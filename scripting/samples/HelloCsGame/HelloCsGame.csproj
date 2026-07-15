@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>HelloCsGame</RootNamespace>
+    <AssemblyName>HelloCsGame</AssemblyName>
+    <!-- Required for native hostfxr: emits HelloCsGame.runtimeconfig.json next to the DLL -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RollForward>LatestMinor</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../sdk/Spark.Scripting/Spark.Scripting.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Spark.Bindings">
+      <HintPath>..\..\bindings\generated\Spark.Bindings\bin\Release\net8.0\Spark.Bindings.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

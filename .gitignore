@@ -1,0 +1,124 @@
+# Spark Game Engine — local build artifacts, IDE state, secrets.
+# Source to commit: include/, src/, shaders/*.glsl, assets/, samples/, CMakeLists.txt, etc.
+
+# --- OS / editor ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+*.code-workspace
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+.vs/
+x64/
+x64_Debug/
+x64_Release/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.pdb
+*.ipch
+*.iobj
+*.pch
+
+# --- CMake / build trees ---
+build/
+out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+Makefile
+_deps/
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+
+# compile_commands.json is useful for clangd; remove this line if you want it in-repo
+compile_commands.json
+
+# Nested sample / editor build dirs
+**/cmake-build-*/
+**/build/
+
+# --- Compiled objects / libs / binaries ---
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+
+# Spark editor output (adjust if your target name differs)
+spark_editor/SparkEditor
+**/SparkEditor
+
+# --- Generated shaders (SPIR-V; keep GLSL sources under shaders/) ---
+*.spv
+shaders/*.spv
+
+# --- Copied / staged runtime assets in build trees ---
+**/spark_runtime_assets/
+
+# --- Logs / captures / temp ---
+*.log
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# --- Secrets / local env (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# --- Package managers (if used under bindings or tools) ---
+node_modules/
+**/node_modules/
+packages/
+.nuget/
+*.nupkg
+
+# --- Python (tools, scripts) ---
+__pycache__/
+*.py[cod]
+.Python
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# --- Test / coverage ---
+*.gcda
+*.gcno
+*.gcov
+coverage/
+*.profraw
+*.profdata
+
+# --- Optional: large third-party drops (uncomment if you vendor binaries locally) ---
+# assets/**/*.zip
+# third_party/

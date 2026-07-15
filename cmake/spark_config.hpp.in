@@ -1,0 +1,19 @@
+#pragma once
+
+/** Absolute path to the build directory where *.spv shaders are emitted. */
+#define SPARK_SHADER_SPV_DIR "@SPV_DIR@"
+
+/** Absolute path to the project `assets/` tree (textures, etc.). */
+#define SPARK_ASSETS_DIR "@SPARK_ASSETS_DIR@"
+
+/** Absolute path to the UI font file CMake resolved at configure time (may match source or build tree). */
+#define SPARK_UI_FONT_PATH "@SPARK_UI_FONT_PATH@"
+
+/** Absolute path to the UI bold font (Roboto-Bold.ttf); optional — faux bold used if load fails. */
+#define SPARK_UI_BOLD_FONT_PATH "@SPARK_UI_BOLD_FONT_PATH@"
+
+/** Copy of `assets/` under the build directory (populated at configure time for running SparkDemo from IDE). */
+#define SPARK_BUILD_ASSETS_DIR "@SPARK_BUILD_ASSETS_DIR@"
+
+/** Equirectangular sky image path for the sky demo (Poly Haven 1k .hdr by default; CMake downloads if missing). */
+#define SPARK_SKY_TEXTURE_PATH "@SPARK_SKY_TEXTURE_PATH@"

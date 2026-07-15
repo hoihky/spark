@@ -1,0 +1,67 @@
+#pragma once
+
+#include "spark/core/Array.hpp"
+#include "spark/core/HashMap.hpp"
+#include "spark/physics/Collision2D.hpp"
+
+#include <cstdint>
+
+namespace Spark {
+
+class GameWorld;
+
+/**
+ * Uniform-cell spatial hash for 2D broad-phase: O(1) cell buckets, conservative insertion of
+ * indexed AABBs, unique index queries. Pairs with parallel StaticCollider2D[] built from ECS
+ * (static BoxCollider2D and/or CircleCollider2D).
+ */
+class SpatialHashGrid2D {
+public:
+    void Clear() noexcept;
+    void SetCellSize(float worldCellSize) noexcept;
+
+    /** Inserts payload index into every cell overlapped by [minX,maxX]×[minY,maxY]. */
+    void InsertIndexedAabb(std::uint32_t payloadIndex, const CollisionAabb2& worldAabb);
+
+    /** All unique payload indices whose cells overlap the query region (narrow-phase still required). */
+    void QueryUniquePayloadIndices(const CollisionAabb2& queryRegion, Array<std::uint32_t>& outUniqueIndices) const;
+
+    [[nodiscard]] float GetCellSize() const noexcept { return cellSize; }
+
+private:
+    struct CellKey {
+        int ix = 0;
+        int iy = 0;
+        [[nodiscard]] bool operator==(const CellKey& o) const noexcept { return ix == o.ix && iy == o.iy; }
+    };
+
+    struct CellKeyHash {
+        [[nodiscard]] std::size_t operator()(const CellKey& k) const noexcept {
+            return static_cast<std::size_t>(k.ix * 73856093) ^ static_cast<std::size_t>(k.iy * 19349663);
+        }
+    };
+
+    struct CellKeyEq {
+        [[nodiscard]] bool operator()(const CellKey& a, const CellKey& b) const noexcept { return a == b; }
+    };
+
+    float cellSize = 4.0F;
+    float invCellSize = 0.25F;
+    HashMap<CellKey, Array<std::uint32_t>, CellKeyHash, CellKeyEq> buckets{};
+    /** Scratch for deduplicating query results; not part of the stored grid topology. */
+    mutable HashMap<std::uint32_t, std::uint8_t, DefaultHash<std::uint32_t>, DefaultKeyEqual<std::uint32_t>>
+            queryDedupe{};
+};
+
+/**
+ * Collects every static 2D collider (box and/or circle on non-dynamic rigidbodies) into outStatics
+ * and inserts each entry's conservative world AABB into the spatial hash. Payload indices match
+ * outStatics order.
+ */
+void RebuildBroadPhaseFromStaticColliders2D(
+        GameWorld& world,
+        float cellWorldSize,
+        Array<StaticCollider2D>& outStatics,
+        SpatialHashGrid2D& outGrid);
+
+}  // namespace Spark

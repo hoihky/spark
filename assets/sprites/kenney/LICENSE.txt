@@ -1,0 +1,6 @@
+Kenney “Simplified Platformer” character sprites (platformChar_*.png)
+
+Source: https://www.kenney.nl (CC0 1.0 Universal — public domain)
+Mirrored for convenience from: https://github.com/kefik/kenney/tree/master/SimplifiedPlatformer/Characters
+
+You may use these assets for any purpose without attribution (CC0).

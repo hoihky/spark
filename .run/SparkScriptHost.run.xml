@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SparkScriptHost (HelloCsGame)" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$PROJECT_DIR$/scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.runtimeconfig.json $PROJECT_DIR$/scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.dll" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Spark" TARGET_NAME="SparkScriptHost" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Spark" RUN_TARGET_NAME="SparkScriptHost">
+    <envs>
+      <env name="DYLD_LIBRARY_PATH" value="/Users/rainechen/Desktop/Kwan/Source/Projects/spark/cmake-build-debug:$DYLD_LIBRARY_PATH$" />
+      <env name="LD_LIBRARY_PATH" value="/Users/rainechen/Desktop/Kwan/Source/Projects/spark/cmake-build-debug:$LD_LIBRARY_PATH$" />
+    </envs>
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>

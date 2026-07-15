@@ -1,0 +1,49 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug (SparkDemo + SparkEditor + C#)",
+      "description": "Default CLion profile: SparkDemo, SparkEditor, SparkScriptHost",
+      "binaryDir": "${sourceDir}/cmake-build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "SPARK_BUILD_SCRIPT_HOST": "ON",
+        "SPARK_BUILD_DEMO": "ON",
+        "SPARK_BUILD_EDITOR": "ON",
+        "SPARK_BUILD_SPARK_EDITOR": "ON"
+      }
+    },
+    {
+      "name": "editor-debug",
+      "displayName": "Debug (SparkEditor)",
+      "description": "SparkEditor + shared SparkEngine (no demos, no script host)",
+      "binaryDir": "${sourceDir}/cmake-build-editor",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "SPARK_BUILD_ENGINE_SHARED": "ON",
+        "SPARK_BUILD_ENGINE_DEMOS": "OFF",
+        "SPARK_BUILD_EDITOR": "ON",
+        "SPARK_BUILD_SPARK_EDITOR": "ON",
+        "SPARK_BUILD_DEMO": "OFF",
+        "SPARK_BUILD_SCRIPT_HOST": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "editor-debug",
+      "configurePreset": "editor-debug",
+      "targets": ["SparkEditor"]
+    }
+  ]
+}
