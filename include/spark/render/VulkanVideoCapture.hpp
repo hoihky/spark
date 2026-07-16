@@ -39,24 +39,24 @@ public:
     void TryCommitFrameAfterFence(double ptsSeconds) noexcept;
 
 private:
-    VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
-    VkDevice device_ = VK_NULL_HANDLE;
-    VkFormat swapchainFormat_ = VK_FORMAT_UNDEFINED;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
+    VkFormat swapchainFormat = VK_FORMAT_UNDEFINED;
 
-    VkBuffer stagingBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory stagingMemory_ = VK_NULL_HANDLE;
-    void* stagingMapped_ = nullptr;
-    VkDeviceSize stagingBytes_ = 0;
-    VkDeviceSize rowPitch_ = 0;
-    VkExtent2D bufferExtent_{};
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
+    void* stagingMapped = nullptr;
+    VkDeviceSize stagingBytes = 0;
+    VkDeviceSize rowPitch = 0;
+    VkExtent2D bufferExtent{};
 
-    bool captureQueued_ = false;
-    VkExtent2D captureExtent_{};
-    VideoRecordingSettings settings_{};
-    UniquePtr<VideoRecorder> recorder_;
-    Array<std::uint8_t> scratchBgra_;
-    Array<std::uint8_t> scratchRgba_;
-    double recordStartPts_ = 0.0;
+    bool captureQueued = false;
+    VkExtent2D captureExtent{};
+    VideoRecordingSettings settings{};
+    UniquePtr<VideoRecorder> recorder;
+    Array<std::uint8_t> scratchBgra;
+    Array<std::uint8_t> scratchRgba;
+    double recordStartPts = 0.0;
 };
 
 }  // namespace Spark

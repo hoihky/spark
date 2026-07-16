@@ -75,29 +75,29 @@ private:
     [[nodiscard]] std::uint64_t ComputeFingerprint(const SceneRenderParams& scene) const;
     void PackSceneGeometry(const SceneRenderParams& scene, Array<float>& interleaved, Array<std::uint32_t>& indices);
 
-    VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
-    VkDevice device_ = VK_NULL_HANDLE;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
 
-    BufferSet active_{};
-    Array<RetiredSet> retired_{};
+    BufferSet active{};
+    Array<RetiredSet> retired{};
 
-    VkBuffer stagingVertex_ = VK_NULL_HANDLE;
-    VkDeviceMemory stagingVertexMemory_ = VK_NULL_HANDLE;
-    void* stagingVertexMapped_ = nullptr;
-    VkDeviceSize stagingVertexCapacity_ = 0;
+    VkBuffer stagingVertex = VK_NULL_HANDLE;
+    VkDeviceMemory stagingVertexMemory = VK_NULL_HANDLE;
+    void* stagingVertexMapped = nullptr;
+    VkDeviceSize stagingVertexCapacity = 0;
 
-    VkBuffer stagingIndex_ = VK_NULL_HANDLE;
-    VkDeviceMemory stagingIndexMemory_ = VK_NULL_HANDLE;
-    void* stagingIndexMapped_ = nullptr;
-    VkDeviceSize stagingIndexCapacity_ = 0;
+    VkBuffer stagingIndex = VK_NULL_HANDLE;
+    VkDeviceMemory stagingIndexMemory = VK_NULL_HANDLE;
+    void* stagingIndexMapped = nullptr;
+    VkDeviceSize stagingIndexCapacity = 0;
 
-    VkDeviceSize pendingVertexBytes_ = 0;
-    VkDeviceSize pendingIndexBytes_ = 0;
-    bool uploadPending_ = false;
+    VkDeviceSize pendingVertexBytes = 0;
+    VkDeviceSize pendingIndexBytes = 0;
+    bool uploadPending = false;
 
-    std::uint64_t lastFingerprint_ = 0;
-    HashMap<const Mesh*, CustomMeshGpuSlice> rigidSlices_{};
-    HashMap<const SkinnedMesh*, CustomMeshGpuSlice> skinnedSlices_{};
+    std::uint64_t lastFingerprint = 0;
+    HashMap<const Mesh*, CustomMeshGpuSlice> rigidSlices{};
+    HashMap<const SkinnedMesh*, CustomMeshGpuSlice> skinnedSlices{};
 };
 
 }  // namespace Spark

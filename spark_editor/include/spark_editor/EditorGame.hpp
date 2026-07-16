@@ -21,7 +21,7 @@ public:
     void OnRender(IRenderFrame& frame, IEngineContext& context) override;
 
 private:
-    UniquePtr<Editor::EditorApplication> editor_;
+    UniquePtr<Editor::EditorApplication> editor;
 };
 
 [[nodiscard]] UniquePtr<IGame> NewEditorGame();

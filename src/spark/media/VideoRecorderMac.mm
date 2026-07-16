@@ -49,15 +49,15 @@ public:
         [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
 
         NSError* error = nil;
-        writer_ = [[AVAssetWriter alloc] initWithURL:[NSURL fileURLWithPath:path]
+        writer = [[AVAssetWriter alloc] initWithURL:[NSURL fileURLWithPath:path]
                                             fileType:AVFileTypeMPEG4
                                                error:&error];
-        if (writer_ == nil || error != nil) {
+        if (writer == nil || error != nil) {
             std::fprintf(stderr, "Spark: video recorder failed to create writer\n");
-            writer_ = nil;
+            writer = nil;
             return false;
         }
-        writer_.shouldOptimizeForNetworkUse = YES;
+        writer.shouldOptimizeForNetworkUse = YES;
 
         NSDictionary* videoSettings = @{
             AVVideoCodecKey : AVVideoCodecTypeH264,
@@ -70,12 +70,12 @@ public:
             },
         };
 
-        videoInput_ = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSettings];
-        if (videoInput_ == nil) {
-            writer_ = nil;
+        videoInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSettings];
+        if (videoInput == nil) {
+            writer = nil;
             return false;
         }
-        videoInput_.expectsMediaDataInRealTime = YES;
+        videoInput.expectsMediaDataInRealTime = YES;
 
         NSDictionary* pixelAttrs = @{
             (NSString*)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
@@ -83,11 +83,11 @@ public:
             (NSString*)kCVPixelBufferHeightKey : @(static_cast<int>(outH)),
             (NSString*)kCVPixelBufferIOSurfacePropertiesKey : @{},
         };
-        pixelAdaptor_ = [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:videoInput_
+        pixelAdaptor = [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:videoInput
                                                                                         sourcePixelBufferAttributes:pixelAttrs];
-        if (pixelAdaptor_ == nil) {
-            writer_ = nil;
-            videoInput_ = nil;
+        if (pixelAdaptor == nil) {
+            writer = nil;
+            videoInput = nil;
             return false;
         }
 
@@ -97,24 +97,24 @@ public:
             AVNumberOfChannelsKey : @2,
             AVEncoderBitRateKey : @(static_cast<int>(settings.audioBitrate)),
         };
-        audioInput_ = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSettings];
-        if (audioInput_ == nil) {
-            writer_ = nil;
-            videoInput_ = nil;
-            pixelAdaptor_ = nil;
+        audioInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSettings];
+        if (audioInput == nil) {
+            writer = nil;
+            videoInput = nil;
+            pixelAdaptor = nil;
             return false;
         }
-        audioInput_.expectsMediaDataInRealTime = YES;
+        audioInput.expectsMediaDataInRealTime = YES;
 
-        if (![writer_ canAddInput:videoInput_] || ![writer_ canAddInput:audioInput_]) {
-            writer_ = nil;
-            videoInput_ = nil;
-            audioInput_ = nil;
-            pixelAdaptor_ = nil;
+        if (![writer canAddInput:videoInput] || ![writer canAddInput:audioInput]) {
+            writer = nil;
+            videoInput = nil;
+            audioInput = nil;
+            pixelAdaptor = nil;
             return false;
         }
-        [writer_ addInput:videoInput_];
-        [writer_ addInput:audioInput_];
+        [writer addInput:videoInput];
+        [writer addInput:audioInput];
 
         AudioStreamBasicDescription asbd{};
         asbd.mSampleRate = kAudioSampleRate;
@@ -138,32 +138,32 @@ public:
                     nullptr,
                     &audioDesc) != noErr ||
             audioDesc == nullptr) {
-            writer_ = nil;
-            videoInput_ = nil;
-            audioInput_ = nil;
-            pixelAdaptor_ = nil;
+            writer = nil;
+            videoInput = nil;
+            audioInput = nil;
+            pixelAdaptor = nil;
             return false;
         }
-        audioFormat_ = audioDesc;
+        audioFormat = audioDesc;
 
-        if (![writer_ startWriting]) {
+        if (![writer startWriting]) {
             std::fprintf(stderr, "Spark: AVAssetWriter startWriting failed: %s\n",
-                    writer_.error != nil ? writer_.error.localizedDescription.UTF8String : "unknown");
-            writer_ = nil;
-            videoInput_ = nil;
-            audioInput_ = nil;
-            pixelAdaptor_ = nil;
-            audioFormat_ = nullptr;
+                    writer.error != nil ? writer.error.localizedDescription.UTF8String : "unknown");
+            writer = nil;
+            videoInput = nil;
+            audioInput = nil;
+            pixelAdaptor = nil;
+            audioFormat = nullptr;
             return false;
         }
-        [writer_ startSessionAtSourceTime:kCMTimeZero];
+        [writer startSessionAtSourceTime:kCMTimeZero];
 
-        outputWidth_ = outW;
-        outputHeight_ = outH;
-        audioSamplesWritten_ = 0;
-        sessionStarted_ = YES;
-        active_ = YES;
-        outputPath_ = settings.outputPath;
+        outputWidth = outW;
+        outputHeight = outH;
+        audioSamplesWritten = 0;
+        sessionStarted = YES;
+        active = YES;
+        outputPath = settings.outputPath;
         std::fprintf(stderr, "Spark: recording %ux%u to %s\n", outW, outH, settings.outputPath.CStr());
         return true;
     }
@@ -173,24 +173,24 @@ public:
             const std::uint32_t width,
             const std::uint32_t height,
             const double ptsSeconds) noexcept override {
-        if (!active_ || bgra == nullptr || width == 0 || height == 0 || pixelAdaptor_ == nil || videoInput_ == nil) {
+        if (!active || bgra == nullptr || width == 0 || height == 0 || pixelAdaptor == nil || videoInput == nil) {
             return;
         }
-        if (!videoInput_.readyForMoreMediaData) {
+        if (!videoInput.readyForMoreMediaData) {
             return;
         }
 
         CVPixelBufferRef pixelBuffer = nullptr;
         const NSDictionary* attrs = @{
             (NSString*)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
-            (NSString*)kCVPixelBufferWidthKey : @(static_cast<int>(outputWidth_)),
-            (NSString*)kCVPixelBufferHeightKey : @(static_cast<int>(outputHeight_)),
+            (NSString*)kCVPixelBufferWidthKey : @(static_cast<int>(outputWidth)),
+            (NSString*)kCVPixelBufferHeightKey : @(static_cast<int>(outputHeight)),
             (NSString*)kCVPixelBufferIOSurfacePropertiesKey : @{},
         };
         if (CVPixelBufferCreate(
                     kCFAllocatorDefault,
-                    outputWidth_,
-                    outputHeight_,
+                    outputWidth,
+                    outputHeight,
                     kCVPixelFormatType_32BGRA,
                     (__bridge CFDictionaryRef)attrs,
                     &pixelBuffer) != kCVReturnSuccess ||
@@ -203,17 +203,17 @@ public:
         const std::size_t dstPitch = static_cast<std::size_t>(CVPixelBufferGetBytesPerRow(pixelBuffer));
         const std::size_t srcPitch = static_cast<std::size_t>(width) * 4U;
 
-        if (width == outputWidth_ && height == outputHeight_) {
+        if (width == outputWidth && height == outputHeight) {
             for (std::uint32_t y = 0; y < height; ++y) {
                 std::memcpy(dstBase + y * dstPitch, bgra + y * srcPitch, srcPitch);
             }
         } else {
-            for (std::uint32_t y = 0; y < outputHeight_; ++y) {
-                const std::uint32_t sy = (y * height) / outputHeight_;
+            for (std::uint32_t y = 0; y < outputHeight; ++y) {
+                const std::uint32_t sy = (y * height) / outputHeight;
                 const std::uint8_t* srcRow = bgra + static_cast<std::size_t>(sy) * srcPitch;
                 std::uint8_t* dstRow = dstBase + y * dstPitch;
-                for (std::uint32_t x = 0; x < outputWidth_; ++x) {
-                    const std::uint32_t sx = (x * width) / outputWidth_;
+                for (std::uint32_t x = 0; x < outputWidth; ++x) {
+                    const std::uint32_t sx = (x * width) / outputWidth;
                     const std::size_t si = static_cast<std::size_t>(sx) * 4U;
                     const std::size_t di = static_cast<std::size_t>(x) * 4U;
                     dstRow[di + 0] = srcRow[si + 0];
@@ -226,7 +226,7 @@ public:
         CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 
         const CMTime pts = VideoTimeFromSeconds(ptsSeconds);
-        const BOOL ok = [pixelAdaptor_ appendPixelBuffer:pixelBuffer withPresentationTime:pts];
+        const BOOL ok = [pixelAdaptor appendPixelBuffer:pixelBuffer withPresentationTime:pts];
         CVPixelBufferRelease(pixelBuffer);
         if (!ok) {
             std::fprintf(stderr, "Spark: failed to append video frame at %.3f s\n", ptsSeconds);
@@ -234,10 +234,10 @@ public:
     }
 
     void AppendAudioInterleavedFloat(const float* samples, const std::size_t frameCount) noexcept override {
-        if (!active_ || samples == nullptr || frameCount == 0 || audioInput_ == nil || audioFormat_ == nullptr) {
+        if (!active || samples == nullptr || frameCount == 0 || audioInput == nil || audioFormat == nullptr) {
             return;
         }
-        if (!audioInput_.readyForMoreMediaData) {
+        if (!audioInput.readyForMoreMediaData) {
             return;
         }
 
@@ -262,7 +262,7 @@ public:
         }
 
         const CMTime pts = CMTimeMake(
-                static_cast<int64_t>(audioSamplesWritten_),
+                static_cast<int64_t>(audioSamplesWritten),
                 static_cast<int32_t>(kAudioSampleRate));
         CMSampleBufferRef sample = nullptr;
         const CMSampleTimingInfo timing = {
@@ -276,7 +276,7 @@ public:
                     true,
                     nullptr,
                     nullptr,
-                    audioFormat_,
+                    audioFormat,
                     static_cast<CMItemCount>(frameCount),
                     1,
                     &timing,
@@ -288,69 +288,69 @@ public:
             return;
         }
 
-        const BOOL ok = [audioInput_ appendSampleBuffer:sample];
+        const BOOL ok = [audioInput appendSampleBuffer:sample];
         CFRelease(sample);
         CFRelease(block);
         if (!ok) {
-            std::fprintf(stderr, "Spark: failed to append audio at sample %lld\n", static_cast<long long>(audioSamplesWritten_));
+            std::fprintf(stderr, "Spark: failed to append audio at sample %lld\n", static_cast<long long>(audioSamplesWritten));
         } else {
-            audioSamplesWritten_ += static_cast<int64_t>(frameCount);
+            audioSamplesWritten += static_cast<int64_t>(frameCount);
         }
     }
 
     bool End() noexcept override {
-        if (!active_) {
+        if (!active) {
             return false;
         }
-        active_ = false;
+        active = false;
 
-        [videoInput_ markAsFinished];
-        [audioInput_ markAsFinished];
+        [videoInput markAsFinished];
+        [audioInput markAsFinished];
 
         __block BOOL finished = NO;
         __block BOOL success = NO;
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        [writer_ finishWritingWithCompletionHandler:^{
-            success = (writer_.status == AVAssetWriterStatusCompleted);
+        [writer finishWritingWithCompletionHandler:^{
+            success = (writer.status == AVAssetWriterStatusCompleted);
             finished = YES;
             dispatch_semaphore_signal(sem);
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 
         if (success) {
-            std::fprintf(stderr, "Spark: recording saved to %s\n", outputPath_.CStr());
+            std::fprintf(stderr, "Spark: recording saved to %s\n", outputPath.CStr());
         } else {
             std::fprintf(stderr, "Spark: recording finalize failed: %s\n",
-                    writer_.error != nil ? writer_.error.localizedDescription.UTF8String : "unknown");
+                    writer.error != nil ? writer.error.localizedDescription.UTF8String : "unknown");
         }
 
-        writer_ = nil;
-        videoInput_ = nil;
-        audioInput_ = nil;
-        pixelAdaptor_ = nil;
-        if (audioFormat_ != nullptr) {
-            CFRelease(audioFormat_);
-            audioFormat_ = nullptr;
+        writer = nil;
+        videoInput = nil;
+        audioInput = nil;
+        pixelAdaptor = nil;
+        if (audioFormat != nullptr) {
+            CFRelease(audioFormat);
+            audioFormat = nullptr;
         }
-        sessionStarted_ = NO;
-        audioSamplesWritten_ = 0;
-        outputWidth_ = 0;
-        outputHeight_ = 0;
+        sessionStarted = NO;
+        audioSamplesWritten = 0;
+        outputWidth = 0;
+        outputHeight = 0;
         return finished && success;
     }
 
-    bool IsActive() const noexcept override { return active_; }
+    bool IsActive() const noexcept override { return active; }
 
 private:
-    AVAssetWriter* writer_ = nil;
-    AVAssetWriterInput* videoInput_ = nil;
-    AVAssetWriterInput* audioInput_ = nil;
-    AVAssetWriterInputPixelBufferAdaptor* pixelAdaptor_ = nil;
-    CMAudioFormatDescriptionRef audioFormat_ = nullptr;
-    int64_t audioSamplesWritten_ = 0;
-    bool sessionStarted_ = NO;
-    bool active_ = false;
-    Utf8String outputPath_;
+    AVAssetWriter* writer = nil;
+    AVAssetWriterInput* videoInput = nil;
+    AVAssetWriterInput* audioInput = nil;
+    AVAssetWriterInputPixelBufferAdaptor* pixelAdaptor = nil;
+    CMAudioFormatDescriptionRef audioFormat = nullptr;
+    int64_t audioSamplesWritten = 0;
+    bool sessionStarted = NO;
+    bool active = false;
+    Utf8String outputPath;
 };
 
 }  // namespace

@@ -22,16 +22,16 @@ public:
     void RegisterPanel(UniquePtr<DockPanel> panel);
     [[nodiscard]] DockPanel* FindPanel(const Utf8String& id) noexcept;
 
-    void SetLayoutState(DockLayoutState state) noexcept { state_ = state; }
-    [[nodiscard]] const DockLayoutState& GetLayoutState() const noexcept { return state_; }
+    void SetLayoutState(DockLayoutState value) noexcept { state = value; }
+    [[nodiscard]] const DockLayoutState& GetLayoutState() const noexcept { return state; }
 
-    void SetLeftCollapsed(bool collapsed) noexcept { state_.leftCollapsed = collapsed; }
-    void SetRightCollapsed(bool collapsed) noexcept { state_.rightCollapsed = collapsed; }
-    void ToggleLeftCollapsed() noexcept { state_.leftCollapsed = !state_.leftCollapsed; }
-    void ToggleRightCollapsed() noexcept { state_.rightCollapsed = !state_.rightCollapsed; }
+    void SetLeftCollapsed(bool collapsed) noexcept { state.leftCollapsed = collapsed; }
+    void SetRightCollapsed(bool collapsed) noexcept { state.rightCollapsed = collapsed; }
+    void ToggleLeftCollapsed() noexcept { state.leftCollapsed = !state.leftCollapsed; }
+    void ToggleRightCollapsed() noexcept { state.rightCollapsed = !state.rightCollapsed; }
 
     void SetOnLayoutStateChanged(std::function<void(const DockLayoutState&)> fn) {
-        onLayoutStateChanged_ = Spark::MoveTemp(fn);
+        onLayoutStateChanged = Spark::MoveTemp(fn);
     }
 
     [[nodiscard]] UniquePtr<DockFrameLayout> BuildFrame();
@@ -46,9 +46,9 @@ private:
     [[nodiscard]] UniquePtr<Widget> BuildLeftContent();
     [[nodiscard]] UniquePtr<Widget> BuildRightContent();
 
-    Array<UniquePtr<DockPanel>> panels_{};
-    DockLayoutState state_{};
-    std::function<void(const DockLayoutState&)> onLayoutStateChanged_{};
+    Array<UniquePtr<DockPanel>> panels{};
+    DockLayoutState state{};
+    std::function<void(const DockLayoutState&)> onLayoutStateChanged{};
 };
 
 }  // namespace Spark::Gui

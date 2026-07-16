@@ -43,12 +43,12 @@ public:
 
     [[nodiscard]] virtual bool IsActive() const noexcept;
 
-    [[nodiscard]] std::uint32_t OutputWidth() const noexcept { return outputWidth_; }
-    [[nodiscard]] std::uint32_t OutputHeight() const noexcept { return outputHeight_; }
+    [[nodiscard]] std::uint32_t OutputWidth() const noexcept { return outputWidth; }
+    [[nodiscard]] std::uint32_t OutputHeight() const noexcept { return outputHeight; }
 
 protected:
-    std::uint32_t outputWidth_ = 0;
-    std::uint32_t outputHeight_ = 0;
+    std::uint32_t outputWidth = 0;
+    std::uint32_t outputHeight = 0;
 };
 
 }  // namespace Spark

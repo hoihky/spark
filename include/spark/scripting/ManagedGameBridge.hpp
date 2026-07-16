@@ -16,7 +16,7 @@ public:
     void OnRender(IRenderFrame& frame, IEngineContext& context) override;
 
 private:
-    SparkManagedGameCallbacks callbacks_{};
+    SparkManagedGameCallbacks callbacks{};
 };
 
 }  // namespace Spark

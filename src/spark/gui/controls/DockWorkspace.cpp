@@ -17,29 +17,29 @@ namespace {
 /** Arranges/paints a panel owned elsewhere; supports passthrough hit testing. */
 class DockLeafHost final : public Widget {
 public:
-    void SetContent(Widget* widget) noexcept { content_ = widget; }
-    void SetPassthrough(bool value) noexcept { passthrough_ = value; }
-    void SetChromePanel(Panel* panel) noexcept { chrome_ = panel; }
-  void SetPadding(float pad) noexcept { padding_ = pad; }
+    void SetContent(Widget* widget) noexcept { content = widget; }
+    void SetPassthrough(bool value) noexcept { passthrough = value; }
+    void SetChromePanel(Panel* panel) noexcept { chrome = panel; }
+  void SetPadding(float pad) noexcept { padding = pad; }
 
     void Arrange(const Rect& r) override {
         bounds = r;
         Rect inner = r;
-        if (chrome_ != nullptr) {
-            chrome_->Arrange(r);
-            inner = r.Inset(padding_);
+        if (chrome != nullptr) {
+            chrome->Arrange(r);
+            inner = r.Inset(padding);
         }
-        if (content_ != nullptr) {
-            content_->Arrange(inner);
+        if (content != nullptr) {
+            content->Arrange(inner);
         }
     }
 
     void Paint(GuiPaintContext& ctx) const override {
-        if (chrome_ != nullptr) {
-            chrome_->Paint(ctx);
+        if (chrome != nullptr) {
+            chrome->Paint(ctx);
         }
-        if (content_ != nullptr && content_->IsVisible()) {
-            content_->Paint(ctx);
+        if (content != nullptr && content->IsVisible()) {
+            content->Paint(ctx);
         }
     }
 
@@ -47,12 +47,12 @@ public:
         if (!visible || !enabled) {
             return nullptr;
         }
-        if (content_ != nullptr) {
-            if (Widget* hit = content_->FindDeepestHover(x, y)) {
+        if (content != nullptr) {
+            if (Widget* hit = content->FindDeepestHover(x, y)) {
                 return hit;
             }
         }
-        if (passthrough_) {
+        if (passthrough) {
             return nullptr;
         }
         if (hitTest && bounds.Contains(x, y)) {
@@ -62,20 +62,20 @@ public:
     }
 
 private:
-    Widget* content_ = nullptr;
-    Panel* chrome_ = nullptr;
-    bool passthrough_ = false;
-    float padding_ = 4.0F;
+    Widget* content = nullptr;
+    Panel* chrome = nullptr;
+    bool passthrough = false;
+    float padding = 4.0F;
 };
 
 /** Horizontal leading-pixel split with draggable gutter (sidebar). */
 class DockLeadingSplit final : public Widget {
 public:
-    void SetLeadingSize(float px) noexcept { leadingPx_ = px; }
-    [[nodiscard]] float GetLeadingSize() const noexcept { return leadingPx_; }
+    void SetLeadingSize(float px) noexcept { leadingPx = px; }
+    [[nodiscard]] float GetLeadingSize() const noexcept { return leadingPx; }
 
     void SetOnLeadingSizeChanged(std::function<void(float px, bool committed)> fn) {
-        onLeadingSizeChanged_ = Spark::MoveTemp(fn);
+        onLeadingSizeChanged = Spark::MoveTemp(fn);
     }
 
     void Arrange(const Rect& r) override {
@@ -83,32 +83,32 @@ public:
         const auto& ch = GetChildren();
         if (ch.GetSize() < 2U) {
             Widget::Arrange(r);
-            gutterRect_ = {0.0F, 0.0F, 0.0F, 0.0F};
+            gutterRect = {0.0F, 0.0F, 0.0F, 0.0F};
             return;
         }
-        const float g2 = gutterHalf_ * 2.0F;
+        const float g2 = gutterHalf * 2.0F;
         const float maxLeading = std::max(160.0F, r.width * 0.5F - g2);
-        leadingPx_ = std::clamp(leadingPx_, 160.0F, maxLeading);
+        leadingPx = std::clamp(leadingPx, 160.0F, maxLeading);
         if (ch[0]) {
-            ch[0]->Arrange({r.x, r.y, leadingPx_, r.height});
+            ch[0]->Arrange({r.x, r.y, leadingPx, r.height});
         }
-        const float rightX = r.x + leadingPx_ + g2;
+        const float rightX = r.x + leadingPx + g2;
         if (ch[1]) {
             ch[1]->SetHitTest(false);
-            ch[1]->Arrange({rightX, r.y, std::max(0.0F, r.width - leadingPx_ - g2), r.height});
+            ch[1]->Arrange({rightX, r.y, std::max(0.0F, r.width - leadingPx - g2), r.height});
         }
-        gutterRect_ = {r.x + leadingPx_, r.y, g2, r.height};
+        gutterRect = {r.x + leadingPx, r.y, g2, r.height};
     }
 
     void Paint(GuiPaintContext& ctx) const override {
         PaintChildren(ctx);
-        if (gutterRect_.width <= 0.0F) {
+        if (gutterRect.width <= 0.0F) {
             return;
         }
         const GuiTheme& th = ctx.GetTheme();
         ctx.PushOverlayLayer();
-        ctx.FillRect(gutterRect_.x, gutterRect_.y, gutterRect_.width, gutterRect_.height, th.insetTrackRgb, 1.0F);
-        ctx.StrokeRect(gutterRect_.x, gutterRect_.y, gutterRect_.width, gutterRect_.height, 1.0F, th.borderRgb, 0.65F);
+        ctx.FillRect(gutterRect.x, gutterRect.y, gutterRect.width, gutterRect.height, th.insetTrackRgb, 1.0F);
+        ctx.StrokeRect(gutterRect.x, gutterRect.y, gutterRect.width, gutterRect.height, 1.0F, th.borderRgb, 0.65F);
         ctx.PopOverlayLayer();
     }
 
@@ -135,39 +135,39 @@ public:
 
     void NotifyPointerDown(const GuiFrameInput& in, GuiCanvasComponent&) override {
         if (HitGutter(in.mouseX, in.mouseY)) {
-            dragging_ = true;
+            dragging = true;
         }
     }
 
     void NotifyPointerDrag(const GuiFrameInput& in, GuiCanvasComponent&) override {
-        if (!dragging_) {
+        if (!dragging) {
             return;
         }
-        const float g2 = gutterHalf_ * 2.0F;
+        const float g2 = gutterHalf * 2.0F;
         const float maxLeading = std::max(160.0F, bounds.width * 0.5F - g2);
-        leadingPx_ = std::clamp(in.mouseX - bounds.x - gutterHalf_, 160.0F, maxLeading);
-        if (onLeadingSizeChanged_) {
-            onLeadingSizeChanged_(leadingPx_, false);
+        leadingPx = std::clamp(in.mouseX - bounds.x - gutterHalf, 160.0F, maxLeading);
+        if (onLeadingSizeChanged) {
+            onLeadingSizeChanged(leadingPx, false);
         }
     }
 
     void NotifyPointerUp(const GuiFrameInput&, GuiCanvasComponent&) override {
-        if (dragging_ && onLeadingSizeChanged_) {
-            onLeadingSizeChanged_(leadingPx_, true);
+        if (dragging && onLeadingSizeChanged) {
+            onLeadingSizeChanged(leadingPx, true);
         }
-        dragging_ = false;
+        dragging = false;
     }
 
 private:
     [[nodiscard]] bool HitGutter(const float x, const float y) const noexcept {
-        return gutterRect_.width > 0.0F && gutterRect_.Contains(x, y);
+        return gutterRect.width > 0.0F && gutterRect.Contains(x, y);
     }
 
-    float leadingPx_ = 300.0F;
-    float gutterHalf_ = 3.0F;
-    Rect gutterRect_{};
-    bool dragging_ = false;
-    std::function<void(float px, bool committed)> onLeadingSizeChanged_{};
+    float leadingPx = 300.0F;
+    float gutterHalf = 3.0F;
+    Rect gutterRect{};
+    bool dragging = false;
+    std::function<void(float px, bool committed)> onLeadingSizeChanged{};
 };
 
 void StyleElevatedChrome(Panel& panel) {
@@ -179,16 +179,16 @@ void StyleElevatedChrome(Panel& panel) {
 
 }  // namespace
 
-void DockWorkspace::SetLayout(DockLayoutModel model) {
-    model_ = MoveTemp(model);
+void DockWorkspace::SetLayout(DockLayoutModel layoutModel) {
+    model = MoveTemp(layoutModel);
     MarkLayoutDirty();
 }
 
 void DockWorkspace::SetPanel(const Utf8String panelId, UniquePtr<Widget> content, const bool useChrome) {
-    for (std::size_t i = 0; i < panels_.GetSize(); ++i) {
-        if (panels_[i].id == panelId) {
-            panels_[i].content = MoveTemp(content);
-            panels_[i].useChrome = useChrome;
+    for (std::size_t i = 0; i < panels.GetSize(); ++i) {
+        if (panels[i].id == panelId) {
+            panels[i].content = MoveTemp(content);
+            panels[i].useChrome = useChrome;
             MarkLayoutDirty();
             return;
         }
@@ -197,7 +197,7 @@ void DockWorkspace::SetPanel(const Utf8String panelId, UniquePtr<Widget> content
     entry.id = panelId;
     entry.content = MoveTemp(content);
     entry.useChrome = useChrome;
-    panels_.PushBack(MoveTemp(entry));
+    panels.PushBack(MoveTemp(entry));
     MarkLayoutDirty();
 }
 
@@ -208,34 +208,34 @@ Widget* DockWorkspace::GetPanelWidget(const Utf8String& panelId) noexcept {
 void DockWorkspace::Arrange(const Rect& r) {
     bounds = r;
     RebuildIfNeeded();
-    if (builtRoot_) {
-        builtRoot_->Arrange(r);
+    if (builtRoot) {
+        builtRoot->Arrange(r);
     }
 }
 
 void DockWorkspace::Paint(GuiPaintContext& ctx) const {
-    if (builtRoot_) {
-        builtRoot_->Paint(ctx);
+    if (builtRoot) {
+        builtRoot->Paint(ctx);
     }
 }
 
 Widget* DockWorkspace::FindDeepestHover(const float x, const float y) {
-    if (!visible || !enabled || !builtRoot_) {
+    if (!visible || !enabled || !builtRoot) {
         return nullptr;
     }
-    return builtRoot_->FindDeepestHover(x, y);
+    return builtRoot->FindDeepestHover(x, y);
 }
 
 void DockWorkspace::RebuildIfNeeded() {
-    if (!layoutDirty_) {
+    if (!layoutDirty) {
         return;
     }
-    builtRoot_ = BuildNode(model_.GetRoot());
-    layoutDirty_ = false;
+    builtRoot = BuildNode(model.GetRoot());
+    layoutDirty = false;
 }
 
 UniquePtr<Widget> DockWorkspace::BuildNode(const int nodeIndex) {
-    const DockNode* node = model_.GetNode(nodeIndex);
+    const DockNode* node = model.GetNode(nodeIndex);
     if (node == nullptr) {
         return {};
     }
@@ -266,9 +266,9 @@ UniquePtr<Widget> DockWorkspace::BuildLeaf(const DockNode& node) {
 
     if (content != nullptr) {
         bool useChrome = true;
-        for (std::size_t i = 0; i < panels_.GetSize(); ++i) {
-            if (panels_[i].id == node.panelId) {
-                useChrome = panels_[i].useChrome;
+        for (std::size_t i = 0; i < panels.GetSize(); ++i) {
+            if (panels[i].id == node.panelId) {
+                useChrome = panels[i].useChrome;
                 break;
             }
         }
@@ -305,7 +305,7 @@ UniquePtr<Widget> DockWorkspace::BuildTabs(const DockNode& node, const int nodeI
     }
     tabs->SetSelectedIndex(node.selectedTab);
     tabs->SetOnTabChanged([this, nodeIndex](const int tabIndex) {
-        if (DockNode* mutableNode = model_.GetNode(nodeIndex)) {
+        if (DockNode* mutableNode = model.GetNode(nodeIndex)) {
             mutableNode->selectedTab = tabIndex;
             NotifyLayoutChanged(true);
         }
@@ -327,7 +327,7 @@ UniquePtr<Widget> DockWorkspace::BuildSplit(const DockNode& node, const int node
         auto split = MakeUnique<DockLeadingSplit>();
         split->SetLeadingSize(node.splitValue);
         split->SetOnLeadingSizeChanged([this, nodeIndex](const float px, const bool committed) {
-            if (DockNode* mutableNode = model_.GetNode(nodeIndex)) {
+            if (DockNode* mutableNode = model.GetNode(nodeIndex)) {
                 mutableNode->splitValue = px;
             }
             NotifyLayoutChanged(committed);
@@ -342,7 +342,7 @@ UniquePtr<Widget> DockWorkspace::BuildSplit(const DockNode& node, const int node
                                                                     : SplitterOrientation::Vertical);
     splitter->SetSplit(node.splitValue);
     splitter->SetOnSplitChanged([this, nodeIndex](const float fraction, const bool committed) {
-        if (DockNode* mutableNode = model_.GetNode(nodeIndex)) {
+        if (DockNode* mutableNode = model.GetNode(nodeIndex)) {
             mutableNode->splitValue = fraction;
         }
         NotifyLayoutChanged(committed);
@@ -353,20 +353,20 @@ UniquePtr<Widget> DockWorkspace::BuildSplit(const DockNode& node, const int node
 }
 
 Widget* DockWorkspace::FindPanelContent(const Utf8String& panelId) noexcept {
-    for (std::size_t i = 0; i < panels_.GetSize(); ++i) {
-        if (panels_[i].id == panelId) {
-            return panels_[i].content.Get();
+    for (std::size_t i = 0; i < panels.GetSize(); ++i) {
+        if (panels[i].id == panelId) {
+            return panels[i].content.Get();
         }
     }
     return nullptr;
 }
 
 void DockWorkspace::NotifyLayoutChanged(const bool committed) {
-    if (onLayoutChanged_) {
-        onLayoutChanged_(model_);
+    if (onLayoutChanged) {
+        onLayoutChanged(model);
     }
     if (committed) {
-        (void)SaveDockLayout(model_);
+        (void)SaveDockLayout(model);
     }
 }
 

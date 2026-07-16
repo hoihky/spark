@@ -55,10 +55,10 @@ struct DockNode {
 class DockLayoutModel {
 public:
     [[nodiscard]] int AddNode(DockNode node);
-    void SetRoot(int nodeIndex) noexcept { rootIndex_ = nodeIndex; }
-    [[nodiscard]] int GetRoot() const noexcept { return rootIndex_; }
+    void SetRoot(int nodeIndex) noexcept { rootIndex = nodeIndex; }
+    [[nodiscard]] int GetRoot() const noexcept { return rootIndex; }
 
-    [[nodiscard]] const Array<DockNode>& GetNodes() const noexcept { return nodes_; }
+    [[nodiscard]] const Array<DockNode>& GetNodes() const noexcept { return nodes; }
     [[nodiscard]] DockNode* GetNode(int index) noexcept;
     [[nodiscard]] const DockNode* GetNode(int index) const noexcept;
 
@@ -83,8 +83,8 @@ public:
     [[nodiscard]] float GetRootLeadingPixels() const noexcept;
 
 private:
-    Array<DockNode> nodes_{};
-    int rootIndex_ = -1;
+    Array<DockNode> nodes{};
+    int rootIndex = -1;
 };
 
 }  // namespace Spark::Gui

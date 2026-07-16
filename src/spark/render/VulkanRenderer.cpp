@@ -160,7 +160,7 @@ VulkanRenderer::VulkanRenderer(Window& inAppWindow) : appWindow(inAppWindow) {
     if (vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDevice failed");
     }
-    shaderLoader_.SetDevice(device);
+    shaderLoader.SetDevice(device);
 
     vkGetDeviceQueue(device, queueFamilies.graphicsFamily, 0, &graphicsQueue);
     vkGetDeviceQueue(device, queueFamilies.presentFamily, 0, &presentQueue);
@@ -200,21 +200,21 @@ VulkanRenderer::~VulkanRenderer() {
 
 void VulkanRenderer::CleanupSwapchain() {
     DestroyRenderFinishedSemaphores();
-    screenSpaceEffectsPass_.DestroyPipeline(device);
-    screenSpaceEffectsPass_.DestroyFlightTargets(device);
-    screenSpaceEffectsPass_.DestroyRenderPass(device);
-    hdrTonemapPass_.DestroyTonemapPipeline(device);
-    hdrTonemapPass_.DestroyFlightTargets(device);
-    hdrTonemapPass_.DestroyRenderPass(device);
+    screenSpaceEffectsPass.DestroyPipeline(device);
+    screenSpaceEffectsPass.DestroyFlightTargets(device);
+    screenSpaceEffectsPass.DestroyRenderPass(device);
+    hdrTonemapPass.DestroyTonemapPipeline(device);
+    hdrTonemapPass.DestroyFlightTargets(device);
+    hdrTonemapPass.DestroyRenderPass(device);
     DestroyDepthResources();
 
     presentationFramebuffers.Destroy(device);
 
-    scenePipeline_.DestroyGraphicsPipeline(device);
-    screenUi_.DestroyPipelines(device);
-    particlePass_.DestroyGraphicsPipeline(device);
-    tilemapPass_.DestroyGraphicsPipeline(device);
-    spritePass_.DestroyGraphicsPipeline(device);
+    scenePipeline.DestroyGraphicsPipeline(device);
+    screenUi.DestroyPipelines(device);
+    particlePass.DestroyGraphicsPipeline(device);
+    tilemapPass.DestroyGraphicsPipeline(device);
+    spritePass.DestroyGraphicsPipeline(device);
     presentRenderPass.Destroy(device);
     presentSwapchain.Destroy(device);
 }
@@ -286,10 +286,10 @@ void VulkanRenderer::RecreateSwapchain() {
 
     presentSwapchain.imageFormat = surfaceFormat.format;
     presentSwapchain.extent = extent;
-    screenshotCapture_.Create(physicalDevice, device, surfaceFormat.format);
-    screenshotCapture_.EnsureBuffer(extent);
-    videoCapture_.Create(physicalDevice, device, surfaceFormat.format);
-    videoCapture_.EnsureBuffer(extent);
+    screenshotCapture.Create(physicalDevice, device, surfaceFormat.format);
+    screenshotCapture.EnsureBuffer(extent);
+    videoCapture.Create(physicalDevice, device, surfaceFormat.format);
+    videoCapture.EnsureBuffer(extent);
 
     presentSwapchain.imageViews.Resize(presentSwapchain.images.GetSize());
     for (std::size_t i = 0; i < presentSwapchain.images.GetSize(); ++i) {
@@ -311,30 +311,30 @@ void VulkanRenderer::RecreateSwapchain() {
     sceneDepthFormat = VulkanRendererGpu::FindDepthFormat(physicalDevice);
     CreateDepthResources();
     CreateRenderPass();
-    screenSpaceEffectsPass_.CreateRenderPass(device);
+    screenSpaceEffectsPass.CreateRenderPass(device);
     RecreateHdrFlightTargets();
-    screenSpaceEffectsPass_.RecreateFlightTargets(
+    screenSpaceEffectsPass.RecreateFlightTargets(
             physicalDevice, device, presentSwapchain.extent, sceneDepthFormat, maxFramesInFlight);
-    scenePipeline_.CreateGraphicsPipeline(
-            device, hdrTonemapPass_.HdrRenderPass(), descriptorSetLayout, shaderLoader_);
-    screenUi_.CreatePipelines(device, presentRenderPass.vkPass);
-    particlePass_.CreateGraphicsPipeline(device, hdrTonemapPass_.HdrRenderPass());
-    tilemapPass_.CreateGraphicsPipeline(
-            device, hdrTonemapPass_.HdrRenderPass(), descriptorSetLayout, shaderLoader_);
-    spritePass_.CreateGraphicsPipeline(
-            device, hdrTonemapPass_.HdrRenderPass(), descriptorSetLayout, shaderLoader_);
+    scenePipeline.CreateGraphicsPipeline(
+            device, hdrTonemapPass.HdrRenderPass(), descriptorSetLayout, shaderLoader);
+    screenUi.CreatePipelines(device, presentRenderPass.vkPass);
+    particlePass.CreateGraphicsPipeline(device, hdrTonemapPass.HdrRenderPass());
+    tilemapPass.CreateGraphicsPipeline(
+            device, hdrTonemapPass.HdrRenderPass(), descriptorSetLayout, shaderLoader);
+    spritePass.CreateGraphicsPipeline(
+            device, hdrTonemapPass.HdrRenderPass(), descriptorSetLayout, shaderLoader);
     CreateFramebuffers();
-    hdrTonemapPass_.CreateTonemapPipeline(
-            physicalDevice, device, presentRenderPass.vkPass, maxFramesInFlight, shaderLoader_);
-    screenSpaceEffectsPass_.CreatePipeline(physicalDevice, device, maxFramesInFlight, shaderLoader_);
+    hdrTonemapPass.CreateTonemapPipeline(
+            physicalDevice, device, presentRenderPass.vkPass, maxFramesInFlight, shaderLoader);
+    screenSpaceEffectsPass.CreatePipeline(physicalDevice, device, maxFramesInFlight, shaderLoader);
     for (std::uint32_t fi = 0; fi < maxFramesInFlight; ++fi) {
-        if (fi < uniformBuffers.GetSize() && hdrTonemapPass_.HasFlight(fi) && fi < sceneDepthResources.GetSize()) {
-            screenSpaceEffectsPass_.UpdateDescriptor(
+        if (fi < uniformBuffers.GetSize() && hdrTonemapPass.HasFlight(fi) && fi < sceneDepthResources.GetSize()) {
+            screenSpaceEffectsPass.UpdateDescriptor(
                     device,
                     fi,
                     uniformBuffers[fi],
-                    hdrTonemapPass_.Flight(fi),
-                    screenSpaceEffectsPass_.Flight(fi));
+                    hdrTonemapPass.Flight(fi),
+                    screenSpaceEffectsPass.Flight(fi));
         }
     }
 
@@ -357,7 +357,7 @@ void VulkanRenderer::RecreateSwapchain() {
 }
 
 void VulkanRenderer::CreateRenderPass() {
-    hdrTonemapPass_.CreateRenderPass(device, sceneDepthFormat);
+    hdrTonemapPass.CreateRenderPass(device, sceneDepthFormat);
     presentRenderPass.Create(device, presentSwapchain.imageFormat, VK_FORMAT_UNDEFINED);
 }
 
@@ -367,7 +367,7 @@ void VulkanRenderer::RecreateHdrFlightTargets() {
     for (std::size_t fi = 0; fi < maxFramesInFlight; ++fi) {
         depthViews[fi] = sceneDepthResources[fi].view;
     }
-    hdrTonemapPass_.RecreateFlightTargets(
+    hdrTonemapPass.RecreateFlightTargets(
             physicalDevice,
             device,
             presentSwapchain.extent,
@@ -407,11 +407,11 @@ void VulkanRenderer::RecordSceneCommandBuffer(
         throw std::runtime_error("vkBeginCommandBuffer failed");
     }
 
-    deferredUploadBatch_.Record(commandBuffer, device, sceneTextureUploader_, screenUi_);
-    customMeshPool_.RecordUploads(commandBuffer);
+    deferredUploadBatch.Record(commandBuffer, device, sceneTextureUploader, screenUi);
+    customMeshPool.RecordUploads(commandBuffer);
     RecordShadowMapPass(commandBuffer, frameIndex);
 
-    hdrTonemapPass_.BeginColorAttachmentBarrierIfNeeded(commandBuffer, frameIndex);
+    hdrTonemapPass.BeginColorAttachmentBarrierIfNeeded(commandBuffer, frameIndex);
 
     if (frameIndex < sceneDepthResources.GetSize()) {
         VulkanDepthResources& depth = sceneDepthResources[frameIndex];
@@ -453,13 +453,13 @@ void VulkanRenderer::RecordSceneCommandBuffer(
 
     VkRenderPassBeginInfo renderPassBeginInfo{};
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    if (!hdrTonemapPass_.HasFlight(frameIndex) ||
-        hdrTonemapPass_.Flight(frameIndex).framebuffer == VK_NULL_HANDLE) {
+    if (!hdrTonemapPass.HasFlight(frameIndex) ||
+        hdrTonemapPass.Flight(frameIndex).framebuffer == VK_NULL_HANDLE) {
         throw std::runtime_error("RecordSceneCommandBuffer: HDR framebuffer missing");
     }
 
-    renderPassBeginInfo.renderPass = hdrTonemapPass_.HdrRenderPass();
-    renderPassBeginInfo.framebuffer = hdrTonemapPass_.Flight(frameIndex).framebuffer;
+    renderPassBeginInfo.renderPass = hdrTonemapPass.HdrRenderPass();
+    renderPassBeginInfo.framebuffer = hdrTonemapPass.Flight(frameIndex).framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = presentSwapchain.extent;
     renderPassBeginInfo.clearValueCount = 2;
@@ -468,16 +468,16 @@ void VulkanRenderer::RecordSceneCommandBuffer(
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     if (frameIndex < descriptorSets.GetSize()) {
-        const VulkanCustomMeshPool::Bindings customMesh = customMeshPool_.GetBindings();
+        const VulkanCustomMeshPool::Bindings customMesh = customMeshPool.GetBindings();
         const VulkanSceneOpaqueRecordContext opaqueCtx{
                 .scene = &pendingScene,
                 .sceneParamsValid = sceneParamsValid,
                 .frameIndex = frameIndex,
                 .extent = presentSwapchain.extent,
-                .pipelineLit = scenePipeline_.PipelineLit(),
-                .pipelineSky = scenePipeline_.PipelineSky(),
-                .pipelineLitTransparent = scenePipeline_.PipelineLitTransparent(),
-                .pipelineLayout = scenePipeline_.PipelineLayout(),
+                .pipelineLit = scenePipeline.PipelineLit(),
+                .pipelineSky = scenePipeline.PipelineSky(),
+                .pipelineLitTransparent = scenePipeline.PipelineLitTransparent(),
+                .pipelineLayout = scenePipeline.PipelineLayout(),
                 .descriptorSet = descriptorSets[frameIndex],
                 .meshBindings =
                         {
@@ -495,8 +495,8 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                 .skinSsboMapped = &skinSsboMapped,
                 .maxSkinJoints = kMaxSkinJoints,
         };
-        sceneOpaquePass_.Record(commandBuffer, opaqueCtx);
-        sceneOpaquePass_.RecordTransparent(commandBuffer, opaqueCtx, customDrawPackedTransparent);
+        sceneOpaquePass.Record(commandBuffer, opaqueCtx);
+        sceneOpaquePass.RecordTransparent(commandBuffer, opaqueCtx, customDrawPackedTransparent);
     }
 
     if (sceneParamsValid && frameIndex < descriptorSets.GetSize()) {
@@ -522,36 +522,36 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                 .quadIndexCount = spriteQuadIndexCount,
                 .descriptorSet = descriptorSets[frameIndex],
         };
-        composite2DPass_.Record(commandBuffer, tilemapPass_, spritePass_, tilemapCtx, spriteCtx);
+        composite2DPass.Record(commandBuffer, tilemapPass, spritePass, tilemapCtx, spriteCtx);
     }
-    particlePass_.Record(commandBuffer, frameIndex, presentSwapchain.extent, pendingScene, sceneParamsValid);
+    particlePass.Record(commandBuffer, frameIndex, presentSwapchain.extent, pendingScene, sceneParamsValid);
 
     vkCmdEndRenderPass(commandBuffer);
 
-    hdrTonemapPass_.TransitionColorToShaderRead(commandBuffer, frameIndex);
+    hdrTonemapPass.TransitionColorToShaderRead(commandBuffer, frameIndex);
 
     const bool ssaoActive = sceneParamsValid && pendingScene.ssaoEnabled;
     if (ssaoActive && frameIndex < uniformBuffers.GetSize() && frameIndex < descriptorSets.GetSize() &&
-        hdrTonemapPass_.HasFlight(frameIndex) && screenSpaceEffectsPass_.HasFlight(frameIndex)) {
-        screenSpaceEffectsPass_.UpdateDescriptor(
+        hdrTonemapPass.HasFlight(frameIndex) && screenSpaceEffectsPass.HasFlight(frameIndex)) {
+        screenSpaceEffectsPass.UpdateDescriptor(
                 device,
                 frameIndex,
                 uniformBuffers[frameIndex],
-                hdrTonemapPass_.Flight(frameIndex),
-                screenSpaceEffectsPass_.Flight(frameIndex));
-        screenSpaceEffectsPass_.Record(
+                hdrTonemapPass.Flight(frameIndex),
+                screenSpaceEffectsPass.Flight(frameIndex));
+        screenSpaceEffectsPass.Record(
                 commandBuffer,
                 frameIndex,
                 presentSwapchain.extent,
                 sceneDepthResources[frameIndex],
                 pendingScene);
-        hdrTonemapPass_.UpdateTonemapDescriptor(
-                device, frameIndex, screenSpaceEffectsPass_.OutputView(frameIndex));
+        hdrTonemapPass.UpdateTonemapDescriptor(
+                device, frameIndex, screenSpaceEffectsPass.OutputView(frameIndex));
     } else {
-        hdrTonemapPass_.UpdateTonemapDescriptor(device, frameIndex);
+        hdrTonemapPass.UpdateTonemapDescriptor(device, frameIndex);
     }
 
-    hdrTonemapPass_.RecordTonemap(
+    hdrTonemapPass.RecordTonemap(
             commandBuffer,
             imageIndex,
             frameIndex,
@@ -559,7 +559,7 @@ void VulkanRenderer::RecordSceneCommandBuffer(
             presentSwapchain.extent,
             presentationFramebuffers,
             resolvedLighting.exposure);
-    screenUi_.Record(
+    screenUi.Record(
             commandBuffer,
             frameIndex,
             presentSwapchain.extent,
@@ -569,11 +569,11 @@ void VulkanRenderer::RecordSceneCommandBuffer(
     vkCmdEndRenderPass(commandBuffer);
 
     if (imageIndex < presentSwapchain.images.GetSize()) {
-        screenshotCapture_.RecordCopyFromSwapchain(
+        screenshotCapture.RecordCopyFromSwapchain(
                 commandBuffer,
                 presentSwapchain.images[imageIndex],
                 presentSwapchain.extent);
-        videoCapture_.RecordCopyFromSwapchain(
+        videoCapture.RecordCopyFromSwapchain(
                 commandBuffer,
                 presentSwapchain.images[imageIndex],
                 presentSwapchain.extent);
@@ -659,8 +659,8 @@ void VulkanRenderer::NotifySwapchainResize() {
 
 void VulkanRenderer::DrawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-    customMeshPool_.ReleaseRetiredBuffers(submittedFrameCounter_);
-    screenUi_.ReleaseRetiredFontAtlases(device, submittedFrameCounter_);
+    customMeshPool.ReleaseRetiredBuffers(submittedFrameCounter);
+    screenUi.ReleaseRetiredFontAtlases(device, submittedFrameCounter);
 
     std::uint32_t imageIndex = 0;
     VkResult acquireResult = vkAcquireNextImageKHR(
@@ -684,27 +684,27 @@ void VulkanRenderer::DrawFrame() {
     }
     imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
-    if (deferredUploadBatch_.NeedsSceneTextureGpuIdle(sceneTextureUploader_, pendingScene, sceneParamsValid)) {
+    if (deferredUploadBatch.NeedsSceneTextureGpuIdle(sceneTextureUploader, pendingScene, sceneParamsValid)) {
         WaitAllFramesComplete();
     }
 
-    deferredUploadBatch_.Prepare(
-            sceneTextureUploader_,
-            screenUi_,
+    deferredUploadBatch.Prepare(
+            sceneTextureUploader,
+            screenUi,
             physicalDevice,
             device,
             pendingScene,
             sceneParamsValid,
-            submittedFrameCounter_,
+            submittedFrameCounter,
             maxFramesInFlight);
 
-    customMeshPool_.UpdateFromScene(pendingScene, submittedFrameCounter_, maxFramesInFlight);
-    customMeshPool_.FillCustomDrawPacked(pendingScene, customDrawPacked, customDrawPackedTransparent);
-    ++submittedFrameCounter_;
+    customMeshPool.UpdateFromScene(pendingScene, submittedFrameCounter, maxFramesInFlight);
+    customMeshPool.FillCustomDrawPacked(pendingScene, customDrawPacked, customDrawPackedTransparent);
+    ++submittedFrameCounter;
 
     vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
-    hdrTonemapPass_.UpdateTonemapDescriptor(device, currentFrame);
+    hdrTonemapPass.UpdateTonemapDescriptor(device, currentFrame);
     WriteUniformBuffer(currentFrame);
 
     if (vkResetCommandBuffer(commandBuffers[imageIndex], 0) != VK_SUCCESS) {
@@ -729,16 +729,16 @@ void VulkanRenderer::DrawFrame() {
         throw std::runtime_error("vkQueueSubmit failed");
     }
 
-    if (screenshotCapture_.HasPendingCapture() || videoCapture_.IsRecording()) {
+    if (screenshotCapture.HasPendingCapture() || videoCapture.IsRecording()) {
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-        screenshotCapture_.TrySavePendingPng();
-        if (videoCapture_.IsRecording()) {
+        screenshotCapture.TrySavePendingPng();
+        if (videoCapture.IsRecording()) {
             double ptsSeconds = 0.0;
-            if (recordingWallClockValid_) {
+            if (recordingWallClockValid) {
                 const auto now = std::chrono::steady_clock::now();
-                ptsSeconds = std::chrono::duration<double>(now - recordingWallStart_).count();
+                ptsSeconds = std::chrono::duration<double>(now - recordingWallStart).count();
             }
-            videoCapture_.TryCommitFrameAfterFence(ptsSeconds);
+            videoCapture.TryCommitFrameAfterFence(ptsSeconds);
         }
     }
 
@@ -763,11 +763,11 @@ void VulkanRenderer::DrawFrame() {
 }
 
 void VulkanRenderer::RequestScreenshotSave(const char* pathUtf8) {
-    screenshotCapture_.RequestSave(pathUtf8);
+    screenshotCapture.RequestSave(pathUtf8);
 }
 
 bool VulkanRenderer::BeginVideoRecording(const VideoRecordingSettings& settings) {
-    if (videoCapture_.IsRecording()) {
+    if (videoCapture.IsRecording()) {
         return false;
     }
     auto recorder = VideoRecorder::Create();
@@ -775,25 +775,25 @@ bool VulkanRenderer::BeginVideoRecording(const VideoRecordingSettings& settings)
         return false;
     }
     const VkExtent2D extent = presentSwapchain.extent;
-    if (!videoCapture_.BeginRecording(MoveTemp(recorder), settings, extent)) {
+    if (!videoCapture.BeginRecording(MoveTemp(recorder), settings, extent)) {
         return false;
     }
-    recordingWallStart_ = std::chrono::steady_clock::now();
-    recordingWallClockValid_ = true;
+    recordingWallStart = std::chrono::steady_clock::now();
+    recordingWallClockValid = true;
     return true;
 }
 
 void VulkanRenderer::EndVideoRecording() {
-    videoCapture_.EndRecording();
-    recordingWallClockValid_ = false;
+    videoCapture.EndRecording();
+    recordingWallClockValid = false;
 }
 
 bool VulkanRenderer::IsVideoRecording() const {
-    return videoCapture_.IsRecording();
+    return videoCapture.IsRecording();
 }
 
 VideoRecorder* VulkanRenderer::GetActiveVideoRecorder() {
-    return videoCapture_.GetRecorder();
+    return videoCapture.GetRecorder();
 }
 
 void VulkanRenderer::SetSceneRenderParams(const SceneRenderParams& params) {
@@ -851,8 +851,8 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    directionalShadow_.DestroyGraphicsPipeline(device);
-    punctualShadow_.DestroyGraphicsPipeline(device);
+    directionalShadow.DestroyGraphicsPipeline(device);
+    punctualShadow.DestroyGraphicsPipeline(device);
     for (std::size_t i = 0; i < uniformBuffers.GetSize(); ++i) {
         if (uniformBuffersMapped[i] != nullptr) {
             vkUnmapMemory(device, uniformBuffersMemory[i]);
@@ -885,9 +885,9 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
     skinSsboMemory.Clear();
     skinSsboMapped.Clear();
 
-    clusteredForwardLights_.DestroyBuffers(device);
-    screenshotCapture_.Destroy(device);
-    videoCapture_.Destroy(device);
+    clusteredForwardLights.DestroyBuffers(device);
+    screenshotCapture.Destroy(device);
+    videoCapture.Destroy(device);
 
     descriptorSets.Clear();
     if (descriptorPool != VK_NULL_HANDLE) {
@@ -899,10 +899,10 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
         descriptorSetLayout = VK_NULL_HANDLE;
     }
 
-    sceneTextureUploader_.DestroyResources(device);
-    customMeshPool_.DestroyResources(device);
-    directionalShadow_.DestroyResources(device);
-    punctualShadow_.DestroyResources(device);
+    sceneTextureUploader.DestroyResources(device);
+    customMeshPool.DestroyResources(device);
+    directionalShadow.DestroyResources(device);
+    punctualShadow.DestroyResources(device);
 
     customDrawPacked.Clear();
     customDrawPackedTransparent.Clear();
@@ -924,13 +924,13 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
         indexBufferMemory = VK_NULL_HANDLE;
     }
 
-    particlePass_.DestroyGraphicsPipeline(device);
-    tilemapPass_.DestroyGraphicsPipeline(device);
-    spritePass_.DestroyGraphicsPipeline(device);
-    screenUi_.DestroyPipelines(device);
-    particlePass_.DestroyGpuResources(device);
-    spritePass_.DestroyGpuResources(device);
-    screenUi_.DestroyResources(device);
+    particlePass.DestroyGraphicsPipeline(device);
+    tilemapPass.DestroyGraphicsPipeline(device);
+    spritePass.DestroyGraphicsPipeline(device);
+    screenUi.DestroyPipelines(device);
+    particlePass.DestroyGpuResources(device);
+    spritePass.DestroyGpuResources(device);
+    screenUi.DestroyResources(device);
 }
 
 
@@ -1089,8 +1089,8 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
 
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = sceneTextureUploader_.ArrayView();
-        imageInfo.sampler = sceneTextureUploader_.Sampler();
+        imageInfo.imageView = sceneTextureUploader.ArrayView();
+        imageInfo.sampler = sceneTextureUploader.Sampler();
 
         VkWriteDescriptorSet texWrite{};
         texWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1116,7 +1116,7 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
         skinWrite.pBufferInfo = &skinInfo;
 
         VkDescriptorBufferInfo lightsInfo{};
-        lightsInfo.buffer = clusteredForwardLights_.LightsBuffer(static_cast<std::uint32_t>(i));
+        lightsInfo.buffer = clusteredForwardLights.LightsBuffer(static_cast<std::uint32_t>(i));
         lightsInfo.offset = 0;
         lightsInfo.range = kClusterLightsGpuBytes;
 
@@ -1130,7 +1130,7 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
         lightsWrite.pBufferInfo = &lightsInfo;
 
         VkDescriptorBufferInfo clusterInfo{};
-        clusterInfo.buffer = clusteredForwardLights_.ClusterBuffer(static_cast<std::uint32_t>(i));
+        clusterInfo.buffer = clusteredForwardLights.ClusterBuffer(static_cast<std::uint32_t>(i));
         clusterInfo.offset = 0;
         clusterInfo.range = kClusterGridGpuBytes;
 
@@ -1144,7 +1144,7 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
         clusterWrite.pBufferInfo = &clusterInfo;
 
         VkDescriptorBufferInfo punctualSsboInfo{};
-        punctualSsboInfo.buffer = punctualShadow_.SsboBuffer(static_cast<std::uint32_t>(i));
+        punctualSsboInfo.buffer = punctualShadow.SsboBuffer(static_cast<std::uint32_t>(i));
         punctualSsboInfo.offset = 0;
         punctualSsboInfo.range = kPunctualShadowGpuBytes;
 
@@ -1158,7 +1158,7 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
         punctualSsboWrite.pBufferInfo = &punctualSsboInfo;
 
         VkDescriptorBufferInfo spriteInstanceInfo{};
-        spriteInstanceInfo.buffer = spritePass_.InstanceBuffer(static_cast<std::uint32_t>(i));
+        spriteInstanceInfo.buffer = spritePass.InstanceBuffer(static_cast<std::uint32_t>(i));
         spriteInstanceInfo.offset = 0;
         spriteInstanceInfo.range = static_cast<VkDeviceSize>(kQuadInstanceSsboBytes);
 
@@ -1172,15 +1172,15 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
         spriteInstanceWrite.pBufferInfo = &spriteInstanceInfo;
 
         const std::size_t shadowFlight = i;
-        const bool hasSunShadow = directionalShadow_.HasFlightDepthView(static_cast<std::uint32_t>(shadowFlight));
-        const bool hasPunctualShadow = punctualShadow_.HasFlightResources(static_cast<std::uint32_t>(shadowFlight));
+        const bool hasSunShadow = directionalShadow.HasFlightDepthView(static_cast<std::uint32_t>(shadowFlight));
+        const bool hasPunctualShadow = punctualShadow.HasFlightResources(static_cast<std::uint32_t>(shadowFlight));
 
         VkDescriptorImageInfo sunShadowInfo{};
         VkWriteDescriptorSet sunShadowWrite{};
         if (hasSunShadow) {
             sunShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-            sunShadowInfo.imageView = directionalShadow_.Flight(static_cast<std::uint32_t>(shadowFlight)).depthView;
-            sunShadowInfo.sampler = directionalShadow_.CompareSampler();
+            sunShadowInfo.imageView = directionalShadow.Flight(static_cast<std::uint32_t>(shadowFlight)).depthView;
+            sunShadowInfo.sampler = directionalShadow.CompareSampler();
             sunShadowWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             sunShadowWrite.dstSet = descriptorSets[i];
             sunShadowWrite.dstBinding = 3;
@@ -1196,10 +1196,10 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
         VkWriteDescriptorSet pointShadowWrite{};
         if (hasPunctualShadow) {
             const VulkanPunctualShadowPass::FlightTarget& pf =
-                    punctualShadow_.Flight(static_cast<std::uint32_t>(shadowFlight));
+                    punctualShadow.Flight(static_cast<std::uint32_t>(shadowFlight));
             spotShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             spotShadowInfo.imageView = pf.spot.depthView;
-            spotShadowInfo.sampler = punctualShadow_.CompareSampler();
+            spotShadowInfo.sampler = punctualShadow.CompareSampler();
             spotShadowWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             spotShadowWrite.dstSet = descriptorSets[i];
             spotShadowWrite.dstBinding = 7;
@@ -1210,7 +1210,7 @@ void VulkanRenderer::CreateDescriptorPoolAndSets() {
 
             pointShadowInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             pointShadowInfo.imageView = pf.point.depthArrayView;
-            pointShadowInfo.sampler = punctualShadow_.CompareSampler();
+            pointShadowInfo.sampler = punctualShadow.CompareSampler();
             pointShadowWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             pointShadowWrite.dstSet = descriptorSets[i];
             pointShadowWrite.dstBinding = 8;
@@ -1388,27 +1388,27 @@ void VulkanRenderer::CreateSceneGeometry() {
 
 void VulkanRenderer::CreatePersistentSceneResources() {
     CreateDescriptorSetLayout();
-    sceneTextureUploader_.CreateResources(physicalDevice, device, commandPool, graphicsQueue);
-    customMeshPool_.CreateResources(physicalDevice, device);
-    directionalShadow_.CreateResources(physicalDevice, device, maxFramesInFlight);
-    directionalShadow_.CreateGraphicsPipeline(device, descriptorSetLayout, shaderLoader_);
-    punctualShadow_.CreateResources(physicalDevice, device, maxFramesInFlight);
-    punctualShadow_.CreateGraphicsPipeline(device, descriptorSetLayout, shaderLoader_);
+    sceneTextureUploader.CreateResources(physicalDevice, device, commandPool, graphicsQueue);
+    customMeshPool.CreateResources(physicalDevice, device);
+    directionalShadow.CreateResources(physicalDevice, device, maxFramesInFlight);
+    directionalShadow.CreateGraphicsPipeline(device, descriptorSetLayout, shaderLoader);
+    punctualShadow.CreateResources(physicalDevice, device, maxFramesInFlight);
+    punctualShadow.CreateGraphicsPipeline(device, descriptorSetLayout, shaderLoader);
     CreateUniformBuffers();
     CreateSkinSsboBuffers();
-    clusteredForwardLights_.CreateBuffers(physicalDevice, device, maxFramesInFlight);
-    spritePass_.CreateGpuResources(physicalDevice, device, maxFramesInFlight);
+    clusteredForwardLights.CreateBuffers(physicalDevice, device, maxFramesInFlight);
+    spritePass.CreateGpuResources(physicalDevice, device, maxFramesInFlight);
     CreateDescriptorPoolAndSets();
     CreateSceneGeometry();
-    screenUi_.CreateResources(physicalDevice, device, maxFramesInFlight, shaderLoader_);
-    particlePass_.CreateGpuResources(physicalDevice, device, maxFramesInFlight, shaderLoader_);
+    screenUi.CreateResources(physicalDevice, device, maxFramesInFlight, shaderLoader);
+    particlePass.CreateGpuResources(physicalDevice, device, maxFramesInFlight, shaderLoader);
 }
 
 void VulkanRenderer::RecordShadowMapPass(VkCommandBuffer commandBuffer, std::uint32_t frameIndex) {
     if (frameIndex >= descriptorSets.GetSize()) {
         return;
     }
-    const VulkanCustomMeshPool::Bindings customMesh = customMeshPool_.GetBindings();
+    const VulkanCustomMeshPool::Bindings customMesh = customMeshPool.GetBindings();
     VulkanShadowRecordContext ctx{};
     ctx.scene = &pendingScene;
     ctx.sceneParamsValid = sceneParamsValid;
@@ -1425,8 +1425,8 @@ void VulkanRenderer::RecordShadowMapPass(VkCommandBuffer commandBuffer, std::uin
     ctx.skinSsboMapped = &skinSsboMapped;
     ctx.descriptorSet = descriptorSets[frameIndex];
     ctx.maxSkinJoints = kMaxSkinJoints;
-    punctualShadow_.Record(commandBuffer, frameIndex, ctx, punctualShadowFrameState_);
-    directionalShadow_.Record(commandBuffer, frameIndex, ctx, shadowFrameState_);
+    punctualShadow.Record(commandBuffer, frameIndex, ctx, punctualShadowFrameState);
+    directionalShadow.Record(commandBuffer, frameIndex, ctx, shadowFrameState);
 }
 
 void VulkanRenderer::WriteUniformBuffer(std::uint32_t frameIndex) {
@@ -1434,20 +1434,20 @@ void VulkanRenderer::WriteUniformBuffer(std::uint32_t frameIndex) {
         uniformBuffersMapped[frameIndex] == nullptr) {
         return;
     }
-    punctualShadow_.PrepareAndUpload(frameIndex, pendingScene, resolvedLighting, punctualShadowFrameState_);
-    clusteredForwardLights_.BuildAndUpload(
+    punctualShadow.PrepareAndUpload(frameIndex, pendingScene, resolvedLighting, punctualShadowFrameState);
+    clusteredForwardLights.BuildAndUpload(
             frameIndex,
             pendingScene,
             resolvedLighting,
             presentSwapchain.extent);
-    sceneUniformWriter_.Write(
+    sceneUniformWriter.Write(
             uniformBuffersMapped[frameIndex],
             pendingScene,
             resolvedLighting,
             presentSwapchain.extent,
-            directionalShadow_,
+            directionalShadow,
             frameIndex,
-            shadowFrameState_);
+            shadowFrameState);
 }
 
 }  // namespace Spark

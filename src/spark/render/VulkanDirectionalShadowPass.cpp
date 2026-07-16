@@ -13,24 +13,24 @@
 namespace Spark {
 
 bool VulkanDirectionalShadowPass::HasFlightDepthView(const std::uint32_t frameIndex) const noexcept {
-    return frameIndex < flights_.GetSize() && flights_[frameIndex].depthView != VK_NULL_HANDLE;
+    return frameIndex < flights.GetSize() && flights[frameIndex].depthView != VK_NULL_HANDLE;
 }
 
 void VulkanDirectionalShadowPass::DestroyGraphicsPipeline(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (pipeline_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipeline_, nullptr);
-        pipeline_ = VK_NULL_HANDLE;
+    if (pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipeline, nullptr);
+        pipeline = VK_NULL_HANDLE;
     }
-    if (pipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
-        pipelineLayout_ = VK_NULL_HANDLE;
+    if (pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        pipelineLayout = VK_NULL_HANDLE;
     }
-    if (vertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, vertModule_, nullptr);
-        vertModule_ = VK_NULL_HANDLE;
+    if (vertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertModule, nullptr);
+        vertModule = VK_NULL_HANDLE;
     }
 }
 
@@ -38,8 +38,8 @@ void VulkanDirectionalShadowPass::DestroyResources(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    for (std::size_t fi = 0; fi < flights_.GetSize(); ++fi) {
-        FlightTarget& sh = flights_[fi];
+    for (std::size_t fi = 0; fi < flights.GetSize(); ++fi) {
+        FlightTarget& sh = flights[fi];
         if (sh.framebuffer != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(device, sh.framebuffer, nullptr);
             sh.framebuffer = VK_NULL_HANDLE;
@@ -58,14 +58,14 @@ void VulkanDirectionalShadowPass::DestroyResources(const VkDevice device) {
         }
         sh.depthLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    flights_.Clear();
-    if (renderPass_ != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(device, renderPass_, nullptr);
-        renderPass_ = VK_NULL_HANDLE;
+    flights.Clear();
+    if (renderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        renderPass = VK_NULL_HANDLE;
     }
-    if (compareSampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, compareSampler_, nullptr);
-        compareSampler_ = VK_NULL_HANDLE;
+    if (compareSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, compareSampler, nullptr);
+        compareSampler = VK_NULL_HANDLE;
     }
 }
 
@@ -97,7 +97,7 @@ void VulkanDirectionalShadowPass::CreateResources(
     samplerInfo.maxLod = 1.0F;
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
     samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    if (vkCreateSampler(device, &samplerInfo, nullptr, &compareSampler_) != VK_SUCCESS) {
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &compareSampler) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateSampler (shadow compare) failed");
     }
 
@@ -135,13 +135,13 @@ void VulkanDirectionalShadowPass::CreateResources(
     rpInfo.pSubpasses = &subpass;
     rpInfo.dependencyCount = 1;
     rpInfo.pDependencies = &dep0;
-    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass_) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateRenderPass (shadow) failed");
     }
 
-    flights_.Resize(framesInFlight);
+    flights.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
-        FlightTarget& sh = flights_[fi];
+        FlightTarget& sh = flights[fi];
         VulkanRendererGpu::CreateImage(
                 physicalDevice,
                 device,
@@ -171,7 +171,7 @@ void VulkanDirectionalShadowPass::CreateResources(
 
         VkFramebufferCreateInfo fbInfo{};
         fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        fbInfo.renderPass = renderPass_;
+        fbInfo.renderPass = renderPass;
         fbInfo.attachmentCount = 1;
         fbInfo.pAttachments = &sh.depthView;
         fbInfo.width = kMapSize;
@@ -188,18 +188,18 @@ void VulkanDirectionalShadowPass::CreateGraphicsPipeline(
         const VkDescriptorSetLayout sceneDescriptorSetLayout,
         const VulkanSpvShaderLoader& shaders) {
     static_assert(sizeof(VulkanShadowPushConstants) == 144);
-    if (device == VK_NULL_HANDLE || renderPass_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE || renderPass == VK_NULL_HANDLE) {
         return;
     }
     DestroyGraphicsPipeline(device);
 
     const Array<char> vertCode = shaders.ReadSpvFile("shadow_depth.vert.spv");
-    vertModule_ = shaders.CreateShaderModule(vertCode);
+    vertModule = shaders.CreateShaderModule(vertCode);
 
     VkPipelineShaderStageCreateInfo vertStage{};
     vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertStage.module = vertModule_;
+    vertStage.module = vertModule;
     vertStage.pName = "main";
 
     using VL = VulkanSceneVertexLayout;
@@ -302,7 +302,7 @@ void VulkanDirectionalShadowPass::CreateGraphicsPipeline(
     plInfo.pSetLayouts = &sceneDescriptorSetLayout;
     plInfo.pushConstantRangeCount = 1;
     plInfo.pPushConstantRanges = &pcRange;
-    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (shadow) failed");
     }
 
@@ -318,11 +318,11 @@ void VulkanDirectionalShadowPass::CreateGraphicsPipeline(
     pipelineCreateInfo.pDepthStencilState = &depthStencil;
     pipelineCreateInfo.pColorBlendState = &colorBlending;
     pipelineCreateInfo.pDynamicState = &dynamicState;
-    pipelineCreateInfo.layout = pipelineLayout_;
-    pipelineCreateInfo.renderPass = renderPass_;
+    pipelineCreateInfo.layout = pipelineLayout;
+    pipelineCreateInfo.renderPass = renderPass;
     pipelineCreateInfo.subpass = 0;
 
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline_) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateGraphicsPipelines (shadow) failed");
     }
 }
@@ -366,15 +366,15 @@ void VulkanDirectionalShadowPass::Record(
         const std::uint32_t frameIndex,
         const VulkanShadowRecordContext& ctx,
         const VulkanDirectionalShadowFrameState& frameState) {
-    if (pipeline_ == VK_NULL_HANDLE || renderPass_ == VK_NULL_HANDLE || frameIndex >= flights_.GetSize()) {
+    if (pipeline == VK_NULL_HANDLE || renderPass == VK_NULL_HANDLE || frameIndex >= flights.GetSize()) {
         return;
     }
 
-    FlightTarget& shadowFlight = flights_[frameIndex];
+    FlightTarget& shadowFlight = flights[frameIndex];
     EnsureDepthImageReadable(commandBuffer, shadowFlight);
 
-    if (!frameState.active || flights_[frameIndex].framebuffer == VK_NULL_HANDLE ||
-        flights_[frameIndex].depthImage == VK_NULL_HANDLE || !ctx.sceneParamsValid || ctx.vertexBuffer == VK_NULL_HANDLE ||
+    if (!frameState.active || flights[frameIndex].framebuffer == VK_NULL_HANDLE ||
+        flights[frameIndex].depthImage == VK_NULL_HANDLE || !ctx.sceneParamsValid || ctx.vertexBuffer == VK_NULL_HANDLE ||
         ctx.indexBuffer == VK_NULL_HANDLE || ctx.descriptorSet == VK_NULL_HANDLE || ctx.scene == nullptr) {
         return;
     }
@@ -426,7 +426,7 @@ void VulkanDirectionalShadowPass::Record(
 
     VkRenderPassBeginInfo rpBegin{};
     rpBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rpBegin.renderPass = renderPass_;
+    rpBegin.renderPass = renderPass;
     rpBegin.framebuffer = shadowFlight.framebuffer;
     rpBegin.renderArea.offset = {0, 0};
     rpBegin.renderArea.extent.width = kMapSize;
@@ -435,12 +435,12 @@ void VulkanDirectionalShadowPass::Record(
     rpBegin.pClearValues = &clearDepth;
 
     vkCmdBeginRenderPass(commandBuffer, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout_,
+            pipelineLayout,
             0,
             1,
             &ctx.descriptorSet,
@@ -471,8 +471,8 @@ void VulkanDirectionalShadowPass::Record(
 
         RecordShadowCastMeshes(
                 commandBuffer,
-                pipeline_,
-                pipelineLayout_,
+                pipeline,
+                pipelineLayout,
                 ctx,
                 frameState.worldToShadowClip[cascade].m,
                 frameIndex);

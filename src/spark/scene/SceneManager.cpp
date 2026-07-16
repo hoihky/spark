@@ -9,8 +9,8 @@
 
 namespace Spark {
 
-SceneManager::SceneManager(GameWorld& world) : world_(world) {
-    assetLoader_.Start();
+SceneManager::SceneManager(GameWorld& world) : world(world) {
+    assetLoader.Start();
 }
 
 void SceneManager::OnDeferredComponentStatic(
@@ -37,18 +37,18 @@ void SceneManager::TagSubtreeSceneInstance(GameObject* root, const SceneInstance
 }
 
 SceneManager::LoadedSceneInstance* SceneManager::FindInstance(const SceneInstanceId id) noexcept {
-    for (std::size_t i = 0; i < instances_.GetSize(); ++i) {
-        if (instances_[i].id == id) {
-            return &instances_[i];
+    for (std::size_t i = 0; i < instances.GetSize(); ++i) {
+        if (instances[i].id == id) {
+            return &instances[i];
         }
     }
     return nullptr;
 }
 
 const SceneManager::LoadedSceneInstance* SceneManager::FindInstance(const SceneInstanceId id) const noexcept {
-    for (std::size_t i = 0; i < instances_.GetSize(); ++i) {
-        if (instances_[i].id == id) {
-            return &instances_[i];
+    for (std::size_t i = 0; i < instances.GetSize(); ++i) {
+        if (instances[i].id == id) {
+            return &instances[i];
         }
     }
     return nullptr;
@@ -61,7 +61,7 @@ void SceneManager::RetryPendingComponents(LoadedSceneInstance& instance) {
     SceneApplyContext ctx{};
     ctx.assetsRoot = instance.options.assetsRoot;
     ctx.sceneInstanceId = instance.id;
-    ctx.assetLoader = &assetLoader_;
+    ctx.assetLoader = &assetLoader;
     ctx.onDeferredComponent = nullptr;
 
     Array<PendingComponentRestore> stillPending;
@@ -75,7 +75,7 @@ void SceneManager::RetryPendingComponents(LoadedSceneInstance& instance) {
         if (handler == nullptr) {
             continue;
         }
-        if (handler->TryRestore(*pending.object, pending.record, world_, ctx)) {
+        if (handler->TryRestore(*pending.object, pending.record, world, ctx)) {
             continue;
         }
         if (std::strcmp(pending.record.kind.CStr(), "skinned_mesh") != 0) {
@@ -105,12 +105,12 @@ void SceneManager::ApplyDocumentInstance(
     ctx.assetsRoot = options.assetsRoot != nullptr && options.assetsRoot[0] != '\0' ? options.assetsRoot
                     : (!document.header.assetsRoot.IsEmpty() ? document.header.assetsRoot.CStr() : nullptr);
     ctx.sceneInstanceId = instance.id;
-    ctx.assetLoader = &assetLoader_;
+    ctx.assetLoader = &assetLoader;
     ctx.onDeferredComponent = OnDeferredComponentStatic;
     ctx.deferredUserData = &instance;
 
     HashMap<std::uint64_t, GameObject*> idMap;
-    if (!deserializer.Apply(document, world_, ctx, &idMap)) {
+    if (!deserializer.Apply(document, world, ctx, &idMap)) {
         instance.failed = true;
         return;
     }
@@ -145,8 +145,8 @@ SceneInstanceId SceneManager::BeginLoadSceneInternal(
         instance.options.assetsRoot = document.header.assetsRoot.CStr();
     }
     ApplyDocumentInstance(document, instance, options);
-    instances_.PushBack(MoveTemp(instance));
-    return instances_.GetLast().id;
+    instances.PushBack(MoveTemp(instance));
+    return instances.GetLast().id;
 }
 
 SceneInstanceId SceneManager::LoadSceneFromFile(const char* path, const SceneLoadOptions& options) {
@@ -203,9 +203,9 @@ SceneInstanceId SceneManager::BeginLoadSceneAsync(
 }
 
 void SceneManager::Pump() {
-    assetLoader_.Pump(world_);
-    for (std::size_t i = 0; i < instances_.GetSize(); ++i) {
-        LoadedSceneInstance& instance = instances_[i];
+    assetLoader.Pump(world);
+    for (std::size_t i = 0; i < instances.GetSize(); ++i) {
+        LoadedSceneInstance& instance = instances[i];
         if (instance.ready || instance.failed) {
             continue;
         }
@@ -235,20 +235,20 @@ void SceneManager::UnloadScene(const SceneInstanceId instanceId) {
     Array<GameObject*> roots = instance->rootObjects;
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
         if (roots[i] != nullptr) {
-            world_.DestroyGameObject(roots[i]);
+            world.DestroyGameObject(roots[i]);
         }
     }
-    for (std::size_t i = 0; i < instances_.GetSize(); ++i) {
-        if (instances_[i].id == instanceId) {
-            instances_.RemoveAt(i);
+    for (std::size_t i = 0; i < instances.GetSize(); ++i) {
+        if (instances[i].id == instanceId) {
+            instances.RemoveAt(i);
             break;
         }
     }
 }
 
 void SceneManager::UnloadAllScenes() {
-    while (!instances_.IsEmpty()) {
-        const SceneInstanceId id = instances_.GetLast().id;
+    while (!instances.IsEmpty()) {
+        const SceneInstanceId id = instances.GetLast().id;
         UnloadScene(id);
     }
 }

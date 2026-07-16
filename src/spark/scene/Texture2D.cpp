@@ -21,7 +21,7 @@ void Texture2D::RefreshContentFingerprint() noexcept {
     if (!rgba.IsEmpty()) {
         h = Fnv64HashBytes(h, rgba.GetData(), rgba.GetSize());
     }
-    contentFingerprint_ = h;
+    contentFingerprint = h;
 }
 
 void Texture2D::SetPixels(std::uint32_t w, std::uint32_t h, Array<std::uint8_t> bytes) {

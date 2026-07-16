@@ -16,40 +16,40 @@ HierarchyPanel::HierarchyPanel() {
     auto stack = MakeUnique<Gui::StackPanel>();
     stack->SetSpacing(4.0F);
 
-    auto tree = MakeUnique<Gui::TreeView>();
-    tree->SetRowHeight(26.0F);
-    tree->SetItemFontSize(18.0F);
-    tree->SetOnSelectionChanged([this](const int nodeId) { OnTreeSelection(nodeId); });
-    tree_ = tree.Get();
-    stack->AddChild(MoveTemp(tree));
+    auto treeUp = MakeUnique<Gui::TreeView>();
+    treeUp->SetRowHeight(26.0F);
+    treeUp->SetItemFontSize(18.0F);
+    treeUp->SetOnSelectionChanged([this](const int nodeId) { OnTreeSelection(nodeId); });
+    tree = treeUp.Get();
+    stack->AddChild(MoveTemp(treeUp));
 
     shell->AddChild(MoveTemp(stack));
-    root_.Reset(shell.Release());
+    root.Reset(shell.Release());
 }
 
 void HierarchyPanel::OnAttach(EditorContext& ctx) {
-    world_ = ctx.world;
-    selection_ = ctx.selection;
-    statusLine_ = &ctx.statusLine;
-    needsTreeRebuild_ = true;
+    world = ctx.world;
+    selection = ctx.selection;
+    statusLine = &ctx.statusLine;
+    needsTreeRebuild = true;
 }
 
 void HierarchyPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*/) {
-    if (tree_ == nullptr || world_ == nullptr) {
+    if (tree == nullptr || world == nullptr) {
         return;
     }
     const std::uint32_t revision = ComputeSceneRevision();
-    if (!needsTreeRebuild_ && revision == sceneRevision_) {
+    if (!needsTreeRebuild && revision == sceneRevision) {
         return;
     }
     RebuildTree();
-    needsTreeRebuild_ = false;
-    sceneRevision_ = revision;
+    needsTreeRebuild = false;
+    sceneRevision = revision;
 }
 
 std::uint32_t HierarchyPanel::ComputeSceneRevision() const noexcept {
     std::uint32_t rev = 0;
-    world_->ForEachGameObject([&](GameObject* obj) {
+    world->ForEachGameObject([&](GameObject* obj) {
         if (obj == nullptr) {
             return;
         }
@@ -68,11 +68,11 @@ std::uint32_t HierarchyPanel::ComputeSceneRevision() const noexcept {
 }
 
 void HierarchyPanel::RebuildTree() {
-    tree_->Clear();
-    nodeObjects_.Clear();
+    tree->Clear();
+    nodeObjects.Clear();
 
     Array<GameObject*> allObjects;
-    world_->ForEachGameObject([&](GameObject* obj) {
+    world->ForEachGameObject([&](GameObject* obj) {
         if (obj == nullptr) {
             return;
         }
@@ -115,13 +115,13 @@ void HierarchyPanel::RebuildTree() {
                 }
                 parentNode = objectToNode[static_cast<std::size_t>(parentIdx)];
             }
-            const int nodeId = tree_->AddItem(parentNode, obj->GetName());
+            const int nodeId = tree->AddItem(parentNode, obj->GetName());
             if (nodeId >= 0) {
                 objectToNode[i] = nodeId;
-                while (static_cast<std::size_t>(nodeId) >= nodeObjects_.GetSize()) {
-                    nodeObjects_.PushBack(nullptr);
+                while (static_cast<std::size_t>(nodeId) >= nodeObjects.GetSize()) {
+                    nodeObjects.PushBack(nullptr);
                 }
-                nodeObjects_[static_cast<std::size_t>(nodeId)] = obj;
+                nodeObjects[static_cast<std::size_t>(nodeId)] = obj;
                 progress = true;
             }
         }
@@ -129,13 +129,13 @@ void HierarchyPanel::RebuildTree() {
 }
 
 void HierarchyPanel::OnTreeSelection(const int nodeId) {
-    if (selection_ == nullptr || nodeId < 0 || static_cast<std::size_t>(nodeId) >= nodeObjects_.GetSize()) {
+    if (selection == nullptr || nodeId < 0 || static_cast<std::size_t>(nodeId) >= nodeObjects.GetSize()) {
         return;
     }
-    GameObject* obj = nodeObjects_[static_cast<std::size_t>(nodeId)];
-    selection_->SetPrimary(obj);
-    if (statusLine_ != nullptr && obj != nullptr) {
-        *statusLine_ = obj->GetName();
+    GameObject* obj = nodeObjects[static_cast<std::size_t>(nodeId)];
+    selection->SetPrimary(obj);
+    if (statusLine != nullptr && obj != nullptr) {
+        *statusLine = obj->GetName();
     }
 }
 

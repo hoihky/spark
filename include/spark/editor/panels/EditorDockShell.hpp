@@ -14,8 +14,8 @@ namespace Spark::Editor {
 class EditorDockShell {
 public:
     void SetSidebarWidth(float widthPx) noexcept;
-    [[nodiscard]] float GetSidebarWidth() const noexcept { return sidebarWidthPx_; }
-    [[nodiscard]] float GetRightPanelWidth() const noexcept { return dockManager_.GetLayoutState().rightWidthPx; }
+    [[nodiscard]] float GetSidebarWidth() const noexcept { return sidebarWidthPx; }
+    [[nodiscard]] float GetRightPanelWidth() const noexcept { return dockManager.GetLayoutState().rightWidthPx; }
 
     void ToggleLeftPanel() noexcept;
     void ToggleRightPanel() noexcept;
@@ -25,8 +25,8 @@ public:
             UniquePtr<Gui::Widget> projectRoot,
             UniquePtr<Gui::Widget> inspectorRoot);
 
-    [[nodiscard]] Gui::Widget* GetRootWidget() noexcept { return root_.Get(); }
-    [[nodiscard]] UniquePtr<Gui::Widget> ReleaseRootWidget() { return MoveTemp(root_); }
+    [[nodiscard]] Gui::Widget* GetRootWidget() noexcept { return root.Get(); }
+    [[nodiscard]] UniquePtr<Gui::Widget> ReleaseRootWidget() { return MoveTemp(root); }
     /** 3D viewport region in framebuffer pixels (center pane after layout). */
     [[nodiscard]] Gui::Rect GetWorldViewportRect() const noexcept;
 
@@ -36,10 +36,10 @@ private:
             UniquePtr<Gui::Widget> projectRoot,
             UniquePtr<Gui::Widget> inspectorRoot);
 
-    Gui::DockManager dockManager_{};
-    Gui::DockFrameLayout* dockFrame_ = nullptr;
-    float sidebarWidthPx_ = 300.0F;
-    UniquePtr<Gui::Widget> root_;
+    Gui::DockManager dockManager{};
+    Gui::DockFrameLayout* dockFrame = nullptr;
+    float sidebarWidthPx = 300.0F;
+    UniquePtr<Gui::Widget> root;
 };
 
 }  // namespace Spark::Editor

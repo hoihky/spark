@@ -145,10 +145,10 @@ void VulkanClusteredForwardLights::CreateBuffers(
         VkPhysicalDevice physicalDevice,
         VkDevice device,
         const std::uint32_t framesInFlight) {
-    device_ = device;
-    framesInFlight_ = std::min(framesInFlight, 2U);
-    for (std::uint32_t i = 0; i < framesInFlight_; ++i) {
-        Flight& f = flights_[i];
+    this->device = device;
+    this->framesInFlight = std::min(framesInFlight, 2U);
+    for (std::uint32_t i = 0; i < framesInFlight; ++i) {
+        Flight& f = flights[i];
         VulkanRendererGpu::CreateBuffer(
                 physicalDevice,
                 device,
@@ -176,8 +176,8 @@ void VulkanClusteredForwardLights::CreateBuffers(
 }
 
 void VulkanClusteredForwardLights::DestroyBuffers(VkDevice device) {
-    for (std::uint32_t i = 0; i < framesInFlight_; ++i) {
-        Flight& f = flights_[i];
+    for (std::uint32_t i = 0; i < framesInFlight; ++i) {
+        Flight& f = flights[i];
         if (f.lightsMapped != nullptr) {
             vkUnmapMemory(device, f.lightsMemory);
             f.lightsMapped = nullptr;
@@ -204,8 +204,8 @@ void VulkanClusteredForwardLights::DestroyBuffers(VkDevice device) {
             f.clusterMemory = VK_NULL_HANDLE;
         }
     }
-    framesInFlight_ = 0;
-    device_ = VK_NULL_HANDLE;
+    framesInFlight = 0;
+    this->device = VK_NULL_HANDLE;
 }
 
 void VulkanClusteredForwardLights::BuildAndUpload(
@@ -214,13 +214,13 @@ void VulkanClusteredForwardLights::BuildAndUpload(
         const ResolvedSceneLighting& lighting,
         const VkExtent2D extent) {
     (void)extent;
-    if (frameIndex >= framesInFlight_ || flights_[frameIndex].lightsMapped == nullptr ||
-        flights_[frameIndex].clusterMapped == nullptr) {
+    if (frameIndex >= framesInFlight || flights[frameIndex].lightsMapped == nullptr ||
+        flights[frameIndex].clusterMapped == nullptr) {
         return;
     }
 
-    auto* lights = static_cast<ClusterLightsGpu*>(flights_[frameIndex].lightsMapped);
-    auto* grid = static_cast<ClusterGridGpu*>(flights_[frameIndex].clusterMapped);
+    auto* lights = static_cast<ClusterLightsGpu*>(flights[frameIndex].lightsMapped);
+    auto* grid = static_cast<ClusterGridGpu*>(flights[frameIndex].clusterMapped);
     std::memset(lights, 0, sizeof(ClusterLightsGpu));
     std::memset(grid, 0, sizeof(ClusterGridGpu));
 
@@ -352,17 +352,17 @@ void VulkanClusteredForwardLights::BuildAndUpload(
 }
 
 VkBuffer VulkanClusteredForwardLights::LightsBuffer(const std::uint32_t frameIndex) const noexcept {
-    if (frameIndex >= framesInFlight_) {
+    if (frameIndex >= framesInFlight) {
         return VK_NULL_HANDLE;
     }
-    return flights_[frameIndex].lightsBuffer;
+    return flights[frameIndex].lightsBuffer;
 }
 
 VkBuffer VulkanClusteredForwardLights::ClusterBuffer(const std::uint32_t frameIndex) const noexcept {
-    if (frameIndex >= framesInFlight_) {
+    if (frameIndex >= framesInFlight) {
         return VK_NULL_HANDLE;
     }
-    return flights_[frameIndex].clusterBuffer;
+    return flights[frameIndex].clusterBuffer;
 }
 
 }  // namespace Spark

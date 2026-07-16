@@ -47,7 +47,7 @@ VkShaderModule VulkanSpvShaderLoader::CreateShaderModule(const Array<char>& code
     shaderModuleCreateInfo.codeSize = code.GetSize();
     shaderModuleCreateInfo.pCode = reinterpret_cast<const std::uint32_t*>(code.GetData());
     VkShaderModule shaderModule = VK_NULL_HANDLE;
-    if (vkCreateShaderModule(device_, &shaderModuleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+    if (vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateShaderModule failed");
     }
     return shaderModule;

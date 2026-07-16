@@ -19,18 +19,18 @@ public:
             const VulkanSpvShaderLoader& shaders);
     void DestroyGraphicsPipeline(VkDevice device);
 
-    [[nodiscard]] VkPipeline PipelineLit() const noexcept { return pipelineLit_; }
-    [[nodiscard]] VkPipeline PipelineLitTransparent() const noexcept { return pipelineLitTransparent_; }
-    [[nodiscard]] VkPipeline PipelineSky() const noexcept { return pipelineSky_; }
-    [[nodiscard]] VkPipelineLayout PipelineLayout() const noexcept { return pipelineLayout_; }
+    [[nodiscard]] VkPipeline PipelineLit() const noexcept { return pipelineLit; }
+    [[nodiscard]] VkPipeline PipelineLitTransparent() const noexcept { return pipelineLitTransparent; }
+    [[nodiscard]] VkPipeline PipelineSky() const noexcept { return pipelineSky; }
+    [[nodiscard]] VkPipelineLayout PipelineLayout() const noexcept { return pipelineLayout; }
 
 private:
-    VkShaderModule vertModule_ = VK_NULL_HANDLE;
-    VkShaderModule fragModule_ = VK_NULL_HANDLE;
-    VkPipeline pipelineLit_ = VK_NULL_HANDLE;
-    VkPipeline pipelineLitTransparent_ = VK_NULL_HANDLE;
-    VkPipeline pipelineSky_ = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+    VkShaderModule vertModule = VK_NULL_HANDLE;
+    VkShaderModule fragModule = VK_NULL_HANDLE;
+    VkPipeline pipelineLit = VK_NULL_HANDLE;
+    VkPipeline pipelineLitTransparent = VK_NULL_HANDLE;
+    VkPipeline pipelineSky = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 };
 
 }  // namespace Spark

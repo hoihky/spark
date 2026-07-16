@@ -20,30 +20,30 @@ ProjectBrowserPanel::ProjectBrowserPanel() {
     shell->SetDropShadowEnabled(false);
 
     auto stack = MakeUnique<Gui::StackPanel>();
-    auto body = MakeUnique<Gui::Label>();
-    body->SetText(Utf8String("No project open."));
-    body->SetFontSize(16.0F);
-    body->SetTextColor(th.labelMuted);
-    body_ = body.Get();
-    stack->AddChild(MoveTemp(body));
+    auto bodyUp = MakeUnique<Gui::Label>();
+    bodyUp->SetText(Utf8String("No project open."));
+    bodyUp->SetFontSize(16.0F);
+    bodyUp->SetTextColor(th.labelMuted);
+    body = bodyUp.Get();
+    stack->AddChild(MoveTemp(bodyUp));
 
     shell->AddChild(MoveTemp(stack));
-    root_.Reset(shell.Release());
+    root.Reset(shell.Release());
 }
 
 void ProjectBrowserPanel::OnAttach(EditorContext& ctx) {
-    project_ = ctx.project;
+    project = ctx.project;
 }
 
 void ProjectBrowserPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*/) {
-    if (body_ == nullptr || project_ == nullptr) {
+    if (body == nullptr || project == nullptr) {
         return;
     }
-    if (!project_->IsOpen()) {
-        body_->SetText(Utf8String("No project open."));
+    if (!project->IsOpen()) {
+        body->SetText(Utf8String("No project open."));
         return;
     }
-    const EditorProjectSettings& s = project_->GetSettings();
+    const EditorProjectSettings& s = project->GetSettings();
     char buf[384]{};
     std::snprintf(
             buf,
@@ -52,7 +52,7 @@ void ProjectBrowserPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /
             s.projectName.CStr(),
             s.rootDirectory.CStr(),
             s.workspace == WorkspaceDimension::TwoD ? "2D" : "3D");
-    body_->SetText(Utf8String(buf));
+    body->SetText(Utf8String(buf));
 }
 
 }  // namespace Spark::Editor

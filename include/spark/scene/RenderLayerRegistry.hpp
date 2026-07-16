@@ -27,10 +27,10 @@ public:
     [[nodiscard]] std::int16_t GetLayerSortingOrder(RenderLayerId id) const noexcept;
     [[nodiscard]] const char* GetLayerName(RenderLayerId id) const noexcept;
 
-    [[nodiscard]] RenderLayerId GetDefaultLayerId() const noexcept { return defaultLayerId_; }
+    [[nodiscard]] RenderLayerId GetDefaultLayerId() const noexcept { return defaultLayerId; }
     [[nodiscard]] std::int16_t GetDefaultLayerSortingOrder() const noexcept;
 
-    [[nodiscard]] std::size_t GetLayerCount() const noexcept { return layers_.GetSize(); }
+    [[nodiscard]] std::size_t GetLayerCount() const noexcept { return layers.GetSize(); }
     [[nodiscard]] const RenderLayerDescriptor& GetLayer(std::size_t index) const noexcept;
 
 private:
@@ -38,8 +38,8 @@ private:
 
     void RegisterBuiltInLayers();
 
-    Array<RenderLayerDescriptor> layers_{};
-    RenderLayerId defaultLayerId_ = 0;
+    Array<RenderLayerDescriptor> layers{};
+    RenderLayerId defaultLayerId = 0;
 };
 
 }  // namespace Spark

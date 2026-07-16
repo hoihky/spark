@@ -20,7 +20,7 @@ public:
     /** Queue a PNG path (UTF-8). Captured on the next completed frame. */
     void RequestSave(const char* pathUtf8);
 
-    [[nodiscard]] bool HasPendingCapture() const noexcept { return pendingCapture_; }
+    [[nodiscard]] bool HasPendingCapture() const noexcept { return pendingCapture; }
 
     void RecordCopyFromSwapchain(
             VkCommandBuffer commandBuffer,
@@ -31,20 +31,20 @@ public:
     bool TrySavePendingPng();
 
 private:
-    VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
-    VkDevice device_ = VK_NULL_HANDLE;
-    VkFormat swapchainFormat_ = VK_FORMAT_UNDEFINED;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
+    VkFormat swapchainFormat = VK_FORMAT_UNDEFINED;
 
-    VkBuffer stagingBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory stagingMemory_ = VK_NULL_HANDLE;
-    void* stagingMapped_ = nullptr;
-    VkDeviceSize stagingBytes_ = 0;
-    VkDeviceSize rowPitch_ = 0;
-    VkExtent2D bufferExtent_{};
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
+    void* stagingMapped = nullptr;
+    VkDeviceSize stagingBytes = 0;
+    VkDeviceSize rowPitch = 0;
+    VkExtent2D bufferExtent{};
 
-    char pendingPath_[512]{};
-    bool pendingCapture_ = false;
-    VkExtent2D captureExtent_{};
+    char pendingPath[512]{};
+    bool pendingCapture = false;
+    VkExtent2D captureExtent{};
 };
 
 }  // namespace Spark

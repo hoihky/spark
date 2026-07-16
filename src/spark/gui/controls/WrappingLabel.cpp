@@ -19,7 +19,7 @@ void WrappingLabel::Paint(GuiPaintContext& ctx) const {
     if (textRect.width <= 4.0F) {
         textRect.width = 64.0F;
     }
-    ctx.DrawTextInRect(textRect, drawFont, text, color, 1.0F, bold, layout_);
+    ctx.DrawTextInRect(textRect, drawFont, text, color, 1.0F, bold, layout);
 }
 
 }  // namespace Spark::Gui

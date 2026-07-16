@@ -63,15 +63,15 @@ void VulkanHdrTonemapPass::CreateRenderPass(VkDevice device, VkFormat depthForma
     rpInfo.pSubpasses = &subpass;
     rpInfo.dependencyCount = 1;
     rpInfo.pDependencies = &dep;
-    if (vkCreateRenderPass(device, &rpInfo, nullptr, &hdrRenderPass_) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device, &rpInfo, nullptr, &hdrRenderPass) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateRenderPass (HDR) failed");
     }
 }
 
 void VulkanHdrTonemapPass::DestroyRenderPass(VkDevice device) {
-    if (hdrRenderPass_ != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(device, hdrRenderPass_, nullptr);
-        hdrRenderPass_ = VK_NULL_HANDLE;
+    if (hdrRenderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(device, hdrRenderPass, nullptr);
+        hdrRenderPass = VK_NULL_HANDLE;
     }
 }
 
@@ -83,14 +83,14 @@ void VulkanHdrTonemapPass::RecreateFlightTargets(
         const VkImageView* depthViews,
         std::size_t depthViewCount) {
     DestroyFlightTargets(device);
-    if (extent.width == 0 || extent.height == 0 || hdrRenderPass_ == VK_NULL_HANDLE ||
+    if (extent.width == 0 || extent.height == 0 || hdrRenderPass == VK_NULL_HANDLE ||
         depthViewCount != static_cast<std::size_t>(framesInFlight)) {
         return;
     }
 
-    flights_.Resize(framesInFlight);
+    flights.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
-        FlightTarget& hdr = flights_[fi];
+        FlightTarget& hdr = flights[fi];
         VulkanRendererGpu::CreateImage(
                 physicalDevice,
                 device,
@@ -121,7 +121,7 @@ void VulkanHdrTonemapPass::RecreateFlightTargets(
         const VkImageView fbAttachments[] = {hdr.colorView, depthViews[fi]};
         VkFramebufferCreateInfo fbInfo{};
         fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        fbInfo.renderPass = hdrRenderPass_;
+        fbInfo.renderPass = hdrRenderPass;
         fbInfo.attachmentCount = 2;
         fbInfo.pAttachments = fbAttachments;
         fbInfo.width = extent.width;
@@ -132,7 +132,7 @@ void VulkanHdrTonemapPass::RecreateFlightTargets(
         }
     }
 
-    if (colorSampler_ == VK_NULL_HANDLE) {
+    if (colorSampler == VK_NULL_HANDLE) {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -146,12 +146,12 @@ void VulkanHdrTonemapPass::RecreateFlightTargets(
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &colorSampler_) != VK_SUCCESS) {
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &colorSampler) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateSampler (HDR) failed");
         }
     }
 
-    if (!tonemapDescriptorSets_.IsEmpty()) {
+    if (!tonemapDescriptorSets.IsEmpty()) {
         for (std::uint32_t fi = 0; fi < framesInFlight; ++fi) {
             UpdateTonemapDescriptor(device, fi);
         }
@@ -159,8 +159,8 @@ void VulkanHdrTonemapPass::RecreateFlightTargets(
 }
 
 void VulkanHdrTonemapPass::DestroyFlightTargets(VkDevice device) {
-    for (std::size_t fi = 0; fi < flights_.GetSize(); ++fi) {
-        FlightTarget& hdr = flights_[fi];
+    for (std::size_t fi = 0; fi < flights.GetSize(); ++fi) {
+        FlightTarget& hdr = flights[fi];
         if (hdr.framebuffer != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(device, hdr.framebuffer, nullptr);
             hdr.framebuffer = VK_NULL_HANDLE;
@@ -179,46 +179,46 @@ void VulkanHdrTonemapPass::DestroyFlightTargets(VkDevice device) {
         }
         hdr.colorLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    flights_.Clear();
-    if (colorSampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, colorSampler_, nullptr);
-        colorSampler_ = VK_NULL_HANDLE;
+    flights.Clear();
+    if (colorSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, colorSampler, nullptr);
+        colorSampler = VK_NULL_HANDLE;
     }
 }
 
 void VulkanHdrTonemapPass::DestroyTonemapPipeline(VkDevice device) {
-    if (tonemapPipeline_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, tonemapPipeline_, nullptr);
-        tonemapPipeline_ = VK_NULL_HANDLE;
+    if (tonemapPipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, tonemapPipeline, nullptr);
+        tonemapPipeline = VK_NULL_HANDLE;
     }
-    if (tonemapPipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, tonemapPipelineLayout_, nullptr);
-        tonemapPipelineLayout_ = VK_NULL_HANDLE;
+    if (tonemapPipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, tonemapPipelineLayout, nullptr);
+        tonemapPipelineLayout = VK_NULL_HANDLE;
     }
-    if (tonemapDescriptorPool_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorPool(device, tonemapDescriptorPool_, nullptr);
-        tonemapDescriptorPool_ = VK_NULL_HANDLE;
+    if (tonemapDescriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, tonemapDescriptorPool, nullptr);
+        tonemapDescriptorPool = VK_NULL_HANDLE;
     }
-    if (tonemapDescriptorSetLayout_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorSetLayout(device, tonemapDescriptorSetLayout_, nullptr);
-        tonemapDescriptorSetLayout_ = VK_NULL_HANDLE;
+    if (tonemapDescriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(device, tonemapDescriptorSetLayout, nullptr);
+        tonemapDescriptorSetLayout = VK_NULL_HANDLE;
     }
-    tonemapDescriptorSets_.Clear();
-    if (tonemapVertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, tonemapVertModule_, nullptr);
-        tonemapVertModule_ = VK_NULL_HANDLE;
+    tonemapDescriptorSets.Clear();
+    if (tonemapVertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, tonemapVertModule, nullptr);
+        tonemapVertModule = VK_NULL_HANDLE;
     }
-    if (tonemapFragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, tonemapFragModule_, nullptr);
-        tonemapFragModule_ = VK_NULL_HANDLE;
+    if (tonemapFragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, tonemapFragModule, nullptr);
+        tonemapFragModule = VK_NULL_HANDLE;
     }
-    if (tonemapVertexBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, tonemapVertexBuffer_, nullptr);
-        tonemapVertexBuffer_ = VK_NULL_HANDLE;
+    if (tonemapVertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, tonemapVertexBuffer, nullptr);
+        tonemapVertexBuffer = VK_NULL_HANDLE;
     }
-    if (tonemapVertexMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, tonemapVertexMemory_, nullptr);
-        tonemapVertexMemory_ = VK_NULL_HANDLE;
+    if (tonemapVertexMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, tonemapVertexMemory, nullptr);
+        tonemapVertexMemory = VK_NULL_HANDLE;
     }
 }
 
@@ -229,7 +229,7 @@ void VulkanHdrTonemapPass::CreateTonemapPipeline(
         std::uint32_t framesInFlight,
         const VulkanSpvShaderLoader& shaders) {
     DestroyTonemapPipeline(device);
-    if (hdrRenderPass_ == VK_NULL_HANDLE || presentRenderPass == VK_NULL_HANDLE || flights_.IsEmpty()) {
+    if (hdrRenderPass == VK_NULL_HANDLE || presentRenderPass == VK_NULL_HANDLE || flights.IsEmpty()) {
         return;
     }
 
@@ -241,14 +241,14 @@ void VulkanHdrTonemapPass::CreateTonemapPipeline(
             triBytes,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            tonemapVertexBuffer_,
-            tonemapVertexMemory_);
+            tonemapVertexBuffer,
+            tonemapVertexMemory);
     void* mapped = nullptr;
-    if (vkMapMemory(device, tonemapVertexMemory_, 0, triBytes, 0, &mapped) != VK_SUCCESS) {
+    if (vkMapMemory(device, tonemapVertexMemory, 0, triBytes, 0, &mapped) != VK_SUCCESS) {
         throw std::runtime_error("vkMapMemory tonemap tri failed");
     }
     std::memcpy(mapped, triVerts, sizeof(triVerts));
-    vkUnmapMemory(device, tonemapVertexMemory_);
+    vkUnmapMemory(device, tonemapVertexMemory);
 
     VkDescriptorSetLayoutBinding sampBinding{};
     sampBinding.binding = 0;
@@ -260,7 +260,7 @@ void VulkanHdrTonemapPass::CreateTonemapPipeline(
     dslInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     dslInfo.bindingCount = 1;
     dslInfo.pBindings = &sampBinding;
-    if (vkCreateDescriptorSetLayout(device, &dslInfo, nullptr, &tonemapDescriptorSetLayout_) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(device, &dslInfo, nullptr, &tonemapDescriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("tonemap descriptor set layout failed");
     }
 
@@ -272,25 +272,25 @@ void VulkanHdrTonemapPass::CreateTonemapPipeline(
     poolInfo.maxSets = framesInFlight;
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes = &poolSize;
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &tonemapDescriptorPool_) != VK_SUCCESS) {
+    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &tonemapDescriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("tonemap descriptor pool failed");
     }
 
-    tonemapDescriptorSets_.Resize(framesInFlight);
+    tonemapDescriptorSets.Resize(framesInFlight);
     for (std::uint32_t fi = 0; fi < framesInFlight; ++fi) {
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = tonemapDescriptorPool_;
+        allocInfo.descriptorPool = tonemapDescriptorPool;
         allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &tonemapDescriptorSetLayout_;
-        if (vkAllocateDescriptorSets(device, &allocInfo, &tonemapDescriptorSets_[fi]) != VK_SUCCESS) {
+        allocInfo.pSetLayouts = &tonemapDescriptorSetLayout;
+        if (vkAllocateDescriptorSets(device, &allocInfo, &tonemapDescriptorSets[fi]) != VK_SUCCESS) {
             throw std::runtime_error("tonemap descriptor set alloc failed");
         }
         UpdateTonemapDescriptor(device, fi);
     }
 
-    tonemapVertModule_ = shaders.CreateShaderModule(shaders.ReadSpvFile("tonemap.vert.spv"));
-    tonemapFragModule_ = shaders.CreateShaderModule(shaders.ReadSpvFile("tonemap.frag.spv"));
+    tonemapVertModule = shaders.CreateShaderModule(shaders.ReadSpvFile("tonemap.vert.spv"));
+    tonemapFragModule = shaders.CreateShaderModule(shaders.ReadSpvFile("tonemap.frag.spv"));
 
     VkPushConstantRange pcRange{};
     pcRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -300,21 +300,21 @@ void VulkanHdrTonemapPass::CreateTonemapPipeline(
     VkPipelineLayoutCreateInfo plInfo{};
     plInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     plInfo.setLayoutCount = 1;
-    plInfo.pSetLayouts = &tonemapDescriptorSetLayout_;
+    plInfo.pSetLayouts = &tonemapDescriptorSetLayout;
     plInfo.pushConstantRangeCount = 1;
     plInfo.pPushConstantRanges = &pcRange;
-    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &tonemapPipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &tonemapPipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("tonemap pipeline layout failed");
     }
 
     VkPipelineShaderStageCreateInfo stages[2]{};
     stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    stages[0].module = tonemapVertModule_;
+    stages[0].module = tonemapVertModule;
     stages[0].pName = "main";
     stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    stages[1].module = tonemapFragModule_;
+    stages[1].module = tonemapFragModule;
     stages[1].pName = "main";
 
     VkVertexInputBindingDescription binding{};
@@ -381,10 +381,10 @@ void VulkanHdrTonemapPass::CreateTonemapPipeline(
     pipeInfo.pMultisampleState = &ms;
     pipeInfo.pColorBlendState = &blend;
     pipeInfo.pDynamicState = &dynamicState;
-    pipeInfo.layout = tonemapPipelineLayout_;
+    pipeInfo.layout = tonemapPipelineLayout;
     pipeInfo.renderPass = presentRenderPass;
     pipeInfo.subpass = 0;
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeInfo, nullptr, &tonemapPipeline_) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeInfo, nullptr, &tonemapPipeline) != VK_SUCCESS) {
         throw std::runtime_error("tonemap pipeline create failed");
     }
 }
@@ -393,11 +393,11 @@ void VulkanHdrTonemapPass::UpdateTonemapDescriptor(
         VkDevice device,
         std::uint32_t flightIndex,
         VkImageView colorViewOverride) {
-    if (flightIndex >= tonemapDescriptorSets_.GetSize() || flightIndex >= flights_.GetSize() ||
-        colorSampler_ == VK_NULL_HANDLE) {
+    if (flightIndex >= tonemapDescriptorSets.GetSize() || flightIndex >= flights.GetSize() ||
+        colorSampler == VK_NULL_HANDLE) {
         return;
     }
-    const FlightTarget& hdr = flights_[flightIndex];
+    const FlightTarget& hdr = flights[flightIndex];
     const VkImageView colorView = (colorViewOverride != VK_NULL_HANDLE) ? colorViewOverride : hdr.colorView;
     if (colorView == VK_NULL_HANDLE) {
         return;
@@ -405,10 +405,10 @@ void VulkanHdrTonemapPass::UpdateTonemapDescriptor(
     VkDescriptorImageInfo imgInfo{};
     imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     imgInfo.imageView = colorView;
-    imgInfo.sampler = colorSampler_;
+    imgInfo.sampler = colorSampler;
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write.dstSet = tonemapDescriptorSets_[flightIndex];
+    write.dstSet = tonemapDescriptorSets[flightIndex];
     write.dstBinding = 0;
     write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     write.descriptorCount = 1;
@@ -422,7 +422,7 @@ void VulkanHdrTonemapPass::BeginColorAttachmentBarrierIfNeeded(
     if (!HasFlight(frameIndex)) {
         return;
     }
-    FlightTarget& hdrFlight = flights_[frameIndex];
+    FlightTarget& hdrFlight = flights[frameIndex];
     if (hdrFlight.colorImage == VK_NULL_HANDLE ||
         hdrFlight.colorLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
         return;
@@ -459,7 +459,7 @@ void VulkanHdrTonemapPass::TransitionColorToShaderRead(VkCommandBuffer commandBu
     if (!HasFlight(frameIndex)) {
         return;
     }
-    FlightTarget& hdrFlight = flights_[frameIndex];
+    FlightTarget& hdrFlight = flights[frameIndex];
     hdrFlight.colorLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkImageMemoryBarrier hdrToTonemap{};
@@ -495,8 +495,8 @@ void VulkanHdrTonemapPass::RecordTonemap(
         VkExtent2D swapchainExtent,
         const VulkanPresentationFramebuffers& presentationFramebuffers,
         float exposure) {
-    if (tonemapPipeline_ == VK_NULL_HANDLE || flightIndex >= flights_.GetSize() ||
-        flightIndex >= tonemapDescriptorSets_.GetSize() || flights_[flightIndex].framebuffer == VK_NULL_HANDLE ||
+    if (tonemapPipeline == VK_NULL_HANDLE || flightIndex >= flights.GetSize() ||
+        flightIndex >= tonemapDescriptorSets.GetSize() || flights[flightIndex].framebuffer == VK_NULL_HANDLE ||
         imageIndex >= presentationFramebuffers.buffers.GetSize()) {
         return;
     }
@@ -517,7 +517,7 @@ void VulkanHdrTonemapPass::RecordTonemap(
     rpBegin.pClearValues = &clear;
 
     vkCmdBeginRenderPass(commandBuffer, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, tonemapPipeline_);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, tonemapPipeline);
 
     VkViewport vp{};
     vp.x = 0.0F;
@@ -535,10 +535,10 @@ void VulkanHdrTonemapPass::RecordTonemap(
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            tonemapPipelineLayout_,
+            tonemapPipelineLayout,
             0,
             1,
-            &tonemapDescriptorSets_[flightIndex],
+            &tonemapDescriptorSets[flightIndex],
             0,
             nullptr);
 
@@ -547,14 +547,14 @@ void VulkanHdrTonemapPass::RecordTonemap(
     push.invGamma = 1.0F / 2.35F;
     vkCmdPushConstants(
             commandBuffer,
-            tonemapPipelineLayout_,
+            tonemapPipelineLayout,
             VK_SHADER_STAGE_FRAGMENT_BIT,
             0,
             sizeof(TonemapPushConstants),
             &push);
 
     const VkDeviceSize vbOff = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &tonemapVertexBuffer_, &vbOff);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &tonemapVertexBuffer, &vbOff);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
     // UI passes recorded by caller before vkCmdEndRenderPass.
 }

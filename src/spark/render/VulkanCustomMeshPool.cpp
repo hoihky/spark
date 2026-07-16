@@ -69,89 +69,89 @@ void VulkanCustomMeshPool::QueueRetire(BufferSet&& set, const std::uint64_t safe
     RetiredSet entry{};
     entry.buffers = set;
     entry.safeAfterFrame = safeAfterFrame;
-    retired_.PushBack(entry);
+    retired.PushBack(entry);
     set = {};
 }
 
 void VulkanCustomMeshPool::CreateResources(const VkPhysicalDevice physicalDevice, const VkDevice device) {
     DestroyResources(device);
-    physicalDevice_ = physicalDevice;
-    device_ = device;
+    this->physicalDevice = physicalDevice;
+    this->device = device;
 }
 
 void VulkanCustomMeshPool::DestroyResources(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    for (std::size_t i = 0; i < retired_.GetSize(); ++i) {
-        DestroyBufferSet(retired_[i].buffers, device);
+    for (std::size_t i = 0; i < retired.GetSize(); ++i) {
+        DestroyBufferSet(retired[i].buffers, device);
     }
-    retired_.Clear();
-    DestroyBufferSet(active_, device);
-    DestroyStagingBuffer(device, stagingVertex_, stagingVertexMemory_, stagingVertexMapped_);
-    DestroyStagingBuffer(device, stagingIndex_, stagingIndexMemory_, stagingIndexMapped_);
-    stagingVertexCapacity_ = 0;
-    stagingIndexCapacity_ = 0;
-    pendingVertexBytes_ = 0;
-    pendingIndexBytes_ = 0;
-    uploadPending_ = false;
-    lastFingerprint_ = 0;
-    rigidSlices_.Clear();
-    skinnedSlices_.Clear();
-    physicalDevice_ = VK_NULL_HANDLE;
-    device_ = VK_NULL_HANDLE;
+    retired.Clear();
+    DestroyBufferSet(active, device);
+    DestroyStagingBuffer(device, stagingVertex, stagingVertexMemory, stagingVertexMapped);
+    DestroyStagingBuffer(device, stagingIndex, stagingIndexMemory, stagingIndexMapped);
+    stagingVertexCapacity = 0;
+    stagingIndexCapacity = 0;
+    pendingVertexBytes = 0;
+    pendingIndexBytes = 0;
+    uploadPending = false;
+    lastFingerprint = 0;
+    rigidSlices.Clear();
+    skinnedSlices.Clear();
+    physicalDevice = VK_NULL_HANDLE;
+    this->device = VK_NULL_HANDLE;
 }
 
 void VulkanCustomMeshPool::ReleaseRetiredBuffers(const std::uint64_t frameCounter) {
-    if (device_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE) {
         return;
     }
     std::size_t write = 0;
-    for (std::size_t i = 0; i < retired_.GetSize(); ++i) {
-        if (retired_[i].safeAfterFrame <= frameCounter) {
-            DestroyBufferSet(retired_[i].buffers, device_);
+    for (std::size_t i = 0; i < retired.GetSize(); ++i) {
+        if (retired[i].safeAfterFrame <= frameCounter) {
+            DestroyBufferSet(retired[i].buffers, device);
         } else {
             if (write != i) {
-                retired_[write] = retired_[i];
+                retired[write] = retired[i];
             }
             ++write;
         }
     }
-    retired_.Resize(write);
+    retired.Resize(write);
 }
 
 void VulkanCustomMeshPool::EnsureStagingCapacity(const VkDeviceSize vertexBytes, const VkDeviceSize indexBytes) {
-    if (device_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (vertexBytes > stagingVertexCapacity_) {
-        DestroyStagingBuffer(device_, stagingVertex_, stagingVertexMemory_, stagingVertexMapped_);
-        stagingVertexCapacity_ = vertexBytes;
+    if (vertexBytes > stagingVertexCapacity) {
+        DestroyStagingBuffer(device, stagingVertex, stagingVertexMemory, stagingVertexMapped);
+        stagingVertexCapacity = vertexBytes;
         VulkanRendererGpu::CreateBuffer(
-                physicalDevice_,
-                device_,
-                stagingVertexCapacity_,
+                physicalDevice,
+                device,
+                stagingVertexCapacity,
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                stagingVertex_,
-                stagingVertexMemory_);
-        if (vkMapMemory(device_, stagingVertexMemory_, 0, stagingVertexCapacity_, 0, &stagingVertexMapped_) !=
+                stagingVertex,
+                stagingVertexMemory);
+        if (vkMapMemory(device, stagingVertexMemory, 0, stagingVertexCapacity, 0, &stagingVertexMapped) !=
                 VK_SUCCESS) {
             throw std::runtime_error("VulkanCustomMeshPool: map staging vertex failed");
         }
     }
-    if (indexBytes > stagingIndexCapacity_) {
-        DestroyStagingBuffer(device_, stagingIndex_, stagingIndexMemory_, stagingIndexMapped_);
-        stagingIndexCapacity_ = indexBytes;
+    if (indexBytes > stagingIndexCapacity) {
+        DestroyStagingBuffer(device, stagingIndex, stagingIndexMemory, stagingIndexMapped);
+        stagingIndexCapacity = indexBytes;
         VulkanRendererGpu::CreateBuffer(
-                physicalDevice_,
-                device_,
-                stagingIndexCapacity_,
+                physicalDevice,
+                device,
+                stagingIndexCapacity,
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                stagingIndex_,
-                stagingIndexMemory_);
-        if (vkMapMemory(device_, stagingIndexMemory_, 0, stagingIndexCapacity_, 0, &stagingIndexMapped_) !=
+                stagingIndex,
+                stagingIndexMemory);
+        if (vkMapMemory(device, stagingIndexMemory, 0, stagingIndexCapacity, 0, &stagingIndexMapped) !=
                 VK_SUCCESS) {
             throw std::runtime_error("VulkanCustomMeshPool: map staging index failed");
         }
@@ -163,30 +163,30 @@ bool VulkanCustomMeshPool::EnsureDeviceCapacity(
         const VkDeviceSize indexBytes,
         const std::uint64_t frameCounter,
         const std::uint32_t maxFramesInFlight) {
-    if (active_.vertexBuffer != VK_NULL_HANDLE || active_.indexBuffer != VK_NULL_HANDLE) {
-        QueueRetire(MoveTemp(active_), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
+    if (active.vertexBuffer != VK_NULL_HANDLE || active.indexBuffer != VK_NULL_HANDLE) {
+        QueueRetire(MoveTemp(active), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
     }
 
-    const VkDeviceSize vbAlloc = std::max(vertexBytes, active_.vertexCapacityBytes);
-    const VkDeviceSize ibAlloc = std::max(indexBytes, active_.indexCapacityBytes);
+    const VkDeviceSize vbAlloc = std::max(vertexBytes, active.vertexCapacityBytes);
+    const VkDeviceSize ibAlloc = std::max(indexBytes, active.indexCapacityBytes);
     VulkanRendererGpu::CreateBuffer(
-            physicalDevice_,
-            device_,
+            physicalDevice,
+            device,
             vbAlloc,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            active_.vertexBuffer,
-            active_.vertexMemory);
+            active.vertexBuffer,
+            active.vertexMemory);
     VulkanRendererGpu::CreateBuffer(
-            physicalDevice_,
-            device_,
+            physicalDevice,
+            device,
             ibAlloc,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            active_.indexBuffer,
-            active_.indexMemory);
-    active_.vertexCapacityBytes = vbAlloc;
-    active_.indexCapacityBytes = ibAlloc;
+            active.indexBuffer,
+            active.indexMemory);
+    active.vertexCapacityBytes = vbAlloc;
+    active.indexCapacityBytes = ibAlloc;
     return true;
 }
 
@@ -278,8 +278,8 @@ void VulkanCustomMeshPool::PackSceneGeometry(
 
     interleaved.Clear();
     meshIndices.Clear();
-    rigidSlices_.Clear();
-    skinnedSlices_.Clear();
+    rigidSlices.Clear();
+    skinnedSlices.Clear();
 
     for (std::size_t ui = 0; ui < uniqueRigid.GetSize(); ++ui) {
         const Mesh* mp = uniqueRigid[ui];
@@ -301,7 +301,7 @@ void VulkanCustomMeshPool::PackSceneGeometry(
         slice.firstIndex = firstIdx;
         slice.indexCount = static_cast<std::uint32_t>(inds.GetSize());
         slice.vertexOffset = 0;
-        rigidSlices_.Add(mp, slice);
+        rigidSlices.Add(mp, slice);
     }
 
     for (std::size_t ui = 0; ui < uniqueSkinned.GetSize(); ++ui) {
@@ -324,7 +324,7 @@ void VulkanCustomMeshPool::PackSceneGeometry(
         slice.firstIndex = firstIdx;
         slice.indexCount = static_cast<std::uint32_t>(inds.GetSize());
         slice.vertexOffset = 0;
-        skinnedSlices_.Add(sp, slice);
+        skinnedSlices.Add(sp, slice);
     }
 }
 
@@ -332,7 +332,7 @@ void VulkanCustomMeshPool::UpdateFromScene(
         const SceneRenderParams& scene,
         const std::uint64_t frameCounter,
         const std::uint32_t maxFramesInFlight) {
-    if (device_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE) {
         return;
     }
 
@@ -353,23 +353,23 @@ void VulkanCustomMeshPool::UpdateFromScene(
     }
 
     if (!anyCustom) {
-        if (active_.vertexBuffer != VK_NULL_HANDLE || active_.indexBuffer != VK_NULL_HANDLE) {
-            QueueRetire(MoveTemp(active_), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
+        if (active.vertexBuffer != VK_NULL_HANDLE || active.indexBuffer != VK_NULL_HANDLE) {
+            QueueRetire(MoveTemp(active), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
         }
-        rigidSlices_.Clear();
-        skinnedSlices_.Clear();
-        lastFingerprint_ = 0;
-        uploadPending_ = false;
-        pendingVertexBytes_ = 0;
-        pendingIndexBytes_ = 0;
+        rigidSlices.Clear();
+        skinnedSlices.Clear();
+        lastFingerprint = 0;
+        uploadPending = false;
+        pendingVertexBytes = 0;
+        pendingIndexBytes = 0;
         return;
     }
 
     const std::uint64_t fp = ComputeFingerprint(scene);
-    if (fp == lastFingerprint_ && active_.vertexBuffer != VK_NULL_HANDLE && !uploadPending_) {
+    if (fp == lastFingerprint && active.vertexBuffer != VK_NULL_HANDLE && !uploadPending) {
         return;
     }
-    lastFingerprint_ = fp;
+    lastFingerprint = fp;
 
     Array<float> interleaved;
     Array<std::uint32_t> meshIndices;
@@ -378,45 +378,45 @@ void VulkanCustomMeshPool::UpdateFromScene(
     const VkDeviceSize vbSize = sizeof(float) * static_cast<std::size_t>(interleaved.GetSize());
     const VkDeviceSize ibSize = sizeof(std::uint32_t) * static_cast<std::size_t>(meshIndices.GetSize());
     if (vbSize == 0 || ibSize == 0) {
-        if (active_.vertexBuffer != VK_NULL_HANDLE || active_.indexBuffer != VK_NULL_HANDLE) {
-            QueueRetire(MoveTemp(active_), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
+        if (active.vertexBuffer != VK_NULL_HANDLE || active.indexBuffer != VK_NULL_HANDLE) {
+            QueueRetire(MoveTemp(active), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
         }
-        rigidSlices_.Clear();
-        skinnedSlices_.Clear();
-        lastFingerprint_ = 0;
-        uploadPending_ = false;
-        pendingVertexBytes_ = 0;
-        pendingIndexBytes_ = 0;
+        rigidSlices.Clear();
+        skinnedSlices.Clear();
+        lastFingerprint = 0;
+        uploadPending = false;
+        pendingVertexBytes = 0;
+        pendingIndexBytes = 0;
         return;
     }
 
     EnsureStagingCapacity(vbSize, ibSize);
-    std::memcpy(stagingVertexMapped_, interleaved.GetData(), static_cast<std::size_t>(vbSize));
-    std::memcpy(stagingIndexMapped_, meshIndices.GetData(), static_cast<std::size_t>(ibSize));
-    pendingVertexBytes_ = vbSize;
-    pendingIndexBytes_ = ibSize;
+    std::memcpy(stagingVertexMapped, interleaved.GetData(), static_cast<std::size_t>(vbSize));
+    std::memcpy(stagingIndexMapped, meshIndices.GetData(), static_cast<std::size_t>(ibSize));
+    pendingVertexBytes = vbSize;
+    pendingIndexBytes = ibSize;
 
     EnsureDeviceCapacity(vbSize, ibSize, frameCounter, maxFramesInFlight);
-    uploadPending_ = true;
+    uploadPending = true;
 }
 
 void VulkanCustomMeshPool::RecordUploads(const VkCommandBuffer commandBuffer) {
-    if (!uploadPending_ || device_ == VK_NULL_HANDLE || commandBuffer == VK_NULL_HANDLE) {
+    if (!uploadPending || device == VK_NULL_HANDLE || commandBuffer == VK_NULL_HANDLE) {
         return;
     }
-    if (active_.vertexBuffer == VK_NULL_HANDLE || active_.indexBuffer == VK_NULL_HANDLE ||
-        stagingVertex_ == VK_NULL_HANDLE || stagingIndex_ == VK_NULL_HANDLE) {
-        uploadPending_ = false;
+    if (active.vertexBuffer == VK_NULL_HANDLE || active.indexBuffer == VK_NULL_HANDLE ||
+        stagingVertex == VK_NULL_HANDLE || stagingIndex == VK_NULL_HANDLE) {
+        uploadPending = false;
         return;
     }
 
     VkBufferCopy vtxCopy{};
-    vtxCopy.size = pendingVertexBytes_;
-    vkCmdCopyBuffer(commandBuffer, stagingVertex_, active_.vertexBuffer, 1, &vtxCopy);
+    vtxCopy.size = pendingVertexBytes;
+    vkCmdCopyBuffer(commandBuffer, stagingVertex, active.vertexBuffer, 1, &vtxCopy);
 
     VkBufferCopy idxCopy{};
-    idxCopy.size = pendingIndexBytes_;
-    vkCmdCopyBuffer(commandBuffer, stagingIndex_, active_.indexBuffer, 1, &idxCopy);
+    idxCopy.size = pendingIndexBytes;
+    vkCmdCopyBuffer(commandBuffer, stagingIndex, active.indexBuffer, 1, &idxCopy);
 
     VkBufferMemoryBarrier barriers[2]{};
     barriers[0].sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -424,18 +424,18 @@ void VulkanCustomMeshPool::RecordUploads(const VkCommandBuffer commandBuffer) {
     barriers[0].dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
     barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barriers[0].buffer = active_.vertexBuffer;
+    barriers[0].buffer = active.vertexBuffer;
     barriers[0].offset = 0;
-    barriers[0].size = pendingVertexBytes_;
+    barriers[0].size = pendingVertexBytes;
 
     barriers[1].sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
     barriers[1].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     barriers[1].dstAccessMask = VK_ACCESS_INDEX_READ_BIT;
     barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barriers[1].buffer = active_.indexBuffer;
+    barriers[1].buffer = active.indexBuffer;
     barriers[1].offset = 0;
-    barriers[1].size = pendingIndexBytes_;
+    barriers[1].size = pendingIndexBytes;
 
     vkCmdPipelineBarrier(
             commandBuffer,
@@ -449,13 +449,13 @@ void VulkanCustomMeshPool::RecordUploads(const VkCommandBuffer commandBuffer) {
             0,
             nullptr);
 
-    uploadPending_ = false;
+    uploadPending = false;
 }
 
 VulkanCustomMeshPool::Bindings VulkanCustomMeshPool::GetBindings() const noexcept {
     return Bindings{
-            .vertexBuffer = active_.vertexBuffer,
-            .indexBuffer = active_.indexBuffer,
+            .vertexBuffer = active.vertexBuffer,
+            .indexBuffer = active.indexBuffer,
     };
 }
 
@@ -472,13 +472,13 @@ void VulkanCustomMeshPool::FillCustomDrawPacked(
             continue;
         }
         if (d.skinnedMesh) {
-            if (const CustomMeshGpuSlice* s = skinnedSlices_.Find(d.skinnedMesh.Get())) {
+            if (const CustomMeshGpuSlice* s = skinnedSlices.Find(d.skinnedMesh.Get())) {
                 outOpaquePacked[i] = *s;
             }
             continue;
         }
         if (d.customMesh) {
-            if (const CustomMeshGpuSlice* s = rigidSlices_.Find(d.customMesh.Get())) {
+            if (const CustomMeshGpuSlice* s = rigidSlices.Find(d.customMesh.Get())) {
                 outOpaquePacked[i] = *s;
             }
         }
@@ -490,13 +490,13 @@ void VulkanCustomMeshPool::FillCustomDrawPacked(
             continue;
         }
         if (d.skinnedMesh) {
-            if (const CustomMeshGpuSlice* s = skinnedSlices_.Find(d.skinnedMesh.Get())) {
+            if (const CustomMeshGpuSlice* s = skinnedSlices.Find(d.skinnedMesh.Get())) {
                 outTransparentPacked[i] = *s;
             }
             continue;
         }
         if (d.customMesh) {
-            if (const CustomMeshGpuSlice* s = rigidSlices_.Find(d.customMesh.Get())) {
+            if (const CustomMeshGpuSlice* s = rigidSlices.Find(d.customMesh.Get())) {
                 outTransparentPacked[i] = *s;
             }
         }

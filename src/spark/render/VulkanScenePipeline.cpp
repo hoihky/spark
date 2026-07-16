@@ -12,29 +12,29 @@ void VulkanScenePipeline::DestroyGraphicsPipeline(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (pipelineLit_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipelineLit_, nullptr);
-        pipelineLit_ = VK_NULL_HANDLE;
+    if (pipelineLit != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipelineLit, nullptr);
+        pipelineLit = VK_NULL_HANDLE;
     }
-    if (pipelineLitTransparent_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipelineLitTransparent_, nullptr);
-        pipelineLitTransparent_ = VK_NULL_HANDLE;
+    if (pipelineLitTransparent != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipelineLitTransparent, nullptr);
+        pipelineLitTransparent = VK_NULL_HANDLE;
     }
-    if (pipelineSky_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipelineSky_, nullptr);
-        pipelineSky_ = VK_NULL_HANDLE;
+    if (pipelineSky != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipelineSky, nullptr);
+        pipelineSky = VK_NULL_HANDLE;
     }
-    if (pipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
-        pipelineLayout_ = VK_NULL_HANDLE;
+    if (pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        pipelineLayout = VK_NULL_HANDLE;
     }
-    if (vertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, vertModule_, nullptr);
-        vertModule_ = VK_NULL_HANDLE;
+    if (vertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertModule, nullptr);
+        vertModule = VK_NULL_HANDLE;
     }
-    if (fragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, fragModule_, nullptr);
-        fragModule_ = VK_NULL_HANDLE;
+    if (fragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, fragModule, nullptr);
+        fragModule = VK_NULL_HANDLE;
     }
 }
 
@@ -51,19 +51,19 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
 
     const Array<char> vertCode = shaders.ReadSpvFile("scene.vert.spv");
     const Array<char> fragCode = shaders.ReadSpvFile("scene.frag.spv");
-    vertModule_ = shaders.CreateShaderModule(vertCode);
-    fragModule_ = shaders.CreateShaderModule(fragCode);
+    vertModule = shaders.CreateShaderModule(vertCode);
+    fragModule = shaders.CreateShaderModule(fragCode);
 
     VkPipelineShaderStageCreateInfo vertShaderStage{};
     vertShaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertShaderStage.module = vertModule_;
+    vertShaderStage.module = vertModule;
     vertShaderStage.pName = "main";
 
     VkPipelineShaderStageCreateInfo fragShaderStage{};
     fragShaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragShaderStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragShaderStage.module = fragModule_;
+    fragShaderStage.module = fragModule;
     fragShaderStage.pName = "main";
 
     const VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStage, fragShaderStage};
@@ -197,7 +197,7 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
     pipelineLayoutCreateInfo.pSetLayouts = &sceneDescriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-    if (vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("VulkanScenePipeline: vkCreatePipelineLayout failed");
     }
 
@@ -213,18 +213,18 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
     pipelineCreateInfo.pDepthStencilState = &depthStencil;
     pipelineCreateInfo.pColorBlendState = &colorBlending;
     pipelineCreateInfo.pDynamicState = &dynamicState;
-    pipelineCreateInfo.layout = pipelineLayout_;
+    pipelineCreateInfo.layout = pipelineLayout;
     pipelineCreateInfo.renderPass = hdrRenderPass;
     pipelineCreateInfo.subpass = 0;
 
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineLit_) !=
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineLit) !=
             VK_SUCCESS) {
         throw std::runtime_error("VulkanScenePipeline: vkCreateGraphicsPipelines failed");
     }
 
     pipelineCreateInfo.pDepthStencilState = &depthStencilSky;
     pipelineCreateInfo.pRasterizationState = &rasterizerSky;
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineSky_) !=
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineSky) !=
             VK_SUCCESS) {
         throw std::runtime_error("VulkanScenePipeline: vkCreateGraphicsPipelines (sky) failed");
     }
@@ -233,7 +233,7 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
     pipelineCreateInfo.pRasterizationState = &rasterizer;
     pipelineCreateInfo.pColorBlendState = &transparentColorBlending;
     if (vkCreateGraphicsPipelines(
-                device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineLitTransparent_) !=
+                device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineLitTransparent) !=
             VK_SUCCESS) {
         throw std::runtime_error("VulkanScenePipeline: vkCreateGraphicsPipelines (transparent) failed");
     }

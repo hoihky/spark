@@ -22,10 +22,10 @@ void Label::Paint(GuiPaintContext& ctx) const {
         return;
     }
     Rect textRect = bounds;
-    if (layout_.wrap == TextWrap::NoWrap) {
+    if (layout.wrap == TextWrap::NoWrap) {
         textRect.height = std::min(bounds.height, drawFont);
     }
-    ctx.DrawTextInRect(textRect, drawFont, text, color, 1.0F, bold, layout_);
+    ctx.DrawTextInRect(textRect, drawFont, text, color, 1.0F, bold, layout);
 }
 
 }  // namespace Spark::Gui

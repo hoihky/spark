@@ -26,13 +26,13 @@ public:
     /** Loads runtime + assembly; calls managed Initialize(hostApi). Returns false on failure. */
     [[nodiscard]] bool LoadAndInitialize(const SparkHostApi& hostApi, std::string& outError);
 
-    [[nodiscard]] std::string_view GetLastError() const noexcept { return lastError_; }
+    [[nodiscard]] std::string_view GetLastError() const noexcept { return lastError; }
 
 private:
-    Options options_;
-    std::string lastError_;
-    void* hostfxrHandle_ = nullptr;
-    void* loadAssemblyFn_ = nullptr;
+    Options options;
+    std::string lastError;
+    void* hostfxrHandle = nullptr;
+    void* loadAssemblyFn = nullptr;
 };
 
 }  // namespace Spark

@@ -448,6 +448,8 @@ set(SPARK_ENGINE_EDITOR_SOURCES
 
 set(SPARK_ENGINE_SOURCES
         src/Engine.cpp
+        src/spark/engine/EngineContext.cpp
+        src/spark/engine/GlfwInput.cpp
         src/spark/ecs/GameObject.cpp
         src/spark/ecs/components/TransformComponent.cpp
         src/spark/ecs/components/MeshComponent.cpp
@@ -473,6 +475,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/Camera.cpp
         src/spark/scene/CharacterCameraRig.cpp
         src/spark/scene/GameWorld.cpp
+        src/spark/scene/GameWorldAssetCache.cpp
         src/spark/scene/SpatialMath.cpp
         src/spark/scene/SceneSpatialCull.cpp
         src/spark/scene/SceneSpriteTileCull.cpp
@@ -589,6 +592,9 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/VulkanPresentationSwapchain.cpp
         src/spark/render/VulkanPresentationFramebuffers.cpp
         src/spark/scene/SceneSubmit.cpp
+        src/spark/scene/SceneSubmitDrawPartition.cpp
+        src/spark/scene/SceneSubmitLighting.cpp
+        src/spark/scene/SceneSubmitMaterial.cpp
         src/spark/scene/serialization/ComponentSnapshotRegistry.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp

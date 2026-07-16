@@ -27,13 +27,13 @@ public:
     };
 
     void SetLayout(DockLayoutModel model);
-    [[nodiscard]] const DockLayoutModel& GetLayout() const noexcept { return model_; }
+    [[nodiscard]] const DockLayoutModel& GetLayout() const noexcept { return model; }
 
     void SetPanel(Utf8String panelId, UniquePtr<Widget> content, bool useChrome = true);
     [[nodiscard]] Widget* GetPanelWidget(const Utf8String& panelId) noexcept;
 
     void SetOnLayoutChanged(std::function<void(const DockLayoutModel&)> fn) {
-        onLayoutChanged_ = Spark::MoveTemp(fn);
+        onLayoutChanged = Spark::MoveTemp(fn);
     }
 
     void Arrange(const Rect& r) override;
@@ -47,7 +47,7 @@ private:
         bool useChrome = true;
     };
 
-    void MarkLayoutDirty() noexcept { layoutDirty_ = true; }
+    void MarkLayoutDirty() noexcept { layoutDirty = true; }
     void RebuildIfNeeded();
     UniquePtr<Widget> BuildNode(int nodeIndex);
     UniquePtr<Widget> BuildLeaf(const DockNode& node);
@@ -56,11 +56,11 @@ private:
     [[nodiscard]] Widget* FindPanelContent(const Utf8String& panelId) noexcept;
     void NotifyLayoutChanged(bool committed);
 
-    DockLayoutModel model_{};
-    Array<PanelSlotEntry> panels_{};
-    UniquePtr<Widget> builtRoot_{};
-    bool layoutDirty_ = true;
-    std::function<void(const DockLayoutModel&)> onLayoutChanged_{};
+    DockLayoutModel model{};
+    Array<PanelSlotEntry> panels{};
+    UniquePtr<Widget> builtRoot{};
+    bool layoutDirty = true;
+    std::function<void(const DockLayoutModel&)> onLayoutChanged{};
 };
 
 }  // namespace Spark::Gui

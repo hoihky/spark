@@ -20,18 +20,18 @@ class DockPanel {
 public:
     DockPanel(Utf8String id, Utf8String title, UniquePtr<Widget> content, DockSide side = DockSide::Left);
 
-    [[nodiscard]] const Utf8String& GetId() const noexcept { return id_; }
-    [[nodiscard]] const Utf8String& GetTitle() const noexcept { return title_; }
-    [[nodiscard]] DockSide GetSide() const noexcept { return side_; }
-    [[nodiscard]] Widget* GetContent() noexcept { return content_.Get(); }
-    [[nodiscard]] const Widget* GetContent() const noexcept { return content_.Get(); }
-    [[nodiscard]] UniquePtr<Widget> ReleaseContent() { return MoveTemp(content_); }
+    [[nodiscard]] const Utf8String& GetId() const noexcept { return id; }
+    [[nodiscard]] const Utf8String& GetTitle() const noexcept { return title; }
+    [[nodiscard]] DockSide GetSide() const noexcept { return side; }
+    [[nodiscard]] Widget* GetContent() noexcept { return content.Get(); }
+    [[nodiscard]] const Widget* GetContent() const noexcept { return content.Get(); }
+    [[nodiscard]] UniquePtr<Widget> ReleaseContent() { return MoveTemp(content); }
 
 private:
-    Utf8String id_;
-    Utf8String title_;
-    UniquePtr<Widget> content_;
-    DockSide side_ = DockSide::Left;
+    Utf8String id;
+    Utf8String title;
+    UniquePtr<Widget> content;
+    DockSide side = DockSide::Left;
 };
 
 }  // namespace Spark::Gui

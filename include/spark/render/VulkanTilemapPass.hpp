@@ -49,15 +49,15 @@ public:
             VulkanSpritePass& instancing,
             const VulkanSpriteRecordContext& spriteCtx) const;
 
-    [[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return pipelineLayout_; }
+    [[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return pipelineLayout; }
 
 private:
     [[nodiscard]] VkPipeline PipelineForBlendMode(SceneBlendMode mode) const noexcept;
 
-    VkShaderModule vertModule_ = VK_NULL_HANDLE;
-    VkShaderModule fragModule_ = VK_NULL_HANDLE;
-    VkPipeline pipelines_[kSceneBlendModeCount]{};
-    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+    VkShaderModule vertModule = VK_NULL_HANDLE;
+    VkShaderModule fragModule = VK_NULL_HANDLE;
+    VkPipeline pipelines[kSceneBlendModeCount]{};
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 };
 
 }  // namespace Spark

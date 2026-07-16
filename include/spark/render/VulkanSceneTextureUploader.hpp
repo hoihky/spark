@@ -30,28 +30,28 @@ public:
     /** GPU buffer→image copies; no-op unless <c>PrepareUploads</c> marked work pending. */
     void RecordUploads(VkCommandBuffer commandBuffer);
 
-    [[nodiscard]] VkImageView ArrayView() const noexcept { return arrayView_; }
-    [[nodiscard]] VkSampler Sampler() const noexcept { return sampler_; }
-    [[nodiscard]] VkImageLayout Layout() const noexcept { return layout_; }
+    [[nodiscard]] VkImageView ArrayView() const noexcept { return arrayView; }
+    [[nodiscard]] VkSampler Sampler() const noexcept { return sampler; }
+    [[nodiscard]] VkImageLayout Layout() const noexcept { return layout; }
 
 private:
     void ResetUploadCache() noexcept;
 
-    VkDevice device_ = VK_NULL_HANDLE;
-    VkImage arrayImage_ = VK_NULL_HANDLE;
-    VkDeviceMemory arrayMemory_ = VK_NULL_HANDLE;
-    VkImageView arrayView_ = VK_NULL_HANDLE;
-    VkSampler sampler_ = VK_NULL_HANDLE;
-    VkBuffer stagingBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory stagingMemory_ = VK_NULL_HANDLE;
-    void* stagingMapped_ = nullptr;
-    VkDeviceSize stagingSize_ = 0;
-    VkImageLayout layout_ = VK_IMAGE_LAYOUT_UNDEFINED;
-    std::uint64_t lastFingerprints_[kLayerCount]{};
-    std::uint32_t lastUploadedCount_ = 0xffffffffu;
-    bool uploadPending_ = false;
-    std::uint32_t pendingUploadCount_ = 0;
-    std::uint64_t pendingFingerprints_[kLayerCount]{};
+    VkDevice device = VK_NULL_HANDLE;
+    VkImage arrayImage = VK_NULL_HANDLE;
+    VkDeviceMemory arrayMemory = VK_NULL_HANDLE;
+    VkImageView arrayView = VK_NULL_HANDLE;
+    VkSampler sampler = VK_NULL_HANDLE;
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
+    void* stagingMapped = nullptr;
+    VkDeviceSize stagingSize = 0;
+    VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    std::uint64_t lastFingerprints[kLayerCount]{};
+    std::uint32_t lastUploadedCount = 0xffffffffu;
+    bool uploadPending = false;
+    std::uint32_t pendingUploadCount = 0;
+    std::uint64_t pendingFingerprints[kLayerCount]{};
 };
 
 }  // namespace Spark

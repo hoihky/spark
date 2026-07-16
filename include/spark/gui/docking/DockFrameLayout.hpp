@@ -17,20 +17,20 @@ public:
     void SetCenter(UniquePtr<Widget> center);
     void SetRightPane(UniquePtr<DockSidePane> pane);
 
-    [[nodiscard]] DockSidePane* GetLeftPane() noexcept { return leftPane_; }
-    [[nodiscard]] DockSidePane* GetRightPane() noexcept { return rightPane_; }
+    [[nodiscard]] DockSidePane* GetLeftPane() noexcept { return leftPane; }
+    [[nodiscard]] DockSidePane* GetRightPane() noexcept { return rightPane; }
     /** Center passthrough region in framebuffer pixels (updated each <c>Arrange</c>). */
-    [[nodiscard]] const Rect& GetCenterBounds() const noexcept { return centerBounds_; }
+    [[nodiscard]] const Rect& GetCenterBounds() const noexcept { return centerBounds; }
 
     void Arrange(const Rect& r) override;
     void Paint(GuiPaintContext& ctx) const override;
     [[nodiscard]] Widget* FindDeepestHover(float x, float y) override;
 
 private:
-    DockSidePane* leftPane_ = nullptr;
-    DockSidePane* rightPane_ = nullptr;
-    Widget* center_ = nullptr;
-    Rect centerBounds_{};
+    DockSidePane* leftPane = nullptr;
+    DockSidePane* rightPane = nullptr;
+    Widget* center = nullptr;
+    Rect centerBounds{};
 };
 
 }  // namespace Spark::Gui

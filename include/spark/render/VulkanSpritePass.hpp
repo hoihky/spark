@@ -73,7 +73,7 @@ public:
             const SceneSpriteDraw& sprite) const;
 
     [[nodiscard]] VkBuffer InstanceBuffer(std::uint32_t frameIndex) const noexcept;
-    [[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return pipelineLayout_; }
+    [[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return pipelineLayout; }
 
 private:
     struct SpriteBatchPushConstants {
@@ -88,15 +88,15 @@ private:
             std::size_t spriteCount,
             std::uint32_t& outInstanceBase) const;
 
-    VkShaderModule vertModule_ = VK_NULL_HANDLE;
-    VkShaderModule fragModule_ = VK_NULL_HANDLE;
-    VkPipeline pipelines_[kSceneBlendModeCount]{};
-    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+    VkShaderModule vertModule = VK_NULL_HANDLE;
+    VkShaderModule fragModule = VK_NULL_HANDLE;
+    VkPipeline pipelines[kSceneBlendModeCount]{};
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
-    Array<VkBuffer> instanceBuffers_;
-    Array<VkDeviceMemory> instanceMemory_;
-    Array<void*> instanceMapped_;
-    mutable Array<std::uint32_t> instanceWriteCursor_;
+    Array<VkBuffer> instanceBuffers;
+    Array<VkDeviceMemory> instanceMemory;
+    Array<void*> instanceMapped;
+    mutable Array<std::uint32_t> instanceWriteCursor;
 };
 
 }  // namespace Spark

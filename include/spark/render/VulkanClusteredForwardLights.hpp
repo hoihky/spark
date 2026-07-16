@@ -28,8 +28,8 @@ public:
     [[nodiscard]] VkBuffer ClusterBuffer(std::uint32_t frameIndex) const noexcept;
 
 private:
-    VkDevice device_ = VK_NULL_HANDLE;
-    std::uint32_t framesInFlight_ = 0;
+    VkDevice device = VK_NULL_HANDLE;
+    std::uint32_t framesInFlight = 0;
 
     struct Flight {
         VkBuffer lightsBuffer = VK_NULL_HANDLE;
@@ -41,7 +41,7 @@ private:
         void* clusterMapped = nullptr;
     };
 
-    Flight flights_[2]{};
+    Flight flights[2]{};
 };
 
 }  // namespace Spark

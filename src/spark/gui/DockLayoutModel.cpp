@@ -5,23 +5,23 @@
 namespace Spark::Gui {
 
 int DockLayoutModel::AddNode(DockNode node) {
-    const int index = static_cast<int>(nodes_.GetSize());
-    nodes_.PushBack(MoveTemp(node));
+    const int index = static_cast<int>(nodes.GetSize());
+    nodes.PushBack(MoveTemp(node));
     return index;
 }
 
 DockNode* DockLayoutModel::GetNode(const int index) noexcept {
-    if (index < 0 || static_cast<std::size_t>(index) >= nodes_.GetSize()) {
+    if (index < 0 || static_cast<std::size_t>(index) >= nodes.GetSize()) {
         return nullptr;
     }
-    return &nodes_[static_cast<std::size_t>(index)];
+    return &nodes[static_cast<std::size_t>(index)];
 }
 
 const DockNode* DockLayoutModel::GetNode(const int index) const noexcept {
-    if (index < 0 || static_cast<std::size_t>(index) >= nodes_.GetSize()) {
+    if (index < 0 || static_cast<std::size_t>(index) >= nodes.GetSize()) {
         return nullptr;
     }
-    return &nodes_[static_cast<std::size_t>(index)];
+    return &nodes[static_cast<std::size_t>(index)];
 }
 
 int DockLayoutModel::AddLeaf(const Utf8String panelId, const bool passthroughInput) {
@@ -89,7 +89,7 @@ DockLayoutModel DockLayoutModel::CreateEditorDefault(const float sidebarWidthPx,
 }
 
 float DockLayoutModel::GetRootLeadingPixels() const noexcept {
-    const DockNode* root = GetNode(rootIndex_);
+    const DockNode* root = GetNode(rootIndex);
     if (root == nullptr || root->kind != DockNodeKind::Split
             || root->measure != DockSplitMeasure::LeadingPixels) {
         return 300.0F;

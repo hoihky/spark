@@ -12,9 +12,9 @@ namespace Spark {
 
 void VulkanSceneTextureUploader::ResetUploadCache() noexcept {
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
-        lastFingerprints_[i] = 0;
+        lastFingerprints[i] = 0;
     }
-    lastUploadedCount_ = 0xffffffffu;
+    lastUploadedCount = 0xffffffffu;
 }
 
 void VulkanSceneTextureUploader::CreateResources(
@@ -23,7 +23,7 @@ void VulkanSceneTextureUploader::CreateResources(
         const VkCommandPool commandPool,
         const VkQueue graphicsQueue) {
     DestroyResources(device);
-    device_ = device;
+    this->device = device;
 
     constexpr VkFormat kTexFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VulkanRendererGpu::CreateImage2DArray(
@@ -36,30 +36,30 @@ void VulkanSceneTextureUploader::CreateResources(
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            arrayImage_,
-            arrayMemory_);
-    arrayView_ = VulkanRendererGpu::CreateImageView2DArray(device, arrayImage_, kTexFormat, kLayerCount);
-    sampler_ = VulkanRendererGpu::CreateTextureSampler(device);
+            arrayImage,
+            arrayMemory);
+    arrayView = VulkanRendererGpu::CreateImageView2DArray(device, arrayImage, kTexFormat, kLayerCount);
+    sampler = VulkanRendererGpu::CreateTextureSampler(device);
 
     const VkDeviceSize layerPitch =
             static_cast<VkDeviceSize>(kLayerSize) * static_cast<VkDeviceSize>(kLayerSize) * 4;
-    stagingSize_ = layerPitch * static_cast<VkDeviceSize>(kLayerCount);
+    stagingSize = layerPitch * static_cast<VkDeviceSize>(kLayerCount);
     VulkanRendererGpu::CreateBuffer(
             physicalDevice,
             device,
-            stagingSize_,
+            stagingSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            stagingBuffer_,
-            stagingMemory_);
-    if (vkMapMemory(device, stagingMemory_, 0, stagingSize_, 0, &stagingMapped_) != VK_SUCCESS) {
+            stagingBuffer,
+            stagingMemory);
+    if (vkMapMemory(device, stagingMemory, 0, stagingSize, 0, &stagingMapped) != VK_SUCCESS) {
         throw std::runtime_error("VulkanSceneTextureUploader: map staging failed");
     }
-    std::memset(stagingMapped_, 255, static_cast<std::size_t>(stagingSize_));
+    std::memset(stagingMapped, 255, static_cast<std::size_t>(stagingSize));
 
     VulkanRendererGpu::RunOneTimeCommands(device, commandPool, graphicsQueue, [&](const VkCommandBuffer cb) {
         VulkanRendererGpu::SceneTexBarrier(
-                cb, arrayImage_, kLayerCount, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                cb, arrayImage, kLayerCount, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         for (std::uint32_t i = 0; i < kLayerCount; ++i) {
             VkBufferImageCopy region{};
             region.bufferOffset = layerPitch * static_cast<VkDeviceSize>(i);
@@ -69,16 +69,16 @@ void VulkanSceneTextureUploader::CreateResources(
             region.imageSubresource.layerCount = 1;
             region.imageExtent = {kLayerSize, kLayerSize, 1};
             vkCmdCopyBufferToImage(
-                    cb, stagingBuffer_, arrayImage_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+                    cb, stagingBuffer, arrayImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         }
         VulkanRendererGpu::SceneTexBarrier(
                 cb,
-                arrayImage_,
+                arrayImage,
                 kLayerCount,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     });
-    layout_ = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     ResetUploadCache();
 }
 
@@ -86,57 +86,57 @@ void VulkanSceneTextureUploader::DestroyResources(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (stagingMapped_ != nullptr) {
-        vkUnmapMemory(device, stagingMemory_);
-        stagingMapped_ = nullptr;
+    if (stagingMapped != nullptr) {
+        vkUnmapMemory(device, stagingMemory);
+        stagingMapped = nullptr;
     }
-    if (stagingBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, stagingBuffer_, nullptr);
-        stagingBuffer_ = VK_NULL_HANDLE;
+    if (stagingBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        stagingBuffer = VK_NULL_HANDLE;
     }
-    if (stagingMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, stagingMemory_, nullptr);
-        stagingMemory_ = VK_NULL_HANDLE;
+    if (stagingMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, stagingMemory, nullptr);
+        stagingMemory = VK_NULL_HANDLE;
     }
-    stagingSize_ = 0;
-    if (sampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, sampler_, nullptr);
-        sampler_ = VK_NULL_HANDLE;
+    stagingSize = 0;
+    if (sampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, sampler, nullptr);
+        sampler = VK_NULL_HANDLE;
     }
-    if (arrayView_ != VK_NULL_HANDLE) {
-        vkDestroyImageView(device, arrayView_, nullptr);
-        arrayView_ = VK_NULL_HANDLE;
+    if (arrayView != VK_NULL_HANDLE) {
+        vkDestroyImageView(device, arrayView, nullptr);
+        arrayView = VK_NULL_HANDLE;
     }
-    if (arrayImage_ != VK_NULL_HANDLE) {
-        vkDestroyImage(device, arrayImage_, nullptr);
-        arrayImage_ = VK_NULL_HANDLE;
+    if (arrayImage != VK_NULL_HANDLE) {
+        vkDestroyImage(device, arrayImage, nullptr);
+        arrayImage = VK_NULL_HANDLE;
     }
-    if (arrayMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, arrayMemory_, nullptr);
-        arrayMemory_ = VK_NULL_HANDLE;
+    if (arrayMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, arrayMemory, nullptr);
+        arrayMemory = VK_NULL_HANDLE;
     }
-    layout_ = VK_IMAGE_LAYOUT_UNDEFINED;
-    device_ = VK_NULL_HANDLE;
-    uploadPending_ = false;
+    layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    this->device = VK_NULL_HANDLE;
+    uploadPending = false;
     ResetUploadCache();
 }
 
 bool VulkanSceneTextureUploader::NeedsUpload(
         const SceneRenderParams& scene,
         const bool sceneParamsValid) const noexcept {
-    if (!sceneParamsValid || stagingMapped_ == nullptr || arrayImage_ == VK_NULL_HANDLE) {
+    if (!sceneParamsValid || stagingMapped == nullptr || arrayImage == VK_NULL_HANDLE) {
         return false;
     }
     const std::size_t texCount = scene.sceneTextures.GetSize();
     const std::size_t n = std::min(texCount, static_cast<std::size_t>(kLayerCount));
     const std::uint32_t n32 = static_cast<std::uint32_t>(n);
-    if (lastUploadedCount_ != n32) {
+    if (lastUploadedCount != n32) {
         return true;
     }
     for (std::size_t i = 0; i < n; ++i) {
         const SharedPtr<Texture2D>& tex = scene.sceneTextures[i];
         const std::uint64_t fp = tex ? tex->GetContentFingerprint() : 0;
-        if (fp != lastFingerprints_[i]) {
+        if (fp != lastFingerprints[i]) {
             return true;
         }
     }
@@ -144,7 +144,7 @@ bool VulkanSceneTextureUploader::NeedsUpload(
 }
 
 void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, const bool sceneParamsValid) {
-    uploadPending_ = false;
+    uploadPending = false;
     if (!NeedsUpload(scene, sceneParamsValid)) {
         return;
     }
@@ -155,7 +155,7 @@ void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, 
 
     const VkDeviceSize layerPitch =
             static_cast<VkDeviceSize>(kLayerSize) * static_cast<VkDeviceSize>(kLayerSize) * 4;
-    auto* const base = static_cast<std::uint8_t*>(stagingMapped_);
+    auto* const base = static_cast<std::uint8_t*>(stagingMapped);
     Array<std::uint8_t> resampled;
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
         std::uint8_t* dst = base + static_cast<std::size_t>(layerPitch) * i;
@@ -176,20 +176,20 @@ void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, 
         }
     }
 
-    pendingUploadCount_ = n32;
+    pendingUploadCount = n32;
     for (std::uint32_t i = 0; i < n32; ++i) {
         const SharedPtr<Texture2D>& tex = scene.sceneTextures[i];
-        pendingFingerprints_[i] = tex ? tex->GetContentFingerprint() : 0;
+        pendingFingerprints[i] = tex ? tex->GetContentFingerprint() : 0;
     }
     for (std::uint32_t i = n32; i < kLayerCount; ++i) {
-        pendingFingerprints_[i] = 0;
+        pendingFingerprints[i] = 0;
     }
-    uploadPending_ = true;
+    uploadPending = true;
 }
 
 void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuffer) {
-    if (!uploadPending_ || commandBuffer == VK_NULL_HANDLE || stagingMapped_ == nullptr ||
-        arrayImage_ == VK_NULL_HANDLE) {
+    if (!uploadPending || commandBuffer == VK_NULL_HANDLE || stagingMapped == nullptr ||
+        arrayImage == VK_NULL_HANDLE) {
         return;
     }
 
@@ -197,7 +197,7 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
             static_cast<VkDeviceSize>(kLayerSize) * static_cast<VkDeviceSize>(kLayerSize) * 4;
 
     VulkanRendererGpu::SceneTexBarrier(
-            commandBuffer, arrayImage_, kLayerCount, layout_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            commandBuffer, arrayImage, kLayerCount, layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
         VkBufferImageCopy region{};
         region.bufferOffset = layerPitch * static_cast<VkDeviceSize>(i);
@@ -207,21 +207,21 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
         region.imageSubresource.layerCount = 1;
         region.imageExtent = {kLayerSize, kLayerSize, 1};
         vkCmdCopyBufferToImage(
-                commandBuffer, stagingBuffer_, arrayImage_, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+                commandBuffer, stagingBuffer, arrayImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
     }
     VulkanRendererGpu::SceneTexBarrier(
             commandBuffer,
-            arrayImage_,
+            arrayImage,
             kLayerCount,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    layout_ = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    lastUploadedCount_ = pendingUploadCount_;
+    lastUploadedCount = pendingUploadCount;
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
-        lastFingerprints_[i] = pendingFingerprints_[i];
+        lastFingerprints[i] = pendingFingerprints[i];
     }
-    uploadPending_ = false;
+    uploadPending = false;
 }
 
 }  // namespace Spark

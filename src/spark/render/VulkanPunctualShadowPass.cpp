@@ -84,32 +84,32 @@ void FillSpotAtlasUv(const std::uint32_t slot, float outAtlas[4]) {
 }  // namespace
 
 bool VulkanPunctualShadowPass::HasFlightResources(const std::uint32_t frameIndex) const noexcept {
-    return frameIndex < flights_.GetSize() && flights_[frameIndex].spot.depthView != VK_NULL_HANDLE &&
-           flights_[frameIndex].point.depthArrayView != VK_NULL_HANDLE;
+    return frameIndex < flights.GetSize() && flights[frameIndex].spot.depthView != VK_NULL_HANDLE &&
+           flights[frameIndex].point.depthArrayView != VK_NULL_HANDLE;
 }
 
 VkBuffer VulkanPunctualShadowPass::SsboBuffer(const std::uint32_t frameIndex) const noexcept {
-    if (frameIndex >= flights_.GetSize()) {
+    if (frameIndex >= flights.GetSize()) {
         return VK_NULL_HANDLE;
     }
-    return flights_[frameIndex].ssboBuffer;
+    return flights[frameIndex].ssboBuffer;
 }
 
 void VulkanPunctualShadowPass::DestroyGraphicsPipeline(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (pipeline_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipeline_, nullptr);
-        pipeline_ = VK_NULL_HANDLE;
+    if (pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipeline, nullptr);
+        pipeline = VK_NULL_HANDLE;
     }
-    if (pipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
-        pipelineLayout_ = VK_NULL_HANDLE;
+    if (pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        pipelineLayout = VK_NULL_HANDLE;
     }
-    if (vertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, vertModule_, nullptr);
-        vertModule_ = VK_NULL_HANDLE;
+    if (vertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertModule, nullptr);
+        vertModule = VK_NULL_HANDLE;
     }
 }
 
@@ -117,8 +117,8 @@ void VulkanPunctualShadowPass::DestroyResources(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    for (std::size_t fi = 0; fi < flights_.GetSize(); ++fi) {
-        FlightTarget& flight = flights_[fi];
+    for (std::size_t fi = 0; fi < flights.GetSize(); ++fi) {
+        FlightTarget& flight = flights[fi];
         if (flight.ssboMapped != nullptr) {
             vkUnmapMemory(device, flight.ssboMemory);
             flight.ssboMapped = nullptr;
@@ -178,15 +178,15 @@ void VulkanPunctualShadowPass::DestroyResources(const VkDevice device) {
         }
         point.depthLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    flights_.Clear();
+    flights.Clear();
 
-    if (renderPass_ != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(device, renderPass_, nullptr);
-        renderPass_ = VK_NULL_HANDLE;
+    if (renderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        renderPass = VK_NULL_HANDLE;
     }
-    if (compareSampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, compareSampler_, nullptr);
-        compareSampler_ = VK_NULL_HANDLE;
+    if (compareSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, compareSampler, nullptr);
+        compareSampler = VK_NULL_HANDLE;
     }
 }
 
@@ -212,7 +212,7 @@ void VulkanPunctualShadowPass::CreateResources(
     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
     samplerInfo.compareEnable = VK_FALSE;
     samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-    if (vkCreateSampler(device, &samplerInfo, nullptr, &compareSampler_) != VK_SUCCESS) {
+    if (vkCreateSampler(device, &samplerInfo, nullptr, &compareSampler) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateSampler (punctual shadow) failed");
     }
 
@@ -249,13 +249,13 @@ void VulkanPunctualShadowPass::CreateResources(
     rpInfo.pSubpasses = &subpass;
     rpInfo.dependencyCount = 1;
     rpInfo.pDependencies = &dep0;
-    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass_) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateRenderPass (punctual shadow) failed");
     }
 
-    flights_.Resize(framesInFlight);
+    flights.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
-        FlightTarget& flight = flights_[fi];
+        FlightTarget& flight = flights[fi];
 
         VulkanRendererGpu::CreateBuffer(
                 physicalDevice,
@@ -297,7 +297,7 @@ void VulkanPunctualShadowPass::CreateResources(
 
         VkFramebufferCreateInfo spotFbInfo{};
         spotFbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        spotFbInfo.renderPass = renderPass_;
+        spotFbInfo.renderPass = renderPass;
         spotFbInfo.attachmentCount = 1;
         spotFbInfo.pAttachments = &spot.depthView;
         spotFbInfo.width = kSpotShadowAtlasSize;
@@ -347,7 +347,7 @@ void VulkanPunctualShadowPass::CreateResources(
 
             VkFramebufferCreateInfo layerFbInfo{};
             layerFbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            layerFbInfo.renderPass = renderPass_;
+            layerFbInfo.renderPass = renderPass;
             layerFbInfo.attachmentCount = 1;
             layerFbInfo.pAttachments = &point.layerViews[layer];
             layerFbInfo.width = kPointShadowFaceSize;
@@ -366,18 +366,18 @@ void VulkanPunctualShadowPass::CreateGraphicsPipeline(
         const VkDescriptorSetLayout sceneDescriptorSetLayout,
         const VulkanSpvShaderLoader& shaders) {
     static_assert(sizeof(VulkanShadowPushConstants) == 144);
-    if (device == VK_NULL_HANDLE || renderPass_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE || renderPass == VK_NULL_HANDLE) {
         return;
     }
     DestroyGraphicsPipeline(device);
 
     const Array<char> vertCode = shaders.ReadSpvFile("shadow_depth.vert.spv");
-    vertModule_ = shaders.CreateShaderModule(vertCode);
+    vertModule = shaders.CreateShaderModule(vertCode);
 
     VkPipelineShaderStageCreateInfo vertStage{};
     vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertStage.module = vertModule_;
+    vertStage.module = vertModule;
     vertStage.pName = "main";
 
     using VL = VulkanSceneVertexLayout;
@@ -476,7 +476,7 @@ void VulkanPunctualShadowPass::CreateGraphicsPipeline(
     plInfo.pSetLayouts = &sceneDescriptorSetLayout;
     plInfo.pushConstantRangeCount = 1;
     plInfo.pPushConstantRanges = &pcRange;
-    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (punctual shadow) failed");
     }
 
@@ -492,11 +492,11 @@ void VulkanPunctualShadowPass::CreateGraphicsPipeline(
     pipelineCreateInfo.pDepthStencilState = &depthStencil;
     pipelineCreateInfo.pColorBlendState = &colorBlending;
     pipelineCreateInfo.pDynamicState = &dynamicState;
-    pipelineCreateInfo.layout = pipelineLayout_;
-    pipelineCreateInfo.renderPass = renderPass_;
+    pipelineCreateInfo.layout = pipelineLayout;
+    pipelineCreateInfo.renderPass = renderPass;
     pipelineCreateInfo.subpass = 0;
 
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline_) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateGraphicsPipelines (punctual shadow) failed");
     }
 }
@@ -507,7 +507,7 @@ void VulkanPunctualShadowPass::PrepareAndUpload(
         const ResolvedSceneLighting& lighting,
         VulkanPunctualShadowFrameState& out) {
     out = VulkanPunctualShadowFrameState{};
-    if (frameIndex >= flights_.GetSize() || flights_[frameIndex].ssboMapped == nullptr) {
+    if (frameIndex >= flights.GetSize() || flights[frameIndex].ssboMapped == nullptr) {
         return;
     }
 
@@ -528,7 +528,7 @@ void VulkanPunctualShadowPass::PrepareAndUpload(
     const bool enabled = lighting.punctualShadowsEnabled && scene.punctualShadowsEnabled && HasFlightResources(frameIndex);
     gpu.enabled = enabled ? 1U : 0U;
     if (!enabled) {
-        std::memcpy(flights_[frameIndex].ssboMapped, &gpu, sizeof(gpu));
+        std::memcpy(flights[frameIndex].ssboMapped, &gpu, sizeof(gpu));
         return;
     }
 
@@ -607,7 +607,7 @@ void VulkanPunctualShadowPass::PrepareAndUpload(
         }
     }
 
-    std::memcpy(flights_[frameIndex].ssboMapped, &gpu, sizeof(gpu));
+    std::memcpy(flights[frameIndex].ssboMapped, &gpu, sizeof(gpu));
 }
 
 void VulkanPunctualShadowPass::EnsureDepthImagesReadable(
@@ -705,11 +705,11 @@ void VulkanPunctualShadowPass::Record(
         const std::uint32_t frameIndex,
         const VulkanShadowRecordContext& ctx,
         const VulkanPunctualShadowFrameState& frameState) {
-    if (pipeline_ == VK_NULL_HANDLE || renderPass_ == VK_NULL_HANDLE || frameIndex >= flights_.GetSize()) {
+    if (pipeline == VK_NULL_HANDLE || renderPass == VK_NULL_HANDLE || frameIndex >= flights.GetSize()) {
         return;
     }
 
-    FlightTarget& flight = flights_[frameIndex];
+    FlightTarget& flight = flights[frameIndex];
     EnsureDepthImagesReadable(commandBuffer, flight);
 
     if (!frameState.active || !ctx.sceneParamsValid || ctx.descriptorSet == VK_NULL_HANDLE) {
@@ -717,11 +717,11 @@ void VulkanPunctualShadowPass::Record(
     }
     const VkClearValue clearDepth{.depthStencil = {1.0F, 0}};
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout_,
+            pipelineLayout,
             0,
             1,
             &ctx.descriptorSet,
@@ -739,7 +739,7 @@ void VulkanPunctualShadowPass::Record(
 
         VkRenderPassBeginInfo rpBegin{};
         rpBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        rpBegin.renderPass = renderPass_;
+        rpBegin.renderPass = renderPass;
         rpBegin.framebuffer = flight.spot.framebuffer;
         rpBegin.renderArea.offset = {0, 0};
         rpBegin.renderArea.extent = {kSpotShadowAtlasSize, kSpotShadowAtlasSize};
@@ -770,8 +770,8 @@ void VulkanPunctualShadowPass::Record(
 
             RecordShadowCastMeshes(
                     commandBuffer,
-                    pipeline_,
-                    pipelineLayout_,
+                    pipeline,
+                    pipelineLayout,
                     ctx,
                     frameState.spotWorldToClip[slot].m,
                     frameIndex);
@@ -824,7 +824,7 @@ void VulkanPunctualShadowPass::Record(
 
                 VkRenderPassBeginInfo rpBegin{};
                 rpBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-                rpBegin.renderPass = renderPass_;
+                rpBegin.renderPass = renderPass;
                 rpBegin.framebuffer = flight.point.layerFramebuffers[layer];
                 rpBegin.renderArea.offset = {0, 0};
                 rpBegin.renderArea.extent = {kPointShadowFaceSize, kPointShadowFaceSize};
@@ -848,8 +848,8 @@ void VulkanPunctualShadowPass::Record(
 
                 RecordShadowCastMeshes(
                         commandBuffer,
-                        pipeline_,
-                        pipelineLayout_,
+                        pipeline,
+                        pipelineLayout,
                         ctx,
                         frameState.pointFaceViewProj[slot][face].m,
                         frameIndex);

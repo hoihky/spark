@@ -32,8 +32,8 @@ public:
     SceneManager(const SceneManager&) = delete;
     SceneManager& operator=(const SceneManager&) = delete;
 
-    [[nodiscard]] GameWorld& GetWorld() noexcept { return world_; }
-    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return assetLoader_; }
+    [[nodiscard]] GameWorld& GetWorld() noexcept { return world; }
+    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return assetLoader; }
 
     /**
      * Reads the scene file and instantiates entities. Asset decode runs on a worker thread;
@@ -62,7 +62,7 @@ public:
     void UnloadScene(SceneInstanceId instanceId);
     void UnloadAllScenes();
 
-    [[nodiscard]] std::size_t GetLoadedSceneCount() const noexcept { return instances_.GetSize(); }
+    [[nodiscard]] std::size_t GetLoadedSceneCount() const noexcept { return instances.GetSize(); }
 
 private:
     struct PendingComponentRestore {
@@ -81,7 +81,7 @@ private:
         SceneLoadOptions options;
     };
 
-    [[nodiscard]] SceneInstanceId AllocateInstanceId() noexcept { return nextInstanceId_++; }
+    [[nodiscard]] SceneInstanceId AllocateInstanceId() noexcept { return nextInstanceId++; }
 
     [[nodiscard]] SceneInstanceId BeginLoadSceneInternal(const SceneDocument& document, const char* path, const SceneLoadOptions& options);
 
@@ -97,10 +97,10 @@ private:
 
     static void OnDeferredComponentStatic(GameObject* object, const ComponentRecord& record, void* userData);
 
-    GameWorld& world_;
-    GameWorldAssetLoader assetLoader_;
-    SceneInstanceId nextInstanceId_ = 1;
-    Array<LoadedSceneInstance> instances_;
+    GameWorld& world;
+    GameWorldAssetLoader assetLoader;
+    SceneInstanceId nextInstanceId = 1;
+    Array<LoadedSceneInstance> instances;
 };
 
 }  // namespace Spark

@@ -15,7 +15,7 @@ RenderLayerRegistry::RenderLayerRegistry() {
 
 void RenderLayerRegistry::RegisterBuiltInLayers() {
     (void)RegisterLayer("Background", 0);
-    defaultLayerId_ = RegisterLayer("Default", 100);
+    defaultLayerId = RegisterLayer("Default", 100);
     (void)RegisterLayer("Characters", 200);
     (void)RegisterLayer("Effects", 300);
     (void)RegisterLayer("Overlay", 400);
@@ -29,25 +29,25 @@ RenderLayerId RenderLayerRegistry::RegisterLayer(const char* name, const std::in
     if (existing != kInvalidRenderLayerId) {
         return existing;
     }
-    if (layers_.GetSize() >= static_cast<std::size_t>(kInvalidRenderLayerId)) {
+    if (layers.GetSize() >= static_cast<std::size_t>(kInvalidRenderLayerId)) {
         return kInvalidRenderLayerId;
     }
     RenderLayerDescriptor entry{};
     entry.name = Utf8String(name);
     entry.sortingOrder = sortingOrder;
-    layers_.PushBack(entry);
+    layers.PushBack(entry);
     if (std::strcmp(name, "Default") == 0) {
-        defaultLayerId_ = static_cast<RenderLayerId>(layers_.GetSize() - 1U);
+        defaultLayerId = static_cast<RenderLayerId>(layers.GetSize() - 1U);
     }
-    return static_cast<RenderLayerId>(layers_.GetSize() - 1U);
+    return static_cast<RenderLayerId>(layers.GetSize() - 1U);
 }
 
 RenderLayerId RenderLayerRegistry::FindLayerIdByName(const char* name) const noexcept {
     if (name == nullptr) {
         return kInvalidRenderLayerId;
     }
-    for (std::size_t i = 0; i < layers_.GetSize(); ++i) {
-        if (std::strcmp(layers_[i].name.CStr(), name) == 0) {
+    for (std::size_t i = 0; i < layers.GetSize(); ++i) {
+        if (std::strcmp(layers[i].name.CStr(), name) == 0) {
             return static_cast<RenderLayerId>(i);
         }
     }
@@ -55,25 +55,25 @@ RenderLayerId RenderLayerRegistry::FindLayerIdByName(const char* name) const noe
 }
 
 std::int16_t RenderLayerRegistry::GetLayerSortingOrder(const RenderLayerId id) const noexcept {
-    if (id >= layers_.GetSize()) {
+    if (id >= layers.GetSize()) {
         return GetDefaultLayerSortingOrder();
     }
-    return layers_[id].sortingOrder;
+    return layers[id].sortingOrder;
 }
 
 const char* RenderLayerRegistry::GetLayerName(const RenderLayerId id) const noexcept {
-    if (id >= layers_.GetSize()) {
+    if (id >= layers.GetSize()) {
         return "Default";
     }
-    return layers_[id].name.CStr();
+    return layers[id].name.CStr();
 }
 
 std::int16_t RenderLayerRegistry::GetDefaultLayerSortingOrder() const noexcept {
-    return GetLayerSortingOrder(defaultLayerId_);
+    return GetLayerSortingOrder(defaultLayerId);
 }
 
 const RenderLayerDescriptor& RenderLayerRegistry::GetLayer(const std::size_t index) const noexcept {
-    return layers_[index];
+    return layers[index];
 }
 
 }  // namespace Spark

@@ -55,7 +55,7 @@ public:
     void ClearKeyboardFocus() noexcept { focusWidget = nullptr; }
 
     /** Precomputed hover from <c>ProcessGuiCanvasesInput</c> (open popups, z-order). Cleared after one <c>StepPointer</c>. */
-    void SetFrameHotWidget(Gui::Widget* widget) noexcept { frameHotWidget_ = widget; }
+    void SetFrameHotWidget(Gui::Widget* widget) noexcept { frameHotWidget = widget; }
 
     void StepPointer(const Gui::GuiFrameInput& frameInput);
     void ProcessKeyFocus(IInput& input);
@@ -90,7 +90,7 @@ private:
     Gui::Widget* hotWidget = nullptr;
     Gui::Widget* activePress = nullptr;
     Gui::Widget* focusWidget = nullptr;
-    Gui::Widget* frameHotWidget_ = nullptr;
+    Gui::Widget* frameHotWidget = nullptr;
     Gui::GuiFrameInput lastFrameInput{};
     bool modalInputCapture = false;
 };

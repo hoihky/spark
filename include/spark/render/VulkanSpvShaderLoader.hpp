@@ -9,14 +9,14 @@ namespace Spark {
 /** Loads SPIR-V from <c>SPARK_SHADER_SPV_DIR</c> and creates <c>VkShaderModule</c> instances. */
 class VulkanSpvShaderLoader {
 public:
-    void SetDevice(VkDevice device) noexcept { device_ = device; }
+    void SetDevice(VkDevice inDevice) noexcept { device = inDevice; }
 
     [[nodiscard]] Array<char> ReadSpvFile(const char* filename) const;
 
     [[nodiscard]] VkShaderModule CreateShaderModule(const Array<char>& code) const;
 
 private:
-    VkDevice device_ = VK_NULL_HANDLE;
+    VkDevice device = VK_NULL_HANDLE;
 };
 
 }  // namespace Spark

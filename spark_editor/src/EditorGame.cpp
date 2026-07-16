@@ -6,25 +6,25 @@
 
 namespace Spark {
 
-EditorGame::EditorGame() : editor_(MakeUnique<Editor::EditorApplication>()) {}
+EditorGame::EditorGame() : editor(MakeUnique<Editor::EditorApplication>()) {}
 
 EditorGame::~EditorGame() = default;
 
 void EditorGame::OnAttach(IEngineContext& context) {
-    editor_->OnAttach(GetScene(), context);
+    editor->OnAttach(GetScene(), context);
 }
 
 void EditorGame::OnDetach() {
-    editor_->OnDetach(GetScene());
+    editor->OnDetach(GetScene());
 }
 
 void EditorGame::OnUpdate(const FrameTiming& timing, IEngineContext& context) {
     Game::OnUpdate(timing, context);
-    editor_->OnUpdate(timing, GetScene(), context);
+    editor->OnUpdate(timing, GetScene(), context);
 }
 
 void EditorGame::OnRender(IRenderFrame& /*frame*/, IEngineContext& context) {
-    editor_->OnRender(GetScene(), context);
+    editor->OnRender(GetScene(), context);
 }
 
 UniquePtr<IGame> NewEditorGame() {

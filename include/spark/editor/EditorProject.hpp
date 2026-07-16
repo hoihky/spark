@@ -17,8 +17,8 @@ struct EditorProjectSettings {
 
 class EditorProject {
 public:
-    [[nodiscard]] const EditorProjectSettings& GetSettings() const noexcept { return settings_; }
-    [[nodiscard]] EditorProjectSettings& GetSettings() noexcept { return settings_; }
+    [[nodiscard]] const EditorProjectSettings& GetSettings() const noexcept { return settings; }
+    [[nodiscard]] EditorProjectSettings& GetSettings() noexcept { return settings; }
 
     /** Creates default folder layout under @p projectRoot. */
     [[nodiscard]] bool CreateNewAt(const char* projectRootUtf8, WorkspaceDimension dimension) noexcept;
@@ -26,17 +26,17 @@ public:
     /** Opens an existing folder; loads project.spark when present. */
     [[nodiscard]] bool OpenExisting(const char* projectRootUtf8) noexcept;
 
-    [[nodiscard]] bool IsOpen() const noexcept { return isOpen_; }
-    [[nodiscard]] bool IsDirty() const noexcept { return dirty_; }
-    void MarkDirty() noexcept { dirty_ = true; }
-    void ClearDirty() noexcept { dirty_ = false; }
+    [[nodiscard]] bool IsOpen() const noexcept { return isOpen; }
+    [[nodiscard]] bool IsDirty() const noexcept { return dirty; }
+    void MarkDirty() noexcept { dirty = true; }
+    void ClearDirty() noexcept { dirty = false; }
 
     [[nodiscard]] bool TrySaveProjectFile() noexcept;
 
 private:
-    EditorProjectSettings settings_{};
-    bool isOpen_ = false;
-    bool dirty_ = false;
+    EditorProjectSettings settings{};
+    bool isOpen = false;
+    bool dirty = false;
 };
 
 }  // namespace Spark::Editor

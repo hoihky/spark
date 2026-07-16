@@ -27,35 +27,35 @@ InspectorPanel::InspectorPanel() {
     auto stack = MakeUnique<Gui::StackPanel>();
     stack->SetSpacing(6.0F);
 
-    auto title = MakeUnique<Gui::Label>();
-    title->SetText(Utf8String("Inspector"));
-    title->SetFontSize(20.0F);
-    title->SetTextColor(th.labelPrimary);
-    title_ = title.Get();
-    stack->AddChild(MoveTemp(title));
+    auto titleUp = MakeUnique<Gui::Label>();
+    titleUp->SetText(Utf8String("Inspector"));
+    titleUp->SetFontSize(20.0F);
+    titleUp->SetTextColor(th.labelPrimary);
+    title = titleUp.Get();
+    stack->AddChild(MoveTemp(titleUp));
 
-    auto body = MakeUnique<Gui::Label>();
-    body->SetText(Utf8String("Select an entity in the Hierarchy."));
-    body->SetFontSize(16.0F);
-    body->SetTextColor(th.labelMuted);
-    body_ = body.Get();
-    stack->AddChild(MoveTemp(body));
+    auto bodyUp = MakeUnique<Gui::Label>();
+    bodyUp->SetText(Utf8String("Select an entity in the Hierarchy."));
+    bodyUp->SetFontSize(16.0F);
+    bodyUp->SetTextColor(th.labelMuted);
+    body = bodyUp.Get();
+    stack->AddChild(MoveTemp(bodyUp));
 
     shell->AddChild(MoveTemp(stack));
-    root_.Reset(shell.Release());
+    root.Reset(shell.Release());
 }
 
 void InspectorPanel::OnAttach(EditorContext& ctx) {
-    selection_ = ctx.selection;
+    selection = ctx.selection;
 }
 
 void InspectorPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*/) {
-    if (body_ == nullptr || selection_ == nullptr) {
+    if (body == nullptr || selection == nullptr) {
         return;
     }
-    GameObject* obj = selection_->GetPrimary();
+    GameObject* obj = selection->GetPrimary();
     if (obj == nullptr) {
-        body_->SetText(Utf8String("Select an entity in the Hierarchy."));
+        body->SetText(Utf8String("Select an entity in the Hierarchy."));
         return;
     }
 
@@ -74,7 +74,7 @@ void InspectorPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*
     if (obj->GetComponent<PointLightComponent>() != nullptr) {
         std::strncat(buf, "PointLightComponent\n", sizeof(buf) - std::strlen(buf) - 1);
     }
-    body_->SetText(Utf8String(buf));
+    body->SetText(Utf8String(buf));
 }
 
 }  // namespace Spark::Editor

@@ -106,26 +106,26 @@ private:
 
     Window& appWindow;
 
-    VulkanSpvShaderLoader shaderLoader_;
-    VulkanSceneUniformWriter sceneUniformWriter_;
-    VulkanClusteredForwardLights clusteredForwardLights_;
-    VulkanScreenshotCapture screenshotCapture_;
-    VulkanVideoCapture videoCapture_;
-    VulkanDirectionalShadowPass directionalShadow_;
-    VulkanDirectionalShadowFrameState shadowFrameState_{};
-    VulkanPunctualShadowPass punctualShadow_;
-    VulkanPunctualShadowFrameState punctualShadowFrameState_{};
-    VulkanHdrTonemapPass hdrTonemapPass_;
-    VulkanScreenSpaceEffectsPass screenSpaceEffectsPass_;
-    VulkanSceneOpaquePass sceneOpaquePass_;
-    VulkanSceneTextureUploader sceneTextureUploader_;
-    VulkanCustomMeshPool customMeshPool_;
-    VulkanDeferredUploadBatch deferredUploadBatch_;
-    VulkanScreenUiPass screenUi_;
-    VulkanParticlePass particlePass_;
-    VulkanTilemapPass tilemapPass_;
-    VulkanSpritePass spritePass_;
-    Vulkan2DCompositePass composite2DPass_;
+    VulkanSpvShaderLoader shaderLoader;
+    VulkanSceneUniformWriter sceneUniformWriter;
+    VulkanClusteredForwardLights clusteredForwardLights;
+    VulkanScreenshotCapture screenshotCapture;
+    VulkanVideoCapture videoCapture;
+    VulkanDirectionalShadowPass directionalShadow;
+    VulkanDirectionalShadowFrameState shadowFrameState{};
+    VulkanPunctualShadowPass punctualShadow;
+    VulkanPunctualShadowFrameState punctualShadowFrameState{};
+    VulkanHdrTonemapPass hdrTonemapPass;
+    VulkanScreenSpaceEffectsPass screenSpaceEffectsPass;
+    VulkanSceneOpaquePass sceneOpaquePass;
+    VulkanSceneTextureUploader sceneTextureUploader;
+    VulkanCustomMeshPool customMeshPool;
+    VulkanDeferredUploadBatch deferredUploadBatch;
+    VulkanScreenUiPass screenUi;
+    VulkanParticlePass particlePass;
+    VulkanTilemapPass tilemapPass;
+    VulkanSpritePass spritePass;
+    Vulkan2DCompositePass composite2DPass;
 
     VkInstance instance = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
@@ -139,7 +139,7 @@ private:
     /** Tonemap + screen UI (swapchain color only). */
     VulkanPresentRenderPass presentRenderPass;
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
-    VulkanScenePipeline scenePipeline_;
+    VulkanScenePipeline scenePipeline;
     VulkanPresentationFramebuffers presentationFramebuffers;
 
     VkFormat sceneDepthFormat = VK_FORMAT_UNDEFINED;
@@ -161,7 +161,7 @@ private:
 
     Array<CustomMeshGpuSlice> customDrawPacked;
     Array<CustomMeshGpuSlice> customDrawPackedTransparent;
-    std::uint64_t submittedFrameCounter_ = 0;
+    std::uint64_t submittedFrameCounter = 0;
 
     static constexpr std::uint32_t kMaxSkinJoints = 64;
     /** std430 mat4 skinPalette[kMaxSkinJoints] — 64 joints × 64 bytes. */
@@ -194,8 +194,8 @@ private:
     /** Cached after <c>SetSceneRenderParams</c> from profile + overrides. */
     ResolvedSceneLighting resolvedLighting{};
 
-    std::chrono::steady_clock::time_point recordingWallStart_{};
-    bool recordingWallClockValid_ = false;
+    std::chrono::steady_clock::time_point recordingWallStart{};
+    bool recordingWallClockValid = false;
 };
 
 }  // namespace Spark

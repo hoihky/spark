@@ -95,11 +95,11 @@ void StableSortTextDrawIndices(const Array<ScreenTextDraw>& texts, Array<std::si
 }
 
 VkPipeline VulkanScreenUiPass::PipelineForSolidBlendMode(const SceneBlendMode mode) const noexcept {
-    return PipelineFromBlendArray(solidPipelines_, mode);
+    return PipelineFromBlendArray(solidPipelines, mode);
 }
 
 VkPipeline VulkanScreenUiPass::PipelineForTextBlendMode(const SceneBlendMode mode) const noexcept {
-    return PipelineFromBlendArray(textPipelines_, mode);
+    return PipelineFromBlendArray(textPipelines, mode);
 }
 
 void VulkanScreenUiPass::CreateResources(
@@ -112,7 +112,7 @@ void VulkanScreenUiPass::CreateResources(
     }
     DestroyResources(device);
 
-    device_ = device;
+    this->device = device;
 
     VkDescriptorSetLayoutBinding fontBinding{};
     fontBinding.binding = 0;
@@ -124,7 +124,7 @@ void VulkanScreenUiPass::CreateResources(
     textLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     textLayoutInfo.bindingCount = 1;
     textLayoutInfo.pBindings = &fontBinding;
-    if (vkCreateDescriptorSetLayout(device, &textLayoutInfo, nullptr, &textDescriptorSetLayout_) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(device, &textLayoutInfo, nullptr, &textDescriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout (text) failed");
     }
 
@@ -137,35 +137,35 @@ void VulkanScreenUiPass::CreateResources(
     textPoolInfo.poolSizeCount = 1;
     textPoolInfo.pPoolSizes = &textPoolSize;
     textPoolInfo.maxSets = framesInFlight;
-    if (vkCreateDescriptorPool(device, &textPoolInfo, nullptr, &textDescriptorPool_) != VK_SUCCESS) {
+    if (vkCreateDescriptorPool(device, &textPoolInfo, nullptr, &textDescriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorPool (text) failed");
     }
 
     Array<VkDescriptorSetLayout> textLayouts;
     textLayouts.Resize(framesInFlight);
     for (std::size_t i = 0; i < framesInFlight; ++i) {
-        textLayouts[i] = textDescriptorSetLayout_;
+        textLayouts[i] = textDescriptorSetLayout;
     }
     VkDescriptorSetAllocateInfo textAlloc{};
     textAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    textAlloc.descriptorPool = textDescriptorPool_;
+    textAlloc.descriptorPool = textDescriptorPool;
     textAlloc.descriptorSetCount = framesInFlight;
     textAlloc.pSetLayouts = textLayouts.GetData();
-    textDescriptorSets_.Resize(framesInFlight);
-    if (vkAllocateDescriptorSets(device, &textAlloc, textDescriptorSets_.GetData()) != VK_SUCCESS) {
+    textDescriptorSets.Resize(framesInFlight);
+    if (vkAllocateDescriptorSets(device, &textAlloc, textDescriptorSets.GetData()) != VK_SUCCESS) {
         throw std::runtime_error("vkAllocateDescriptorSets (text) failed");
     }
 
-    fontSampler_ = VulkanRendererGpu::CreateFontAtlasSampler(device);
+    fontSampler = VulkanRendererGpu::CreateFontAtlasSampler(device);
 
     const Array<char> textVertSpv = shaders.ReadSpvFile("text.vert.spv");
     const Array<char> textFragSpv = shaders.ReadSpvFile("text.frag.spv");
-    textVertModule_ = shaders.CreateShaderModule(textVertSpv);
-    textFragModule_ = shaders.CreateShaderModule(textFragSpv);
+    textVertModule = shaders.CreateShaderModule(textVertSpv);
+    textFragModule = shaders.CreateShaderModule(textFragSpv);
 
-    textFlightBuffers_.Resize(framesInFlight);
+    textFlightBuffers.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
-        UiMeshFlightBuffers& mesh = textFlightBuffers_[fi];
+        UiMeshFlightBuffers& mesh = textFlightBuffers[fi];
         VulkanRendererGpu::CreateBuffer(
                 physicalDevice,
                 device,
@@ -193,12 +193,12 @@ void VulkanScreenUiPass::CreateResources(
 
     const Array<char> solidVertSpv = shaders.ReadSpvFile("ui_solid.vert.spv");
     const Array<char> solidFragSpv = shaders.ReadSpvFile("ui_solid.frag.spv");
-    solidVertModule_ = shaders.CreateShaderModule(solidVertSpv);
-    solidFragModule_ = shaders.CreateShaderModule(solidFragSpv);
+    solidVertModule = shaders.CreateShaderModule(solidVertSpv);
+    solidFragModule = shaders.CreateShaderModule(solidFragSpv);
 
-    solidFlightBuffers_.Resize(framesInFlight);
+    solidFlightBuffers.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
-        UiMeshFlightBuffers& mesh = solidFlightBuffers_[fi];
+        UiMeshFlightBuffers& mesh = solidFlightBuffers[fi];
         VulkanRendererGpu::CreateBuffer(
                 physicalDevice,
                 device,
@@ -229,32 +229,32 @@ void VulkanScreenUiPass::DestroyResources(VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    uploadedUiFont_ = nullptr;
-    uploadedUiBoldFont_ = nullptr;
-    for (std::size_t i = 0; i < retiredFontAtlases_.GetSize(); ++i) {
-        DestroyFontAtlas(retiredFontAtlases_[i].atlas, device);
+    uploadedUiFont = nullptr;
+    uploadedUiBoldFont = nullptr;
+    for (std::size_t i = 0; i < retiredFontAtlases.GetSize(); ++i) {
+        DestroyFontAtlas(retiredFontAtlases[i].atlas, device);
     }
-    retiredFontAtlases_.Clear();
-    DestroyFontAtlas(activeFontAtlas_, device);
-    DestroyFontAtlas(pendingFontAtlas_, device);
-    if (fontStagingMapped_ != nullptr) {
-        vkUnmapMemory(device, fontStagingMemory_);
-        fontStagingMapped_ = nullptr;
+    retiredFontAtlases.Clear();
+    DestroyFontAtlas(activeFontAtlas, device);
+    DestroyFontAtlas(pendingFontAtlas, device);
+    if (fontStagingMapped != nullptr) {
+        vkUnmapMemory(device, fontStagingMemory);
+        fontStagingMapped = nullptr;
     }
-    if (fontStagingBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, fontStagingBuffer_, nullptr);
-        fontStagingBuffer_ = VK_NULL_HANDLE;
+    if (fontStagingBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, fontStagingBuffer, nullptr);
+        fontStagingBuffer = VK_NULL_HANDLE;
     }
-    if (fontStagingMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, fontStagingMemory_, nullptr);
-        fontStagingMemory_ = VK_NULL_HANDLE;
+    if (fontStagingMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, fontStagingMemory, nullptr);
+        fontStagingMemory = VK_NULL_HANDLE;
     }
-    fontStagingCapacity_ = 0;
-    fontUploadPending_ = false;
-    device_ = VK_NULL_HANDLE;
+    fontStagingCapacity = 0;
+    fontUploadPending = false;
+    this->device = VK_NULL_HANDLE;
 
-    for (std::size_t fi = 0; fi < textFlightBuffers_.GetSize(); ++fi) {
-        UiMeshFlightBuffers& mesh = textFlightBuffers_[fi];
+    for (std::size_t fi = 0; fi < textFlightBuffers.GetSize(); ++fi) {
+        UiMeshFlightBuffers& mesh = textFlightBuffers[fi];
         if (mesh.vertexMapped != nullptr) {
             vkUnmapMemory(device, mesh.vertexMemory);
             mesh.vertexMapped = nullptr;
@@ -280,32 +280,32 @@ void VulkanScreenUiPass::DestroyResources(VkDevice device) {
             mesh.indexMemory = VK_NULL_HANDLE;
         }
     }
-    textFlightBuffers_.Clear();
+    textFlightBuffers.Clear();
 
-    textDescriptorSets_.Clear();
-    if (textDescriptorPool_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorPool(device, textDescriptorPool_, nullptr);
-        textDescriptorPool_ = VK_NULL_HANDLE;
+    textDescriptorSets.Clear();
+    if (textDescriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, textDescriptorPool, nullptr);
+        textDescriptorPool = VK_NULL_HANDLE;
     }
-    if (textDescriptorSetLayout_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorSetLayout(device, textDescriptorSetLayout_, nullptr);
-        textDescriptorSetLayout_ = VK_NULL_HANDLE;
+    if (textDescriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(device, textDescriptorSetLayout, nullptr);
+        textDescriptorSetLayout = VK_NULL_HANDLE;
     }
-    if (fontSampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, fontSampler_, nullptr);
-        fontSampler_ = VK_NULL_HANDLE;
+    if (fontSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, fontSampler, nullptr);
+        fontSampler = VK_NULL_HANDLE;
     }
-    if (textVertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, textVertModule_, nullptr);
-        textVertModule_ = VK_NULL_HANDLE;
+    if (textVertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, textVertModule, nullptr);
+        textVertModule = VK_NULL_HANDLE;
     }
-    if (textFragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, textFragModule_, nullptr);
-        textFragModule_ = VK_NULL_HANDLE;
+    if (textFragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, textFragModule, nullptr);
+        textFragModule = VK_NULL_HANDLE;
     }
 
-    for (std::size_t fi = 0; fi < solidFlightBuffers_.GetSize(); ++fi) {
-        UiMeshFlightBuffers& mesh = solidFlightBuffers_[fi];
+    for (std::size_t fi = 0; fi < solidFlightBuffers.GetSize(); ++fi) {
+        UiMeshFlightBuffers& mesh = solidFlightBuffers[fi];
         if (mesh.vertexMapped != nullptr) {
             vkUnmapMemory(device, mesh.vertexMemory);
             mesh.vertexMapped = nullptr;
@@ -331,15 +331,15 @@ void VulkanScreenUiPass::DestroyResources(VkDevice device) {
             mesh.indexMemory = VK_NULL_HANDLE;
         }
     }
-    solidFlightBuffers_.Clear();
+    solidFlightBuffers.Clear();
 
-    if (solidVertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, solidVertModule_, nullptr);
-        solidVertModule_ = VK_NULL_HANDLE;
+    if (solidVertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, solidVertModule, nullptr);
+        solidVertModule = VK_NULL_HANDLE;
     }
-    if (solidFragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, solidFragModule_, nullptr);
-        solidFragModule_ = VK_NULL_HANDLE;
+    if (solidFragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, solidFragModule, nullptr);
+        solidFragModule = VK_NULL_HANDLE;
     }
 }
 
@@ -348,28 +348,28 @@ void VulkanScreenUiPass::DestroyPipelines(VkDevice device) {
         return;
     }
     for (std::size_t i = 0; i < kSceneBlendModeCount; ++i) {
-        if (textPipelines_[i] != VK_NULL_HANDLE) {
-            vkDestroyPipeline(device, textPipelines_[i], nullptr);
-            textPipelines_[i] = VK_NULL_HANDLE;
+        if (textPipelines[i] != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, textPipelines[i], nullptr);
+            textPipelines[i] = VK_NULL_HANDLE;
         }
-        if (solidPipelines_[i] != VK_NULL_HANDLE) {
-            vkDestroyPipeline(device, solidPipelines_[i], nullptr);
-            solidPipelines_[i] = VK_NULL_HANDLE;
+        if (solidPipelines[i] != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, solidPipelines[i], nullptr);
+            solidPipelines[i] = VK_NULL_HANDLE;
         }
     }
-    if (textPipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, textPipelineLayout_, nullptr);
-        textPipelineLayout_ = VK_NULL_HANDLE;
+    if (textPipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, textPipelineLayout, nullptr);
+        textPipelineLayout = VK_NULL_HANDLE;
     }
-    if (solidPipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, solidPipelineLayout_, nullptr);
-        solidPipelineLayout_ = VK_NULL_HANDLE;
+    if (solidPipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, solidPipelineLayout, nullptr);
+        solidPipelineLayout = VK_NULL_HANDLE;
     }
 }
 
 void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRenderPass) {
-    if (device == VK_NULL_HANDLE || presentRenderPass == VK_NULL_HANDLE || textVertModule_ == VK_NULL_HANDLE ||
-        textFragModule_ == VK_NULL_HANDLE || textDescriptorSetLayout_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE || presentRenderPass == VK_NULL_HANDLE || textVertModule == VK_NULL_HANDLE ||
+        textFragModule == VK_NULL_HANDLE || textDescriptorSetLayout == VK_NULL_HANDLE) {
         return;
     }
 
@@ -378,13 +378,13 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
     VkPipelineShaderStageCreateInfo textVertStage{};
     textVertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     textVertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    textVertStage.module = textVertModule_;
+    textVertStage.module = textVertModule;
     textVertStage.pName = "main";
 
     VkPipelineShaderStageCreateInfo textFragStage{};
     textFragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     textFragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    textFragStage.module = textFragModule_;
+    textFragStage.module = textFragModule;
     textFragStage.pName = "main";
 
     const VkPipelineShaderStageCreateInfo textStages[] = {textVertStage, textFragStage};
@@ -472,10 +472,10 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
     VkPipelineLayoutCreateInfo textPl{};
     textPl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     textPl.setLayoutCount = 1;
-    textPl.pSetLayouts = &textDescriptorSetLayout_;
+    textPl.pSetLayouts = &textDescriptorSetLayout;
     textPl.pushConstantRangeCount = 1;
     textPl.pPushConstantRanges = &textPc;
-    if (vkCreatePipelineLayout(device, &textPl, nullptr, &textPipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &textPl, nullptr, &textPipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (text) failed");
     }
 
@@ -491,31 +491,31 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
     textPipe.pDepthStencilState = &textDs;
     textPipe.pColorBlendState = &textBlend;
     textPipe.pDynamicState = &textDyn;
-    textPipe.layout = textPipelineLayout_;
+    textPipe.layout = textPipelineLayout;
     textPipe.renderPass = presentRenderPass;
     textPipe.subpass = 0;
 
     for (std::size_t mi = 0; mi < kSceneBlendModeCount; ++mi) {
         const auto mode = static_cast<SceneBlendMode>(mi);
-        if (VulkanCreateGraphicsPipelineForBlendMode(device, textPipe, mode, &textPipelines_[mi]) != VK_SUCCESS) {
+        if (VulkanCreateGraphicsPipelineForBlendMode(device, textPipe, mode, &textPipelines[mi]) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateGraphicsPipelines (text blend) failed");
         }
     }
 
-    if (solidVertModule_ == VK_NULL_HANDLE || solidFragModule_ == VK_NULL_HANDLE) {
+    if (solidVertModule == VK_NULL_HANDLE || solidFragModule == VK_NULL_HANDLE) {
         return;
     }
 
     VkPipelineShaderStageCreateInfo solidVertStage{};
     solidVertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     solidVertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    solidVertStage.module = solidVertModule_;
+    solidVertStage.module = solidVertModule;
     solidVertStage.pName = "main";
 
     VkPipelineShaderStageCreateInfo solidFragStage{};
     solidFragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     solidFragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    solidFragStage.module = solidFragModule_;
+    solidFragStage.module = solidFragModule;
     solidFragStage.pName = "main";
 
     const VkPipelineShaderStageCreateInfo solidStages[] = {solidVertStage, solidFragStage};
@@ -603,7 +603,7 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
     solidPl.pSetLayouts = nullptr;
     solidPl.pushConstantRangeCount = 1;
     solidPl.pPushConstantRanges = &solidPc;
-    if (vkCreatePipelineLayout(device, &solidPl, nullptr, &solidPipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &solidPl, nullptr, &solidPipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (solid UI) failed");
     }
 
@@ -619,13 +619,13 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
     solidPipe.pDepthStencilState = &solidDs;
     solidPipe.pColorBlendState = &solidBlend;
     solidPipe.pDynamicState = &solidDyn;
-    solidPipe.layout = solidPipelineLayout_;
+    solidPipe.layout = solidPipelineLayout;
     solidPipe.renderPass = presentRenderPass;
     solidPipe.subpass = 0;
 
     for (std::size_t mi = 0; mi < kSceneBlendModeCount; ++mi) {
         const auto mode = static_cast<SceneBlendMode>(mi);
-        if (VulkanCreateGraphicsPipelineForBlendMode(device, solidPipe, mode, &solidPipelines_[mi]) != VK_SUCCESS) {
+        if (VulkanCreateGraphicsPipelineForBlendMode(device, solidPipe, mode, &solidPipelines[mi]) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateGraphicsPipelines (solid UI blend) failed");
         }
     }
@@ -633,12 +633,12 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
 
 void VulkanScreenUiPass::AppendUiSolidRectGeometry(const ScreenRectDraw& rd) {
     auto pushV = [this](const float px, const float py, const float r, const float g, const float b, const float a) {
-        solidScratchVertices_.PushBack(px);
-        solidScratchVertices_.PushBack(py);
-        solidScratchVertices_.PushBack(r);
-        solidScratchVertices_.PushBack(g);
-        solidScratchVertices_.PushBack(b);
-        solidScratchVertices_.PushBack(a);
+        solidScratchVertices.PushBack(px);
+        solidScratchVertices.PushBack(py);
+        solidScratchVertices.PushBack(r);
+        solidScratchVertices.PushBack(g);
+        solidScratchVertices.PushBack(b);
+        solidScratchVertices.PushBack(a);
     };
     const float x0 = rd.x;
     const float y0 = rd.y;
@@ -651,7 +651,7 @@ void VulkanScreenUiPass::AppendUiSolidRectGeometry(const ScreenRectDraw& rd) {
     const float r1 = rd.colorB.x;
     const float g1 = rd.colorB.y;
     const float b1 = rd.colorB.z;
-    const std::uint32_t base = static_cast<std::uint32_t>(solidScratchVertices_.GetSize() / 6U);
+    const std::uint32_t base = static_cast<std::uint32_t>(solidScratchVertices.GetSize() / 6U);
     if (rd.gradient == ScreenRectGradient::Vertical) {
         pushV(x0, y0, r0, g0, b0, a);
         pushV(x1, y0, r0, g0, b0, a);
@@ -668,12 +668,12 @@ void VulkanScreenUiPass::AppendUiSolidRectGeometry(const ScreenRectDraw& rd) {
         pushV(x1, y1, r0, g0, b0, a);
         pushV(x0, y1, r0, g0, b0, a);
     }
-    solidScratchIndices_.PushBack(base);
-    solidScratchIndices_.PushBack(base + 1);
-    solidScratchIndices_.PushBack(base + 2);
-    solidScratchIndices_.PushBack(base);
-    solidScratchIndices_.PushBack(base + 2);
-    solidScratchIndices_.PushBack(base + 3);
+    solidScratchIndices.PushBack(base);
+    solidScratchIndices.PushBack(base + 1);
+    solidScratchIndices.PushBack(base + 2);
+    solidScratchIndices.PushBack(base);
+    solidScratchIndices.PushBack(base + 2);
+    solidScratchIndices.PushBack(base + 3);
 }
 
 void VulkanScreenUiPass::FlushAccumulatedUiSolids(
@@ -682,20 +682,20 @@ void VulkanScreenUiPass::FlushAccumulatedUiSolids(
         VkExtent2D extent,
         const ScreenRectDraw& clipRef,
         VkPipeline pipeline) {
-    if (pipeline == VK_NULL_HANDLE || solidScratchIndices_.IsEmpty() || frameIndex >= solidFlightBuffers_.GetSize()) {
+    if (pipeline == VK_NULL_HANDLE || solidScratchIndices.IsEmpty() || frameIndex >= solidFlightBuffers.GetSize()) {
         return;
     }
-    UiMeshFlightBuffers& mesh = solidFlightBuffers_[frameIndex];
-    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(solidScratchVertices_.GetSize());
-    const VkDeviceSize ibBytes = sizeof(std::uint32_t) * static_cast<VkDeviceSize>(solidScratchIndices_.GetSize());
+    UiMeshFlightBuffers& mesh = solidFlightBuffers[frameIndex];
+    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(solidScratchVertices.GetSize());
+    const VkDeviceSize ibBytes = sizeof(std::uint32_t) * static_cast<VkDeviceSize>(solidScratchIndices.GetSize());
     if (vbBytes > kSolidVertexBytes || ibBytes > kSolidIndexBytes || mesh.vertexMapped == nullptr ||
         mesh.indexMapped == nullptr) {
-        solidScratchVertices_.Clear();
-        solidScratchIndices_.Clear();
+        solidScratchVertices.Clear();
+        solidScratchIndices.Clear();
         return;
     }
-    std::memcpy(mesh.vertexMapped, solidScratchVertices_.GetData(), static_cast<std::size_t>(vbBytes));
-    std::memcpy(mesh.indexMapped, solidScratchIndices_.GetData(), static_cast<std::size_t>(ibBytes));
+    std::memcpy(mesh.vertexMapped, solidScratchVertices.GetData(), static_cast<std::size_t>(vbBytes));
+    std::memcpy(mesh.indexMapped, solidScratchIndices.GetData(), static_cast<std::size_t>(ibBytes));
 
     VkViewport solidVp{};
     solidVp.x = 0.0F;
@@ -715,8 +715,8 @@ void VulkanScreenUiPass::FlushAccumulatedUiSolids(
                 clipRef.clipH,
                 extent,
                 solidSc)) {
-        solidScratchVertices_.Clear();
-        solidScratchIndices_.Clear();
+        solidScratchVertices.Clear();
+        solidScratchIndices.Clear();
         return;
     }
     vkCmdSetScissor(commandBuffer, 0, 1, &solidSc);
@@ -733,7 +733,7 @@ void VulkanScreenUiPass::FlushAccumulatedUiSolids(
     scp.screenSize[3] = 0.0F;
     vkCmdPushConstants(
             commandBuffer,
-            solidPipelineLayout_,
+            solidPipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT,
             0,
             sizeof(TextPushConstants),
@@ -741,14 +741,14 @@ void VulkanScreenUiPass::FlushAccumulatedUiSolids(
 
     vkCmdDrawIndexed(
             commandBuffer,
-            static_cast<std::uint32_t>(solidScratchIndices_.GetSize()),
+            static_cast<std::uint32_t>(solidScratchIndices.GetSize()),
             1,
             0,
             0,
             0);
 
-    solidScratchVertices_.Clear();
-    solidScratchIndices_.Clear();
+    solidScratchVertices.Clear();
+    solidScratchIndices.Clear();
 }
 
 void VulkanScreenUiPass::RecordSolidRectsForPipeline(
@@ -760,8 +760,8 @@ void VulkanScreenUiPass::RecordSolidRectsForPipeline(
         return;
     }
 
-    solidScratchVertices_.Clear();
-    solidScratchIndices_.Clear();
+    solidScratchVertices.Clear();
+    solidScratchIndices.Clear();
 
     Array<std::size_t> drawOrder;
     StableSortRectDrawIndices(rects, drawOrder);
@@ -793,9 +793,9 @@ void VulkanScreenUiPass::RecordSolidRectsForPipeline(
         }
         if (haveSolidBatch) {
             const VkDeviceSize nextVb =
-                    sizeof(float) * static_cast<VkDeviceSize>(solidScratchVertices_.GetSize()) + kBytesPerSolidRectVerts;
+                    sizeof(float) * static_cast<VkDeviceSize>(solidScratchVertices.GetSize()) + kBytesPerSolidRectVerts;
             const VkDeviceSize nextIb =
-                    sizeof(std::uint32_t) * static_cast<VkDeviceSize>(solidScratchIndices_.GetSize()) +
+                    sizeof(std::uint32_t) * static_cast<VkDeviceSize>(solidScratchIndices.GetSize()) +
                     kBytesPerSolidRectIndices;
             if (nextVb > kSolidVertexBytes || nextIb > kSolidIndexBytes) {
                 FlushAccumulatedUiSolids(
@@ -833,18 +833,18 @@ void VulkanScreenUiPass::RecordSolidRectsFor(
 }
 
 void VulkanScreenUiPass::UpdateTextDescriptorImage(VkDevice device) {
-    if (device == VK_NULL_HANDLE || activeFontAtlas_.view == VK_NULL_HANDLE || fontSampler_ == VK_NULL_HANDLE ||
-        textDescriptorSets_.IsEmpty()) {
+    if (device == VK_NULL_HANDLE || activeFontAtlas.view == VK_NULL_HANDLE || fontSampler == VK_NULL_HANDLE ||
+        textDescriptorSets.IsEmpty()) {
         return;
     }
     VkDescriptorImageInfo img{};
     img.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    img.imageView = activeFontAtlas_.view;
-    img.sampler = fontSampler_;
-    for (std::size_t i = 0; i < textDescriptorSets_.GetSize(); ++i) {
+    img.imageView = activeFontAtlas.view;
+    img.sampler = fontSampler;
+    for (std::size_t i = 0; i < textDescriptorSets.GetSize(); ++i) {
         VkWriteDescriptorSet w{};
         w.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        w.dstSet = textDescriptorSets_[i];
+        w.dstSet = textDescriptorSets[i];
         w.dstBinding = 0;
         w.dstArrayElement = 0;
         w.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -882,7 +882,7 @@ void VulkanScreenUiPass::QueueRetireFontAtlas(FontAtlasGpu&& atlas, const std::u
     RetiredFontAtlas entry{};
     entry.atlas = atlas;
     entry.safeAfterFrame = safeAfterFrame;
-    retiredFontAtlases_.PushBack(entry);
+    retiredFontAtlases.PushBack(entry);
     atlas = {};
 }
 
@@ -890,31 +890,31 @@ void VulkanScreenUiPass::EnsureFontStagingCapacity(
         const VkPhysicalDevice physicalDevice,
         const VkDevice device,
         const VkDeviceSize bytes) {
-    if (bytes <= fontStagingCapacity_) {
+    if (bytes <= fontStagingCapacity) {
         return;
     }
-    if (fontStagingMapped_ != nullptr) {
-        vkUnmapMemory(device, fontStagingMemory_);
-        fontStagingMapped_ = nullptr;
+    if (fontStagingMapped != nullptr) {
+        vkUnmapMemory(device, fontStagingMemory);
+        fontStagingMapped = nullptr;
     }
-    if (fontStagingBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, fontStagingBuffer_, nullptr);
-        fontStagingBuffer_ = VK_NULL_HANDLE;
+    if (fontStagingBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, fontStagingBuffer, nullptr);
+        fontStagingBuffer = VK_NULL_HANDLE;
     }
-    if (fontStagingMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, fontStagingMemory_, nullptr);
-        fontStagingMemory_ = VK_NULL_HANDLE;
+    if (fontStagingMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, fontStagingMemory, nullptr);
+        fontStagingMemory = VK_NULL_HANDLE;
     }
-    fontStagingCapacity_ = bytes;
+    fontStagingCapacity = bytes;
     VulkanRendererGpu::CreateBuffer(
             physicalDevice,
             device,
-            fontStagingCapacity_,
+            fontStagingCapacity,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            fontStagingBuffer_,
-            fontStagingMemory_);
-    if (vkMapMemory(device, fontStagingMemory_, 0, fontStagingCapacity_, 0, &fontStagingMapped_) != VK_SUCCESS) {
+            fontStagingBuffer,
+            fontStagingMemory);
+    if (vkMapMemory(device, fontStagingMemory, 0, fontStagingCapacity, 0, &fontStagingMapped) != VK_SUCCESS) {
         throw std::runtime_error("VulkanScreenUiPass: font staging map failed");
     }
 }
@@ -922,7 +922,7 @@ void VulkanScreenUiPass::EnsureFontStagingCapacity(
 bool VulkanScreenUiPass::NeedsFontUpload(const SceneRenderParams& scene) const noexcept {
     const Font* wantReg = scene.uiFont.Get();
     const Font* wantBold = scene.uiBoldFont.Get();
-    return wantReg != uploadedUiFont_ || wantBold != uploadedUiBoldFont_;
+    return wantReg != uploadedUiFont || wantBold != uploadedUiBoldFont;
 }
 
 void VulkanScreenUiPass::PrepareFontUpload(
@@ -931,24 +931,24 @@ void VulkanScreenUiPass::PrepareFontUpload(
         const SceneRenderParams& scene,
         const std::uint64_t frameCounter,
         const std::uint32_t maxFramesInFlight) {
-    fontUploadPending_ = false;
+    fontUploadPending = false;
     if (device == VK_NULL_HANDLE || !NeedsFontUpload(scene)) {
         return;
     }
 
-    pendingUiFont_ = scene.uiFont.Get();
-    pendingUiBoldFont_ = scene.uiBoldFont.Get();
-    fontRetireAfterFrame_ = frameCounter + static_cast<std::uint64_t>(maxFramesInFlight);
+    pendingUiFont = scene.uiFont.Get();
+    pendingUiBoldFont = scene.uiBoldFont.Get();
+    fontRetireAfterFrame = frameCounter + static_cast<std::uint64_t>(maxFramesInFlight);
 
-    DestroyFontAtlas(pendingFontAtlas_, device);
+    DestroyFontAtlas(pendingFontAtlas, device);
 
-    if (pendingUiFont_ == nullptr || !pendingUiFont_->IsValid()) {
-        fontUploadClearsAtlas_ = true;
-        fontUploadPending_ = true;
+    if (pendingUiFont == nullptr || !pendingUiFont->IsValid()) {
+        fontUploadClearsAtlas = true;
+        fontUploadPending = true;
         return;
     }
 
-    const Texture2D& regAtlas = pendingUiFont_->GetAtlas();
+    const Texture2D& regAtlas = pendingUiFont->GetAtlas();
     const std::uint32_t w = regAtlas.GetWidth();
     const std::uint32_t h = regAtlas.GetHeight();
     if (w == 0 || h == 0) {
@@ -956,30 +956,30 @@ void VulkanScreenUiPass::PrepareFontUpload(
     }
 
     const Array<std::uint8_t>& regPx = regAtlas.GetRgba();
-    pendingFontLayerBytes_ = static_cast<VkDeviceSize>(regPx.GetSize());
-    const VkDeviceSize stagingBytes = pendingFontLayerBytes_ * 2U;
+    pendingFontLayerBytes = static_cast<VkDeviceSize>(regPx.GetSize());
+    const VkDeviceSize stagingBytes = pendingFontLayerBytes * 2U;
     EnsureFontStagingCapacity(physicalDevice, device, stagingBytes);
 
     const Font* boldForLayer1 = nullptr;
-    if (pendingUiBoldFont_ != nullptr && pendingUiBoldFont_->IsValid()) {
-        const Texture2D& bAt = pendingUiBoldFont_->GetAtlas();
+    if (pendingUiBoldFont != nullptr && pendingUiBoldFont->IsValid()) {
+        const Texture2D& bAt = pendingUiBoldFont->GetAtlas();
         if (bAt.GetWidth() == w && bAt.GetHeight() == h && bAt.GetRgba().GetSize() == regPx.GetSize()) {
-            boldForLayer1 = pendingUiBoldFont_;
+            boldForLayer1 = pendingUiBoldFont;
         }
     }
 
-    auto* bytes = static_cast<std::uint8_t*>(fontStagingMapped_);
-    std::memcpy(bytes, regPx.GetData(), static_cast<std::size_t>(pendingFontLayerBytes_));
+    auto* bytes = static_cast<std::uint8_t*>(fontStagingMapped);
+    std::memcpy(bytes, regPx.GetData(), static_cast<std::size_t>(pendingFontLayerBytes));
     if (boldForLayer1 != nullptr) {
         std::memcpy(
-                bytes + static_cast<std::size_t>(pendingFontLayerBytes_),
+                bytes + static_cast<std::size_t>(pendingFontLayerBytes),
                 boldForLayer1->GetAtlas().GetRgba().GetData(),
-                static_cast<std::size_t>(pendingFontLayerBytes_));
+                static_cast<std::size_t>(pendingFontLayerBytes));
     } else {
         std::memcpy(
-                bytes + static_cast<std::size_t>(pendingFontLayerBytes_),
+                bytes + static_cast<std::size_t>(pendingFontLayerBytes),
                 regPx.GetData(),
-                static_cast<std::size_t>(pendingFontLayerBytes_));
+                static_cast<std::size_t>(pendingFontLayerBytes));
     }
 
     VulkanRendererGpu::CreateImage2DArray(
@@ -992,75 +992,75 @@ void VulkanScreenUiPass::PrepareFontUpload(
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            pendingFontAtlas_.image,
-            pendingFontAtlas_.memory);
-    pendingFontAtlas_.view =
-            VulkanRendererGpu::CreateImageView2DArray(device, pendingFontAtlas_.image, VK_FORMAT_R8G8B8A8_UNORM, 2);
-    pendingFontAtlas_.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-    pendingFontAtlas_.width = w;
-    pendingFontAtlas_.height = h;
+            pendingFontAtlas.image,
+            pendingFontAtlas.memory);
+    pendingFontAtlas.view =
+            VulkanRendererGpu::CreateImageView2DArray(device, pendingFontAtlas.image, VK_FORMAT_R8G8B8A8_UNORM, 2);
+    pendingFontAtlas.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    pendingFontAtlas.width = w;
+    pendingFontAtlas.height = h;
 
-    fontUploadClearsAtlas_ = false;
-    fontUploadPending_ = true;
+    fontUploadClearsAtlas = false;
+    fontUploadPending = true;
 }
 
 void VulkanScreenUiPass::RecordFontUpload(const VkCommandBuffer commandBuffer, const VkDevice device) {
-    if (!fontUploadPending_ || commandBuffer == VK_NULL_HANDLE) {
+    if (!fontUploadPending || commandBuffer == VK_NULL_HANDLE) {
         return;
     }
 
-    if (fontUploadClearsAtlas_) {
-        QueueRetireFontAtlas(MoveTemp(activeFontAtlas_), fontRetireAfterFrame_);
-        uploadedUiFont_ = nullptr;
-        uploadedUiBoldFont_ = nullptr;
-        fontUploadPending_ = false;
-        fontUploadClearsAtlas_ = false;
+    if (fontUploadClearsAtlas) {
+        QueueRetireFontAtlas(MoveTemp(activeFontAtlas), fontRetireAfterFrame);
+        uploadedUiFont = nullptr;
+        uploadedUiBoldFont = nullptr;
+        fontUploadPending = false;
+        fontUploadClearsAtlas = false;
         UpdateTextDescriptorImage(device);
         return;
     }
 
-    if (pendingFontAtlas_.image == VK_NULL_HANDLE || fontStagingBuffer_ == VK_NULL_HANDLE ||
-        pendingFontLayerBytes_ == 0) {
-        fontUploadPending_ = false;
+    if (pendingFontAtlas.image == VK_NULL_HANDLE || fontStagingBuffer == VK_NULL_HANDLE ||
+        pendingFontLayerBytes == 0) {
+        fontUploadPending = false;
         return;
     }
 
     VulkanRendererGpu::SceneTexBarrier(
             commandBuffer,
-            pendingFontAtlas_.image,
+            pendingFontAtlas.image,
             2,
-            pendingFontAtlas_.layout,
+            pendingFontAtlas.layout,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     VkBufferImageCopy regions[2]{};
     for (int i = 0; i < 2; ++i) {
-        regions[static_cast<std::size_t>(i)].bufferOffset = static_cast<VkDeviceSize>(i) * pendingFontLayerBytes_;
+        regions[static_cast<std::size_t>(i)].bufferOffset = static_cast<VkDeviceSize>(i) * pendingFontLayerBytes;
         regions[static_cast<std::size_t>(i)].imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         regions[static_cast<std::size_t>(i)].imageSubresource.mipLevel = 0;
         regions[static_cast<std::size_t>(i)].imageSubresource.baseArrayLayer = static_cast<std::uint32_t>(i);
         regions[static_cast<std::size_t>(i)].imageSubresource.layerCount = 1;
-        regions[static_cast<std::size_t>(i)].imageExtent = {pendingFontAtlas_.width, pendingFontAtlas_.height, 1};
+        regions[static_cast<std::size_t>(i)].imageExtent = {pendingFontAtlas.width, pendingFontAtlas.height, 1};
     }
     vkCmdCopyBufferToImage(
             commandBuffer,
-            fontStagingBuffer_,
-            pendingFontAtlas_.image,
+            fontStagingBuffer,
+            pendingFontAtlas.image,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             2,
             regions);
     VulkanRendererGpu::SceneTexBarrier(
             commandBuffer,
-            pendingFontAtlas_.image,
+            pendingFontAtlas.image,
             2,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-    pendingFontAtlas_.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    pendingFontAtlas.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    QueueRetireFontAtlas(MoveTemp(activeFontAtlas_), fontRetireAfterFrame_);
-    activeFontAtlas_ = pendingFontAtlas_;
-    pendingFontAtlas_ = {};
-    uploadedUiFont_ = pendingUiFont_;
-    uploadedUiBoldFont_ = pendingUiBoldFont_;
-    fontUploadPending_ = false;
+    QueueRetireFontAtlas(MoveTemp(activeFontAtlas), fontRetireAfterFrame);
+    activeFontAtlas = pendingFontAtlas;
+    pendingFontAtlas = {};
+    uploadedUiFont = pendingUiFont;
+    uploadedUiBoldFont = pendingUiBoldFont;
+    fontUploadPending = false;
     UpdateTextDescriptorImage(device);
 }
 
@@ -1069,17 +1069,17 @@ void VulkanScreenUiPass::ReleaseRetiredFontAtlases(const VkDevice device, const 
         return;
     }
     std::size_t write = 0;
-    for (std::size_t i = 0; i < retiredFontAtlases_.GetSize(); ++i) {
-        if (retiredFontAtlases_[i].safeAfterFrame <= frameCounter) {
-            DestroyFontAtlas(retiredFontAtlases_[i].atlas, device);
+    for (std::size_t i = 0; i < retiredFontAtlases.GetSize(); ++i) {
+        if (retiredFontAtlases[i].safeAfterFrame <= frameCounter) {
+            DestroyFontAtlas(retiredFontAtlases[i].atlas, device);
         } else {
             if (write != i) {
-                retiredFontAtlases_[write] = retiredFontAtlases_[i];
+                retiredFontAtlases[write] = retiredFontAtlases[i];
             }
             ++write;
         }
     }
-    retiredFontAtlases_.Resize(write);
+    retiredFontAtlases.Resize(write);
 }
 
 void VulkanScreenUiPass::AppendUiTextDrawGeometry(
@@ -1096,8 +1096,8 @@ void VulkanScreenUiPass::AppendUiTextDrawGeometry(
                 td.color,
                 td.alpha,
                 atlasLayer,
-                textScratchVertices_,
-                textScratchIndices_);
+                textScratchVertices,
+                textScratchIndices);
     };
     if (td.bold && boldAtlasOk) {
         appendGeo(boldFont, 0.0F, 1.0F);
@@ -1117,20 +1117,20 @@ void VulkanScreenUiPass::FlushAccumulatedUiTexts(
         VkExtent2D extent,
         const ScreenTextDraw& clipRef,
         VkPipeline pipeline) {
-    if (pipeline == VK_NULL_HANDLE || textScratchIndices_.IsEmpty() || frameIndex >= textFlightBuffers_.GetSize()) {
+    if (pipeline == VK_NULL_HANDLE || textScratchIndices.IsEmpty() || frameIndex >= textFlightBuffers.GetSize()) {
         return;
     }
-    UiMeshFlightBuffers& mesh = textFlightBuffers_[frameIndex];
-    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(textScratchVertices_.GetSize());
-    const VkDeviceSize ibBytes = sizeof(std::uint32_t) * static_cast<VkDeviceSize>(textScratchIndices_.GetSize());
+    UiMeshFlightBuffers& mesh = textFlightBuffers[frameIndex];
+    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(textScratchVertices.GetSize());
+    const VkDeviceSize ibBytes = sizeof(std::uint32_t) * static_cast<VkDeviceSize>(textScratchIndices.GetSize());
     if (vbBytes > kTextVertexBytes || ibBytes > kTextIndexBytes || mesh.vertexMapped == nullptr ||
         mesh.indexMapped == nullptr) {
-        textScratchVertices_.Clear();
-        textScratchIndices_.Clear();
+        textScratchVertices.Clear();
+        textScratchIndices.Clear();
         return;
     }
-    std::memcpy(mesh.vertexMapped, textScratchVertices_.GetData(), static_cast<std::size_t>(vbBytes));
-    std::memcpy(mesh.indexMapped, textScratchIndices_.GetData(), static_cast<std::size_t>(ibBytes));
+    std::memcpy(mesh.vertexMapped, textScratchVertices.GetData(), static_cast<std::size_t>(vbBytes));
+    std::memcpy(mesh.indexMapped, textScratchIndices.GetData(), static_cast<std::size_t>(ibBytes));
 
     VkViewport textViewport{};
     textViewport.x = 0.0F;
@@ -1150,8 +1150,8 @@ void VulkanScreenUiPass::FlushAccumulatedUiTexts(
                 clipRef.clipH,
                 extent,
                 textScissor)) {
-        textScratchVertices_.Clear();
-        textScratchIndices_.Clear();
+        textScratchVertices.Clear();
+        textScratchIndices.Clear();
         return;
     }
     vkCmdSetScissor(commandBuffer, 0, 1, &textScissor);
@@ -1163,10 +1163,10 @@ void VulkanScreenUiPass::FlushAccumulatedUiTexts(
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            textPipelineLayout_,
+            textPipelineLayout,
             0,
             1,
-            &textDescriptorSets_[frameIndex],
+            &textDescriptorSets[frameIndex],
             0,
             nullptr);
 
@@ -1177,7 +1177,7 @@ void VulkanScreenUiPass::FlushAccumulatedUiTexts(
     tcp.screenSize[3] = 0.0F;
     vkCmdPushConstants(
             commandBuffer,
-            textPipelineLayout_,
+            textPipelineLayout,
             VK_SHADER_STAGE_VERTEX_BIT,
             0,
             sizeof(TextPushConstants),
@@ -1185,14 +1185,14 @@ void VulkanScreenUiPass::FlushAccumulatedUiTexts(
 
     vkCmdDrawIndexed(
             commandBuffer,
-            static_cast<std::uint32_t>(textScratchIndices_.GetSize()),
+            static_cast<std::uint32_t>(textScratchIndices.GetSize()),
             1,
             0,
             0,
             0);
 
-    textScratchVertices_.Clear();
-    textScratchIndices_.Clear();
+    textScratchVertices.Clear();
+    textScratchIndices.Clear();
 }
 
 void VulkanScreenUiPass::RecordTextOverlaysFor(
@@ -1201,9 +1201,9 @@ void VulkanScreenUiPass::RecordTextOverlaysFor(
         VkExtent2D extent,
         const SceneRenderParams& scene,
         const Array<ScreenTextDraw>& texts) {
-    if (PipelineForTextBlendMode(kSceneBlendModeDefault) == VK_NULL_HANDLE || uploadedUiFont_ == nullptr ||
-        activeFontAtlas_.view == VK_NULL_HANDLE || texts.IsEmpty() ||
-        frameIndex >= textDescriptorSets_.GetSize()) {
+    if (PipelineForTextBlendMode(kSceneBlendModeDefault) == VK_NULL_HANDLE || uploadedUiFont == nullptr ||
+        activeFontAtlas.view == VK_NULL_HANDLE || texts.IsEmpty() ||
+        frameIndex >= textDescriptorSets.GetSize()) {
         return;
     }
     const Font* regFont = scene.uiFont.Get();
@@ -1216,8 +1216,8 @@ void VulkanScreenUiPass::RecordTextOverlaysFor(
             boldFont->GetAtlas().GetWidth() == regFont->GetAtlas().GetWidth() &&
             boldFont->GetAtlas().GetHeight() == regFont->GetAtlas().GetHeight();
 
-    textScratchVertices_.Clear();
-    textScratchIndices_.Clear();
+    textScratchVertices.Clear();
+    textScratchIndices.Clear();
 
     Array<std::size_t> drawOrder;
     StableSortTextDrawIndices(texts, drawOrder);
@@ -1250,8 +1250,8 @@ void VulkanScreenUiPass::RecordTextOverlaysFor(
         const std::size_t glyphMul = (td.bold && !boldAtlasOk) ? 3U : 1U;
         const std::size_t estFloats = glyphEstimate * glyphMul * 24U;
         const std::size_t estIndices = glyphEstimate * glyphMul * 6U;
-        if (textScratchVertices_.GetSize() + estFloats > kMaxTextFloats ||
-            textScratchIndices_.GetSize() + estIndices > kMaxTextIndices) {
+        if (textScratchVertices.GetSize() + estFloats > kMaxTextFloats ||
+            textScratchIndices.GetSize() + estIndices > kMaxTextIndices) {
             FlushAccumulatedUiTexts(
                     commandBuffer,
                     frameIndex,
@@ -1262,7 +1262,7 @@ void VulkanScreenUiPass::RecordTextOverlaysFor(
             haveTextBatch = true;
         }
         AppendUiTextDrawGeometry(td, regFont, boldFont, boldAtlasOk);
-        if (textScratchVertices_.GetSize() > kMaxTextFloats || textScratchIndices_.GetSize() > kMaxTextIndices) {
+        if (textScratchVertices.GetSize() > kMaxTextFloats || textScratchIndices.GetSize() > kMaxTextIndices) {
             FlushAccumulatedUiTexts(
                     commandBuffer,
                     frameIndex,
@@ -1299,8 +1299,8 @@ void VulkanScreenUiPass::Record(
 
     const bool canSolid = PipelineForSolidBlendMode(kSceneBlendModeDefault) != VK_NULL_HANDLE;
     const bool canText = PipelineForTextBlendMode(kSceneBlendModeDefault) != VK_NULL_HANDLE &&
-                         uploadedUiFont_ != nullptr && activeFontAtlas_.view != VK_NULL_HANDLE &&
-                         frameIndex < textDescriptorSets_.GetSize();
+                         uploadedUiFont != nullptr && activeFontAtlas.view != VK_NULL_HANDLE &&
+                         frameIndex < textDescriptorSets.GetSize();
     const Font* regFont = scene.uiFont.Get();
     const bool fontCpuOk = regFont != nullptr && regFont->IsValid();
 

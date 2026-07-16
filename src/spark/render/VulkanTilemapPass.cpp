@@ -63,35 +63,35 @@ void VulkanTilemapPass::DestroyGraphicsPipeline(const VkDevice device) {
         return;
     }
     for (std::size_t i = 0; i < kSceneBlendModeCount; ++i) {
-        if (pipelines_[i] != VK_NULL_HANDLE) {
-            vkDestroyPipeline(device, pipelines_[i], nullptr);
-            pipelines_[i] = VK_NULL_HANDLE;
+        if (pipelines[i] != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, pipelines[i], nullptr);
+            pipelines[i] = VK_NULL_HANDLE;
         }
     }
-    if (pipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
-        pipelineLayout_ = VK_NULL_HANDLE;
+    if (pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        pipelineLayout = VK_NULL_HANDLE;
     }
-    if (vertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, vertModule_, nullptr);
-        vertModule_ = VK_NULL_HANDLE;
+    if (vertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertModule, nullptr);
+        vertModule = VK_NULL_HANDLE;
     }
-    if (fragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, fragModule_, nullptr);
-        fragModule_ = VK_NULL_HANDLE;
+    if (fragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, fragModule, nullptr);
+        fragModule = VK_NULL_HANDLE;
     }
 }
 
 VkPipeline VulkanTilemapPass::PipelineForBlendMode(const SceneBlendMode mode) const noexcept {
     const std::size_t index = static_cast<std::size_t>(mode);
     if (index >= kSceneBlendModeCount) {
-        return pipelines_[static_cast<std::size_t>(kSceneBlendModeDefault)];
+        return pipelines[static_cast<std::size_t>(kSceneBlendModeDefault)];
     }
-    const VkPipeline pipe = pipelines_[index];
+    const VkPipeline pipe = pipelines[index];
     if (pipe != VK_NULL_HANDLE) {
         return pipe;
     }
-    return pipelines_[static_cast<std::size_t>(kSceneBlendModeDefault)];
+    return pipelines[static_cast<std::size_t>(kSceneBlendModeDefault)];
 }
 
 void VulkanTilemapPass::CreateGraphicsPipeline(
@@ -107,19 +107,19 @@ void VulkanTilemapPass::CreateGraphicsPipeline(
 
     const Array<char> sv = shaders.ReadSpvFile("sprite.vert.spv");
     const Array<char> sf = shaders.ReadSpvFile("sprite.frag.spv");
-    vertModule_ = shaders.CreateShaderModule(sv);
-    fragModule_ = shaders.CreateShaderModule(sf);
+    vertModule = shaders.CreateShaderModule(sv);
+    fragModule = shaders.CreateShaderModule(sf);
 
     VkPipelineShaderStageCreateInfo vertStage{};
     vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertStage.module = vertModule_;
+    vertStage.module = vertModule;
     vertStage.pName = "main";
 
     VkPipelineShaderStageCreateInfo fragStage{};
     fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragStage.module = fragModule_;
+    fragStage.module = fragModule;
     fragStage.pName = "main";
 
     const VkPipelineShaderStageCreateInfo stages[] = {vertStage, fragStage};
@@ -208,7 +208,7 @@ void VulkanTilemapPass::CreateGraphicsPipeline(
     pl.pSetLayouts = &sceneDescriptorSetLayout;
     pl.pushConstantRangeCount = 1;
     pl.pPushConstantRanges = &pcr;
-    if (vkCreatePipelineLayout(device, &pl, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &pl, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (tilemap) failed");
     }
 
@@ -224,13 +224,13 @@ void VulkanTilemapPass::CreateGraphicsPipeline(
     pipe.pDepthStencilState = &ds;
     pipe.pColorBlendState = &blend;
     pipe.pDynamicState = &dyn;
-    pipe.layout = pipelineLayout_;
+    pipe.layout = pipelineLayout;
     pipe.renderPass = hdrRenderPass;
     pipe.subpass = 0;
 
     for (std::size_t mi = 0; mi < kSceneBlendModeCount; ++mi) {
         const auto mode = static_cast<SceneBlendMode>(mi);
-        if (VulkanCreateGraphicsPipelineForBlendMode(device, pipe, mode, &pipelines_[mi]) != VK_SUCCESS) {
+        if (VulkanCreateGraphicsPipelineForBlendMode(device, pipe, mode, &pipelines[mi]) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateGraphicsPipelines (tilemap blend) failed");
         }
     }
@@ -281,7 +281,7 @@ void VulkanTilemapPass::Record(
         const VulkanTilemapRecordContext& ctx,
         VulkanSpritePass& instancing,
         const VulkanSpriteRecordContext& spriteCtx) const {
-    if (!ctx.sceneParamsValid || pipelineLayout_ == VK_NULL_HANDLE || ctx.vertexBuffer == VK_NULL_HANDLE ||
+    if (!ctx.sceneParamsValid || pipelineLayout == VK_NULL_HANDLE || ctx.vertexBuffer == VK_NULL_HANDLE ||
         ctx.indexBuffer == VK_NULL_HANDLE || ctx.scene == nullptr || ctx.scene->tilemaps.IsEmpty() ||
         ctx.descriptorSet == VK_NULL_HANDLE) {
         return;
@@ -308,7 +308,7 @@ void VulkanTilemapPass::Record(
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout_,
+            pipelineLayout,
             0,
             1,
             &ctx.descriptorSet,

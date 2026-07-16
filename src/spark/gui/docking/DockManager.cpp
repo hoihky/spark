@@ -9,14 +9,14 @@ namespace Spark::Gui {
 
 void DockManager::RegisterPanel(UniquePtr<DockPanel> panel) {
     if (panel) {
-        panels_.PushBack(MoveTemp(panel));
+        panels.PushBack(MoveTemp(panel));
     }
 }
 
 DockPanel* DockManager::FindPanel(const Utf8String& id) noexcept {
-    for (std::size_t i = 0; i < panels_.GetSize(); ++i) {
-        if (panels_[i] && panels_[i]->GetId() == id) {
-            return panels_[i].Get();
+    for (std::size_t i = 0; i < panels.GetSize(); ++i) {
+        if (panels[i] && panels[i]->GetId() == id) {
+            return panels[i].Get();
         }
     }
     return nullptr;
@@ -28,15 +28,15 @@ UniquePtr<DockFrameLayout> DockManager::BuildFrame() {
     auto leftPane = MakeUnique<DockSidePane>();
     leftPane->SetEdge(DockSidePane::Edge::Left);
     leftPane->SetTitle(Utf8String("Panels"));
-    leftPane->SetPaneWidth(state_.leftWidthPx);
-    leftPane->SetCollapsed(state_.leftCollapsed);
+    leftPane->SetPaneWidth(state.leftWidthPx);
+    leftPane->SetCollapsed(state.leftCollapsed);
     leftPane->SetContent(BuildLeftContent());
     leftPane->SetOnPaneWidthChanged([this](const float widthPx, const bool committed) {
-        state_.leftWidthPx = widthPx;
+        state.leftWidthPx = widthPx;
         NotifyStateChanged(committed);
     });
     leftPane->SetOnCollapsedChanged([this](const bool collapsed) {
-        state_.leftCollapsed = collapsed;
+        state.leftCollapsed = collapsed;
         NotifyStateChanged(true);
     });
 
@@ -49,15 +49,15 @@ UniquePtr<DockFrameLayout> DockManager::BuildFrame() {
     auto rightPane = MakeUnique<DockSidePane>();
     rightPane->SetEdge(DockSidePane::Edge::Right);
     rightPane->SetTitle(Utf8String("Inspector"));
-    rightPane->SetPaneWidth(state_.rightWidthPx);
-    rightPane->SetCollapsed(state_.rightCollapsed);
+    rightPane->SetPaneWidth(state.rightWidthPx);
+    rightPane->SetCollapsed(state.rightCollapsed);
     rightPane->SetContent(BuildRightContent());
     rightPane->SetOnPaneWidthChanged([this](const float widthPx, const bool committed) {
-        state_.rightWidthPx = widthPx;
+        state.rightWidthPx = widthPx;
         NotifyStateChanged(committed);
     });
     rightPane->SetOnCollapsedChanged([this](const bool collapsed) {
-        state_.rightCollapsed = collapsed;
+        state.rightCollapsed = collapsed;
         NotifyStateChanged(true);
     });
 
@@ -70,12 +70,12 @@ UniquePtr<DockFrameLayout> DockManager::BuildFrame() {
 void DockManager::LoadState() noexcept {
     DockLayoutState loaded{};
     if (TryLoadDockLayoutState(loaded)) {
-        state_ = loaded;
+        state = loaded;
     }
 }
 
 void DockManager::SaveState() const noexcept {
-    (void)SaveDockLayoutState(state_);
+    (void)SaveDockLayoutState(state);
 }
 
 DockManager DockManager::CreateEditorDefault() {
@@ -85,8 +85,8 @@ DockManager DockManager::CreateEditorDefault() {
 }
 
 void DockManager::NotifyStateChanged(const bool save) {
-    if (onLayoutStateChanged_) {
-        onLayoutStateChanged_(state_);
+    if (onLayoutStateChanged) {
+        onLayoutStateChanged(state);
     }
     if (save) {
         SaveState();
@@ -97,8 +97,8 @@ UniquePtr<Widget> DockManager::BuildLeftContent() {
     auto tabs = MakeUnique<TabControl>();
     tabs->SetTabBarHeight(32.0F);
     bool added = false;
-    for (std::size_t i = 0; i < panels_.GetSize(); ++i) {
-        DockPanel* panel = panels_[i].Get();
+    for (std::size_t i = 0; i < panels.GetSize(); ++i) {
+        DockPanel* panel = panels[i].Get();
         if (panel == nullptr || panel->GetSide() != DockSide::Left) {
             continue;
         }
@@ -114,17 +114,17 @@ UniquePtr<Widget> DockManager::BuildLeftContent() {
         empty->SetChromeEnabled(false);
         return UniquePtr<Widget>(empty.Release());
     }
-    tabs->SetSelectedIndex(state_.leftSelectedTab);
+    tabs->SetSelectedIndex(state.leftSelectedTab);
     tabs->SetOnTabChanged([this](const int tabIndex) {
-        state_.leftSelectedTab = tabIndex;
+        state.leftSelectedTab = tabIndex;
         NotifyStateChanged(true);
     });
     return UniquePtr<Widget>(tabs.Release());
 }
 
 UniquePtr<Widget> DockManager::BuildRightContent() {
-    for (std::size_t i = 0; i < panels_.GetSize(); ++i) {
-        DockPanel* panel = panels_[i].Get();
+    for (std::size_t i = 0; i < panels.GetSize(); ++i) {
+        DockPanel* panel = panels[i].Get();
         if (panel == nullptr || panel->GetSide() != DockSide::Right) {
             continue;
         }

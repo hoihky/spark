@@ -61,15 +61,15 @@ void VulkanScreenSpaceEffectsPass::CreateRenderPass(VkDevice device) {
     rpInfo.pSubpasses = &subpass;
     rpInfo.dependencyCount = 1;
     rpInfo.pDependencies = &dep;
-    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass_) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateRenderPass (screen-space effects) failed");
     }
 }
 
 void VulkanScreenSpaceEffectsPass::DestroyRenderPass(VkDevice device) {
-    if (renderPass_ != VK_NULL_HANDLE) {
-        vkDestroyRenderPass(device, renderPass_, nullptr);
-        renderPass_ = VK_NULL_HANDLE;
+    if (renderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(device, renderPass, nullptr);
+        renderPass = VK_NULL_HANDLE;
     }
 }
 
@@ -80,14 +80,14 @@ void VulkanScreenSpaceEffectsPass::RecreateFlightTargets(
         VkFormat depthFormat,
         std::uint32_t framesInFlight) {
     DestroyFlightTargets(device);
-    if (extent.width == 0 || extent.height == 0 || renderPass_ == VK_NULL_HANDLE ||
+    if (extent.width == 0 || extent.height == 0 || renderPass == VK_NULL_HANDLE ||
         depthFormat == VK_FORMAT_UNDEFINED) {
         return;
     }
 
-    flights_.Resize(framesInFlight);
+    flights.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
-        FlightTarget& flight = flights_[fi];
+        FlightTarget& flight = flights[fi];
         VulkanRendererGpu::CreateImage(
                 physicalDevice,
                 device,
@@ -150,7 +150,7 @@ void VulkanScreenSpaceEffectsPass::RecreateFlightTargets(
         const VkImageView fbAttachments[] = {flight.colorView};
         VkFramebufferCreateInfo fbInfo{};
         fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        fbInfo.renderPass = renderPass_;
+        fbInfo.renderPass = renderPass;
         fbInfo.attachmentCount = 1;
         fbInfo.pAttachments = fbAttachments;
         fbInfo.width = extent.width;
@@ -161,7 +161,7 @@ void VulkanScreenSpaceEffectsPass::RecreateFlightTargets(
         }
     }
 
-    if (colorSampler_ == VK_NULL_HANDLE) {
+    if (colorSampler == VK_NULL_HANDLE) {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
@@ -175,12 +175,12 @@ void VulkanScreenSpaceEffectsPass::RecreateFlightTargets(
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &colorSampler_) != VK_SUCCESS) {
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &colorSampler) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateSampler (screen-space effects color) failed");
         }
     }
 
-    if (depthSampler_ == VK_NULL_HANDLE) {
+    if (depthSampler == VK_NULL_HANDLE) {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_NEAREST;
@@ -194,15 +194,15 @@ void VulkanScreenSpaceEffectsPass::RecreateFlightTargets(
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &depthSampler_) != VK_SUCCESS) {
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &depthSampler) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateSampler (screen-space effects depth) failed");
         }
     }
 }
 
 void VulkanScreenSpaceEffectsPass::DestroyFlightTargets(VkDevice device) {
-    for (std::size_t fi = 0; fi < flights_.GetSize(); ++fi) {
-        FlightTarget& flight = flights_[fi];
+    for (std::size_t fi = 0; fi < flights.GetSize(); ++fi) {
+        FlightTarget& flight = flights[fi];
         if (flight.framebuffer != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(device, flight.framebuffer, nullptr);
             flight.framebuffer = VK_NULL_HANDLE;
@@ -234,50 +234,50 @@ void VulkanScreenSpaceEffectsPass::DestroyFlightTargets(VkDevice device) {
         flight.colorLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         flight.depthSampleLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     }
-    flights_.Clear();
-    if (colorSampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, colorSampler_, nullptr);
-        colorSampler_ = VK_NULL_HANDLE;
+    flights.Clear();
+    if (colorSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, colorSampler, nullptr);
+        colorSampler = VK_NULL_HANDLE;
     }
-    if (depthSampler_ != VK_NULL_HANDLE) {
-        vkDestroySampler(device, depthSampler_, nullptr);
-        depthSampler_ = VK_NULL_HANDLE;
+    if (depthSampler != VK_NULL_HANDLE) {
+        vkDestroySampler(device, depthSampler, nullptr);
+        depthSampler = VK_NULL_HANDLE;
     }
 }
 
 void VulkanScreenSpaceEffectsPass::DestroyPipeline(VkDevice device) {
-    if (pipeline_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipeline_, nullptr);
-        pipeline_ = VK_NULL_HANDLE;
+    if (pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipeline, nullptr);
+        pipeline = VK_NULL_HANDLE;
     }
-    if (pipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
-        pipelineLayout_ = VK_NULL_HANDLE;
+    if (pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        pipelineLayout = VK_NULL_HANDLE;
     }
-    if (descriptorPool_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorPool(device, descriptorPool_, nullptr);
-        descriptorPool_ = VK_NULL_HANDLE;
+    if (descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+        descriptorPool = VK_NULL_HANDLE;
     }
-    if (descriptorSetLayout_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout_, nullptr);
-        descriptorSetLayout_ = VK_NULL_HANDLE;
+    if (descriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        descriptorSetLayout = VK_NULL_HANDLE;
     }
-    descriptorSets_.Clear();
-    if (vertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, vertModule_, nullptr);
-        vertModule_ = VK_NULL_HANDLE;
+    descriptorSets.Clear();
+    if (vertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertModule, nullptr);
+        vertModule = VK_NULL_HANDLE;
     }
-    if (fragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, fragModule_, nullptr);
-        fragModule_ = VK_NULL_HANDLE;
+    if (fragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, fragModule, nullptr);
+        fragModule = VK_NULL_HANDLE;
     }
-    if (vertexBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, vertexBuffer_, nullptr);
-        vertexBuffer_ = VK_NULL_HANDLE;
+    if (vertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vertexBuffer = VK_NULL_HANDLE;
     }
-    if (vertexMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, vertexMemory_, nullptr);
-        vertexMemory_ = VK_NULL_HANDLE;
+    if (vertexMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, vertexMemory, nullptr);
+        vertexMemory = VK_NULL_HANDLE;
     }
 }
 
@@ -287,7 +287,7 @@ void VulkanScreenSpaceEffectsPass::CreatePipeline(
         std::uint32_t framesInFlight,
         const VulkanSpvShaderLoader& shaders) {
     DestroyPipeline(device);
-    if (renderPass_ == VK_NULL_HANDLE || flights_.IsEmpty()) {
+    if (renderPass == VK_NULL_HANDLE || flights.IsEmpty()) {
         return;
     }
 
@@ -299,14 +299,14 @@ void VulkanScreenSpaceEffectsPass::CreatePipeline(
             triBytes,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            vertexBuffer_,
-            vertexMemory_);
+            vertexBuffer,
+            vertexMemory);
     void* mapped = nullptr;
-    if (vkMapMemory(device, vertexMemory_, 0, triBytes, 0, &mapped) != VK_SUCCESS) {
+    if (vkMapMemory(device, vertexMemory, 0, triBytes, 0, &mapped) != VK_SUCCESS) {
         throw std::runtime_error("vkMapMemory post tri failed");
     }
     std::memcpy(mapped, triVerts, sizeof(triVerts));
-    vkUnmapMemory(device, vertexMemory_);
+    vkUnmapMemory(device, vertexMemory);
 
     VkDescriptorSetLayoutBinding bindings[3]{};
     bindings[0].binding = 0;
@@ -326,7 +326,7 @@ void VulkanScreenSpaceEffectsPass::CreatePipeline(
     dslInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     dslInfo.bindingCount = 3;
     dslInfo.pBindings = bindings;
-    if (vkCreateDescriptorSetLayout(device, &dslInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(device, &dslInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("screen-space effects descriptor set layout failed");
     }
 
@@ -340,24 +340,24 @@ void VulkanScreenSpaceEffectsPass::CreatePipeline(
     poolInfo.maxSets = framesInFlight;
     poolInfo.poolSizeCount = 2;
     poolInfo.pPoolSizes = poolSizes;
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS) {
+    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("screen-space effects descriptor pool failed");
     }
 
-    descriptorSets_.Resize(framesInFlight);
+    descriptorSets.Resize(framesInFlight);
     for (std::uint32_t fi = 0; fi < framesInFlight; ++fi) {
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool_;
+        allocInfo.descriptorPool = descriptorPool;
         allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &descriptorSetLayout_;
-        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets_[fi]) != VK_SUCCESS) {
+        allocInfo.pSetLayouts = &descriptorSetLayout;
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets[fi]) != VK_SUCCESS) {
             throw std::runtime_error("screen-space effects descriptor set alloc failed");
         }
     }
 
-    vertModule_ = shaders.CreateShaderModule(shaders.ReadSpvFile("tonemap.vert.spv"));
-    fragModule_ = shaders.CreateShaderModule(shaders.ReadSpvFile("post_process.frag.spv"));
+    vertModule = shaders.CreateShaderModule(shaders.ReadSpvFile("tonemap.vert.spv"));
+    fragModule = shaders.CreateShaderModule(shaders.ReadSpvFile("post_process.frag.spv"));
 
     VkPushConstantRange pcRange{};
     pcRange.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -367,21 +367,21 @@ void VulkanScreenSpaceEffectsPass::CreatePipeline(
     VkPipelineLayoutCreateInfo plInfo{};
     plInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     plInfo.setLayoutCount = 1;
-    plInfo.pSetLayouts = &descriptorSetLayout_;
+    plInfo.pSetLayouts = &descriptorSetLayout;
     plInfo.pushConstantRangeCount = 1;
     plInfo.pPushConstantRanges = &pcRange;
-    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &plInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("screen-space effects pipeline layout failed");
     }
 
     VkPipelineShaderStageCreateInfo stages[2]{};
     stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-    stages[0].module = vertModule_;
+    stages[0].module = vertModule;
     stages[0].pName = "main";
     stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    stages[1].module = fragModule_;
+    stages[1].module = fragModule;
     stages[1].pName = "main";
 
     VkVertexInputBindingDescription binding{};
@@ -448,10 +448,10 @@ void VulkanScreenSpaceEffectsPass::CreatePipeline(
     pipeInfo.pMultisampleState = &ms;
     pipeInfo.pColorBlendState = &blend;
     pipeInfo.pDynamicState = &dynamicState;
-    pipeInfo.layout = pipelineLayout_;
-    pipeInfo.renderPass = renderPass_;
+    pipeInfo.layout = pipelineLayout;
+    pipeInfo.renderPass = renderPass;
     pipeInfo.subpass = 0;
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeInfo, nullptr, &pipeline_) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeInfo, nullptr, &pipeline) != VK_SUCCESS) {
         throw std::runtime_error("screen-space effects pipeline create failed");
     }
 }
@@ -462,8 +462,8 @@ void VulkanScreenSpaceEffectsPass::UpdateDescriptor(
         VkBuffer sceneUbo,
         const VulkanHdrTonemapPass::FlightTarget& hdrFlight,
         const FlightTarget& effectsFlight) {
-    if (flightIndex >= descriptorSets_.GetSize() || colorSampler_ == VK_NULL_HANDLE ||
-        depthSampler_ == VK_NULL_HANDLE || sceneUbo == VK_NULL_HANDLE || hdrFlight.colorView == VK_NULL_HANDLE ||
+    if (flightIndex >= descriptorSets.GetSize() || colorSampler == VK_NULL_HANDLE ||
+        depthSampler == VK_NULL_HANDLE || sceneUbo == VK_NULL_HANDLE || hdrFlight.colorView == VK_NULL_HANDLE ||
         effectsFlight.depthSampleView == VK_NULL_HANDLE) {
         return;
     }
@@ -476,30 +476,30 @@ void VulkanScreenSpaceEffectsPass::UpdateDescriptor(
     VkDescriptorImageInfo colorInfo{};
     colorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     colorInfo.imageView = hdrFlight.colorView;
-    colorInfo.sampler = colorSampler_;
+    colorInfo.sampler = colorSampler;
 
     VkDescriptorImageInfo depthInfo{};
     depthInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     depthInfo.imageView = effectsFlight.depthSampleView;
-    depthInfo.sampler = depthSampler_;
+    depthInfo.sampler = depthSampler;
 
     VkWriteDescriptorSet writes[3]{};
     writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writes[0].dstSet = descriptorSets_[flightIndex];
+    writes[0].dstSet = descriptorSets[flightIndex];
     writes[0].dstBinding = 0;
     writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     writes[0].descriptorCount = 1;
     writes[0].pBufferInfo = &uboInfo;
 
     writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writes[1].dstSet = descriptorSets_[flightIndex];
+    writes[1].dstSet = descriptorSets[flightIndex];
     writes[1].dstBinding = 1;
     writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     writes[1].descriptorCount = 1;
     writes[1].pImageInfo = &colorInfo;
 
     writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writes[2].dstSet = descriptorSets_[flightIndex];
+    writes[2].dstSet = descriptorSets[flightIndex];
     writes[2].dstBinding = 2;
     writes[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     writes[2].descriptorCount = 1;
@@ -517,7 +517,7 @@ void VulkanScreenSpaceEffectsPass::RecordDepthCopy(
         return;
     }
 
-    FlightTarget& flight = flights_[frameIndex];
+    FlightTarget& flight = flights[frameIndex];
     if (flight.depthSampleImage == VK_NULL_HANDLE) {
         return;
     }
@@ -625,14 +625,14 @@ void VulkanScreenSpaceEffectsPass::Record(
         VkExtent2D extent,
         const VulkanDepthResources& sceneDepth,
         const SceneRenderParams& scene) {
-    if (pipeline_ == VK_NULL_HANDLE || !HasFlight(frameIndex) ||
-        flights_[frameIndex].framebuffer == VK_NULL_HANDLE || frameIndex >= descriptorSets_.GetSize()) {
+    if (pipeline == VK_NULL_HANDLE || !HasFlight(frameIndex) ||
+        flights[frameIndex].framebuffer == VK_NULL_HANDLE || frameIndex >= descriptorSets.GetSize()) {
         return;
     }
 
     RecordDepthCopy(commandBuffer, frameIndex, extent, sceneDepth);
 
-    FlightTarget& flight = flights_[frameIndex];
+    FlightTarget& flight = flights[frameIndex];
     if (flight.colorImage != VK_NULL_HANDLE &&
         flight.colorLayout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
         VkImageMemoryBarrier barrier{};
@@ -664,7 +664,7 @@ void VulkanScreenSpaceEffectsPass::Record(
 
     VkRenderPassBeginInfo rpBegin{};
     rpBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    rpBegin.renderPass = renderPass_;
+    rpBegin.renderPass = renderPass;
     rpBegin.framebuffer = flight.framebuffer;
     rpBegin.renderArea.offset = {0, 0};
     rpBegin.renderArea.extent = extent;
@@ -672,7 +672,7 @@ void VulkanScreenSpaceEffectsPass::Record(
     rpBegin.pClearValues = nullptr;
 
     vkCmdBeginRenderPass(commandBuffer, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     VkViewport vp{};
     vp.x = 0.0F;
@@ -690,24 +690,24 @@ void VulkanScreenSpaceEffectsPass::Record(
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout_,
+            pipelineLayout,
             0,
             1,
-            &descriptorSets_[frameIndex],
+            &descriptorSets[frameIndex],
             0,
             nullptr);
 
     const PostPushConstants push = BuildPushConstants(scene);
     vkCmdPushConstants(
             commandBuffer,
-            pipelineLayout_,
+            pipelineLayout,
             VK_SHADER_STAGE_FRAGMENT_BIT,
             0,
             sizeof(PostPushConstants),
             &push);
 
     const VkDeviceSize vbOff = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &vbOff);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &vbOff);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
     vkCmdEndRenderPass(commandBuffer);
 

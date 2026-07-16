@@ -50,7 +50,7 @@ public:
             std::uint32_t maxTiles) const noexcept;
 
 private:
-    Frustum frustum_{};
+    Frustum frustum{};
 };
 
 }  // namespace Spark

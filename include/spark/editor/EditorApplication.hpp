@@ -37,37 +37,37 @@ public:
     void OnUpdate(const FrameTiming& timing, Scene& scene, IEngineContext& context);
     void OnRender(Scene& scene, IEngineContext& context);
 
-    [[nodiscard]] EditorMode GetMode() const noexcept { return mode_; }
-    [[nodiscard]] const Utf8String& GetStatusLine() const noexcept { return statusLine_; }
+    [[nodiscard]] EditorMode GetMode() const noexcept { return mode; }
+    [[nodiscard]] const Utf8String& GetStatusLine() const noexcept { return statusLine; }
 
 private:
     void BootstrapDefaultScene(GameWorld& world);
     void BuildEditorUi(GameWorld& world);
     void UpdateViewportCamera(const FrameTiming& timing, IEngineContext& context);
-    void TickPanels(const FrameTiming& timing, Scene& scene, IEngineContext& context);
+    void TickPanels(const FrameTiming& timing, Scene& scene, IEngineContext& engineContext);
     void HighlightSelection(Scene& scene);
 
-    EditorMode mode_ = EditorMode::Edit;
-    WorkspaceDimension workspace_ = WorkspaceDimension::ThreeD;
-    EditorSelection selection_{};
-    EditorProject project_{};
-    EditorContext context_{};
-    EditorDockShell dock_{};
+    EditorMode mode = EditorMode::Edit;
+    WorkspaceDimension workspace = WorkspaceDimension::ThreeD;
+    EditorSelection selection{};
+    EditorProject project{};
+    EditorContext context{};
+    EditorDockShell dock{};
 
-    UniquePtr<HierarchyPanel> hierarchyPanel_;
-    UniquePtr<InspectorPanel> inspectorPanel_;
-    UniquePtr<ProjectBrowserPanel> projectPanel_;
+    UniquePtr<HierarchyPanel> hierarchyPanel;
+    UniquePtr<InspectorPanel> inspectorPanel;
+    UniquePtr<ProjectBrowserPanel> projectPanel;
 
-    FlyCamera viewportCamera_{};
-    GameObject* guiCanvasObject_ = nullptr;
-    class GuiCanvasComponent* guiCanvas_ = nullptr;
-    GameObject* fpsHudObject_ = nullptr;
-    class TextOverlayComponent* fpsText_ = nullptr;
-    GameObject* highlightedObject_ = nullptr;
+    FlyCamera viewportCamera{};
+    GameObject* guiCanvasObject = nullptr;
+    class GuiCanvasComponent* guiCanvas = nullptr;
+    GameObject* fpsHudObject = nullptr;
+    class TextOverlayComponent* fpsText = nullptr;
+    GameObject* highlightedObject = nullptr;
 
-    SharedPtr<Mesh> groundMesh_;
-    Utf8String statusLine_{"Spark Editor — F1: fly camera · WASD move · RMB look"};
-    bool uiBuilt_ = false;
+    SharedPtr<Mesh> groundMesh;
+    Utf8String statusLine{"Spark Editor — F1: fly camera · WASD move · RMB look"};
+    bool uiBuilt = false;
 };
 
 }  // namespace Editor

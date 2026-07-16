@@ -20,8 +20,8 @@ public:
 
     [[nodiscard]] Utf8String GetPanelId() const override { return Utf8String("hierarchy"); }
     [[nodiscard]] Utf8String GetDisplayName() const override { return Utf8String("Hierarchy"); }
-    [[nodiscard]] Gui::Widget* GetRootWidget() noexcept override { return root_.Get(); }
-    [[nodiscard]] UniquePtr<Gui::Widget> ReleaseRootWidget() { return MoveTemp(root_); }
+    [[nodiscard]] Gui::Widget* GetRootWidget() noexcept override { return root.Get(); }
+    [[nodiscard]] UniquePtr<Gui::Widget> ReleaseRootWidget() { return MoveTemp(root); }
 
     void OnAttach(EditorContext& ctx) override;
     void OnTick(const FrameTiming& timing, EditorContext& ctx) override;
@@ -31,14 +31,14 @@ private:
     void OnTreeSelection(int nodeId);
     [[nodiscard]] std::uint32_t ComputeSceneRevision() const noexcept;
 
-    UniquePtr<Gui::Widget> root_;
-    Gui::TreeView* tree_ = nullptr;
-    GameWorld* world_ = nullptr;
-    EditorSelection* selection_ = nullptr;
-    Utf8String* statusLine_ = nullptr;
-    Array<GameObject*> nodeObjects_;
-    std::uint32_t sceneRevision_ = 0;
-    bool needsTreeRebuild_ = true;
+    UniquePtr<Gui::Widget> root;
+    Gui::TreeView* tree = nullptr;
+    GameWorld* world = nullptr;
+    EditorSelection* selection = nullptr;
+    Utf8String* statusLine = nullptr;
+    Array<GameObject*> nodeObjects;
+    std::uint32_t sceneRevision = 0;
+    bool needsTreeRebuild = true;
 };
 
 }  // namespace Editor

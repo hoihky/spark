@@ -23,88 +23,88 @@ VkDeviceSize AlignUp(VkDeviceSize value, VkDeviceSize alignment) {
 }  // namespace
 
 bool VulkanVideoCapture::IsRecording() const noexcept {
-    return recorder_.Get() != nullptr && recorder_->IsActive();
+    return recorder.Get() != nullptr && recorder->IsActive();
 }
 
 VideoRecorder* VulkanVideoCapture::GetRecorder() noexcept {
-    return recorder_.Get();
+    return recorder.Get();
 }
 
 const VideoRecorder* VulkanVideoCapture::GetRecorder() const noexcept {
-    return recorder_.Get();
+    return recorder.Get();
 }
 
 void VulkanVideoCapture::Create(
         VkPhysicalDevice physicalDevice,
         VkDevice device,
         const VkFormat swapchainFormat) {
-    physicalDevice_ = physicalDevice;
-    device_ = device;
-    swapchainFormat_ = swapchainFormat;
+    this->physicalDevice = physicalDevice;
+    this->device = device;
+    this->swapchainFormat = swapchainFormat;
 }
 
 void VulkanVideoCapture::Destroy(VkDevice device) {
     (void)EndRecording();
-    if (stagingMapped_ != nullptr) {
-        vkUnmapMemory(device, stagingMemory_);
-        stagingMapped_ = nullptr;
+    if (stagingMapped != nullptr) {
+        vkUnmapMemory(device, stagingMemory);
+        stagingMapped = nullptr;
     }
-    if (stagingBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, stagingBuffer_, nullptr);
-        stagingBuffer_ = VK_NULL_HANDLE;
+    if (stagingBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        stagingBuffer = VK_NULL_HANDLE;
     }
-    if (stagingMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, stagingMemory_, nullptr);
-        stagingMemory_ = VK_NULL_HANDLE;
+    if (stagingMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, stagingMemory, nullptr);
+        stagingMemory = VK_NULL_HANDLE;
     }
-    stagingBytes_ = 0;
-    rowPitch_ = 0;
-    bufferExtent_ = {};
-    captureQueued_ = false;
-    captureExtent_ = {};
-    device_ = VK_NULL_HANDLE;
-    physicalDevice_ = VK_NULL_HANDLE;
+    stagingBytes = 0;
+    rowPitch = 0;
+    bufferExtent = {};
+    captureQueued = false;
+    captureExtent = {};
+    this->device = VK_NULL_HANDLE;
+    this->physicalDevice = VK_NULL_HANDLE;
 }
 
 void VulkanVideoCapture::EnsureBuffer(const VkExtent2D extent) {
-    if (device_ == VK_NULL_HANDLE || extent.width == 0 || extent.height == 0) {
+    if (device == VK_NULL_HANDLE || extent.width == 0 || extent.height == 0) {
         return;
     }
-    if (bufferExtent_.width == extent.width && bufferExtent_.height == extent.height && stagingBuffer_ != VK_NULL_HANDLE) {
+    if (bufferExtent.width == extent.width && bufferExtent.height == extent.height && stagingBuffer != VK_NULL_HANDLE) {
         return;
     }
 
-    if (stagingMapped_ != nullptr) {
-        vkUnmapMemory(device_, stagingMemory_);
-        stagingMapped_ = nullptr;
+    if (stagingMapped != nullptr) {
+        vkUnmapMemory(device, stagingMemory);
+        stagingMapped = nullptr;
     }
-    if (stagingBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device_, stagingBuffer_, nullptr);
-        stagingBuffer_ = VK_NULL_HANDLE;
+    if (stagingBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        stagingBuffer = VK_NULL_HANDLE;
     }
-    if (stagingMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device_, stagingMemory_, nullptr);
-        stagingMemory_ = VK_NULL_HANDLE;
+    if (stagingMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, stagingMemory, nullptr);
+        stagingMemory = VK_NULL_HANDLE;
     }
 
     VkPhysicalDeviceProperties props{};
-    vkGetPhysicalDeviceProperties(physicalDevice_, &props);
+    vkGetPhysicalDeviceProperties(physicalDevice, &props);
     const VkDeviceSize alignment = props.limits.optimalBufferCopyRowPitchAlignment;
-    rowPitch_ = AlignUp(static_cast<VkDeviceSize>(extent.width) * 4U, alignment);
-    stagingBytes_ = rowPitch_ * static_cast<VkDeviceSize>(extent.height);
+    rowPitch = AlignUp(static_cast<VkDeviceSize>(extent.width) * 4U, alignment);
+    stagingBytes = rowPitch * static_cast<VkDeviceSize>(extent.height);
 
     VulkanRendererGpu::CreateBuffer(
-            physicalDevice_,
-            device_,
-            stagingBytes_,
+            physicalDevice,
+            device,
+            stagingBytes,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            stagingBuffer_,
-            stagingMemory_);
-    if (vkMapMemory(device_, stagingMemory_, 0, stagingBytes_, 0, &stagingMapped_) != VK_SUCCESS) {
+            stagingBuffer,
+            stagingMemory);
+    if (vkMapMemory(device, stagingMemory, 0, stagingBytes, 0, &stagingMapped) != VK_SUCCESS) {
         throw std::runtime_error("VulkanVideoCapture: vkMapMemory failed");
     }
-    bufferExtent_ = extent;
+    bufferExtent = extent;
 }
 
 bool VulkanVideoCapture::BeginRecording(
@@ -118,25 +118,25 @@ bool VulkanVideoCapture::BeginRecording(
     if (!recorder->Begin(settings, extent.width, extent.height)) {
         return false;
     }
-    recorder_ = MoveTemp(recorder);
-    settings_ = settings;
-    recordStartPts_ = 0.0;
+    recorder = MoveTemp(recorder);
+    this->settings = settings;
+    recordStartPts = 0.0;
     EnsureBuffer(extent);
     return true;
 }
 
 bool VulkanVideoCapture::EndRecording() noexcept {
-    captureQueued_ = false;
-    captureExtent_ = {};
-    if (!recorder_) {
+    captureQueued = false;
+    captureExtent = {};
+    if (!recorder) {
         return false;
     }
-    const bool ok = recorder_->End();
-    recorder_.Reset();
-    settings_ = {};
-    recordStartPts_ = 0.0;
-    scratchBgra_.Clear();
-    scratchRgba_.Clear();
+    const bool ok = recorder->End();
+    recorder.Reset();
+    settings = {};
+    recordStartPts = 0.0;
+    scratchBgra.Clear();
+    scratchRgba.Clear();
     return ok;
 }
 
@@ -149,8 +149,8 @@ void VulkanVideoCapture::RecordCopyFromSwapchain(
     }
 
     EnsureBuffer(extent);
-    captureExtent_ = extent;
-    captureQueued_ = true;
+    captureExtent = extent;
+    captureQueued = true;
 
     VkImageMemoryBarrier toSrc{};
     toSrc.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -187,7 +187,7 @@ void VulkanVideoCapture::RecordCopyFromSwapchain(
     region.imageExtent.height = extent.height;
     region.imageExtent.depth = 1;
 
-    vkCmdCopyImageToBuffer(commandBuffer, swapchainImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer_, 1, &region);
+    vkCmdCopyImageToBuffer(commandBuffer, swapchainImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, stagingBuffer, 1, &region);
 
     VkImageMemoryBarrier toPresent{};
     toPresent.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -216,43 +216,43 @@ void VulkanVideoCapture::RecordCopyFromSwapchain(
 }
 
 void VulkanVideoCapture::TryCommitFrameAfterFence(const double ptsSeconds) noexcept {
-    if (!captureQueued_ || !IsRecording() || stagingMapped_ == nullptr || captureExtent_.width == 0 ||
-        captureExtent_.height == 0) {
-        captureQueued_ = false;
+    if (!captureQueued || !IsRecording() || stagingMapped == nullptr || captureExtent.width == 0 ||
+        captureExtent.height == 0) {
+        captureQueued = false;
         return;
     }
 
-    const std::uint32_t width = captureExtent_.width;
-    const std::uint32_t height = captureExtent_.height;
+    const std::uint32_t width = captureExtent.width;
+    const std::uint32_t height = captureExtent.height;
     const std::size_t tightBgraCount = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4U;
-    scratchBgra_.Resize(tightBgraCount);
+    scratchBgra.Resize(tightBgraCount);
 
-    const auto* src = static_cast<const std::uint8_t*>(stagingMapped_);
+    const auto* src = static_cast<const std::uint8_t*>(stagingMapped);
     for (std::uint32_t y = 0; y < height; ++y) {
-        const std::uint8_t* row = src + static_cast<std::size_t>(y) * static_cast<std::size_t>(rowPitch_);
-        std::memcpy(scratchBgra_.GetData() + static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 4U, row, static_cast<std::size_t>(width) * 4U);
+        const std::uint8_t* row = src + static_cast<std::size_t>(y) * static_cast<std::size_t>(rowPitch);
+        std::memcpy(scratchBgra.GetData() + static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 4U, row, static_cast<std::size_t>(width) * 4U);
     }
 
-    if (settings_.applyWatermark) {
-        scratchRgba_.Resize(tightBgraCount);
-        ConvertBgraRowsToRgba(scratchBgra_.GetData(), width, height, static_cast<std::size_t>(width) * 4U, scratchRgba_.GetData());
-        ApplyFrameCaptureWatermark(scratchRgba_.GetData(), width, height);
-        ConvertRgbaToBgraRows(scratchRgba_.GetData(), width, height, scratchBgra_.GetData(), static_cast<std::size_t>(width) * 4U);
+    if (settings.applyWatermark) {
+        scratchRgba.Resize(tightBgraCount);
+        ConvertBgraRowsToRgba(scratchBgra.GetData(), width, height, static_cast<std::size_t>(width) * 4U, scratchRgba.GetData());
+        ApplyFrameCaptureWatermark(scratchRgba.GetData(), width, height);
+        ConvertRgbaToBgraRows(scratchRgba.GetData(), width, height, scratchBgra.GetData(), static_cast<std::size_t>(width) * 4U);
     }
 
-    const std::uint32_t outW = recorder_->OutputWidth();
-    const std::uint32_t outH = recorder_->OutputHeight();
+    const std::uint32_t outW = recorder->OutputWidth();
+    const std::uint32_t outH = recorder->OutputHeight();
     if (outW != width || outH != height) {
         const std::size_t scaledCount = static_cast<std::size_t>(outW) * static_cast<std::size_t>(outH) * 4U;
-        scratchRgba_.Resize(scaledCount);
-        DownscaleBgraBox(scratchBgra_.GetData(), width, height, scratchRgba_.GetData(), outW, outH);
-        recorder_->AppendVideoFrameBgra(scratchRgba_.GetData(), outW, outH, ptsSeconds);
+        scratchRgba.Resize(scaledCount);
+        DownscaleBgraBox(scratchBgra.GetData(), width, height, scratchRgba.GetData(), outW, outH);
+        recorder->AppendVideoFrameBgra(scratchRgba.GetData(), outW, outH, ptsSeconds);
     } else {
-        recorder_->AppendVideoFrameBgra(scratchBgra_.GetData(), width, height, ptsSeconds);
+        recorder->AppendVideoFrameBgra(scratchBgra.GetData(), width, height, ptsSeconds);
     }
 
-    captureQueued_ = false;
-    captureExtent_ = {};
+    captureQueued = false;
+    captureExtent = {};
 }
 
 }  // namespace Spark

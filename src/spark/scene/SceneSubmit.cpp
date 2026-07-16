@@ -1,12 +1,13 @@
 #include "spark/scene/SceneSubmit.hpp"
 
+#include "spark/scene/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/detail/SceneSubmitLighting.hpp"
+
 #include "spark/animation/Skeleton.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/Camera.hpp"
-#include "spark/ecs/components/BlendModeComponent.hpp"
-#include "spark/ecs/components/DirectionalLightComponent.hpp"
 #include "spark/ecs/components/AnimatorComponent.hpp"
 #include "spark/ecs/components/MaterialComponent.hpp"
 #include "spark/ecs/components/MeshComponent.hpp"
@@ -19,7 +20,6 @@
 #include "spark/ecs/components/SpriteLighting2DComponent.hpp"
 #include "spark/ecs/components/SkyComponent.hpp"
 #include "spark/ecs/components/TextOverlayComponent.hpp"
-#include "spark/ecs/components/TilemapComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
@@ -29,243 +29,19 @@
 #include "spark/scene/Scene.hpp"
 #include "spark/scene/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/ScenePartitionKind.hpp"
-#include "spark/scene/DrawableSortKey.hpp"
 #include "spark/scene/DrawableSortResolver.hpp"
 #include "spark/scene/SceneSpriteTileCull.hpp"
 #include "spark/scene/SceneTilemapSubmit.hpp"
-#include "spark/render/SceneBlendMode.hpp"
 #include "spark/render/SceneLightingProfile.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 #include "spark/math/Constants.hpp"
 
-#include <cmath>
-#include <cstdio>
 #include <functional>
 
 namespace Spark {
 
 namespace {
-
-std::int32_t FindOrAddSceneTexture(SceneRenderParams& params, const SharedPtr<Texture2D>& tex) {
-    if (!tex) {
-        return -1;
-    }
-    for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-        if (params.sceneTextures[i].Get() == tex.Get()) {
-            return static_cast<std::int32_t>(i);
-        }
-    }
-    if (params.sceneTextures.GetSize() >= SceneRenderParams::MaxSceneTextures) {
-        std::fprintf(
-                stderr,
-                "Spark: scene texture limit (%u) reached; dropping \"%s\"\n",
-                SceneRenderParams::MaxSceneTextures,
-                tex->GetName().CStr());
-        return -1;
-    }
-    params.sceneTextures.PushBack(tex);
-    return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
-}
-
-void ApplyMaterialComponentToSceneDrawItemImpl(SceneDrawItem& item, const MaterialComponent* mat) noexcept {
-    if (mat == nullptr) {
-        return;
-    }
-    item.metallic = mat->GetMetallic();
-    item.roughness = mat->GetRoughness();
-    item.metallicFactor = mat->GetMetallicFactor();
-    item.roughnessFactor = mat->GetRoughnessFactor();
-    item.occlusionStrength = mat->GetOcclusionStrength();
-    item.emissiveColor = mat->GetEmissiveColor();
-    item.emissiveIntensity = mat->GetEmissiveIntensity();
-    item.emissiveFactor = mat->GetEmissiveFactor();
-    item.shadingModel = mat->GetShadingModel();
-    item.toonDiffuseBands = mat->GetToonDiffuseBands();
-    item.toonRimIntensity = mat->GetToonRimIntensity();
-    item.toonRimPower = mat->GetToonRimPower();
-    item.doubleSided = mat->IsDoubleSided();
-    item.opacity = mat->GetOpacity();
-}
-
-void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept {
-    if (params.iblEnvironmentLayer >= 0) {
-        return;
-    }
-    for (std::size_t i = 0; i < params.draws.GetSize(); ++i) {
-        const SceneDrawItem& d = params.draws[i];
-        if (d.skyMode != SceneSkyMode::None && d.textureLayer >= 0) {
-            params.iblEnvironmentLayer = d.textureLayer;
-            return;
-        }
-    }
-}
-
-}  // namespace
-
-void ApplyMaterialComponentToSceneDrawItem(
-        SceneDrawItem& item, const MaterialComponent* mat, SceneRenderParams* resolveTextures) noexcept {
-    ApplyMaterialComponentToSceneDrawItemImpl(item, mat);
-    if (mat == nullptr || resolveTextures == nullptr) {
-        return;
-    }
-    item.normalMapLayer = -1;
-    item.metallicRoughnessMapLayer = -1;
-    item.emissiveMapLayer = -1;
-    if (mat->GetNormalTexture()) {
-        item.normalMapLayer = FindOrAddSceneTexture(*resolveTextures, mat->GetNormalTexture());
-    }
-    if (mat->GetMetallicRoughnessTexture()) {
-        item.metallicRoughnessMapLayer = FindOrAddSceneTexture(*resolveTextures, mat->GetMetallicRoughnessTexture());
-    }
-    if (mat->GetEmissiveTexture()) {
-        item.emissiveMapLayer = FindOrAddSceneTexture(*resolveTextures, mat->GetEmissiveTexture());
-    }
-}
-
-namespace {
-
-int DrawSortLayer(SceneMeshSlot s) {
-    switch (s) {
-    case SceneMeshSlot::GroundPlane:
-        return 0;
-    case SceneMeshSlot::UnitCube:
-        return 1;
-    case SceneMeshSlot::Custom:
-        return 2;
-    }
-    return 1;
-}
-
-int DrawSortKey(const SceneDrawItem& it) {
-    if (it.skyMode != SceneSkyMode::None) {
-        return -100;
-    }
-    return DrawSortLayer(it.mesh);
-}
-
-void StableSortDrawItems(Array<SceneDrawItem>& items) {
-    const std::size_t n = items.GetSize();
-    for (std::size_t i = 1; i < n; ++i) {
-        SceneDrawItem key = items[i];
-        std::size_t j = i;
-        while (j > 0 && DrawSortKey(items[j - 1]) > DrawSortKey(key)) {
-            items[j] = items[j - 1];
-            --j;
-        }
-        items[j] = key;
-    }
-}
-
-[[nodiscard]] SceneBlendMode ResolveSpriteBlendMode(const GameObject& object) noexcept {
-    if (const BlendModeComponent* blend = object.GetComponent<BlendModeComponent>()) {
-        return blend->GetMode();
-    }
-    return kSceneBlendModeDefault;
-}
-
-void StableSortSprites(Array<SceneSpriteDraw>& items, SceneSpriteSortMode mode) {
-    const auto moreInFront = [mode](const SceneSpriteDraw& a, const SceneSpriteDraw& b) noexcept -> bool {
-        const std::uint8_t blendA = GetSceneBlendModePassOrder(a.blendMode);
-        const std::uint8_t blendB = GetSceneBlendModePassOrder(b.blendMode);
-        if (blendA != blendB) {
-            return blendA > blendB;
-        }
-        const DrawableSortKey keyA{a.sortingLayerOrder, a.sortOrder};
-        const DrawableSortKey keyB{b.sortingLayerOrder, b.sortOrder};
-        if (DrawableSortMoreInFront(keyA, keyB)) {
-            return true;
-        }
-        if (DrawableSortMoreInFront(keyB, keyA)) {
-            return false;
-        }
-        if (mode == SceneSpriteSortMode::SortOrderThenWorldY) {
-            return a.sortWorldY < b.sortWorldY;
-        }
-        return false;
-    };
-    const std::size_t n = items.GetSize();
-    for (std::size_t i = 1; i < n; ++i) {
-        SceneSpriteDraw key = items[i];
-        std::size_t j = i;
-        while (j > 0 && moreInFront(items[j - 1], key)) {
-            items[j] = items[j - 1];
-            --j;
-        }
-        items[j] = key;
-    }
-}
-
-[[nodiscard]] bool IsTransparentSceneDraw(const SceneDrawItem& item) noexcept {
-    return item.skyMode == SceneSkyMode::None && item.opacity < 0.999F;
-}
-
-void SortTransparentDrawsBackToFront(
-        Array<SceneDrawItem>& items,
-        const Vector3& cameraPositionWorld,
-        const SceneTransparentSortMode mode) {
-    if (mode != SceneTransparentSortMode::BackToFrontByDepth) {
-        return;
-    }
-    const auto fartherFirst = [&cameraPositionWorld](const SceneDrawItem& a, const SceneDrawItem& b) noexcept -> bool {
-        const float ax = a.model.m[12] - cameraPositionWorld.x;
-        const float ay = a.model.m[13] - cameraPositionWorld.y;
-        const float az = a.model.m[14] - cameraPositionWorld.z;
-        const float bx = b.model.m[12] - cameraPositionWorld.x;
-        const float by = b.model.m[13] - cameraPositionWorld.y;
-        const float bz = b.model.m[14] - cameraPositionWorld.z;
-        return (ax * ax + ay * ay + az * az) > (bx * bx + by * by + bz * bz);
-    };
-    const std::size_t n = items.GetSize();
-    for (std::size_t i = 1; i < n; ++i) {
-        SceneDrawItem key = items[i];
-        std::size_t j = i;
-        while (j > 0 && fartherFirst(items[j - 1], key)) {
-            items[j] = items[j - 1];
-            --j;
-        }
-        items[j] = key;
-    }
-}
-
-void PartitionSortedDrawItemsIntoSceneParamsImpl(
-        const Array<SceneDrawItem>& sortedDrawList,
-        SceneRenderParams& params,
-        const Vector3& cameraPositionWorld) {
-    for (std::size_t di = 0; di < sortedDrawList.GetSize(); ++di) {
-        if (IsTransparentSceneDraw(sortedDrawList[di])) {
-            params.transparentDraws.PushBack(sortedDrawList[di]);
-        } else {
-            params.draws.PushBack(sortedDrawList[di]);
-        }
-    }
-    SortTransparentDrawsBackToFront(params.transparentDraws, cameraPositionWorld, params.transparentSortMode);
-}
-
-void ApplyEcsDirectionalLight(GameWorld& world, SceneRenderParams& params) {
-    bool applied = false;
-    world.ForEachGameObject([&](GameObject* object) {
-        if (applied || object == nullptr) {
-            return;
-        }
-        const DirectionalLightComponent* directional = object->GetComponent<DirectionalLightComponent>();
-        if (directional == nullptr || !directional->IsEnabled()) {
-            return;
-        }
-        const Matrix4 worldMatrix = object->GetWorldMatrix();
-        Vector3 towardLight = worldMatrix.TransformVector(Vector3{0.0F, 0.0F, 1.0F});
-        if (towardLight.LengthSquared() < 1.0e-10F) {
-            towardLight = Vector3{0.0F, 1.0F, 0.0F};
-        } else {
-            towardLight = towardLight.Normalized();
-        }
-        params.lightDirectionWorld = towardLight;
-        params.lightColor = directional->GetColor();
-        params.lightIntensity = directional->GetIntensity();
-        params.directionalShadowsEnabled = directional->CastsShadow();
-        applied = true;
-    });
-}
 
 struct RigidDrawableSubmitSink final : DrawableFrustumSink {
     Array<SceneDrawItem>& drawList;
@@ -338,13 +114,6 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
 
 }  // namespace
 
-void PartitionSortedDrawItemsIntoSceneParams(
-        const Array<SceneDrawItem>& sortedDrawList,
-        SceneRenderParams& params,
-        const Vector3& cameraPositionWorld) noexcept {
-    PartitionSortedDrawItemsIntoSceneParamsImpl(sortedDrawList, params, cameraPositionWorld);
-}
-
 void FillStandardLitSceneFromWorld(
         GameWorld& world,
         IEngineContext& context,
@@ -369,7 +138,7 @@ void FillStandardLitSceneFromWorld(
     params.lightColor = lightColor;
     params.lightIntensity = lightIntensity;
     params.ambientColor = ambientColor;
-    ApplyEcsDirectionalLight(world, params);
+    SceneSubmitDetail::ApplyEcsDirectionalLight(world, params);
 
     params.draws.Clear();
     params.transparentDraws.Clear();
@@ -462,7 +231,7 @@ void FillStandardLitSceneFromWorld(
     });
 
     auto findOrAddTexture = [&params](const SharedPtr<Texture2D>& tex) -> std::int32_t {
-        return FindOrAddSceneTexture(params, tex);
+        return SceneSubmitDetail::FindOrAddSceneTexture(params, tex);
     };
 
     Array<SceneDrawItem> drawList;
@@ -549,7 +318,7 @@ void FillStandardLitSceneFromWorld(
     SkinnedSubmitSink skinnedSink{drawList, params, findOrAddTexture, defaultShadowFlags};
     DispatchSkinnedDrawableFrustumCull(world, viewProjection, skinnedPartition, skinnedSink);
 
-    StableSortDrawItems(drawList);
+    SceneSubmitDetail::StableSortDrawItems(drawList);
     PartitionSortedDrawItemsIntoSceneParams(drawList, params, cameraPositionWorld);
 
     const SceneSpriteTileCull spriteTileCull(viewProjection);
@@ -588,13 +357,13 @@ void FillStandardLitSceneFromWorld(
             sd.lightingParam0 = lit->GetParam0();
             sd.lightingParam1 = lit->GetParam1();
         }
-        sd.blendMode = ResolveSpriteBlendMode(*o);
+        sd.blendMode = SceneSubmitDetail::ResolveSpriteBlendMode(*o);
         params.sprites.PushBack(sd);
     });
 
-    tilemapSubmitter.Submit(world, params, spriteTileCull, findOrAddTexture, ResolveSpriteBlendMode);
+    tilemapSubmitter.Submit(world, params, spriteTileCull, findOrAddTexture, SceneSubmitDetail::ResolveSpriteBlendMode);
 
-    StableSortSprites(params.sprites, params.spriteSortMode);
+    SceneSubmitDetail::StableSortSprites(params.sprites, params.spriteSortMode);
 
     params.particles.Clear();
     if (enableParticles) {
@@ -641,7 +410,7 @@ void FillStandardLitSceneFromWorld(
         params.screenTexts.PushBack(MoveTemp(d));
     });
 
-    ResolveIblEnvironmentLayer(params);
+    SceneSubmitDetail::ResolveIblEnvironmentLayer(params);
 
     if (params.draws.IsEmpty() && (!params.sprites.IsEmpty() || !params.tilemaps.IsEmpty())) {
         params.directionalShadowsEnabled = false;

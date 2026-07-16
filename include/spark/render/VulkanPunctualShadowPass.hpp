@@ -66,8 +66,8 @@ public:
             const VulkanPunctualShadowFrameState& frameState);
 
     [[nodiscard]] bool HasFlightResources(std::uint32_t frameIndex) const noexcept;
-    [[nodiscard]] VkSampler CompareSampler() const noexcept { return compareSampler_; }
-    [[nodiscard]] const FlightTarget& Flight(std::uint32_t frameIndex) const noexcept { return flights_[frameIndex]; }
+    [[nodiscard]] VkSampler CompareSampler() const noexcept { return compareSampler; }
+    [[nodiscard]] const FlightTarget& Flight(std::uint32_t frameIndex) const noexcept { return flights[frameIndex]; }
     [[nodiscard]] VkBuffer SsboBuffer(std::uint32_t frameIndex) const noexcept;
 
 private:
@@ -80,12 +80,12 @@ private:
             VkImageLayout newLayout,
             VkAccessFlags dstAccess) const;
 
-    VkRenderPass renderPass_ = VK_NULL_HANDLE;
-    Array<FlightTarget> flights_;
-    VkSampler compareSampler_ = VK_NULL_HANDLE;
-    VkPipeline pipeline_ = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-    VkShaderModule vertModule_ = VK_NULL_HANDLE;
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    Array<FlightTarget> flights;
+    VkSampler compareSampler = VK_NULL_HANDLE;
+    VkPipeline pipeline = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkShaderModule vertModule = VK_NULL_HANDLE;
 };
 
 }  // namespace Spark

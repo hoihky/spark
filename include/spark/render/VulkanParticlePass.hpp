@@ -38,21 +38,21 @@ private:
         float cameraUp[4]{};
     };
 
-    VkShaderModule vertModule_ = VK_NULL_HANDLE;
-    VkShaderModule fragModule_ = VK_NULL_HANDLE;
-    VkPipeline pipeline_ = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout_ = VK_NULL_HANDLE;
-    VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
-    Array<VkDescriptorSet> descriptorSets_;
-    Array<VkBuffer> uniformBuffers_;
-    Array<VkDeviceMemory> uniformBuffersMemory_;
-    Array<void*> uniformBuffersMapped_;
-    VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory vertexBufferMemory_ = VK_NULL_HANDLE;
-    void* vertexMapped_ = nullptr;
-    VkDeviceSize vertexCapacityBytes_ = 0;
-    mutable Array<float> scratchVertices_;
+    VkShaderModule vertModule = VK_NULL_HANDLE;
+    VkShaderModule fragModule = VK_NULL_HANDLE;
+    VkPipeline pipeline = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    Array<VkDescriptorSet> descriptorSets;
+    Array<VkBuffer> uniformBuffers;
+    Array<VkDeviceMemory> uniformBuffersMemory;
+    Array<void*> uniformBuffersMapped;
+    VkBuffer vertexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vertexBufferMemory = VK_NULL_HANDLE;
+    void* vertexMapped = nullptr;
+    VkDeviceSize vertexCapacityBytes = 0;
+    mutable Array<float> scratchVertices;
 };
 
 }  // namespace Spark

@@ -7,10 +7,10 @@
 namespace Spark {
 
 SceneSpriteTileCull::SceneSpriteTileCull(const Matrix4& viewProjection) noexcept
-    : frustum_(Frustum::FromColumnMajorViewProjection(viewProjection)) {}
+    : frustum(Frustum::FromColumnMajorViewProjection(viewProjection)) {}
 
 bool SceneSpriteTileCull::IsAxisAlignedBoxVisible(const Vector3& boxMin, const Vector3& boxMax) const noexcept {
-    return frustum_.IntersectsAxisAlignedBox(boxMin, boxMax);
+    return frustum.IntersectsAxisAlignedBox(boxMin, boxMax);
 }
 
 void SceneSpriteTileCull::ComputeSpriteWorldBounds(

@@ -33,7 +33,7 @@ public:
     void ResampleBilinear(std::uint32_t targetW, std::uint32_t targetH, Array<std::uint8_t>& outRgba) const;
 
     /** Cached FNV-1a fingerprint; refreshed when pixels change via <c>SetPixels</c>. */
-    [[nodiscard]] std::uint64_t GetContentFingerprint() const noexcept { return contentFingerprint_; }
+    [[nodiscard]] std::uint64_t GetContentFingerprint() const noexcept { return contentFingerprint; }
 
     static Texture2D CreateCheckerboard(
             std::uint32_t size,
@@ -70,7 +70,7 @@ private:
     std::uint32_t width = 0;
     std::uint32_t height = 0;
     Array<std::uint8_t> rgba;
-    std::uint64_t contentFingerprint_ = 0;
+    std::uint64_t contentFingerprint = 0;
 
     void RefreshContentFingerprint() noexcept;
 };

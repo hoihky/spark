@@ -3,33 +3,33 @@
 namespace Spark::Editor {
 
 void EditorSelection::Clear() noexcept {
-    if (primary_ == nullptr) {
+    if (primary == nullptr) {
         return;
     }
-    primary_ = nullptr;
+    primary = nullptr;
     NotifyChanged();
 }
 
 void EditorSelection::SetPrimary(GameObject* const object) noexcept {
-    if (primary_ == object) {
+    if (primary == object) {
         return;
     }
-    primary_ = object;
+    primary = object;
     NotifyChanged();
 }
 
 bool EditorSelection::IsSelected(const GameObject* const object) const noexcept {
-    return object != nullptr && primary_ == object;
+    return object != nullptr && primary == object;
 }
 
 void EditorSelection::SetOnChanged(const ChangedCallback callback, void* const userData) noexcept {
-    onChanged_ = callback;
-    onChangedUserData_ = userData;
+    onChanged = callback;
+    onChangedUserData = userData;
 }
 
 void EditorSelection::NotifyChanged() noexcept {
-    if (onChanged_ != nullptr) {
-        onChanged_(onChangedUserData_);
+    if (onChanged != nullptr) {
+        onChanged(onChangedUserData);
     }
 }
 

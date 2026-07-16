@@ -35,7 +35,7 @@ void VulkanParticlePass::CreateGpuResources(
     dslInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     dslInfo.bindingCount = 1;
     dslInfo.pBindings = &uboBinding;
-    if (vkCreateDescriptorSetLayout(device, &dslInfo, nullptr, &descriptorSetLayout_) != VK_SUCCESS) {
+    if (vkCreateDescriptorSetLayout(device, &dslInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout (particle) failed");
     }
 
@@ -48,28 +48,28 @@ void VulkanParticlePass::CreateGpuResources(
     poolInfo.poolSizeCount = 1;
     poolInfo.pPoolSizes = &poolSize;
     poolInfo.maxSets = framesInFlight;
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool_) != VK_SUCCESS) {
+    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorPool (particle) failed");
     }
 
     Array<VkDescriptorSetLayout> layouts;
     layouts.Resize(framesInFlight);
     for (std::size_t i = 0; i < framesInFlight; ++i) {
-        layouts[i] = descriptorSetLayout_;
+        layouts[i] = descriptorSetLayout;
     }
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocInfo.descriptorPool = descriptorPool_;
+    allocInfo.descriptorPool = descriptorPool;
     allocInfo.descriptorSetCount = framesInFlight;
     allocInfo.pSetLayouts = layouts.GetData();
-    descriptorSets_.Resize(framesInFlight);
-    if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets_.GetData()) != VK_SUCCESS) {
+    descriptorSets.Resize(framesInFlight);
+    if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.GetData()) != VK_SUCCESS) {
         throw std::runtime_error("vkAllocateDescriptorSets (particle) failed");
     }
 
-    uniformBuffers_.Resize(framesInFlight);
-    uniformBuffersMemory_.Resize(framesInFlight);
-    uniformBuffersMapped_.Resize(framesInFlight);
+    uniformBuffers.Resize(framesInFlight);
+    uniformBuffersMemory.Resize(framesInFlight);
+    uniformBuffersMapped.Resize(framesInFlight);
     for (std::size_t i = 0; i < framesInFlight; ++i) {
         VulkanRendererGpu::CreateBuffer(
                 physicalDevice,
@@ -77,24 +77,24 @@ void VulkanParticlePass::CreateGpuResources(
                 kParticleUboBytes,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                uniformBuffers_[i],
-                uniformBuffersMemory_[i]);
+                uniformBuffers[i],
+                uniformBuffersMemory[i]);
         if (vkMapMemory(
                     device,
-                    uniformBuffersMemory_[i],
+                    uniformBuffersMemory[i],
                     0,
                     kParticleUboBytes,
                     0,
-                    &uniformBuffersMapped_[i]) != VK_SUCCESS) {
+                    &uniformBuffersMapped[i]) != VK_SUCCESS) {
             throw std::runtime_error("map particle UBO failed");
         }
         VkDescriptorBufferInfo bi{};
-        bi.buffer = uniformBuffers_[i];
+        bi.buffer = uniformBuffers[i];
         bi.offset = 0;
         bi.range = kParticleUboBytes;
         VkWriteDescriptorSet write{};
         write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write.dstSet = descriptorSets_[i];
+        write.dstSet = descriptorSets[i];
         write.dstBinding = 0;
         write.dstArrayElement = 0;
         write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -109,70 +109,70 @@ void VulkanParticlePass::CreateGpuResources(
             kParticleVertexBytes,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            vertexBuffer_,
-            vertexBufferMemory_);
-    if (vkMapMemory(device, vertexBufferMemory_, 0, kParticleVertexBytes, 0, &vertexMapped_) != VK_SUCCESS) {
+            vertexBuffer,
+            vertexBufferMemory);
+    if (vkMapMemory(device, vertexBufferMemory, 0, kParticleVertexBytes, 0, &vertexMapped) != VK_SUCCESS) {
         throw std::runtime_error("map particle vertex buffer failed");
     }
-    vertexCapacityBytes_ = kParticleVertexBytes;
+    vertexCapacityBytes = kParticleVertexBytes;
 
     const Array<char> pv = shaders.ReadSpvFile("particle.vert.spv");
     const Array<char> pf = shaders.ReadSpvFile("particle.frag.spv");
-    vertModule_ = shaders.CreateShaderModule(pv);
-    fragModule_ = shaders.CreateShaderModule(pf);
+    vertModule = shaders.CreateShaderModule(pv);
+    fragModule = shaders.CreateShaderModule(pf);
 }
 
 void VulkanParticlePass::DestroyGpuResources(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (vertexMapped_ != nullptr) {
-        vkUnmapMemory(device, vertexBufferMemory_);
-        vertexMapped_ = nullptr;
+    if (vertexMapped != nullptr) {
+        vkUnmapMemory(device, vertexBufferMemory);
+        vertexMapped = nullptr;
     }
-    if (vertexBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device, vertexBuffer_, nullptr);
-        vertexBuffer_ = VK_NULL_HANDLE;
+    if (vertexBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, vertexBuffer, nullptr);
+        vertexBuffer = VK_NULL_HANDLE;
     }
-    if (vertexBufferMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device, vertexBufferMemory_, nullptr);
-        vertexBufferMemory_ = VK_NULL_HANDLE;
+    if (vertexBufferMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, vertexBufferMemory, nullptr);
+        vertexBufferMemory = VK_NULL_HANDLE;
     }
-    vertexCapacityBytes_ = 0;
+    vertexCapacityBytes = 0;
 
-    for (std::size_t i = 0; i < uniformBuffers_.GetSize(); ++i) {
-        if (uniformBuffersMapped_[i] != nullptr) {
-            vkUnmapMemory(device, uniformBuffersMemory_[i]);
-            uniformBuffersMapped_[i] = nullptr;
+    for (std::size_t i = 0; i < uniformBuffers.GetSize(); ++i) {
+        if (uniformBuffersMapped[i] != nullptr) {
+            vkUnmapMemory(device, uniformBuffersMemory[i]);
+            uniformBuffersMapped[i] = nullptr;
         }
-        if (uniformBuffers_[i] != VK_NULL_HANDLE) {
-            vkDestroyBuffer(device, uniformBuffers_[i], nullptr);
+        if (uniformBuffers[i] != VK_NULL_HANDLE) {
+            vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         }
-        if (uniformBuffersMemory_[i] != VK_NULL_HANDLE) {
-            vkFreeMemory(device, uniformBuffersMemory_[i], nullptr);
+        if (uniformBuffersMemory[i] != VK_NULL_HANDLE) {
+            vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
         }
     }
-    uniformBuffers_.Clear();
-    uniformBuffersMemory_.Clear();
-    uniformBuffersMapped_.Clear();
+    uniformBuffers.Clear();
+    uniformBuffersMemory.Clear();
+    uniformBuffersMapped.Clear();
 
-    descriptorSets_.Clear();
-    if (descriptorPool_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorPool(device, descriptorPool_, nullptr);
-        descriptorPool_ = VK_NULL_HANDLE;
+    descriptorSets.Clear();
+    if (descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+        descriptorPool = VK_NULL_HANDLE;
     }
-    if (descriptorSetLayout_ != VK_NULL_HANDLE) {
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout_, nullptr);
-        descriptorSetLayout_ = VK_NULL_HANDLE;
+    if (descriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        descriptorSetLayout = VK_NULL_HANDLE;
     }
 
-    if (vertModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, vertModule_, nullptr);
-        vertModule_ = VK_NULL_HANDLE;
+    if (vertModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertModule, nullptr);
+        vertModule = VK_NULL_HANDLE;
     }
-    if (fragModule_ != VK_NULL_HANDLE) {
-        vkDestroyShaderModule(device, fragModule_, nullptr);
-        fragModule_ = VK_NULL_HANDLE;
+    if (fragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, fragModule, nullptr);
+        fragModule = VK_NULL_HANDLE;
     }
 }
 
@@ -180,19 +180,19 @@ void VulkanParticlePass::DestroyGraphicsPipeline(const VkDevice device) {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (pipeline_ != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipeline_, nullptr);
-        pipeline_ = VK_NULL_HANDLE;
+    if (pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipeline, nullptr);
+        pipeline = VK_NULL_HANDLE;
     }
-    if (pipelineLayout_ != VK_NULL_HANDLE) {
-        vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
-        pipelineLayout_ = VK_NULL_HANDLE;
+    if (pipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        pipelineLayout = VK_NULL_HANDLE;
     }
 }
 
 void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkRenderPass hdrRenderPass) {
-    if (device == VK_NULL_HANDLE || hdrRenderPass == VK_NULL_HANDLE || vertModule_ == VK_NULL_HANDLE ||
-        fragModule_ == VK_NULL_HANDLE || descriptorSetLayout_ == VK_NULL_HANDLE) {
+    if (device == VK_NULL_HANDLE || hdrRenderPass == VK_NULL_HANDLE || vertModule == VK_NULL_HANDLE ||
+        fragModule == VK_NULL_HANDLE || descriptorSetLayout == VK_NULL_HANDLE) {
         return;
     }
     DestroyGraphicsPipeline(device);
@@ -200,13 +200,13 @@ void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkR
     VkPipelineShaderStageCreateInfo vertStage{};
     vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
-    vertStage.module = vertModule_;
+    vertStage.module = vertModule;
     vertStage.pName = "main";
 
     VkPipelineShaderStageCreateInfo fragStage{};
     fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    fragStage.module = fragModule_;
+    fragStage.module = fragModule;
     fragStage.pName = "main";
 
     const VkPipelineShaderStageCreateInfo stages[] = {vertStage, fragStage};
@@ -292,9 +292,9 @@ void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkR
     VkPipelineLayoutCreateInfo pl{};
     pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pl.setLayoutCount = 1;
-    pl.pSetLayouts = &descriptorSetLayout_;
+    pl.pSetLayouts = &descriptorSetLayout;
     pl.pushConstantRangeCount = 0;
-    if (vkCreatePipelineLayout(device, &pl, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &pl, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (particle) failed");
     }
 
@@ -310,11 +310,11 @@ void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkR
     pipe.pDepthStencilState = &ds;
     pipe.pColorBlendState = &blend;
     pipe.pDynamicState = &dyn;
-    pipe.layout = pipelineLayout_;
+    pipe.layout = pipelineLayout;
     pipe.renderPass = hdrRenderPass;
     pipe.subpass = 0;
 
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipe, nullptr, &pipeline_) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipe, nullptr, &pipeline) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateGraphicsPipelines (particle) failed");
     }
 }
@@ -325,13 +325,13 @@ void VulkanParticlePass::Record(
         const VkExtent2D extent,
         const SceneRenderParams& scene,
         const bool sceneParamsValid) const {
-    if (!sceneParamsValid || pipeline_ == VK_NULL_HANDLE || vertexMapped_ == nullptr ||
-        frameIndex >= descriptorSets_.GetSize() || scene.particles.IsEmpty()) {
+    if (!sceneParamsValid || pipeline == VK_NULL_HANDLE || vertexMapped == nullptr ||
+        frameIndex >= descriptorSets.GetSize() || scene.particles.IsEmpty()) {
         return;
     }
 
     const std::size_t maxByBuffer =
-            static_cast<std::size_t>(vertexCapacityBytes_ / (sizeof(float) * kParticleFloatsPerVertex)) / 4U;
+            static_cast<std::size_t>(vertexCapacityBytes / (sizeof(float) * kParticleFloatsPerVertex)) / 4U;
     std::size_t nPart = scene.particles.GetSize();
     if (nPart > static_cast<std::size_t>(SceneRenderParams::MaxParticles)) {
         nPart = static_cast<std::size_t>(SceneRenderParams::MaxParticles);
@@ -357,30 +357,30 @@ void VulkanParticlePass::Record(
     ubo.cameraUp[1] = scene.particleCameraUp.y;
     ubo.cameraUp[2] = scene.particleCameraUp.z;
     ubo.cameraUp[3] = 0.0F;
-    std::memcpy(uniformBuffersMapped_[frameIndex], &ubo, sizeof(ParticleUniformGpu));
+    std::memcpy(uniformBuffersMapped[frameIndex], &ubo, sizeof(ParticleUniformGpu));
 
-    scratchVertices_.Clear();
+    scratchVertices.Clear();
     const float corners[4][2] = {{-1.0F, -1.0F}, {1.0F, -1.0F}, {1.0F, 1.0F}, {-1.0F, 1.0F}};
     const std::uint32_t idx0[] = {0, 1, 2, 0, 2, 3};
     for (std::size_t pi = 0; pi < nPart; ++pi) {
         const SceneParticleInstance& p = scene.particles[pi];
         for (int t = 0; t < 6; ++t) {
             const int k = static_cast<int>(idx0[t]);
-            scratchVertices_.PushBack(p.position.x);
-            scratchVertices_.PushBack(p.position.y);
-            scratchVertices_.PushBack(p.position.z);
-            scratchVertices_.PushBack(p.color.x);
-            scratchVertices_.PushBack(p.color.y);
-            scratchVertices_.PushBack(p.color.z);
-            scratchVertices_.PushBack(p.color.w);
-            scratchVertices_.PushBack(p.size);
-            scratchVertices_.PushBack(corners[k][0]);
-            scratchVertices_.PushBack(corners[k][1]);
+            scratchVertices.PushBack(p.position.x);
+            scratchVertices.PushBack(p.position.y);
+            scratchVertices.PushBack(p.position.z);
+            scratchVertices.PushBack(p.color.x);
+            scratchVertices.PushBack(p.color.y);
+            scratchVertices.PushBack(p.color.z);
+            scratchVertices.PushBack(p.color.w);
+            scratchVertices.PushBack(p.size);
+            scratchVertices.PushBack(corners[k][0]);
+            scratchVertices.PushBack(corners[k][1]);
         }
     }
 
-    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(scratchVertices_.GetSize());
-    std::memcpy(vertexMapped_, scratchVertices_.GetData(), static_cast<std::size_t>(vbBytes));
+    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(scratchVertices.GetSize());
+    std::memcpy(vertexMapped, scratchVertices.GetData(), static_cast<std::size_t>(vbBytes));
 
     VkViewport viewport{};
     viewport.x = 0.0F;
@@ -394,21 +394,21 @@ void VulkanParticlePass::Record(
     VkRect2D fullScissor{};
     VulkanScreenUiClip::BindScenePassScissor(commandBuffer, &scene, extent, fullScissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     vkCmdBindDescriptorSets(
             commandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout_,
+            pipelineLayout,
             0,
             1,
-            &descriptorSets_[frameIndex],
+            &descriptorSets[frameIndex],
             0,
             nullptr);
 
     const VkDeviceSize vbOff = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &vbOff);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &vbOff);
 
-    const std::uint32_t vertCount = static_cast<std::uint32_t>(scratchVertices_.GetSize() / kParticleFloatsPerVertex);
+    const std::uint32_t vertCount = static_cast<std::uint32_t>(scratchVertices.GetSize() / kParticleFloatsPerVertex);
     vkCmdDraw(commandBuffer, vertCount, 1, 0, 0);
 
     VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullScissor);

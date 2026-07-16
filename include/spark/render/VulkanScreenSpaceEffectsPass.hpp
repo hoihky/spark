@@ -63,13 +63,13 @@ public:
             const SceneRenderParams& scene);
 
     [[nodiscard]] bool HasFlight(std::uint32_t frameIndex) const noexcept {
-        return frameIndex < flights_.GetSize();
+        return frameIndex < flights.GetSize();
     }
     [[nodiscard]] VkImageView OutputView(std::uint32_t frameIndex) const noexcept {
-        return (frameIndex < flights_.GetSize()) ? flights_[frameIndex].colorView : VK_NULL_HANDLE;
+        return (frameIndex < flights.GetSize()) ? flights[frameIndex].colorView : VK_NULL_HANDLE;
     }
     [[nodiscard]] const FlightTarget& Flight(std::uint32_t frameIndex) const noexcept {
-        return flights_[frameIndex];
+        return flights[frameIndex];
     }
 
 private:
@@ -92,20 +92,20 @@ private:
             VkExtent2D extent,
             const VulkanDepthResources& sceneDepth);
 
-    VkRenderPass renderPass_ = VK_NULL_HANDLE;
-    Array<FlightTarget> flights_;
-    VkSampler colorSampler_ = VK_NULL_HANDLE;
-    VkSampler depthSampler_ = VK_NULL_HANDLE;
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    Array<FlightTarget> flights;
+    VkSampler colorSampler = VK_NULL_HANDLE;
+    VkSampler depthSampler = VK_NULL_HANDLE;
 
-    VkShaderModule vertModule_ = VK_NULL_HANDLE;
-    VkShaderModule fragModule_ = VK_NULL_HANDLE;
-    VkPipeline pipeline_ = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-    VkDescriptorSetLayout descriptorSetLayout_ = VK_NULL_HANDLE;
-    VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
-    Array<VkDescriptorSet> descriptorSets_;
-    VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory vertexMemory_ = VK_NULL_HANDLE;
+    VkShaderModule vertModule = VK_NULL_HANDLE;
+    VkShaderModule fragModule = VK_NULL_HANDLE;
+    VkPipeline pipeline = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    Array<VkDescriptorSet> descriptorSets;
+    VkBuffer vertexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vertexMemory = VK_NULL_HANDLE;
 };
 
 }  // namespace Spark

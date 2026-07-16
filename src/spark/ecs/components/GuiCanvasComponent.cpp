@@ -51,9 +51,9 @@ void GuiCanvasComponent::StepPointer(const Gui::GuiFrameInput& in) {
         return;
     }
 
-    if (frameHotWidget_ != nullptr) {
-        hotWidget = frameHotWidget_;
-        frameHotWidget_ = nullptr;
+    if (frameHotWidget != nullptr) {
+        hotWidget = frameHotWidget;
+        frameHotWidget = nullptr;
     } else {
         hotWidget = root->FindDeepestHover(in.mouseX, in.mouseY);
     }

@@ -37,15 +37,15 @@ EditorApplication::EditorApplication() = default;
 EditorApplication::~EditorApplication() = default;
 
 void EditorApplication::BootstrapDefaultScene(GameWorld& world) {
-    groundMesh_ = MakeShared<Mesh>(Utf8String("EditorGround"));
-    *groundMesh_ = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    world.RegisterMesh(groundMesh_, "spark/editor/ground");
+    groundMesh = MakeShared<Mesh>(Utf8String("EditorGround"));
+    *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
+    world.RegisterMesh(groundMesh, "spark/editor/ground");
 
     GameObject* ground = world.CreateGameObject();
     ground->GetName() = Utf8String("Ground");
     ground->AddComponent<TransformComponent>();
     ground->AddComponent<MeshComponent>(
-            groundMesh_, SceneMeshSlot::GroundPlane, Vector3{0.45F, 0.48F, 0.5F});
+            groundMesh, SceneMeshSlot::GroundPlane, Vector3{0.45F, 0.48F, 0.5F});
 
     GameObject* sun = world.CreateGameObject();
     sun->GetName() = Utf8String("Sun");
@@ -66,55 +66,55 @@ void EditorApplication::BootstrapDefaultScene(GameWorld& world) {
 }
 
 void EditorApplication::BuildEditorUi(GameWorld& world) {
-    if (uiBuilt_) {
+    if (uiBuilt) {
         return;
     }
 
-    hierarchyPanel_ = MakeUnique<HierarchyPanel>();
-    inspectorPanel_ = MakeUnique<InspectorPanel>();
-    projectPanel_ = MakeUnique<ProjectBrowserPanel>();
+    hierarchyPanel = MakeUnique<HierarchyPanel>();
+    inspectorPanel = MakeUnique<InspectorPanel>();
+    projectPanel = MakeUnique<ProjectBrowserPanel>();
 
-    context_.world = &world;
-    context_.selection = &selection_;
-    context_.project = &project_;
-    context_.mode = mode_;
-    context_.workspace = workspace_;
-    context_.statusLine = statusLine_;
+    context.world = &world;
+    context.selection = &selection;
+    context.project = &project;
+    context.mode = mode;
+    context.workspace = workspace;
+    context.statusLine = statusLine;
 
     for (IEditorPanel* panel :
-            {static_cast<IEditorPanel*>(hierarchyPanel_.Get()),
-                    static_cast<IEditorPanel*>(inspectorPanel_.Get()),
-                    static_cast<IEditorPanel*>(projectPanel_.Get())}) {
-        panel->OnAttach(context_);
+            {static_cast<IEditorPanel*>(hierarchyPanel.Get()),
+                    static_cast<IEditorPanel*>(inspectorPanel.Get()),
+                    static_cast<IEditorPanel*>(projectPanel.Get())}) {
+        panel->OnAttach(context);
     }
 
     Gui::SceneEditorLayoutSettings layout{};
     (void)Gui::TryLoadSceneEditorLayout(layout);
-    dock_.SetSidebarWidth(Gui::GetSceneEditorSidebarWidthPx());
+    dock.SetSidebarWidth(Gui::GetSceneEditorSidebarWidthPx());
 
-    dock_.SetPanels(
-            hierarchyPanel_->ReleaseRootWidget(),
-            projectPanel_->ReleaseRootWidget(),
-            inspectorPanel_->ReleaseRootWidget());
+    dock.SetPanels(
+            hierarchyPanel->ReleaseRootWidget(),
+            projectPanel->ReleaseRootWidget(),
+            inspectorPanel->ReleaseRootWidget());
 
-    guiCanvasObject_ = world.CreateGameObject();
-    guiCanvasObject_->GetName() = Utf8String("EditorGui");
-    guiCanvas_ = guiCanvasObject_->AddComponent<GuiCanvasComponent>();
-    guiCanvas_->SetSortOrder(240);
-    guiCanvas_->SetTheme(Gui::GuiTheme::SceneEditorDark());
-    guiCanvas_->SetRoot(dock_.ReleaseRootWidget());
+    guiCanvasObject = world.CreateGameObject();
+    guiCanvasObject->GetName() = Utf8String("EditorGui");
+    guiCanvas = guiCanvasObject->AddComponent<GuiCanvasComponent>();
+    guiCanvas->SetSortOrder(240);
+    guiCanvas->SetTheme(Gui::GuiTheme::SceneEditorDark());
+    guiCanvas->SetRoot(dock.ReleaseRootWidget());
 
-    fpsHudObject_ = world.CreateGameObject();
-    fpsHudObject_->GetName() = Utf8String("EditorStatusHud");
-    fpsText_ = fpsHudObject_->AddComponent<TextOverlayComponent>();
-    fpsText_->SetScreenPosition(12.0F, 78.0F);
-    fpsText_->SetFontSizePixels(16.0F);
-    fpsText_->SetColor({0.9F, 0.93F, 0.98F});
+    fpsHudObject = world.CreateGameObject();
+    fpsHudObject->GetName() = Utf8String("EditorStatusHud");
+    fpsText = fpsHudObject->AddComponent<TextOverlayComponent>();
+    fpsText->SetScreenPosition(12.0F, 78.0F);
+    fpsText->SetFontSizePixels(16.0F);
+    fpsText->SetColor({0.9F, 0.93F, 0.98F});
 
     const Utf8String defaultProjectPath(SPARK_BUILD_ASSETS_DIR);
-    (void)project_.OpenExisting(defaultProjectPath.CStr());
+    (void)project.OpenExisting(defaultProjectPath.CStr());
 
-    uiBuilt_ = true;
+    uiBuilt = true;
 }
 
 void EditorApplication::UpdateViewportCamera(const FrameTiming& timing, IEngineContext& context) {
@@ -125,20 +125,20 @@ void EditorApplication::UpdateViewportCamera(const FrameTiming& timing, IEngineC
     }
 
     if (input.IsCursorCaptured()) {
-        viewportCamera_.ProcessMovement(input, timing.deltaTimeSeconds);
+        viewportCamera.ProcessMovement(input, timing.deltaTimeSeconds);
         if (timing.frameIndex > 0) {
-            viewportCamera_.AddLook(input.GetMouseDeltaX(), input.GetMouseDeltaY());
+            viewportCamera.AddLook(input.GetMouseDeltaX(), input.GetMouseDeltaY());
         }
         const float scroll = input.GetScrollDeltaY();
         if (std::fabs(scroll) > 1.0e-4F) {
-            viewportCamera_.position += viewportCamera_.Forward() * (scroll * 0.65F);
+            viewportCamera.position += viewportCamera.Forward() * (scroll * 0.65F);
         }
         return;
     }
 
     const float scroll = input.GetScrollDeltaY();
     if (std::fabs(scroll) > 1.0e-4F && !GuiScrollWheelConsumed()) {
-        viewportCamera_.position += viewportCamera_.Forward() * (scroll * 0.65F);
+        viewportCamera.position += viewportCamera.Forward() * (scroll * 0.65F);
     }
 
     if (GuiConsumesGamePointer()) {
@@ -148,43 +148,43 @@ void EditorApplication::UpdateViewportCamera(const FrameTiming& timing, IEngineC
     if (timing.frameIndex > 0) {
         const bool rmbDown = input.IsMouseButtonDown(1);
         if (rmbDown) {
-            viewportCamera_.AddLook(input.GetMouseDeltaX(), input.GetMouseDeltaY());
+            viewportCamera.AddLook(input.GetMouseDeltaX(), input.GetMouseDeltaY());
         }
     }
 
-    viewportCamera_.ProcessMovement(input, timing.deltaTimeSeconds);
+    viewportCamera.ProcessMovement(input, timing.deltaTimeSeconds);
 }
 
 void EditorApplication::HighlightSelection(Scene& /*scene*/) {
-    GameObject* selected = selection_.GetPrimary();
-    if (highlightedObject_ != nullptr && highlightedObject_ != selected) {
-        if (MaterialComponent* prev = highlightedObject_->GetComponent<MaterialComponent>()) {
+    GameObject* selected = selection.GetPrimary();
+    if (highlightedObject != nullptr && highlightedObject != selected) {
+        if (MaterialComponent* prev = highlightedObject->GetComponent<MaterialComponent>()) {
             prev->SetEmissive(Vector3{}, 0.0F);
         }
-        highlightedObject_ = nullptr;
+        highlightedObject = nullptr;
     }
     if (selected == nullptr) {
         return;
     }
     if (MaterialComponent* mat = selected->GetComponent<MaterialComponent>()) {
         mat->SetEmissive({0.35F, 0.28F, 0.12F}, 0.45F);
-        highlightedObject_ = selected;
+        highlightedObject = selected;
     }
 }
 
-void EditorApplication::TickPanels(const FrameTiming& timing, Scene& scene, IEngineContext& context) {
-    context_.world = &scene.GetWorld();
-    context_.scene = &scene;
-    context_.engine = &context;
-    context_.statusLine = statusLine_;
-    if (hierarchyPanel_) {
-        hierarchyPanel_->OnTick(timing, context_);
+void EditorApplication::TickPanels(const FrameTiming& timing, Scene& scene, IEngineContext& engineContext) {
+    context.world = &scene.GetWorld();
+    context.scene = &scene;
+    context.engine = &engineContext;
+    context.statusLine = statusLine;
+    if (hierarchyPanel) {
+        hierarchyPanel->OnTick(timing, context);
     }
-    if (inspectorPanel_) {
-        inspectorPanel_->OnTick(timing, context_);
+    if (inspectorPanel) {
+        inspectorPanel->OnTick(timing, context);
     }
-    if (projectPanel_) {
-        projectPanel_->OnTick(timing, context_);
+    if (projectPanel) {
+        projectPanel->OnTick(timing, context);
     }
 }
 
@@ -193,35 +193,35 @@ void EditorApplication::OnAttach(Scene& scene, IEngineContext& /*context*/) {
     MountEditorUiFonts(scene.GetWorld());
     BootstrapDefaultScene(scene.GetWorld());
     BuildEditorUi(scene.GetWorld());
-    viewportCamera_.position = {8.0F, 6.0F, 14.0F};
-    viewportCamera_.SnapLookAt({0.0F, 0.0F, 0.0F});
+    viewportCamera.position = {8.0F, 6.0F, 14.0F};
+    viewportCamera.SnapLookAt({0.0F, 0.0F, 0.0F});
 }
 
 void EditorApplication::OnDetach(Scene& scene) {
     GameWorld& world = scene.GetWorld();
-    if (guiCanvasObject_ != nullptr) {
-        world.DestroyGameObject(guiCanvasObject_);
-        guiCanvasObject_ = nullptr;
-        guiCanvas_ = nullptr;
+    if (guiCanvasObject != nullptr) {
+        world.DestroyGameObject(guiCanvasObject);
+        guiCanvasObject = nullptr;
+        guiCanvas = nullptr;
     }
-    if (fpsHudObject_ != nullptr) {
-        world.DestroyGameObject(fpsHudObject_);
-        fpsHudObject_ = nullptr;
-        fpsText_ = nullptr;
+    if (fpsHudObject != nullptr) {
+        world.DestroyGameObject(fpsHudObject);
+        fpsHudObject = nullptr;
+        fpsText = nullptr;
     }
-    if (hierarchyPanel_) {
-        hierarchyPanel_->OnDetach();
+    if (hierarchyPanel) {
+        hierarchyPanel->OnDetach();
     }
-    if (inspectorPanel_) {
-        inspectorPanel_->OnDetach();
+    if (inspectorPanel) {
+        inspectorPanel->OnDetach();
     }
-    if (projectPanel_) {
-        projectPanel_->OnDetach();
+    if (projectPanel) {
+        projectPanel->OnDetach();
     }
-    hierarchyPanel_.Reset();
-    inspectorPanel_.Reset();
-    projectPanel_.Reset();
-    uiBuilt_ = false;
+    hierarchyPanel.Reset();
+    inspectorPanel.Reset();
+    projectPanel.Reset();
+    uiBuilt = false;
 }
 
 void EditorApplication::OnUpdate(const FrameTiming& timing, Scene& scene, IEngineContext& context) {
@@ -235,8 +235,8 @@ void EditorApplication::OnUpdate(const FrameTiming& timing, Scene& scene, IEngin
 
     UpdateViewportCamera(timing, context);
     TickPanels(timing, scene, context);
-    if (fpsText_ != nullptr) {
-        fpsText_->SetText(statusLine_);
+    if (fpsText != nullptr) {
+        fpsText->SetText(statusLine);
     }
 }
 
@@ -249,7 +249,7 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& context) {
     const float aspect = (fbH > 0) ? static_cast<float>(fbW) / static_cast<float>(fbH) : 1.0F;
 
     const Matrix4 proj = Matrix4::PerspectiveVulkan(DegreesToRadians(60.0F), aspect, 0.1F, 500.0F);
-    const Matrix4 view = viewportCamera_.ViewMatrix();
+    const Matrix4 view = viewportCamera.ViewMatrix();
     const Matrix4 viewProj = proj * view;
 
     const Vector3 lightDir = Vector3{0.35F, 0.88F, 0.32F}.Normalized();
@@ -258,7 +258,7 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& context) {
             scene.GetWorld(),
             context,
             viewProj,
-            viewportCamera_.position,
+            viewportCamera.position,
             lightDir,
             Vector3{1.0F, 0.98F, 0.94F},
             0.95F,
@@ -271,7 +271,7 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& context) {
             SceneSpriteSortMode::SortOrderOnly,
             &scene);
 
-    const Gui::Rect worldViewport = dock_.GetWorldViewportRect();
+    const Gui::Rect worldViewport = dock.GetWorldViewportRect();
     if (worldViewport.width > 1.0F && worldViewport.height > 1.0F) {
         params.worldViewportScissorEnabled = true;
         params.worldViewportScissorX = worldViewport.x;

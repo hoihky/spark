@@ -8,12 +8,12 @@ bool EditorProject::CreateNewAt(const char* const projectRootUtf8, const Workspa
     if (projectRootUtf8 == nullptr || projectRootUtf8[0] == '\0') {
         return false;
     }
-    settings_ = {};
-    settings_.rootDirectory = Utf8String(projectRootUtf8);
-    settings_.workspace = dimension;
-    settings_.projectName = Utf8String("New Project");
-    isOpen_ = true;
-    dirty_ = true;
+    settings = {};
+    settings.rootDirectory = Utf8String(projectRootUtf8);
+    settings.workspace = dimension;
+    settings.projectName = Utf8String("New Project");
+    isOpen = true;
+    dirty = true;
     return TrySaveProjectFile();
 }
 
@@ -21,20 +21,20 @@ bool EditorProject::OpenExisting(const char* const projectRootUtf8) noexcept {
     if (projectRootUtf8 == nullptr || projectRootUtf8[0] == '\0') {
         return false;
     }
-    settings_ = {};
-    settings_.rootDirectory = Utf8String(projectRootUtf8);
-    settings_.workspace = WorkspaceDimension::ThreeD;
-    settings_.projectName = Utf8String("Opened Project");
-    isOpen_ = true;
-    dirty_ = false;
-    return isOpen_;
+    settings = {};
+    settings.rootDirectory = Utf8String(projectRootUtf8);
+    settings.workspace = WorkspaceDimension::ThreeD;
+    settings.projectName = Utf8String("Opened Project");
+    isOpen = true;
+    dirty = false;
+    return isOpen;
 }
 
 bool EditorProject::TrySaveProjectFile() noexcept {
-    if (!isOpen_ || settings_.rootDirectory.IsEmpty()) {
+    if (!isOpen || settings.rootDirectory.IsEmpty()) {
         return false;
     }
-    Utf8String path = settings_.rootDirectory;
+    Utf8String path = settings.rootDirectory;
     if (!path.IsEmpty() && path.CStr()[path.ByteLength() - 1] != '/') {
         path.AppendUtf8("/");
     }
@@ -44,7 +44,7 @@ bool EditorProject::TrySaveProjectFile() noexcept {
     if (f == nullptr) {
         return false;
     }
-    const char* dim = settings_.workspace == WorkspaceDimension::TwoD ? "2d" : "3d";
+    const char* dim = settings.workspace == WorkspaceDimension::TwoD ? "2d" : "3d";
     std::fprintf(
             f,
             "spark_project_v1\n"
@@ -53,13 +53,13 @@ bool EditorProject::TrySaveProjectFile() noexcept {
             "assets=%s\n"
             "scenes=%s\n"
             "main_scene=%s\n",
-            settings_.projectName.CStr(),
+            settings.projectName.CStr(),
             dim,
-            settings_.assetsDirectory.CStr(),
-            settings_.scenesDirectory.CStr(),
-            settings_.mainScenePath.CStr());
+            settings.assetsDirectory.CStr(),
+            settings.scenesDirectory.CStr(),
+            settings.mainScenePath.CStr());
     std::fclose(f);
-    dirty_ = false;
+    dirty = false;
     return true;
 }
 

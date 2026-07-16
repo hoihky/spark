@@ -60,10 +60,10 @@ public:
             const VulkanPresentationFramebuffers& presentationFramebuffers,
             float exposure);
 
-    [[nodiscard]] VkRenderPass HdrRenderPass() const noexcept { return hdrRenderPass_; }
-    [[nodiscard]] FlightTarget& Flight(std::uint32_t frameIndex) noexcept { return flights_[frameIndex]; }
-    [[nodiscard]] const FlightTarget& Flight(std::uint32_t frameIndex) const noexcept { return flights_[frameIndex]; }
-    [[nodiscard]] bool HasFlight(std::uint32_t frameIndex) const noexcept { return frameIndex < flights_.GetSize(); }
+    [[nodiscard]] VkRenderPass HdrRenderPass() const noexcept { return hdrRenderPass; }
+    [[nodiscard]] FlightTarget& Flight(std::uint32_t frameIndex) noexcept { return flights[frameIndex]; }
+    [[nodiscard]] const FlightTarget& Flight(std::uint32_t frameIndex) const noexcept { return flights[frameIndex]; }
+    [[nodiscard]] bool HasFlight(std::uint32_t frameIndex) const noexcept { return frameIndex < flights.GetSize(); }
 
 private:
     struct TonemapPushConstants {
@@ -73,19 +73,19 @@ private:
         float pad1 = 0.0F;
     };
 
-    VkRenderPass hdrRenderPass_ = VK_NULL_HANDLE;
-    Array<FlightTarget> flights_;
-    VkSampler colorSampler_ = VK_NULL_HANDLE;
+    VkRenderPass hdrRenderPass = VK_NULL_HANDLE;
+    Array<FlightTarget> flights;
+    VkSampler colorSampler = VK_NULL_HANDLE;
 
-    VkShaderModule tonemapVertModule_ = VK_NULL_HANDLE;
-    VkShaderModule tonemapFragModule_ = VK_NULL_HANDLE;
-    VkPipeline tonemapPipeline_ = VK_NULL_HANDLE;
-    VkPipelineLayout tonemapPipelineLayout_ = VK_NULL_HANDLE;
-    VkDescriptorSetLayout tonemapDescriptorSetLayout_ = VK_NULL_HANDLE;
-    VkDescriptorPool tonemapDescriptorPool_ = VK_NULL_HANDLE;
-    Array<VkDescriptorSet> tonemapDescriptorSets_;
-    VkBuffer tonemapVertexBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory tonemapVertexMemory_ = VK_NULL_HANDLE;
+    VkShaderModule tonemapVertModule = VK_NULL_HANDLE;
+    VkShaderModule tonemapFragModule = VK_NULL_HANDLE;
+    VkPipeline tonemapPipeline = VK_NULL_HANDLE;
+    VkPipelineLayout tonemapPipelineLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout tonemapDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorPool tonemapDescriptorPool = VK_NULL_HANDLE;
+    Array<VkDescriptorSet> tonemapDescriptorSets;
+    VkBuffer tonemapVertexBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory tonemapVertexMemory = VK_NULL_HANDLE;
 };
 
 }  // namespace Spark

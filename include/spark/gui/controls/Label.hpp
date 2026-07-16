@@ -18,10 +18,10 @@ public:
     void SetFontSize(float px) noexcept { fontPx = px; }
     void SetTextColor(const Vector3& c) noexcept { color = c; }
     void SetBold(bool b) noexcept { bold = b; }
-    void SetTextLayout(TextLayout layout) noexcept { layout_ = layout; }
-    void SetTextOverflow(TextOverflow overflow) noexcept { layout_.overflow = overflow; }
-    void SetTextWrap(TextWrap wrap) noexcept { layout_.wrap = wrap; }
-    void SetMaxLines(int lines) noexcept { layout_.maxLines = lines; }
+    void SetTextLayout(TextLayout value) noexcept { layout = value; }
+    void SetTextOverflow(TextOverflow overflow) noexcept { layout.overflow = overflow; }
+    void SetTextWrap(TextWrap wrap) noexcept { layout.wrap = wrap; }
+    void SetMaxLines(int lines) noexcept { layout.maxLines = lines; }
 
     void Paint(GuiPaintContext& ctx) const override;
 
@@ -30,7 +30,7 @@ private:
     float fontPx = 22.0F;
     Vector3 color{0.10F, 0.22F, 0.13F};
     bool bold = false;
-    TextLayout layout_{};
+    TextLayout layout{};
 };
 
 }  // namespace Spark::Gui

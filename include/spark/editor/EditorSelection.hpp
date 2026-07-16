@@ -17,7 +17,7 @@ class EditorSelection {
 public:
     void Clear() noexcept;
     void SetPrimary(GameObject* object) noexcept;
-    [[nodiscard]] GameObject* GetPrimary() const noexcept { return primary_; }
+    [[nodiscard]] GameObject* GetPrimary() const noexcept { return primary; }
     [[nodiscard]] bool IsSelected(const GameObject* object) const noexcept;
 
     using ChangedCallback = void (*)(void* userData);
@@ -26,9 +26,9 @@ public:
 private:
     void NotifyChanged() noexcept;
 
-    GameObject* primary_ = nullptr;
-    ChangedCallback onChanged_ = nullptr;
-    void* onChangedUserData_ = nullptr;
+    GameObject* primary = nullptr;
+    ChangedCallback onChanged = nullptr;
+    void* onChangedUserData = nullptr;
 };
 
 }  // namespace Editor
