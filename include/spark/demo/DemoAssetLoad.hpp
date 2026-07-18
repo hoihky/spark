@@ -80,4 +80,17 @@ struct RandomSoilGroundResult {
 
 [[nodiscard]] Texture2D MakePlayerRunAtlasFallback();
 
+/** Kenney slime (2-frame) when `PNG/Enemies` is present; else Tiny Dungeon ghost; else procedural. */
+struct PlatformerEnemyAtlasResult {
+    Texture2D texture{};
+    std::uint32_t columns = 1U;
+    bool fromKenneySlime = false;
+    bool fromTinyDungeon = false;
+};
+
+[[nodiscard]] PlatformerEnemyAtlasResult BuildPlatformerEnemyAtlas();
+
+/** Small additive projectile sprite (used when no dedicated PNG is bundled). */
+[[nodiscard]] Texture2D MakeEnemyBulletTextureFallback();
+
 }  // namespace Spark::DemoAssets

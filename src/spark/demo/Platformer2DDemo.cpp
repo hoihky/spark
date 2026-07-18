@@ -1,10 +1,15 @@
 #include "spark/demo/Platformer2DDemo.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
-#include "spark/ecs/components/camera/Camera2DComponent.hpp"
+#include "spark/ecs/components/gameplay/DamageableComponent.hpp"
+#include "spark/ecs/components/gameplay/HealthComponent.hpp"
+#include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/scene/SceneSubmit.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
+#include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {
 
@@ -12,8 +17,205 @@ namespace {
 
 constexpr float kAttackArcRadius = 1.5F;
 constexpr float kAttackArcHalfAngleRad = 0.96F;
+constexpr float kEnemyHalfW = 0.36F;
+constexpr float kEnemyHalfH = 0.42F;
+constexpr float kEnemyDrawScale = 0.88F;
+constexpr float kEnemyPatrolSpeed = 2.2F;
+constexpr float kEnemyBobAmplitude = 0.05F;
+constexpr float kEnemyShootRangeX = 14.0F;
+constexpr float kEnemyShootRangeY = 7.5F;
+constexpr float kBulletSpeed = 7.0F;
+constexpr float kBulletHalfW = 0.055F;
+constexpr float kBulletHalfH = 0.035F;
+constexpr float kBulletLifetimeSeconds = 3.6F;
+constexpr float kBulletDrawScale = 0.42F;
+constexpr float kPlayerHurtCooldownSeconds = 1.15F;
 
 }  // namespace
+
+void Platformer2DDemo::DeactivateBullet(BulletSlot& b) noexcept
+{
+    b.active = false;
+    b.vx = 0.0F;
+    b.vy = 0.0F;
+    b.age = 0.0F;
+    b.lifetime = 0.0F;
+    if (b.tr != nullptr) {
+        b.tr->SetTranslation({-120.0F, -120.0F, 0.0F});
+        b.tr->SetRotation(Spark::Quaternion::Identity);
+    }
+    if (b.spr != nullptr) {
+        const Spark::Vector4 tint = b.spr->GetTint();
+        b.spr->SetTint({tint.x, tint.y, tint.z, 0.0F});
+    }
+}
+
+bool Platformer2DDemo::BoxOverlap(
+        float ax,
+        float ay,
+        float ahx,
+        float ahy,
+        float bx,
+        float by,
+        float bhx,
+        float bhy) noexcept
+{
+    return std::fabs(ax - bx) <= ahx + bhx && std::fabs(ay - by) <= ahy + bhy;
+}
+
+[[nodiscard]] bool Platformer2DDemo::TrySpawnEnemyBullet(
+        EnemySlot& enemy,
+        float playerX,
+        float playerY) noexcept
+{
+    if (!enemy.alive || enemy.tr == nullptr) {
+        return false;
+    }
+    const Spark::Vector3 epos = enemy.tr->GetLocalTransform().translation;
+    float dx = playerX - epos.x;
+    float dy = playerY - epos.y;
+    const float len2 = dx * dx + dy * dy;
+    if (len2 < 1.0e-4F) {
+        dx = enemy.patrolDir;
+        dy = 0.0F;
+    } else {
+        const float inv = 1.0F / std::sqrt(len2);
+        dx *= inv;
+        dy *= inv;
+    }
+    for (std::size_t bi = 0; bi < enemyBullets.GetSize(); ++bi) {
+        BulletSlot& bl = enemyBullets[bi];
+        if (bl.active) {
+            continue;
+        }
+        bl.active = true;
+        bl.vx = dx * kBulletSpeed;
+        bl.vy = dy * kBulletSpeed;
+        bl.age = 0.0F;
+        bl.lifetime = kBulletLifetimeSeconds;
+        bl.cx = epos.x + dx * (kEnemyHalfW * 0.95F);
+        bl.cy = epos.y + dy * (kEnemyHalfW * 0.35F) + kEnemyHalfH * 0.08F;
+        if (bl.tr != nullptr) {
+            bl.tr->SetTranslation({bl.cx, bl.cy, 0.06F});
+            bl.tr->SetUniformScale(kBulletDrawScale);
+            const float angleZ = std::atan2(bl.vy, bl.vx);
+            bl.tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitZ, angleZ));
+        }
+        if (bl.spr != nullptr) {
+            bl.spr->SetTint({1.0F, 0.72F, 0.38F, 0.92F});
+        }
+        enemy.attackFlashTimer = 0.24F;
+        return true;
+    }
+    return false;
+}
+
+void Platformer2DDemo::UpdateEnemies(float dt, float playerX, float playerY) noexcept
+{
+    for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {
+        EnemySlot& enemy = enemies[ei];
+        if (!enemy.alive || enemy.tr == nullptr) {
+            continue;
+        }
+        Spark::Vector3 pos = enemy.tr->GetLocalTransform().translation;
+        pos.x += enemy.patrolDir * kEnemyPatrolSpeed * dt;
+        if (pos.x <= enemy.patrolMinX) {
+            pos.x = enemy.patrolMinX;
+            enemy.patrolDir = 1.0F;
+        } else if (pos.x >= enemy.patrolMaxX) {
+            pos.x = enemy.patrolMaxX;
+            enemy.patrolDir = -1.0F;
+        }
+        const float bob = std::sin(sceneTime * 3.2F + enemy.bobPhase) * kEnemyBobAmplitude;
+        pos.y = enemy.baseY + bob;
+        enemy.tr->SetTranslation(pos);
+        const float sx = (enemy.patrolDir < 0.0F ? -kEnemyDrawScale : kEnemyDrawScale);
+        enemy.tr->SetScale({sx, kEnemyDrawScale, 1.0F});
+
+        if (enemy.spr != nullptr) {
+            if (enemy.attackFlashTimer > 0.0F) {
+                enemy.attackFlashTimer = std::max(0.0F, enemy.attackFlashTimer - dt);
+                enemy.spr->SetUvRect(enemyAttackUv);
+            } else {
+                enemy.spr->SetUvRect(enemyIdleUv);
+            }
+        }
+
+        enemy.fireCooldown -= dt;
+        if (enemy.fireCooldown > 0.0F) {
+            continue;
+        }
+        const float dx = playerX - pos.x;
+        const float dy = playerY - pos.y;
+        if (std::fabs(dx) > kEnemyShootRangeX || std::fabs(dy) > kEnemyShootRangeY) {
+            continue;
+        }
+        const bool playerAhead =
+                (enemy.patrolDir > 0.0F && dx > 0.75F) || (enemy.patrolDir < 0.0F && dx < -0.75F);
+        if (!playerAhead) {
+            continue;
+        }
+        if (TrySpawnEnemyBullet(enemy, playerX, playerY)) {
+            enemy.fireCooldown = 2.35F + 0.45F * static_cast<float>(ei % 3U);
+        } else {
+            enemy.fireCooldown = 0.45F;
+        }
+    }
+}
+
+void Platformer2DDemo::UpdateEnemyBullets(float dt) noexcept
+{
+    constexpr float kCullX = 18.0F;
+    constexpr float kCullY = 14.0F;
+    for (std::size_t bi = 0; bi < enemyBullets.GetSize(); ++bi) {
+        BulletSlot& bl = enemyBullets[bi];
+        if (!bl.active) {
+            continue;
+        }
+        bl.age += dt;
+        if (bl.age >= bl.lifetime) {
+            DeactivateBullet(bl);
+            continue;
+        }
+        bl.cx += bl.vx * dt;
+        bl.cy += bl.vy * dt;
+        if (bl.tr != nullptr) {
+            bl.tr->SetTranslation({bl.cx, bl.cy, 0.06F});
+        }
+        if (bl.spr != nullptr) {
+            const float pulse = 0.78F + 0.22F * std::sin(bl.age * 18.0F);
+            const float fade = 1.0F - std::clamp((bl.age - bl.lifetime * 0.72F) / (bl.lifetime * 0.28F), 0.0F, 1.0F);
+            bl.spr->SetTint({1.0F, 0.68F + 0.12F * pulse, 0.32F, 0.55F + 0.35F * pulse * fade});
+        }
+        if (bl.cx < -kCullX || bl.cx > 54.0F || bl.cy < -kCullY || bl.cy > 12.0F) {
+            DeactivateBullet(bl);
+        }
+    }
+}
+
+void Platformer2DDemo::ResolveEnemyBulletHits(float playerX, float playerY) noexcept
+{
+    for (std::size_t bi = 0; bi < enemyBullets.GetSize(); ++bi) {
+        BulletSlot& bl = enemyBullets[bi];
+        if (!bl.active) {
+            continue;
+        }
+        if (!BoxOverlap(bl.cx, bl.cy, kBulletHalfW, kBulletHalfH, playerX, playerY, kPlayerHalfW, kPlayerHalfH)) {
+            continue;
+        }
+        DeactivateBullet(bl);
+        if (playerHurtCooldown > 0.0F) {
+            continue;
+        }
+        playerHurtCooldown = kPlayerHurtCooldownSeconds;
+        if (playerCharFsm != nullptr) {
+            playerCharFsm->RequestHurt();
+        }
+        if (playerDamageable != nullptr) {
+            playerDamageable->ApplyDamage(1.0F, nullptr);
+        }
+    }
+}
 
 void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
@@ -29,6 +231,10 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         goalReached = false;
         facingLeft = false;
         sceneTime = 0.0F;
+        enemiesDefeated = 0;
+        playerHurtCooldown = 0.0F;
+        enemies.Clear();
+        enemyBullets.Clear();
         playerBaseScaleX = kPlayerHalfW * 2.0F;
         playerBaseScaleY = kPlayerHalfH * 2.0F;
 
@@ -51,6 +257,22 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             playerAtlasColumns = 5U;
         }
         w.RegisterTexture(playerAtlasTex, "spark/plat/player_atlas");
+
+        {
+            const Spark::DemoAssets::PlatformerEnemyAtlasResult enemyAtlas = BuildPlatformerEnemyAtlas();
+            enemyAtlasTex = Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(enemyAtlas.texture));
+            enemyAtlasColumns = enemyAtlas.columns;
+            enemyUsingKenneySlime = enemyAtlas.fromKenneySlime;
+            enemyUsingTinyDungeon = enemyAtlas.fromTinyDungeon;
+            enemyIdleUv = SpriteAnimatorComponent::ComputeUniformGridUv(enemyAtlasColumns, 1U, 0U);
+            enemyAttackUv = enemyAtlasColumns >= 2U
+                    ? SpriteAnimatorComponent::ComputeUniformGridUv(enemyAtlasColumns, 1U, 1U)
+                    : enemyIdleUv;
+            w.RegisterTexture(enemyAtlasTex, "spark/plat/enemy_atlas");
+        }
+
+        enemyBulletTex = Spark::MakeShared<Spark::Texture2D>(MakeEnemyBulletTextureFallback());
+        w.RegisterTexture(enemyBulletTex, "spark/plat/enemy_bullet");
 
         gemTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("PlatGem"));
         gemUsingKenneyPng = TryLoadKenneyGemCollectible(*gemTex);
@@ -82,6 +304,9 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                             : Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
                     40 + i);
             go->AddComponent<Spark::BoxCollider2DComponent>();
+            if (i == 10) {
+                go->AddComponent<Spark::PhysicsMaterial2DComponent>(0.08F, 0.05F);
+            }
             roots.PushBack(go);
         }
 
@@ -108,13 +333,15 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         playerCharFsm->SetMoveSpeedThreshold(0.35F);
         playerObject->AddComponent<Spark::BoxCollider2DComponent>();
         playerRb = playerObject->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Dynamic, 1.0F);
+        playerHealth = playerObject->AddComponent<Spark::HealthComponent>(3.0F);
+        playerDamageable = playerObject->AddComponent<Spark::DamageableComponent>();
+        playerObject->AddComponent<Spark::SoundCueComponent>();
 
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("PlatFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(20.0F);
-        fpsText->SetColor({0.95F, 0.98F, 0.96F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText, false);
         {
             const char* plat = platformUsingKenneyTilesheet ? "Kenney tilesheet" : "checker fallback";
             const char* src = playerUsingKenneyAtlas
@@ -122,11 +349,14 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                                ? "Kenney character (idle, walk, happy=attack, duck=hurt)"
                                : "Kenney character (idle+walk only; add happy+duck PNGs for J/K)")
                     : "procedural 5-cell atlas (orange=attack, blue=hurt)";
+            const char* enemySrc = enemyUsingKenneySlime ? "Kenney slime enemy"
+                    : (enemyUsingTinyDungeon ? "Tiny Dungeon ghost enemy" : "procedural ghost enemy");
             fpsText->SetText(Spark::Utf8String(
                     std::format(
-                            "Platformer — {} — {} — WASD · Space jump · J attack (arc) · K hurt · fall = respawn",
+                            "Platformer — {} — {} — {} — WASD · Space · J attack · dodge enemy shots",
                             plat,
-                            src)
+                            src,
+                            enemySrc)
                             .c_str()));
         }
         roots.PushBack(playerObject);
@@ -165,6 +395,61 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             gemObjects.PushBack(gem);
         }
 
+        enemies.Clear();
+        enemies.Resize(static_cast<std::size_t>(kEnemyCount));
+        for (int ei = 0; ei < kEnemyCount; ++ei) {
+            const float ex = kEnemySpawns[static_cast<std::size_t>(ei)][0];
+            const float ey = kEnemySpawns[static_cast<std::size_t>(ei)][1];
+            const float pMin = kEnemySpawns[static_cast<std::size_t>(ei)][2];
+            const float pMax = kEnemySpawns[static_cast<std::size_t>(ei)][3];
+            Spark::GameObject* ego = w.CreateGameObject();
+            ego->GetName() = Spark::Utf8String("PlatEnemy");
+            Spark::TransformComponent* etr = ego->AddComponent<Spark::TransformComponent>();
+            etr->SetTranslation({ex, ey, 0.045F + 0.0002F * static_cast<float>(ei)});
+            etr->SetScale({kEnemyDrawScale, kEnemyDrawScale, 1.0F});
+            Spark::SpriteComponent* espr = ego->AddComponent<Spark::SpriteComponent>(
+                    enemyAtlasTex,
+                    Spark::Vector4{1.0F, 1.0F, 1.0F, 1.0F},
+                    enemyIdleUv,
+                    710 + ei);
+            Spark::CircleCollider2DComponent* enemyHit = ego->AddComponent<Spark::CircleCollider2DComponent>(0.68F);
+            enemyHit->SetIsTrigger(true);
+            enemyHit->SetCategoryBits(kEnemyHurtboxCategoryBits);
+            enemyHit->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
+            ego->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
+            enemies[static_cast<std::size_t>(ei)] = {
+                    true,
+                    ego,
+                    etr,
+                    espr,
+                    pMin,
+                    pMax,
+                    1.0F,
+                    0.85F + 0.4F * static_cast<float>(ei),
+                    0.0F,
+                    1.7F * static_cast<float>(ei),
+                    ey};
+        }
+
+        enemyBullets.Clear();
+        enemyBullets.Resize(static_cast<std::size_t>(kMaxEnemyBullets));
+        for (int bi = 0; bi < kMaxEnemyBullets; ++bi) {
+            Spark::GameObject* bgo = w.CreateGameObject();
+            bgo->GetName() = Spark::Utf8String("PlatEnemyBullet");
+            Spark::TransformComponent* btr = bgo->AddComponent<Spark::TransformComponent>();
+            btr->SetUniformScale(kBulletDrawScale);
+            btr->SetTranslation({-120.0F, -120.0F, 0.0F});
+            bgo->AddComponent<Spark::BlendModeComponent>(Spark::SceneBlendMode::Additive);
+            Spark::SpriteComponent* bspr = bgo->AddComponent<Spark::SpriteComponent>(
+                    enemyBulletTex,
+                    Spark::Vector4{1.0F, 0.72F, 0.38F, 0.0F},
+                    Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
+                    760 + bi);
+            roots.PushBack(bgo);
+            enemyBullets[static_cast<std::size_t>(bi)] = {
+                    false, bgo, btr, bspr, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+        }
+
         const float spawnY = kGroundSurfaceY + kPlayerHalfH;
         playerTr->SetTranslation({kPlayerSpawnX, spawnY, 0.04F});
         playerRb->SetVelocity(Spark::Vector2::Zero);
@@ -197,6 +482,12 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
             }
         }
         gemObjects.Clear();
+        for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {
+            if (enemies[ei].go != nullptr) {
+                w.DestroyGameObject(enemies[ei].go);
+            }
+        }
+        enemies.Clear();
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -206,9 +497,13 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
         gemTex.Reset();
         platformTilesTex.Reset();
         playerAtlasTex.Reset();
+        enemyAtlasTex.Reset();
+        enemyBulletTex.Reset();
         playerObject = nullptr;
         playerTr = nullptr;
         playerRb = nullptr;
+        playerHealth = nullptr;
+        playerDamageable = nullptr;
         playerAnim = nullptr;
         playerCharFsm = nullptr;
         fpsHudObject = nullptr;
@@ -216,6 +511,10 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
         mainCameraGo = nullptr;
         cameraRig = nullptr;
         attackArcHitsScratch.Clear();
+        enemies.Clear();
+        enemyBullets.Clear();
+        enemiesDefeated = 0;
+        playerHurtCooldown = 0.0F;
     }
 
 void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
@@ -223,6 +522,9 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
         sceneTime += timing.deltaTimeSeconds;
         Spark::IInput& in = context.GetInput();
         const float dt = timing.deltaTimeSeconds;
+        if (playerHurtCooldown > 0.0F) {
+            playerHurtCooldown = std::max(0.0F, playerHurtCooldown - dt);
+        }
 
         if (playerRb != nullptr && playerTr != nullptr) {
             float run = 0.0F;
@@ -238,6 +540,9 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                 }
                 if (in.IsKeyPressedThisFrame(GLFW_KEY_K)) {
                     playerCharFsm->RequestHurt();
+                    if (playerDamageable != nullptr) {
+                        playerDamageable->ApplyDamage(1.0F, playerObject);
+                    }
                 }
             }
             if (std::abs(run) > 0.5F) {
@@ -268,7 +573,7 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                 const float originY = p.y + kPlayerHalfH * 0.12F;
                 PhysicsQueryFilter2D weaponFilter{};
                 weaponFilter.queryCategoryBits = CollisionFilter2D::LayerBit(2);
-                weaponFilter.queryMaskBits = kGemHurtboxCategoryBits;
+                weaponFilter.queryMaskBits = kGemHurtboxCategoryBits | kEnemyHurtboxCategoryBits;
                 weaponFilter.hitSolids = false;
                 weaponFilter.hitTriggers = true;
                 StaticBroadPhase2D combatBp;
@@ -288,6 +593,7 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                     if (hitOwner == nullptr) {
                         continue;
                     }
+                    bool handled = false;
                     for (std::size_t gi = 0; gi < gemObjects.GetSize(); ++gi) {
                         if (gemObjects[gi] != hitOwner) {
                             continue;
@@ -295,12 +601,44 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                         world.DestroyGameObject(hitOwner);
                         gemObjects.RemoveAt(gi);
                         ++gemsCollected;
-                        DemoPlayProceduralClip(context, DemoSfx::ClipGemCollect(), 0.95F);
+                        DemoAudio::QueueCue(*playerObject, DemoSfx::ClipGemCollect(), 0.95F);
+                        handled = true;
+                        break;
+                    }
+                    if (handled) {
+                        continue;
+                    }
+                    for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {
+                        EnemySlot& enemy = enemies[ei];
+                        if (!enemy.alive || enemy.go != hitOwner) {
+                            continue;
+                        }
+                        enemy.alive = false;
+                        world.DestroyGameObject(enemy.go);
+                        enemy.go = nullptr;
+                        enemy.tr = nullptr;
+                        enemy.spr = nullptr;
+                        ++enemiesDefeated;
+                        DemoAudio::QueueCue(*playerObject, DemoSfx::ClipInvadersHit(), 0.9F);
                         break;
                     }
                 }
             }
+
+            UpdateEnemies(dt, p.x, p.y);
+            UpdateEnemyBullets(dt);
+            ResolveEnemyBulletHits(p.x, p.y);
             if (p.y < kFallRespawnY) {
+                for (std::size_t bi = 0; bi < enemyBullets.GetSize(); ++bi) {
+                    DeactivateBullet(enemyBullets[bi]);
+                }
+                playerHurtCooldown = 0.0F;
+                if (playerDamageable != nullptr) {
+                    playerDamageable->ApplyDamage(1.0F, nullptr);
+                    if (playerHealth != nullptr && !playerHealth->IsAlive()) {
+                        playerHealth->ResetToFull();
+                    }
+                }
                 playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
                 playerRb->SetVelocity(Spark::Vector2::Zero);
                 goalReached = false;
@@ -326,7 +664,7 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                     world.DestroyGameObject(gem);
                     gemObjects.RemoveAt(gi);
                     ++gemsCollected;
-                    DemoPlayProceduralClip(context, DemoSfx::ClipGemCollect(), 0.95F);
+                    DemoAudio::QueueCue(*playerObject, DemoSfx::ClipGemCollect(), 0.95F);
                     continue;
                 }
                 ++gi;
@@ -361,10 +699,13 @@ void Platformer2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                 fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
             }
             std::string hud = std::format(
-                    "Platformer — {:.0f} FPS — gems {}/{} — WASD · Space jump · J attack (arc) · K hurt · fall = respawn",
+                    "Platformer — {:.0f} FPS — HP {:.0f} — gems {}/{} — enemies {}/{} — WASD · Space · J attack",
                     static_cast<double>(fpsSmoothed),
+                    playerHealth != nullptr ? static_cast<double>(playerHealth->GetCurrent()) : 0.0,
                     gemsCollected,
-                    gemsTotal);
+                    gemsTotal,
+                    enemiesDefeated,
+                    kEnemyCount);
             if (!playerUsingKenneyAtlas || !platformUsingKenneyTilesheet || !gemUsingKenneyPng) {
                 hud += " — [asset fallback]";
             }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoFoundation.hpp"
 #include "spark/config.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"

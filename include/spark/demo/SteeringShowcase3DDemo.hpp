@@ -1,6 +1,9 @@
 #pragma once
 
-#include "spark/ai/AiBlackboard.hpp"
+#include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/ecs/components/ai/AiAgentComponent.hpp"
+#include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
+#include "spark/ecs/components/ai/PatrolPathComponent.hpp"
 #include "spark/ai/steering/SteeringBehaviors3D.hpp"
 #include "spark/ai/steering/SteeringEnvironment3D.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
@@ -61,7 +64,7 @@ public:
     void Unload(GameWorld& w);
 
 
-    void Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& /*world*/);
+    void Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world);
 
 
     void Render(Scene& scene, GameWorld& world, IEngineContext& context);
@@ -121,6 +124,8 @@ private:
     GameObject* secondaryGo = nullptr;
     GameObject* leaderGo = nullptr;
     GameObject* primaryGo = nullptr;
+    GameObject* ecsPatrolPathGo = nullptr;
+    GameObject* ecsPatrolAgentGo = nullptr;
     Array<GameObject*> flockGos{};
     Array<Vector3> flockVels{};
     Array<Vector3> obstacleCenters{};

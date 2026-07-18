@@ -13,6 +13,11 @@
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
+#include "spark/ecs/components/ai/AiAgentComponent.hpp"
+#include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
+#include "spark/ecs/components/ai/PatrolPathComponent.hpp"
+#include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
+#include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
 #include "spark/scene/Scene.hpp"
 
@@ -24,15 +29,15 @@ namespace Spark {
 
 /**
  * Procedural maze on XZ (Y up): static box walls (brick texture), wide corridors (~one cell ≈
- * <c>kCellWorld</c> meters — sized for three abreast), HDR sky, skinned human (CesiumMan / Fox),
+ * <c>kCellWorld</c> meters per corridor cell), HDR sky, skinned human (CesiumMan / Fox),
  * <c>SimulatePhysics3D</c> torso sphere vs static boxes, gems, first-person camera.
  */
 class Maze3DDemo {
 public:
     static constexpr int kMazeW = 39;
     static constexpr int kMazeH = 27;
-    /** One grid step in world meters; empty cell width ≈ this (wide enough for ~3 human-width avatars). */
-    static constexpr float kCellWorld = 2.25F;
+    /** One grid step in world meters; empty cell width ≈ this (walkable corridor span). */
+    static constexpr float kCellWorld = 6.0F;
 
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
 
@@ -80,6 +85,9 @@ private:
 
     Spark::GameObject* fpsHudObject = nullptr;
     Spark::TextOverlayComponent* fpsText = nullptr;
+    Spark::GameObject* patrolPathGo = nullptr;
+    Spark::GameObject* guardGo = nullptr;
+    Spark::PerceptionSensorComponent* guardPerception = nullptr;
     float fpsSmoothed = 0.0F;
     int gemsCollected = 0;
     int gemsTotal = 0;

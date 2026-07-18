@@ -333,12 +333,50 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("MazeFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(18.0F);
-        fpsText->SetColor({0.94F, 0.97F, 0.99F});
-        fpsText->SetText(Spark::Utf8String("Tiny Dungeon art (Kenney) — collect gems — WASD — ESC menu"));
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText, false);
+        fpsText->SetText(Spark::Utf8String("Tiny Dungeon — gems — HingeJoint2D swing near spawn — WASD — ESC"));
         roots.PushBack(playerGo);
         roots.PushBack(fpsHudObject);
+
+        {
+            const float hingeX = px + 2.8F * kCellWorld;
+            const float hingeY = py;
+            Spark::GameObject* hingeAnchor = w.CreateGameObject();
+            hingeAnchor->GetName() = Spark::Utf8String("Maze2DHingeAnchor");
+            Spark::TransformComponent* anchorTr = hingeAnchor->AddComponent<Spark::TransformComponent>();
+            anchorTr->SetTranslation({hingeX, hingeY, 0.04F});
+            anchorTr->SetScale({0.35F * kCellWorld, 0.35F * kCellWorld, 1.0F});
+            hingeAnchor->AddComponent<Spark::SpriteComponent>(
+                    dungeonAtlasTex,
+                    Spark::Vector4{0.72F, 0.72F, 0.78F, 1.0F},
+                    TinyDungeonTileUv(118U),
+                    5000);
+            hingeAnchor->AddComponent<Spark::BoxCollider2DComponent>();
+            hingeAnchor->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 1.0F);
+            roots.PushBack(hingeAnchor);
+
+            Spark::GameObject* swingPlat = w.CreateGameObject();
+            swingPlat->GetName() = Spark::Utf8String("Maze2DSwingPlat");
+            Spark::TransformComponent* swingTr = swingPlat->AddComponent<Spark::TransformComponent>();
+            swingTr->SetTranslation({hingeX, hingeY - 1.6F * kCellWorld, 0.05F});
+            swingTr->SetScale({1.4F * kCellWorld, 0.28F * kCellWorld, 1.0F});
+            swingPlat->AddComponent<Spark::SpriteComponent>(
+                    dungeonAtlasTex,
+                    Spark::Vector4{0.55F, 0.82F, 0.95F, 1.0F},
+                    TinyDungeonTileUv(kTinyDungeonGemTile),
+                    5100);
+            swingPlat->AddComponent<Spark::BoxCollider2DComponent>();
+            Spark::Rigidbody2DComponent* swingRb =
+                    swingPlat->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Dynamic, 1.0F);
+            swingRb->SetGravityScale(0.0F);
+            Spark::HingeJoint2DComponent* hinge =
+                    swingPlat->AddComponent<Spark::HingeJoint2DComponent>(hingeAnchor);
+            hinge->SetLocalAnchorA({0.0F, 0.5F * kCellWorld});
+            hinge->SetLocalAnchorB({0.0F, -0.5F * kCellWorld});
+            hinge->SetStiffness(0.72F);
+            roots.PushBack(swingPlat);
+        }
 
         const float broadCell = std::max(16.0F, kCellWorld * 4.0F);
         RebuildBroadPhaseFromStaticColliders2D(w, broadCell, staticColliders, broadGrid);
@@ -423,6 +461,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
             phys.gravityY = 0.0F;
             phys.maxFallSpeed = 500.0F;
             phys.resolveDynamicVsDynamic = true;
+            phys.jointIterations = 6;
             Spark::SimulatePhysics2D(world, timing, phys);
 
             const Spark::BoxCollider2DComponent* pCol = playerGo->GetComponent<Spark::BoxCollider2DComponent>();
@@ -485,7 +524,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
             }
             const std::string hud = std::format(
                     "Maze {}×{} ({}×{} floor×{}) — {} walls — gems {}/{} — {:.0f} FPS — hash {} / narrow {} — "
-                    "SpriteLighting2D pulse — WASD — ESC",
+                    "HingeJoint2D — WASD — ESC",
                     kMazeW,
                     kMazeH,
                     kMazeLogicalW,

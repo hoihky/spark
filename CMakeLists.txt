@@ -411,6 +411,7 @@ configure_file(
 # Shell demos ship with SparkDemo; slim editor/game builds omit these (SPARK_BUILD_ENGINE_DEMOS=OFF).
 set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/DemoAssetLoad.cpp
+        src/spark/demo/DemoFoundation.cpp
         src/spark/demo/SparkShellDemo.cpp
         src/spark/demo/ShellDemoSceneUtil.cpp
         src/spark/demo/ShellDemoUi.cpp
@@ -433,6 +434,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/Maze3DDemo.cpp
         src/spark/demo/SteeringShowcase3DDemo.cpp
         src/spark/demo/SceneEditor3DDemo.cpp
+        src/spark/demo/ComponentShowcaseDemo.cpp
 )
 
 set(SPARK_ENGINE_EDITOR_SOURCES

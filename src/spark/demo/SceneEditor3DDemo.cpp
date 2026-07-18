@@ -68,9 +68,8 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("SceneEditorFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(480.0F, 14.0F);
-        fpsText->SetFontSizePixels(18.0F);
-        fpsText->SetColor({0.92F, 0.95F, 1.0F});
+        fpsText->SetScreenPosition(480.0F, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText);
         fpsText->SetText(Spark::Utf8String("Scene editor — RMB menu · drag RMB look · Alt+LMB orbit · F1 fly"));
         roots.PushBack(fpsHudObject);
 
@@ -339,7 +338,7 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
                 hud += statusMessage.CStr();
             }
             fpsText->SetText(Spark::Utf8String(hud.c_str()));
-            fpsText->SetScreenPosition(12.0F, 14.0F);
+            fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
         }
     }
 

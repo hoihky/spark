@@ -2,6 +2,10 @@
 #include "spark/demo/DemoAssetLoad.hpp"
 
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/rendering/BillboardComponent.hpp"
+#include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
+#include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
+#include "spark/scene/Mesh.hpp"
 
 namespace Spark {
 
@@ -42,6 +46,8 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         groundObject->AddComponent<Spark::TransformComponent>();
         groundObject->AddComponent<Spark::MeshComponent>(
                 groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.58F, 0.6F, 0.64F});
+        groundObject->AddComponent<Spark::SceneSpatialPolicyComponent>(
+                Spark::ScenePartitionKind::BoundingVolumeHierarchy);
         roots.PushBack(groundObject);
 
         cubeObject = w.CreateGameObject();
@@ -60,6 +66,37 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             emMat->SetRoughness(0.35F);
         }
         roots.PushBack(cubeObject);
+
+        Spark::SharedPtr<Spark::Mesh> billboardMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("DemoBillboard"));
+        *billboardMesh = Spark::Mesh::CreateSkyBillboardPlane(0.55F, 0.55F);
+        Spark::GameObject* billboardMarker = w.CreateGameObject();
+        billboardMarker->GetName() = Spark::Utf8String("BillboardMarker");
+        {
+            Spark::TransformComponent* tr = billboardMarker->AddComponent<Spark::TransformComponent>();
+            tr->SetTranslation({0.0F, 1.65F, 3.2F});
+        }
+        billboardMarker->AddComponent<Spark::MeshComponent>(
+                billboardMesh, Spark::SceneMeshSlot::Custom, Spark::Vector3{0.2F, 0.95F, 0.35F});
+        if (Spark::MaterialComponent* bm = billboardMarker->AddComponent<Spark::MaterialComponent>()) {
+            bm->SetEmissive({0.35F, 1.0F, 0.45F}, 3.5F);
+            bm->SetRoughness(0.2F);
+        }
+        Spark::BillboardComponent* billboard = billboardMarker->AddComponent<Spark::BillboardComponent>();
+        billboard->SetMode(Spark::BillboardMode::YAxisLocked);
+        roots.PushBack(billboardMarker);
+
+        Spark::GameObject* decalGo = w.CreateGameObject();
+        decalGo->GetName() = Spark::Utf8String("GroundDecal");
+        {
+            Spark::TransformComponent* tr = decalGo->AddComponent<Spark::TransformComponent>();
+            tr->SetTranslation({0.0F, 0.02F, 0.0F});
+            tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitX, Spark::HalfPi));
+        }
+        Spark::DecalProjectorComponent* decal = decalGo->AddComponent<Spark::DecalProjectorComponent>();
+        decal->SetTexture(checkerTex);
+        decal->SetSize({2.4F, 2.4F, 0.35F});
+        decal->SetOpacity(0.72F);
+        roots.PushBack(decalGo);
 
         Spark::GameObject* texturedCube = w.CreateGameObject();
         texturedCube->GetName() = Spark::Utf8String("TexturedCube");
@@ -272,9 +309,8 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("FpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(20.0F);
-        fpsText->SetColor({0.9F, 0.94F, 0.98F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText);
         fpsText->SetText(Spark::Utf8String("..."));
         roots.PushBack(fpsHudObject);
     }
@@ -320,7 +356,10 @@ void ThreeDDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             } else {
                 fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
             }
-            fpsText->SetText(Spark::Utf8String(std::format("{:.0f} FPS", static_cast<double>(fpsSmoothed)).c_str()));
+            fpsText->SetText(Spark::Utf8String(
+                    std::format("{:.0f} FPS — BVH policy · Billboard · DecalProjector",
+                                static_cast<double>(fpsSmoothed))
+                            .c_str()));
         }
     }
 
@@ -337,6 +376,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         const Spark::Matrix4 viewProj = proj * view;
 
         scene.SetSpatialPartitionKind(Spark::ScenePartitionKind::BoundingVolumeHierarchy);
+        scene.ApplySpatialPolicyFromFirstMatchingObject();
 
         Spark::SceneRenderParams params{};
         params.viewProjection = viewProj;
@@ -350,6 +390,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         params.draws.Clear();
         params.sceneTextures.Clear();
         params.pointLights.Clear();
+        params.decals.Clear();
         params.sprites.Clear();
         params.screenRects.Clear();
         params.screenTexts.Clear();
@@ -452,6 +493,25 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
             params.draws.PushBack(drawList[di]);
         }
+
+        world.ForEachActiveGameObject([&params, &findOrAddTexture](Spark::GameObject* o) {
+            if (o == nullptr || params.decals.GetSize() >= Spark::SceneRenderParams::MaxDecals) {
+                return;
+            }
+            const Spark::DecalProjectorComponent* decalComp = o->GetComponent<Spark::DecalProjectorComponent>();
+            if (decalComp == nullptr || !decalComp->IsEnabled()) {
+                return;
+            }
+            Spark::SceneDecalDraw draw{};
+            draw.projectorWorld = o->GetWorldMatrix();
+            const Spark::Vector3 size = decalComp->GetSize();
+            draw.halfExtents = {size.x * 0.5F, size.y * 0.5F, size.z * 0.5F};
+            draw.opacity = decalComp->GetOpacity();
+            if (decalComp->GetTexture()) {
+                draw.textureLayer = findOrAddTexture(decalComp->GetTexture());
+            }
+            params.decals.PushBack(draw);
+        });
 
         scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
             Spark::ScreenTextDraw d{};

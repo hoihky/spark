@@ -118,9 +118,8 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("TetrisFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(20.0F);
-        fpsText->SetColor({0.95F, 0.98F, 1.0F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText, false);
         fpsText->SetText(Spark::Utf8String("Tetris — multiply ghost · additive line clear · ←→ ↓ ↑/X rotate · Space slam"));
         roots.PushBack(fpsHudObject);
 

@@ -84,9 +84,8 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("TerrainFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(20.0F);
-        fpsText->SetColor({0.9F, 0.95F, 1.0F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText);
         fpsText->SetText(Spark::Utf8String(
                 "Terrain — cyan dot = aim · LMB raise / RMB lower · R reset · F1 mouse"));
         roots.PushBack(fpsHudObject);

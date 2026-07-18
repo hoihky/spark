@@ -97,9 +97,8 @@ void TwoDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("TwoDFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(20.0F);
-        fpsText->SetColor({0.92F, 0.98F, 0.95F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText, false);
         fpsText->SetText(Spark::Utf8String("2D — Camera2D · blend modes (multiply water, additive glint)"));
         roots.PushBack(fpsHudObject);
 

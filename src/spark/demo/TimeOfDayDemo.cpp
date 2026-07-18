@@ -1,8 +1,10 @@
 #include "spark/demo/TimeOfDayDemo.hpp"
 
 #include "spark/config.hpp"
-#include "spark/ecs/components/rendering/MaterialComponent.hpp"
-#include "spark/render/lighting/SceneLightingProfile.hpp"
+#include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"
+#include "spark/ecs/components/rendering/FogVolumeComponent.hpp"
+#include "spark/ecs/components/rendering/PostProcessVolumeComponent.hpp"
+#include "spark/scene/RenderVolumes.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -124,12 +126,37 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     roots.PushBack(skyObject);
     UpdateSkyTintForTime(cycleClockSeconds / cycleDurationSeconds);
 
+    Spark::GameObject* driverGo = w.CreateGameObject();
+    driverGo->GetName() = Spark::Utf8String("TodDriver");
+    timeDriver = driverGo->AddComponent<Spark::TimeOfDayDriverComponent>();
+    timeDriver->SetDayLengthSeconds(cycleDurationSeconds);
+    timeDriver->SetTimeOfDay(cycleClockSeconds / cycleDurationSeconds);
+    timeDriver->SetLooping(true);
+    roots.PushBack(driverGo);
+
+    Spark::GameObject* fogGo = w.CreateGameObject();
+    fogGo->GetName() = Spark::Utf8String("TodFogVolume");
+    fogGo->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
+    fogVolume = fogGo->AddComponent<Spark::FogVolumeComponent>();
+    fogVolume->SetHalfExtents({14.0F, 5.0F, 14.0F});
+    fogVolume->SetFogDensity(0.028F);
+    fogVolume->SetFogColor({0.62F, 0.68F, 0.78F});
+    roots.PushBack(fogGo);
+
+    Spark::GameObject* postGo = w.CreateGameObject();
+    postGo->GetName() = Spark::Utf8String("TodPostVolume");
+    postGo->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
+    Spark::PostProcessVolumeComponent* post = postGo->AddComponent<Spark::PostProcessVolumeComponent>();
+    post->SetHalfExtents({10.0F, 4.0F, 10.0F});
+    post->SetSsaoEnabled(false);
+    post->SetExposure(1.12F);
+    roots.PushBack(postGo);
+
     hudObject = w.CreateGameObject();
     hudObject->GetName() = Spark::Utf8String("TodHud");
     hudText = hudObject->AddComponent<Spark::TextOverlayComponent>();
-    hudText->SetScreenPosition(12.0F, 12.0F);
-    hudText->SetFontSizePixels(20.0F);
-    hudText->SetColor({0.92F, 0.94F, 0.98F});
+    hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+    DemoHud::Apply(*hudText);
     roots.PushBack(hudObject);
 
     context.GetInput().SetCursorCaptured(true);
@@ -153,6 +180,8 @@ void TimeOfDayDemo::Unload(Spark::GameWorld& w) {
     skyHasEquirect = false;
     hudObject = nullptr;
     hudText = nullptr;
+    timeDriver = nullptr;
+    fogVolume = nullptr;
 }
 
 void TimeOfDayDemo::UpdateSkyTintForTime(const float normalizedTime) {
@@ -214,6 +243,9 @@ void TimeOfDayDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCon
         cycleClockSeconds += timing.deltaTimeSeconds * timeSpeed;
     }
     const float timeNorm = Wrap01(cycleClockSeconds / cycleDurationSeconds);
+    if (timeDriver != nullptr) {
+        timeDriver->SetTimeOfDay(timeNorm);
+    }
     UpdateSkyTintForTime(timeNorm);
 
     if (skyTransform != nullptr) {
@@ -232,7 +264,8 @@ void TimeOfDayDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCon
         }
         hudText->SetText(Spark::Utf8String(
                 std::format(
-                        "Time of day — {} — t={:.2f} — {:.0f}s/cycle — {:.1f}x — {:.0f} FPS — SPACE pause  +/- speed  R dawn",
+                        "Time of day — {} — t={:.2f} — {:.0f}s/cycle — {:.1f}x — {:.0f} FPS — "
+                        "TimeOfDayDriver · FogVolume · PostProcess — SPACE pause  +/- speed  R dawn",
                         TimeOfDayPhaseLabel(timeNorm),
                         static_cast<double>(timeNorm),
                         static_cast<double>(cycleDurationSeconds),
@@ -260,7 +293,7 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
     params.cameraPositionWorld = camera.position;
     params.lightingProfile = SceneLightingProfile::Outdoor;
     params.useTimeOfDay = true;
-    params.timeOfDay = timeNorm;
+    params.timeOfDay = timeDriver != nullptr ? timeDriver->GetTimeOfDay() : timeNorm;
     params.directionalShadowsEnabled = true;
     params.shadowDepthSampleFlipV = true;
     params.sceneTimeSeconds = static_cast<float>(cycleClockSeconds);
@@ -278,6 +311,8 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
     params.uiFont = world.GetUiFont();
     params.uiBoldFont = world.GetUiBoldFont();
     params.draws.Reserve(24);
+
+    ApplyRegionalRenderVolumes(world, camera.position, params);
 
     auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
         if (!tex) {

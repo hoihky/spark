@@ -16,9 +16,8 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         hudGo = w.CreateGameObject();
         hudGo->GetName() = Spark::Utf8String("SpaceInvadersHud");
         hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
-        hudText->SetScreenPosition(12.0F, 12.0F);
-        hudText->SetFontSizePixels(19.0F);
-        hudText->SetColor({0.92F, 0.98F, 1.0F});
+        hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*hudText, false);
         roots.PushBack(hudGo);
 
         aliens.Clear();

@@ -20,6 +20,7 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 #include "spark/demo/SceneEditor3DDemo.hpp"
 #include "spark/demo/TimeOfDayDemo.hpp"
+#include "spark/demo/ComponentShowcaseDemo.hpp"
 #include "spark/gui/EditorLayoutStore.hpp"
 #include "spark/gui/GuiThemeCatalog.hpp"
 #include "spark/gui/controls/Label.hpp"
@@ -102,6 +103,8 @@ public:
                 EnterMaterialShowcase3DDemo(*engineCtx);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_N)) {
                 EnterTimeOfDayDemo(*engineCtx);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_G)) {
+                EnterComponentShowcaseDemo(*engineCtx);
             }
         }
 
@@ -204,6 +207,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::ComponentShowcase) {
+            componentShowcaseDemo.Simulate(timing, context, GetWorld());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
         }
         Game::OnUpdate(timing, context);
     }
@@ -288,12 +296,17 @@ public:
             timeOfDayDemo.Render(GetScene(), GetWorld(), context);
             return;
         }
+        if (mode == DemoMode::ComponentShowcase) {
+            componentShowcaseDemo.Render(GetScene(), GetWorld(), context);
+            return;
+        }
         RenderUiOnly(context, fbW, fbH);
     }
 
     void EnterThreeD(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (skyDemoLoaded) {
             skyDemo.Unload(GetWorld());
             skyDemoLoaded = false;
@@ -361,6 +374,7 @@ public:
     void EnterToonShadingDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -432,6 +446,7 @@ public:
     void EnterMaterialShowcase3DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -503,6 +518,7 @@ public:
     void EnterGuiShowcase(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -571,6 +587,7 @@ public:
     void EnterSkyDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -634,6 +651,7 @@ public:
     void EnterTimeOfDayDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -710,9 +728,90 @@ public:
         context.GetInput().SetCursorCaptured(true);
     }
 
+    void EnterComponentShowcaseDemo(IEngineContext& context) {
+        UnloadPhysicsBall3DDemoIfAny();
+        UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
+        if (threeDLoaded) {
+            threeD.Unload(GetWorld());
+            threeDLoaded = false;
+        }
+        if (skyDemoLoaded) {
+            skyDemo.Unload(GetWorld());
+            skyDemoLoaded = false;
+        }
+        if (timeOfDayDemoLoaded) {
+            timeOfDayDemo.Unload(GetWorld());
+            timeOfDayDemoLoaded = false;
+        }
+        if (particleDemoLoaded) {
+            particleDemo.Unload(GetWorld());
+            particleDemoLoaded = false;
+        }
+        if (terrainDemoLoaded) {
+            terrainDemo.Unload(GetWorld());
+            terrainDemoLoaded = false;
+        }
+        if (characterDemoLoaded) {
+            characterDemo.Unload(GetWorld());
+            characterDemoLoaded = false;
+        }
+        if (twoDLoaded) {
+            twoDDemo.Unload(GetWorld());
+            twoDLoaded = false;
+        }
+        if (tetris2DLoaded) {
+            tetris2DDemo.Unload(GetWorld());
+            tetris2DLoaded = false;
+        }
+        if (connect3Loaded) {
+            connect3Demo.Unload(GetWorld());
+            connect3Loaded = false;
+        }
+        if (spaceInvaders2DLoaded) {
+            spaceInvaders2DDemo.Unload(GetWorld());
+            spaceInvaders2DLoaded = false;
+        }
+        if (platformer2DLoaded) {
+            platformer2DDemo.Unload(GetWorld());
+            platformer2DLoaded = false;
+        }
+        if (broadPhase2DLoaded) {
+            broadPhase2DDemo.Unload(GetWorld());
+            broadPhase2DLoaded = false;
+        }
+        if (renderLayers2DLoaded) {
+            renderLayers2DDemo.Unload(GetWorld());
+            renderLayers2DLoaded = false;
+        }
+        if (maze3DLoaded) {
+            maze3DDemo.Unload(GetWorld());
+            maze3DLoaded = false;
+        }
+        if (toonShadingLoaded) {
+            toonShadingDemo.Unload(GetWorld());
+            toonShadingLoaded = false;
+        }
+        if (materialShowcaseLoaded) {
+            materialShowcase3DDemo.Unload(GetWorld());
+            materialShowcaseLoaded = false;
+        }
+        DestroyGuiShowcase();
+        if (!componentShowcaseLoaded) {
+            componentShowcaseDemo.Load(GetWorld(), context);
+            componentShowcaseLoaded = true;
+        }
+        if (menuCanvas != nullptr) {
+            menuCanvas->SetCanvasEnabled(false);
+        }
+        mode = DemoMode::ComponentShowcase;
+        context.GetInput().SetCursorCaptured(true);
+    }
+
     void EnterParticleDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -780,6 +879,7 @@ public:
     void EnterTerrainDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -847,6 +947,7 @@ public:
     void EnterCharacterDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -914,6 +1015,7 @@ public:
     void EnterTwoDDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -981,6 +1083,7 @@ public:
     void EnterTetris2DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1048,6 +1151,7 @@ public:
     void EnterConnect3Demo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1115,6 +1219,7 @@ public:
     void EnterSpaceInvaders2DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1182,6 +1287,7 @@ public:
     void EnterPlatformer2DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1251,6 +1357,7 @@ public:
     void EnterBroadPhase2DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1320,6 +1427,7 @@ public:
     void EnterRenderLayers2DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1391,6 +1499,7 @@ public:
     void EnterMaze3DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1517,6 +1626,7 @@ public:
         DestroyGuiShowcase();
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         physicsBall3D.Load(GetWorld(), context);
         physicsBall3DLoaded = true;
         if (menuCanvas != nullptr) {
@@ -1586,6 +1696,7 @@ public:
         DestroyGuiShowcase();
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         steeringShowcase3D.Load(GetWorld(), context);
         steeringShowcase3DLoaded = true;
         if (menuCanvas != nullptr) {
@@ -1598,6 +1709,7 @@ public:
     void EnterSceneEditor3DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1667,6 +1779,7 @@ public:
     void ReturnToMenu(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
+        UnloadComponentShowcaseIfAny();
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1743,6 +1856,13 @@ private:
         if (timeOfDayDemoLoaded) {
             timeOfDayDemo.Unload(GetWorld());
             timeOfDayDemoLoaded = false;
+        }
+    }
+
+    void UnloadComponentShowcaseIfAny() {
+        if (componentShowcaseLoaded) {
+            componentShowcaseDemo.Unload(GetWorld());
+            componentShowcaseLoaded = false;
         }
     }
 
@@ -1842,6 +1962,7 @@ private:
         items.PushBack(Spark::Utf8String("18 — Material ball"));
         items.PushBack(Spark::Utf8String("19 — Time of day"));
         items.PushBack(Spark::Utf8String("20 — Farming RPG render layers"));
+        items.PushBack(Spark::Utf8String("21 — Game component showcase (P2)"));
         demoList->SetItems(Spark::MoveTemp(items));
         demoList->SetOnSelectionChanged([self](int idx) {
             if (self->engineCtx == nullptr) {
@@ -1887,6 +2008,8 @@ private:
                 self->EnterTimeOfDayDemo(*self->engineCtx);
             } else if (idx == 19) {
                 self->EnterRenderLayers2DDemo(*self->engineCtx);
+            } else if (idx == 20) {
+                self->EnterComponentShowcaseDemo(*self->engineCtx);
             }
         });
         scroll->AddChild(Spark::MoveTemp(lst));
@@ -2214,6 +2337,8 @@ private:
     bool materialShowcaseLoaded = false;
     TimeOfDayDemo timeOfDayDemo{};
     bool timeOfDayDemoLoaded = false;
+    ComponentShowcaseDemo componentShowcaseDemo{};
+    bool componentShowcaseLoaded = false;
     Spark::GameObject* menuGo = nullptr;
     Spark::GuiCanvasComponent* menuCanvas = nullptr;
     Spark::Gui::Panel* menuBackdrop = nullptr;

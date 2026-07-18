@@ -304,6 +304,151 @@ Texture2D MakePlayerRunAtlasFallback() {
 
 namespace {
 
+[[nodiscard]] bool TryLoadKenneySlimeFramesFromDir(
+        const char* dirPath,
+        Texture2D& rest,
+        Texture2D& attack) noexcept {
+    if (dirPath == nullptr || dirPath[0] == '\0') {
+        return false;
+    }
+    Utf8String pRest(dirPath);
+    pRest.AppendUtf8("/platformPack_enemySlime_rest.png");
+    Utf8String pAttack(dirPath);
+    pAttack.AppendUtf8("/platformPack_enemySlime_attack.png");
+    if (Texture2D::TryLoadFromFile(pRest.CStr(), rest) && Texture2D::TryLoadFromFile(pAttack.CStr(), attack)) {
+        return true;
+    }
+    Utf8String pMain(dirPath);
+    pMain.AppendUtf8("/platformPack_enemySlime.png");
+    if (!Texture2D::TryLoadFromFile(pMain.CStr(), rest)) {
+        return false;
+    }
+    attack = rest;
+    return true;
+}
+
+}  // namespace
+
+PlatformerEnemyAtlasResult BuildPlatformerEnemyAtlas() {
+    PlatformerEnemyAtlasResult result{};
+    const char* enemyDirs[] = {
+            SPARK_ASSETS_DIR "/sprites/kenney_simplified-platformer-pack/PNG/Enemies",
+            SPARK_BUILD_ASSETS_DIR "/sprites/kenney_simplified-platformer-pack/PNG/Enemies",
+            "assets/sprites/kenney_simplified-platformer-pack/PNG/Enemies",
+            nullptr,
+    };
+    for (std::size_t di = 0; enemyDirs[di] != nullptr; ++di) {
+        Texture2D rest;
+        Texture2D attack;
+        if (!TryLoadKenneySlimeFramesFromDir(enemyDirs[di], rest, attack)) {
+            continue;
+        }
+        const std::uint32_t w0 = rest.GetWidth();
+        const std::uint32_t h0 = rest.GetHeight();
+        const std::uint32_t w1 = attack.GetWidth();
+        const std::uint32_t h1 = attack.GetHeight();
+        const std::uint32_t cellW = (std::max)(w0, w1);
+        const std::uint32_t maxH = (std::max)(h0, h1);
+        const std::uint32_t totalW = cellW * 2U;
+        if (cellW == 0U || maxH == 0U) {
+            continue;
+        }
+        Array<std::uint8_t> buf;
+        buf.Resize(static_cast<std::size_t>(totalW) * static_cast<std::size_t>(maxH) * 4U);
+        std::memset(buf.GetData(), 0, buf.GetSize());
+        BlitTextureBottomAligned(rest, buf, totalW, maxH, 0U);
+        BlitTextureBottomAligned(attack, buf, totalW, maxH, cellW);
+        result.texture = Texture2D(Utf8String("KenneyPlatformerEnemySlime"));
+        result.texture.SetPixels(totalW, maxH, MoveTemp(buf));
+        result.columns = 2U;
+        result.fromKenneySlime = true;
+        return result;
+    }
+
+    Texture2D ghost;
+    if (TryLoadRelativeAsset(
+                ghost,
+                "/sprites/kenney_tiny-dungeon/Tiles/tile_0121.png",
+                "TinyDungeonEnemyGhost")) {
+        result.texture = MoveTemp(ghost);
+        result.columns = 1U;
+        result.fromTinyDungeon = true;
+        return result;
+    }
+
+    constexpr std::uint32_t kW = 20U;
+    constexpr std::uint32_t kH = 22U;
+    Texture2D t(Utf8String("PlatEnemyFallback"));
+    Array<std::uint8_t> bytes;
+    bytes.Resize(static_cast<std::size_t>(kW) * static_cast<std::size_t>(kH) * 4U);
+    for (std::uint32_t y = 0; y < kH; ++y) {
+        for (std::uint32_t x = 0; x < kW; ++x) {
+            const float cx = static_cast<float>(kW - 1U) * 0.5F;
+            const float cy = static_cast<float>(kH - 1U) * 0.52F;
+            const float dx = (static_cast<float>(x) - cx) / (cx * 0.92F);
+            const float dy = (static_cast<float>(y) - cy) / (cy * 0.95F);
+            const float r = std::sqrt(dx * dx + dy * dy);
+            const bool body = r < 1.0F;
+            const bool eye = body && std::fabs(dx + 0.22F) < 0.14F && std::fabs(dy + 0.12F) < 0.16F;
+            const bool eye2 = body && std::fabs(dx - 0.22F) < 0.14F && std::fabs(dy + 0.12F) < 0.16F;
+            const bool mouth = body && std::fabs(dx) < 0.12F && std::fabs(dy - 0.18F) < 0.12F;
+            std::uint8_t rr = 28;
+            std::uint8_t gg = 24;
+            std::uint8_t bb = 38;
+            std::uint8_t aa = 0;
+            if (body) {
+                rr = 228;
+                gg = 232;
+                bb = 242;
+                aa = 255;
+            }
+            if (eye || eye2 || mouth) {
+                rr = 34;
+                gg = 30;
+                bb = 48;
+            }
+            const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(kW) + x) * 4U;
+            bytes[i] = rr;
+            bytes[i + 1U] = gg;
+            bytes[i + 2U] = bb;
+            bytes[i + 3U] = aa;
+        }
+    }
+    t.SetPixels(kW, kH, MoveTemp(bytes));
+    result.texture = MoveTemp(t);
+    result.columns = 1U;
+    return result;
+}
+
+Texture2D MakeEnemyBulletTextureFallback() {
+    constexpr std::uint32_t kW = 10U;
+    constexpr std::uint32_t kH = 6U;
+    Texture2D t(Utf8String("PlatEnemyBullet"));
+    Array<std::uint8_t> bytes;
+    bytes.Resize(static_cast<std::size_t>(kW) * static_cast<std::size_t>(kH) * 4U);
+    for (std::uint32_t y = 0; y < kH; ++y) {
+        for (std::uint32_t x = 0; x < kW; ++x) {
+            const float cx = (static_cast<float>(kW) - 1.0F) * 0.5F;
+            const float cy = (static_cast<float>(kH) - 1.0F) * 0.5F;
+            const float dx = (static_cast<float>(x) - cx) / (cx + 0.35F);
+            const float dy = (static_cast<float>(y) - cy) / (cy + 0.35F);
+            const float r2 = dx * dx + dy * dy;
+            const float core = std::exp(-r2 * 2.8F);
+            const float halo = std::exp(-r2 * 1.1F);
+            const float a = std::clamp(core * 0.95F + halo * 0.35F, 0.0F, 1.0F);
+            const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(kW) + x) * 4U;
+            bytes[i] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.55F + 0.45F * core), 0.0F, 255.0F));
+            bytes[i + 1U] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.35F + 0.45F * halo), 0.0F, 255.0F));
+            bytes[i + 2U] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.18F + 0.25F * core), 0.0F, 255.0F));
+            bytes[i + 3U] = static_cast<std::uint8_t>(std::clamp(a * 255.0F, 0.0F, 255.0F));
+        }
+    }
+    t.SetPixels(kW, kH, MoveTemp(bytes));
+    return t;
+}
+
+namespace {
+
 [[nodiscard]] std::uint32_t HashCell(std::uint32_t seed, std::uint32_t cx, std::uint32_t cy) noexcept {
     std::uint32_t h = seed ^ cx * 0x9E3779B1u ^ cy * 0x85EBCA6Bu;
     h ^= h << 13U;

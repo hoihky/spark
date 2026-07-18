@@ -12,6 +12,8 @@ using Spark::DemoAssets::KenneySimplifiedPlatformerTileUv;
 using Spark::DemoAssets::kKenneyTilesheetCols;
 using Spark::DemoAssets::kKenneyTilesheetRows;
 using Spark::DemoAssets::kPlayerAtlasFallbackCols;
+using Spark::DemoAssets::BuildPlatformerEnemyAtlas;
+using Spark::DemoAssets::MakeEnemyBulletTextureFallback;
 using Spark::DemoAssets::MakeGemTextureFallback;
 using Spark::DemoAssets::MakePlayerRunAtlasFallback;
 using Spark::DemoAssets::TryBuildKenneyPlayerAtlas;

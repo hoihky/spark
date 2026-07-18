@@ -1,5 +1,7 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 
+#include "spark/ai/GameAiSubsystem.hpp"
+
 namespace Spark {
 
 void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
@@ -18,6 +20,8 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         orbitPursuer = 0.0F;
         orbitSecondary = 0.0F;
         orbitLeader = 0.0F;
+        ecsPatrolPathGo = nullptr;
+        ecsPatrolAgentGo = nullptr;
 
         skyMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SteerSky"));
         *skyMesh = Spark::Mesh::CreateSkySphere(1.0F, 12, 24);
@@ -131,9 +135,31 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         GameObject* hud = w.CreateGameObject();
         hud->GetName() = Spark::Utf8String("SteerHud");
         hudText = hud->AddComponent<TextOverlayComponent>();
-        hudText->SetScreenPosition(14.0F, 14.0F);
-        hudText->SetFontSizePixels(22.0F);
+        hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*hudText);
         roots.PushBack(hud);
+
+        ecsPatrolPathGo = w.CreateGameObject();
+        ecsPatrolPathGo->GetName() = Spark::Utf8String("SteerEcsPatrolPath");
+        TransformComponent* ecsPathTr = ecsPatrolPathGo->AddComponent<TransformComponent>();
+        ecsPathTr->SetTranslation({-14.0F, 0.0F, -12.0F});
+        PatrolPathComponent* ecsPatrol = ecsPatrolPathGo->AddComponent<PatrolPathComponent>();
+        ecsPatrol->SetLooping(true);
+        const float leg = 5.0F;
+        ecsPatrol->GetWaypoints().PushBack(Vector3::Zero);
+        ecsPatrol->GetWaypoints().PushBack({leg, 0.0F, 0.0F});
+        ecsPatrol->GetWaypoints().PushBack({leg, 0.0F, leg});
+        ecsPatrol->GetWaypoints().PushBack({0.0F, 0.0F, leg});
+        roots.PushBack(ecsPatrolPathGo);
+
+        ecsPatrolAgentGo = addSphere("SteerEcsPatrolAgent", {0.35F, 0.85F, 0.95F});
+        ecsPatrolAgentGo->GetComponent<TransformComponent>()->SetTranslation({-14.0F, 0.55F, -12.0F});
+        ecsPatrolAgentGo->GetComponent<TransformComponent>()->SetUniformScale(0.75F);
+        NavMeshAgentComponent* ecsNav = ecsPatrolAgentGo->AddComponent<NavMeshAgentComponent>();
+        ecsNav->SetPatrolPathObject(ecsPatrolPathGo);
+        AiAgentComponent* ecsAgent = ecsPatrolAgentGo->AddComponent<AiAgentComponent>();
+        ecsAgent->SetMaxSpeed(2.8F);
+        ecsAgent->SetSteeringPlane(AiSteeringPlane::XzWorld);
 
         MountUiFont(w);
         context.GetInput().SetCursorCaptured(false);
@@ -159,6 +185,8 @@ void SteeringShowcase3DDemo::Unload(GameWorld& w)
         secondaryGo = nullptr;
         leaderGo = nullptr;
         primaryGo = nullptr;
+        ecsPatrolPathGo = nullptr;
+        ecsPatrolAgentGo = nullptr;
         flockGos.Clear();
         flockVels.Clear();
         obstacleCenters.Clear();
@@ -167,7 +195,7 @@ void SteeringShowcase3DDemo::Unload(GameWorld& w)
         pathPoints.Clear();
     }
 
-void SteeringShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& /*world*/)
+void SteeringShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world)
 {
         const float dt = timing.deltaTimeSeconds;
         Spark::IInput& in = context.GetInput();
@@ -365,12 +393,13 @@ void SteeringShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         }
 
         ResolveSteeringDemoCollisions();
+        SimulateGameAi(world, timing, context);
 
         if (hudText != nullptr) {
             hudText->SetText(Spark::Utf8String(
                     std::format(
                             "[ ] cycle · 1-9 Seek…Interpose · 0 Hide · - Path · = Offset · QWER flock · TYUI O "
-                            "combines · arrows move magenta target · solid collision · F1 look · ESC menu\n{}",
+                            "combines · arrows move magenta target · cyan agent = ECS AiAgent patrol · F1 · ESC\n{}",
                             ModeName(mode))
                             .c_str()));
         }

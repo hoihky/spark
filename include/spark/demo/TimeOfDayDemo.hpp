@@ -44,6 +44,8 @@ private:
     bool skyHasEquirect = false;
     Spark::GameObject* hudObject = nullptr;
     Spark::TextOverlayComponent* hudText = nullptr;
+    Spark::TimeOfDayDriverComponent* timeDriver = nullptr;
+    Spark::FogVolumeComponent* fogVolume = nullptr;
 };
 
 }  // namespace Spark

@@ -1,5 +1,7 @@
 #include "spark/demo/Maze3DDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
+#include "spark/demo/DemoFoundation.hpp"
+#include "spark/ai/GameAiSubsystem.hpp"
 
 namespace Spark {
 namespace {
@@ -140,6 +142,9 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         gemsTotal = 0;
         playerAnimator = nullptr;
         playerCharAnimFsm = nullptr;
+        patrolPathGo = nullptr;
+        guardGo = nullptr;
+        guardPerception = nullptr;
         useHumanAvatar = false;
         humanModelYawOffset = 0.0F;
         humanModelBindFix = Spark::Quaternion::Identity;
@@ -353,6 +358,45 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         roots.PushBack(playerGo);
 
+        {
+            const float pathX = originX + (static_cast<float>(kMazeW / 2) + 0.5F) * kCellWorld;
+            const float pathZ = originZ + (static_cast<float>(kMazeH / 2) + 0.5F) * kCellWorld;
+            patrolPathGo = w.CreateGameObject();
+            patrolPathGo->GetName() = Spark::Utf8String("Maze3DPatrolPath");
+            Spark::TransformComponent* pathTr = patrolPathGo->AddComponent<Spark::TransformComponent>();
+            pathTr->SetTranslation({pathX, 0.0F, pathZ});
+            Spark::PatrolPathComponent* patrol = patrolPathGo->AddComponent<Spark::PatrolPathComponent>();
+            patrol->SetLooping(true);
+            const float leg = kCellWorld * 2.0F;
+            patrol->GetWaypoints().PushBack(Spark::Vector3::Zero);
+            patrol->GetWaypoints().PushBack({leg, 0.0F, 0.0F});
+            patrol->GetWaypoints().PushBack({leg, 0.0F, leg});
+            patrol->GetWaypoints().PushBack({0.0F, 0.0F, leg});
+            roots.PushBack(patrolPathGo);
+
+            guardGo = w.CreateGameObject();
+            guardGo->GetName() = Spark::Utf8String("Maze3DGuard");
+            Spark::TransformComponent* guardTr = guardGo->AddComponent<Spark::TransformComponent>();
+            guardTr->SetTranslation({pathX, 0.85F, pathZ});
+            guardTr->SetUniformScale(0.55F);
+            guardGo->AddComponent<Spark::MeshComponent>(
+                    unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{0.92F, 0.22F, 0.18F});
+            if (Spark::MaterialComponent* gm = guardGo->AddComponent<Spark::MaterialComponent>()) {
+                gm->SetEmissive({0.95F, 0.28F, 0.12F}, 2.4F);
+                gm->SetRoughness(0.4F);
+            }
+            Spark::NavMeshAgentComponent* nav = guardGo->AddComponent<Spark::NavMeshAgentComponent>();
+            nav->SetPatrolPathObject(patrolPathGo);
+            Spark::AiAgentComponent* agent = guardGo->AddComponent<Spark::AiAgentComponent>();
+            agent->SetMaxSpeed(3.2F);
+            agent->SetSteeringPlane(Spark::AiSteeringPlane::XzWorld);
+            guardPerception = guardGo->AddComponent<Spark::PerceptionSensorComponent>();
+            guardPerception->SetSightRadius(9.5F);
+            guardPerception->SetSightFovDegrees(130.0F);
+            guardPerception->SetHearingRadius(6.0F);
+            roots.PushBack(guardGo);
+        }
+
         Array<Maze3DCell> floorCells;
         for (int j = 0; j < kMazeH; ++j) {
             for (int i = 0; i < kMazeW; ++i) {
@@ -433,18 +477,18 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("Maze3DFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(18.0F);
-        fpsText->SetColor({0.94F, 0.97F, 0.99F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText);
         fpsText->SetText(Spark::Utf8String(
-                "3D maze — first person (CharacterCameraRig) — mouse look — F1 release/capture cursor — ESC menu"));
+                "3D maze — FP WASD — guard patrols (NavMeshAgent+AiAgent) — F1 mouse — ESC menu"));
         roots.PushBack(fpsHudObject);
 
         rig = {};
         rig.mode = Spark::CharacterCameraMode::FirstPerson;
         rig.groundY = 0.0F;
         rig.characterPosition = {px, 0.0F, pz};
-        rig.moveSpeed = 14.0F;
+        rig.moveSpeed = kCellWorld * (14.0F / 2.25F);
+        rig.runSpeed = rig.moveSpeed * 1.65F;
         rig.mouseSensitivity = 0.12F;
         rig.firstPersonEyeHeight = 1.62F;
         rig.firstPersonForwardNudge = 0.22F;
@@ -486,6 +530,9 @@ void Maze3DDemo::Unload(Spark::GameWorld& w)
         playerRb = nullptr;
         playerAnimator = nullptr;
         playerCharAnimFsm = nullptr;
+        patrolPathGo = nullptr;
+        guardGo = nullptr;
+        guardPerception = nullptr;
         useHumanAvatar = false;
         fpsHudObject = nullptr;
         fpsText = nullptr;
@@ -563,13 +610,14 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             phys.gravityY = 0.0F;
             phys.maxFallSpeed = 500.0F;
             Spark::SimulatePhysics3D(world, timing, phys);
+            Spark::SimulateGameAi(world, timing, context);
 
             const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
             rig.characterPosition.x = p.x;
             rig.characterPosition.y = rig.groundY;
             rig.characterPosition.z = p.z;
 
-            constexpr float kCollectRadius = 0.65F;
+            constexpr float kCollectRadius = 0.65F * (kCellWorld / 2.25F);
             const float cr2 = kCollectRadius * kCollectRadius;
             for (std::size_t gi = 0; gi < gemObjects.GetSize();) {
                 Spark::GameObject* gem = gemObjects[gi];
@@ -591,7 +639,7 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
                     world.DestroyGameObject(gem);
                     gemObjects.RemoveAt(gi);
                     ++gemsCollected;
-                    DemoPlayProceduralClip(context, DemoSfx::ClipGemCollect(), 0.95F);
+                    DemoAudio::QueueCue(*playerGo, DemoSfx::ClipGemCollect(), 0.95F);
                     continue;
                 }
                 ++gi;
@@ -606,14 +654,25 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             } else {
                 fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
             }
+            bool guardSeesPlayer = false;
+            if (guardPerception != nullptr && playerGo != nullptr) {
+                const Spark::Array<Spark::GameObject*>& detected = guardPerception->GetDetectedObjects();
+                for (std::size_t di = 0; di < detected.GetSize(); ++di) {
+                    if (detected[di] == playerGo) {
+                        guardSeesPlayer = true;
+                        break;
+                    }
+                }
+            }
             const std::string hud = std::format(
-                    "3D maze {}×{} — {} — {} walls — gems {}/{} — {:.0f} FPS — FP WASD — F1 mouse — ESC",
+                    "3D maze {}×{} — {} — {} walls — gems {}/{} — guard {} — {:.0f} FPS — FP WASD — F1 — ESC",
                     kMazeW,
                     kMazeH,
                     characterAvatarHudName.CStr(),
                     wallCount,
                     gemsCollected,
                     gemsTotal,
+                    guardSeesPlayer ? "ALERT" : "patrol",
                     static_cast<double>(fpsSmoothed));
             fpsText->SetText(Spark::Utf8String(hud.c_str()));
         }

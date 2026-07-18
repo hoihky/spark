@@ -2,6 +2,7 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
+#include "spark/demo/DemoFoundation.hpp"
 #include "spark/demo/DemoProceduralSound.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
@@ -82,7 +83,18 @@ public:
     static constexpr float kGemCollectRadius = 0.62F;
     /** Layer bit for gem hurtboxes (static trigger circles); weapon queries use <c>LayerBit(2)</c> vs this. */
     static constexpr std::uint16_t kGemHurtboxCategoryBits = CollisionFilter2D::LayerBit(1);
+    /** Layer bit for enemy hurtboxes (J attack arc queries layer 1 | 3). */
+    static constexpr std::uint16_t kEnemyHurtboxCategoryBits = CollisionFilter2D::LayerBit(3);
     static constexpr std::uint32_t kPlayerAttackClipIndex = 2U;
+    static constexpr int kEnemyCount = 4;
+    static constexpr int kMaxEnemyBullets = 12;
+    /** World XY plus patrol span (x, y, patrolMinX, patrolMaxX). */
+    static constexpr float kEnemySpawns[kEnemyCount][4] = {
+            {-4.5F, 1.35F, -6.8F, -1.5F},
+            {7.4F, 2.82F, 6.2F, 8.8F},
+            {21.0F, 1.48F, 18.5F, 23.5F},
+            {25.0F, 5.62F, 23.2F, 26.8F},
+    };
 
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
 
@@ -97,6 +109,58 @@ public:
 
 
 private:
+    struct EnemySlot {
+        bool alive = false;
+        Spark::GameObject* go = nullptr;
+        Spark::TransformComponent* tr = nullptr;
+        Spark::SpriteComponent* spr = nullptr;
+        float patrolMinX = 0.0F;
+        float patrolMaxX = 0.0F;
+        float patrolDir = 1.0F;
+        float fireCooldown = 0.0F;
+        float attackFlashTimer = 0.0F;
+        float bobPhase = 0.0F;
+        float baseY = 0.0F;
+    };
+
+    struct BulletSlot {
+        bool active = false;
+        Spark::GameObject* go = nullptr;
+        Spark::TransformComponent* tr = nullptr;
+        Spark::SpriteComponent* spr = nullptr;
+        float cx = 0.0F;
+        float cy = 0.0F;
+        float vx = 0.0F;
+        float vy = 0.0F;
+        float age = 0.0F;
+        float lifetime = 0.0F;
+    };
+
+    static void DeactivateBullet(BulletSlot& b) noexcept;
+
+
+    void UpdateEnemies(float dt, float playerX, float playerY) noexcept;
+
+
+    void UpdateEnemyBullets(float dt) noexcept;
+
+
+    void ResolveEnemyBulletHits(float playerX, float playerY) noexcept;
+
+
+    [[nodiscard]] bool TrySpawnEnemyBullet(EnemySlot& enemy, float playerX, float playerY) noexcept;
+
+
+    static bool BoxOverlap(
+            float ax,
+            float ay,
+            float ahx,
+            float ahy,
+            float bx,
+            float by,
+            float bhx,
+            float bhy) noexcept;
+
     Array<PhysicsQueryHit2D> attackArcHitsScratch{};
     Spark::Array<Spark::GameObject*> gemObjects{};
     Spark::SharedPtr<Spark::Texture2D> gemTex{};
@@ -109,9 +173,18 @@ private:
     Spark::SharedPtr<Spark::Texture2D> platformTilesTex{};
     bool platformUsingKenneyTilesheet = false;
     Spark::SharedPtr<Spark::Texture2D> playerAtlasTex{};
+    Spark::SharedPtr<Spark::Texture2D> enemyAtlasTex{};
+    Spark::SharedPtr<Spark::Texture2D> enemyBulletTex{};
+    std::uint32_t enemyAtlasColumns = 1U;
+    bool enemyUsingKenneySlime = false;
+    bool enemyUsingTinyDungeon = false;
+    Spark::Vector4 enemyIdleUv{0.0F, 0.0F, 1.0F, 1.0F};
+    Spark::Vector4 enemyAttackUv{0.0F, 0.0F, 1.0F, 1.0F};
     Spark::GameObject* playerObject = nullptr;
     Spark::TransformComponent* playerTr = nullptr;
     Spark::Rigidbody2DComponent* playerRb = nullptr;
+    Spark::HealthComponent* playerHealth = nullptr;
+    Spark::DamageableComponent* playerDamageable = nullptr;
     SpriteAnimatorComponent* playerAnim = nullptr;
     Sprite2DCharacterAnimFsmComponent* playerCharFsm = nullptr;
     float playerBaseScaleX = kPlayerHalfW * 2.0F;
@@ -125,6 +198,10 @@ private:
     float fpsSmoothed = 0.0F;
     bool goalReached = false;
     float sceneTime = 0.0F;
+    Spark::Array<EnemySlot> enemies{};
+    Spark::Array<BulletSlot> enemyBullets{};
+    int enemiesDefeated = 0;
+    float playerHurtCooldown = 0.0F;
 
 };
 

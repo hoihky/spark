@@ -338,9 +338,8 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     helpHud = w.CreateGameObject();
     helpHud->GetName() = Utf8String("MatShowHelp");
     helpText = helpHud->AddComponent<TextOverlayComponent>();
-    helpText->SetScreenPosition(10.0F, 10.0F);
-    helpText->SetFontSizePixels(16.0F);
-    helpText->SetColor({0.9F, 0.93F, 0.98F});
+    helpText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+    DemoHud::Apply(*helpText);
     helpText->SetText(Utf8String("…"));
     roots.PushBack(helpHud);
 }

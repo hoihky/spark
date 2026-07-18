@@ -32,6 +32,7 @@ enum class DemoMode : std::uint8_t {
     Connect3,
     SpaceInvaders2D,
     RenderLayers2D,
+    ComponentShowcase,
 };
 
 }  // namespace Spark

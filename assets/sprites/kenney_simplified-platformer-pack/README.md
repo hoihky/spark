@@ -7,6 +7,7 @@ Expected layout (from [Kenney](https://kenney.nl/assets)):
 - `Tilesheet/platformPack_tilesheet.png`
 - `PNG/Characters/platformChar_idle.png`, `platformChar_walk1.png`, `platformChar_walk2.png`
 - Optional combat frames: `platformChar_happy.png` (attack), `platformChar_duck.png` (hurt)
+- Optional enemies: `PNG/Enemies/platformPack_enemySlime_rest.png`, `platformPack_enemySlime_attack.png` (else Tiny Dungeon ghost)
 
 Paths tried at runtime (repo-relative):
 

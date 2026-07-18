@@ -3,6 +3,9 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/audio/AudioListenerComponent.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 
 namespace Spark {
 
@@ -80,6 +83,10 @@ private:
     Spark::Utf8String characterAvatarHudName{};
     Spark::GameObject* fpsHudObject = nullptr;
     Spark::TextOverlayComponent* fpsText = nullptr;
+    Spark::GameObject* audioListenerGo = nullptr;
+    Spark::TransformComponent* audioListenerTr = nullptr;
+    Spark::SoundCueComponent* footstepCue = nullptr;
+    bool wasMovingLastFrame = false;
     float fpsSmoothed = 0.0F;
 
 };

@@ -12,6 +12,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         cubeRubber.Clear();
         ballRb = nullptr;
         ballTr = nullptr;
+        pendulumBobRb = nullptr;
         fpsText = nullptr;
         guiCanvasGo = nullptr;
 
@@ -101,6 +102,35 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         ball->AddComponent<Spark::PhysicsMaterial3DComponent>(0.48F, 0.38F, 0.86F);
         roots.PushBack(ball);
 
+        {
+            constexpr float kPendRadius = 0.11F;
+            constexpr float kPendRestLength = 2.1F;
+            Spark::GameObject* anchor = w.CreateGameObject();
+            anchor->GetName() = Spark::Utf8String("PhysBallPendulumAnchor");
+            Spark::TransformComponent* anchorTr = anchor->AddComponent<Spark::TransformComponent>();
+            anchorTr->SetTranslation({-5.5F, 4.8F, -2.5F});
+            anchor->AddComponent<Spark::MeshComponent>(
+                    cubeMesh, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{0.35F, 0.38F, 0.42F});
+            anchor->AddComponent<Spark::SphereCollider3DComponent>(kPendRadius, Spark::Vector3::Zero);
+            anchor->AddComponent<Spark::Rigidbody3DComponent>(Spark::RigidbodyBodyType3D::Static, 1.0F);
+            roots.PushBack(anchor);
+
+            Spark::GameObject* bob = w.CreateGameObject();
+            bob->GetName() = Spark::Utf8String("PhysBallPendulumBob");
+            Spark::TransformComponent* bobTr = bob->AddComponent<Spark::TransformComponent>();
+            bobTr->SetTranslation({-5.5F, 4.8F - kPendRestLength, -2.5F});
+            bob->AddComponent<Spark::MeshComponent>(
+                    ballMesh, Spark::SceneMeshSlot::Custom, Spark::Vector3{0.88F, 0.55F, 0.2F});
+            bob->AddComponent<Spark::SphereCollider3DComponent>(kPendRadius, Spark::Vector3::Zero);
+            pendulumBobRb = bob->AddComponent<Spark::Rigidbody3DComponent>(Spark::RigidbodyBodyType3D::Dynamic, 1.0F);
+            pendulumBobRb->SetInverseMass(1.0F / 0.35F);
+            pendulumBobRb->SetLinearDamping(0.01F);
+            Spark::SpringJoint3DComponent* spring = bob->AddComponent<Spark::SpringJoint3DComponent>(anchor, kPendRestLength);
+            spring->SetSpringStiffness(38.0F);
+            spring->SetDamping(3.8F);
+            roots.PushBack(bob);
+        }
+
         Spark::GameObject* light = w.CreateGameObject();
         light->GetName() = Spark::Utf8String("PhysBallSun");
         Spark::TransformComponent* ltr = light->AddComponent<Spark::TransformComponent>();
@@ -115,10 +145,10 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         Spark::GameObject* hud = w.CreateGameObject();
         hud->GetName() = Spark::Utf8String("PhysBallHud");
         fpsText = hud->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(16.0F, 16.0F);
-        fpsText->SetFontSizePixels(26.0F);
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText);
         fpsText->SetText(Spark::Utf8String(
-                "Physics — panel right · LMB throw · R reset · WASD+mouse · F1 capture · ESC menu"));
+                "Physics — panel right · LMB throw · R reset · SpringJoint3D pendulum left · WASD+mouse · F1 · ESC"));
         roots.PushBack(hud);
 
         guiCanvasGo = w.CreateGameObject();
@@ -152,6 +182,7 @@ void PhysicsBallThrow3DDemo::Unload(Spark::GameWorld& w)
         cubeRubber.Clear();
         ballRb = nullptr;
         ballTr = nullptr;
+        pendulumBobRb = nullptr;
         fpsText = nullptr;
         guiCanvasGo = nullptr;
     }
@@ -198,7 +229,7 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
         phys.maxFallSpeed = 130.0F;
         phys.resolveIterations = 10;
         phys.substeps = 3;
-        phys.jointIterations = 0;
+        phys.jointIterations = 8;
         /** Impulses are first-iter only in the solver; Baumgarte here fights clean bouncing. */
         phys.baumgarteContactBias = 0.0F;
         Spark::SimulatePhysics3D(world, timing, phys);

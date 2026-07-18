@@ -1,7 +1,12 @@
 #include "spark/demo/CharacterCameraDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
+#include "spark/demo/DemoFoundation.hpp"
+#include "spark/demo/DemoProceduralSound.hpp"
 
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/audio/AudioListenerComponent.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
+#include "spark/ecs/components/camera/SpringArm3DComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 
@@ -16,6 +21,10 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterVisualTr = nullptr;
         fpsHudObject = nullptr;
         fpsText = nullptr;
+        audioListenerGo = nullptr;
+        audioListenerTr = nullptr;
+        footstepCue = nullptr;
+        wasMovingLastFrame = false;
         playerAnimator = nullptr;
         useSkinnedAvatar = false;
         skyTransform = nullptr;
@@ -107,6 +116,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterRootTr->SetTranslation(rig.characterPosition);
         characterRootTr->SetRotation(
                 Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, rig.characterVisualYaw));
+        footstepCue = characterRoot->AddComponent<Spark::SoundCueComponent>();
         roots.PushBack(characterRoot);
 
         characterVisualFootOffsetY = 0.0F;
@@ -169,15 +179,32 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("CharFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(12.0F, 12.0F);
-        fpsText->SetFontSizePixels(20.0F);
-        fpsText->SetColor({0.9F, 0.95F, 1.0F});
+        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*fpsText);
         fpsText->SetText(Spark::Utf8String(
                 std::format(
                         "Character — {} · WASD walk · Shift+WASD run · M model · 1/2/3 clips · V FP · F1",
                         characterAvatarHudName.CStr())
                         .c_str()));
         roots.PushBack(fpsHudObject);
+
+        audioListenerGo = w.CreateGameObject();
+        audioListenerGo->GetName() = Spark::Utf8String("CharAudioListener");
+        audioListenerTr = audioListenerGo->AddComponent<Spark::TransformComponent>();
+        audioListenerGo->AddComponent<Spark::AudioListenerComponent>()->SetPriority(10);
+        roots.PushBack(audioListenerGo);
+
+        Spark::GameObject* springArmRig = w.CreateGameObject();
+        springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
+        springArmRig->SetParent(characterRoot);
+        Spark::TransformComponent* armTr = springArmRig->AddComponent<Spark::TransformComponent>();
+        armTr->SetTranslation({0.0F, 0.0F, 0.0F});
+        Spark::SpringArm3DComponent* springArm = springArmRig->AddComponent<Spark::SpringArm3DComponent>();
+        springArm->SetPivotTarget(characterRoot);
+        springArm->SetSocketOffset({0.0F, 1.55F, 0.0F});
+        springArm->SetArmLength(4.2F);
+        springArm->SetPitchRadians(-0.22F);
+        roots.PushBack(springArmRig);
 
         context.GetInput().SetCursorCaptured(true);
     }
@@ -196,6 +223,10 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         characterVisualTr = nullptr;
         fpsHudObject = nullptr;
         fpsText = nullptr;
+        audioListenerGo = nullptr;
+        audioListenerTr = nullptr;
+        footstepCue = nullptr;
+        wasMovingLastFrame = false;
         playerAnimator = nullptr;
         charAnimFsm = nullptr;
         characterSkinnedMesh = nullptr;
@@ -299,6 +330,19 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             characterRootTr->SetRotation(
                     useSkinnedAvatar ? (qYaw * humanModelBindFix).Normalized() : qYaw);
         }
+        if (audioListenerTr != nullptr) {
+            const Spark::Vector3 camPos = rig.CameraWorldPosition();
+            const Spark::Vector3 fwd = rig.ForwardWorld().Normalized();
+            audioListenerTr->SetTranslation(camPos);
+            if (fwd.LengthSquared() > 1.0e-8F) {
+                const float yaw = std::atan2(fwd.x, -fwd.z);
+                audioListenerTr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, yaw));
+            }
+        }
+        if (moving && !wasMovingLastFrame && footstepCue != nullptr && characterRoot != nullptr) {
+            DemoAudio::QueueCue(*characterRoot, DemoSfx::ClipPhysicsThrow(), 0.22F);
+        }
+        wasMovingLastFrame = moving;
         if (fpsText != nullptr) {
             const float dt = timing.deltaTimeSeconds;
             const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;

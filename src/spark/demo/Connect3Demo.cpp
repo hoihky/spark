@@ -88,9 +88,8 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         hudGo = w.CreateGameObject();
         hudGo->GetName() = Spark::Utf8String("Connect3Hud");
         hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
-        hudText->SetScreenPosition(12.0F, 12.0F);
-        hudText->SetFontSizePixels(19.0F);
-        hudText->SetColor({0.96F, 0.98F, 1.0F});
+        hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        DemoHud::Apply(*hudText, false);
         roots.PushBack(hudGo);
 
         camera.position = {static_cast<float>(kCols) * 0.5F * kTileWorld, static_cast<float>(kRows) * 0.5F * kTileWorld, 0.0F};

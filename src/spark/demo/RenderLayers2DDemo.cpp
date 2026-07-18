@@ -277,9 +277,8 @@ void RenderLayers2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& contex
 
     hudGo = &AddRoot(w, roots, "Hud");
     hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
-    hudText->SetScreenPosition(12.0F, 12.0F);
-    hudText->SetFontSizePixels(18.0F);
-    hudText->SetColor({0.95F, 0.98F, 0.90F});
+    hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+    DemoHud::Apply(*hudText, false);
     {
         const char* art = usingKenneyTiles && usingKenneyFarmer ? "Kenney farm art" : "procedural farm fallback";
         hudText->SetText(Spark::Utf8String(

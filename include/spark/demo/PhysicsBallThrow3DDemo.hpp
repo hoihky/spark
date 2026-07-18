@@ -13,6 +13,7 @@
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/SpringJoint3DComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/gui/GuiControls.hpp"
@@ -95,6 +96,7 @@ private:
     Spark::SharedPtr<Spark::Mesh> ballMesh;
     Spark::Rigidbody3DComponent* ballRb = nullptr;
     Spark::TransformComponent* ballTr = nullptr;
+    Spark::Rigidbody3DComponent* pendulumBobRb = nullptr;
     Spark::TextOverlayComponent* fpsText = nullptr;
     Spark::GameObject* guiCanvasGo = nullptr;
     Spark::Gui::Slider* guiGravity = nullptr;

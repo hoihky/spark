@@ -102,9 +102,8 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     helpHud = w.CreateGameObject();
     helpHud->GetName() = Utf8String("ToonHelpHud");
     helpText = helpHud->AddComponent<TextOverlayComponent>();
-    helpText->SetScreenPosition(12.0F, 12.0F);
-    helpText->SetFontSizePixels(18.0F);
-    helpText->SetColor({0.88F, 0.92F, 0.98F});
+    helpText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+    DemoHud::Apply(*helpText);
     helpText->SetText(Utf8String("…"));
     roots.PushBack(helpHud);
 }
