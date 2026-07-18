@@ -1,12 +1,12 @@
 #include "spark/demo/ToonShadingDemo.hpp"
 
 #include "spark/scene/SceneSubmit.hpp"
-#include "spark/ecs/components/MaterialComponent.hpp"
-#include "spark/ecs/components/MeshComponent.hpp"
-#include "spark/ecs/components/PointLightComponent.hpp"
-#include "spark/ecs/components/SpotLightComponent.hpp"
-#include "spark/ecs/components/TextOverlayComponent.hpp"
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/lighting/PointLightComponent.hpp"
+#include "spark/ecs/components/lighting/SpotLightComponent.hpp"
+#include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/math/Quaternion.hpp"
 
 #include <algorithm>

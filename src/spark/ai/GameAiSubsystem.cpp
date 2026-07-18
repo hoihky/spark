@@ -1,7 +1,7 @@
 #include "spark/ai/GameAiSubsystem.hpp"
 
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/AiAgentComponent.hpp"
+#include "spark/ecs/components/ai/AiAgentComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/scene/GameWorld.hpp"

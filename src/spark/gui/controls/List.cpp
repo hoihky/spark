@@ -1,6 +1,6 @@
 #include "spark/gui/controls/List.hpp"
 
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/gui/controls/Button.hpp"
 #include "spark/gui/GuiLayoutMetrics.hpp"

@@ -1,8 +1,8 @@
 #include "spark/scene/Camera.hpp"
 
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/Camera2DComponent.hpp"
-#include "spark/ecs/components/CameraComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DComponent.hpp"
+#include "spark/ecs/components/camera/CameraComponent.hpp"
 #include "spark/scene/GameWorld.hpp"
 
 namespace Spark {

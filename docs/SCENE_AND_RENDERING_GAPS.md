@@ -277,7 +277,7 @@ Prioritized for **C++ game authors** (no editor dependency):
 - **`SceneRenderParams` snapshot** — simulation and GPU stay decoupled; easy to test fill logic.
 - **`Scene` iterators + `SceneSubmit`** — opt-in manual path or one-call submit.
 - **`ComponentSnapshotRegistry`** — extend serialization without changing `SceneSerializer` signature.
-- **Header modularization** — `spark/ecs/components/*.hpp`, `spark/scene/`, `spark/engine/` compose without monolithic include.
+- **Header modularization** — `spark/ecs/components/<domain>/`, `spark/scene/`, `spark/engine/` compose without monolithic include.
 
 ---
 

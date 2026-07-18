@@ -2,9 +2,9 @@
 
 #include "spark/editor/EditorSelection.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/MeshComponent.hpp"
-#include "spark/ecs/components/PointLightComponent.hpp"
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/lighting/PointLightComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/gui/GuiTheme.hpp"
 #include "spark/gui/controls/Panel.hpp"
 #include "spark/gui/controls/StackPanel.hpp"

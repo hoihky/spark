@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/ecs/components/TilemapComponent.hpp"
+#include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Frustum.hpp"
 #include "spark/math/Matrix4.hpp"

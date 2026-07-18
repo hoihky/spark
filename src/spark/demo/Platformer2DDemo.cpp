@@ -1,9 +1,9 @@
 #include "spark/demo/Platformer2DDemo.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
-#include "spark/ecs/components/Camera2DComponent.hpp"
-#include "spark/ecs/components/Camera2DRigComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/scene/SceneSubmit.hpp"
-#include "spark/ecs/components/Sprite2DCharacterAnimFsmComponent.hpp"
+#include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
 
 namespace Spark {

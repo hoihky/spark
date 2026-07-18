@@ -34,7 +34,7 @@ Key header groups:
 
 - **Engine loop:** `spark/engine/` — `Engine`, `IGame`, `Game`, `ISceneProvider`, `IEngineContext`, `EngineContext`, `GlfwInput`, `FrameTiming`, `SceneRenderParams`.
 - **World & entities:** `spark/scene/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/Scene.hpp`.
-- **Components:** `spark/ecs/components/*.hpp` (catalog in §5.2 / §5.4; full list in §8).
+- **Components:** `spark/ecs/components/` — domain subfolders (`core/`, `rendering/`, `lighting/`, `camera/`, `physics/2d|3d/`, `animation/`, `ai/`, `audio/`, `ui/`, `world/`).
 - **Math & containers:** `spark/math/`, `spark/core/`, `spark/memory/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
 - **Fast path for lit scenes:** `spark/scene/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).

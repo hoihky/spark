@@ -1,7 +1,7 @@
 #include "spark/demo/TimeOfDayDemo.hpp"
 
 #include "spark/config.hpp"
-#include "spark/ecs/components/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 
 #include <algorithm>

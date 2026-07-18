@@ -1,7 +1,7 @@
 #include "spark/physics/SpatialHashGrid3D.hpp"
 
-#include "spark/ecs/components/BoxCollider3DComponent.hpp"
-#include "spark/ecs/components/PhysicsMaterial3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/PhysicsMaterial3DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/GameWorld.hpp"
 

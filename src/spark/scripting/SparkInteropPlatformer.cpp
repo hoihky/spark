@@ -4,7 +4,7 @@
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
-#include "spark/ecs/components/SpriteAnimatorComponent.hpp"
+#include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Texture2D.hpp"
 #include "spark/text/Font.hpp"

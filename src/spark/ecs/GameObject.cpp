@@ -1,6 +1,6 @@
 #include "spark/ecs/GameObject.hpp"
 
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/scene/GameWorld.hpp"
 

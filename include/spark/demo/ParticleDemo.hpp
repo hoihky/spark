@@ -3,7 +3,7 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/gui/GuiControls.hpp"
 #include "spark/gui/GuiPaintContext.hpp"
 

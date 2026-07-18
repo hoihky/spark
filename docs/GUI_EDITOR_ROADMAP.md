@@ -370,7 +370,7 @@ Adjust if team size > 3 or if editor is **tools-only** (no ship-as-product).
 | `include/spark/demo/SceneEditor3DDemo_detail.hpp` | Sidebar layout |
 | `src/spark/demo/SparkShellDemo.cpp` | GUI showcase |
 | *(removed)* | Legacy `ShellUiNative.cpp` (C# UI builders) |
-| `include/spark/ecs/components/GuiCanvasComponent.hpp` | Canvas ECS |
+| `include/spark/ecs/components/ui/GuiCanvasComponent.hpp` | Canvas ECS |
 
 ---
 

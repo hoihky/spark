@@ -2,7 +2,7 @@
 
 Living plan for **skeletal mesh playback**, **gameplay-driven clip control**, **blending**, **events**, and **scale**. It complements the high-level traversal/combat items in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) (Phase F) with concrete engine work items.
 
-**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/AnimatorComponent.hpp`, `include/spark/ecs/components/Character3DAnimFsmComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit*.cpp`, `shaders/scene.vert`.
+**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/animation/AnimatorComponent.hpp`, `include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit*.cpp`, `shaders/scene.vert`.
 
 **2D reference (target parity for gameplay drivers):** `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` — see [`2D_ARPG_FEATURES.md`](2D_ARPG_FEATURES.md).
 
@@ -94,7 +94,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 - [ ] C# + C API exposed
 
 ## Files (expected)
-- include/spark/ecs/components/AnimatorComponent.hpp
+- include/spark/ecs/components/animation/AnimatorComponent.hpp
 - src/spark/animation/Skeleton.cpp
 - bindings (C API + C#)
 ```
@@ -269,8 +269,8 @@ done
 |------|------|
 | `include/spark/animation/Skeleton.hpp` | Clips, palette, joint limit |
 | `src/spark/scene/skinned_mesh_gltf.cpp` | glTF import |
-| `include/spark/ecs/components/AnimatorComponent.hpp` | Runtime playback |
-| `include/spark/ecs/components/Sprite2DCharacterAnimFsmComponent.hpp` | 2D FSM pattern to mirror |
+| `include/spark/ecs/components/animation/AnimatorComponent.hpp` | Runtime playback |
+| `include/spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp` | 2D FSM pattern to mirror |
 | `src/spark/scene/SceneSubmit.cpp` | Skinned draw submission (core walk) |
 | `src/spark/scene/SceneSubmitLighting.cpp` | Directional light / profile overrides during submit |
 | `src/spark/scene/SceneSubmitMaterial.cpp` | Material texture resolve into `sceneTextures` |

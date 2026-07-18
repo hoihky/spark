@@ -6,7 +6,7 @@
 #include "spark/audio/SoundClip.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/audio/SoundFileLoader.hpp"
-#include "spark/ecs/components/SpriteAnimatorComponent.hpp"
+#include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/physics/Collision2D.hpp"
 #include "spark/physics/SpatialHashGrid2D.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"

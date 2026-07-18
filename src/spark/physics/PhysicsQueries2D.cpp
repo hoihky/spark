@@ -1,9 +1,9 @@
 #include "spark/physics/PhysicsQueries2D.hpp"
 
-#include "spark/ecs/components/BoxCollider2DComponent.hpp"
-#include "spark/ecs/components/CircleCollider2DComponent.hpp"
-#include "spark/ecs/components/Rigidbody2DComponent.hpp"
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/physics/2d/BoxCollider2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/physics/CollisionFilter2D.hpp"
 #include "spark/scene/GameWorld.hpp"

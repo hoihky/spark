@@ -2,10 +2,10 @@
 
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/ecs/components/BlendModeComponent.hpp"
-#include "spark/ecs/components/SpriteComponent.hpp"
-#include "spark/ecs/components/TextOverlayComponent.hpp"
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/BlendModeComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteComponent.hpp"
+#include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
 
 #include <algorithm>

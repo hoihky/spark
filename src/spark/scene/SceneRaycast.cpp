@@ -1,9 +1,9 @@
 #include "spark/scene/SceneRaycast.hpp"
 
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/AnimatorComponent.hpp"
-#include "spark/ecs/components/MeshComponent.hpp"
-#include "spark/ecs/components/SkinnedMeshComponent.hpp"
+#include "spark/ecs/components/animation/AnimatorComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/MeshRaycast.hpp"
 #include "spark/scene/Scene.hpp"

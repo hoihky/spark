@@ -1,7 +1,7 @@
 #include "spark/physics/SpatialHashGrid2D.hpp"
 
-#include "spark/ecs/components/BoxCollider2DComponent.hpp"
-#include "spark/ecs/components/CircleCollider2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/BoxCollider2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/GameWorld.hpp"
 

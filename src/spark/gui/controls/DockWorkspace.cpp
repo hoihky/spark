@@ -1,7 +1,7 @@
 #include "spark/gui/DockLayoutStore.hpp"
 #include "spark/gui/controls/DockWorkspace.hpp"
 
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/gui/GuiPaintContext.hpp"
 #include "spark/gui/GuiTheme.hpp"
 #include "spark/gui/controls/Panel.hpp"

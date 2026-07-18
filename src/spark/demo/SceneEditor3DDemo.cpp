@@ -1,9 +1,9 @@
 #include "spark/demo/SceneEditor3DDemo.hpp"
 #include "spark/demo/SceneEditor3DDemo_detail.hpp"
 
-#include "spark/ecs/components/DirectionalLightComponent.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
-#include "spark/ecs/components/SpotLightComponent.hpp"
+#include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
+#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 #include "spark/gui/GuiContextMenu.hpp"
 #include "spark/gui/GuiScene.hpp"
 #include "spark/gui/Widget.hpp"

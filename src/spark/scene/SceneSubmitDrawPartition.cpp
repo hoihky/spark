@@ -3,7 +3,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/BlendModeComponent.hpp"
+#include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"

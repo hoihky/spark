@@ -2,7 +2,7 @@
 
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/ecs/components/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 
 namespace Spark {
 

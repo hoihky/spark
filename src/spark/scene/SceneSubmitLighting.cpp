@@ -1,7 +1,7 @@
 #include "spark/scene/detail/SceneSubmitLighting.hpp"
 
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/DirectionalLightComponent.hpp"
+#include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"

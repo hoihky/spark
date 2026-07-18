@@ -1,7 +1,7 @@
 #include "spark/render/sprites2d/Vulkan2DCompositePass.hpp"
 
 #include "spark/core/Array.hpp"
-#include "spark/ecs/components/SpriteLighting2DComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/scene/DrawableSortKey.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 

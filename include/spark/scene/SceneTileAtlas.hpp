@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/ecs/components/TilemapComponent.hpp"
+#include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/math/Vector4.hpp"
 
 #include <cstdint>

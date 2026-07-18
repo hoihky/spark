@@ -1,6 +1,6 @@
 #include "spark/scene/SceneSubmit.hpp"
 
-#include "spark/ecs/components/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/Texture2D.hpp"

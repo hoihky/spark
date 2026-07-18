@@ -3,7 +3,7 @@
 #include "spark/scene/DrawableSortKey.hpp"
 #include "spark/scene/DrawableSortResolver.hpp"
 
-#include "spark/ecs/components/TilemapComponent.hpp"
+#include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/scene/GameWorld.hpp"
 
 #include <cstdio>

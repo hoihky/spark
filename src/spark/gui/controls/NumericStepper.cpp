@@ -1,7 +1,7 @@
 #include "spark/gui/controls/NumericStepper.hpp"
 
 #include "spark/core/Utf8String.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/gui/GuiPaintContext.hpp"
 #include "spark/gui/GuiTheme.hpp"

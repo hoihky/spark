@@ -1,8 +1,8 @@
 #include "spark/demo/RenderLayers2DDemo.hpp"
 
-#include "spark/ecs/components/Camera2DComponent.hpp"
-#include "spark/ecs/components/Camera2DRigComponent.hpp"
-#include "spark/ecs/components/BlendModeComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
+#include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/scene/SceneSubmit.hpp"
 
 #include <cmath>

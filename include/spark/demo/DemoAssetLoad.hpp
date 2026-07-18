@@ -2,7 +2,7 @@
 
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/ecs/components/SpriteAnimatorComponent.hpp"
+#include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/scene/Texture2D.hpp"
 

@@ -1,7 +1,7 @@
 #include "spark/audio/SoundSubsystem.hpp"
 
 #include "spark/audio/SoundEngine.hpp"
-#include "spark/ecs/components/SoundCueComponent.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/scene/GameWorld.hpp"

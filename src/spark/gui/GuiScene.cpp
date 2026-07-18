@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/gui/EditorLayoutStore.hpp"

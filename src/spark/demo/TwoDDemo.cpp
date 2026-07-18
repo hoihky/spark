@@ -1,6 +1,6 @@
 #include "spark/demo/TwoDDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
-#include "spark/ecs/components/BlendModeComponent.hpp"
+#include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 
 namespace Spark {
 

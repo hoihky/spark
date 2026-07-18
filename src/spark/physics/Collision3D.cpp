@@ -1,8 +1,8 @@
 #include "spark/physics/Collision3D.hpp"
 
-#include "spark/ecs/components/BoxCollider3DComponent.hpp"
-#include "spark/ecs/components/Rigidbody3DComponent.hpp"
-#include "spark/ecs/components/SphereCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"

@@ -4,10 +4,10 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoProceduralSound.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/ecs/components/Camera2DRigComponent.hpp"
-#include "spark/ecs/components/SpriteAnimatorComponent.hpp"
-#include "spark/ecs/components/Sprite2DCharacterAnimFsmComponent.hpp"
-#include "spark/ecs/components/SpriteLighting2DComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
+#include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
+#include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
 
 #include <algorithm>

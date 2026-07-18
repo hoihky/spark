@@ -1,8 +1,8 @@
 #include "spark/scene/DrawableSortResolver.hpp"
 
 #include "spark/ecs/GameObject.hpp"
-#include "spark/ecs/components/RenderLayerComponent.hpp"
-#include "spark/ecs/components/SortingGroupComponent.hpp"
+#include "spark/ecs/components/rendering/RenderLayerComponent.hpp"
+#include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
 #include "spark/scene/RenderLayerRegistry.hpp"
 
 namespace Spark {

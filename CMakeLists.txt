@@ -451,23 +451,23 @@ set(SPARK_ENGINE_SOURCES
         src/spark/engine/EngineContext.cpp
         src/spark/engine/GlfwInput.cpp
         src/spark/ecs/GameObject.cpp
-        src/spark/ecs/components/TransformComponent.cpp
-        src/spark/ecs/components/MeshComponent.cpp
-        src/spark/ecs/components/SpriteComponent.cpp
-        src/spark/ecs/components/SpriteAnimatorComponent.cpp
-        src/spark/ecs/components/Sprite2DCharacterAnimFsmComponent.cpp
-        src/spark/ecs/components/Character3DAnimFsmComponent.cpp
-        src/spark/ecs/components/TilemapComponent.cpp
-        src/spark/ecs/components/MaterialComponent.cpp
-        src/spark/ecs/components/PointLightComponent.cpp
-        src/spark/ecs/components/DirectionalLightComponent.cpp
-        src/spark/ecs/components/SpotLightComponent.cpp
-        src/spark/ecs/components/CameraComponent.cpp
-        src/spark/ecs/components/Camera2DComponent.cpp
-        src/spark/ecs/components/Camera2DRigComponent.cpp
-        src/spark/ecs/components/SkinnedMeshComponent.cpp
-        src/spark/ecs/components/AnimatorComponent.cpp
-        src/spark/ecs/components/CollisionComponent.cpp
+        src/spark/ecs/components/core/TransformComponent.cpp
+        src/spark/ecs/components/rendering/MeshComponent.cpp
+        src/spark/ecs/components/rendering/SpriteComponent.cpp
+        src/spark/ecs/components/animation/SpriteAnimatorComponent.cpp
+        src/spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.cpp
+        src/spark/ecs/components/animation/Character3DAnimFsmComponent.cpp
+        src/spark/ecs/components/rendering/TilemapComponent.cpp
+        src/spark/ecs/components/rendering/MaterialComponent.cpp
+        src/spark/ecs/components/lighting/PointLightComponent.cpp
+        src/spark/ecs/components/lighting/DirectionalLightComponent.cpp
+        src/spark/ecs/components/lighting/SpotLightComponent.cpp
+        src/spark/ecs/components/camera/CameraComponent.cpp
+        src/spark/ecs/components/camera/Camera2DComponent.cpp
+        src/spark/ecs/components/camera/Camera2DRigComponent.cpp
+        src/spark/ecs/components/rendering/SkinnedMeshComponent.cpp
+        src/spark/ecs/components/animation/AnimatorComponent.cpp
+        src/spark/ecs/components/physics/CollisionComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/LocomotionClipSet.cpp
         src/spark/scene/FlyCamera.cpp
@@ -494,11 +494,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/Texture2D.cpp
         src/spark/scene/stb_image_impl.cpp
         src/spark/text/Font.cpp
-        src/spark/ecs/components/TextOverlayComponent.cpp
-        src/spark/ecs/components/GuiCanvasComponent.cpp
-        src/spark/ecs/components/SkyComponent.cpp
-        src/spark/ecs/components/ParticleEmitterComponent.cpp
-        src/spark/ecs/components/TerrainComponent.cpp
+        src/spark/ecs/components/rendering/TextOverlayComponent.cpp
+        src/spark/ecs/components/ui/GuiCanvasComponent.cpp
+        src/spark/ecs/components/rendering/SkyComponent.cpp
+        src/spark/ecs/components/rendering/ParticleEmitterComponent.cpp
+        src/spark/ecs/components/rendering/TerrainComponent.cpp
         src/spark/gui/GuiInputState.cpp
         src/spark/gui/GuiLayoutMetrics.cpp
         src/spark/gui/GuiWidgetPopups.cpp
@@ -621,8 +621,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ai/goap/GoapPlanner.cpp
         src/spark/ai/fuzzy/FuzzyLogic.cpp
         src/spark/ai/GameAiSubsystem.cpp
-        src/spark/ecs/components/AiAgentComponent.cpp
-        src/spark/ecs/components/SoundCueComponent.cpp
+        src/spark/ecs/components/ai/AiAgentComponent.cpp
+        src/spark/ecs/components/audio/SoundCueComponent.cpp
         src/spark/audio/SoundClip.cpp
         src/spark/audio/WavDecoder.cpp
         src/spark/audio/SoundMixer.cpp
