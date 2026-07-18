@@ -25,9 +25,9 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 
 | API | Role |
 |-----|------|
-| `GameWorld` | `CreateGameObject`, `DestroyGameObject`, `SetParent`, `UpdateGameObjects`, asset `Load*` / `Register*` caches |
+| `GameWorld` | `CreateGameObject`, `DestroyGameObject`, `SetParent`, `UpdateGameObjects`; asset I/O via **`GameWorldAssetCache`** (`Load*` / `Register*`) |
 | `GameObject` | `AddComponent<T>`, `GetComponent<T>`, `GetWorldMatrix`, signals |
-| `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **32** `ComponentKind` values |
+| `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **37** concrete `ComponentKind` values (+ `Unknown`) |
 | `Scene` | Query iterators: `ForEachDrawable`, `ForEachSkinnedDrawable`, lights, sky, GUI, particles; frustum variants |
 
 ### Scene → render bridge
@@ -36,6 +36,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 |-----|------|
 | `FillStandardLitSceneFromWorld` | Walk ECS → fill `SceneRenderParams` (optional `Scene*` for frustum culling) |
 | `SubmitStandardLitSceneFromWorld` | Fill + `IEngineContext::SetSceneRenderParams` |
+| `SceneSubmitLighting.cpp` / `SceneSubmitMaterial.cpp` / `SceneSubmitDrawPartition.cpp` | Lighting overrides, material texture resolve, opaque/transparent partition |
 | `ApplyMaterialComponentToSceneDrawItem` | Map `MaterialComponent` textures/scalars onto `SceneDrawItem` |
 | `PaintGuiCanvases` / `ProcessGuiCanvasesInput` | Retained GUI → params + input |
 
@@ -45,7 +46,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 |-----|------|
 | `SceneSerializer` / `SceneDeserializer` | Text format **`spark_scene_v4`** (reads v3) |
 | `SceneDocument` / `SceneDocumentHeader` | Entity list + optional `name`, `assets_root`, `scene_uid` headers |
-| `ComponentSnapshotRegistry` | Pluggable handlers; **18** kinds registered today |
+| `ComponentSnapshotRegistry` | Pluggable handlers; **23** kinds registered today |
 | `SceneManager` | Runtime load/unload of scene files on one `GameWorld` (additive by default) |
 | `GameWorldAssetLoader` | Background decode for glTF, skinned glTF, textures, OBJ; commit via `Pump` |
 
@@ -113,12 +114,12 @@ C <kind> <payload>
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Handler coverage** | 19 / 32 kinds | Handlers for `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … |
+| **Handler coverage** | 23 / 37 kinds | Handlers for `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … |
 | **Asset references** | Paths embedded in snapshots | Stable asset IDs, optional binary format, version migration hooks |
 | **Partial apply** | `Apply` creates full document | Merge into existing world, diff/patch documents |
 | **Runtime registration** | `ComponentSnapshotRegistry::Default()` fixed set | Public `RegisterHandler` for game-specific `GameComponent` subclasses |
 
-Registered today: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D.
+Registered today: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig.
 
 **Runtime load flow:** `SceneManager::BeginLoadSceneAsync` → entities created immediately → asset-dependent components deferred → call `Pump()` each frame until `IsSceneReady`. Sync path: `LoadSceneFromFile` pumps until ready.
 
@@ -259,7 +260,7 @@ Prioritized for **C++ game authors** (no editor dependency):
 
 | Phase | Public API work | Unlocks |
 |-------|-----------------|---------|
-| **1** | Serialization handlers for lights, sprites, physics, terrain | Save/load real gameplay scenes |
+| **1** | ~~Serialization handlers for lights, sprites, 3D physics, terrain~~; extend for `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | Save/load real gameplay scenes |
 | **2** | ~~`DirectionalLightComponent`; `Scene::RaycastPick`~~ | Less boilerplate in `OnRender` |
 | **3** | ~~Transparent draw list + sort on `SceneRenderParams`~~ | Glass, foliage, alpha meshes |
 | **4** | `AssetHandle` + async `RequestLoad*` | Large levels without hitches |
@@ -293,4 +294,4 @@ Prioritized for **C++ game authors** (no editor dependency):
 
 ---
 
-*Last updated: 2026-07 — 32 `ComponentKind` values, 19 serialization handlers, `DirectionalLightComponent`, `Scene::RaycastPick`, `transparentDraws` submit + Vulkan pass.*
+*Last updated: 2026-07 — 37 `ComponentKind` values (+ `Unknown`), 23 serialization handlers, `GameWorldAssetCache`, split `SceneSubmit` modules, `DirectionalLightComponent`, `Scene::RaycastPick`, `transparentDraws` submit + Vulkan pass.*

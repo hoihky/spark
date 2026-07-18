@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 #include "spark/scene/SceneSpriteTileCull.hpp"
 #include "spark/scene/Texture2D.hpp"
 

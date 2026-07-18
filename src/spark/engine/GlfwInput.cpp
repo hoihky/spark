@@ -1,6 +1,6 @@
 #include "spark/engine/GlfwInput.hpp"
 
-#include "spark/render/Window.hpp"
+#include "spark/render/platform/Window.hpp"
 
 #include <cmath>
 #include <cstring>

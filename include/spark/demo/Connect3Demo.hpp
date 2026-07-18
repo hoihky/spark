@@ -6,7 +6,7 @@
 #include "spark/ecs/components/SpriteComponent.hpp"
 #include "spark/ecs/components/TextOverlayComponent.hpp"
 #include "spark/ecs/components/TransformComponent.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 #include <algorithm>
 #include <cmath>

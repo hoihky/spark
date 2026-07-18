@@ -6,7 +6,7 @@
 #include "spark/ecs/components/BlendModeComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 #include "spark/scene/DrawableSortKey.hpp"
 #include "spark/scene/DrawableSortResolver.hpp"
 

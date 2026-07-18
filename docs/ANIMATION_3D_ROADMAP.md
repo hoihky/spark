@@ -2,7 +2,7 @@
 
 Living plan for **skeletal mesh playback**, **gameplay-driven clip control**, **blending**, **events**, and **scale**. It complements the high-level traversal/combat items in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) (Phase F) with concrete engine work items.
 
-**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/AnimatorComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit.cpp`, `shaders/scene.vert`.
+**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/AnimatorComponent.hpp`, `include/spark/ecs/components/Character3DAnimFsmComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit*.cpp`, `shaders/scene.vert`.
 
 **2D reference (target parity for gameplay drivers):** `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` — see [`2D_ARPG_FEATURES.md`](2D_ARPG_FEATURES.md).
 
@@ -271,10 +271,13 @@ done
 | `src/spark/scene/skinned_mesh_gltf.cpp` | glTF import |
 | `include/spark/ecs/components/AnimatorComponent.hpp` | Runtime playback |
 | `include/spark/ecs/components/Sprite2DCharacterAnimFsmComponent.hpp` | 2D FSM pattern to mirror |
-| `src/spark/scene/SceneSubmit.cpp` | Skinned draw submission |
+| `src/spark/scene/SceneSubmit.cpp` | Skinned draw submission (core walk) |
+| `src/spark/scene/SceneSubmitLighting.cpp` | Directional light / profile overrides during submit |
+| `src/spark/scene/SceneSubmitMaterial.cpp` | Material texture resolve into `sceneTextures` |
+| `src/spark/scene/SceneSubmitDrawPartition.cpp` | Opaque vs transparent draw partition |
 | `shaders/scene.vert` | GPU skinning |
 | `src/spark/demo/Maze3DDemo.cpp` | Skinned character integration |
-| *(removed)* | C# bindings removed — re-add when scripting layer returns |
+| `scripting/bindings/generated/Spark.Bindings/` | C# animator API (`AnimatorComponent`, loop modes, crossfade) |
 
 ---
 

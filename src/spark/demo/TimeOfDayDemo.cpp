@@ -2,7 +2,7 @@
 
 #include "spark/config.hpp"
 #include "spark/ecs/components/MaterialComponent.hpp"
-#include "spark/render/SceneLightingProfile.hpp"
+#include "spark/render/lighting/SceneLightingProfile.hpp"
 
 #include <algorithm>
 #include <cmath>

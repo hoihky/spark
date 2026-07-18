@@ -14,7 +14,7 @@ Spark is a **C++23** codebase that provides:
 - **Forward-lit 3D** with directional + optional **shadow map**, **point** and **spot** lights, **PBR** and **toon** shading, optional **normal** and **ORM** texture maps on draws.
 - **Optional** 2D and **3D** toy physics (`SimulatePhysics2D`, `SimulatePhysics3D`).
 - A **retained-mode GUI** (`GuiCanvasComponent`, widgets under `spark/gui/`).
-- **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorld`.
+- **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
 The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus built-in modes (3D fly scenes, maze, 2D demos, GUI showcase, etc.).
 
 ---
@@ -32,12 +32,12 @@ The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemo
 
 Key header groups:
 
-- **Engine loop:** `spark/engine/` — `Engine`, `IGame`, `Game`, `IEngineContext`, `FrameTiming`, `SceneRenderParams`.
+- **Engine loop:** `spark/engine/` — `Engine`, `IGame`, `Game`, `ISceneProvider`, `IEngineContext`, `EngineContext`, `GlfwInput`, `FrameTiming`, `SceneRenderParams`.
 - **World & entities:** `spark/scene/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/Scene.hpp`.
 - **Components:** `spark/ecs/components/*.hpp` (catalog in §5.2 / §5.4; full list in §8).
 - **Math & containers:** `spark/math/`, `spark/core/`, `spark/memory/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
-- **Fast path for lit scenes:** `spark/scene/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld`.
+- **Fast path for lit scenes:** `spark/scene/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).
 
 ---
 
@@ -160,9 +160,9 @@ classDiagram
 
 **How to read this diagram**
 
-- **`IGame`** is the only polymorphic “application” type the engine loop calls; **`Game`** is an optional base that owns **`Scene`** and forwards **`OnUpdate`** to **`GameWorld::UpdateGameObjects`**.
+- **`IGame`** is the only polymorphic “application” type the engine loop calls; **`Game`** is an optional base that owns **`Scene`**, implements **`ISceneProvider`**, and forwards **`OnUpdate`** to **`GameWorld::UpdateGameObjects`**.
 - **`Scene`** does not own entities; it is a **query façade** over the same **`GameWorld`** (iterators for drawables, lights, GUI roots, etc.).
-- **`IEngineContext`** is the stable façade for gameplay; **`SetSceneRenderParams`** ultimately reaches **`VulkanRenderer`** without game code including Vulkan headers.
+- **`IEngineContext`** is the stable façade for gameplay; the default implementation is **`EngineContext`**; input is **`GlfwInput`**. **`SetSceneRenderParams`** ultimately reaches **`VulkanRenderer`** without game code including Vulkan headers.
 - **`GameObject` ↔ `GameComponent`**: one object holds a **set** of components (typically one instance per concrete `ComponentKind`); components receive **`OnUpdate`** when the world ticks.
 
 ---
@@ -178,7 +178,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Engine entry** | Owns window, presenter, input, runs the loop | `spark/engine/Engine.hpp`, `src/Engine.cpp` |
 | **Game contract** | Your simulation + render hooks | `IGame` (`spark/engine/IGame.hpp`), optional `Game` base (`spark/engine/Game.hpp`) |
 | **Per-frame timing** | Delta time, wall time, frame counter | `FrameTiming` (`spark/engine/FrameTiming.hpp`) |
-| **Engine façade to gameplay** | Input, framebuffer size, scene params hand-off | `IEngineContext` (`spark/engine/IEngineContext.hpp`) |
+| **Engine façade to gameplay** | Input, framebuffer size, scene params hand-off | `IEngineContext` / `EngineContext` (`spark/engine/IEngineContext.hpp`, `EngineContext.hpp`); input via `GlfwInput` |
 | **Presentation abstraction** | Swapchain / GPU without leaking into `IGame` | `IFramePresenter` (`spark/engine/IFramePresenter.hpp`), default impl `VulkanRenderer` |
 | **Shell / demos** | Launcher and built-in modes | `NewShellDemoGame`, modes under `include/spark/demo/` |
 
@@ -207,7 +207,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Punctual shadows** | Spot atlas + point depth array | `punctualShadowsEnabled`; `castsShadow` on point/spot lights — see [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) |
 | **Point lights** | Omnidirectional; ECS → `pointLights`; **256** max on GPU | `ScenePointLight`, `PointLightComponent`, `MaxPointLights` |
 | **Spot lights** | Cone lights; forward axis = object **local −Z** in world space; **128** max on GPU | `SceneSpotLight`, `SpotLightComponent`, `MaxSpotLights`; degrees on component, radians in `SceneSpotLight` |
-| **SSAO** | Optional screen-space AO before tonemap | `ssaoEnabled`, `ssaoRadius`, `ssaoBias`, `ssaoStrength` — [`VulkanScreenSpaceEffectsPass`](include/spark/render/VulkanScreenSpaceEffectsPass.hpp), `post_process.frag` |
+| **SSAO** | Optional screen-space AO before tonemap | `ssaoEnabled`, `ssaoRadius`, `ssaoBias`, `ssaoStrength` — [`VulkanScreenSpaceEffectsPass`](include/spark/render/post/VulkanScreenSpaceEffectsPass.hpp), `post_process.frag` |
 | **World sprites** | Alpha quads after opaque scene | `SceneSpriteDraw`, `sprites`, `spriteSortMode` (`SceneSpriteSortMode`) |
 | **Particles** | CPU billboards, additive pass | `SceneParticleInstance`, `particles`, `particleCameraRight` / `Up` |
 | **Screen UI** | Solid rects + text, three paint layers | `screenRects` / `screenTexts`, overlay, late; `ScreenRectDraw`, `ScreenTextDraw`, `NextUiPaintOrder` |
@@ -233,7 +233,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
-| **Sprites** | Textured quads, sorting, optional 2D lighting modes | `SpriteComponent`, `SceneSpriteDraw`, `SpriteLighting2DMode` (`spark/render/SpriteLighting2D.hpp`) |
+| **Sprites** | Textured quads, sorting, optional 2D lighting modes | `SpriteComponent`, `SceneSpriteDraw`, `SpriteLighting2DMode` (`spark/render/sprites2d/SpriteLighting2D.hpp`) |
 | **Sprite animation** | Flipbook / state machine hooks | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` |
 | **Tilemaps** | Grid of tiles | `TilemapComponent` |
 | **2D camera** | Ortho view-projection helper | `Camera2D` (`spark/scene/Camera2D.hpp`) |
@@ -269,7 +269,8 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
-| **Widget tree** | Layout + controls | `spark/gui/` — `Widget`, `GuiControls.hpp`, themes (`GuiTheme.hpp`) |
+| **Widget tree** | Layout + controls | `spark/gui/` — `Widget`, `GuiControls.hpp`, themes (`GuiTheme.hpp`, `GuiThemeCatalog.hpp`) |
+| **Label tone** | Theme-aware text color at paint time | `LabelTone` (`Primary` / `Muted` / `Custom`) on `Label` / `WrappingLabel` (`GuiTypes.hpp`) |
 | **Screen canvas** | Root + sort order | `GuiCanvasComponent` |
 | **Input → focus** | Hit testing, focus | `ProcessGuiCanvasesInput` (`spark/gui/GuiScene.hpp`) |
 | **Paint → params** | Emit rects/text into `SceneRenderParams` | `PaintGuiCanvases` |
@@ -338,7 +339,7 @@ engine.Run();
 - Allocates **`GameObject`** instances (`CreateGameObject` / `DestroyGameObject`).
 - Maintains **parent/child** links (`SetParent` on world or object).
 - Runs **`UpdateGameObjects`** → each object’s components receive `OnUpdate`.
-- **Caches assets:** `LoadMesh`, `LoadGltf`, `LoadSkinnedGltf`, `LoadTexture`, `RegisterMesh`, `RegisterTexture`, `RegisterGltf`, `RegisterSkinnedGltf`, plus lookups by path/key.
+- **Caches assets** via **`GameWorldAssetCache`** (`assetCache`): `LoadMesh`, `LoadGltf`, `LoadSkinnedGltf`, `LoadTexture`, `RegisterMesh`, `RegisterTexture`, `RegisterGltf`, `RegisterSkinnedGltf`, plus lookups by path/key.
 - **Async path:** use `GameWorldAssetLoader` (or `SceneManager::GetAssetLoader()`) and `Pump` each frame; caches update only on the main thread.
 - Holds **UI fonts** for screen text: `SetUiFont` / `SetUiBoldFont` (used with `TextOverlayComponent` / `SceneRenderParams::uiFont`).
 
@@ -380,7 +381,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 
 `SceneLoadOptions::additive` defaults to `true`. Set `additive = false` to replace all loaded instances. `assetsRoot` resolves relative mesh/texture paths in the file; v4 `H assets_root` is used when options omit it.
 
-Registered snapshot kinds (18): Transform, Mesh, Material, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D. Mesh/material/sky/sprite restores may defer until `GameWorldAssetLoader` finishes the path.
+Registered snapshot kinds (23): Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig. Mesh/material/sky/sprite restores may defer until `GameWorldAssetLoader` finishes the path.
 
 **Demo:** `SceneEditor3DDemo` uses `SceneManager` for v3/v4 load (async asset decode + `Pump` each frame). Legacy v1/v2 editor format still loads synchronously.
 
@@ -426,6 +427,7 @@ Representative **3D / rendering** components:
 | `AnimatorComponent` | Skeletal clip playback: `AnimLoopMode`, crossfade, `IsClipFinished`, `ComputeJointPalette`. |
 | `PointLightComponent` | Omnidirectional light; position from world matrix. |
 | `SpotLightComponent` | Cone light; axis = **local −Z** in world space; inner/outer cone in **degrees** on the component. |
+| `DirectionalLightComponent` | Sun/key light; overrides `SceneRenderParams` directional fields when present during submit. |
 | `SkyComponent` | Sky rendering mode + enable flag; used with `MeshComponent`. |
 | `TextOverlayComponent` | Screen-space HUD text (separate from GUI canvas). |
 | `ParticleEmitterComponent` | CPU particles; standard submit fills `SceneRenderParams::particles`. |
@@ -509,7 +511,17 @@ Use this when your game matches the **stock lit pipeline** and you do not need c
 
 ### 9.3 VulkanRenderer internals (rendering logic)
 
-`VulkanRenderer` (`include/spark/render/VulkanRenderer.hpp`, `src/spark/render/VulkanRenderer.cpp`) is the default **`IFramePresenter`**. It owns the **Vulkan instance**, **device**, **swapchain**, **depth buffer**, **command pool / per–swapchain-image command buffers**, **synchronization** (semaphores + fences), and **all GPU resources** needed to interpret a `SceneRenderParams` snapshot.
+`VulkanRenderer` (`include/spark/render/core/VulkanRenderer.hpp`, `src/spark/render/core/VulkanRenderer.cpp`) is the default **`IFramePresenter`**. It **orchestrates** the frame graph and scene draw recording; lower-level ownership is split across focused types:
+
+| Type | Role |
+|------|------|
+| **`VulkanDeviceContext`** | Vulkan instance, physical/logical device, queues, swapchain images |
+| **`VulkanFrameSync`** | Per-frame fences, acquire/present semaphores, frames-in-flight indexing |
+| **`VulkanFrameCapture`** | Screenshot / video capture hooks |
+| **`VulkanSceneDescriptors`** | Scene descriptor pool/layout and per-frame descriptor sets |
+| **`SceneLightingResolver`** | Resolves `SceneLightingProfile`, time-of-day, and ambient into GPU-ready lighting (`include/spark/render/lighting/SceneLightingResolver.hpp`) |
+
+Pass implementations live under `include/spark/render/{shadow,scene,post,sprites2d,ui,capture}/` — see the render subfolder table in [`README.md`](../README.md).
 
 #### Frame loop and presentation
 
@@ -550,7 +562,7 @@ Inside the **HDR scene** subpass the renderer switches pipelines:
 
 #### Scene uniforms and textures
 
-- **`WriteUniformBuffer`** fills **`SceneUniformGpu`** via `VulkanSceneUniformWriter` — view-projection, directional light, camera position, ambient, inverse view-projection, viewport size (shadow V-flip in `.w`), CSM data, cluster grid metadata, IBL params, and time. Punctual lights are uploaded to **cluster SSBOs** (not the UBO).
+- **`WriteUniformBuffer`** fills **`SceneUniformGpu`** via `VulkanSceneUniformWriter` (struct in `include/spark/render/scene/VulkanSceneUniformGpu.hpp`) — view-projection, directional light, camera position, ambient, inverse view-projection, viewport size (shadow V-flip in `.w`), CSM data, cluster grid metadata, IBL params, and time. `SceneLightingResolver::Resolve` may adjust sun/ambient before upload. Punctual lights are uploaded to **cluster SSBOs** (not the UBO).
 - **Descriptor set (scene):** binding **0** UBO, **1** scene texture array, **2** skin SSBO, **3** directional shadow atlas, **4**–**5** cluster lights/grid SSBOs, **6**–**8** punctual shadow SSBO + atlases.
 - **`RecordSceneTextureUploads`** resizes/stages **RGBA8** textures from `SceneRenderParams::sceneTextures` into the array image when the **pointer set** changes (dirty tracking via `lastSceneUploadedTexturePtrs`), so unchanged frames skip redundant **`vkCmdCopyBufferToImage`**.
 
@@ -572,7 +584,7 @@ The main mesh path loads **`scene.vert.spv`** / **`scene.frag.spv`**; post-proce
 
 #### Extending the GPU path
 
-Any change that alters **shader inputs** must stay consistent across three places: **`SceneRenderParams` / draw structs**, **`VulkanRenderer` upload + push/descriptor logic**, and **GLSL** (`*.vert` / `*.frag` sources that compile to the shipped `.spv`). Prefer documenting packed layouts in comments beside **`SceneUniformGpu`** / **`ModelPushConstants`** in `VulkanRenderer.hpp` and the public structs in `SceneRenderParams.hpp`.
+Any change that alters **shader inputs** must stay consistent across three places: **`SceneRenderParams` / draw structs**, **`VulkanRenderer` upload + push/descriptor logic**, and **GLSL** (`*.vert` / `*.frag` sources that compile to the shipped `.spv`). Prefer documenting packed layouts in comments beside **`SceneUniformGpu`** (`VulkanSceneUniformGpu.hpp`) / **`ModelPushConstants`** (`VulkanSceneOpaquePass.hpp`) and the public structs in `SceneRenderParams.hpp`.
 
 ---
 
@@ -603,7 +615,8 @@ Call these from your **`OnUpdate`** (or from a `GameComponent::OnUpdate`) **afte
 
 ## 12. GUI (`spark/gui/`)
 
-- Compose widgets (`Panel`, `StackPanel`, `GridPanel`, `GroupBox`, `Label`, `Button`, `MenuBar`, `Slider`, `RadioGroup`/`RadioButton`, `NumericStepper`, `Separator`, …) — see `spark/gui/GuiControls.hpp`.
+- Compose widgets (`Panel`, `StackPanel`, `GridPanel`, `GroupBox`, `Label`, `WrappingLabel`, `Button`, `MenuBar`, `Slider`, `RadioGroup`/`RadioButton`, `NumericStepper`, `Separator`, …) — see `spark/gui/GuiControls.hpp`.
+- **Themes** — six built-in presets in `GuiThemeCatalog` (`ClassicMint`, `SceneEditorDark`, `HighContrastLight`, `HighContrastDark`, `HighContrastYellowOnBlack`, `TwilightSlate`); `Label` / `WrappingLabel` resolve colors via `LabelTone`.
 - **Docking** — `DockManager`, `DockPanel`, `DockSidePane`, `DockFrameLayout` (`spark/gui/docking/`) for editor-style left/center/right workspaces with persisted layout state.
 - **Text layout** — `DrawTextInRect`, `EllipsizeUtf8`, `TextOverflow` / `TextWrap` on labels and buttons.
 - **Context menu** — `GuiContextMenu` (right-click menus; wired from `GuiScene.cpp`).
@@ -632,7 +645,7 @@ Sort order: `GuiCanvasComponent::SetSortOrder` — lower draws first. Overlay/la
 2. `spark/scene/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/Scene.hpp`
 3. `spark/engine/SceneRenderParams.hpp` (what a frame expects on the GPU side)
 4. **This guide — §4.1 (class map), §7.4 (sim vs render), §9.3 (`VulkanRenderer` internals), §5 (feature catalog)**
-5. `include/spark/render/VulkanRenderer.hpp` + `src/spark/render/VulkanRenderer.cpp` (implementation detail; large)
+5. `include/spark/render/core/VulkanRenderer.hpp` + `src/spark/render/core/VulkanRenderer.cpp` (implementation detail; large)
 6. `include/spark/demo/ThreeDDemo.hpp` — camera + glTF + lights + manual submit pattern
 7. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
 8. `spark/gui/GuiScene.hpp` + `spark/demo/ShellDemoUi.hpp` — layout helpers used by the shell
@@ -657,7 +670,7 @@ Sort order: `GuiCanvasComponent::SetSortOrder` — lower draws first. Overlay/la
 | `SceneUniformGpu` | std140 UBO (`VulkanSceneUniformGpu.hpp`): matrices, directional + ambient, shadow params, cluster/IBL metadata — must match `scene_ubo.glsl`. |
 | `VulkanScreenSpaceEffectsPass` | Optional SSAO: depth copy + fullscreen composite to scratch HDR before tonemap. |
 | `SceneSpotLight` | CPU cone light: position, range, **normalized** `directionWorld`, inner/outer **full cone angles in radians**, color, intensity. |
-| `ModelPushConstants` | Per-draw push constant block on the main scene pipeline (transform, material, `textureLayer`, **normal / ORM layer indices**, sky mode, skinning summary). |
+| `ModelPushConstants` | Per-draw push constant block on the main scene pipeline (`VulkanSceneOpaquePass.hpp`): transform, material, `textureLayer`, **normal / ORM layer indices**, sky mode, skinning summary. |
 | `DrawFrame` | `VulkanRenderer` implementation: acquire swapchain image, record commands, submit graphics work, present. |
 
 ---

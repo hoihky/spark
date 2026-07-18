@@ -27,7 +27,7 @@ This note complements [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (shad
 
 | Type | Source | Shadow | Limits / notes |
 |------|--------|--------|------------------|
-| **Directional** | `SceneRenderParams::lightDirectionWorld` (+ color, intensity) | Optional **CSM** (4 cascades) | 2×2 atlas in 2048² shadow map; PCF in `scene.frag`. |
+| **Directional** | `DirectionalLightComponent` → submit overrides, or `SceneRenderParams::lightDirectionWorld` (+ color, intensity) | Optional **CSM** (4 cascades) | 2×2 atlas in 2048² shadow map; PCF in `scene.frag`. |
 | **Ambient** | `ambientColor` | — | Hemispheric tint hacks exist only inside **toon** path; PBR uses flat ambient × AO when ORM present. |
 | **Point** | `PointLightComponent` → `ScenePointLight` | Optional cubemap shadow (`castsShadow`, max **2** active/frame) | **256** max (`MaxPointLights`). |
 | **Spot** | `SpotLightComponent` → `SceneSpotLight`; axis = object **local −Z** | Optional atlas shadow (`castsShadow`, max **4** active/frame) | **128** max (`MaxSpotLights`). |
@@ -50,7 +50,7 @@ Prioritized for a forward PBR renderer of this size:
 
 | Gap | Impact | Typical follow-up |
 |-----|--------|---------------------|
-| **No ECS directional component** | Sun always from submit params, not transform | `DirectionalLightComponent` or level script sets `SceneRenderParams` each frame (already possible in game code). |
+| **Directional light ECS** | `DirectionalLightComponent` overrides submit params when present | Multiple directional lights with blending / priority |
 | **No area / line / tube lights** | Architectural interiors harder | LTC rectangles, capsule approximations, or emissive mesh proxies. |
 | **IBL (basic)** | Equirect + GGX importance sample; no dedicated cubemap mips / BRDF LUT texture yet | Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count. |
 | **Punctual shadow quality** | 512² tiles; 2 point + 4 spot cap | Higher-res atlases, EVSM, or temporal filtering. |
@@ -61,8 +61,8 @@ Prioritized for a forward PBR renderer of this size:
 ## When you extend materials or lights
 
 1. **`SceneRenderParams` / `SceneDrawItem`** — public data model.  
-2. **`ModelPushConstants` + `SceneUniformGpu`** in `VulkanRenderer.hpp` — alignment and `static_assert`s.  
-3. **`VulkanRenderer.cpp`** — push / memcpy packing.  
+2. **`ModelPushConstants`** (`include/spark/render/scene/VulkanSceneOpaquePass.hpp`) + **`SceneUniformGpu`** (`include/spark/render/scene/VulkanSceneUniformGpu.hpp`) — alignment and `static_assert`s.  
+3. **`src/spark/render/core/VulkanRenderer.cpp`** — push / memcpy packing.  
 4. **`shaders/scene.vert` / `scene.frag`** — matching `layout` and UBO.  
 5. **Recompile SPIR-V** (`glslangValidator` per `CMakeLists.txt`).  
 6. **Managed / C ABI** — only if you expose new `ComponentKind` or params through bindings.

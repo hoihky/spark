@@ -19,7 +19,7 @@
 #include "spark/gui/GuiScene.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
-#include "spark/render/SceneGroundExtent.hpp"
+#include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/Scene.hpp"
 
 #include <algorithm>

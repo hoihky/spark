@@ -11,7 +11,7 @@
 #include "spark/engine/IInput.hpp"
 #include "spark/math/Constants.hpp"
 #include "spark/math/Quaternion.hpp"
-#include "spark/render/SceneGroundExtent.hpp"
+#include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 #include <algorithm>

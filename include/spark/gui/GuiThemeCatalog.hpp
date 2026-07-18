@@ -11,10 +11,11 @@ enum class GuiThemePreset : int {
     HighContrastLight = 2,
     HighContrastDark = 3,
     HighContrastYellowOnBlack = 4,
+    TwilightSlate = 5,
 };
 
 [[nodiscard]] constexpr int GuiThemePresetCount() noexcept {
-    return 5;
+    return 6;
 }
 
 [[nodiscard]] GuiThemePreset GetActiveGuiThemePreset() noexcept;

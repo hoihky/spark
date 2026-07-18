@@ -9,7 +9,7 @@
 #include "spark/ecs/components/SpriteAnimatorComponent.hpp"
 #include "spark/physics/Collision2D.hpp"
 #include "spark/physics/SpatialHashGrid2D.hpp"
-#include "spark/render/SpriteLighting2D.hpp"
+#include "spark/render/sprites2d/SpriteLighting2D.hpp"
 
 #include <algorithm>
 #include <cmath>

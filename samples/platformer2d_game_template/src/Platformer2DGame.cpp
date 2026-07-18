@@ -18,7 +18,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
-#include "spark/render/Window.hpp"
+#include "spark/render/platform/Window.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Texture2D.hpp"
 #include "spark/text/Font.hpp"

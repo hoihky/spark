@@ -8,8 +8,8 @@
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/media/VideoRecordingSettings.hpp"
 #include "spark/memory/UniquePtr.hpp"
-#include "spark/render/VulkanRenderer.hpp"
-#include "spark/render/Window.hpp"
+#include "spark/render/core/VulkanRenderer.hpp"
+#include "spark/render/platform/Window.hpp"
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
 

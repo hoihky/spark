@@ -32,7 +32,7 @@
 #include "spark/scene/DrawableSortResolver.hpp"
 #include "spark/scene/SceneSpriteTileCull.hpp"
 #include "spark/scene/SceneTilemapSubmit.hpp"
-#include "spark/render/SceneLightingProfile.hpp"
+#include "spark/render/lighting/SceneLightingResolver.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 #include "spark/math/Constants.hpp"
@@ -159,19 +159,7 @@ void FillStandardLitSceneFromWorld(
     params.uiBoldFont = world.GetUiBoldFont();
     params.draws.Reserve(32);
 
-    const ResolvedSceneLighting resolvedLighting = ResolveSceneLightingFromParams(
-            params.lightingProfile,
-            params.exposure,
-            params.shadowCascadeNear,
-            params.shadowCascadeFar,
-            params.shadowDistanceMax,
-            params.shadowFadeStartRatio,
-            params.ambientScale,
-            params.directionalShadowsEnabled,
-            params.shadowsCastByDefault,
-            params.shadowsReceiveByDefault,
-            params.useTimeOfDay,
-            params.timeOfDay);
+    const ResolvedSceneLighting resolvedLighting = SceneLightingResolver::Resolve(params);
     const std::int32_t defaultShadowFlags = DefaultShadowFlagsFor(resolvedLighting);
 
     world.ForEachGameObject([&params](GameObject* o) {

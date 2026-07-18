@@ -14,7 +14,7 @@
 #include "spark/ecs/components/TextOverlayComponent.hpp"
 #include "spark/ecs/components/TransformComponent.hpp"
 #include "spark/physics/Collision3D.hpp"
-#include "spark/render/SceneGroundExtent.hpp"
+#include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/Scene.hpp"
 
 #include <cmath>

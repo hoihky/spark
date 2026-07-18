@@ -553,44 +553,49 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gui/controls/WrapPanel.cpp
         src/spark/gui/controls/WrappingLabel.cpp
         src/spark/gui/GuiScene.cpp
-        src/spark/render/window.cpp
-        src/spark/render/VulkanRenderer.cpp
-        src/spark/render/VulkanDirectionalShadowCascadeMath.cpp
-        src/spark/render/VulkanDirectionalShadowPass.cpp
-        src/spark/render/VulkanPunctualShadowPass.cpp
-        src/spark/render/VulkanShadowCastDraw.cpp
-        src/spark/render/VulkanHdrTonemapPass.cpp
-        src/spark/render/VulkanScreenSpaceEffectsPass.cpp
-        src/spark/render/VulkanParticlePass.cpp
-        src/spark/render/VulkanBlendAttachment.cpp
-        src/spark/render/VulkanSpritePass.cpp
-        src/spark/render/VulkanTilemapPass.cpp
-        src/spark/render/Vulkan2DCompositePass.cpp
-        src/spark/render/VulkanSceneMeshDraw.cpp
-        src/spark/render/VulkanSceneOpaquePass.cpp
-        src/spark/render/VulkanScenePipeline.cpp
-        src/spark/render/VulkanSceneTextureUploader.cpp
-        src/spark/render/VulkanCustomMeshPool.cpp
-        src/spark/render/VulkanDeferredUploadBatch.cpp
-        src/spark/render/VulkanSceneUniformWriter.cpp
-        src/spark/render/VulkanClusteredForwardLights.cpp
-        src/spark/render/VulkanScreenshotCapture.cpp
-        src/spark/render/VulkanVideoCapture.cpp
-        src/spark/render/FrameCaptureWatermark.cpp
+        src/spark/render/platform/window.cpp
+        src/spark/render/core/VulkanDeviceContext.cpp
+        src/spark/render/core/VulkanFrameCapture.cpp
+        src/spark/render/core/VulkanFrameSync.cpp
+        src/spark/render/scene/VulkanSceneDescriptors.cpp
+        src/spark/render/core/VulkanRenderer.cpp
+        src/spark/render/shadow/VulkanDirectionalShadowCascadeMath.cpp
+        src/spark/render/shadow/VulkanDirectionalShadowPass.cpp
+        src/spark/render/shadow/VulkanPunctualShadowPass.cpp
+        src/spark/render/shadow/VulkanShadowCastDraw.cpp
+        src/spark/render/post/VulkanHdrTonemapPass.cpp
+        src/spark/render/post/VulkanScreenSpaceEffectsPass.cpp
+        src/spark/render/sprites2d/VulkanParticlePass.cpp
+        src/spark/render/gpu/VulkanBlendAttachment.cpp
+        src/spark/render/sprites2d/VulkanSpritePass.cpp
+        src/spark/render/sprites2d/VulkanTilemapPass.cpp
+        src/spark/render/sprites2d/Vulkan2DCompositePass.cpp
+        src/spark/render/scene/VulkanSceneMeshDraw.cpp
+        src/spark/render/scene/VulkanSceneOpaquePass.cpp
+        src/spark/render/scene/VulkanScenePipeline.cpp
+        src/spark/render/scene/VulkanSceneTextureUploader.cpp
+        src/spark/render/scene/VulkanCustomMeshPool.cpp
+        src/spark/render/scene/VulkanDeferredUploadBatch.cpp
+        src/spark/render/scene/VulkanSceneUniformWriter.cpp
+        src/spark/render/scene/VulkanClusteredForwardLights.cpp
+        src/spark/render/capture/VulkanScreenshotCapture.cpp
+        src/spark/render/capture/VulkanVideoCapture.cpp
+        src/spark/render/capture/FrameCaptureWatermark.cpp
         src/spark/media/VideoRecorder.cpp
-        src/spark/render/VulkanSpvShaderLoader.cpp
-        src/spark/render/VulkanScreenUiClip.cpp
-        src/spark/render/VulkanScreenUiPass.cpp
-        src/spark/render/VulkanGpuInstance.cpp
-        src/spark/render/VulkanGpuPhysicalDevice.cpp
-        src/spark/render/VulkanGpuSwapchain.cpp
-        src/spark/render/VulkanGpuBufferImage.cpp
-        src/spark/render/VulkanGpuMeshInterleaved.cpp
-        src/spark/render/VulkanPresentRenderPass.cpp
-        src/spark/render/SceneLightingProfile.cpp
-        src/spark/render/VulkanDepthResources.cpp
-        src/spark/render/VulkanPresentationSwapchain.cpp
-        src/spark/render/VulkanPresentationFramebuffers.cpp
+        src/spark/render/gpu/VulkanSpvShaderLoader.cpp
+        src/spark/render/ui/VulkanScreenUiClip.cpp
+        src/spark/render/ui/VulkanScreenUiPass.cpp
+        src/spark/render/gpu/VulkanGpuInstance.cpp
+        src/spark/render/gpu/VulkanGpuPhysicalDevice.cpp
+        src/spark/render/gpu/VulkanGpuSwapchain.cpp
+        src/spark/render/gpu/VulkanGpuBufferImage.cpp
+        src/spark/render/gpu/VulkanGpuMeshInterleaved.cpp
+        src/spark/render/present/VulkanPresentRenderPass.cpp
+        src/spark/render/lighting/SceneLightingProfile.cpp
+        src/spark/render/lighting/SceneLightingResolver.cpp
+        src/spark/render/present/VulkanDepthResources.cpp
+        src/spark/render/present/VulkanPresentationSwapchain.cpp
+        src/spark/render/present/VulkanPresentationFramebuffers.cpp
         src/spark/scene/SceneSubmit.cpp
         src/spark/scene/SceneSubmitDrawPartition.cpp
         src/spark/scene/SceneSubmitLighting.cpp

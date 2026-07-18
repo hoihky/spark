@@ -4,95 +4,190 @@ namespace Spark::Gui {
 
 GuiTheme GuiTheme::ClassicMint() noexcept {
     GuiTheme t{};
-    t.controlIdleTop = {0.78F, 0.92F, 0.74F};
-    t.controlIdleBottom = {0.60F, 0.80F, 0.58F};
-    t.controlHotTop = {0.66F, 0.88F, 0.84F};
-    t.controlHotBottom = {0.50F, 0.74F, 0.68F};
-    t.controlActiveTop = {0.36F, 0.56F, 0.42F};
-    t.controlActiveBottom = {0.28F, 0.46F, 0.34F};
-    t.controlAccentTop = {0.54F, 0.78F, 0.58F};
-    t.controlAccentBottom = {0.40F, 0.64F, 0.46F};
+    t.controlIdleTop = {0.84F, 0.93F, 0.86F};
+    t.controlIdleBottom = {0.70F, 0.84F, 0.72F};
+    t.controlHotTop = {0.76F, 0.90F, 0.88F};
+    t.controlHotBottom = {0.58F, 0.78F, 0.74F};
+    t.controlActiveTop = {0.40F, 0.62F, 0.50F};
+    t.controlActiveBottom = {0.30F, 0.50F, 0.40F};
+    t.controlAccentTop = {0.34F, 0.72F, 0.58F};
+    t.controlAccentBottom = {0.24F, 0.58F, 0.46F};
     t.controlFillAlpha = 0.93F;
-    t.controlStrokeAlpha = 0.62F;
-    t.controlCornerRadius = 6.0F;
-    t.textBoxCornerRadius = 6.0F;
+    t.controlStrokeAlpha = 0.66F;
+    t.controlCornerRadius = 8.0F;
+    t.textBoxCornerRadius = 8.0F;
 
-    t.borderRgb = {0.32F, 0.52F, 0.34F};
-    t.shadowRgb = {0.10F, 0.20F, 0.11F};
+    t.borderRgb = {0.36F, 0.54F, 0.40F};
+    t.shadowRgb = {0.06F, 0.14F, 0.10F};
 
-    t.labelPrimary = {0.10F, 0.22F, 0.13F};
-    t.labelMuted = {0.28F, 0.42F, 0.30F};
-    t.labelOnAccent = {0.10F, 0.22F, 0.13F};
+    t.labelPrimary = {0.08F, 0.20F, 0.14F};
+    t.labelMuted = {0.32F, 0.46F, 0.36F};
+    t.labelOnAccent = {0.96F, 0.99F, 0.96F};
 
-    t.scrollViewportTop = {0.86F, 0.96F, 0.82F};
-    t.scrollViewportBottom = {0.70F, 0.88F, 0.74F};
-    t.scrollViewportAlpha = 0.94F;
+    t.scrollViewportTop = {0.88F, 0.94F, 0.90F};
+    t.scrollViewportBottom = {0.72F, 0.86F, 0.76F};
+    t.scrollViewportAlpha = 0.96F;
 
-    t.insetTrackRgb = {0.14F, 0.22F, 0.16F};
-    t.thumbGradientTop = {0.62F, 0.82F, 0.66F};
-    t.thumbGradientBottom = {0.48F, 0.68F, 0.52F};
+    t.insetTrackRgb = {0.12F, 0.20F, 0.15F};
+    t.thumbGradientTop = {0.66F, 0.84F, 0.70F};
+    t.thumbGradientBottom = {0.50F, 0.70F, 0.56F};
 
-    t.sliderTrackRgb = {0.14F, 0.22F, 0.16F};
-    t.sliderThumbTop = {0.72F, 0.90F, 0.74F};
-    t.sliderThumbBottom = {0.52F, 0.74F, 0.58F};
+    t.sliderTrackRgb = {0.12F, 0.20F, 0.15F};
+    t.sliderThumbTop = {0.74F, 0.90F, 0.78F};
+    t.sliderThumbBottom = {0.54F, 0.74F, 0.60F};
 
-    t.progressTrackRgb = {0.12F, 0.18F, 0.14F};
-    t.progressFillTop = {0.42F, 0.78F, 0.52F};
-    t.progressFillBottom = {0.22F, 0.58F, 0.40F};
+    t.progressTrackRgb = {0.10F, 0.16F, 0.12F};
+    t.progressFillTop = {0.30F, 0.74F, 0.56F};
+    t.progressFillBottom = {0.18F, 0.58F, 0.44F};
 
-    t.switchTrackOffTop = {0.55F, 0.62F, 0.56F};
-    t.switchTrackOffBottom = {0.42F, 0.50F, 0.44F};
-    t.switchTrackOnTop = {0.38F, 0.78F, 0.50F};
-    t.switchTrackOnBottom = {0.22F, 0.58F, 0.36F};
-    t.switchKnobTop = {0.92F, 0.98F, 0.90F};
-    t.switchKnobBottom = {0.72F, 0.86F, 0.74F};
+    t.switchTrackOffTop = {0.58F, 0.64F, 0.60F};
+    t.switchTrackOffBottom = {0.44F, 0.52F, 0.48F};
+    t.switchTrackOnTop = {0.32F, 0.74F, 0.58F};
+    t.switchTrackOnBottom = {0.20F, 0.58F, 0.44F};
+    t.switchKnobTop = {0.94F, 0.98F, 0.92F};
+    t.switchKnobBottom = {0.76F, 0.88F, 0.78F};
 
-    t.checkFrameTop = {0.72F, 0.86F, 0.70F};
-    t.checkFrameBottom = {0.58F, 0.76F, 0.58F};
-    t.checkFillTop = {0.38F, 0.78F, 0.48F};
-    t.checkFillBottom = {0.22F, 0.58F, 0.36F};
-    t.checkInnerStrokeRgb = {0.18F, 0.42F, 0.26F};
+    t.checkFrameTop = {0.76F, 0.88F, 0.74F};
+    t.checkFrameBottom = {0.62F, 0.78F, 0.62F};
+    t.checkFillTop = {0.32F, 0.74F, 0.54F};
+    t.checkFillBottom = {0.20F, 0.58F, 0.42F};
+    t.checkInnerStrokeRgb = {0.16F, 0.40F, 0.28F};
 
-    t.textBoxFillTop = {0.88F, 0.96F, 0.86F};
-    t.textBoxFillBottom = {0.72F, 0.88F, 0.74F};
-    t.textBoxFillAlpha = 0.88F;
-    t.textBoxBorderFocus = {0.28F, 0.62F, 0.42F};
-    t.textBoxBorderIdle = {0.38F, 0.55F, 0.40F};
+    t.textBoxFillTop = {0.90F, 0.96F, 0.88F};
+    t.textBoxFillBottom = {0.74F, 0.88F, 0.76F};
+    t.textBoxFillAlpha = 0.90F;
+    t.textBoxBorderFocus = {0.26F, 0.62F, 0.46F};
+    t.textBoxBorderIdle = {0.40F, 0.56F, 0.42F};
 
-    t.numericFillTop = {0.82F, 0.94F, 0.80F};
-    t.numericFillBottom = {0.66F, 0.84F, 0.68F};
-    t.numericBorderDragging = {0.32F, 0.68F, 0.44F};
-    t.numericBorderIdle = {0.36F, 0.52F, 0.38F};
+    t.numericFillTop = {0.84F, 0.94F, 0.82F};
+    t.numericFillBottom = {0.68F, 0.84F, 0.70F};
+    t.numericBorderDragging = {0.30F, 0.68F, 0.48F};
+    t.numericBorderIdle = {0.38F, 0.54F, 0.40F};
 
-    t.dialogDimmerTop = {0.03F, 0.10F, 0.05F};
+    t.dialogDimmerTop = {0.03F, 0.10F, 0.06F};
     t.dialogDimmerBottom = {0.06F, 0.14F, 0.08F};
     t.dialogDimmerAlpha = 0.58F;
-    t.dialogTitleText = {0.86F, 0.97F, 0.90F};
-    t.panelElevatedTop = {0.84F, 0.95F, 0.80F};
-    t.panelElevatedBottom = {0.70F, 0.88F, 0.72F};
-    t.panelElevatedAlpha = 1.0F;
+    t.dialogTitleText = {0.92F, 0.98F, 0.94F};
+    t.panelElevatedTop = {0.86F, 0.94F, 0.84F};
+    t.panelElevatedBottom = {0.74F, 0.88F, 0.76F};
+    t.panelElevatedAlpha = 0.98F;
 
-    t.tabHeaderTop = {0.14F, 0.22F, 0.16F};
-    t.tabHeaderBottom = {0.08F, 0.14F, 0.10F};
-    t.tabHeaderAlpha = 0.92F;
-    t.tabBodyTop = {0.74F, 0.90F, 0.76F};
-    t.tabBodyBottom = {0.58F, 0.78F, 0.62F};
-    t.tabBodyAlpha = 0.88F;
+    t.tabHeaderTop = {0.22F, 0.34F, 0.26F};
+    t.tabHeaderBottom = {0.16F, 0.26F, 0.20F};
+    t.tabHeaderAlpha = 0.94F;
+    t.tabBodyTop = {0.78F, 0.90F, 0.80F};
+    t.tabBodyBottom = {0.64F, 0.80F, 0.66F};
+    t.tabBodyAlpha = 0.90F;
 
-    t.dropdownPanelTop = {0.80F, 0.93F, 0.76F};
-    t.dropdownPanelBottom = {0.64F, 0.84F, 0.64F};
-    t.dropdownPanelAlpha = 1.0F;
+    t.dropdownPanelTop = {0.82F, 0.93F, 0.78F};
+    t.dropdownPanelBottom = {0.66F, 0.84F, 0.66F};
+    t.dropdownPanelAlpha = 0.98F;
 
-    t.shellBackdropTop = {0.86F, 0.96F, 0.82F};
-    t.shellBackdropBottom = {0.70F, 0.88F, 0.74F};
-    t.shellBackdropAlpha = 0.88F;
+    t.shellBackdropTop = {0.88F, 0.94F, 0.90F};
+    t.shellBackdropBottom = {0.72F, 0.86F, 0.76F};
+    t.shellBackdropAlpha = 0.92F;
 
-    t.albumCardTop = {0.80F, 0.92F, 0.78F};
-    t.albumCardBottom = {0.64F, 0.84F, 0.66F};
-    t.albumCardAlpha = 0.96F;
-    t.albumArtPlaceholderTop = {0.58F, 0.72F, 0.60F};
-    t.albumArtPlaceholderBottom = {0.36F, 0.52F, 0.42F};
-    t.albumAccentBarRgb = {0.22F, 0.58F, 0.36F};
+    t.albumCardTop = {0.82F, 0.92F, 0.80F};
+    t.albumCardBottom = {0.66F, 0.84F, 0.68F};
+    t.albumCardAlpha = 0.98F;
+    t.albumArtPlaceholderTop = {0.56F, 0.70F, 0.58F};
+    t.albumArtPlaceholderBottom = {0.34F, 0.50F, 0.40F};
+    t.albumAccentBarRgb = {0.24F, 0.62F, 0.48F};
+    t.albumAccentBarAlpha = 1.0F;
+    return t;
+}
+
+GuiTheme GuiTheme::TwilightSlate() noexcept {
+    GuiTheme t{};
+    t.controlIdleTop = {0.20F, 0.22F, 0.28F};
+    t.controlIdleBottom = {0.14F, 0.16F, 0.21F};
+    t.controlHotTop = {0.26F, 0.30F, 0.38F};
+    t.controlHotBottom = {0.18F, 0.22F, 0.30F};
+    t.controlActiveTop = {0.30F, 0.56F, 0.52F};
+    t.controlActiveBottom = {0.22F, 0.44F, 0.42F};
+    t.controlAccentTop = {0.28F, 0.72F, 0.66F};
+    t.controlAccentBottom = {0.18F, 0.56F, 0.52F};
+    t.controlFillAlpha = 0.98F;
+    t.controlStrokeAlpha = 0.70F;
+    t.controlCornerRadius = 8.0F;
+    t.textBoxCornerRadius = 8.0F;
+
+    t.borderRgb = {0.38F, 0.44F, 0.52F};
+    t.shadowRgb = {0.03F, 0.04F, 0.06F};
+
+    t.labelPrimary = {0.92F, 0.94F, 0.96F};
+    t.labelMuted = {0.62F, 0.68F, 0.74F};
+    t.labelOnAccent = {0.06F, 0.10F, 0.12F};
+
+    t.scrollViewportTop = {0.18F, 0.20F, 0.26F};
+    t.scrollViewportBottom = {0.12F, 0.14F, 0.19F};
+    t.scrollViewportAlpha = 0.98F;
+
+    t.insetTrackRgb = {0.08F, 0.10F, 0.13F};
+    t.thumbGradientTop = {0.32F, 0.38F, 0.46F};
+    t.thumbGradientBottom = {0.22F, 0.28F, 0.36F};
+
+    t.sliderTrackRgb = {0.08F, 0.10F, 0.13F};
+    t.sliderThumbTop = {0.34F, 0.42F, 0.50F};
+    t.sliderThumbBottom = {0.24F, 0.32F, 0.40F};
+
+    t.progressTrackRgb = {0.08F, 0.10F, 0.13F};
+    t.progressFillTop = {0.30F, 0.74F, 0.68F};
+    t.progressFillBottom = {0.18F, 0.58F, 0.54F};
+
+    t.switchTrackOffTop = {0.22F, 0.24F, 0.30F};
+    t.switchTrackOffBottom = {0.16F, 0.18F, 0.24F};
+    t.switchTrackOnTop = {0.28F, 0.72F, 0.66F};
+    t.switchTrackOnBottom = {0.18F, 0.56F, 0.52F};
+    t.switchKnobTop = {0.90F, 0.92F, 0.94F};
+    t.switchKnobBottom = {0.72F, 0.76F, 0.82F};
+
+    t.checkFrameTop = {0.20F, 0.22F, 0.28F};
+    t.checkFrameBottom = {0.14F, 0.16F, 0.21F};
+    t.checkFillTop = {0.28F, 0.72F, 0.66F};
+    t.checkFillBottom = {0.18F, 0.56F, 0.52F};
+    t.checkInnerStrokeRgb = {0.06F, 0.10F, 0.12F};
+
+    t.textBoxFillTop = {0.18F, 0.20F, 0.26F};
+    t.textBoxFillBottom = {0.12F, 0.14F, 0.19F};
+    t.textBoxFillAlpha = 0.98F;
+    t.textBoxBorderFocus = {0.34F, 0.74F, 0.68F};
+    t.textBoxBorderIdle = {0.32F, 0.38F, 0.46F};
+
+    t.numericFillTop = {0.18F, 0.20F, 0.26F};
+    t.numericFillBottom = {0.12F, 0.14F, 0.19F};
+    t.numericBorderDragging = {0.34F, 0.74F, 0.68F};
+    t.numericBorderIdle = {0.32F, 0.38F, 0.46F};
+
+    t.dialogDimmerTop = {0.02F, 0.03F, 0.05F};
+    t.dialogDimmerBottom = {0.04F, 0.06F, 0.09F};
+    t.dialogDimmerAlpha = 0.64F;
+    t.dialogTitleText = {0.92F, 0.94F, 0.96F};
+    t.panelElevatedTop = {0.22F, 0.24F, 0.30F};
+    t.panelElevatedBottom = {0.14F, 0.16F, 0.21F};
+    t.panelElevatedAlpha = 0.98F;
+
+    t.tabHeaderTop = {0.10F, 0.12F, 0.16F};
+    t.tabHeaderBottom = {0.06F, 0.08F, 0.11F};
+    t.tabHeaderAlpha = 0.96F;
+    t.tabBodyTop = {0.18F, 0.20F, 0.26F};
+    t.tabBodyBottom = {0.12F, 0.14F, 0.19F};
+    t.tabBodyAlpha = 0.96F;
+
+    t.dropdownPanelTop = {0.20F, 0.22F, 0.28F};
+    t.dropdownPanelBottom = {0.14F, 0.16F, 0.21F};
+    t.dropdownPanelAlpha = 0.98F;
+
+    t.shellBackdropTop = {0.14F, 0.16F, 0.22F};
+    t.shellBackdropBottom = {0.08F, 0.10F, 0.14F};
+    t.shellBackdropAlpha = 0.94F;
+
+    t.albumCardTop = {0.20F, 0.22F, 0.28F};
+    t.albumCardBottom = {0.14F, 0.16F, 0.21F};
+    t.albumCardAlpha = 0.98F;
+    t.albumArtPlaceholderTop = {0.28F, 0.32F, 0.40F};
+    t.albumArtPlaceholderBottom = {0.18F, 0.22F, 0.30F};
+    t.albumAccentBarRgb = {0.92F, 0.52F, 0.44F};
     t.albumAccentBarAlpha = 1.0F;
     return t;
 }

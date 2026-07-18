@@ -13,7 +13,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 | Engine loop / ECS / `GameWorld` | **Ready** | Core simulation model |
 | Vulkan forward renderer | **Ready** | Viewport scissor for center pane; offscreen RT later |
 | GUI toolkit | **Usable** | Docking (`DockManager`), `MenuBar`, context menu, text overflow |
-| Scene serialization v3 | **Partial** | 7 component types; text format |
+| Scene serialization v4 | **Partial** | **23** component handlers; text format (reads v3) |
 | `SceneEditor3DDemo` | **Prototype** | Pick, translate gizmo, save/load — reference for viewport service |
 | **`SparkEditor` (M0)** | **Started** | `EditorApplication`, dock shell, hierarchy/inspector stubs, fly camera |
 | Project / asset DB | **Missing** | Critical for Godot workflow |
@@ -28,7 +28,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 
 ### Engine & ECS
 - `IGame` / `Game` / `Engine::Run` — editor is an `IGame` implementation (`spark_editor/EditorGame`).
-- `GameWorld`, `GameObject`, **32** `ComponentKind` values, hierarchy via `SetParent`.
+- `GameWorld`, `GameObject`, **37** `ComponentKind` values (+ `Unknown`), hierarchy via `SetParent`.
 - `Scene` + `SubmitStandardLitSceneFromWorld` — no Vulkan in editor code.
 - `FlyCamera`, `MeshRaycast`, lighting profiles, 2D/3D cameras.
 
@@ -44,8 +44,8 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 - **Port target:** `EditorViewport` service (M3), not rewrite.
 
 ### Serialization
-- `SceneSerializer` / `ComponentSnapshotRegistry` — Transform, Mesh, Material, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy. Runtime: `SceneManager`, `GameWorldAssetLoader`.
-- Extensible handler pattern for more components.
+- `SceneSerializer` / `ComponentSnapshotRegistry` — **23** handlers: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig. Runtime: `SceneManager`, `GameWorldAssetLoader`.
+- Extensible handler pattern for remaining kinds (`GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, …).
 
 ### Build
 - `SPARK_BUILD_ENGINE_SHARED` — proven in `game_template/`, `samples/*`.
@@ -74,7 +74,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 | **Dock workspace** | `EditorDockShell` + `DockManager` (menu, left/center/right) | **M0** ✓ |
 | **Embedded viewport service** | `worldViewportScissor` + passthrough center pane | **M2** (partial) |
 | **Undo/redo command stack** | None | **M3** |
-| **Serialization coverage** | 7 / 32 components; no SpotLight, physics, sprites, GUI, terrain | **M3** |
+| **Serialization coverage** | 23 / 37 components; no `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | **M3** |
 | **Play-in-editor (PIE)** | No world snapshot / script run from editor | **M5** |
 | **Prefab / `.sparkscene` asset** | Loose `scene.txt` only | **M3** |
 

@@ -2,7 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector4.hpp"
-#include "spark/render/SpriteLighting2D.hpp"
+#include "spark/render/sprites2d/SpriteLighting2D.hpp"
 
 namespace Spark {
 

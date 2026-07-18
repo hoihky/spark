@@ -29,7 +29,7 @@ Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engin
 | `ProcessGuiCanvasesInput` | Full-viewport layout, topmost canvas under cursor, scroll routing |
 | `PaintGuiCanvases` | Emits `ScreenRectDraw` / `ScreenTextDraw` into `SceneRenderParams` |
 | `GuiPaintContext` | Solid/gradient/rounded rects, strokes, drop shadow, text; **overlay** + **late** layers for popups |
-| `GuiTheme` | Semantic colors per canvas (`ClassicMint()` default) |
+| `GuiTheme` / `GuiThemeCatalog` | Semantic colors per canvas; **6** presets (`ClassicMint` default, `TwilightSlate`, high-contrast variants, `SceneEditorDark`) |
 
 **Rendering:** CPU-drawn 2D (no GPU widget atlas). Text via `Font` / stb. **Not** retained mesh UI.
 
@@ -109,7 +109,7 @@ Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engin
 | **Transform gizmo** | Translate in `SceneEditor3DDemo` only |
 | **Play mode / edit mode** | `EditorMode::Edit` only; shell switches demos separately |
 | **Undo/redo** | None |
-| **Serialization** | `spark_scene_v4` (reads v3); 18 / 32 component kinds; `SceneManager` in scene editor demo |
+| **Serialization** | `spark_scene_v4` (reads v3); **23 / 37** component kinds; `SceneManager` in scene editor demo |
 | **Material editor** | Runtime `MaterialComponent` only |
 | **Animation editor** | See [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) |
 | **Script editor** | C# host exists; no in-engine IDE |
@@ -184,7 +184,7 @@ A single executable (or shell mode) with:
 | GUI-E0-07 | **Multiline `TextArea`** (for scripts / long strings) | P1 | [x] |
 | GUI-E0-08 | **Context menu** widget (popup on RMB, overlay layer) | P1 | [x] |
 | GUI-E0-09 | **Tooltip** (hover delay, late layer) | P2 | [x] |
-| GUI-E0-10 | **Theming**: `EditorDark` theme + high-contrast variant | P1 | [ ] |
+| GUI-E0-10 | **Theming**: `GuiThemeCatalog` presets + `LabelTone` on labels | P1 | [x] |
 | GUI-E0-11 | **GUI perf harness**: N rects/texts frame cost in `SceneRenderParams` | P2 | [ ] |
 
 ---
@@ -213,7 +213,7 @@ A single executable (or shell mode) with:
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| GUI-E2-01 | **Scene serialization v3** — hierarchy, parent links, component blobs (JSON or YAML) | P0 | [ ] |
+| GUI-E2-01 | **Scene serialization v4** — extend handler coverage; hierarchy, parent links, component blobs | P0 | [~] |
 | GUI-E2-02 | **`EditorSelection`** service — selected `GameObject*`, multi-select policy | P0 | [ ] |
 | GUI-E2-03 | **Hierarchy panel** — `TreeView` ↔ `GameWorld` (create/rename/delete/parent) | P0 | [ ] |
 | GUI-E2-04 | **`EditorViewport` region** — rect + `hitTest=false`; central render target | P0 | [ ] |

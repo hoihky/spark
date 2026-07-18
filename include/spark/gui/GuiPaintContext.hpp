@@ -5,7 +5,7 @@
 #include "spark/gui/GuiTypes.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {
 

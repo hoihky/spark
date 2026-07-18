@@ -2,7 +2,7 @@
 
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/engine/IFramePresenter.hpp"
-#include "spark/render/Window.hpp"
+#include "spark/render/platform/Window.hpp"
 #include "spark/scene/Scene.hpp"
 
 namespace Spark {

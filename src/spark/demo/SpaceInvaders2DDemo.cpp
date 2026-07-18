@@ -3,7 +3,7 @@
 #include "spark/ecs/components/BlendModeComponent.hpp"
 #include "spark/ecs/components/SpriteComponent.hpp"
 #include "spark/ecs/components/TransformComponent.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {
 

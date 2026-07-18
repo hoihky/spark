@@ -23,7 +23,7 @@
 #include "spark/gui/EditorLayoutStore.hpp"
 #include "spark/gui/GuiThemeCatalog.hpp"
 #include "spark/gui/controls/Label.hpp"
-#include "spark/render/Window.hpp"
+#include "spark/render/platform/Window.hpp"
 
 #include <cstdio>
 
@@ -1812,7 +1812,7 @@ private:
         auto scroll = Spark::MakeUnique<Spark::Gui::ScrollPanel>();
         demoListScroll = scroll.Get();
         scroll->SetViewportFillGradient(
-                skin.scrollViewportTop, skin.scrollViewportBottom, 1.0F);
+                skin.scrollViewportTop, skin.scrollViewportBottom, skin.scrollViewportAlpha);
 
         auto lst = Spark::MakeUnique<Spark::Gui::List>();
         demoList = lst.Get();
@@ -1931,20 +1931,18 @@ private:
                 "(slider, progress, scrollbar, switch, numeric drag, tabs, wrap + stack, AlbumCard). Theme presets "
                 "are selectable from the launcher menu (persisted in editor_layout.ini).  ESC returns to the menu."));
         intro->SetFontSize(22.0F);
-        intro->SetTextColor(skin.labelPrimary);
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(intro), 108.0F);
 
         auto secClassic = Spark::MakeUnique<Spark::Gui::Label>();
         secClassic->SetText(Spark::Utf8String("Classic controls"));
         secClassic->SetFontSize(24.0F);
         secClassic->SetBold(true);
-        secClassic->SetTextColor(skin.labelPrimary);
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(secClassic), 32.0F);
 
         auto listLbl = Spark::MakeUnique<Spark::Gui::Label>();
         listLbl->SetText(Spark::Utf8String("Sample list"));
         listLbl->SetFontSize(22.0F);
-        listLbl->SetTextColor(skin.labelMuted);
+        listLbl->SetTone(Spark::Gui::LabelTone::Muted);
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(listLbl), 28.0F);
 
         auto innerList = Spark::MakeUnique<Spark::Gui::List>();
@@ -1960,7 +1958,7 @@ private:
         auto ddLbl = Spark::MakeUnique<Spark::Gui::Label>();
         ddLbl->SetText(Spark::Utf8String("Dropdown"));
         ddLbl->SetFontSize(22.0F);
-        ddLbl->SetTextColor(skin.labelMuted);
+        ddLbl->SetTone(Spark::Gui::LabelTone::Muted);
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(ddLbl), 28.0F);
 
         auto dd = Spark::MakeUnique<Spark::Gui::Dropdown>();
@@ -1992,7 +1990,6 @@ private:
         secNew->SetText(Spark::Utf8String("New controls"));
         secNew->SetFontSize(24.0F);
         secNew->SetBold(true);
-        secNew->SetTextColor(skin.labelPrimary);
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(secNew), 32.0F);
 
         auto slider = Spark::MakeUnique<Spark::Gui::Slider>();
@@ -2024,11 +2021,9 @@ private:
         auto tabA = Spark::MakeUnique<Spark::Gui::Label>();
         tabA->SetText(Spark::Utf8String("Tab A — WrappingLabel-style content can live in each page."));
         tabA->SetFontSize(20.0F);
-        tabA->SetTextColor(skin.labelPrimary);
         auto tabB = Spark::MakeUnique<Spark::Gui::Label>();
         tabB->SetText(Spark::Utf8String("Tab B — switch tabs using the strip above."));
         tabB->SetFontSize(20.0F);
-        tabB->SetTextColor(skin.labelPrimary);
         tabs->AddTab(Spark::Utf8String("Tab A"), Spark::MoveTemp(tabA));
         tabs->AddTab(Spark::Utf8String("Tab B"), Spark::MoveTemp(tabB));
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(tabs), 200.0F);
@@ -2055,7 +2050,7 @@ private:
             auto col = Spark::MakeUnique<Spark::Gui::Label>();
             col->SetText(Spark::Utf8String(buf));
             col->SetFontSize(20.0F);
-            col->SetTextColor(skin.labelMuted);
+            col->SetTone(Spark::Gui::LabelTone::Muted);
             hstack->AddChild(Spark::MoveTemp(col));
         }
         Detail::GuiShowcasePushRow(stack, rowH, Spark::MoveTemp(hstack), 46.0F);
@@ -2083,7 +2078,7 @@ private:
         auto presetLbl = Spark::MakeUnique<Spark::Gui::Label>();
         presetLbl->SetText(Spark::Utf8String("Preset (dropdown omitted):"));
         presetLbl->SetFontSize(22.0F);
-        presetLbl->SetTextColor(skin.labelMuted);
+        presetLbl->SetTone(Spark::Gui::LabelTone::Muted);
         presetRow->AddChild(Spark::MoveTemp(presetLbl));
         for (const char* tag : {"Low", "Medium", "High"}) {
             auto b = Spark::MakeUnique<Spark::Gui::Button>();
@@ -2139,7 +2134,7 @@ private:
         }
         if (demoListScroll != nullptr) {
             demoListScroll->SetViewportFillGradient(
-                    skin.scrollViewportTop, skin.scrollViewportBottom, 1.0F);
+                    skin.scrollViewportTop, skin.scrollViewportBottom, skin.scrollViewportAlpha);
         }
     }
 
@@ -2166,7 +2161,12 @@ private:
         params.lightDirectionWorld = Spark::Vector3{0.3F, 0.85F, 0.4F}.Normalized();
         params.lightColor = {1.0F, 1.0F, 1.0F};
         params.lightIntensity = 0.0F;
-        params.ambientColor = {0.08F, 0.11F, 0.08F};
+        const Spark::Gui::GuiTheme menuSkin =
+                Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
+        params.ambientColor = {
+                menuSkin.shellBackdropBottom.x * 0.14F,
+                menuSkin.shellBackdropBottom.y * 0.14F,
+                menuSkin.shellBackdropBottom.z * 0.14F};
         params.uiFont = GetWorld().GetUiFont();
         params.uiBoldFont = GetWorld().GetUiBoldFont();
         Spark::PaintGuiCanvases(GetScene(), params, fbW, fbH);

@@ -108,6 +108,8 @@ struct GuiTheme {
     float albumAccentBarAlpha = 1.0F;
 
     [[nodiscard]] static GuiTheme ClassicMint() noexcept;
+    /** Dark slate with teal accents — polished alternative for built-in demos. */
+    [[nodiscard]] static GuiTheme TwilightSlate() noexcept;
     /** Dark blue-gray palette for the 3D scene editor sidebar (matches editor panel gradient). */
     [[nodiscard]] static GuiTheme SceneEditorDark() noexcept;
     /** White surfaces, black text — Windows high-contrast light style. */

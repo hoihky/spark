@@ -71,10 +71,13 @@ Per frame, `VulkanRenderer::RecordSceneCommandBuffer` records (in order):
 - `shaders/post_process.frag`, `shaders/post_common.glsl` — SSAO composite (fullscreen).
 - `shaders/punctual_shadows.glsl` — spot/point shadow sampling in the lit pass.
 - `include/spark/engine/SceneRenderParams.hpp` — CPU → GPU scene parameters (`ssaoEnabled`, …).
-- `include/spark/render/VulkanScreenSpaceEffectsPass.hpp` — SSAO pass resources and recording.
-- `include/spark/render/VulkanScreenUiPass.hpp` — screen-space UI (font atlas, solid/text batches).
-- `include/spark/render/VulkanRenderer.hpp` — composes passes; `SceneUniformGpu` must stay **std140**-compatible with the scene UBO in GLSL.
-- `src/spark/render/VulkanRenderer.cpp` — frame recording and swapchain presentation.
+- `include/spark/render/post/VulkanScreenSpaceEffectsPass.hpp` — SSAO pass resources and recording.
+- `include/spark/render/ui/VulkanScreenUiPass.hpp` — screen-space UI (font atlas, solid/text batches).
+- `include/spark/render/core/VulkanRenderer.hpp` — composes passes; delegates device/swapchain to `VulkanDeviceContext`.
+- `include/spark/render/scene/VulkanSceneUniformGpu.hpp` — `SceneUniformGpu` must stay **std140**-compatible with the scene UBO in GLSL.
+- `include/spark/render/scene/VulkanSceneDescriptors.hpp` — scene descriptor pool, layout, per-frame sets.
+- `include/spark/render/lighting/SceneLightingResolver.hpp` — profile + time-of-day → resolved sun/ambient.
+- `src/spark/render/core/VulkanRenderer.cpp` — frame recording and swapchain presentation.
 
 ## UBO size
 

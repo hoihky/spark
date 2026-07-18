@@ -3,7 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/render/SceneShadingModel.hpp"
+#include "spark/render/scene/SceneShadingModel.hpp"
 
 #include <cstdint>
 

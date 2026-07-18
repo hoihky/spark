@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {
 

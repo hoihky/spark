@@ -60,4 +60,11 @@ struct TextLayout {
     int maxLines = 0;
 };
 
+/** Semantic label color role; resolved from <c>GuiTheme</c> at paint time unless <c>Custom</c>. */
+enum class LabelTone : std::uint8_t {
+    Primary = 0,
+    Muted,
+    Custom,
+};
+
 }  // namespace Spark::Gui

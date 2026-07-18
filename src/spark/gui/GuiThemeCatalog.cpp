@@ -26,6 +26,8 @@ GuiTheme ResolveGuiTheme(const GuiThemePreset preset) noexcept {
         return GuiTheme::HighContrastDark();
     case GuiThemePreset::HighContrastYellowOnBlack:
         return GuiTheme::HighContrastYellowOnBlack();
+    case GuiThemePreset::TwilightSlate:
+        return GuiTheme::TwilightSlate();
     case GuiThemePreset::ClassicMint:
     default:
         return GuiTheme::ClassicMint();
@@ -42,6 +44,8 @@ const char* GetGuiThemePresetDisplayName(const GuiThemePreset preset) noexcept {
         return "High contrast dark";
     case GuiThemePreset::HighContrastYellowOnBlack:
         return "High contrast yellow on black";
+    case GuiThemePreset::TwilightSlate:
+        return "Twilight slate";
     case GuiThemePreset::ClassicMint:
     default:
         return "Classic mint";
@@ -58,6 +62,8 @@ GuiThemePreset GuiThemePresetFromId(const int id) noexcept {
         return GuiThemePreset::HighContrastDark;
     case 4:
         return GuiThemePreset::HighContrastYellowOnBlack;
+    case 5:
+        return GuiThemePreset::TwilightSlate;
     case 0:
     default:
         return GuiThemePreset::ClassicMint;

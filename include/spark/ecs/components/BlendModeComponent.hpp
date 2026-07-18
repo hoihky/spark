@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {
 

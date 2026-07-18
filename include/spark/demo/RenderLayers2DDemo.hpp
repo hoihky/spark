@@ -12,7 +12,7 @@
 #include "spark/ecs/components/TextOverlayComponent.hpp"
 #include "spark/ecs/components/TilemapComponent.hpp"
 #include "spark/ecs/components/TransformComponent.hpp"
-#include "spark/render/SceneBlendMode.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 #include "spark/scene/RenderLayerRegistry.hpp"
 
 namespace Spark {

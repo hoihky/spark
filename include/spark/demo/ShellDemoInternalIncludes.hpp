@@ -10,7 +10,7 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Constants.hpp"
-#include "spark/render/SceneGroundExtent.hpp"
+#include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector2.hpp"

@@ -54,16 +54,9 @@ void LauncherThemeRow::RefreshThemeName() {
         return;
     }
     const Spark::Gui::GuiThemePreset preset = Spark::Gui::GetActiveGuiThemePreset();
-    const Spark::Gui::GuiTheme skin = Spark::Gui::ResolveGuiTheme(preset);
-    if (children[0]) {
-        if (Spark::Gui::Label* cap = AsLabel(children[0].Get())) {
-            cap->SetTextColor(skin.labelPrimary);
-        }
-    }
     if (children[2]) {
         if (Spark::Gui::Label* nameLbl = AsLabel(children[2].Get())) {
             nameLbl->SetText(Spark::Utf8String(Spark::Gui::GetGuiThemePresetDisplayName(preset)));
-            nameLbl->SetTextColor(skin.labelPrimary);
         }
     }
 }

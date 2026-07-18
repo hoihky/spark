@@ -6,7 +6,7 @@
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/gui/GuiScene.hpp"
-#include "spark/render/Window.hpp"
+#include "spark/render/platform/Window.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
 #include "spark/scene/GameWorld.hpp"

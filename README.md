@@ -14,7 +14,7 @@ cmake --build cmake-build-debug -j
 
 | Target | Path (debug preset) | Purpose |
 |--------|---------------------|---------|
-| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + 19 built-in modes |
+| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **20** built-in modes |
 | **SparkEditor** | `cmake-build-debug/spark_editor/SparkEditor` | 3D editor shell (edit mode, dock UI) |
 | **SparkScriptHost** | `cmake-build-debug/SparkScriptHost` | CoreCLR host for C# games |
 
@@ -52,11 +52,27 @@ game_template/     Minimal external game CMake project
 samples/           FPS and 2D platformer templates
 ```
 
+**Render headers** live under `include/spark/render/` in stage subfolders (not flat `render/*.hpp`):
+
+| Subfolder | Examples |
+|-----------|----------|
+| `platform/` | `Window.hpp` |
+| `core/` | `VulkanRenderer.hpp`, `VulkanDeviceContext.hpp`, `VulkanFrameSync.hpp`, `VulkanFrameCapture.hpp` |
+| `gpu/` | `VulkanGpuBufferImage.hpp`, `VulkanSpvShaderLoader.hpp` |
+| `present/` | `VulkanPresentRenderPass.hpp`, `VulkanPresentationFramebuffers.hpp`, `VulkanDepthResources.hpp` |
+| `scene/` | `VulkanScenePipeline.hpp`, `VulkanSceneDescriptors.hpp`, `VulkanSceneOpaquePass.hpp` |
+| `shadow/` | `VulkanDirectionalShadowPass.hpp`, `VulkanPunctualShadowPass.hpp` |
+| `post/` | `VulkanHdrTonemapPass.hpp`, `VulkanScreenSpaceEffectsPass.hpp` |
+| `sprites2d/` | `VulkanSpritePass.hpp`, `VulkanTilemapPass.hpp`, `VulkanParticlePass.hpp` |
+| `ui/` | `VulkanScreenUiPass.hpp` |
+| `capture/` | `VulkanScreenshotCapture.hpp`, `VulkanVideoCapture.hpp` |
+| `lighting/` | `SceneLightingResolver.hpp`, `SceneLightingProfile.hpp` |
+
 ## Mental model
 
 1. **Simulation** — `GameWorld` + `GameObject` + `GameComponent`; tick via `IGame::OnUpdate`.
 2. **Render snapshot** — Each frame, gameplay fills `SceneRenderParams` (draws, lights, sprites, UI).
-3. **Presentation** — `VulkanRenderer` records shadow → HDR scene → SSAO → tonemap → screen UI.
+3. **Presentation** — `VulkanRenderer` orchestrates passes under `render/*/` (shadow → HDR scene → SSAO → tonemap → screen UI). Instance/device/swapchain live in `VulkanDeviceContext`; frame sync in `VulkanFrameSync`.
 
 Games implement `IGame` (`spark/engine/IGame.hpp`). Optional `Game` base owns a `Scene` and forwards component updates.
 

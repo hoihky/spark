@@ -1,5 +1,7 @@
 #include "spark/demo/ParticleDemo.hpp"
 
+#include "spark/gui/GuiThemeCatalog.hpp"
+
 namespace Spark {
 
 void ParticleDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
@@ -296,13 +298,16 @@ void ParticleDemo::BuildGuiPanel(Spark::GuiCanvasComponent& canvas)
 {
         ClearGuiWidgetRefs();
 
+        const Spark::Gui::GuiTheme skin =
+                Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
+        canvas.SetTheme(skin);
+
         auto root = Spark::MakeUnique<ParticleEffectsRightDockRoot>();
         auto shell = Spark::MakeUnique<Spark::Gui::Panel>();
         shell->SetPadding(18.0F);
         shell->SetChromeEnabled(true);
         shell->SetDropShadowEnabled(true);
-        shell->SetBackgroundGradient(
-                Spark::Vector3{0.14F, 0.16F, 0.22F}, Spark::Vector3{0.08F, 0.09F, 0.13F}, 0.97F);
+        shell->SetBackgroundGradient(skin.panelElevatedTop, skin.panelElevatedBottom, skin.panelElevatedAlpha);
 
         auto layout = Spark::MakeUnique<ParticleGuiEmitterOverlayLayout>();
 
@@ -314,14 +319,13 @@ void ParticleDemo::BuildGuiPanel(Spark::GuiCanvasComponent& canvas)
         title->SetText(Spark::Utf8String("Particle effects"));
         title->SetFontSize(30.0F);
         title->SetBold(true);
-        title->SetTextColor({0.94F, 0.96F, 1.0F});
 
         ParticleDemo* self = this;
 
         auto pickLbl = Spark::MakeUnique<Spark::Gui::Label>();
         pickLbl->SetText(Spark::Utf8String("Emitter"));
         pickLbl->SetFontSize(21.0F);
-        pickLbl->SetTextColor({0.86F, 0.90F, 0.95F});
+        pickLbl->SetTone(Spark::Gui::LabelTone::Muted);
 
         auto emitterPick = Spark::MakeUnique<Spark::Gui::StackPanel>();
         emitterPick->SetOrientation(Spark::Gui::StackOrientation::Vertical);
@@ -347,7 +351,7 @@ void ParticleDemo::BuildGuiPanel(Spark::GuiCanvasComponent& canvas)
                 "Choose an emitter preset above, then tune sliders or reset. "
                 "F1 toggles fly camera vs mouse for this panel."));
         help->SetFontSize(21.0F);
-        help->SetTextColor({0.82F, 0.86F, 0.92F});
+        help->SetTone(Spark::Gui::LabelTone::Muted);
         lowerStack->AddChild(Spark::MoveTemp(help));
 
         auto addLabeledSlider =
@@ -358,7 +362,7 @@ void ParticleDemo::BuildGuiPanel(Spark::GuiCanvasComponent& canvas)
                     auto lab = Spark::MakeUnique<Spark::Gui::Label>();
                     lab->SetText(Spark::Utf8String(title));
                     lab->SetFontSize(20.0F);
-                    lab->SetTextColor({0.86F, 0.90F, 0.95F});
+                    lab->SetTone(Spark::Gui::LabelTone::Muted);
                     auto sl = Spark::MakeUnique<Spark::Gui::Slider>();
                     outPtr = sl.Get();
                     sl->SetRange(r0, r1);

@@ -1,5 +1,7 @@
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
 
+#include "spark/gui/GuiThemeCatalog.hpp"
+
 namespace Spark {
 
 void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
@@ -355,13 +357,17 @@ void PhysicsBallThrow3DDemo::ClearGuiRefs() noexcept
 void PhysicsBallThrow3DDemo::BuildPhysTuningPanel(Spark::GuiCanvasComponent& canvas)
 {
         ClearGuiRefs();
+
+        const Spark::Gui::GuiTheme skin =
+                Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
+        canvas.SetTheme(skin);
+
         auto root = Spark::MakeUnique<PhysicsBallGuiDockRoot>();
         auto shell = Spark::MakeUnique<Spark::Gui::Panel>();
         shell->SetPadding(16.0F);
         shell->SetChromeEnabled(true);
         shell->SetDropShadowEnabled(true);
-        shell->SetBackgroundGradient(
-                Spark::Vector3{0.12F, 0.15F, 0.2F}, Spark::Vector3{0.07F, 0.09F, 0.12F}, 0.96F);
+        shell->SetBackgroundGradient(skin.panelElevatedTop, skin.panelElevatedBottom, skin.panelElevatedAlpha);
 
         auto stack = Spark::MakeUnique<Spark::Gui::StackPanel>();
         stack->SetOrientation(Spark::Gui::StackOrientation::Vertical);
@@ -371,7 +377,6 @@ void PhysicsBallThrow3DDemo::BuildPhysTuningPanel(Spark::GuiCanvasComponent& can
         title->SetText(Spark::Utf8String("Physics tuning"));
         title->SetFontSize(26.0F);
         title->SetBold(true);
-        title->SetTextColor({0.92F, 0.95F, 1.0F});
         stack->AddChild(Spark::MoveTemp(title));
 
         auto help = Spark::MakeUnique<Spark::Gui::WrappingLabel>();
@@ -379,7 +384,7 @@ void PhysicsBallThrow3DDemo::BuildPhysTuningPanel(Spark::GuiCanvasComponent& can
                 "F1 toggles mouse capture. Sliders use SI-style units (m/s², kg). Bounce uses ball + surface "
                 "materials (geometric mean) in the solver; cube bounciness retunes dull vs rubber crates."));
         help->SetFontSize(17.0F);
-        help->SetTextColor({0.78F, 0.82F, 0.9F});
+        help->SetTone(Spark::Gui::LabelTone::Muted);
         stack->AddChild(Spark::MoveTemp(help));
 
         PhysicsBallThrow3DDemo* self = this;
@@ -390,7 +395,7 @@ void PhysicsBallThrow3DDemo::BuildPhysTuningPanel(Spark::GuiCanvasComponent& can
             auto lab = Spark::MakeUnique<Spark::Gui::Label>();
             lab->SetText(Spark::Utf8String(title));
             lab->SetFontSize(18.0F);
-            lab->SetTextColor({0.84F, 0.88F, 0.94F});
+            lab->SetTone(Spark::Gui::LabelTone::Muted);
             auto sl = Spark::MakeUnique<Spark::Gui::Slider>();
             outPtr = sl.Get();
             sl->SetRange(r0, r1);
