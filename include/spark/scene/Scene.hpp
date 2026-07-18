@@ -40,7 +40,7 @@ public:
      */
     void ApplySpatialPolicyFromFirstMatchingObject() noexcept {
         bool found = false;
-        world.ForEachGameObject([this, &found](GameObject* o) {
+        world.ForEachActiveGameObject([this, &found](GameObject* o) {
             if (found || o == nullptr) {
                 return;
             }
@@ -100,7 +100,7 @@ public:
      */
     template<typename Fn>
     void ForEachDrawable(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -120,7 +120,7 @@ public:
      */
     template<typename Fn>
     void ForEachSkinnedDrawable(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -141,7 +141,7 @@ public:
      */
     template<typename Fn>
     void ForEachPointLight(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -156,7 +156,7 @@ public:
     /** Invokes fn(spotLightComponent, worldMatrix) for every object with an enabled SpotLightComponent. */
     template<typename Fn>
     void ForEachSpotLight(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -171,7 +171,7 @@ public:
     /** Invokes fn(directionalLightComponent, worldMatrix) for every enabled DirectionalLightComponent. */
     template<typename Fn>
     void ForEachDirectionalLight(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -186,7 +186,7 @@ public:
     /** Invokes fn(cameraComponent, worldMatrix) for every object with an enabled CameraComponent. */
     template<typename Fn>
     void ForEachCamera(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -201,7 +201,7 @@ public:
     /** Invokes fn(camera2dComponent, worldMatrix) for every object with an enabled Camera2DComponent. */
     template<typename Fn>
     void ForEachCamera2D(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -216,7 +216,7 @@ public:
     /** Screen-space text overlays (TextOverlayComponent). */
     template<typename Fn>
     void ForEachTextOverlay(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -234,7 +234,7 @@ public:
      */
     template<typename Fn>
     void ForEachSky(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -257,7 +257,7 @@ public:
      */
     template<typename Fn>
     void ForEachParticleEmitter(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -272,7 +272,7 @@ public:
     /** GUI roots (GuiCanvasComponent); use for custom tooling or with spark/gui/GuiScene helpers. */
     template<typename Fn>
     void ForEachGuiCanvas(Fn&& fn) const {
-        world.ForEachGameObject([&fn](GameObject* o) {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }

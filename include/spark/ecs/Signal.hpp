@@ -19,6 +19,22 @@ enum class SignalId : std::uint32_t {
      * <c>kPhysics2DTriggerOverlapNoStaticIndex</c> when the other body is dynamic (see <c>spark/physics/PhysicsQueries2D.hpp</c>).
      */
     Physics2DTriggerOverlap = 4,
+    /** 3D trigger enter: <c>ptr</c> = other <c>GameObject*</c>, <c>a</c> = other object id. */
+    Physics3DTriggerEnter = 5,
+    /** 3D trigger exit: same payload as <c>Physics3DTriggerEnter</c>. */
+    Physics3DTriggerExit = 6,
+    /**
+     * Animation clip marker fired by <c>AnimationEventReceiverComponent</c>.
+     * <c>ptr</c> = null-terminated event name, <c>a</c> = clip index, <c>b</c> = time in seconds (bit pattern).
+     */
+    AnimationEvent = 7,
+    /**
+     * Damage applied to a <c>HealthComponent</c>.
+     * <c>ptr</c> = <c>DamageSignalPayload*</c>, valid only for the synchronous dispatch.
+     */
+    DamageApplied = 8,
+    /** Owner's health reached zero. <c>ptr</c> = instigator <c>GameObject*</c> or nullptr. */
+    Died = 9,
     UserBase = 0x10000,
 };
 

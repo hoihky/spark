@@ -451,6 +451,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/engine/EngineContext.cpp
         src/spark/engine/GlfwInput.cpp
         src/spark/ecs/GameObject.cpp
+        src/spark/ecs/GameObjectQuery.cpp
         src/spark/ecs/components/core/TransformComponent.cpp
         src/spark/ecs/components/rendering/MeshComponent.cpp
         src/spark/ecs/components/rendering/SpriteComponent.cpp
@@ -465,9 +466,18 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/camera/CameraComponent.cpp
         src/spark/ecs/components/camera/Camera2DComponent.cpp
         src/spark/ecs/components/camera/Camera2DRigComponent.cpp
+        src/spark/ecs/components/camera/CameraFollow3DComponent.cpp
+        src/spark/ecs/components/camera/SpringArm3DComponent.cpp
         src/spark/ecs/components/rendering/SkinnedMeshComponent.cpp
+        src/spark/ecs/components/animation/AnimationEventReceiverComponent.cpp
+        src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
         src/spark/ecs/components/animation/AnimatorComponent.cpp
         src/spark/ecs/components/physics/CollisionComponent.cpp
+        src/spark/ecs/components/ai/NavMeshAgentComponent.cpp
+        src/spark/ecs/components/gameplay/HealthComponent.cpp
+        src/spark/ecs/components/gameplay/DamageableComponent.cpp
+        src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
+        src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/LocomotionClipSet.cpp
         src/spark/scene/FlyCamera.cpp
@@ -497,6 +507,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/rendering/TextOverlayComponent.cpp
         src/spark/ecs/components/ui/GuiCanvasComponent.cpp
         src/spark/ecs/components/rendering/SkyComponent.cpp
+        src/spark/ecs/components/rendering/BillboardComponent.cpp
         src/spark/ecs/components/rendering/ParticleEmitterComponent.cpp
         src/spark/ecs/components/rendering/TerrainComponent.cpp
         src/spark/gui/GuiInputState.cpp
@@ -596,6 +607,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/present/VulkanDepthResources.cpp
         src/spark/render/present/VulkanPresentationSwapchain.cpp
         src/spark/render/present/VulkanPresentationFramebuffers.cpp
+        src/spark/scene/RenderVolumes.cpp
+        src/spark/scene/VolumeRegions.cpp
         src/spark/scene/SceneSubmit.cpp
         src/spark/scene/SceneSubmitDrawPartition.cpp
         src/spark/scene/SceneSubmitLighting.cpp
@@ -608,12 +621,20 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/GameWorldAssetLoader.cpp
         src/spark/scene/SceneManager.cpp
         src/spark/physics/Collision2D.cpp
+        src/spark/physics/TilemapCollider2D.cpp
+        src/spark/physics/PhysicsMaterial2D.cpp
+        src/spark/physics/MeshCollider3D.cpp
+        src/spark/physics/PhysicsJoints.cpp
+        src/spark/physics/PolygonCollider2D.cpp
         src/spark/physics/SpatialHashGrid2D.cpp
         src/spark/physics/PhysicsWorld2D.cpp
         src/spark/physics/PhysicsQueries2D.cpp
         src/spark/physics/Collision3D.cpp
+        src/spark/physics/DynamicCollider3D.cpp
         src/spark/physics/SpatialHashGrid3D.cpp
         src/spark/physics/PhysicsWorld3D.cpp
+        src/spark/physics/CharacterController3D.cpp
+        src/spark/physics/TriggerVolume3D.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp
         src/spark/ai/steering/SteeringBehaviors3D.cpp
@@ -621,8 +642,12 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ai/goap/GoapPlanner.cpp
         src/spark/ai/fuzzy/FuzzyLogic.cpp
         src/spark/ai/GameAiSubsystem.cpp
+        src/spark/ai/NavigationSubsystem.cpp
+        src/spark/ai/PerceptionSubsystem.cpp
         src/spark/ecs/components/ai/AiAgentComponent.cpp
         src/spark/ecs/components/audio/SoundCueComponent.cpp
+        src/spark/audio/AmbientAudio.cpp
+        src/spark/audio/AudioSpatial.cpp
         src/spark/audio/SoundClip.cpp
         src/spark/audio/WavDecoder.cpp
         src/spark/audio/SoundMixer.cpp

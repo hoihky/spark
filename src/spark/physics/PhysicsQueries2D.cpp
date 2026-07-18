@@ -237,7 +237,7 @@ struct DynamicQueryBody2D {
 
 void GatherDynamicQueryBodies2D(GameWorld& world, Array<DynamicQueryBody2D>& out) {
     out.Clear();
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

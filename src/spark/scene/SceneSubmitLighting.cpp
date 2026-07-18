@@ -11,7 +11,7 @@ namespace Spark::SceneSubmitDetail {
 
 void ApplyEcsDirectionalLight(GameWorld& world, SceneRenderParams& params) {
     bool applied = false;
-    world.ForEachGameObject([&](GameObject* object) {
+    world.ForEachActiveGameObject([&](GameObject* object) {
         if (applied || object == nullptr) {
             return;
         }

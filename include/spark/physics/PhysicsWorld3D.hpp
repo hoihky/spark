@@ -36,8 +36,9 @@ struct PhysicsWorld3DSettings {
 };
 
 /**
- * Integrates dynamic rigidbodies with <c>SphereCollider3DComponent</c> against static <c>BoxCollider3DComponent</c>,
- * dynamic sphere–sphere contacts, <c>DistanceJoint3DComponent</c> constraints, and optional
+ * Integrates dynamic rigidbodies with <c>SphereCollider3DComponent</c> or <c>CapsuleCollider3DComponent</c> against static
+ * <c>BoxCollider3DComponent</c> and <c>CapsuleCollider3DComponent</c>,
+ * dynamic sphere/capsule pairs (sphere–sphere, sphere–capsule, capsule–capsule), <c>DistanceJoint3DComponent</c> constraints, and optional
  * <c>PhysicsMaterial3DComponent</c> on surfaces. Rebuilds a 3D spatial hash of statics each step.
  * Solid spheres use <c>I = 2/5 m r²</c> (or <c>Rigidbody3DComponent::inverseInertiaTensorScale</c> when set);
  * contact impulses apply torque <c>Δω = I⁻¹ (r × J)</c>. Translation is swept against statics before integration

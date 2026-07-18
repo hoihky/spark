@@ -13,7 +13,7 @@ class GameWorld;
 /**
  * Uniform-cell spatial hash for 2D broad-phase: O(1) cell buckets, conservative insertion of
  * indexed AABBs, unique index queries. Pairs with parallel StaticCollider2D[] built from ECS
- * (static BoxCollider2D and/or CircleCollider2D).
+ * (static BoxCollider2D, CircleCollider2D, and/or TilemapCollider2D).
  */
 class SpatialHashGrid2D {
 public:

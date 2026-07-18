@@ -3,6 +3,7 @@
 | Document | Audience | Summary |
 |----------|----------|---------|
 | [**../README.md**](../README.md) | Everyone | Quick start, build targets, repo map |
+| [**programming-guide/**](programming-guide/index.md) | Game devs | Multi-part tutorial + [**component reference**](programming-guide/1-overview-architecture/07-game-component-reference.md) (all 64 components) |
 | [**ARCHITECTURE_AND_DEVELOPER_GUIDE.md**](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine & gameplay devs | Loop, ECS, rendering, feature catalog |
 | [**SCENE_AND_RENDERING_GAPS.md**](SCENE_AND_RENDERING_GAPS.md) | Gameplay devs | C++ public API gaps — scene, ECS, rendering (`include/spark/`) |
 | [**CLION.md**](CLION.md) | IDE users | CMake presets, editor-debug profile |

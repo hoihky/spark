@@ -62,6 +62,16 @@ public:
             Matrix4* outPalette,
             std::uint32_t paletteMax) const;
 
+    /**
+     * Joint world matrix in skeleton space (before owner world transform).
+     * Returns false when clip/joint indices are out of range.
+     */
+    [[nodiscard]] bool TryComputeJointWorldMatrix(
+            std::uint32_t clipIndex,
+            float timeSec,
+            std::uint32_t jointIndex,
+            Matrix4& outJointWorld) const;
+
 private:
     static void ComputeJointWorldMatrices(
             std::uint32_t jointCount,

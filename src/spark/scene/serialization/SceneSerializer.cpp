@@ -37,8 +37,21 @@ constexpr ComponentKind kCaptureOrder[] = {
         ComponentKind::Terrain,
         ComponentKind::BoxCollider3D,
         ComponentKind::SphereCollider3D,
+        ComponentKind::CapsuleCollider3D,
         ComponentKind::Rigidbody3D,
+        ComponentKind::CharacterController3D,
+        ComponentKind::TriggerVolume3D,
         ComponentKind::PhysicsMaterial3D,
+        ComponentKind::AudioListener,
+        ComponentKind::Billboard,
+        ComponentKind::AnimationEventReceiver,
+        ComponentKind::AttachmentSocket,
+        ComponentKind::CameraFollow3D,
+        ComponentKind::SpringArm3D,
+        ComponentKind::PolygonCollider2D,
+        ComponentKind::Health,
+        ComponentKind::Damageable,
+        ComponentKind::DecalProjector,
 };
 
 bool WriteEscapedName(std::FILE* f, const Utf8String& name) {

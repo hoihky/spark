@@ -14,10 +14,10 @@ enum class RigidbodyBodyType3D : std::uint8_t {
 };
 
 /**
- * 3D velocity-based body. Dynamic spheres with <c>SphereCollider3DComponent</c> are integrated by
- * <c>SimulatePhysics3D</c> (static boxes, dynamic sphere pairs, optional joints; combines with
+ * 3D velocity-based body. Dynamic colliders (<c>SphereCollider3DComponent</c> or <c>CapsuleCollider3DComponent</c>)
+ * are integrated by <c>SimulatePhysics3D</c> (static boxes/capsules, dynamic pairs, optional joints; combines with
  * <c>PhysicsMaterial3DComponent</c> on surfaces). Spherical inertia uses <c>I = 2/5 m r²</c> from collider
- * scale unless <c>inverseInertiaTensorScale</c> overrides the scalar inverse.
+ * scale; capsules use a bounding-sphere approximation unless <c>inverseInertiaTensorScale</c> overrides the scalar inverse.
  */
 class Rigidbody3DComponent final : public GameComponent {
 public:

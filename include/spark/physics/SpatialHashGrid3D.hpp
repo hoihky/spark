@@ -12,7 +12,7 @@ class GameObject;
 class GameWorld;
 
 /**
- * Uniform-cell 3D spatial hash for static box AABBs (broad-phase for sphere / AABB dynamics).
+ * Uniform-cell 3D spatial hash for static collider AABBs (broad-phase for sphere dynamics / character motors).
  */
 class SpatialHashGrid3D {
 public:

@@ -39,7 +39,7 @@ void SceneTilemapSubmitter::Submit(
     params.tilemaps.Reserve(8);
     params.tilemapTiles.Reserve(512);
 
-    world.ForEachGameObject([&](GameObject* object) {
+    world.ForEachActiveGameObject([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

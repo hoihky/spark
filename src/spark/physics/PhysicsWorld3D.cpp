@@ -1,7 +1,12 @@
 #include "spark/physics/PhysicsWorld3D.hpp"
 
 #include "spark/core/Array.hpp"
+#include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/DistanceJoint3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/HingeJoint3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/SpringJoint3DComponent.hpp"
+#include "spark/physics/PhysicsJoints.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsMaterial3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
@@ -10,6 +15,7 @@
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/physics/Collision3D.hpp"
+#include "spark/physics/DynamicCollider3D.hpp"
 #include "spark/physics/SpatialHashGrid3D.hpp"
 #include "spark/scene/GameWorld.hpp"
 
@@ -20,15 +26,6 @@
 namespace Spark {
 
 namespace {
-
-struct DynSphere {
-    GameObject* obj = nullptr;
-    Rigidbody3DComponent* rb = nullptr;
-    TransformComponent* tr = nullptr;
-    SphereCollider3DComponent* sph = nullptr;
-};
-
-[[nodiscard]] float EffectiveSphereInverseInertia(const Rigidbody3DComponent& rb, const float radius) noexcept;
 
 [[nodiscard]] float Clamp01(const float x) noexcept {
     return std::clamp(x, 0.0F, 1.0F);
@@ -78,7 +75,11 @@ struct DynSphere {
     return CombineGeometricMean(SurfaceDynamicFrictionOrDefault(dynObj), std::max(0.0F, st.dynamicFriction));
 }
 
-[[nodiscard]] float PairRestitutionSphereSphere(const Rigidbody3DComponent& a, const GameObject* oa, const Rigidbody3DComponent& b, const GameObject* ob) noexcept {
+[[nodiscard]] float PairRestitutionDynamicDynamic(
+        const Rigidbody3DComponent& a,
+        const GameObject* oa,
+        const Rigidbody3DComponent& b,
+        const GameObject* ob) noexcept {
     const float sa = SurfaceRestitutionOrNeutral(oa);
     const float sb = SurfaceRestitutionOrNeutral(ob);
     const float surface = CombineGeometricMean(sa, sb);
@@ -86,7 +87,7 @@ struct DynSphere {
     return Clamp01(surface * body);
 }
 
-[[nodiscard]] float PairFrictionSphereSphere(const GameObject* oa, const GameObject* ob) noexcept {
+[[nodiscard]] float PairFrictionDynamicDynamic(const GameObject* oa, const GameObject* ob) noexcept {
     return CombineGeometricMean(SurfaceDynamicFrictionOrDefault(oa), SurfaceDynamicFrictionOrDefault(ob));
 }
 
@@ -97,18 +98,12 @@ void ApplyVelocityRestitutionAlongNormal(
     if (vn >= 0.0F) {
         return;
     }
-    /** Newton: post-contact normal speed <c>v'_n = -e v_n</c> for an infinite-mass surface; impulse <c>-(1+e) v_n</c> along outward <c>n</c>. */
     const float impulse = (1.0F + e) * vn;
     v.x -= impulse * nx;
     v.y -= impulse * ny;
     v.z -= impulse * nz;
 }
 
-/**
- * Coulomb kinetic friction after the normal impulse: tangential slip magnitude drops by at most
- * <c>μ * |(1+e) v{n}^{-}|</c>, where <c>v{n}^{-}</c> is the pre-impact normal velocity (negative when approaching).
- * Preserves the normal component of <c>v</c> (already restitution-corrected).
- */
 void ApplyCoulombKineticFrictionTangent(
         Vector3& v,
         const float nx,
@@ -130,11 +125,10 @@ void ApplyCoulombKineticFrictionTangent(
     if (t2 < 1.0e-16F) {
         return;
     }
-    const float tLen = std::sqrt(t2);
-    /** No slip budget unless this was a real impact (skip resting / projection micro-slides). */
     if (vnApproach >= -std::max(0.0F, minImpactNormalSpeed)) {
         return;
     }
+    const float tLen = std::sqrt(t2);
     const float slipCap = muDyn * (1.0F + e) * std::fabs(vnApproach);
     const float newLen = std::max(0.0F, tLen - slipCap);
     const float s = newLen / tLen;
@@ -143,130 +137,46 @@ void ApplyCoulombKineticFrictionTangent(
     v.z = nz * vn + tz * s;
 }
 
-[[nodiscard]] bool ComputeSphereAabbContact(
-        const Vector3& pos,
-        const float r,
-        const CollisionAabb3& b,
-        float& outNx,
-        float& outNy,
-        float& outNz,
-        float& outPen,
-        const float separationSlopForInclusion = 0.0F) noexcept {
-    const bool overlapped = (separationSlopForInclusion > 0.0F)
-            ? CollisionAabb3OverlapsSphereInflated(b, pos, r, separationSlopForInclusion)
-            : CollisionAabb3OverlapsSphere(b, pos, r);
-    if (!overlapped) {
-        return false;
+void RefreshDynamicBodySim(DynamicBody3D& body) noexcept {
+    if (body.sphere != nullptr) {
+        BuildDynamicCollider3DSimFromSphere(*body.obj, *body.sphere, body.sim);
+    } else if (body.capsule != nullptr) {
+        BuildDynamicCollider3DSimFromCapsule(*body.obj, *body.capsule, body.sim);
     }
-    const float penReject =
-            (separationSlopForInclusion > 0.0F) ? -(separationSlopForInclusion + 0.001F) : -1.0e-3F;
-    const float qx = std::clamp(pos.x, b.minX, b.maxX);
-    const float qy = std::clamp(pos.y, b.minY, b.maxY);
-    const float qz = std::clamp(pos.z, b.minZ, b.maxZ);
-    const float dx = pos.x - qx;
-    const float dy = pos.y - qy;
-    const float dz = pos.z - qz;
-    const float d2 = dx * dx + dy * dy + dz * dz;
-    constexpr float kEps = 1.0e-8F;
-    if (d2 > kEps * kEps) {
-        const float d = std::sqrt(d2);
-        float pen = r - d;
-        if (pen < penReject) {
-            return false;
-        }
-        if (pen < 0.0F) {
-            pen = 0.0F;
-        }
-        const float inv = 1.0F / d;
-        outNx = dx * inv;
-        outNy = dy * inv;
-        outNz = dz * inv;
-        outPen = pen;
-        return true;
-    }
-    float best = 1.0e30F;
-    float nx = 0.0F;
-    float ny = 0.0F;
-    float nz = 0.0F;
-    auto consider = [&](const float p, const float sx, const float sy, const float sz) noexcept {
-        if (p > 0.0F && p < best) {
-            best = p;
-            nx = sx;
-            ny = sy;
-            nz = sz;
-        }
-    };
-    if (pos.x - r < b.minX) {
-        consider((b.minX + r) - pos.x, 1.0F, 0.0F, 0.0F);
-    }
-    if (pos.x + r > b.maxX) {
-        consider(pos.x - (b.maxX - r), -1.0F, 0.0F, 0.0F);
-    }
-    if (pos.y - r < b.minY) {
-        consider((b.minY + r) - pos.y, 0.0F, 1.0F, 0.0F);
-    }
-    if (pos.y + r > b.maxY) {
-        consider(pos.y - (b.maxY - r), 0.0F, -1.0F, 0.0F);
-    }
-    if (pos.z - r < b.minZ) {
-        consider((b.minZ + r) - pos.z, 0.0F, 0.0F, 1.0F);
-    }
-    if (pos.z + r > b.maxZ) {
-        consider(pos.z - (b.maxZ - r), 0.0F, 0.0F, -1.0F);
-    }
-    if (best >= 1.0e29F) {
-        return false;
-    }
-    outNx = nx;
-    outNy = ny;
-    outNz = nz;
-    outPen = best;
-    return true;
 }
 
-bool SeparateSphereFromAabb(Vector3& pos, const float r, const CollisionAabb3& b) noexcept {
-    float nx = 0.0F;
-    float ny = 0.0F;
-    float nz = 0.0F;
-    float pen = 0.0F;
-    if (!ComputeSphereAabbContact(pos, r, b, nx, ny, nz, pen)) {
-        return false;
-    }
-    if (pen > 1.0e-8F) {
-        pos.x += nx * pen;
-        pos.y += ny * pen;
-        pos.z += nz * pen;
-    }
-    return true;
+void ApplyTranslationDeltaToBody(DynamicBody3D& body, const Vector3& delta) noexcept {
+    Vector3 translation = body.tr->GetLocalTransform().translation;
+    translation.x += delta.x;
+    translation.y += delta.y;
+    translation.z += delta.z;
+    body.tr->SetTranslation(translation);
+    TranslateDynamicCollider3DSim(body.sim, delta);
 }
 
-void ApplyDeepestStaticNormalImpulseForSphere(
-        DynSphere& d,
+void ApplyDeepestStaticNormalImpulse(
+        DynamicBody3D& body,
         const Array<StaticCollider3DSim>& statics,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch,
         const float h,
         const PhysicsWorld3DSettings& settings) noexcept {
-    Vector3 center{};
-    float rad = 0.0F;
-    ComputeSphereCollider3World(*d.obj, *d.sph, center, rad);
+    RefreshDynamicBodySim(body);
 
-    /** Widen query so thin post-separation gaps still find the same statics after float error. */
     constexpr float kBroadInflate = 0.006F;
-    CollisionAabb3 q{};
-    q.minX = center.x - rad - kBroadInflate;
-    q.minY = center.y - rad - kBroadInflate;
-    q.minZ = center.z - rad - kBroadInflate;
-    q.maxX = center.x + rad + kBroadInflate;
-    q.maxY = center.y + rad + kBroadInflate;
-    q.maxZ = center.z + rad + kBroadInflate;
+    CollisionAabb3 q = body.sim.bounds;
+    q.minX -= kBroadInflate;
+    q.minY -= kBroadInflate;
+    q.minZ -= kBroadInflate;
+    q.maxX += kBroadInflate;
+    q.maxY += kBroadInflate;
+    q.maxZ += kBroadInflate;
     broadPhase.QueryUniquePayloadIndices(q, scratch);
 
-    Vector3 vel = d.rb->GetVelocity();
-    Vector3 omega = d.rb->GetAngularVelocity();
+    Vector3 vel = body.rb->GetVelocity();
+    Vector3 omega = body.rb->GetAngularVelocity();
+    const Vector3 anchor = GetDynamicCollider3DTrackingPoint(body.sim);
 
-    /** Slightly inflated narrow phase: strict overlap often disappears after position solve while velocity still
-     *  points into the surface, which skipped impulses entirely ("glued", no bounce). */
     constexpr float kNarrowSlop = 0.0045F;
     constexpr float kApproachEps = 1.0e-6F;
     constexpr int kMaxPasses = 6;
@@ -290,7 +200,7 @@ void ApplyDeepestStaticNormalImpulseForSphere(
             float ny = 0.0F;
             float nz = 0.0F;
             float pen = 0.0F;
-            if (!ComputeSphereAabbContact(center, rad, rec.aabb, nx, ny, nz, pen, kNarrowSlop)) {
+            if (!ComputeDynamicStaticCollider3Contact(body.sim, rec, nx, ny, nz, pen, kNarrowSlop)) {
                 continue;
             }
             const float vn = vel.x * nx + vel.y * ny + vel.z * nz;
@@ -313,86 +223,58 @@ void ApplyDeepestStaticNormalImpulseForSphere(
 
         const float vn0 = bestVn;
         const StaticCollider3DSim& rec = statics[bestIdx];
-        const float ePair = PairRestitution(*d.rb, d.obj, rec);
-        const float mu = PairDynamicFriction(d.obj, rec);
+        const float ePair = PairRestitution(*body.rb, body.obj, rec);
+        const float mu = PairDynamicFriction(body.obj, rec);
         const Vector3 vPhys0 = vel;
         ApplyVelocityRestitutionAlongNormal(vel, bnX, bnY, bnZ, ePair);
         ApplyCoulombKineticFrictionTangent(
                 vel, bnX, bnY, bnZ, mu, vn0, ePair, settings.frictionImpactNormalSpeed);
 
-        const float invM = d.rb->GetInverseMass();
-        const float invI = EffectiveSphereInverseInertia(*d.rb, rad);
+        const float invM = body.rb->GetInverseMass();
+        const float invI = EffectiveDynamicCollider3DInverseInertia(*body.rb, body.sim);
         if (invM > 1.0e-10F && invI > 1.0e-10F) {
             const Vector3 dv{vel.x - vPhys0.x, vel.y - vPhys0.y, vel.z - vPhys0.z};
             const Vector3 impulse{dv.x / invM, dv.y / invM, dv.z / invM};
-            const Vector3 rArm{-bnX * rad, -bnY * rad, -bnZ * rad};
+            Vector3 contactOnBody{
+                    anchor.x - bnX * (body.sim.shape == DynamicCollider3DShape::Sphere ? body.sim.sphereRadius
+                                                                                      : body.sim.capsule.radius),
+                    anchor.y - bnY * (body.sim.shape == DynamicCollider3DShape::Sphere ? body.sim.sphereRadius
+                                                                                      : body.sim.capsule.radius),
+                    anchor.z - bnZ * (body.sim.shape == DynamicCollider3DShape::Sphere ? body.sim.sphereRadius
+                                                                                      : body.sim.capsule.radius)};
+            const Vector3 rArm{
+                    contactOnBody.x - anchor.x, contactOnBody.y - anchor.y, contactOnBody.z - anchor.z};
             const Vector3 tau = Vector3::Cross(rArm, impulse);
             omega.x += invI * tau.x;
             omega.y += invI * tau.y;
             omega.z += invI * tau.z;
         }
 
-        const bool baumgarteEnable = settings.baumgarteContactBias > 0.0F;
-        if (baumgarteEnable && bestPen > settings.contactPenetrationSlop) {
+        if (settings.baumgarteContactBias > 0.0F && bestPen > settings.contactPenetrationSlop) {
             const float hh = std::max(h, 1.0e-6F);
-            const float bias =
-                    std::min(settings.baumgarteMaxSeparationVelocity, settings.baumgarteContactBias * bestPen / hh);
+            const float bias = std::min(
+                    settings.baumgarteMaxSeparationVelocity, settings.baumgarteContactBias * bestPen / hh);
             vel.x += bias * bnX;
             vel.y += bias * bnY;
             vel.z += bias * bnZ;
         }
     }
 
-    d.rb->SetVelocity(vel);
-    d.rb->SetAngularVelocity(omega);
+    body.rb->SetVelocity(vel);
+    body.rb->SetAngularVelocity(omega);
 }
 
-bool SeparateSpheresPosition(
-        Vector3& ca,
-        Vector3& cb,
-        const float wA,
-        const float ra,
-        const float wB,
-        const float rb) noexcept {
-    Vector3 d = cb - ca;
-    const float distSq = d.LengthSquared();
-    const float minD = 1.0e-8F;
-    if (distSq < minD * minD) {
-        return false;
-    }
-    const float dist = std::sqrt(distSq);
-    const float pen = ra + rb - dist;
-    if (pen <= 0.0F) {
-        return false;
-    }
-    const float nx = d.x / dist;
-    const float ny = d.y / dist;
-    const float nz = d.z / dist;
-    const float den = wA + wB;
-    if (den < 1.0e-10F) {
-        return false;
-    }
-    const float corr = pen / den;
-    ca.x -= nx * corr * wB;
-    ca.y -= ny * corr * wB;
-    ca.z -= nz * corr * wB;
-    cb.x += nx * corr * wA;
-    cb.y += ny * corr * wA;
-    cb.z += nz * corr * wA;
-    return true;
-}
-
-void ApplySpherePairVelocityImpulses(
+void ApplyDynamicPairVelocityImpulses(
         Vector3& va,
         Vector3& vb,
         Vector3* omegaA,
         const float invIA,
         const float wA,
-        const float ra,
+        const DynamicCollider3DSim& simA,
         Vector3* omegaB,
         const float invIB,
         const float wB,
-        const float rb,
+        const DynamicCollider3DSim& simB,
         const float nx,
         const float ny,
         const float nz,
@@ -444,7 +326,10 @@ void ApplySpherePairVelocityImpulses(
     if (omegaA != nullptr && invIA > 0.0F && wA > 1.0e-10F) {
         const Vector3 dv{va.x - vaPhys0.x, va.y - vaPhys0.y, va.z - vaPhys0.z};
         const Vector3 impulse{dv.x / wA, dv.y / wA, dv.z / wA};
-        const Vector3 rA{nx * ra, ny * ra, nz * ra};
+        Vector3 contactOnA{};
+        ComputeDynamicDynamicContactPointOnA(simA, simB, nx, ny, nz, contactOnA);
+        const Vector3 anchorA = GetDynamicCollider3DTrackingPoint(simA);
+        const Vector3 rA{contactOnA.x - anchorA.x, contactOnA.y - anchorA.y, contactOnA.z - anchorA.z};
         const Vector3 tau = Vector3::Cross(rA, impulse);
         omegaA->x += invIA * tau.x;
         omegaA->y += invIA * tau.y;
@@ -453,15 +338,17 @@ void ApplySpherePairVelocityImpulses(
     if (omegaB != nullptr && invIB > 0.0F && wB > 1.0e-10F) {
         const Vector3 dv{vb.x - vbPhys0.x, vb.y - vbPhys0.y, vb.z - vbPhys0.z};
         const Vector3 impulse{dv.x / wB, dv.y / wB, dv.z / wB};
-        const Vector3 rB{-nx * rb, -ny * rb, -nz * rb};
+        Vector3 contactOnB{};
+        ComputeDynamicDynamicContactPointOnA(simB, simA, -nx, -ny, -nz, contactOnB);
+        const Vector3 anchorB = GetDynamicCollider3DTrackingPoint(simB);
+        const Vector3 rB{contactOnB.x - anchorB.x, contactOnB.y - anchorB.y, contactOnB.z - anchorB.z};
         const Vector3 tau = Vector3::Cross(rB, impulse);
         omegaB->x += invIB * tau.x;
         omegaB->y += invIB * tau.y;
         omegaB->z += invIB * tau.z;
     }
 
-    const bool baumgarteEnable = settings.baumgarteContactBias > 0.0F;
-    if (baumgarteEnable && pen > settings.contactPenetrationSlop) {
+    if (settings.baumgarteContactBias > 0.0F && pen > settings.contactPenetrationSlop) {
         const float hh = std::max(h, 1.0e-6F);
         const float bias =
                 std::min(settings.baumgarteMaxSeparationVelocity, settings.baumgarteContactBias * pen / hh);
@@ -494,23 +381,6 @@ void ApplyAngularDamping(Vector3& w, const float dampingPerSec, const float dt) 
     w.z *= k;
 }
 
-/** Isotropic inverse inertia for a solid sphere: <c>I = 2/5 m r²</c>. */
-[[nodiscard]] float SolidSphereInverseInertiaScalar(const float invMass, const float radius) noexcept {
-    if (invMass <= 0.0F || radius < 1.0e-6F) {
-        return 0.0F;
-    }
-    const float rr = radius * radius;
-    return 2.5F * invMass / rr;
-}
-
-[[nodiscard]] float EffectiveSphereInverseInertia(const Rigidbody3DComponent& rb, const float radius) noexcept {
-    const float overrideInv = rb.GetInverseInertiaTensorScale();
-    if (overrideInv > 0.0F) {
-        return overrideInv;
-    }
-    return SolidSphereInverseInertiaScalar(rb.GetInverseMass(), radius);
-}
-
 void IntegrateLocalOrientation(TransformComponent& tr, const Vector3& w, const float dt) noexcept {
     const float w2 = w.x * w.x + w.y * w.y + w.z * w.z;
     if (w2 < 1.0e-20F) {
@@ -525,26 +395,18 @@ void IntegrateLocalOrientation(TransformComponent& tr, const Vector3& w, const f
     tr.SetRotation(q);
 }
 
-[[nodiscard]] bool AnyStaticOverlap(
-        const Vector3& center,
-        const float rad,
+[[nodiscard]] bool AnyStaticOverlapForDynamic(
+        const DynamicCollider3DSim& sim,
         const Array<StaticCollider3DSim>& statics,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
-    CollisionAabb3 q{};
-    q.minX = center.x - rad;
-    q.minY = center.y - rad;
-    q.minZ = center.z - rad;
-    q.maxX = center.x + rad;
-    q.maxY = center.y + rad;
-    q.maxZ = center.z + rad;
-    broadPhase.QueryUniquePayloadIndices(q, scratch);
+    broadPhase.QueryUniquePayloadIndices(sim.bounds, scratch);
     for (std::size_t i = 0; i < scratch.GetSize(); ++i) {
         const std::uint32_t idx = scratch[i];
         if (idx >= statics.GetSize()) {
             continue;
         }
-        if (CollisionAabb3OverlapsSphere(statics[idx].aabb, center, rad)) {
+        if (DynamicCollider3DOverlapsStatic(sim, statics[idx])) {
             return true;
         }
     }
@@ -552,9 +414,9 @@ void IntegrateLocalOrientation(TransformComponent& tr, const Vector3& w, const f
 }
 
 [[nodiscard]] float ComputeTranslationLambdaAgainstStatics(
-        const Vector3& c0,
-        const Vector3& c1,
-        const float rad,
+        const DynamicCollider3DSim& simAtStart,
+        const Vector3& track0,
+        const Vector3& track1,
         const int binaryIters,
         const Array<StaticCollider3DSim>& statics,
         SpatialHashGrid3D& broadPhase,
@@ -562,17 +424,21 @@ void IntegrateLocalOrientation(TransformComponent& tr, const Vector3& w, const f
     if (binaryIters <= 0) {
         return 1.0F;
     }
-    if (!AnyStaticOverlap(c1, rad, statics, broadPhase, scratch)) {
+
+    DynamicCollider3DSim simEnd = simAtStart;
+    const Vector3 endDelta{track1.x - track0.x, track1.y - track0.y, track1.z - track0.z};
+    TranslateDynamicCollider3DSim(simEnd, endDelta);
+    if (!AnyStaticOverlapForDynamic(simEnd, statics, broadPhase, scratch)) {
         return 1.0F;
     }
-    if (!AnyStaticOverlap(c0, rad, statics, broadPhase, scratch)) {
-        /** Already separated at start; find latest free fraction along the segment. */
+    if (!AnyStaticOverlapForDynamic(simAtStart, statics, broadPhase, scratch)) {
         float lo = 0.0F;
         float hi = 1.0F;
         for (int k = 0; k < binaryIters; ++k) {
             const float mid = 0.5F * (lo + hi);
-            const Vector3 cm{c0.x + (c1.x - c0.x) * mid, c0.y + (c1.y - c0.y) * mid, c0.z + (c1.z - c0.z) * mid};
-            if (AnyStaticOverlap(cm, rad, statics, broadPhase, scratch)) {
+            DynamicCollider3DSim simMid = simAtStart;
+            TranslateDynamicCollider3DSim(simMid, {endDelta.x * mid, endDelta.y * mid, endDelta.z * mid});
+            if (AnyStaticOverlapForDynamic(simMid, statics, broadPhase, scratch)) {
                 hi = mid;
             } else {
                 lo = mid;
@@ -580,36 +446,46 @@ void IntegrateLocalOrientation(TransformComponent& tr, const Vector3& w, const f
         }
         return std::max(0.0F, lo * 0.999F);
     }
-    /** Deep overlap at start: do not shorten the step (positional solve will recover). */
     return 1.0F;
 }
 
-void CollectDynamics(GameWorld& world, Array<DynSphere>& out) noexcept {
+void CollectDynamics(GameWorld& world, Array<DynamicBody3D>& out) noexcept {
     out.Clear();
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
+            return;
+        }
+        if (o->GetComponent<CharacterController3DComponent>() != nullptr) {
             return;
         }
         auto* rb = o->GetComponent<Rigidbody3DComponent>();
         auto* tr = o->GetComponent<TransformComponent>();
-        auto* sph = o->GetComponent<SphereCollider3DComponent>();
-        if (rb == nullptr || tr == nullptr || sph == nullptr) {
+        if (rb == nullptr || tr == nullptr) {
             return;
         }
         if (rb->GetBodyType() != RigidbodyBodyType3D::Dynamic) {
             return;
         }
-        DynSphere d{};
-        d.obj = o;
-        d.rb = rb;
-        d.tr = tr;
-        d.sph = sph;
-        out.PushBack(d);
+
+        auto* sphere = o->GetComponent<SphereCollider3DComponent>();
+        auto* capsule = o->GetComponent<CapsuleCollider3DComponent>();
+        if (sphere == nullptr && capsule == nullptr) {
+            return;
+        }
+
+        DynamicBody3D body{};
+        body.obj = o;
+        body.rb = rb;
+        body.tr = tr;
+        body.sphere = sphere;
+        body.capsule = (sphere == nullptr) ? capsule : nullptr;
+        RefreshDynamicBodySim(body);
+        out.PushBack(body);
     });
 }
 
 void SolveDistanceJoints(GameWorld& world, const float stiffnessScale) noexcept {
-    world.ForEachGameObject([&](GameObject* owner) {
+    world.ForEachActiveGameObject([&](GameObject* owner) {
         if (owner == nullptr) {
             return;
         }
@@ -705,116 +581,88 @@ void SimulatePhysics3D(GameWorld& world, const FrameTiming& timing, const Physic
     RebuildBroadPhaseFromStaticColliders3D(world, kBroadCellWorld, statics, broadPhase);
 
     Array<std::uint32_t> queryScratch;
-    Array<DynSphere> bodies;
+    Array<DynamicBody3D> bodies;
     CollectDynamics(world, bodies);
 
     for (int s = 0; s < substeps; ++s) {
         for (std::size_t bi = 0; bi < bodies.GetSize(); ++bi) {
-            DynSphere& d = bodies[bi];
-            Vector3 v = d.rb->GetVelocity();
-            v.y += settings.gravityY * d.rb->GetGravityScale() * h;
-            if (v.y < -settings.maxFallSpeed) {
-                v.y = -settings.maxFallSpeed;
-            }
-            if (v.y > settings.maxFallSpeed) {
-                v.y = settings.maxFallSpeed;
-            }
-            ApplyLinearDamping(v, d.rb->GetLinearDamping(), h);
-            d.rb->SetVelocity(v);
+            DynamicBody3D& body = bodies[bi];
+            Vector3 v = body.rb->GetVelocity();
+            v.y += settings.gravityY * body.rb->GetGravityScale() * h;
+            v.y = std::clamp(v.y, -settings.maxFallSpeed, settings.maxFallSpeed);
+            ApplyLinearDamping(v, body.rb->GetLinearDamping(), h);
+            body.rb->SetVelocity(v);
 
-            Vector3 w = d.rb->GetAngularVelocity();
-            ApplyAngularDamping(w, d.rb->GetAngularDamping(), h);
-            d.rb->SetAngularVelocity(w);
+            Vector3 w = body.rb->GetAngularVelocity();
+            ApplyAngularDamping(w, body.rb->GetAngularDamping(), h);
+            body.rb->SetAngularVelocity(w);
 
-            const Vector3 t0 = d.tr->GetLocalTransform().translation;
-            Vector3 c0{};
-            float rad = 0.0F;
-            ComputeSphereCollider3World(*d.obj, *d.sph, c0, rad);
-            const Vector3 c1{c0.x + v.x * h, c0.y + v.y * h, c0.z + v.z * h};
+            RefreshDynamicBodySim(body);
+            const Vector3 track0 = GetDynamicCollider3DTrackingPoint(body.sim);
+            const Vector3 track1{track0.x + v.x * h, track0.y + v.y * h, track0.z + v.z * h};
             const float lambda = ComputeTranslationLambdaAgainstStatics(
-                    c0,
-                    c1,
-                    rad,
-                    settings.sweptStaticCcdBinaryIterations,
-                    statics,
-                    broadPhase,
-                    queryScratch);
-            const Vector3 cSafe{
-                    c0.x + (c1.x - c0.x) * lambda, c0.y + (c1.y - c0.y) * lambda, c0.z + (c1.z - c0.z) * lambda};
-            const Vector3 tNew{
-                    t0.x + (cSafe.x - c0.x), t0.y + (cSafe.y - c0.y), t0.z + (cSafe.z - c0.z)};
-            d.tr->SetTranslation(tNew);
+                    body.sim, track0, track1, settings.sweptStaticCcdBinaryIterations, statics, broadPhase, queryScratch);
+            const Vector3 trackSafe{
+                    track0.x + (track1.x - track0.x) * lambda,
+                    track0.y + (track1.y - track0.y) * lambda,
+                    track0.z + (track1.z - track0.z) * lambda};
+            ApplyTranslationDeltaToBody(body, {trackSafe.x - track0.x, trackSafe.y - track0.y, trackSafe.z - track0.z});
 
-            IntegrateLocalOrientation(*d.tr, w, h);
+            IntegrateLocalOrientation(*body.tr, w, h);
         }
 
-        /** Velocity impulses while overlaps are reliable (post-integration). Position iterations may open a float gap
-         *  that no longer passes strict AABB–sphere tests, which previously skipped restitution entirely. */
         for (std::size_t bi = 0; bi < bodies.GetSize(); ++bi) {
-            ApplyDeepestStaticNormalImpulseForSphere(bodies[bi], statics, broadPhase, queryScratch, h, settings);
+            ApplyDeepestStaticNormalImpulse(bodies[bi], statics, broadPhase, queryScratch, h, settings);
         }
 
         const int iters = std::max(1, settings.resolveIterations);
         for (int it = 0; it < iters; ++it) {
             for (std::size_t bi = 0; bi < bodies.GetSize(); ++bi) {
-                DynSphere& d = bodies[bi];
-                Vector3 center{};
-                float rad = 0.0F;
-                ComputeSphereCollider3World(*d.obj, *d.sph, center, rad);
+                DynamicBody3D& body = bodies[bi];
+                RefreshDynamicBodySim(body);
 
-                CollisionAabb3 q{};
-                q.minX = center.x - rad;
-                q.minY = center.y - rad;
-                q.minZ = center.z - rad;
-                q.maxX = center.x + rad;
-                q.maxY = center.y + rad;
-                q.maxZ = center.z + rad;
-
-                broadPhase.QueryUniquePayloadIndices(q, queryScratch);
-
-                Vector3 trPos = d.tr->GetLocalTransform().translation;
-
+                broadPhase.QueryUniquePayloadIndices(body.sim.bounds, queryScratch);
                 for (std::size_t i = 0; i < queryScratch.GetSize(); ++i) {
                     const std::uint32_t idx = queryScratch[i];
                     if (idx >= statics.GetSize()) {
                         continue;
                     }
                     const StaticCollider3DSim& rec = statics[idx];
-                    if (!CollisionAabb3OverlapsSphere(rec.aabb, center, rad)) {
+                    if (!DynamicCollider3DOverlapsStatic(body.sim, rec)) {
                         continue;
                     }
-                    Vector3 c = center;
-                    if (SeparateSphereFromAabb(c, rad, rec.aabb)) {
-                        trPos += (c - center);
-                        d.tr->SetTranslation(trPos);
-                        center = c;
+                    const Vector3 trackBefore = GetDynamicCollider3DTrackingPoint(body.sim);
+                    DynamicCollider3DSim separated = body.sim;
+                    if (SeparateDynamicCollider3DFromStatic(separated, rec)) {
+                        const Vector3 trackAfter = GetDynamicCollider3DTrackingPoint(separated);
+                        ApplyTranslationDeltaToBody(
+                                body,
+                                {trackAfter.x - trackBefore.x, trackAfter.y - trackBefore.y, trackAfter.z - trackBefore.z});
                     }
                 }
             }
 
             for (std::size_t a = 0; a < bodies.GetSize(); ++a) {
                 for (std::size_t b = a + 1; b < bodies.GetSize(); ++b) {
-                    DynSphere& A = bodies[a];
-                    DynSphere& B = bodies[b];
-                    Vector3 ca{};
-                    float ra = 0.0F;
-                    Vector3 cb{};
-                    float rb = 0.0F;
-                    ComputeSphereCollider3World(*A.obj, *A.sph, ca, ra);
-                    ComputeSphereCollider3World(*B.obj, *B.sph, cb, rb);
+                    DynamicBody3D& bodyA = bodies[a];
+                    DynamicBody3D& bodyB = bodies[b];
+                    RefreshDynamicBodySim(bodyA);
+                    RefreshDynamicBodySim(bodyB);
 
-                    const float wA = A.rb->GetInverseMass();
-                    const float wB = B.rb->GetInverseMass();
-
-                    const Vector3 ca0 = ca;
-                    const Vector3 cb0 = cb;
-                    if (SeparateSpheresPosition(ca, cb, wA, ra, wB, rb)) {
-                        Vector3 pa = A.tr->GetLocalTransform().translation;
-                        Vector3 pb = B.tr->GetLocalTransform().translation;
-                        pa += (ca - ca0);
-                        pb += (cb - cb0);
-                        A.tr->SetTranslation(pa);
-                        B.tr->SetTranslation(pb);
+                    const Vector3 trackA0 = GetDynamicCollider3DTrackingPoint(bodyA.sim);
+                    const Vector3 trackB0 = GetDynamicCollider3DTrackingPoint(bodyB.sim);
+                    DynamicCollider3DSim simA = bodyA.sim;
+                    DynamicCollider3DSim simB = bodyB.sim;
+                    if (SeparateDynamicDynamicCollider3Position(
+                                simA, simB, bodyA.rb->GetInverseMass(), bodyB.rb->GetInverseMass())) {
+                        const Vector3 trackA1 = GetDynamicCollider3DTrackingPoint(simA);
+                        const Vector3 trackB1 = GetDynamicCollider3DTrackingPoint(simB);
+                        ApplyTranslationDeltaToBody(
+                                bodyA,
+                                {trackA1.x - trackA0.x, trackA1.y - trackA0.y, trackA1.z - trackA0.z});
+                        ApplyTranslationDeltaToBody(
+                                bodyB,
+                                {trackB1.x - trackB0.x, trackB1.y - trackB0.y, trackB1.z - trackB0.z});
                     }
                 }
             }
@@ -822,50 +670,41 @@ void SimulatePhysics3D(GameWorld& world, const FrameTiming& timing, const Physic
 
         for (std::size_t a = 0; a < bodies.GetSize(); ++a) {
             for (std::size_t b = a + 1; b < bodies.GetSize(); ++b) {
-                DynSphere& A = bodies[a];
-                DynSphere& B = bodies[b];
-                Vector3 ca{};
-                float ra = 0.0F;
-                Vector3 cb{};
-                float rb = 0.0F;
-                ComputeSphereCollider3World(*A.obj, *A.sph, ca, ra);
-                ComputeSphereCollider3World(*B.obj, *B.sph, cb, rb);
-                Vector3 d = cb - ca;
-                const float distSq = d.LengthSquared();
-                if (distSq < 1.0e-16F) {
+                DynamicBody3D& bodyA = bodies[a];
+                DynamicBody3D& bodyB = bodies[b];
+                RefreshDynamicBodySim(bodyA);
+                RefreshDynamicBodySim(bodyB);
+
+                float nx = 0.0F;
+                float ny = 0.0F;
+                float nz = 0.0F;
+                float pen = 0.0F;
+                if (!ComputeDynamicDynamicCollider3Contact(bodyA.sim, bodyB.sim, nx, ny, nz, pen) || pen <= 0.0F) {
                     continue;
                 }
-                const float dist = std::sqrt(distSq);
-                const float pen = ra + rb - dist;
-                if (pen <= 0.0F) {
-                    continue;
-                }
-                const float nx = d.x / dist;
-                const float ny = d.y / dist;
-                const float nz = d.z / dist;
 
-                Vector3 va = A.rb->GetVelocity();
-                Vector3 vb = B.rb->GetVelocity();
-                Vector3 omegaA = A.rb->GetAngularVelocity();
-                Vector3 omegaB = B.rb->GetAngularVelocity();
-                const float wA = A.rb->GetInverseMass();
-                const float wB = B.rb->GetInverseMass();
-                const float invIA = EffectiveSphereInverseInertia(*A.rb, ra);
-                const float invIB = EffectiveSphereInverseInertia(*B.rb, rb);
-                const float e = PairRestitutionSphereSphere(*A.rb, A.obj, *B.rb, B.obj);
-                const float mu = PairFrictionSphereSphere(A.obj, B.obj);
+                Vector3 va = bodyA.rb->GetVelocity();
+                Vector3 vb = bodyB.rb->GetVelocity();
+                Vector3 omegaA = bodyA.rb->GetAngularVelocity();
+                Vector3 omegaB = bodyB.rb->GetAngularVelocity();
+                const float wA = bodyA.rb->GetInverseMass();
+                const float wB = bodyB.rb->GetInverseMass();
+                const float invIA = EffectiveDynamicCollider3DInverseInertia(*bodyA.rb, bodyA.sim);
+                const float invIB = EffectiveDynamicCollider3DInverseInertia(*bodyB.rb, bodyB.sim);
+                const float e = PairRestitutionDynamicDynamic(*bodyA.rb, bodyA.obj, *bodyB.rb, bodyB.obj);
+                const float mu = PairFrictionDynamicDynamic(bodyA.obj, bodyB.obj);
 
-                ApplySpherePairVelocityImpulses(
+                ApplyDynamicPairVelocityImpulses(
                         va,
                         vb,
                         &omegaA,
                         invIA,
                         wA,
-                        ra,
+                        bodyA.sim,
                         &omegaB,
                         invIB,
                         wB,
-                        rb,
+                        bodyB.sim,
                         nx,
                         ny,
                         nz,
@@ -875,17 +714,20 @@ void SimulatePhysics3D(GameWorld& world, const FrameTiming& timing, const Physic
                         h,
                         settings,
                         pen);
-                A.rb->SetVelocity(va);
-                B.rb->SetVelocity(vb);
-                A.rb->SetAngularVelocity(omegaA);
-                B.rb->SetAngularVelocity(omegaB);
+                bodyA.rb->SetVelocity(va);
+                bodyB.rb->SetVelocity(vb);
+                bodyA.rb->SetAngularVelocity(omegaA);
+                bodyB.rb->SetAngularVelocity(omegaB);
             }
         }
 
         const int jIters = std::max(0, settings.jointIterations);
         for (int j = 0; j < jIters; ++j) {
-            SolveDistanceJoints(world, 1.0F / static_cast<float>(std::max(1, jIters)));
+            const float scale = 1.0F / static_cast<float>(std::max(1, jIters));
+            SolveDistanceJoints(world, scale);
+            SolveHingeJoints3D(world, scale);
         }
+        SolveSpringJoints3D(world, h);
     }
 }
 

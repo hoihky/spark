@@ -2,6 +2,7 @@
 
 #include "spark/audio/SoundClip.hpp"
 #include "spark/core/Array.hpp"
+#include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 
 #include <cstddef>
@@ -16,6 +17,18 @@ public:
 
     /** Fire-and-forget; drops oldest voice if the pool is full. */
     void PlayOneShot(const SharedPtr<SoundClip>& clip, float volume) noexcept;
+
+    /**
+     * Spatial one-shot: pan/attenuate using the frame listener pose from <c>ProcessAudioListeners</c>.
+     * <c>spatialBlend</c> 0 = centered mono, 1 = full stereo pan + distance falloff.
+     */
+    void PlayOneShotSpatial(
+            const SharedPtr<SoundClip>& clip,
+            float volume,
+            const Vector3& worldPosition,
+            float spatialBlend = 1.0F,
+            float minDistance = 1.0F,
+            float maxDistance = 48.0F) noexcept;
 
     /**
      * Continuous bed mixed under one-shots (separate voice; never evicted by <c>PlayOneShot</c>).
@@ -35,6 +48,10 @@ private:
         SharedPtr<SoundClip> clip{};
         double readIndex = 0.0;
         float volume = 1.0F;
+        Vector3 worldPosition{0.0F, 0.0F, 0.0F};
+        float spatialBlend = 0.0F;
+        float minDistance = 1.0F;
+        float maxDistance = 48.0F;
         bool active = false;
         bool loop = false;
     };

@@ -25,6 +25,15 @@ bool GameObject::SetParent(GameObject* newParent) {
     return world->SetParent(this, newParent);
 }
 
+bool GameObject::IsActiveInHierarchy() const noexcept {
+    for (const GameObject* node = this; node != nullptr; node = node->parent) {
+        if (!node->activeSelf) {
+            return false;
+        }
+    }
+    return true;
+}
+
 Matrix4 GameObject::GetWorldMatrix() const {
     const TransformComponent* tc = GetComponent<TransformComponent>();
     const Matrix4 local = tc != nullptr ? tc->GetLocalTransform().ToMatrix4() : Matrix4::Identity;
@@ -45,6 +54,9 @@ void GameObject::EmitSignal(SignalId id, const SignalPayload& payload, GameCompo
 }
 
 void GameObject::UpdateComponents(const FrameTiming& timing, IEngineContext& context) {
+    if (!IsActiveInHierarchy()) {
+        return;
+    }
     const std::size_t n = components.GetSize();
     if (n == 0) {
         return;

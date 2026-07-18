@@ -1,5 +1,6 @@
 #include "spark/scene/SceneRaycast.hpp"
 
+#include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
@@ -110,8 +111,16 @@ bool Scene::RaycastPick(const SceneRay& ray, SceneRaycastHit& outHit, const Scen
     float bestT = ray.tMax;
     GameObject* bestObject = nullptr;
 
+    const auto visitObjects = [&](auto&& fn) {
+        if (options.includeInactive) {
+            world.ForEachGameObject(Forward<decltype(fn)>(fn));
+        } else {
+            world.ForEachActiveGameObject(Forward<decltype(fn)>(fn));
+        }
+    };
+
     if (options.pickRigidMeshes) {
-        world.ForEachGameObject([&](GameObject* object) {
+        visitObjects([&](GameObject* object) {
             if (object == nullptr) {
                 return;
             }
@@ -137,7 +146,7 @@ bool Scene::RaycastPick(const SceneRay& ray, SceneRaycastHit& outHit, const Scen
     }
 
     if (options.pickSkinnedMeshes) {
-        world.ForEachGameObject([&](GameObject* object) {
+        visitObjects([&](GameObject* object) {
             if (object == nullptr) {
                 return;
             }

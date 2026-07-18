@@ -347,4 +347,30 @@ void Skeleton::ComputePalette(
     BuildPaletteFromPose(pose, outPalette, paletteMax);
 }
 
+bool Skeleton::TryComputeJointWorldMatrix(
+        const std::uint32_t clipIndex,
+        const float timeSec,
+        const std::uint32_t jointIndex,
+        Matrix4& outJointWorld) const {
+    if (jointIndex >= jointCount || clipIndex >= clips.GetSize()) {
+        return false;
+    }
+    Array<Transform> pose;
+    SampleClipPose(clipIndex, timeSec, pose);
+    if (pose.GetSize() < jointCount) {
+        return false;
+    }
+    Array<Matrix4> locals;
+    locals.Resize(jointCount);
+    for (std::uint32_t j = 0; j < jointCount; ++j) {
+        locals[j] = pose[j].ToMatrix4();
+    }
+    Array<Matrix4> world;
+    ComputeJointWorldMatrices(jointCount, jointParents, locals, world);
+    const bool usePrefix = jointGlobalPrefix.GetSize() == jointCount;
+    const Matrix4& pre = usePrefix ? jointGlobalPrefix[jointIndex] : Matrix4::Identity;
+    outJointWorld = pre * world[jointIndex];
+    return true;
+}
+
 }  // namespace Spark

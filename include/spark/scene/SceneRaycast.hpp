@@ -25,6 +25,8 @@ struct SceneRaycastHit {
 struct SceneRaycastOptions {
     bool pickRigidMeshes = true;
     bool pickSkinnedMeshes = true;
+    /** When false (default), inactive hierarchy nodes are not pickable. */
+    bool includeInactive = false;
 };
 
 }  // namespace Spark

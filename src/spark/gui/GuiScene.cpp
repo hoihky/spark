@@ -33,7 +33,7 @@ namespace {
 
 void CollectCanvases(const GameWorld& world, Array<GuiCanvasComponent*>& out) {
     out.Clear();
-    world.ForEachGameObject([&out](GameObject* o) {
+    world.ForEachActiveGameObject([&out](GameObject* o) {
         if (o == nullptr) {
             return;
         }

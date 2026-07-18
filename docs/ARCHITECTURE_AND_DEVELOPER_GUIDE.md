@@ -243,7 +243,8 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
-| **Sphere vs static boxes** | Minimal 3D dynamics | `SimulatePhysics3D`, `SphereCollider3DComponent`, `BoxCollider3DComponent`, `Rigidbody3DComponent` |
+| **Character controller 3D** | Kinematic sphere motor vs static boxes | `CharacterController3DComponent`, `SimulateCharacterControllers3D` (`spark/physics/CharacterController3D.hpp`) |
+| **Sphere/capsule vs static boxes/capsules** | Minimal 3D dynamics | `SimulatePhysics3D`, `DynamicCollider3D`, sphere/capsule colliders, `Rigidbody3DComponent` |
 | **Physics material** | Per-body friction/restitution-style data where used | `PhysicsMaterial3DComponent` |
 | **Distance joint** | Constraint between bodies | `DistanceJoint3DComponent` |
 | **Static broad-phase inclusion** | Which box colliders feed the grid | `ContributesStaticCollider3D` (`spark/physics/Collision3D.hpp`) |
@@ -381,7 +382,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 
 `SceneLoadOptions::additive` defaults to `true`. Set `additive = false` to replace all loaded instances. `assetsRoot` resolves relative mesh/texture paths in the file; v4 `H assets_root` is used when options omit it.
 
-Registered snapshot kinds (23): Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig. Mesh/material/sky/sprite restores may defer until `GameWorldAssetLoader` finishes the path.
+Registered snapshot kinds (28+): Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, RenderLayer, SortingGroup, and more — see `SceneSerializer.cpp` `kCaptureOrder`.
 
 **Demo:** `SceneEditor3DDemo` uses `SceneManager` for v3/v4 load (async asset decode + `Pump` each frame). Legacy v1/v2 editor format still loads synchronously.
 
@@ -441,7 +442,13 @@ Representative **3D / rendering** components:
 | `CollisionComponent` | Simple **local sphere** collider; recenters on `TransformChanged` (`RefreshWorldBounds`). |
 | `SceneSpatialPolicyComponent` | Chooses `ScenePartitionKind` for frustum iterators. |
 | `AiAgentComponent` | Host for AI blackboard + behaviors (`SimulateGameAi`). |
-| `SoundCueComponent` | Plays cues through the audio subsystem. |
+| `SoundCueComponent` | Queues one-shots; drained by `ProcessSoundCues`. |
+| `AudioListenerComponent` | Spatial audio listener pose (priority-based). |
+| `HealthComponent` / `DamageableComponent` | Hit points, damage routing, `DamageApplied` / `Died` signals. |
+| `BillboardComponent` | Orients transform toward main camera (priority 50). |
+| `DecalProjectorComponent` | Collects `SceneRenderParams::decals` (GPU pass optional). |
+| `AnimationEventReceiverComponent` | Clip markers → `SignalId::AnimationEvent`. |
+| `AttachmentSocketComponent` | Positions child object at skeleton joint (priority 250). |
 
 **2D rendering & physics:**
 
@@ -454,6 +461,8 @@ Representative **3D / rendering** components:
 | `Character3DAnimFsmComponent` | Locomotion / attack overlay for `AnimatorComponent` (add before animator on same object). |
 | `TilemapComponent` | Tile grid for 2D levels. |
 | `BoxCollider2DComponent` / `CircleCollider2DComponent` | 2D colliders. |
+| `PolygonCollider2DComponent` | Convex static polygon (max 16 verts). |
+| `TilemapCollider2DComponent` | Bakes one static box per solid tile on sibling `TilemapComponent` into `SimulatePhysics2D`. |
 | `Rigidbody2DComponent` | 2D dynamics body. |
 
 **3D physics (minimal solver):**
@@ -461,12 +470,26 @@ Representative **3D / rendering** components:
 | Component | Purpose |
 |-----------|---------|
 | `BoxCollider3DComponent` | Local AABB collider; contributes to **static** broad-phase when body is not dynamic. |
-| `SphereCollider3DComponent` | Dynamic **sphere** collider for `SimulatePhysics3D`. |
+| `CapsuleCollider3DComponent` | Local capsule collider; **static** when body is not dynamic; **dynamic** with `Rigidbody3DComponent`. |
+| `SphereCollider3DComponent` | Dynamic **sphere** collider for `SimulatePhysics3D` (preferred if both sphere and capsule are present). |
+| `TriggerVolume3DComponent` | Non-blocking box/sphere/capsule volume; `SimulateTriggerVolumes3D` fires enter/exit callbacks and signals. |
+| `CharacterController3DComponent` | Kinematic FPS/third-person motor; call `SimulateCharacterControllers3D` (excluded from dynamic sphere solver). |
 | `Rigidbody3DComponent` | `Dynamic` / `Static` / `Kinematic`, velocity, gravity scale, **restitution** for the sphere solver. |
 | `PhysicsMaterial3DComponent` | Surface parameters for the 3D solver where applied. |
 | `DistanceJoint3DComponent` | Distance constraint between two 3D bodies. |
 
-The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp`.
+**Camera rigs (ECS):**
+
+| Component | Purpose |
+|-----------|---------|
+| `CameraComponent` / `Camera2DComponent` | Main 3D / 2D cameras (priority resolves "main"). |
+| `Camera2DRigComponent` | 2D follow / bounds / zoom (priority 300). |
+| `SpringArm3DComponent` | 3D orbit arm behind pivot (priority 295). |
+| `CameraFollow3DComponent` | 3D smooth follow + look-at (priority 300). |
+
+The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**51** concrete types + `Unknown`).
+
+**Full usage reference:** [`docs/programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).
 
 Include umbrella **`spark/ecs/Ecs.hpp`** in tooling if you want a single include for registration patterns (headers still remain modular).
 
@@ -605,11 +628,13 @@ Demos typically toggle **mouse capture** (e.g. **F1**) for first-person cameras.
 |-----|--------|------|
 | `SimulatePhysics2D` | `spark/physics/PhysicsWorld2D.hpp` | Dynamics vs statics (grid broad-phase); dynamic–dynamic pairs use the same grid pattern, then triggers + optional `resolveDynamicVsDynamic`. |
 | `PhysicsQueries2D` | `spark/physics/PhysicsQueries2D.hpp` | Overlap circle/AABB and raycast vs static broad-phase (same bake as simulation); no trigger signals. **Also:** `QueryOverlapCircleDynamics2D`, `QueryOverlapArcStatics2D` / `QueryOverlapArcDynamics2D` (attack arc / cone), and `QueryOverlapArcWorld*` helpers. |
-| `SimulatePhysics3D` | `spark/physics/PhysicsWorld3D.hpp` | **Dynamic spheres** vs **static box** AABBs; rebuilds `SpatialHashGrid3D` each step. Settings: gravity, clamp speed, iteration count. |
+| `SimulatePhysics3D` | `spark/physics/PhysicsWorld3D.hpp` | **Dynamic spheres** vs **static box** AABBs (skips objects with `CharacterController3DComponent`). |
+| `SimulateCharacterControllers3D` | `spark/physics/CharacterController3D.hpp` | Kinematic character motor: slide + step offset vs static boxes/capsules. |
+| `SimulateTriggerVolumes3D` | `spark/physics/TriggerVolume3D.hpp` | Enter/exit overlap tests for probe bodies vs `TriggerVolume3DComponent`. |
 
 Call these from your **`OnUpdate`** (or from a `GameComponent::OnUpdate`) **after** integrating player intent and **before** relying on transforms for render.
 
-**Static geometry rule (3D):** `ContributesStaticCollider3D` (`spark/physics/Collision3D.hpp`) decides which `BoxCollider3D` instances enter the broad-phase (non-dynamic rigidbodies or no rigidbody).
+**Static geometry rule (3D):** `ContributesStaticCollider3D` (`spark/physics/Collision3D.hpp`) decides which `BoxCollider3D` / `CapsuleCollider3D` instances enter the broad-phase (non-dynamic rigidbodies or no rigidbody).
 
 ---
 

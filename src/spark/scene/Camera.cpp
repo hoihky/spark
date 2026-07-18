@@ -12,7 +12,7 @@ bool TryResolveMainCamera(const GameWorld& world, ResolvedCamera& out) noexcept 
     out.component = nullptr;
     bool found = false;
     std::int32_t bestPriority = 0;
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -35,7 +35,7 @@ bool TryResolveMainCamera2D(const GameWorld& world, ResolvedCamera2D& out) noexc
     out.component = nullptr;
     bool found = false;
     std::int32_t bestPriority = 0;
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

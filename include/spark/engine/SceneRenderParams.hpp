@@ -90,6 +90,14 @@ struct SceneParticleInstance {
     Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
 };
 
+/** One oriented decal projector instance (world pose + half-extents). */
+struct SceneDecalDraw {
+    Matrix4 projectorWorld = Matrix4::Identity;
+    Vector3 halfExtents{0.5F, 0.5F, 0.25F};
+    std::int32_t textureLayer = -1;
+    float opacity = 1.0F;
+};
+
 /**
  * One alpha-blended textured quad in world space (unlit). Sorted before draw (see <c>SceneSpriteSortMode</c> on
  * <c>SceneRenderParams</c>).
@@ -330,6 +338,13 @@ struct SceneRenderParams {
     /** 0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset. */
     float timeOfDay = 0.5F;
 
+    /** Regional fog from <c>FogVolumeComponent</c> (data path; GPU may ignore until wired). */
+    bool fogEnabled = false;
+    Vector3 fogColor{0.72F, 0.78F, 0.86F};
+    float fogDensity = 0.0F;
+    float fogStart = 8.0F;
+    float fogEnd = 96.0F;
+
     /** Dynamic point lights (typically from PointLightComponent); only the first MaxPointLights are sent to GPU. */
     Array<ScenePointLight> pointLights;
 
@@ -372,6 +387,10 @@ struct SceneRenderParams {
     /** Camera-facing billboard axes in world space (normalized). */
     Vector3 particleCameraRight{1.0F, 0.0F, 0.0F};
     Vector3 particleCameraUp{0.0F, 1.0F, 0.0F};
+
+    /** Oriented decal volumes collected from <c>DecalProjectorComponent</c> (renderer may ignore until implemented). */
+    static constexpr std::uint32_t MaxDecals = 256;
+    Array<SceneDecalDraw> decals;
 
     /** Optional UI font (TrueType atlas); when null, screen text draws are skipped. */
     SharedPtr<Font> uiFont{};

@@ -34,6 +34,21 @@ public:
     [[nodiscard]] Utf8String& GetName() noexcept { return name; }
     [[nodiscard]] const Utf8String& GetName() const noexcept { return name; }
 
+    /** User tag for queries (see <c>GameWorld::FindGameObjectWithTag</c>). */
+    [[nodiscard]] const Utf8String& GetTag() const noexcept { return tag; }
+    void SetTag(const Utf8String& value) { tag = value; }
+    void SetTag(const char* utf8) { tag = Utf8String(utf8 != nullptr ? utf8 : ""); }
+
+    /**
+     * Local active flag on this object. When false, <c>IsActiveInHierarchy</c> is false and simulation /
+     * rendering iterators skip this subtree unless <c>GameObjectQueryFilter::includeInactive</c> is set.
+     */
+    [[nodiscard]] bool IsActiveSelf() const noexcept { return activeSelf; }
+    void SetActive(const bool value) noexcept { activeSelf = value; }
+
+    /** False when this object or any ancestor has <c>IsActiveSelf() == false</c>. */
+    [[nodiscard]] bool IsActiveInHierarchy() const noexcept;
+
     [[nodiscard]] GameObject* GetParent() const noexcept { return parent; }
     [[nodiscard]] const Array<GameObject*>& GetChildren() const noexcept { return children; }
 
@@ -82,6 +97,11 @@ public:
         return nullptr;
     }
 
+    template<typename T>
+    [[nodiscard]] bool HasComponent() const noexcept {
+        return GetComponent<T>() != nullptr;
+    }
+
     /** First component matching kind, or nullptr (used by language bindings). */
     [[nodiscard]] GameComponent* TryGetComponentByKind(ComponentKind kind) noexcept;
     [[nodiscard]] const GameComponent* TryGetComponentByKind(ComponentKind kind) const noexcept;
@@ -102,6 +122,8 @@ private:
     std::uint64_t id = 0;
     SceneInstanceId sceneInstanceId = kInvalidSceneInstanceId;
     Utf8String name;
+    Utf8String tag;
+    bool activeSelf = true;
     GameObject* parent = nullptr;
     Array<GameObject*> children;
     Array<UniquePtr<GameComponent>> components;

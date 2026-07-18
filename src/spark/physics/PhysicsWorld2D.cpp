@@ -12,7 +12,8 @@
 #include "spark/physics/Collision2D.hpp"
 #include "spark/physics/CollisionFilter2D.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
-#include "spark/physics/SpatialHashGrid2D.hpp"
+#include "spark/physics/PhysicsMaterial2D.hpp"
+#include "spark/physics/PhysicsJoints.hpp"
 #include "spark/scene/GameWorld.hpp"
 
 #include <algorithm>
@@ -69,19 +70,34 @@ void ReportStaticDynamicTriggerOverlap2D(
     return StaticCollider2DOverlapsWorldCircle(st, cx, cy, cr);
 }
 
-void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept {
+constexpr float kDefaultDynamicRestitution2D = 0.12F;
+
+void ResolveNormalVelocity(Vector2& v, const float nx, const float ny, const float restitution) noexcept {
     const float vn = v.x * nx + v.y * ny;
     if (vn < 0.0F) {
-        v.x -= vn * nx;
-        v.y -= vn * ny;
+        const float bounce = 1.0F + std::clamp(restitution, 0.0F, 1.0F);
+        v.x -= bounce * vn * nx;
+        v.y -= bounce * vn * ny;
     }
+}
+
+[[nodiscard]] float RestitutionForStaticContact(const StaticCollider2D& st) noexcept {
+    if (!st.hasMaterial) {
+        return 0.0F;
+    }
+    return CombineRestitution2D(kDefaultDynamicRestitution2D, st.restitution);
+}
+
+void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept {
+    ResolveNormalVelocity(v, nx, ny, 0.0F);
 }
 
 [[nodiscard]] bool TryResolveBoxVsStaticAabb(
         CollisionAabb2& box,
         TransformComponent& tr,
         Rigidbody2DComponent& rb,
-        const CollisionAabb2& s) noexcept {
+        const CollisionAabb2& s,
+        const float restitution) noexcept {
     if (!CollisionAabb2Overlaps(box, s)) {
         return false;
     }
@@ -106,17 +122,17 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
     Vector2 v = rb.GetVelocity();
     if (axis == 3) {
         pos.y += penU;
-        v.y = 0.0F;
+        ResolveNormalVelocity(v, 0.0F, 1.0F, restitution);
         rb.SetGrounded(true);
     } else if (axis == 2) {
         pos.y -= penD;
-        v.y = 0.0F;
+        ResolveNormalVelocity(v, 0.0F, -1.0F, restitution);
     } else if (axis == 0) {
         pos.x -= penL;
-        v.x = 0.0F;
+        ResolveNormalVelocity(v, -1.0F, 0.0F, restitution);
     } else {
         pos.x += penR;
-        v.x = 0.0F;
+        ResolveNormalVelocity(v, 1.0F, 0.0F, restitution);
     }
     tr.SetTranslation(pos);
     rb.SetVelocity(v);
@@ -129,7 +145,8 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         Rigidbody2DComponent& rb,
         const float scx,
         const float scy,
-        const float sr) noexcept {
+        const float sr,
+        const float restitution) noexcept {
     if (!CollisionAabb2OverlapsCircle(box, scx, scy, sr)) {
         return false;
     }
@@ -152,7 +169,7 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         const float ny = (qy - scy) * inv;
         pos.x += nx * pen;
         pos.y += ny * pen;
-        ZeroVelocityIntoNormal(v, nx, ny);
+        ResolveNormalVelocity(v, nx, ny, restitution);
         if (ny > 0.55F) {
             rb.SetGrounded(true);
         }
@@ -204,7 +221,8 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         const float cr,
         TransformComponent& tr,
         Rigidbody2DComponent& rb,
-        const CollisionAabb2& s) noexcept {
+        const CollisionAabb2& s,
+        const float restitution) noexcept {
     if (!CollisionAabb2OverlapsCircle(s, cx, cy, cr)) {
         return false;
     }
@@ -227,7 +245,7 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         const float ny = dy * inv;
         pos.x += nx * pen;
         pos.y += ny * pen;
-        ZeroVelocityIntoNormal(v, nx, ny);
+        ResolveNormalVelocity(v, nx, ny, restitution);
         if (ny > 0.55F) {
             rb.SetGrounded(true);
         }
@@ -281,7 +299,8 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         Rigidbody2DComponent& rb,
         const float scx,
         const float scy,
-        const float sr) noexcept {
+        const float sr,
+        const float restitution) noexcept {
     float dx = cx - scx;
     float dy = cy - scy;
     float d2 = dx * dx + dy * dy;
@@ -294,7 +313,7 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
     constexpr float kEps = 1.0e-6F;
     if (d2 < kEps * kEps) {
         pos.x += sum * 0.5F;
-        ZeroVelocityIntoNormal(v, 1.0F, 0.0F);
+        ResolveNormalVelocity(v, 1.0F, 0.0F, restitution);
     } else {
         const float d = std::sqrt(d2);
         const float pen = sum - d;
@@ -303,10 +322,35 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         const float ny = dy * inv;
         pos.x += nx * pen;
         pos.y += ny * pen;
-        ZeroVelocityIntoNormal(v, nx, ny);
+        ResolveNormalVelocity(v, nx, ny, restitution);
         if (ny > 0.55F) {
             rb.SetGrounded(true);
         }
+    }
+    tr.SetTranslation(pos);
+    rb.SetVelocity(v);
+    return true;
+}
+
+[[nodiscard]] bool TryResolveBoxVsStaticPolygon(
+        CollisionAabb2& box,
+        TransformComponent& tr,
+        Rigidbody2DComponent& rb,
+        const StaticCollider2D& poly) noexcept {
+    float nx = 0.0F;
+    float ny = 1.0F;
+    float pen = 0.0F;
+    if (!TryComputeBoxPolygonSeparation(box, poly, nx, ny, pen)) {
+        return false;
+    }
+    Vector3 pos = tr.GetLocalTransform().translation;
+    Vector2 v = rb.GetVelocity();
+    pos.x += nx * pen;
+    pos.y += ny * pen;
+    const float e = RestitutionForStaticContact(poly);
+    ResolveNormalVelocity(v, nx, ny, e);
+    if (ny > 0.55F) {
+        rb.SetGrounded(true);
     }
     tr.SetTranslation(pos);
     rb.SetVelocity(v);
@@ -318,10 +362,41 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
         TransformComponent& tr,
         Rigidbody2DComponent& rb,
         const StaticCollider2D& st) noexcept {
+    const float e = RestitutionForStaticContact(st);
     if (st.shape == StaticCollider2DShape::Box) {
-        return TryResolveBoxVsStaticAabb(box, tr, rb, st.aabb);
+        return TryResolveBoxVsStaticAabb(box, tr, rb, st.aabb, e);
     }
-    return TryResolveBoxVsStaticCircle(box, tr, rb, st.circleCx, st.circleCy, st.circleR);
+    if (st.shape == StaticCollider2DShape::Circle) {
+        return TryResolveBoxVsStaticCircle(box, tr, rb, st.circleCx, st.circleCy, st.circleR, e);
+    }
+    return TryResolveBoxVsStaticPolygon(box, tr, rb, st);
+}
+
+[[nodiscard]] bool TryResolveCircleVsStaticPolygon(
+        const float cx,
+        const float cy,
+        const float cr,
+        TransformComponent& tr,
+        Rigidbody2DComponent& rb,
+        const StaticCollider2D& poly) noexcept {
+    float nx = 0.0F;
+    float ny = 1.0F;
+    float pen = 0.0F;
+    if (!TryComputeCirclePolygonSeparation(cx, cy, cr, poly, nx, ny, pen)) {
+        return false;
+    }
+    Vector3 pos = tr.GetLocalTransform().translation;
+    Vector2 v = rb.GetVelocity();
+    pos.x += nx * pen;
+    pos.y += ny * pen;
+    const float e = RestitutionForStaticContact(poly);
+    ResolveNormalVelocity(v, nx, ny, e);
+    if (ny > 0.55F) {
+        rb.SetGrounded(true);
+    }
+    tr.SetTranslation(pos);
+    rb.SetVelocity(v);
+    return true;
 }
 
 [[nodiscard]] bool TryResolveCircleWithStaticCollider(
@@ -334,10 +409,14 @@ void ZeroVelocityIntoNormal(Vector2& v, const float nx, const float ny) noexcept
     float cy = 0.0F;
     float cr = 0.0F;
     ComputeCircleCollider2World(dyn, col, cx, cy, cr);
+    const float e = RestitutionForStaticContact(st);
     if (st.shape == StaticCollider2DShape::Box) {
-        return TryResolveCircleVsStaticAabb(cx, cy, cr, tr, rb, st.aabb);
+        return TryResolveCircleVsStaticAabb(cx, cy, cr, tr, rb, st.aabb, e);
     }
-    return TryResolveCircleVsStaticCircle(cx, cy, cr, tr, rb, st.circleCx, st.circleCy, st.circleR);
+    if (st.shape == StaticCollider2DShape::Circle) {
+        return TryResolveCircleVsStaticCircle(cx, cy, cr, tr, rb, st.circleCx, st.circleCy, st.circleR, e);
+    }
+    return TryResolveCircleVsStaticPolygon(cx, cy, cr, tr, rb, st);
 }
 
 void ResolveDynamicBoxVsStatics(
@@ -863,7 +942,7 @@ void SimulatePhysics2DImpl(GameWorld& world, const FrameTiming& timing, const Ph
     SpatialHashGrid2D broadPhase;
     RebuildBroadPhaseFromStaticColliders2D(world, kSim2DBroadPhaseCellWorld, statics, broadPhase);
 
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -918,7 +997,7 @@ void SimulatePhysics2DImpl(GameWorld& world, const FrameTiming& timing, const Ph
     Array<Dynamic2DSimBody> dynamics;
     SpatialHashGrid2D dynBroad;
     Array<std::uint32_t> dynPairScratch;
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -943,6 +1022,13 @@ void SimulatePhysics2DImpl(GameWorld& world, const FrameTiming& timing, const Ph
         dynamics.PushBack(body);
     });
     ProcessDynamicDynamicPairs2D(dynamics, settings, dynBroad, dynPairScratch);
+
+    const int jIters = std::max(0, settings.jointIterations);
+    for (int j = 0; j < jIters; ++j) {
+        const float scale = 1.0F / static_cast<float>(std::max(1, jIters));
+        SolveDistanceJoints2D(world, scale);
+        SolveHingeJoints2D(world, scale);
+    }
 }
 
 }  // namespace PhysicsWorld2DDetail

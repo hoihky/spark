@@ -9,6 +9,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/Camera.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
+#include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
@@ -33,6 +34,7 @@
 #include "spark/scene/SceneSpriteTileCull.hpp"
 #include "spark/scene/SceneTilemapSubmit.hpp"
 #include "spark/render/lighting/SceneLightingResolver.hpp"
+#include "spark/scene/RenderVolumes.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 #include "spark/math/Constants.hpp"
@@ -159,10 +161,21 @@ void FillStandardLitSceneFromWorld(
     params.uiBoldFont = world.GetUiBoldFont();
     params.draws.Reserve(32);
 
+    {
+        static float sLastSceneTime = 0.0F;
+        float dt = sceneTimeSeconds - sLastSceneTime;
+        if (dt < 0.0F || dt > 1.0F) {
+            dt = 0.0F;
+        }
+        sLastSceneTime = sceneTimeSeconds;
+        ProcessTimeOfDayDrivers(world, dt);
+    }
+    ApplyRegionalRenderVolumes(world, cameraPositionWorld, params);
+
     const ResolvedSceneLighting resolvedLighting = SceneLightingResolver::Resolve(params);
     const std::int32_t defaultShadowFlags = DefaultShadowFlagsFor(resolvedLighting);
 
-    world.ForEachGameObject([&params](GameObject* o) {
+    world.ForEachActiveGameObject([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -183,7 +196,7 @@ void FillStandardLitSceneFromWorld(
         params.pointLights.PushBack(gpu);
     });
 
-    world.ForEachGameObject([&params](GameObject* o) {
+    world.ForEachActiveGameObject([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -230,7 +243,7 @@ void FillStandardLitSceneFromWorld(
         DispatchDrawableFrustumCull(
                 *sceneForCulling, viewProjection, sceneForCulling->GetSpatialPartitionKind(), rigidSink);
     } else {
-        world.ForEachGameObject([&](GameObject* o) {
+        world.ForEachActiveGameObject([&](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -243,7 +256,7 @@ void FillStandardLitSceneFromWorld(
     }
 
     ScenePartitionKind skinnedPartition = ScenePartitionKind::None;
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr || skinnedPartition != ScenePartitionKind::None) {
             return;
         }
@@ -312,7 +325,7 @@ void FillStandardLitSceneFromWorld(
     const SceneSpriteTileCull spriteTileCull(viewProjection);
     const SceneTilemapSubmitter tilemapSubmitter{};
 
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -357,7 +370,7 @@ void FillStandardLitSceneFromWorld(
     if (enableParticles) {
         params.particleCameraRight = particleCameraRight.Normalized();
         params.particleCameraUp = particleCameraUp.Normalized();
-        world.ForEachGameObject([&params](GameObject* o) {
+        world.ForEachActiveGameObject([&params](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -379,7 +392,30 @@ void FillStandardLitSceneFromWorld(
         });
     }
 
-    world.ForEachGameObject([&params](GameObject* o) {
+    params.decals.Clear();
+    world.ForEachActiveGameObject([&params, &findOrAddTexture](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        if (params.decals.GetSize() >= SceneRenderParams::MaxDecals) {
+            return;
+        }
+        const DecalProjectorComponent* decal = o->GetComponent<DecalProjectorComponent>();
+        if (decal == nullptr || !decal->IsEnabled()) {
+            return;
+        }
+        SceneDecalDraw draw{};
+        draw.projectorWorld = o->GetWorldMatrix();
+        const Vector3 size = decal->GetSize();
+        draw.halfExtents = {size.x * 0.5F, size.y * 0.5F, size.z * 0.5F};
+        draw.opacity = decal->GetOpacity();
+        if (decal->GetTexture()) {
+            draw.textureLayer = findOrAddTexture(decal->GetTexture());
+        }
+        params.decals.PushBack(draw);
+    });
+
+    world.ForEachActiveGameObject([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }

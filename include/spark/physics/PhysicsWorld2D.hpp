@@ -16,6 +16,8 @@ struct PhysicsWorld2DSettings {
      * <c>Physics2DTriggerOverlap</c>. A second static pass is not run (fast-moving bodies may re-penetrate statics).
      */
     bool resolveDynamicVsDynamic = false;
+    /** Soft position iterations for 2D distance/hinge joints per physics step. */
+    int jointIterations = 4;
 };
 
 /**

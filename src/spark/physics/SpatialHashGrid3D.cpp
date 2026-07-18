@@ -1,13 +1,58 @@
 #include "spark/physics/SpatialHashGrid3D.hpp"
 
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/MeshCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsMaterial3DComponent.hpp"
+#include "spark/physics/MeshCollider3D.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/GameWorld.hpp"
 
 #include <cmath>
 
 namespace Spark {
+
+namespace {
+
+void ApplyMaterialToStaticRecord(const GameObject& object, StaticCollider3DSim& rec) {
+    if (const PhysicsMaterial3DComponent* mat = object.GetComponent<PhysicsMaterial3DComponent>()) {
+        rec.hasMaterial = true;
+        rec.restitution = mat->GetRestitution();
+        rec.staticFriction = mat->GetStaticFriction();
+        rec.dynamicFriction = mat->GetDynamicFriction();
+    }
+}
+
+void PushStaticBoxCollider(
+        GameObject& object,
+        const BoxCollider3DComponent& box,
+        Array<StaticCollider3DSim>& outStatics,
+        SpatialHashGrid3D& outGrid) {
+    StaticCollider3DSim rec{};
+    rec.shape = StaticCollider3DShape::Box;
+    ComputeBoxCollider3WorldAabb(object, box, rec.aabb);
+    ApplyMaterialToStaticRecord(object, rec);
+    const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
+    outStatics.PushBack(rec);
+    outGrid.InsertIndexedAabb(idx, rec.aabb);
+}
+
+void PushStaticCapsuleCollider(
+        GameObject& object,
+        const CapsuleCollider3DComponent& capsule,
+        Array<StaticCollider3DSim>& outStatics,
+        SpatialHashGrid3D& outGrid) {
+    StaticCollider3DSim rec{};
+    rec.shape = StaticCollider3DShape::Capsule;
+    ComputeCapsuleCollider3World(object, capsule, rec.capsule);
+    ComputeCapsuleCollider3WorldAabb(object, capsule, rec.aabb);
+    ApplyMaterialToStaticRecord(object, rec);
+    const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
+    outStatics.PushBack(rec);
+    outGrid.InsertIndexedAabb(idx, rec.aabb);
+}
+
+}  // namespace
 
 void SpatialHashGrid3D::Clear() noexcept {
     buckets.Clear();
@@ -84,28 +129,31 @@ void RebuildBroadPhaseFromStaticColliders3D(
     outStatics.Clear();
     outGrid.Clear();
     outGrid.SetCellSize(cellWorldSize);
-    world.ForEachGameObject([&](GameObject* o) {
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
         if (!ContributesStaticCollider3D(*o)) {
             return;
         }
-        const BoxCollider3DComponent* col = o->GetComponent<BoxCollider3DComponent>();
-        if (col == nullptr) {
-            return;
+        if (const BoxCollider3DComponent* box = o->GetComponent<BoxCollider3DComponent>()) {
+            PushStaticBoxCollider(*o, *box, outStatics, outGrid);
         }
-        StaticCollider3DSim rec{};
-        ComputeBoxCollider3WorldAabb(*o, *col, rec.aabb);
-        if (const PhysicsMaterial3DComponent* mat = o->GetComponent<PhysicsMaterial3DComponent>()) {
-            rec.hasMaterial = true;
-            rec.restitution = mat->GetRestitution();
-            rec.staticFriction = mat->GetStaticFriction();
-            rec.dynamicFriction = mat->GetDynamicFriction();
+        if (const CapsuleCollider3DComponent* capsule = o->GetComponent<CapsuleCollider3DComponent>()) {
+            PushStaticCapsuleCollider(*o, *capsule, outStatics, outGrid);
         }
-        const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
-        outStatics.PushBack(rec);
-        outGrid.InsertIndexedAabb(idx, rec.aabb);
+        if (ContributesMeshCollider3DStatic(*o)) {
+            const MeshCollider3DComponent* meshCol = o->GetComponent<MeshCollider3DComponent>();
+            if (meshCol != nullptr) {
+                StaticCollider3DSim rec{};
+                rec.shape = StaticCollider3DShape::Box;
+                ComputeMeshCollider3WorldAabb(*o, *meshCol, rec.aabb);
+                ApplyMaterialToStaticRecord(*o, rec);
+                const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
+                outStatics.PushBack(rec);
+                outGrid.InsertIndexedAabb(idx, rec.aabb);
+            }
+        }
     });
 }
 

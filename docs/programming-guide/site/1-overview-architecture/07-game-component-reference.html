@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game Component Reference · Spark Game Engine Programming Guide</title>
+  <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/vendor/atom-one-dark.min.css">
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">☰</button>
+      <a href="../index.html" class="brand">Spark Game Engine Programming Guide</a>
+      <div class="search-wrap">
+        <input type="search" id="search" placeholder="Search docs…" autocomplete="off">
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="nav" aria-label="Documentation">
+          <ul class="nav-list">
+            
+                        <li class="nav-item depth-0">
+                          
+                            <a href="../index.html" class="nav-link">Spark Game Engine Programming Guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">1 overview architecture</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/01-introduction.html" class="nav-link">Introduction to Spark</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/02-engine-capabilities.html" class="nav-link">Engine Capabilities</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/03-building-and-running.html" class="nav-link">Building and Running</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/04-engine-loop.html" class="nav-link">The Engine Loop</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/05-igame-contract.html" class="nav-link">IGame and Game</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/06-ecs-and-scene.html" class="nav-link">ECS and Scene</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1 is-active">
+                          
+                            <a href="../1-overview-architecture/07-game-component-reference.html" class="nav-link">Game Component Reference</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">2 2d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/01-sprites.html" class="nav-link">Sprites</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/02-camera2d.html" class="nav-link">Camera2D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/03-tilemaps.html" class="nav-link">Tilemaps</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-2d-animation.html" class="nav-link">2D Animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">2D Lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">2D Render Pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">3 3d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/01-meshes-and-materials.html" class="nav-link">Meshes and Materials</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/02-cameras-3d.html" class="nav-link">Cameras in 3D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/03-lighting.html" class="nav-link">Lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/04-shadows.html" class="nav-link">Shadows</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/05-skinned-characters.html" class="nav-link">Skinned Characters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/06-terrain-and-sky.html" class="nav-link">Terrain and Sky</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/07-particles.html" class="nav-link">Particles</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">4 ai</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/01-ai-overview.html" class="nav-link">AI Overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/02-steering.html" class="nav-link">Steering Behaviors</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/03-fsm.html" class="nav-link">Finite State Machines</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/04-goap.html" class="nav-link">GOAP</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/05-pathfinding.html" class="nav-link">Pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">5 physics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/01-physics-overview.html" class="nav-link">Physics Overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/02-rigidbody-2d.html" class="nav-link">Rigidbody 2D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/03-colliders.html" class="nav-link">Colliders</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/04-queries.html" class="nav-link">Physics Queries</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/05-physics-3d.html" class="nav-link">Physics 3D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/06-tips.html" class="nav-link">Joints and Tips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">6 sound</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/01-sound-engine.html" class="nav-link">Sound Engine</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/02-clips.html" class="nav-link">Sound Clips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/03-cues.html" class="nav-link">Sound Cues</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">7 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">Platformer Introduction</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">Project Setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/03-level-design.html" class="nav-link">Level Design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">Player Controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">Camera and HUD</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/06-polish.html" class="nav-link">Polish and Ship</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">FPS Introduction</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">Project Setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/03-arena.html" class="nav-link">Arena and Targets</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/04-shooting.html" class="nav-link">Shooting and Tracers</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/05-rendering.html" class="nav-link">Rendering the 3D Scene</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0">
+                          
+                            <span class="nav-group">site</span>
+                            
+                        </li>
+                        
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <article class="doc">
+          <header class="doc-header">
+            <h1>Game Component Reference</h1>
+          </header>
+          <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
+<p>Complete reference for all <strong>64</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
+<p><strong>Includes:</strong> <code>#include &quot;spark/ecs/Ecs.hpp&quot;</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
+<p>**Subsystem tick order (typical frame)😗*</p>
+<ol>
+<li><code>UpdateGameObjects</code> — component <code>OnUpdate</code> (billboards, springs, …)</li>
+<li><code>SimulatePhysics2D</code> / <code>SimulatePhysics3D</code> (+ character controllers, triggers)</li>
+<li><code>SimulateGameAi</code> — <code>ProcessNavMeshAgents</code>, <code>ProcessPerceptionSensors</code>, then <code>AiAgentComponent</code></li>
+<li><code>ProcessSoundCues</code> — <code>ProcessAudioListeners</code>, <code>ProcessAmbientZones</code>, cue flush</li>
+<li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
+</ol>
+<hr />
+<h2 id="quick-index">Quick index</h2>
+<table class="table">
+<thead>
+<tr>
+<th>Folder</th>
+<th>Components</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#core">Core</a></td>
+<td><code>TransformComponent</code></td>
+</tr>
+<tr>
+<td><a href="#rendering">Rendering</a></td>
+<td><code>Mesh</code>, <code>Material</code>, <code>SkinnedMesh</code>, <code>Sprite</code>, <code>Tilemap</code>, <code>Sky</code>, <code>Terrain</code>, <code>ParticleEmitter</code>, <code>TextOverlay</code>, <code>Billboard</code>, <code>DecalProjector</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>BlendMode</code>, <code>RenderLayer</code>, <code>SortingGroup</code>, <code>SpriteLighting2D</code></td>
+</tr>
+<tr>
+<td><a href="#lighting">Lighting</a></td>
+<td><code>DirectionalLight</code>, <code>PointLight</code>, <code>SpotLight</code></td>
+</tr>
+<tr>
+<td><a href="#camera">Camera</a></td>
+<td><code>Camera</code>, <code>Camera2D</code>, <code>Camera2DRig</code>, <code>CameraFollow3D</code>, <code>SpringArm3D</code></td>
+</tr>
+<tr>
+<td><a href="#physics-2d">Physics 2D</a></td>
+<td><code>BoxCollider2D</code>, <code>CircleCollider2D</code>, <code>PolygonCollider2D</code>, <code>Rigidbody2D</code>, <code>TilemapCollider2D</code>, <code>PhysicsMaterial2D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code></td>
+</tr>
+<tr>
+<td><a href="#physics-3d">Physics 3D</a></td>
+<td><code>BoxCollider3D</code>, <code>SphereCollider3D</code>, <code>CapsuleCollider3D</code>, <code>MeshCollider3D</code>, <code>Rigidbody3D</code>, <code>CharacterController3D</code>, <code>TriggerVolume3D</code>, <code>PhysicsMaterial3D</code>, <code>DistanceJoint3D</code>, <code>HingeJoint3D</code>, <code>SpringJoint3D</code>, <code>Collision</code></td>
+</tr>
+<tr>
+<td><a href="#animation">Animation</a></td>
+<td><code>Animator</code>, <code>SpriteAnimator</code>, <code>AnimationEventReceiver</code>, <code>AttachmentSocket</code>, <code>Character3DAnimFsm</code>, <code>Sprite2DCharacterAnimFsm</code></td>
+</tr>
+<tr>
+<td><a href="#ai">AI</a></td>
+<td><code>AiAgent</code>, <code>NavMeshAgent</code>, <code>PatrolPath</code>, <code>PerceptionSensor</code></td>
+</tr>
+<tr>
+<td><a href="#audio">Audio</a></td>
+<td><code>SoundCue</code>, <code>AudioListener</code>, <code>AmbientZone</code></td>
+</tr>
+<tr>
+<td><a href="#ui">UI</a></td>
+<td><code>GuiCanvas</code></td>
+</tr>
+<tr>
+<td><a href="#world">World</a></td>
+<td><code>SceneSpatialPolicy</code>, <code>TimeOfDayDriver</code></td>
+</tr>
+<tr>
+<td><a href="#gameplay">Gameplay</a></td>
+<td><code>Health</code>, <code>Damageable</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="update-priorities">Update priorities</h2>
+<table class="table">
+<thead>
+<tr>
+<th>Priority</th>
+<th>Constant / note</th>
+<th>Components</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>default</td>
+<td>Most components; <code>ParticleEmitterComponent</code></td>
+</tr>
+<tr>
+<td>50</td>
+<td>—</td>
+<td><code>BillboardComponent</code></td>
+</tr>
+<tr>
+<td>100</td>
+<td><code>ComponentUpdatePriority::AnimationDriver</code></td>
+<td><code>Character3DAnimFsmComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code></td>
+</tr>
+<tr>
+<td>200</td>
+<td><code>ComponentUpdatePriority::AnimatorPlayback</code></td>
+<td><code>AnimatorComponent</code>, <code>SpriteAnimatorComponent</code></td>
+</tr>
+<tr>
+<td>210</td>
+<td>—</td>
+<td><code>AnimationEventReceiverComponent</code></td>
+</tr>
+<tr>
+<td>250</td>
+<td>—</td>
+<td><code>AttachmentSocketComponent</code></td>
+</tr>
+<tr>
+<td>295</td>
+<td>—</td>
+<td><code>SpringArm3DComponent</code></td>
+</tr>
+<tr>
+<td>300</td>
+<td>—</td>
+<td><code>Camera2DRigComponent</code>, <code>CameraFollow3DComponent</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rule of thumb:</strong> add animation <strong>drivers</strong> (FSM) before <strong>playback</strong> (<code>Animator</code> / <code>SpriteAnimator</code>) on the same <code>GameObject</code>.</p>
+<hr />
+<h2 id="signals-sparkecssignal.hpp">Signals (<code>spark/ecs/Signal.hpp</code>)</h2>
+<table class="table">
+<thead>
+<tr>
+<th><code>SignalId</code></th>
+<th>Payload</th>
+<th>Emitted by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TransformChanged</code></td>
+<td>—</td>
+<td><code>TransformComponent</code> on TRS change</td>
+</tr>
+<tr>
+<td><code>MeshDirty</code></td>
+<td>—</td>
+<td>mesh/material paths</td>
+</tr>
+<tr>
+<td><code>CollisionBoundsDirty</code></td>
+<td>—</td>
+<td><code>CollisionComponent</code></td>
+</tr>
+<tr>
+<td><code>Physics2DTriggerOverlap</code></td>
+<td><code>ptr</code> = other <code>GameObject*</code>, <code>a</code> = id, <code>b</code> = static index</td>
+<td><code>SimulatePhysics2D</code></td>
+</tr>
+<tr>
+<td><code>Physics3DTriggerEnter</code> / <code>Exit</code></td>
+<td><code>ptr</code> = other <code>GameObject*</code>, <code>a</code> = id</td>
+<td><code>SimulateTriggerVolumes3D</code></td>
+</tr>
+<tr>
+<td><code>AnimationEvent</code></td>
+<td><code>ptr</code> = event name C-string, <code>a</code> = clip index</td>
+<td><code>AnimationEventReceiverComponent</code></td>
+</tr>
+<tr>
+<td><code>DamageApplied</code></td>
+<td><code>ptr</code> = <code>DamageSignalPayload*</code> (sync only)</td>
+<td><code>HealthComponent</code></td>
+</tr>
+<tr>
+<td><code>Died</code></td>
+<td><code>ptr</code> = instigator <code>GameObject*</code> or null</td>
+<td><code>HealthComponent</code></td>
+</tr>
+<tr>
+<td><code>UserBase + n</code></td>
+<td>custom</td>
+<td>your gameplay code</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
+    if (id == SignalId::Physics2DTriggerOverlap) {
+        GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
+        (void)other;
+    }
+    if (id == SignalId::AnimationEvent) {
+        const char* name = static_cast&lt;const char*&gt;(payload.ptr);
+        (void)name;
+    }
+    if (id == SignalId::DamageApplied) {
+        const auto* dmg = static_cast&lt;const DamageSignalPayload*&gt;(payload.ptr);
+        (void)dmg;
+    }
+}
+</code></pre>
+<hr />
+<h2 id="core">Core</h2>
+<h3 id="transformcomponent"><code>TransformComponent</code></h3>
+<p><strong>Header:</strong> <code>spark/ecs/components/core/TransformComponent.hpp</code><br />
+<strong>Kind:</strong> <code>ComponentKind::Transform</code><br />
+<strong>Consumed by:</strong> Everything that needs pose (render, physics, audio, cameras).</p>
+<p>Local translation / rotation / quaternion scale. Parent chain composes <code>GameObject::GetWorldMatrix()</code>.</p>
+<pre><code class="language-cpp">GameObject* player = world.CreateGameObject();
+auto* tr = player-&gt;AddComponent&lt;TransformComponent&gt;();
+tr-&gt;SetTranslation({0.0F, 1.0F, 0.0F});
+tr-&gt;SetUniformScale(1.5F);
+tr-&gt;SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
+</code></pre>
+<hr />
+<h2 id="rendering">Rendering</h2>
+<h3 id="meshcomponent"><code>MeshComponent</code></h3>
+<p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
+<p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
+<pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh(&quot;assets/models/cube.obj&quot;);
+auto* mesh = go-&gt;AddComponent&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
+mesh-&gt;SetAlbedo({0.8F, 0.2F, 0.2F});
+</code></pre>
+<h3 id="materialcomponent"><code>MaterialComponent</code></h3>
+<p><strong>Kind:</strong> <code>Material</code> · <strong>Consumed by:</strong> Scene submit (PBR / toon, transparency partition)</p>
+<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture(&quot;assets/brick.png&quot;);
+go-&gt;AddComponent&lt;MaterialComponent&gt;(albedo, Vector3::One);
+auto* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;();
+mat-&gt;SetMetallic(0.1F);
+mat-&gt;SetRoughness(0.7F);
+mat-&gt;SetNormalTexture(normalMap);
+mat-&gt;SetMetallicRoughnessTexture(ormMap);
+mat-&gt;SetOpacity(0.85F);  // → transparent pass
+</code></pre>
+<h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
+<p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
+<pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/Fox.glb&quot;);
+go-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(fox.mesh);
+go-&gt;AddComponent&lt;MaterialComponent&gt;(fox.baseColorTexture);
+auto* anim = go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, 0, 1.0F);
+anim-&gt;SetLoopMode(AnimLoopMode::Loop);
+anim-&gt;SetClipIndexWithCrossfade(1, 0.25F);
+</code></pre>
+<h3 id="spritecomponent"><code>SpriteComponent</code></h3>
+<p><strong>Kind:</strong> <code>Sprite</code> · <strong>Consumed by:</strong> Sprite pass in <code>SceneRenderParams</code></p>
+<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture(&quot;assets/hero.png&quot;);
+auto* sprite = go-&gt;AddComponent&lt;SpriteComponent&gt;(sheet, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 10);
+sprite-&gt;SetSortOrder(5);  // higher draws on top within layer
+</code></pre>
+<h3 id="spritelighting2dcomponent"><code>SpriteLighting2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>SpriteLighting2D</code> · <strong>Sibling:</strong> <code>SpriteComponent</code></p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(SpriteLighting2DMode::NormalMapped, 1.0F, 0.0F);
+</code></pre>
+<h3 id="spriteanimatorcomponent"><code>SpriteAnimatorComponent</code></h3>
+<p><strong>Kind:</strong> <code>SpriteAnimator</code> · <strong>Priority:</strong> 200 · <strong>Sibling:</strong> <code>SpriteComponent</code></p>
+<pre><code class="language-cpp">auto* sa = go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
+sa-&gt;SetUniformGrid(4, 4);
+SpriteAnimationClip idle{};
+idle.firstFrame = 0;
+idle.frameCount = 4;
+idle.framesPerSecond = 8.0F;
+sa-&gt;AddClip(idle);
+sa-&gt;SetClipIndex(0);
+</code></pre>
+<h3 id="tilemapcomponent"><code>TilemapComponent</code></h3>
+<p><strong>Kind:</strong> <code>Tilemap</code> · <strong>Consumed by:</strong> Tilemap pass</p>
+<pre><code class="language-cpp">auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(atlas, 32, 24, 8, 8, 1.0F, 0);
+tm-&gt;SetTile(10, 5, 42);  // tile index in atlas
+</code></pre>
+<h3 id="tilemapcollider2dcomponent"><code>TilemapCollider2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>TilemapCollider2D</code> · <strong>Sibling:</strong> <code>TilemapComponent</code> · <strong>Consumed by:</strong> <code>SimulatePhysics2D</code></p>
+<pre><code class="language-cpp">auto* tc = go-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
+tc-&gt;SetCategoryBits(1u &lt;&lt; 1);  // environment layer
+tc-&gt;SetMaskBits(0xFFFF);
+</code></pre>
+<h3 id="skycomponent"><code>SkyComponent</code></h3>
+<p><strong>Kind:</strong> <code>Sky</code> · <strong>Siblings:</strong> <code>MeshComponent</code> (sky mesh), <code>TransformComponent</code></p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;MeshComponent&gt;(skyBoxMesh, SceneMeshSlot::Custom);
+go-&gt;AddComponent&lt;SkyComponent&gt;(SceneSkyMode::Box);
+</code></pre>
+<h3 id="terraincomponent"><code>TerrainComponent</code></h3>
+<p><strong>Kind:</strong> <code>Terrain</code> · <strong>Consumed by:</strong> Mesh rebuild + raycast</p>
+<pre><code class="language-cpp">TerrainGeneratorSettings settings{};
+settings.gridWidth = 128;
+settings.gridDepth = 128;
+go-&gt;AddComponent&lt;TerrainComponent&gt;(settings, Vector3{0.4F, 0.55F, 0.35F});
+go-&gt;AddComponent&lt;MaterialComponent&gt;(grassTex);
+</code></pre>
+<h3 id="particleemittercomponent"><code>ParticleEmitterComponent</code></h3>
+<p><strong>Kind:</strong> <code>ParticleEmitter</code> · <strong>Consumed by:</strong> <code>OnUpdate</code> + <code>SceneRenderParams::particles</code></p>
+<pre><code class="language-cpp">auto* pe = go-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
+pe-&gt;SetEmitterEnabled(true);
+pe-&gt;SetMaxParticles(256);
+pe-&gt;SetEmissionRate(40.0F);
+pe-&gt;SetStartColor({1.0F, 0.6F, 0.1F, 1.0F});
+pe-&gt;SetGravity({0.0F, -4.0F, 0.0F});
+</code></pre>
+<h3 id="billboardcomponent"><code>BillboardComponent</code></h3>
+<p><strong>Kind:</strong> <code>Billboard</code> · <strong>Priority:</strong> 50 · <strong>Consumed by:</strong> <code>OnUpdate</code> (rotates transform)</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteComponent&gt;(iconTex);
+go-&gt;AddComponent&lt;BillboardComponent&gt;();  // default: full camera facing
+// YAxisLocked for trees / pickups in 3D:
+auto* bb = go-&gt;AddComponent&lt;BillboardComponent&gt;();
+bb-&gt;SetMode(BillboardMode::YAxisLocked);
+</code></pre>
+<h3 id="decalprojectorcomponent"><code>DecalProjectorComponent</code></h3>
+<p><strong>Kind:</strong> <code>DecalProjector</code> · <strong>Consumed by:</strong> <code>SceneRenderParams::decals</code> (data path; GPU decal pass optional)</p>
+<pre><code class="language-cpp">auto* decal = go-&gt;AddComponent&lt;DecalProjectorComponent&gt;();
+decal-&gt;SetTexture(bulletHoleTex);
+decal-&gt;SetSize({0.4F, 0.4F, 0.2F});
+decal-&gt;SetOpacity(0.9F);
+</code></pre>
+<h3 id="fogvolumecomponent"><code>FogVolumeComponent</code></h3>
+<p><strong>Kind:</strong> <code>FogVolume</code> · <strong>Consumed by:</strong> <code>ApplyRegionalRenderVolumes</code> → <code>SceneRenderParams</code> (data path; GPU fog optional)</p>
+<p>Oriented box or sphere volume. When the camera is inside, overrides <code>fogEnabled</code>, <code>fogColor</code>, <code>fogDensity</code>, <code>fogStart</code>, <code>fogEnd</code>. Higher <code>priority</code> wins overlaps.</p>
+<pre><code class="language-cpp">auto* fog = cave-&gt;AddComponent&lt;FogVolumeComponent&gt;();
+fog-&gt;SetShape(VolumeShape::Box);
+fog-&gt;SetHalfExtents({12.0F, 6.0F, 12.0F});
+fog-&gt;SetFogColor({0.55F, 0.58F, 0.62F});
+fog-&gt;SetFogDensity(0.035F);
+fog-&gt;SetPriority(5);
+</code></pre>
+<h3 id="postprocessvolumecomponent"><code>PostProcessVolumeComponent</code></h3>
+<p><strong>Kind:</strong> <code>PostProcessVolume</code> · <strong>Consumed by:</strong> <code>ApplyRegionalRenderVolumes</code></p>
+<p>Regional overrides for SSAO, exposure, and ambient scale when the camera is inside the volume.</p>
+<pre><code class="language-cpp">auto* pp = interior-&gt;AddComponent&lt;PostProcessVolumeComponent&gt;();
+pp-&gt;SetSsaoEnabled(false);
+pp-&gt;SetExposure(1.15F);
+pp-&gt;SetAmbientScale(0.85F);
+pp-&gt;SetPriority(2);
+</code></pre>
+<h3 id="textoverlaycomponent"><code>TextOverlayComponent</code></h3>
+<p><strong>Kind:</strong> <code>TextOverlay</code> · <strong>Consumed by:</strong> Screen UI pass</p>
+<pre><code class="language-cpp">world.SetUiFont(font);
+auto* hud = hudGo-&gt;AddComponent&lt;TextOverlayComponent&gt;();
+hud-&gt;SetText(&quot;HP: 100&quot;);
+hud-&gt;SetScreenPosition({24.0F, 24.0F});
+hud-&gt;SetFontSizePixels(18.0F);
+</code></pre>
+<h3 id="blendmodecomponent-renderlayercomponent-sortinggroupcomponent"><code>BlendModeComponent</code> / <code>RenderLayerComponent</code> / <code>SortingGroupComponent</code></h3>
+<pre><code class="language-cpp">// Per-sprite blend (sprite or tilemap sibling required)
+go-&gt;AddComponent&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
+
+// Named layer from RenderLayerRegistry
+go-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
+
+// Batch sort for subtree (descendant sprites/tilemaps)
+parent-&gt;AddComponent&lt;SortingGroupComponent&gt;(100);
+</code></pre>
+<hr />
+<h2 id="lighting">Lighting</h2>
+<h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
+<p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>FillStandardLitSceneFromWorld</code></p>
+<p>Light direction = owner transform <strong>local +Z</strong> in world space.</p>
+<pre><code class="language-cpp">auto* sun = sunGo-&gt;AddComponent&lt;DirectionalLightComponent&gt;(Vector3{1,0.97,0.9}, 1.2F);
+sunGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetRotation(
+    Quaternion::FromAxisAngle(Vector3::UnitX, -0.6F));
+</code></pre>
+<h3 id="pointlightcomponent-spotlightcomponent"><code>PointLightComponent</code> / <code>SpotLightComponent</code></h3>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;PointLightComponent&gt;(Vector3::One, 4.0F, 12.0F);
+
+auto* spot = go-&gt;AddComponent&lt;SpotLightComponent&gt;(Vector3::One, 6.0F, 15.0F, 25.0F, 40.0F);
+// Cone axis = local −Z in world space
+</code></pre>
+<hr />
+<h2 id="camera">Camera</h2>
+<h3 id="cameracomponent-3d"><code>CameraComponent</code> (3D)</h3>
+<p><strong>Kind:</strong> <code>Camera</code> · <strong>Consumed by:</strong> <code>TryResolveMainCamera</code>, scene submit</p>
+<pre><code class="language-cpp">auto* cam = cameraGo-&gt;AddComponent&lt;CameraComponent&gt;();
+cam-&gt;SetProjectionMode(CameraProjectionMode::Perspective);
+cam-&gt;SetFovYDegrees(72.0F);
+cam-&gt;SetNearPlane(0.1F);
+cam-&gt;SetFarPlane(500.0F);
+cam-&gt;SetPriority(10);  // higher wins as &quot;main&quot; camera
+</code></pre>
+<h3 id="camera2dcomponent-camera2drigcomponent"><code>Camera2DComponent</code> + <code>Camera2DRigComponent</code></h3>
+<pre><code class="language-cpp">auto* cam2d = cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;();
+cam2d-&gt;SetHalfExtentY(6.0F);
+
+auto* rig = cameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;();
+rig-&gt;SetMode(Camera2DRigMode::FollowTarget);
+rig-&gt;SetTarget(player);
+rig-&gt;SetFollowSmoothRate(7.5F);
+rig-&gt;SetLookAheadScale(0.15F);
+</code></pre>
+<h3 id="springarm3dcomponent-camerafollow3dcomponent"><code>SpringArm3DComponent</code> + <code>CameraFollow3DComponent</code></h3>
+<p>Third-person orbit (runs at priorities 295 / 300).</p>
+<pre><code class="language-cpp">GameObject* rig = world.CreateGameObject();
+GameObject* camObj = world.CreateGameObject();
+world.SetParent(camObj, rig);
+
+rig-&gt;AddComponent&lt;TransformComponent&gt;();
+auto* arm = camObj-&gt;AddComponent&lt;SpringArm3DComponent&gt;();
+arm-&gt;SetPivotTarget(player);
+arm-&gt;SetSocketOffset({0.0F, 1.5F, 0.0F});
+arm-&gt;SetArmLength(4.5F);
+arm-&gt;SetYawRadians(0.0F);
+arm-&gt;SetPitchRadians(-0.3F);
+
+camObj-&gt;AddComponent&lt;CameraComponent&gt;();
+auto* follow = camObj-&gt;AddComponent&lt;CameraFollow3DComponent&gt;();
+follow-&gt;SetTarget(player);
+follow-&gt;SetTargetOffset({0.0F, 1.6F, 0.0F});
+follow-&gt;SetLookAtTarget(true);
+</code></pre>
+<hr />
+<h2 id="physics-2d">Physics 2D</h2>
+<p>Call each frame from <code>OnUpdate</code> (after gameplay input, before render):</p>
+<pre><code class="language-cpp">SimulatePhysics2D(world, timing);
+</code></pre>
+<h3 id="rigidbody2dcomponent"><code>Rigidbody2DComponent</code></h3>
+<pre><code class="language-cpp">auto* rb = go-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
+rb-&gt;SetVelocity({3.0F, 0.0F});
+</code></pre>
+<h3 id="boxcollider2dcomponent-circlecollider2dcomponent"><code>BoxCollider2DComponent</code> / <code>CircleCollider2DComponent</code></h3>
+<pre><code class="language-cpp">auto* box = go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{0.5F, 0.5F});
+box-&gt;SetCategoryBits(1u &lt;&lt; 0);
+box-&gt;SetMaskBits(0xFFFF);
+box-&gt;SetIsTrigger(false);
+
+// On same dynamic body, circle wins over box if both exist:
+go-&gt;AddComponent&lt;CircleCollider2DComponent&gt;(0.45F);
+</code></pre>
+<h3 id="polygoncollider2dcomponent"><code>PolygonCollider2DComponent</code></h3>
+<p><strong>Static only</strong> (no dynamic rigidbody, or static/kinematic body). Convex, max <strong>16</strong> vertices.</p>
+<pre><code class="language-cpp">Array&lt;Vector2&gt; verts;
+verts.PushBack({-1.0F, 0.0F});
+verts.PushBack({1.0F, 0.0F});
+verts.PushBack({0.0F, 1.5F});
+auto* poly = ramp-&gt;AddComponent&lt;PolygonCollider2DComponent&gt;();
+poly-&gt;SetVertices(verts);
+poly-&gt;SetCategoryBits(1u &lt;&lt; 1);
+</code></pre>
+<h3 id="physicsmaterial2dcomponent"><code>PhysicsMaterial2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>PhysicsMaterial2D</code> · <strong>Sibling:</strong> static 2D collider on same object · <strong>Consumed by:</strong> static broad-phase bake + contact restitution</p>
+<pre><code class="language-cpp">ice-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{4.0F, 0.1F});
+ice-&gt;AddComponent&lt;PhysicsMaterial2DComponent&gt;(0.15F, 0.35F);  // friction, restitution
+</code></pre>
+<h3 id="distancejoint2dcomponent-hingejoint2dcomponent"><code>DistanceJoint2DComponent</code> / <code>HingeJoint2DComponent</code></h3>
+<p><strong>Consumed by:</strong> <code>SimulatePhysics2D</code> when <code>PhysicsWorld2DSettings::jointIterations &gt; 0</code> (default <strong>4</strong>)</p>
+<pre><code class="language-cpp">PhysicsWorld2DSettings settings{};
+settings.jointIterations = 6;
+
+chainA-&gt;AddComponent&lt;Rigidbody2DComponent&gt;();
+chainB-&gt;AddComponent&lt;Rigidbody2DComponent&gt;();
+chainA-&gt;AddComponent&lt;DistanceJoint2DComponent&gt;(chainB, 1.2F);
+
+// Pin two bodies at local anchor offsets:
+hingeA-&gt;AddComponent&lt;HingeJoint2DComponent&gt;(hingeB);
+auto* hj = hingeA-&gt;GetComponent&lt;HingeJoint2DComponent&gt;();
+hj-&gt;SetLocalAnchorA({0.0F, 0.5F});
+hj-&gt;SetLocalAnchorB({0.0F, -0.5F});
+</code></pre>
+<h3 id="layer-filter">Layer filter</h3>
+<pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
+</code></pre>
+<hr />
+<h2 id="physics-3d">Physics 3D</h2>
+<pre><code class="language-cpp">SimulatePhysics3D(world, timing, settings);
+SimulateCharacterControllers3D(world, timing);
+SimulateTriggerVolumes3D(world, timing);
+</code></pre>
+<h3 id="rigidbody3dcomponent-spherecollider3dcomponent"><code>Rigidbody3DComponent</code> + <code>SphereCollider3DComponent</code></h3>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;Rigidbody3DComponent&gt;(RigidbodyBodyType3D::Dynamic, 1.0F);
+go-&gt;AddComponent&lt;SphereCollider3DComponent&gt;(0.5F);
+go-&gt;AddComponent&lt;PhysicsMaterial3DComponent&gt;(0.5F, 0.4F, 0.3F);
+</code></pre>
+<h3 id="capsulecollider3dcomponent"><code>CapsuleCollider3DComponent</code></h3>
+<p>Static when body is not dynamic; dynamic with <code>Rigidbody3DComponent</code>.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;CapsuleCollider3DComponent&gt;(0.35F, 1.8F, CapsuleCollider3DComponent::Axis::Y);
+</code></pre>
+<h3 id="meshcollider3dcomponent"><code>MeshCollider3DComponent</code></h3>
+<p><strong>Kind:</strong> <code>MeshCollider3D</code> · <strong>Sibling:</strong> <code>MeshComponent</code> · <strong>Static only</strong> (non-dynamic rigidbody)</p>
+<p>World AABB baked from mesh vertices each broad-phase rebuild — useful for imported glTF level geometry.</p>
+<pre><code class="language-cpp">level-&gt;AddComponent&lt;MeshComponent&gt;(levelMesh, SceneMeshSlot::Custom, Vector3::One);
+level-&gt;AddComponent&lt;MeshCollider3DComponent&gt;();
+</code></pre>
+<h3 id="charactercontroller3dcomponent"><code>CharacterController3DComponent</code></h3>
+<p>Kinematic motor — <strong>do not</strong> add <code>Rigidbody3DComponent</code> on the same object.</p>
+<pre><code class="language-cpp">auto* cc = player-&gt;AddComponent&lt;CharacterController3DComponent&gt;(0.4F, Vector3{0,0.9F,0});
+cc-&gt;SetMoveInput({inputX, 0.0F, inputZ});
+// After SimulateCharacterControllers3D:
+const bool grounded = cc-&gt;IsGrounded();
+</code></pre>
+<h3 id="triggervolume3dcomponent"><code>TriggerVolume3DComponent</code></h3>
+<pre><code class="language-cpp">auto* trig = zone-&gt;AddComponent&lt;TriggerVolume3DComponent&gt;(
+    TriggerVolume3DShape::Box, Vector3{2,2,2});
+trig-&gt;SetOnEnter([](GameObject&amp; other) { (void)other; });
+trig-&gt;SetOnExit([](GameObject&amp; other) { (void)other; });
+</code></pre>
+<h3 id="distancejoint3dcomponent"><code>DistanceJoint3DComponent</code></h3>
+<p>Requires <code>jointIterations &gt; 0</code> in <code>PhysicsWorld3DSettings</code>. Both ends need <code>SphereCollider3DComponent</code>.</p>
+<pre><code class="language-cpp">PhysicsWorld3DSettings settings{};
+settings.jointIterations = 8;
+
+ballA-&gt;AddComponent&lt;DistanceJoint3DComponent&gt;(ballB, 2.5F);
+auto* joint = ballA-&gt;GetComponent&lt;DistanceJoint3DComponent&gt;();
+joint-&gt;SetStiffness(0.9F);
+</code></pre>
+<h3 id="hingejoint3dcomponent-springjoint3dcomponent"><code>HingeJoint3DComponent</code> / <code>SpringJoint3DComponent</code></h3>
+<p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br />
+<strong>Spring:</strong> velocity spring-damper along the line between sphere centers.</p>
+<pre><code class="language-cpp">doorA-&gt;AddComponent&lt;HingeJoint3DComponent&gt;(doorB);
+auto* hinge = doorA-&gt;GetComponent&lt;HingeJoint3DComponent&gt;();
+hinge-&gt;SetLocalAnchorA({0.0F, 1.0F, 0.0F});
+hinge-&gt;SetLocalAnchorB({0.0F, 1.0F, 0.0F});
+
+pendulum-&gt;AddComponent&lt;SpringJoint3DComponent&gt;(anchor, 3.0F);
+auto* spring = pendulum-&gt;GetComponent&lt;SpringJoint3DComponent&gt;();
+spring-&gt;SetSpringStiffness(55.0F);
+spring-&gt;SetDamping(5.0F);
+</code></pre>
+<h3 id="collisioncomponent-legacy-sphere"><code>CollisionComponent</code> (legacy sphere)</h3>
+<p>Simple world-space sphere bounds; used by some probe paths.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;CollisionComponent&gt;(0.5F, Vector3::Zero);
+</code></pre>
+<hr />
+<h2 id="animation">Animation</h2>
+<h3 id="character3danimfsmcomponent"><code>Character3DAnimFsmComponent</code></h3>
+<p><strong>Priority:</strong> 100 · Add <strong>before</strong> <code>AnimatorComponent</code> on same object.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
+go-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, walkClip, 1.0F);
+auto* fsm = go-&gt;GetComponent&lt;Character3DAnimFsmComponent&gt;();
+fsm-&gt;SetLocomotionInput({0.0F, 0.0F, 1.0F});
+fsm-&gt;RequestAttack();
+</code></pre>
+<h3 id="animationeventreceivercomponent"><code>AnimationEventReceiverComponent</code></h3>
+<p><strong>Priority:</strong> 210 · <strong>Sibling:</strong> <code>AnimatorComponent</code></p>
+<pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
+recv-&gt;AddMarker(0, 0.35F, &quot;Footstep&quot;);
+recv-&gt;AddMarker(0, 0.72F, &quot;Footstep&quot;);
+
+class FootstepHandler final : public GameComponent {
+public:
+    void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) override {
+        if (id == SignalId::AnimationEvent) {
+            // const char* name = static_cast&lt;const char*&gt;(p.ptr);
+        }
+    }
+};
+go-&gt;AddComponent&lt;FootstepHandler&gt;();
+</code></pre>
+<h3 id="attachmentsocketcomponent"><code>AttachmentSocketComponent</code></h3>
+<p><strong>Priority:</strong> 250 · Source needs <code>AnimatorComponent</code>.</p>
+<pre><code class="language-cpp">// On character:
+go-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, 0);
+
+// On weapon child (or separate object):
+auto* socket = go-&gt;AddComponent&lt;AttachmentSocketComponent&gt;();
+socket-&gt;SetSourceObject(character);
+socket-&gt;SetAttachedObject(swordObject);
+socket-&gt;SetJointIndex(12);  // hand bone
+socket-&gt;SetLocalOffset({0.05F, 0.0F, 0.1F});
+</code></pre>
+<h3 id="sprite2dcharacteranimfsmcomponent"><code>Sprite2DCharacterAnimFsmComponent</code></h3>
+<p><strong>Priority:</strong> 100 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code></p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
+auto* fsm = go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+fsm-&gt;RequestAttack();
+fsm-&gt;RequestHurt();
+</code></pre>
+<hr />
+<h2 id="ai">AI</h2>
+<p><code>SimulateGameAi</code> runs, in order: <code>ProcessNavMeshAgents</code> → <code>ProcessPerceptionSensors</code> → each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
+<h3 id="aiagentcomponent"><code>AiAgentComponent</code></h3>
+<p><strong>Consumed by:</strong> <code>SimulateGameAi</code> (not <code>OnUpdate</code> on the component)</p>
+<pre><code class="language-cpp">auto* agent = enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
+AiBlackboard&amp; bb = agent-&gt;GetBlackboard();
+bb.SetFloat(0, playerX);   // grid goal X when using NavMeshAgent grid mode
+bb.SetFloat(1, playerZ);
+agent-&gt;SetMaxSpeed(4.5F);
+agent-&gt;SetSteeringPlane(AiSteeringPlane::XzWorld);
+agent-&gt;SetFsmEnabled(true);
+</code></pre>
+<h3 id="patrolpathcomponent-navmeshagentcomponent"><code>PatrolPathComponent</code> + <code>NavMeshAgentComponent</code></h3>
+<p><strong>PatrolPath</strong> stores local waypoints; <strong>NavMeshAgent</strong> copies them into <code>AiAgentComponent::pathWorldPolylineXZ</code> each AI tick (or runs grid A* when <code>UseGridPathfinding()</code> is true).</p>
+<pre><code class="language-cpp">// Waypoint object (or same object as agent):
+auto* path = pathObj-&gt;AddComponent&lt;PatrolPathComponent&gt;();
+path-&gt;GetWaypoints().PushBack({0.0F, 0.0F, 0.0F});
+path-&gt;GetWaypoints().PushBack({8.0F, 0.0F, 0.0F});
+path-&gt;GetWaypoints().PushBack({8.0F, 0.0F, 8.0F});
+path-&gt;SetLooping(true);
+
+enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
+auto* nav = enemy-&gt;AddComponent&lt;NavMeshAgentComponent&gt;();
+nav-&gt;SetPatrolPathObject(pathObj);
+
+// Optional grid replan to blackboard goal (slots 0,1 = world X/Z):
+nav-&gt;SetUseGridPathfinding(true);
+nav-&gt;SetGridOriginXZ({-32.0F, -32.0F});
+nav-&gt;SetGridCellSize(1.0F);
+</code></pre>
+<h3 id="perceptionsensorcomponent"><code>PerceptionSensorComponent</code></h3>
+<p><strong>Consumed by:</strong> <code>ProcessPerceptionSensors</code> — fills <code>GetDetectedObjects()</code> each frame (sight cone + hearing radius).</p>
+<pre><code class="language-cpp">auto* sense = guard-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
+sense-&gt;SetSightRadius(18.0F);
+sense-&gt;SetSightFovDegrees(110.0F);
+sense-&gt;SetHearingRadius(10.0F);
+
+// After SimulateGameAi:
+for (GameObject* target : sense-&gt;GetDetectedObjects()) {
+    (void)target;
+}
+</code></pre>
+<hr />
+<h2 id="audio">Audio</h2>
+<p><code>Game::OnUpdate</code> calls <code>ProcessSoundCues</code>, which runs <code>ProcessAudioListeners</code>, then <code>ProcessAmbientZones</code>, then flushes cues.</p>
+<h3 id="audiolistenercomponent"><code>AudioListenerComponent</code></h3>
+<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;AudioListenerComponent&gt;()-&gt;SetPriority(10);
+</code></pre>
+<p>Without an explicit listener, spatial audio falls back to the main 3D camera pose.</p>
+<h3 id="soundcuecomponent"><code>SoundCueComponent</code></h3>
+<pre><code class="language-cpp">auto* cue = player-&gt;AddComponent&lt;SoundCueComponent&gt;();
+cue-&gt;Queue(jumpClip, 0.9F);
+
+// Spatial one-shot at world position:
+const Matrix4&amp; wm = player-&gt;GetWorldMatrix();
+const Vector3 pos{wm.m[12], wm.m[13], wm.m[14]};
+cue-&gt;QueueAtWorld(landClip, 0.7F, pos, 1.0F, 1.0F, 48.0F);
+</code></pre>
+<p>Background music: <code>context.TryGetSoundEngine()-&gt;SetBackgroundMusic(bgm, 0.3F, true)</code>.</p>
+<h3 id="ambientzonecomponent"><code>AmbientZoneComponent</code></h3>
+<p><strong>Consumed by:</strong> <code>ProcessAmbientZones</code> — when the listener is inside, scales master one-shot volume (<code>volumeScale</code>). Higher <code>priority</code> wins.</p>
+<pre><code class="language-cpp">auto* zone = cave-&gt;AddComponent&lt;AmbientZoneComponent&gt;();
+zone-&gt;SetShape(VolumeShape::Sphere);
+zone-&gt;SetHalfExtents({10.0F, 10.0F, 10.0F});
+zone-&gt;SetVolumeScale(0.7F);
+zone-&gt;SetPriority(3);
+</code></pre>
+<hr />
+<h2 id="ui">UI</h2>
+<h3 id="guicanvascomponent"><code>GuiCanvasComponent</code></h3>
+<pre><code class="language-cpp">auto canvas = uiRoot-&gt;AddComponent&lt;GuiCanvasComponent&gt;();
+canvas-&gt;SetSortOrder(0);
+canvas-&gt;SetRoot&lt;Gui::Panel&gt;(MakeUnique&lt;Gui::Panel&gt;());
+// Each frame (after scene submit params built):
+ProcessGuiCanvasesInput(world, input, fbW, fbH);
+PaintGuiCanvases(world, params, fbW, fbH);
+</code></pre>
+<hr />
+<h2 id="world">World</h2>
+<h3 id="scenespatialpolicycomponent"><code>SceneSpatialPolicyComponent</code></h3>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::Bvh);
+</code></pre>
+<p>Affects <code>Scene::ForEachDrawableInViewFrustum</code> partition strategy.</p>
+<h3 id="timeofdaydrivercomponent"><code>TimeOfDayDriverComponent</code></h3>
+<p><strong>Consumed by:</strong> <code>ProcessTimeOfDayDrivers</code> before scene lighting resolve</p>
+<p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> and <code>dayLengthSeconds &gt; 0</code>, time advances automatically each submit.</p>
+<pre><code class="language-cpp">auto* tod = worldRoot-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;();
+tod-&gt;SetTimeOfDay(0.35F);
+tod-&gt;SetDayLengthSeconds(90.0F);
+tod-&gt;SetLooping(true);
+tod-&gt;SetPriority(1);
+</code></pre>
+<hr />
+<h2 id="gameplay">Gameplay</h2>
+<h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
+<pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
+auto* dmg = enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
+dmg-&gt;SetDamageMultiplier(1.5F);  // vulnerable to fire, etc.
+
+float applied = dmg-&gt;ApplyDamage(25.0F, player);
+hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
+    (void)killer;
+    self.GetWorld().DestroyGameObject(&amp;self);
+});
+</code></pre>
+<p>Listen for combat feedback:</p>
+<pre><code class="language-cpp">void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
+    if (id == SignalId::DamageApplied) {
+        const auto* d = static_cast&lt;const DamageSignalPayload*&gt;(payload.ptr);
+        // d-&gt;applied, d-&gt;instigator, d-&gt;target
+    }
+}
+</code></pre>
+<hr />
+<h2 id="typical-object-recipes">Typical object recipes</h2>
+<h3 id="d-platformer-player">2D platformer player</h3>
+<pre><code class="language-cpp">player-&gt;AddComponent&lt;TransformComponent&gt;();
+player-&gt;AddComponent&lt;SpriteComponent&gt;(heroTex);
+player-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
+player-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+player-&gt;AddComponent&lt;Rigidbody2DComponent&gt;();
+player-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
+player-&gt;AddComponent&lt;SoundCueComponent&gt;();
+player-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
+player-&gt;AddComponent&lt;DamageableComponent&gt;();
+</code></pre>
+<h3 id="d-skinned-enemy">3D skinned enemy</h3>
+<pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
+enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
+enemy-&gt;AddComponent&lt;MaterialComponent&gt;(tex);
+enemy-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
+enemy-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, 0);
+enemy-&gt;AddComponent&lt;CapsuleCollider3DComponent&gt;(0.4F, 1.8F);
+enemy-&gt;AddComponent&lt;Rigidbody3DComponent&gt;();
+enemy-&gt;AddComponent&lt;HealthComponent&gt;(50.0F);
+enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
+</code></pre>
+<h3 id="d-patrolling-guard">3D patrolling guard</h3>
+<pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
+enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
+enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
+enemy-&gt;AddComponent&lt;NavMeshAgentComponent&gt;()-&gt;SetPatrolPathObject(patrolPathObj);
+enemy-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
+enemy-&gt;AddComponent&lt;HealthComponent&gt;(80.0F);
+</code></pre>
+<h3 id="static-2d-level-chunk">Static 2D level chunk</h3>
+<pre><code class="language-cpp">level-&gt;AddComponent&lt;TransformComponent&gt;();
+level-&gt;AddComponent&lt;TilemapComponent&gt;(...);
+level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
+</code></pre>
+<hr />
+<h2 id="serialization">Serialization</h2>
+<p>Scene format <strong><code>spark_scene_v4</code></strong> captures a subset of components via <code>ComponentSnapshotRegistry</code>. Registered kinds include Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, and more — see <code>SceneSerializer.cpp</code> <code>kCaptureOrder</code>.</p>
+<p>Components without handlers still work at runtime; they are omitted from saved scenes until a handler is added.</p>
+<hr />
+<h2 id="related-chapters">Related chapters</h2>
+<ul>
+<li><a href="06-ecs-and-scene.html">ECS and Scene</a> — <code>GameObject</code>, signals, submit hand-off</li>
+<li><a href="../5-physics/03-colliders.html">Colliders</a> — layer masks, triggers</li>
+<li><a href="../6-sound/03-cues.html">Sound Cues</a> — mixer and spatial audio</li>
+<li><a href="../3-3d-graphics/02-cameras-3d.html">Cameras in 3D</a> — fly camera vs ECS rigs</li>
+<li><a href="../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> — contributor deep-dive</li>
+</ul>
+</div>
+          <footer class="doc-footer">
+            <p>Generated by <strong>MDWeb</strong></p>
+          </footer>
+        </article>
+
+        
+                <aside class="toc" aria-label="On this page">
+                  <p class="toc-title">On this page</p>
+                  <ul>
+                    
+                        <li class="toc-h1">
+                          <a href="#game-component-reference">Game Component Reference</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#quick-index">Quick index</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#update-priorities">Update priorities</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#signals">Signals ()</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#core">Core</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#rendering">Rendering</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> /  / </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#lighting">Lighting</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> / </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#camera">Camera</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#3d"> (3D)</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#physics-2d">Physics 2D</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> / </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> / </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#layer-filter">Layer filter</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#physics-3d">Physics 3D</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> / </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#legacy-sphere"> (legacy sphere)</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#animation">Animation</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#ai">AI</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#audio">Audio</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#ui">UI</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#world">World</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#gameplay">Gameplay</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#typical-object-recipes">Typical object recipes</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#2d-platformer-player">2D platformer player</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#3d-skinned-enemy">3D skinned enemy</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#3d-patrolling-guard">3D patrolling guard</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#static-2d-level-chunk">Static 2D level chunk</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#serialization">Serialization</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#related-chapters">Related chapters</a>
+                        </li>
+                        
+                  </ul>
+                </aside>
+                
+      </main>
+    </div>
+  </div>
+  <script src="../assets/vendor/mermaid.min.js"></script>
+  <script src="../assets/vendor/highlight.min.js"></script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

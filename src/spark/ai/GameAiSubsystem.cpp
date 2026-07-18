@@ -2,6 +2,8 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
+#include "spark/ai/NavigationSubsystem.hpp"
+#include "spark/ai/PerceptionSubsystem.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/scene/GameWorld.hpp"
@@ -9,7 +11,9 @@
 namespace Spark {
 
 void SimulateGameAi(GameWorld& world, const FrameTiming& timing, IEngineContext& context) {
-    world.ForEachGameObject([&](GameObject* o) {
+    ProcessNavMeshAgents(world);
+    ProcessPerceptionSensors(world);
+    world.ForEachActiveGameObject([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

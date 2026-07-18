@@ -1,5 +1,9 @@
 #include "spark/audio/SoundMixer.hpp"
 
+#include "spark/audio/AmbientAudio.hpp"
+#include "spark/audio/AudioListenerPose.hpp"
+
+#include <algorithm>
 #include <cmath>
 
 namespace Spark {
@@ -35,6 +39,16 @@ void SoundMixer::ClearBackgroundMusic() noexcept {
 }
 
 void SoundMixer::PlayOneShot(const SharedPtr<SoundClip>& clip, const float volume) noexcept {
+    PlayOneShotSpatial(clip, volume, Vector3::Zero, 0.0F);
+}
+
+void SoundMixer::PlayOneShotSpatial(
+        const SharedPtr<SoundClip>& clip,
+        const float volume,
+        const Vector3& worldPosition,
+        const float spatialBlend,
+        const float minDistance,
+        const float maxDistance) noexcept {
     if (!clip || clip->GetFrameCount() == 0) {
         return;
     }
@@ -58,6 +72,10 @@ void SoundMixer::PlayOneShot(const SharedPtr<SoundClip>& clip, const float volum
     v.clip = clip;
     v.readIndex = 0.0;
     v.volume = volume;
+    v.worldPosition = worldPosition;
+    v.spatialBlend = spatialBlend;
+    v.minDistance = (minDistance > 1.0e-4F) ? minDistance : 1.0F;
+    v.maxDistance = (maxDistance > v.minDistance) ? maxDistance : v.minDistance + 1.0F;
     v.loop = false;
     v.active = true;
 }
@@ -88,8 +106,34 @@ void SoundMixer::AccumulateVoiceForFrame(Voice& v, float& accL, float& accR) noe
     const float r1 = s[i1 * 2U + 1U];
     const float l = l0 + (l1 - l0) * t;
     const float r = r0 + (r1 - r0) * t;
-    accL += l * v.volume;
-    accR += r * v.volume;
+    float gainL = 1.0F;
+    float gainR = 1.0F;
+    const AmbientAudioMix& ambient = GetFrameAmbientAudioMixConst();
+    const float ambientVolume = ambient.active ? ambient.volumeScale : 1.0F;
+    if (v.spatialBlend > 1.0e-4F) {
+        const AudioListenerPose& listener = GetFrameAudioListenerPoseConst();
+        if (listener.valid) {
+            const Vector3 delta = v.worldPosition - listener.position;
+            const float dist = std::sqrt(delta.LengthSquared());
+            const float falloff = 1.0F - std::clamp(
+                    (dist - v.minDistance) / (v.maxDistance - v.minDistance),
+                    0.0F,
+                    1.0F);
+            const float pan = std::clamp(
+                    Vector3::Dot(delta, listener.right) / std::max(dist, 1.0e-4F),
+                    -1.0F,
+                    1.0F);
+            const float center = 0.5F * (1.0F - std::abs(pan));
+            const float side = 0.5F * (1.0F + std::abs(pan));
+            gainL = center + (pan < 0.0F ? side : 0.0F);
+            gainR = center + (pan > 0.0F ? side : 0.0F);
+            const float spatialGain = falloff * v.spatialBlend + (1.0F - v.spatialBlend);
+            gainL *= spatialGain;
+            gainR *= spatialGain;
+        }
+    }
+    accL += l * v.volume * gainL * ambientVolume;
+    accR += r * v.volume * gainR * ambientVolume;
     v.readIndex += step;
     if (v.loop && maxFrame > 0) {
         while (v.readIndex >= static_cast<double>(maxFrame)) {

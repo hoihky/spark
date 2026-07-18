@@ -1,5 +1,7 @@
 #include "spark/audio/SoundSubsystem.hpp"
 
+#include "spark/audio/AmbientAudio.hpp"
+#include "spark/audio/AudioSpatial.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
@@ -9,11 +11,13 @@
 namespace Spark {
 
 void ProcessSoundCues(GameWorld& world, IEngineContext& context) {
+    ProcessAudioListeners(world);
+    ProcessAmbientZones(world);
     SoundEngine* audio = context.TryGetSoundEngine();
     if (audio == nullptr || !audio->IsRunning()) {
         return;
     }
-    world.ForEachGameObject([audio](GameObject* o) {
+    world.ForEachActiveGameObject([audio](GameObject* o) {
         if (o == nullptr) {
             return;
         }

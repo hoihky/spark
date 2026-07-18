@@ -79,7 +79,7 @@ struct SkinnedRecord {
 
 void GatherDrawables(const Scene& scene, Array<DrawableRecord>& out) {
     out.Clear();
-    scene.GetWorld().ForEachGameObject([&out](GameObject* o) {
+    scene.GetWorld().ForEachActiveGameObject([&out](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -101,7 +101,7 @@ void GatherDrawables(const Scene& scene, Array<DrawableRecord>& out) {
 
 void GatherSkinned(const GameWorld& world, Array<SkinnedRecord>& out) {
     out.Clear();
-    world.ForEachGameObject([&out](GameObject* o) {
+    world.ForEachActiveGameObject([&out](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -567,7 +567,7 @@ void RunSkinnedCull(
 void DispatchDrawableFrustumCull(
         const Scene& scene, const Matrix4& viewProjection, ScenePartitionKind mode, DrawableFrustumSink& sink) {
     if (mode == ScenePartitionKind::None) {
-        scene.GetWorld().ForEachGameObject([&sink](GameObject* o) {
+        scene.GetWorld().ForEachActiveGameObject([&sink](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -593,7 +593,7 @@ void DispatchSkinnedDrawableFrustumCull(
         ScenePartitionKind mode,
         SkinnedDrawableFrustumSink& sink) {
     if (mode == ScenePartitionKind::None) {
-        world.ForEachGameObject([&sink](GameObject* o) {
+        world.ForEachActiveGameObject([&sink](GameObject* o) {
             if (o == nullptr) {
                 return;
             }

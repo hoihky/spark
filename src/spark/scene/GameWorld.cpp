@@ -107,4 +107,60 @@ void GameWorld::SetUiBoldFont(SharedPtr<Font> font) {
     uiBoldFont = MoveTemp(font);
 }
 
+GameObject* GameWorld::FindGameObjectById(const std::uint64_t id) const noexcept {
+    if (id == 0) {
+        return nullptr;
+    }
+    for (std::size_t i = 0; i < objects.GetSize(); ++i) {
+        GameObject* object = objects[i].Get();
+        if (object != nullptr && object->GetId() == id) {
+            return object;
+        }
+    }
+    return nullptr;
+}
+
+GameObject* GameWorld::FindGameObjectByName(const char* name, const GameObjectQueryFilter& filter) const {
+    if (name == nullptr) {
+        return nullptr;
+    }
+    GameObject* found = nullptr;
+    ForEachGameObject(
+            [&](GameObject* object) {
+                if (found == nullptr && object->GetName() == Utf8String(name)) {
+                    found = object;
+                }
+            },
+            filter);
+    return found;
+}
+
+GameObject* GameWorld::FindGameObjectWithTag(const char* tag, const GameObjectQueryFilter& filter) const {
+    if (tag == nullptr) {
+        return nullptr;
+    }
+    GameObjectQueryFilter tagFilter = filter;
+    tagFilter.tagEquals = tag;
+    GameObject* found = nullptr;
+    ForEachGameObject(
+            [&](GameObject* object) {
+                if (found == nullptr) {
+                    found = object;
+                }
+            },
+            tagFilter);
+    return found;
+}
+
+void GameWorld::CollectGameObjects(GameObjectQueryResult& out, const GameObjectQueryFilter& filter) const {
+    out.Clear();
+    ForEachGameObject([&](GameObject* object) { out.objects.PushBack(object); }, filter);
+}
+
+GameObjectQueryResult GameWorld::QueryGameObjects(const GameObjectQueryFilter& filter) const {
+    GameObjectQueryResult result;
+    CollectGameObjects(result, filter);
+    return result;
+}
+
 }  // namespace Spark

@@ -27,7 +27,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 |-----|------|
 | `GameWorld` | `CreateGameObject`, `DestroyGameObject`, `SetParent`, `UpdateGameObjects`; asset I/O via **`GameWorldAssetCache`** (`Load*` / `Register*`) |
 | `GameObject` | `AddComponent<T>`, `GetComponent<T>`, `GetWorldMatrix`, signals |
-| `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **37** concrete `ComponentKind` values (+ `Unknown`) |
+| `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **64** concrete `ComponentKind` values (+ `Unknown`) |
 | `Scene` | Query iterators: `ForEachDrawable`, `ForEachSkinnedDrawable`, lights, sky, GUI, particles; frustum variants |
 
 ### Scene → render bridge
@@ -46,7 +46,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 |-----|------|
 | `SceneSerializer` / `SceneDeserializer` | Text format **`spark_scene_v4`** (reads v3) |
 | `SceneDocument` / `SceneDocumentHeader` | Entity list + optional `name`, `assets_root`, `scene_uid` headers |
-| `ComponentSnapshotRegistry` | Pluggable handlers; **23** kinds registered today |
+| `ComponentSnapshotRegistry` | Pluggable handlers; **28+** kinds registered today |
 | `SceneManager` | Runtime load/unload of scene files on one `GameWorld` (additive by default) |
 | `GameWorldAssetLoader` | Background decode for glTF, skinned glTF, textures, OBJ; commit via `Pump` |
 
@@ -114,7 +114,7 @@ C <kind> <payload>
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Handler coverage** | 23 / 37 kinds | Handlers for `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … |
+| **Handler coverage** | 28+ / 51 kinds | Handlers for remaining 2D physics, `GuiCanvas`, `Tilemap`, `AiAgent`, audio, animation sockets, … |
 | **Asset references** | Paths embedded in snapshots | Stable asset IDs, optional binary format, version migration hooks |
 | **Partial apply** | `Apply` creates full document | Merge into existing world, diff/patch documents |
 | **Runtime registration** | `ComponentSnapshotRegistry::Default()` fixed set | Public `RegisterHandler` for game-specific `GameComponent` subclasses |
@@ -147,9 +147,10 @@ Registered today: Transform, Mesh, Material, DirectionalLight, PointLight, SpotL
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **3D scope** | Spheres vs static boxes + sphere–sphere | Capsules, meshes, convex hulls, compound colliders |
-| **Character controller** | None | `CharacterController3D::Move(intent)` on public API |
-| **Triggers** | 2D trigger signals partial | `OnTriggerEnter3D` component callbacks |
+| **3D scope** | Spheres/capsules vs static boxes/capsules + dynamic pairs | Meshes, convex hulls, compound colliders |
+| **Character controller** | `CharacterController3DComponent` + `SimulateCharacterControllers3D` | Capsule mesh, moving platforms, dynamic body pushes |
+| **3D triggers** | `TriggerVolume3DComponent` + `SimulateTriggerVolumes3D` (enter/exit callbacks + signals) | Layer masks, trigger stay events |
+| **Triggers** | 2D overlap signals; 3D enter/exit | `OnTriggerStay3D`, unified layer filtering |
 | **Fixed timestep** | `PhysicsWorld3DSettings::substeps` only | `IPhysicsWorld::Step(fixedDt)` decoupled from render rate |
 | **Determinism** | Float integration | Documented deterministic mode or fixed-point option |
 
@@ -205,7 +206,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 |-----|-------------|------------------------|
 | **glTF extensions** | Core PBR + emissive map | Clearcoat, sheen, transmission, unlit |
 | **Second UV** | Single UV in mesh | `uv1` channel on `Mesh` / material |
-| **Decals** | None | `DecalProjectorComponent` → decal draw list |
+| **Decals** | `DecalProjectorComponent` → `SceneRenderParams::decals` | GPU decal projection pass in `VulkanRenderer` (data path implemented) |
 | **Directional light ECS** | `DirectionalLightComponent` + `FillStandardLitSceneFromWorld` override | Multiple directional lights with blending / priority |
 | **Reflection probes** | `iblEnabled` + env layer index | `ReflectionProbeComponent`, blend weights per object |
 | **Material instances** | Per-object `MaterialComponent` | Shared `MaterialAsset` + instance overrides |
@@ -217,7 +218,9 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | **Post stack** | `ssaoEnabled` + tonemap exposure | `bloomStrength`, `vignette`, color grading LUT slot on params |
 | **Fog** | None | `fogColor`, `fogDensity` / height fog on `SceneRenderParams` |
 | **Contact shadows** | None | Toggle + tunables on params |
-| **Time of day** | `useTimeOfDay`, `timeOfDay` | Documented; no `TimeOfDaySystem` component driving params |
+| **Time of day** | `useTimeOfDay`, `timeOfDay` | `TimeOfDayDriverComponent` + `ProcessTimeOfDayDrivers` (submit path); GPU uses existing analytic sun |
+| **Regional fog** | `fogEnabled`, `fogColor`, `fogDensity`, … | `FogVolumeComponent` → `SceneRenderParams` (data path; Vulkan fog pass optional) |
+| **Regional post** | SSAO / exposure overrides | `PostProcessVolumeComponent` at camera position |
 | **Area lights** | None | `RectLightComponent` |
 
 Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md).
@@ -294,4 +297,4 @@ Prioritized for **C++ game authors** (no editor dependency):
 
 ---
 
-*Last updated: 2026-07 — 37 `ComponentKind` values (+ `Unknown`), 23 serialization handlers, `GameWorldAssetCache`, split `SceneSubmit` modules, `DirectionalLightComponent`, `Scene::RaycastPick`, `transparentDraws` submit + Vulkan pass.*
+*Last updated: 2026-07 — 64 `ComponentKind` values (+ `Unknown`), P2 components (`PhysicsMaterial2D`, `MeshCollider3D`, `NavMeshAgent`, `PatrolPath`, `PerceptionSensor`, `AmbientZone`, `FogVolume`, `PostProcessVolume`, `HingeJoint3D`, `SpringJoint3D`, `DistanceJoint2D`, `HingeJoint2D`, `TimeOfDayDriver`). See [`programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).*

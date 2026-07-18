@@ -2,6 +2,8 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
+#include "spark/core/Utility.hpp"
+#include "spark/ecs/GameObjectQuery.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
@@ -87,6 +89,107 @@ public:
             fn(objects[i].Get());
         }
     }
+
+    /** Visits objects matching <c>filter</c> (default skips inactive hierarchy). */
+    template<typename Fn>
+    void ForEachGameObject(Fn&& fn, const GameObjectQueryFilter& filter) {
+        ForEachGameObject([&](GameObject* object) {
+            if (GameObjectPassesQueryFilter(object, filter)) {
+                fn(object);
+            }
+        });
+    }
+
+    template<typename Fn>
+    void ForEachGameObject(Fn&& fn, const GameObjectQueryFilter& filter) const {
+        ForEachGameObject([&](GameObject* object) {
+            if (GameObjectPassesQueryFilter(object, filter)) {
+                fn(object);
+            }
+        });
+    }
+
+    /** Visits objects that are active in the hierarchy (simulation / render default). */
+    template<typename Fn>
+    void ForEachActiveGameObject(Fn&& fn) {
+        GameObjectQueryFilter filter;
+        filter.includeInactive = false;
+        ForEachGameObject(Forward<Fn>(fn), filter);
+    }
+
+    template<typename Fn>
+    void ForEachActiveGameObject(Fn&& fn) const {
+        GameObjectQueryFilter filter;
+        filter.includeInactive = false;
+        ForEachGameObject(Forward<Fn>(fn), filter);
+    }
+
+    /**
+     * Visits objects that pass <c>filter</c> and have every listed component type.
+     * Example: <c>ForEachGameObjectWithComponents&lt;MeshComponent, MaterialComponent&gt;(fn);</c>
+     */
+    template<typename... ComponentTypes, typename Fn>
+    void ForEachGameObjectWithComponents(Fn&& fn, const GameObjectQueryFilter& filter = {}) {
+        ForEachGameObject(
+                [&](GameObject* object) {
+                    if (GameObjectHasAllComponents<ComponentTypes...>(object)) {
+                        fn(object);
+                    }
+                },
+                filter);
+    }
+
+    template<typename... ComponentTypes, typename Fn>
+    void ForEachGameObjectWithComponents(Fn&& fn, const GameObjectQueryFilter& filter = {}) const {
+        ForEachGameObject(
+                [&](GameObject* object) {
+                    if (GameObjectHasAllComponents<ComponentTypes...>(object)) {
+                        fn(object);
+                    }
+                },
+                filter);
+    }
+
+    /** Visits each matching component instance: <c>fn(object, component)</c>. */
+    template<typename T, typename Fn>
+    void ForEachComponent(Fn&& fn, const GameObjectQueryFilter& filter = {}) {
+        ForEachGameObjectWithComponents<T>([&](GameObject* object) { fn(object, *object->GetComponent<T>()); }, filter);
+    }
+
+    template<typename T, typename Fn>
+    void ForEachComponent(Fn&& fn, const GameObjectQueryFilter& filter = {}) const {
+        ForEachGameObjectWithComponents<T>([&](GameObject* object) { fn(object, *object->GetComponent<T>()); }, filter);
+    }
+
+    template<typename... ComponentTypes>
+    [[nodiscard]] GameObject* FindFirstGameObjectWithComponents(
+            const GameObjectQueryFilter& filter = {}) {
+        GameObject* found = nullptr;
+        ForEachGameObjectWithComponents<ComponentTypes...>([&](GameObject* object) {
+            if (found == nullptr) {
+                found = object;
+            }
+        }, filter);
+        return found;
+    }
+
+    template<typename... ComponentTypes>
+    [[nodiscard]] GameObject* FindFirstGameObjectWithComponents(const GameObjectQueryFilter& filter = {}) const {
+        GameObject* found = nullptr;
+        ForEachGameObjectWithComponents<ComponentTypes...>([&](GameObject* object) {
+            if (found == nullptr) {
+                found = object;
+            }
+        }, filter);
+        return found;
+    }
+
+    [[nodiscard]] GameObject* FindGameObjectById(std::uint64_t id) const noexcept;
+    [[nodiscard]] GameObject* FindGameObjectByName(const char* name, const GameObjectQueryFilter& filter = {}) const;
+    [[nodiscard]] GameObject* FindGameObjectWithTag(const char* tag, const GameObjectQueryFilter& filter = {}) const;
+
+    void CollectGameObjects(GameObjectQueryResult& out, const GameObjectQueryFilter& filter) const;
+    [[nodiscard]] GameObjectQueryResult QueryGameObjects(const GameObjectQueryFilter& filter = {}) const;
 
     [[nodiscard]] GameWorldAssetCache& GetAssetCache() noexcept { return assetCache; }
     [[nodiscard]] const GameWorldAssetCache& GetAssetCache() const noexcept { return assetCache; }

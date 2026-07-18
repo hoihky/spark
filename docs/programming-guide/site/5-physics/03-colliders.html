@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Colliders · Spark Game Engine Programming Guide</title>
+  <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/vendor/atom-one-dark.min.css">
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">☰</button>
+      <a href="../index.html" class="brand">Spark Game Engine Programming Guide</a>
+      <div class="search-wrap">
+        <input type="search" id="search" placeholder="Search docs…" autocomplete="off">
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="nav" aria-label="Documentation">
+          <ul class="nav-list">
+            
+                        <li class="nav-item depth-0">
+                          
+                            <a href="../index.html" class="nav-link">Spark Game Engine Programming Guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">1 overview architecture</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/01-introduction.html" class="nav-link">Introduction to Spark</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/02-engine-capabilities.html" class="nav-link">Engine Capabilities</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/03-building-and-running.html" class="nav-link">Building and Running</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/04-engine-loop.html" class="nav-link">The Engine Loop</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/05-igame-contract.html" class="nav-link">IGame and Game</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/06-ecs-and-scene.html" class="nav-link">ECS and Scene</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/07-game-component-reference.html" class="nav-link">Game Component Reference</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">2 2d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/01-sprites.html" class="nav-link">Sprites</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/02-camera2d.html" class="nav-link">Camera2D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/03-tilemaps.html" class="nav-link">Tilemaps</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-2d-animation.html" class="nav-link">2D Animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">2D Lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">2D Render Pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">3 3d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/01-meshes-and-materials.html" class="nav-link">Meshes and Materials</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/02-cameras-3d.html" class="nav-link">Cameras in 3D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/03-lighting.html" class="nav-link">Lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/04-shadows.html" class="nav-link">Shadows</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/05-skinned-characters.html" class="nav-link">Skinned Characters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/06-terrain-and-sky.html" class="nav-link">Terrain and Sky</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/07-particles.html" class="nav-link">Particles</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">4 ai</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/01-ai-overview.html" class="nav-link">AI Overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/02-steering.html" class="nav-link">Steering Behaviors</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/03-fsm.html" class="nav-link">Finite State Machines</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/04-goap.html" class="nav-link">GOAP</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/05-pathfinding.html" class="nav-link">Pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">5 physics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/01-physics-overview.html" class="nav-link">Physics Overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/02-rigidbody-2d.html" class="nav-link">Rigidbody 2D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1 is-active">
+                          
+                            <a href="../5-physics/03-colliders.html" class="nav-link">Colliders</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/04-queries.html" class="nav-link">Physics Queries</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/05-physics-3d.html" class="nav-link">Physics 3D</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/06-tips.html" class="nav-link">Joints and Tips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">6 sound</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/01-sound-engine.html" class="nav-link">Sound Engine</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/02-clips.html" class="nav-link">Sound Clips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/03-cues.html" class="nav-link">Sound Cues</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">7 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">Platformer Introduction</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">Project Setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/03-level-design.html" class="nav-link">Level Design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">Player Controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">Camera and HUD</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/06-polish.html" class="nav-link">Polish and Ship</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">FPS Introduction</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">Project Setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/03-arena.html" class="nav-link">Arena and Targets</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/04-shooting.html" class="nav-link">Shooting and Tracers</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/05-rendering.html" class="nav-link">Rendering the 3D Scene</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0">
+                          
+                            <span class="nav-group">site</span>
+                            
+                        </li>
+                        
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <article class="doc">
+          <header class="doc-header">
+            <h1>Colliders</h1>
+          </header>
+          <div class="doc-body"><h1 id="colliders">Colliders</h1>
+<h2 id="d-colliders">2D Colliders</h2>
+<p><strong>BoxCollider2DComponent:</strong></p>
+<pre><code class="language-cpp">BoxCollider2DComponent(Vector2 localHalfExtents = {0.5F, 0.5F},
+Vector2 localOffset = Vector2::Zero);
+</code></pre>
+<p><strong>CircleCollider2DComponent:</strong></p>
+<pre><code class="language-cpp">CircleCollider2DComponent(float localRadius = 0.5F,
+Vector2 localOffset = Vector2::Zero);
+</code></pre>
+<p>If both exist on a dynamic body, <strong>circle wins</strong> for simulation.</p>
+<p><strong>PolygonCollider2DComponent</strong> (convex, static only, max 16 vertices):</p>
+<pre><code class="language-cpp">Array&lt;Vector2&gt; verts;
+verts.PushBack({-2.0F, 0.0F});
+verts.PushBack({2.0F, 0.0F});
+verts.PushBack({0.0F, 1.0F});
+auto* poly = ramp-&gt;AddComponent&lt;PolygonCollider2DComponent&gt;();
+poly-&gt;SetVertices(verts);
+</code></pre>
+<p><strong>TilemapCollider2DComponent</strong> — one static box per non-empty tile on sibling <code>TilemapComponent</code>:</p>
+<pre><code class="language-cpp">level-&gt;AddComponent&lt;TilemapComponent&gt;(...);
+level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
+</code></pre>
+<p><strong>PhysicsMaterial2DComponent</strong> — friction/restitution on static 2D surfaces (baked into broad-phase, applied at contact resolve):</p>
+<pre><code class="language-cpp">platform-&gt;AddComponent&lt;PhysicsMaterial2DComponent&gt;(0.5F, 0.2F);
+</code></pre>
+<p><strong>2D joints</strong> — <code>DistanceJoint2DComponent</code>, <code>HingeJoint2DComponent</code> (require <code>PhysicsWorld2DSettings::jointIterations &gt; 0</code>).</p>
+<h2 id="layer-masks">Layer Masks</h2>
+<pre><code class="language-cpp">auto* box = go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
+box-&gt;SetCategoryBits(1u &lt;&lt; 0);   // layer 0 = player
+box-&gt;SetMaskBits(0xFFFF);        // collides with all by default
+box-&gt;SetIsTrigger(true);         // overlap only, no resolution
+</code></pre>
+<p>Collision filter (<code>CollisionFilter2D::ShouldCollide</code>):</p>
+<pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
+</code></pre>
+<h2 id="d-colliders-1">3D Colliders</h2>
+<table class="table">
+<thead>
+<tr>
+<th>Component</th>
+<th>Shape</th>
+<th>Dynamic?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BoxCollider3DComponent</code></td>
+<td>Axis-aligned box</td>
+<td>Static broad-phase</td>
+</tr>
+<tr>
+<td><code>SphereCollider3DComponent</code></td>
+<td>Sphere</td>
+<td>Yes (preferred dynamic shape)</td>
+</tr>
+<tr>
+<td><code>CapsuleCollider3DComponent</code></td>
+<td>Capsule along X/Y/Z</td>
+<td>Static or dynamic</td>
+</tr>
+<tr>
+<td><code>MeshCollider3DComponent</code></td>
+<td>Mesh AABB (static)</td>
+<td>Static broad-phase from <code>MeshComponent</code></td>
+</tr>
+<tr>
+<td><code>CharacterController3DComponent</code></td>
+<td>Kinematic sphere motor</td>
+<td>Not a collider — use instead of dynamic RB</td>
+</tr>
+<tr>
+<td><code>TriggerVolume3DComponent</code></td>
+<td>Box / sphere / capsule</td>
+<td>Overlap only</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">// Dynamic ball
+go-&gt;AddComponent&lt;Rigidbody3DComponent&gt;();
+go-&gt;AddComponent&lt;SphereCollider3DComponent&gt;(0.5F);
+
+// Static wall
+wall-&gt;AddComponent&lt;BoxCollider3DComponent&gt;(Vector3{1,2,0.2F});
+
+// FPS character (no Rigidbody3D on same object)
+player-&gt;AddComponent&lt;CharacterController3DComponent&gt;(0.4F, Vector3{0,0.9F,0});
+cc-&gt;SetMoveInput({mx, 0, mz});
+SimulateCharacterControllers3D(world, dt);
+
+// Trigger zone
+zone-&gt;AddComponent&lt;TriggerVolume3DComponent&gt;(TriggerVolume3DShape::Box, Vector3{3,2,3});
+</code></pre>
+<p>Optional: <code>PhysicsMaterial3DComponent</code> (friction/restitution), <code>DistanceJoint3DComponent</code>, <code>HingeJoint3DComponent</code>, <code>SpringJoint3DComponent</code> (set <code>jointIterations</code> in <code>PhysicsWorld3DSettings</code>).</p>
+<h2 id="trigger-signals">Trigger Signals</h2>
+<p><strong>2D:</strong></p>
+<pre><code class="language-cpp">void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
+    if (id == SignalId::Physics2DTriggerOverlap) {
+        GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
+        // pickup, damage zone, goal flag
+    }
+}
+</code></pre>
+<p><strong>3D:</strong></p>
+<pre><code class="language-cpp">if (id == SignalId::Physics3DTriggerEnter) {
+    GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
+}
+if (id == SignalId::Physics3DTriggerExit) {
+    GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
+}
+</code></pre>
+<p>Or use <code>TriggerVolume3DComponent::SetOnEnter</code> / <code>SetOnExit</code> callbacks.</p>
+<p>See also: <a href="../1-overview-architecture/07-game-component-reference.html">Game Component Reference</a>.</p>
+<p>Next: <a href="04-queries.html">Physics Queries</a>.</p>
+</div>
+          <footer class="doc-footer">
+            <p>Generated by <strong>MDWeb</strong></p>
+          </footer>
+        </article>
+
+        
+                <aside class="toc" aria-label="On this page">
+                  <p class="toc-title">On this page</p>
+                  <ul>
+                    
+                        <li class="toc-h1">
+                          <a href="#colliders">Colliders</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#2d-colliders">2D Colliders</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#layer-masks">Layer Masks</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#3d-colliders">3D Colliders</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#trigger-signals">Trigger Signals</a>
+                        </li>
+                        
+                  </ul>
+                </aside>
+                
+      </main>
+    </div>
+  </div>
+  <script src="../assets/vendor/mermaid.min.js"></script>
+  <script src="../assets/vendor/highlight.min.js"></script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>
