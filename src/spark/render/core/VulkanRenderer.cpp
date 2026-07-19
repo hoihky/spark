@@ -22,6 +22,12 @@
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
 #include "spark/render/post/VulkanScreenSpaceEffectsPass.hpp"
 
+#include "spark/config.hpp"
+#if SPARK_ENABLE_IMGUI
+#include "spark/imgui/ImGuiVulkanBackend.hpp"
+#include "spark/imgui/ImGuiVulkanBackendAccess.hpp"
+#endif
+
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -33,13 +39,17 @@
 
 namespace Spark {
 
-VulkanRenderer::VulkanRenderer(Window& inAppWindow) : deviceContext(inAppWindow) {
+VulkanRenderer::VulkanRenderer(Window& inAppWindow) : deviceContext(inAppWindow), boundWindow(&inAppWindow) {
     shaderLoader.SetDevice(device());
 
     CreateCommandPool();
     CreatePersistentSceneResources();
     RecreateSwapchain();
     frameSync.Create(device());
+
+    imguiLayer = CreateImGuiLayer();
+    SetActiveImGuiLayer(imguiLayer.Get());
+    InitImGuiBackend();
 }
 
 VulkanRenderer::~VulkanRenderer() {
@@ -47,6 +57,10 @@ VulkanRenderer::~VulkanRenderer() {
         return;
     }
     deviceContext.WaitDeviceIdle();
+
+    ShutdownImGuiBackend();
+    SetActiveImGuiLayer(nullptr);
+    imguiLayer.Reset();
 
     DestroyPersistentSceneResources();
 
@@ -58,6 +72,7 @@ VulkanRenderer::~VulkanRenderer() {
 }
 
 void VulkanRenderer::CleanupSwapchain() {
+    InvalidateImGuiBackend();
     frameSync.DestroySwapchainSync(device());
     screenSpaceEffectsPass.DestroyPipeline(device());
     screenSpaceEffectsPass.DestroyFlightTargets(device());
@@ -139,6 +154,7 @@ void VulkanRenderer::RecreateSwapchain() {
     }
 
     frameSync.RecreateSwapchainSync(device(), presentSwapchain().images.GetSize());
+    InitImGuiBackend();
 }
 
 void VulkanRenderer::CreateRenderPass() {
@@ -350,6 +366,7 @@ void VulkanRenderer::RecordSceneCommandBuffer(
             presentSwapchain().extent,
             pendingScene,
             sceneParamsValid);
+    RecordImGuiDrawData(commandBuffer);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -387,6 +404,7 @@ void VulkanRenderer::DrawFrame() {
     frameSync.WaitForCurrentFrameFence(device());
     customMeshPool.ReleaseRetiredBuffers(submittedFrameCounter);
     screenUi.ReleaseRetiredFontAtlases(device(), submittedFrameCounter);
+    screenUi.ReleaseRetiredUiTextureAtlases(device(), submittedFrameCounter);
 
     std::uint32_t imageIndex = 0;
     const VkResult acquireResult =
@@ -403,7 +421,8 @@ void VulkanRenderer::DrawFrame() {
     frameSync.WaitForSwapchainImageFence(device(), imageIndex);
     frameSync.TrackSwapchainImageInFlight(imageIndex);
 
-    if (deferredUploadBatch.NeedsSceneTextureGpuIdle(sceneTextureUploader, pendingScene, sceneParamsValid)) {
+    if (deferredUploadBatch.NeedsSceneTextureGpuIdle(sceneTextureUploader, pendingScene, sceneParamsValid) ||
+        deferredUploadBatch.NeedsUiTextureGpuIdle(screenUi, pendingScene)) {
         frameSync.WaitForAllOtherFrames(device());
     }
 
@@ -756,6 +775,55 @@ void VulkanRenderer::CreateSceneGeometry() {
     vkFreeMemory(device(), stagingVertexMemory, nullptr);
     vkDestroyBuffer(device(), stagingIndex, nullptr);
     vkFreeMemory(device(), stagingIndexMemory, nullptr);
+}
+
+void VulkanRenderer::InitImGuiBackend() {
+#if SPARK_ENABLE_IMGUI
+    if (!imguiLayer || boundWindow == nullptr || presentRenderPass.vkPass == VK_NULL_HANDLE) {
+        return;
+    }
+    IImGuiVulkanBackend* backend = TryGetImGuiVulkanBackend(imguiLayer.Get());
+    if (backend == nullptr) {
+        return;
+    }
+    backend->InitGlfw(*boundWindow);
+    ImGuiVulkanBackendInfo info{};
+    info.instance = deviceContext.GetInstance();
+    info.physicalDevice = deviceContext.GetPhysicalDevice();
+    info.device = device();
+    info.queueFamily = deviceContext.GetQueueFamilies().graphicsFamily;
+    info.queue = graphicsQueue();
+    info.renderPass = presentRenderPass.vkPass;
+    info.minImageCount = 2;
+    info.imageCount = static_cast<std::uint32_t>(std::max<std::size_t>(presentSwapchain().images.GetSize(), 2U));
+    info.msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    backend->RecreateVulkan(info);
+#endif
+}
+
+void VulkanRenderer::InvalidateImGuiBackend() noexcept {
+#if SPARK_ENABLE_IMGUI
+    if (IImGuiVulkanBackend* backend = TryGetImGuiVulkanBackend(imguiLayer.Get())) {
+        backend->InvalidateVulkan();
+    }
+#endif
+}
+
+void VulkanRenderer::ShutdownImGuiBackend() noexcept {
+#if SPARK_ENABLE_IMGUI
+    if (IImGuiVulkanBackend* backend = TryGetImGuiVulkanBackend(imguiLayer.Get())) {
+        backend->Shutdown();
+    }
+#endif
+}
+
+void VulkanRenderer::RecordImGuiDrawData(const VkCommandBuffer commandBuffer) {
+#if SPARK_ENABLE_IMGUI
+    if (IImGuiVulkanBackend* backend = TryGetImGuiVulkanBackend(imguiLayer.Get())) {
+        backend->RecordDrawData(commandBuffer);
+    }
+#endif
+    (void)commandBuffer;
 }
 
 }  // namespace Spark

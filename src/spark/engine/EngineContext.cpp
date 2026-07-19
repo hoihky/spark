@@ -2,6 +2,7 @@
 
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/engine/IFramePresenter.hpp"
+#include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/scene/Scene.hpp"
 
@@ -12,6 +13,10 @@ EngineContext::EngineContext(Window& w, IFramePresenter& p, IInput& i, SoundEngi
 
 void EngineContext::SetSceneBinding(Scene* scene) noexcept {
     sceneBinding = scene;
+}
+
+void EngineContext::BindImGuiLayer(IImGuiLayer& layer) noexcept {
+    imguiLayerBinding = &layer;
 }
 
 Window& EngineContext::GetWindow() {
@@ -43,6 +48,10 @@ SoundEngine* EngineContext::TryGetSoundEngine() noexcept {
 
 Scene* EngineContext::TryGetScene() noexcept {
     return sceneBinding;
+}
+
+IImGuiLayer* EngineContext::TryGetImGuiLayer() noexcept {
+    return imguiLayerBinding;
 }
 
 }  // namespace Spark

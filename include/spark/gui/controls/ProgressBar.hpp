@@ -20,11 +20,13 @@ public:
         }
     }
     [[nodiscard]] float GetValue01() const noexcept { return value01; }
+    void SetPreferSkinChrome(bool v) noexcept { preferSkinChrome = v; }
 
     void Paint(GuiPaintContext& ctx) const override;
 
 private:
     float value01 = 0.35F;
+    bool preferSkinChrome = false;
 };
 
 }  // namespace Spark::Gui

@@ -36,12 +36,10 @@ constexpr float kCubeSpinRadPerSec = TwoPi * 0.35F;
 enum class DemoMode : std::uint8_t {
     Menu,
     ThreeD,
-    GuiShowcase,
     Sky,
     Particles,
     Terrain,
     Character,
-    TwoD,
     Platformer2D,
 };
 

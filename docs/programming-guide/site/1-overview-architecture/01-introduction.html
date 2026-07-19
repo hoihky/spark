@@ -80,6 +80,12 @@
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/08-ui-and-toolkits.html" class="nav-link">UI and Toolkits</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -372,7 +378,7 @@
             <h1>Introduction to Spark</h1>
           </header>
           <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
-<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, and a CPU-painted GUI toolkit.</p>
+<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
 <h2 id="what-you-get">What You Get</h2>
 <table class="table">
 <thead>
@@ -414,9 +420,14 @@
 <td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
 </tr>
 <tr>
-<td>UI</td>
-<td>Retained widgets</td>
-<td><code>GuiCanvasComponent</code></td>
+<td>UI (retained)</td>
+<td>Widget tree → screen draws</td>
+<td><code>GuiCanvasComponent</code>, <code>spark/gui/</code></td>
+</tr>
+<tr>
+<td>UI (tools, optional)</td>
+<td>Dear ImGui docking</td>
+<td><code>IImGuiLayer</code>, <code>GuiToolkitSettings</code></td>
 </tr>
 </tbody>
 </table>
@@ -447,7 +458,7 @@ int main() {
 }
 </code></pre>
 <h2 id="default-demo-binary">Default Demo Binary</h2>
-<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher (3D fly scenes, maze, 2D platformer, GUI gallery, material showcase).</p>
+<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher with <strong>19</strong> built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, <strong>Dear ImGui docking demo</strong>, and more).</p>
 <p>Next: <a href="02-engine-capabilities.html">Engine Capabilities</a>.</p>
 </div>
           <footer class="doc-footer">

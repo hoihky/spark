@@ -20,6 +20,7 @@ public:
     void SetValue(float v) noexcept;
     [[nodiscard]] float GetValue() const noexcept { return value; }
     void SetOnChanged(std::function<void(float)> fn) { onChanged = Spark::MoveTemp(fn); }
+    void SetPreferSkinChrome(bool v) noexcept { preferSkinChrome = v; }
 
     void Paint(GuiPaintContext& ctx) const override;
     void ProcessKeyInput(IInput& input) override;
@@ -35,6 +36,7 @@ private:
     float maxV = 1.0F;
     float value = 0.5F;
     bool dragging = false;
+    bool preferSkinChrome = false;
     std::function<void(float)> onChanged{};
 };
 

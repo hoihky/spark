@@ -5,7 +5,7 @@ order: 1
 
 # Introduction to Spark
 
-Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, and a CPU-painted GUI toolkit.
+Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted **retained GUI** toolkit, and optional **Dear ImGui** for immediate-mode tools.
 
 ## What You Get
 
@@ -17,7 +17,8 @@ Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vul
 | Physics | Custom solvers | `SimulatePhysics2D`, `SimulatePhysics3D` |
 | AI | FSM, GOAP, steering | `SimulateGameAi`, `AiAgentComponent` |
 | Audio | Software mixer | `SoundEngine`, `SoundCueComponent` |
-| UI | Retained widgets | `GuiCanvasComponent` |
+| UI (retained) | Widget tree → screen draws | `GuiCanvasComponent`, `spark/gui/` |
+| UI (tools, optional) | Dear ImGui docking | `IImGuiLayer`, `GuiToolkitSettings` |
 
 ## Design Philosophy
 
@@ -50,6 +51,6 @@ int main() {
 
 ## Default Demo Binary
 
-`src/main.cpp` constructs `Engine` with `NewShellDemoGame()` — an interactive launcher (3D fly scenes, maze, 2D platformer, GUI gallery, material showcase).
+`src/main.cpp` constructs `Engine` with `NewShellDemoGame()` — an interactive launcher with **19** built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, **Dear ImGui docking demo**, and more).
 
 Next: [Engine Capabilities](overview-architecture/02-engine-capabilities.html).

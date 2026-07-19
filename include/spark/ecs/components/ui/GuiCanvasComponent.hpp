@@ -4,9 +4,11 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/gui/GuiTheme.hpp"
 #include "spark/gui/GuiLayoutMetrics.hpp"
+#include "spark/gui/GuiSkin.hpp"
 #include "spark/gui/GuiTypes.hpp"
 #include "spark/gui/Widget.hpp"
 #include "spark/memory/UniquePtr.hpp"
+#include "spark/memory/SharedPtr.hpp"
 
 namespace Spark::Gui {
 class GuiPaintContext;
@@ -66,6 +68,10 @@ public:
     void SetTheme(Gui::GuiTheme theme) noexcept { guiTheme = theme; }
     [[nodiscard]] const Gui::GuiTheme& GetTheme() const noexcept { return guiTheme; }
 
+    void SetSkin(SharedPtr<Gui::GuiSkin> skin) noexcept { guiSkin = MoveTemp(skin); }
+    [[nodiscard]] const SharedPtr<Gui::GuiSkin>& GetSkin() const noexcept { return guiSkin; }
+    [[nodiscard]] Gui::GuiSkin* GetSkinMutable() noexcept { return guiSkin.Get(); }
+
     void SetLayoutMetrics(Gui::GuiLayoutMetrics metrics) noexcept { layoutMetrics = metrics; }
     [[nodiscard]] const Gui::GuiLayoutMetrics& GetLayoutMetrics() const noexcept { return layoutMetrics; }
 
@@ -85,6 +91,7 @@ private:
     bool canvasEnabled = true;
     UniquePtr<Gui::Widget> root{};
     Gui::GuiTheme guiTheme{Gui::GuiTheme::ClassicMint()};
+    SharedPtr<Gui::GuiSkin> guiSkin{};
     Gui::GuiLayoutMetrics layoutMetrics{Gui::GuiLayoutMetrics::Default()};
 
     Gui::Widget* hotWidget = nullptr;

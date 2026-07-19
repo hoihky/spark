@@ -1,11 +1,13 @@
 #include "spark/engine/Engine.hpp"
 #include "spark/engine/EngineContext.hpp"
+#include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/Game.hpp"
 #include "spark/engine/GlfwInput.hpp"
 #include "spark/engine/IFramePresenter.hpp"
 #include "spark/engine/IRenderFrame.hpp"
 #include "spark/engine/ISceneProvider.hpp"
 #include "spark/audio/SoundEngine.hpp"
+#include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/media/VideoRecordingSettings.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/render/core/VulkanRenderer.hpp"
@@ -99,6 +101,8 @@ struct Engine::Impl {
         , engineContext(MakeUnique<EngineContext>(window, *renderer, *input, audio))
         , game(MoveTemp(ownedGame)) {
         input->WireToWindow(window);
+        renderer->GetImGuiLayer().InstallPlatformCallbacks(window);
+        engineContext->BindImGuiLayer(renderer->GetImGuiLayer());
         window.SetFramebufferResizeCallback([this](int /*width*/, int /*height*/) {
             renderer->NotifySwapchainResize();
         });
@@ -174,9 +178,25 @@ struct Engine::Impl {
             totalSeconds += deltaSeconds;
 
             const FrameTiming timing{deltaSeconds, totalSeconds, frameIndex};
+
             game->OnUpdate(timing, *engineContext);
             audio.PumpFrame(timing.deltaTimeSeconds);
+
+            if (IImGuiLayer* imgui = engineContext->TryGetImGuiLayer()) {
+                if (imgui->IsEnabled()) {
+                    const ImGuiFrameTiming imguiTiming{timing.deltaTimeSeconds};
+                    imgui->BeginFrame(window, *input, imguiTiming);
+                }
+            }
+
             game->OnRender(renderFrame, *engineContext);
+
+            if (IImGuiLayer* imgui = engineContext->TryGetImGuiLayer()) {
+                if (imgui->IsEnabled()) {
+                    imgui->EndFrame();
+                }
+            }
+
             renderer->PresentFrame();
             ++frameIndex;
         }

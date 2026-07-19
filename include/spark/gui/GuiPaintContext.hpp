@@ -2,22 +2,27 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
+#include "spark/gui/GuiSpriteSlice.hpp"
 #include "spark/gui/GuiTypes.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {
 
 struct SceneRenderParams;
 struct ScreenRectDraw;
+struct ScreenSpriteDraw;
 struct ScreenTextDraw;
 class Font;
+class Texture2D;
 
 namespace Gui {
 
 struct GuiTheme;
 struct GuiLayoutMetrics;
+class GuiSkin;
 class Widget;
 
 /**
@@ -43,6 +48,10 @@ public:
     /** Bound per canvas in `PaintGuiCanvases`; never null when painting engine canvases. */
     void SetTheme(const GuiTheme* theme) noexcept { themePtr = theme; }
     [[nodiscard]] const GuiTheme& GetTheme() const noexcept;
+
+    /** Optional skin for textured chrome (see <c>GuiSkin</c>). */
+    void SetSkin(const GuiSkin* skin) noexcept { skinPtr = skin; }
+    [[nodiscard]] const GuiSkin* GetSkin() const noexcept { return skinPtr; }
 
     void SetLayoutMetrics(const GuiLayoutMetrics* metrics) noexcept { metricsPtr = metrics; }
     [[nodiscard]] const GuiLayoutMetrics& GetLayoutMetrics() const noexcept;
@@ -197,6 +206,34 @@ public:
             std::int32_t sortOrder = -1,
             SceneBlendMode blend = kSceneBlendModeDefault);
 
+    /**
+     * Draws a textured quad in the UI pass (correct z-order vs solid rects and text).
+     * Registers @p slice.texture in <c>SceneRenderParams::uiTextures</c> when needed.
+     */
+    void DrawSpriteSlice(
+            const GuiSpriteSlice& slice,
+            float x,
+            float y,
+            float w,
+            float h,
+            const Vector3& tint = Vector3::One,
+            float alpha = 1.0F,
+            SceneBlendMode blend = kSceneBlendModeDefault);
+
+    /** Nine-slice stretch using <c>GuiSpriteSlice::nineSlice</c>; falls back to <c>DrawSpriteSlice</c> when empty. */
+    void DrawNineSlice(
+            const GuiSpriteSlice& slice,
+            float x,
+            float y,
+            float w,
+            float h,
+            const Vector3& tint = Vector3::One,
+            float alpha = 1.0F,
+            SceneBlendMode blend = kSceneBlendModeDefault);
+
+    /** Resolves a texture pointer to a UI atlas layer index for this frame. */
+    [[nodiscard]] std::int32_t AcquireUiTextureLayer(const SharedPtr<Texture2D>& texture);
+
     Widget* hotWidget = nullptr;
     Widget* activeWidget = nullptr;
     Widget* focusWidget = nullptr;
@@ -206,11 +243,13 @@ private:
     /** Main layer respects clip stack; overlay/late skip degenerate parent clips but honor local PushClipRect via AttachClipTo. */
     [[nodiscard]] bool ClipAllowsImmediateDraw() const noexcept;
     void AttachClipTo(ScreenRectDraw& d) const noexcept;
+    void AttachClipTo(ScreenSpriteDraw& d) const noexcept;
     void AttachClipTo(ScreenTextDraw& d) const noexcept;
 
     SceneRenderParams* params = nullptr;
     const Font* layoutFont = nullptr;
     const GuiTheme* themePtr = nullptr;
+    const GuiSkin* skinPtr = nullptr;
     const GuiLayoutMetrics* metricsPtr = nullptr;
     Array<Rect> clipStack{};
     int overlayDepth = 0;

@@ -1,6 +1,6 @@
 # Spark
 
-Spark is a **C++23** game engine with a Vulkan forward renderer, entity–component scene model, retained-mode GUI, optional C# scripting, and an in-progress editor.
+Spark is a **C++23** game engine with a Vulkan forward renderer, entity–component scene model, retained-mode GUI, optional **Dear ImGui** tool UI, optional C# scripting, and an in-progress editor.
 
 ## Quick start
 
@@ -14,7 +14,7 @@ cmake --build cmake-build-debug -j
 
 | Target | Path (debug preset) | Purpose |
 |--------|---------------------|---------|
-| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **20** built-in modes |
+| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **19** built-in modes |
 | **SparkEditor** | `cmake-build-debug/spark_editor/SparkEditor` | 3D editor shell (edit mode, dock UI) |
 | **SparkScriptHost** | `cmake-build-debug/SparkScriptHost` | CoreCLR host for C# games |
 
@@ -26,6 +26,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 
 | Document | Contents |
 |----------|----------|
+| [**Programming guide**](docs/programming-guide/index.md) | Tutorials + [UI toolkits](docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md) + [component reference](docs/programming-guide/1-overview-architecture/07-game-component-reference.md) |
 | [**Architecture & Developer Guide**](docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine loop, ECS, rendering data path, feature catalog |
 | [**Scene & Rendering API Gaps**](docs/SCENE_AND_RENDERING_GAPS.md) | C++ public API gap analysis (`include/spark/`, scene + 3D render) |
 | [**Lighting & Shadows**](docs/LIGHTING_AND_SHADOWS.md) | CSM, punctual lights, SSAO, HDR/tonemap |
@@ -40,7 +41,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 ## Repository layout
 
 ```
-include/spark/     Public API (engine, ecs, scene, render, gui, editor, …)
+include/spark/     Public API (engine, ecs, scene, render, gui, imgui, editor, …)
 src/spark/         Implementations
 src/Engine.cpp     Engine loop (not under src/spark/engine/)
 assets/            Runtime fonts, models, textures

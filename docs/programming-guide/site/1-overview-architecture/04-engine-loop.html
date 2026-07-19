@@ -80,6 +80,12 @@
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/08-ui-and-toolkits.html" class="nav-link">UI and Toolkits</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -416,13 +422,21 @@ public:
     participant E as Engine
     participant G as IGame
     participant S as SoundEngine
+    participant I as IImGuiLayer
     participant V as VulkanRenderer
     E-&gt;&gt;E: PollEvents + BeginInputFrame
     E-&gt;&gt;G: OnUpdate(timing, context)
     E-&gt;&gt;S: PumpFrame(delta)
+    opt ImGui enabled
+        E-&gt;&gt;I: BeginFrame (NewFrame)
+    end
     E-&gt;&gt;G: OnRender(frame, context)
+    opt ImGui enabled
+        E-&gt;&gt;I: EndFrame (Render)
+    end
     E-&gt;&gt;V: PresentFrame
 </pre>
+<p>When Dear ImGui is enabled, build all <code>ImGui::Begin</code> / widget code inside <strong><code>OnRender</code></strong>, not <code>OnUpdate</code>. See <a href="08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
 <h2 id="frametiming">FrameTiming</h2>
 <pre><code class="language-cpp">struct FrameTiming {
     float deltaTimeSeconds;   // Use for all motion
@@ -436,6 +450,7 @@ public:
 IInput&amp; GetInput();
 void GetFramebufferSize(int&amp; outWidth, int&amp; outHeight) const;
 void SetSceneRenderParams(const SceneRenderParams&amp; params);
+IImGuiLayer* TryGetImGuiLayer() noexcept;  // null when SPARK_ENABLE_IMGUI=0
 SoundEngine* TryGetSoundEngine() noexcept;
 Scene* TryGetScene() noexcept;
 </code></pre>

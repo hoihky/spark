@@ -36,6 +36,7 @@ Dialog::Dialog() {
     dimmer->SetBackgroundGradient({0.03F, 0.10F, 0.05F}, {0.06F, 0.14F, 0.08F}, 0.58F);
     dimmer->SetDropShadowEnabled(false);
     dimmer->SetChromeEnabled(false);
+    dimmer->SetHitTest(false);
     AddChild(Spark::MoveTemp(d));
 
     auto t = MakeUnique<Label>();
@@ -71,8 +72,12 @@ void Dialog::Arrange(const Rect& r) {
     }
     constexpr float titleH = 32.0F;
     constexpr float gap = 10.0F;
+    constexpr float margin = 8.0F;
     const float stackH = titleH + gap + bodyH;
-    const float topY = r.y + std::max(0.0F, (r.height - stackH) * 0.5F);
+    float topY = r.y + std::max(0.0F, (r.height - stackH) * 0.5F);
+    if (stackH > r.height - margin * 2.0F) {
+        topY = r.y + margin;
+    }
     const float cx = r.x + std::max(0.0F, (r.width - bodyW) * 0.5F);
     if (titleLabel != nullptr) {
         titleLabel->Arrange({cx, topY, bodyW, titleH});

@@ -13,6 +13,7 @@
 #include "spark/gui/controls/EditorSidebarLayout.hpp"
 #include "spark/gui/controls/GridPanel.hpp"
 #include "spark/gui/controls/GroupBox.hpp"
+#include "spark/gui/controls/Image.hpp"
 #include "spark/gui/controls/Label.hpp"
 #include "spark/gui/controls/List.hpp"
 #include "spark/gui/controls/MenuBar.hpp"

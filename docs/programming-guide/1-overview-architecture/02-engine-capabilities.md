@@ -13,8 +13,18 @@ flowchart LR
     Fill --> SRP[SceneRenderParams]
     GUI[PaintGuiCanvases] --> SRP
     SRP --> VK[VulkanRenderer]
+    IMGUI[Dear ImGui overlay] --> VK
     VK --> Present[Swapchain Present]
 ```
+
+## UI toolkits
+
+| Stack | When to use | Key APIs |
+|-------|-------------|----------|
+| **Spark GUI** (retained) | Menus, editor chrome, themed HUD | `GuiCanvasComponent`, `ProcessGuiCanvasesInput`, `PaintGuiCanvases` |
+| **Dear ImGui** (optional, `SPARK_ENABLE_IMGUI`) | Docking tools, debug panels | `IImGuiLayer`, `GuiToolkitSettings`, build UI in `OnRender` |
+
+Full guide: [UI and Toolkits](08-ui-and-toolkits.html).
 
 ## 3D Rendering
 

@@ -14,8 +14,10 @@ Spark is a **C++23** codebase that provides:
 - **Forward-lit 3D** with directional + optional **shadow map**, **point** and **spot** lights, **PBR** and **toon** shading, optional **normal** and **ORM** texture maps on draws.
 - **Optional** 2D and **3D** toy physics (`SimulatePhysics2D`, `SimulatePhysics3D`).
 - A **retained-mode GUI** (`GuiCanvasComponent`, widgets under `spark/gui/`).
+- Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
-The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus built-in modes (3D fly scenes, maze, 2D demos, GUI showcase, etc.).
+
+The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **19** built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, Dear ImGui docking demo, etc.).
 
 ---
 
@@ -178,7 +180,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Engine entry** | Owns window, presenter, input, runs the loop | `spark/engine/Engine.hpp`, `src/Engine.cpp` |
 | **Game contract** | Your simulation + render hooks | `IGame` (`spark/engine/IGame.hpp`), optional `Game` base (`spark/engine/Game.hpp`) |
 | **Per-frame timing** | Delta time, wall time, frame counter | `FrameTiming` (`spark/engine/FrameTiming.hpp`) |
-| **Engine façade to gameplay** | Input, framebuffer size, scene params hand-off | `IEngineContext` / `EngineContext` (`spark/engine/IEngineContext.hpp`, `EngineContext.hpp`); input via `GlfwInput` |
+| **Engine façade to gameplay** | Input, framebuffer size, scene params hand-off, optional ImGui layer | `IEngineContext` / `EngineContext`; `TryGetImGuiLayer()`; input via `GlfwInput` |
 | **Presentation abstraction** | Swapchain / GPU without leaking into `IGame` | `IFramePresenter` (`spark/engine/IFramePresenter.hpp`), default impl `VulkanRenderer` |
 | **Shell / demos** | Launcher and built-in modes | `NewShellDemoGame`, modes under `include/spark/demo/` |
 
@@ -273,12 +275,28 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Widget tree** | Layout + controls | `spark/gui/` — `Widget`, `GuiControls.hpp`, themes (`GuiTheme.hpp`, `GuiThemeCatalog.hpp`) |
 | **Label tone** | Theme-aware text color at paint time | `LabelTone` (`Primary` / `Muted` / `Custom`) on `Label` / `WrappingLabel` (`GuiTypes.hpp`) |
 | **Screen canvas** | Root + sort order | `GuiCanvasComponent` |
-| **Input → focus** | Hit testing, focus | `ProcessGuiCanvasesInput` (`spark/gui/GuiScene.hpp`) |
+| **Input → focus** | Hit testing, focus; skips when `GuiToolkitSettings` prefers ImGui | `ProcessGuiCanvasesInput` (`spark/gui/GuiScene.hpp`) |
 | **Paint → params** | Emit rects/text into `SceneRenderParams` | `PaintGuiCanvases` |
+| **Toolkit routing** | Choose retained vs ImGui input policy | `GuiToolkitSettings`, `GuiToolkitKind` (`spark/gui/toolkit/`) |
 | **Editor module** | `SparkEditor` shell: dock UI, hierarchy/inspector stubs, viewport camera | `spark/editor/`, `spark_editor/SparkEditor` — see [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md) |
-| **Editor roadmap** | Scene / material / animation / script tools on this GUI | [`docs/GUI_EDITOR_ROADMAP.md`](GUI_EDITOR_ROADMAP.md) |
+| **Editor roadmap** | Scene / material / animation / script tools on retained GUI | [`docs/GUI_EDITOR_ROADMAP.md`](GUI_EDITOR_ROADMAP.md) |
 
-### 5.10 Audio
+### 5.10 Dear ImGui (optional tool UI)
+
+| Feature | Role | Primary types / paths |
+|--------|------|------------------------|
+| **Build flag** | Link docking-branch ImGui + GLFW/Vulkan backends | `SPARK_ENABLE_IMGUI` (CMake, default ON), `cmake/SparkImGui.cmake` |
+| **Frame facade** | `NewFrame` / `Render` without leaking backends into `IGame` | `IImGuiLayer` (`spark/imgui/IImGuiLayer.hpp`) |
+| **Vulkan hook** | Record draw lists after screen UI in present pass | `IImGuiVulkanBackend`, `VulkanRenderer::RecordImGuiDrawData` |
+| **Input capture** | Gate game pointer when ImGui hovers widgets | `WantsCaptureMouse`, `WantsCaptureKeyboard` |
+| **GLFW chaining** | Install callbacks after `GlfwInput::WireToWindow` | `IImGuiLayer::InstallPlatformCallbacks` |
+| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **19** (hotkey **G**) |
+
+ImGui UI must be built in **`IGame::OnRender`** (after engine `BeginFrame`, before `EndFrame`). Retained GUI remains the primary stack for shipped menus and `SparkEditor`.
+
+Programming guide: [`docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md`](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
+
+### 5.11 Audio
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
@@ -286,7 +304,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **ECS cue** | Gameplay-triggered sounds | `SoundCueComponent` |
 | **Asset decode** | WAV → `SoundClip` | `WavDecoder`, `SoundFileLoader` |
 
-### 5.11 AI (optional subsystem)
+### 5.12 AI (optional subsystem)
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
@@ -296,7 +314,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 
 Call **`SimulateGameAi(world, timing, context)`** from your game tick when you want ECS-driven AI to run.
 
-### 5.12 C# scripting
+### 5.13 C# scripting
 
 Native **CoreCLR** hosting (`SparkScriptHost` via **nethost** + **hostfxr**) loads managed games; **ClangSharp** generates C# from `include/spark/scripting/SparkInterop.h`. See **`docs/CSHARP_SCRIPTING.md`**. Enabled by default (`SPARK_BUILD_SCRIPT_HOST=ON`; set `OFF` to skip). Gameplay without scripting remains **C++** via `IGame` / `GameComponent`.
 
@@ -395,17 +413,24 @@ sequenceDiagram
     participant Loop as Engine loop
     participant Game as IGame
     participant World as GameWorld / Scene
+    participant ImGui as IImGuiLayer
     participant Ctx as IEngineContext
     participant Present as IFramePresenter
 
     Loop->>Game: OnUpdate(timing, context)
     Game->>World: logic, physics, components
+    opt ImGui enabled
+        Loop->>ImGui: BeginFrame (NewFrame)
+    end
     Loop->>Game: OnRender(frame, context)
     Game->>World: queries (ForEach..., matrices)
     Game->>Ctx: SetSceneRenderParams(params)
+    opt ImGui enabled
+        Loop->>ImGui: EndFrame (Render)
+    end
     Ctx->>Present: SetSceneRenderParams (VulkanRenderer stores copy)
     Loop->>Present: PresentFrame
-    Note over Present: acquire, record, submit, present
+    Note over Present: shadows → HDR scene → SSAO → tonemap → screen UI → ImGui
 ```
 
 ---
@@ -566,6 +591,7 @@ Pass implementations live under `include/spark/render/{shadow,scene,post,sprites
 | **SSAO (optional)** | When `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR (`VulkanScreenSpaceEffectsPass`) |
 | **Tonemap** | Scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass::RecordTonemap`) |
 | **Screen UI** | Solid rects + text in the **present** render pass (`VulkanScreenUiPass`) |
+| **Dear ImGui** | Immediate-mode tool overlay in the same present pass (`IImGuiVulkanBackend::RecordDrawData`) when `SPARK_ENABLE_IMGUI` and layer enabled |
 
 Inside the **HDR scene** subpass the renderer switches pipelines:
 
@@ -651,7 +677,20 @@ Call these from your **`OnUpdate`** (or from a `GameComponent::OnUpdate`) **afte
 
 Sort order: `GuiCanvasComponent::SetSortOrder` — lower draws first. Overlay/late layers via `GuiPaintContext::PushOverlayLayer` / `PushLateLayer`.
 
-**UI GPU note:** `VulkanScreenUiPass` draws all solid rects then all text per layer (main, overlay, late) for stable Vulkan batching.
+**UI GPU note:** `VulkanScreenUiPass` draws all solid rects then all text per layer (main, overlay, late) for stable Vulkan batching. Dear ImGui draws **after** screen UI in the present subpass when enabled.
+
+---
+
+## 12.1 Dear ImGui (`spark/imgui/`)
+
+Optional when `SPARK_ENABLE_IMGUI=ON` (default):
+
+- **`IImGuiLayer`** — `SetEnabled`, `BeginFrame`, `EndFrame`, `WantsCaptureMouse` / `WantsCaptureKeyboard`, `InstallPlatformCallbacks`.
+- **`GuiToolkitSettings`** — `SetPreferred(DearImGui | SparkNative)`; when Dear ImGui is preferred, `ProcessGuiCanvasesInput` skips retained canvas hit tests.
+- **Frame contract:** engine calls `BeginFrame` after `OnUpdate`, game builds UI in `OnRender`, engine calls `EndFrame` before `PresentFrame`.
+- **Factory:** `CreateImGuiLayer()` → `ImGuiVulkanLayer` (GLFW + Vulkan backends); null object when ImGui is compiled out.
+
+Demo: **`ImGuiShowcaseDemo`** (launcher **#19**, key **G**). See programming guide chapter [UI and Toolkits](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
 
 ---
 
@@ -673,8 +712,9 @@ Sort order: `GuiCanvasComponent::SetSortOrder` — lower draws first. Overlay/la
 5. `include/spark/render/core/VulkanRenderer.hpp` + `src/spark/render/core/VulkanRenderer.cpp` (implementation detail; large)
 6. `include/spark/demo/ThreeDDemo.hpp` — camera + glTF + lights + manual submit pattern
 7. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
-8. `spark/gui/GuiScene.hpp` + `spark/demo/ShellDemoUi.hpp` — layout helpers used by the shell
-9. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
+8. `spark/gui/GuiScene.hpp` + `spark/demo/ShellDemoUi.hpp` — retained GUI layout helpers
+9. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
+10. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
 ---
 
 ## 15. Extending the Engine Safely

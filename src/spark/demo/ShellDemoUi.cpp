@@ -170,55 +170,6 @@ void GuiStackPanel::Paint(Spark::Gui::GuiPaintContext& ctx) const {
     PaintChildren(ctx);
 }
 
-ShowcaseFormLayout::ShowcaseFormLayout() {
-    SetHitTest(false);
-}
-
-void ShowcaseFormLayout::Arrange(const Spark::Gui::Rect& r) {
-    bounds = r;
-    if (children.GetSize() == 1 && children[0]) {
-        children[0]->Arrange(r);
-    }
-}
-
-void ShowcaseFormLayout::Paint(Spark::Gui::GuiPaintContext& ctx) const {
-    PaintChildren(ctx);
-}
-
-ShowcaseVStackForm::ShowcaseVStackForm() {
-    SetHitTest(false);
-}
-
-void ShowcaseVStackForm::SetVerticalGap(const float g) noexcept {
-    vGap = g;
-}
-
-void ShowcaseVStackForm::SetRowHeights(Spark::Array<float> heights) noexcept {
-    rowHeights = Spark::MoveTemp(heights);
-}
-
-void ShowcaseVStackForm::Arrange(const Spark::Gui::Rect& r) {
-    bounds = r;
-    const std::size_t n = children.GetSize();
-    if (n == 0) {
-        return;
-    }
-    const bool custom = rowHeights.GetSize() == n;
-    float y = r.y;
-    for (std::size_t i = 0; i < n; ++i) {
-        if (!children[i]) {
-            continue;
-        }
-        const float h = custom ? (std::max)(4.0F, rowHeights[i]) : 32.0F;
-        children[i]->Arrange({r.x, y, r.width, h});
-        y += h + vGap;
-    }
-}
-
-void ShowcaseVStackForm::Paint(Spark::Gui::GuiPaintContext& ctx) const {
-    PaintChildren(ctx);
-}
-
 void MountUiFont(Spark::GameWorld& w) {
     auto uiFont = Spark::MakeShared<Spark::Font>();
     constexpr float kUiFontEmPx = 42.0F;

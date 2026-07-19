@@ -33,6 +33,9 @@ public:
      * Use for open dropdown list panels so theme updates do not overwrite sibling panel colors.
      */
     void SetDropdownListThemeBound(bool bound) noexcept { dropdownListThemeBound = bound; }
+    /** When true and the canvas has a <c>GuiSkin</c>, paints a nine-slice panel background from the skin. */
+    void SetPreferSkinBackground(bool v) noexcept { preferSkinBackground = v; }
+    [[nodiscard]] bool GetPreferSkinBackground() const noexcept { return preferSkinBackground; }
 
     void Arrange(const Rect& r) override;
     void Paint(GuiPaintContext& ctx) const override;
@@ -47,6 +50,7 @@ private:
     bool chrome = true;
     bool backgroundEnabled = true;
     bool dropdownListThemeBound = false;
+    bool preferSkinBackground = false;
 };
 
 }  // namespace Spark::Gui

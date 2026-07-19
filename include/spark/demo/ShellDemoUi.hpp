@@ -55,33 +55,6 @@ private:
     float spacing = 8.0F;
 };
 
-/**
- * GUI showcase root: one child fills the dialog body. Hit testing disabled so padding gaps do not steal clicks.
- */
-class ShowcaseFormLayout final : public Spark::Gui::Widget {
-public:
-    ShowcaseFormLayout();
-    void Arrange(const Spark::Gui::Rect& r) override;
-    void Paint(Spark::Gui::GuiPaintContext& ctx) const override;
-};
-
-/**
- * Vertical stack with explicit row heights (GUI showcase without <c>ScrollPanel</c>).
- * Call <c>SetRowHeights</c> after all children are added; size must match child count.
- */
-class ShowcaseVStackForm final : public Spark::Gui::Widget {
-public:
-    ShowcaseVStackForm();
-    void SetVerticalGap(const float g) noexcept;
-    void SetRowHeights(Spark::Array<float> heights) noexcept;
-    void Arrange(const Spark::Gui::Rect& r) override;
-    void Paint(Spark::Gui::GuiPaintContext& ctx) const override;
-
-private:
-    float vGap = 8.0F;
-    Spark::Array<float> rowHeights{};
-};
-
 void MountUiFont(GameWorld& w);
 
 }  // namespace Spark

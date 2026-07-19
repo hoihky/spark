@@ -137,6 +137,7 @@ void GuiCanvasComponent::Paint(Gui::GuiPaintContext& ctx) const {
     }
     ctx.ClearClipStack();
     ctx.SetTheme(&guiTheme);
+    ctx.SetSkin(guiSkin.Get());
     ctx.SetLayoutMetrics(&layoutMetrics);
     ctx.SetInteraction(hotWidget, activePress, focusWidget);
     root->Paint(ctx);

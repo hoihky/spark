@@ -3,6 +3,8 @@
 #include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/gui/GuiPaintContext.hpp"
+#include "spark/gui/GuiSkin.hpp"
+#include "spark/gui/GuiSkinElement.hpp"
 #include "spark/gui/GuiTheme.hpp"
 
 #include <GLFW/glfw3.h>
@@ -37,12 +39,30 @@ void Slider::Paint(GuiPaintContext& ctx) const {
         return;
     }
     const GuiTheme& th = ctx.GetTheme();
-    const float h = bounds.height;
-    const float trackY = bounds.y + h * 0.5F - 3.0F;
-    ctx.FillRect(bounds.x, trackY, bounds.width, 6.0F, th.sliderTrackRgb, 0.65F);
     const float lo = std::min(minV, maxV);
     const float hi = std::max(minV, maxV);
     const float t = hi > lo ? (value - lo) / (hi - lo) : 0.0F;
+
+    if (preferSkinChrome) {
+        const GuiSkin* skin = ctx.GetSkin();
+        GuiSpriteSlice trackSlice{};
+        GuiSpriteSlice thumbSlice{};
+        if (skin != nullptr && skin->TryGetSlice(GuiSkinElement::SliderTrack, trackSlice) && trackSlice.IsValid() &&
+                skin->TryGetSlice(GuiSkinElement::SliderThumb, thumbSlice) && thumbSlice.IsValid()) {
+            constexpr float kTrackH = 16.0F;
+            const float trackY = bounds.y + (bounds.height - kTrackH) * 0.5F;
+            ctx.DrawNineSlice(trackSlice, bounds.x, trackY, bounds.width, kTrackH);
+            constexpr float kThumb = 18.0F;
+            const float thumbX = bounds.x + t * std::max(0.0F, bounds.width - kThumb);
+            const float thumbY = bounds.y + (bounds.height - kThumb) * 0.5F;
+            ctx.DrawSpriteSlice(thumbSlice, thumbX, thumbY, kThumb, kThumb);
+            return;
+        }
+    }
+
+    const float h = bounds.height;
+    const float trackY = bounds.y + h * 0.5F - 3.0F;
+    ctx.FillRect(bounds.x, trackY, bounds.width, 6.0F, th.sliderTrackRgb, 0.65F);
     const float thumbX = bounds.x + t * bounds.width - 8.0F;
     const float thumbY = bounds.y + h * 0.5F - 10.0F;
     ctx.FillDropShadow(thumbX, thumbY, 16.0F, 20.0F, 1.5F, 2.0F, th.shadowRgb, 0.55F);
@@ -78,21 +98,17 @@ void Slider::ProcessKeyInput(IInput& input) {
     const float hi = std::max(minV, maxV);
     const float span = std::max(0.001F, hi - lo);
     const float step = span * 0.02F;
-    float next = value;
     if (input.IsKeyPressedThisFrame(GLFW_KEY_LEFT) || input.IsKeyPressedThisFrame(GLFW_KEY_DOWN)) {
-        next = value - step;
-    } else if (input.IsKeyPressedThisFrame(GLFW_KEY_RIGHT) || input.IsKeyPressedThisFrame(GLFW_KEY_UP)) {
-        next = value + step;
-    } else if (input.IsKeyPressedThisFrame(GLFW_KEY_HOME)) {
-        next = lo;
-    } else if (input.IsKeyPressedThisFrame(GLFW_KEY_END)) {
-        next = hi;
-    } else {
-        return;
+        SetValue(value - step);
+        if (onChanged) {
+            onChanged(value);
+        }
     }
-    SetValue(next);
-    if (onChanged) {
-        onChanged(value);
+    if (input.IsKeyPressedThisFrame(GLFW_KEY_RIGHT) || input.IsKeyPressedThisFrame(GLFW_KEY_UP)) {
+        SetValue(value + step);
+        if (onChanged) {
+            onChanged(value);
+        }
     }
 }
 

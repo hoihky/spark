@@ -36,13 +36,22 @@ sequenceDiagram
     participant E as Engine
     participant G as IGame
     participant S as SoundEngine
+    participant I as IImGuiLayer
     participant V as VulkanRenderer
     E->>E: PollEvents + BeginInputFrame
     E->>G: OnUpdate(timing, context)
     E->>S: PumpFrame(delta)
+    opt ImGui enabled
+        E->>I: BeginFrame (NewFrame)
+    end
     E->>G: OnRender(frame, context)
+    opt ImGui enabled
+        E->>I: EndFrame (Render)
+    end
     E->>V: PresentFrame
 ```
+
+When Dear ImGui is enabled, build all `ImGui::Begin` / widget code inside **`OnRender`**, not `OnUpdate`. See [UI and Toolkits](08-ui-and-toolkits.html).
 
 ## FrameTiming
 
@@ -63,6 +72,7 @@ Window& GetWindow();
 IInput& GetInput();
 void GetFramebufferSize(int& outWidth, int& outHeight) const;
 void SetSceneRenderParams(const SceneRenderParams& params);
+IImGuiLayer* TryGetImGuiLayer() noexcept;  // null when SPARK_ENABLE_IMGUI=0
 SoundEngine* TryGetSoundEngine() noexcept;
 Scene* TryGetScene() noexcept;
 ```

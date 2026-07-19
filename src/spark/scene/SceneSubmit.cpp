@@ -148,10 +148,14 @@ void FillStandardLitSceneFromWorld(
     params.pointLights.Clear();
     params.spotLights.Clear();
     params.screenRects.Clear();
+    params.screenSprites.Clear();
+    params.uiTextures.Clear();
     params.screenTexts.Clear();
     params.screenOverlayRects.Clear();
+    params.screenOverlaySprites.Clear();
     params.screenOverlayTexts.Clear();
     params.screenLateRects.Clear();
+    params.screenLateSprites.Clear();
     params.screenLateTexts.Clear();
     params.uiPaintOrderNext = 0U;
     params.sprites.Clear();

@@ -7,6 +7,7 @@ namespace Spark {
 class Window;
 class IFramePresenter;
 class IInput;
+class IImGuiLayer;
 class SoundEngine;
 class Scene;
 
@@ -32,6 +33,12 @@ public:
 
     /** Non-owning ECS scene; nullptr when the running game is not a <c>Game</c> (no scene binding). */
     [[nodiscard]] virtual Scene* TryGetScene() noexcept = 0;
+
+    /**
+     * Dear ImGui layer when <c>SPARK_ENABLE_IMGUI</c> is on (always non-null; may be a no-op null object).
+     * Enable per game via <c>IImGuiLayer::SetEnabled</c> and <c>GuiToolkitSettings</c>.
+     */
+    [[nodiscard]] virtual IImGuiLayer* TryGetImGuiLayer() noexcept = 0;
 };
 
 }  // namespace Spark

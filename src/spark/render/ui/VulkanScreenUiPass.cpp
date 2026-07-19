@@ -102,6 +102,10 @@ VkPipeline VulkanScreenUiPass::PipelineForTextBlendMode(const SceneBlendMode mod
     return PipelineFromBlendArray(textPipelines, mode);
 }
 
+VkPipeline VulkanScreenUiPass::PipelineForSpriteBlendMode(const SceneBlendMode mode) const noexcept {
+    return PipelineFromBlendArray(spritePipelines, mode);
+}
+
 void VulkanScreenUiPass::CreateResources(
         VkPhysicalDevice physicalDevice,
         VkDevice device,
@@ -160,8 +164,48 @@ void VulkanScreenUiPass::CreateResources(
 
     const Array<char> textVertSpv = shaders.ReadSpvFile("text.vert.spv");
     const Array<char> textFragSpv = shaders.ReadSpvFile("text.frag.spv");
+    const Array<char> uiSpriteFragSpv = shaders.ReadSpvFile("ui_sprite.frag.spv");
     textVertModule = shaders.CreateShaderModule(textVertSpv);
     textFragModule = shaders.CreateShaderModule(textFragSpv);
+    uiSpriteFragModule = shaders.CreateShaderModule(uiSpriteFragSpv);
+
+    VkDescriptorSetLayoutBinding spriteBinding{};
+    spriteBinding.binding = 0;
+    spriteBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    spriteBinding.descriptorCount = 1;
+    spriteBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    VkDescriptorSetLayoutCreateInfo spriteLayoutInfo{};
+    spriteLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    spriteLayoutInfo.bindingCount = 1;
+    spriteLayoutInfo.pBindings = &spriteBinding;
+    if (vkCreateDescriptorSetLayout(device, &spriteLayoutInfo, nullptr, &spriteDescriptorSetLayout) != VK_SUCCESS) {
+        throw std::runtime_error("vkCreateDescriptorSetLayout (ui sprite) failed");
+    }
+    VkDescriptorPoolSize spritePoolSize{};
+    spritePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    spritePoolSize.descriptorCount = framesInFlight;
+    VkDescriptorPoolCreateInfo spritePoolInfo{};
+    spritePoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    spritePoolInfo.poolSizeCount = 1;
+    spritePoolInfo.pPoolSizes = &spritePoolSize;
+    spritePoolInfo.maxSets = framesInFlight;
+    if (vkCreateDescriptorPool(device, &spritePoolInfo, nullptr, &spriteDescriptorPool) != VK_SUCCESS) {
+        throw std::runtime_error("vkCreateDescriptorPool (ui sprite) failed");
+    }
+    Array<VkDescriptorSetLayout> spriteLayouts;
+    spriteLayouts.Resize(framesInFlight);
+    for (std::size_t i = 0; i < framesInFlight; ++i) {
+        spriteLayouts[i] = spriteDescriptorSetLayout;
+    }
+    VkDescriptorSetAllocateInfo spriteAlloc{};
+    spriteAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    spriteAlloc.descriptorPool = spriteDescriptorPool;
+    spriteAlloc.descriptorSetCount = framesInFlight;
+    spriteAlloc.pSetLayouts = spriteLayouts.GetData();
+    spriteDescriptorSets.Resize(framesInFlight);
+    if (vkAllocateDescriptorSets(device, &spriteAlloc, spriteDescriptorSets.GetData()) != VK_SUCCESS) {
+        throw std::runtime_error("vkAllocateDescriptorSets (ui sprite) failed");
+    }
 
     textFlightBuffers.Resize(framesInFlight);
     for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
@@ -188,6 +232,33 @@ void VulkanScreenUiPass::CreateResources(
                 mesh.indexMemory);
         if (vkMapMemory(device, mesh.indexMemory, 0, kTextIndexBytes, 0, &mesh.indexMapped) != VK_SUCCESS) {
             throw std::runtime_error("map text index buffer failed");
+        }
+    }
+
+    spriteFlightBuffers.Resize(framesInFlight);
+    for (std::size_t fi = 0; fi < framesInFlight; ++fi) {
+        UiMeshFlightBuffers& mesh = spriteFlightBuffers[fi];
+        VulkanRendererGpu::CreateBuffer(
+                physicalDevice,
+                device,
+                kTextVertexBytes,
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                mesh.vertexBuffer,
+                mesh.vertexMemory);
+        if (vkMapMemory(device, mesh.vertexMemory, 0, kTextVertexBytes, 0, &mesh.vertexMapped) != VK_SUCCESS) {
+            throw std::runtime_error("map ui sprite vertex buffer failed");
+        }
+        VulkanRendererGpu::CreateBuffer(
+                physicalDevice,
+                device,
+                kTextIndexBytes,
+                VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                mesh.indexBuffer,
+                mesh.indexMemory);
+        if (vkMapMemory(device, mesh.indexMemory, 0, kTextIndexBytes, 0, &mesh.indexMapped) != VK_SUCCESS) {
+            throw std::runtime_error("map ui sprite index buffer failed");
         }
     }
 
@@ -231,6 +302,69 @@ void VulkanScreenUiPass::DestroyResources(VkDevice device) {
     }
     uploadedUiFont = nullptr;
     uploadedUiBoldFont = nullptr;
+    uploadedUiTexturePointers.Clear();
+    pendingUiTexturePointers.Clear();
+    for (std::size_t i = 0; i < retiredUiSpriteAtlases.GetSize(); ++i) {
+        DestroyFontAtlas(retiredUiSpriteAtlases[i].atlas, device);
+    }
+    retiredUiSpriteAtlases.Clear();
+    DestroyFontAtlas(activeUiSpriteAtlas, device);
+    DestroyFontAtlas(pendingUiSpriteAtlas, device);
+    if (uiSpriteStagingMapped != nullptr) {
+        vkUnmapMemory(device, uiSpriteStagingMemory);
+        uiSpriteStagingMapped = nullptr;
+    }
+    if (uiSpriteStagingBuffer != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device, uiSpriteStagingBuffer, nullptr);
+        uiSpriteStagingBuffer = VK_NULL_HANDLE;
+    }
+    if (uiSpriteStagingMemory != VK_NULL_HANDLE) {
+        vkFreeMemory(device, uiSpriteStagingMemory, nullptr);
+        uiSpriteStagingMemory = VK_NULL_HANDLE;
+    }
+    uiSpriteStagingCapacity = 0;
+    uiSpriteUploadPending = false;
+    for (std::size_t fi = 0; fi < spriteFlightBuffers.GetSize(); ++fi) {
+        UiMeshFlightBuffers& mesh = spriteFlightBuffers[fi];
+        if (mesh.vertexMapped != nullptr) {
+            vkUnmapMemory(device, mesh.vertexMemory);
+            mesh.vertexMapped = nullptr;
+        }
+        if (mesh.vertexBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(device, mesh.vertexBuffer, nullptr);
+            mesh.vertexBuffer = VK_NULL_HANDLE;
+        }
+        if (mesh.vertexMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(device, mesh.vertexMemory, nullptr);
+            mesh.vertexMemory = VK_NULL_HANDLE;
+        }
+        if (mesh.indexMapped != nullptr) {
+            vkUnmapMemory(device, mesh.indexMemory);
+            mesh.indexMapped = nullptr;
+        }
+        if (mesh.indexBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(device, mesh.indexBuffer, nullptr);
+            mesh.indexBuffer = VK_NULL_HANDLE;
+        }
+        if (mesh.indexMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(device, mesh.indexMemory, nullptr);
+            mesh.indexMemory = VK_NULL_HANDLE;
+        }
+    }
+    spriteFlightBuffers.Clear();
+    spriteDescriptorSets.Clear();
+    if (spriteDescriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(device, spriteDescriptorPool, nullptr);
+        spriteDescriptorPool = VK_NULL_HANDLE;
+    }
+    if (spriteDescriptorSetLayout != VK_NULL_HANDLE) {
+        vkDestroyDescriptorSetLayout(device, spriteDescriptorSetLayout, nullptr);
+        spriteDescriptorSetLayout = VK_NULL_HANDLE;
+    }
+    if (uiSpriteFragModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, uiSpriteFragModule, nullptr);
+        uiSpriteFragModule = VK_NULL_HANDLE;
+    }
     for (std::size_t i = 0; i < retiredFontAtlases.GetSize(); ++i) {
         DestroyFontAtlas(retiredFontAtlases[i].atlas, device);
     }
@@ -352,6 +486,10 @@ void VulkanScreenUiPass::DestroyPipelines(VkDevice device) {
             vkDestroyPipeline(device, textPipelines[i], nullptr);
             textPipelines[i] = VK_NULL_HANDLE;
         }
+        if (spritePipelines[i] != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, spritePipelines[i], nullptr);
+            spritePipelines[i] = VK_NULL_HANDLE;
+        }
         if (solidPipelines[i] != VK_NULL_HANDLE) {
             vkDestroyPipeline(device, solidPipelines[i], nullptr);
             solidPipelines[i] = VK_NULL_HANDLE;
@@ -360,6 +498,10 @@ void VulkanScreenUiPass::DestroyPipelines(VkDevice device) {
     if (textPipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(device, textPipelineLayout, nullptr);
         textPipelineLayout = VK_NULL_HANDLE;
+    }
+    if (spritePipelineLayout != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device, spritePipelineLayout, nullptr);
+        spritePipelineLayout = VK_NULL_HANDLE;
     }
     if (solidPipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(device, solidPipelineLayout, nullptr);
@@ -499,6 +641,119 @@ void VulkanScreenUiPass::CreatePipelines(VkDevice device, VkRenderPass presentRe
         const auto mode = static_cast<SceneBlendMode>(mi);
         if (VulkanCreateGraphicsPipelineForBlendMode(device, textPipe, mode, &textPipelines[mi]) != VK_SUCCESS) {
             throw std::runtime_error("vkCreateGraphicsPipelines (text blend) failed");
+        }
+    }
+
+    if (textVertModule != VK_NULL_HANDLE && uiSpriteFragModule != VK_NULL_HANDLE &&
+        spriteDescriptorSetLayout != VK_NULL_HANDLE) {
+        VkPipelineShaderStageCreateInfo spriteVertStage{};
+        spriteVertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        spriteVertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        spriteVertStage.module = textVertModule;
+        spriteVertStage.pName = "main";
+        VkPipelineShaderStageCreateInfo spriteFragStage{};
+        spriteFragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        spriteFragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        spriteFragStage.module = uiSpriteFragModule;
+        spriteFragStage.pName = "main";
+        const VkPipelineShaderStageCreateInfo spriteStages[] = {spriteVertStage, spriteFragStage};
+        constexpr std::uint32_t kSpriteStride = sizeof(float) * 9;
+        VkVertexInputBindingDescription spriteBinding{};
+        spriteBinding.binding = 0;
+        spriteBinding.stride = kSpriteStride;
+        spriteBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        VkVertexInputAttributeDescription spriteAttrs[3]{};
+        spriteAttrs[0].binding = 0;
+        spriteAttrs[0].location = 0;
+        spriteAttrs[0].format = VK_FORMAT_R32G32_SFLOAT;
+        spriteAttrs[0].offset = 0;
+        spriteAttrs[1].binding = 0;
+        spriteAttrs[1].location = 1;
+        spriteAttrs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        spriteAttrs[1].offset = sizeof(float) * 2;
+        spriteAttrs[2].binding = 0;
+        spriteAttrs[2].location = 2;
+        spriteAttrs[2].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        spriteAttrs[2].offset = sizeof(float) * 5;
+        VkPipelineVertexInputStateCreateInfo spriteVtxIn{};
+        spriteVtxIn.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        spriteVtxIn.vertexBindingDescriptionCount = 1;
+        spriteVtxIn.pVertexBindingDescriptions = &spriteBinding;
+        spriteVtxIn.vertexAttributeDescriptionCount = 3;
+        spriteVtxIn.pVertexAttributeDescriptions = spriteAttrs;
+        VkPipelineInputAssemblyStateCreateInfo spriteIa{};
+        spriteIa.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        spriteIa.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        VkPipelineViewportStateCreateInfo spriteVp{};
+        spriteVp.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        spriteVp.viewportCount = 1;
+        spriteVp.scissorCount = 1;
+        VkPipelineRasterizationStateCreateInfo spriteRast{};
+        spriteRast.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        spriteRast.polygonMode = VK_POLYGON_MODE_FILL;
+        spriteRast.lineWidth = 1.0F;
+        spriteRast.cullMode = VK_CULL_MODE_NONE;
+        spriteRast.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        VkPipelineMultisampleStateCreateInfo spriteMs{};
+        spriteMs.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        spriteMs.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        VkPipelineDepthStencilStateCreateInfo spriteDs{};
+        spriteDs.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        spriteDs.depthTestEnable = VK_FALSE;
+        spriteDs.depthWriteEnable = VK_FALSE;
+        VkPipelineColorBlendAttachmentState spriteBlendAtt{};
+        spriteBlendAtt.colorWriteMask =
+                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+                VK_COLOR_COMPONENT_A_BIT;
+        spriteBlendAtt.blendEnable = VK_TRUE;
+        spriteBlendAtt.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        spriteBlendAtt.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        spriteBlendAtt.colorBlendOp = VK_BLEND_OP_ADD;
+        spriteBlendAtt.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        spriteBlendAtt.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        spriteBlendAtt.alphaBlendOp = VK_BLEND_OP_ADD;
+        VkPipelineColorBlendStateCreateInfo spriteBlend{};
+        spriteBlend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        spriteBlend.attachmentCount = 1;
+        spriteBlend.pAttachments = &spriteBlendAtt;
+        const VkDynamicState spriteDynStates[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+        VkPipelineDynamicStateCreateInfo spriteDyn{};
+        spriteDyn.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+        spriteDyn.dynamicStateCount = 2U;
+        spriteDyn.pDynamicStates = spriteDynStates;
+        VkPushConstantRange spritePc{};
+        spritePc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        spritePc.offset = 0;
+        spritePc.size = sizeof(TextPushConstants);
+        VkDescriptorSetLayout spriteSetLayouts[] = {spriteDescriptorSetLayout};
+        VkPipelineLayoutCreateInfo spritePl{};
+        spritePl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        spritePl.setLayoutCount = 1;
+        spritePl.pSetLayouts = spriteSetLayouts;
+        spritePl.pushConstantRangeCount = 1;
+        spritePl.pPushConstantRanges = &spritePc;
+        if (vkCreatePipelineLayout(device, &spritePl, nullptr, &spritePipelineLayout) != VK_SUCCESS) {
+            throw std::runtime_error("vkCreatePipelineLayout (ui sprite) failed");
+        }
+        VkGraphicsPipelineCreateInfo spritePipe{};
+        spritePipe.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        spritePipe.stageCount = 2;
+        spritePipe.pStages = spriteStages;
+        spritePipe.pVertexInputState = &spriteVtxIn;
+        spritePipe.pInputAssemblyState = &spriteIa;
+        spritePipe.pViewportState = &spriteVp;
+        spritePipe.pRasterizationState = &spriteRast;
+        spritePipe.pMultisampleState = &spriteMs;
+        spritePipe.pDepthStencilState = &spriteDs;
+        spritePipe.pColorBlendState = &spriteBlend;
+        spritePipe.pDynamicState = &spriteDyn;
+        spritePipe.layout = spritePipelineLayout;
+        spritePipe.renderPass = presentRenderPass;
+        for (std::size_t mi = 0; mi < kSceneBlendModeCount; ++mi) {
+            const SceneBlendMode mode = static_cast<SceneBlendMode>(mi);
+            if (VulkanCreateGraphicsPipelineForBlendMode(device, spritePipe, mode, &spritePipelines[mi]) != VK_SUCCESS) {
+                throw std::runtime_error("vkCreateGraphicsPipelines (ui sprite blend) failed");
+            }
         }
     }
 
@@ -830,6 +1085,28 @@ void VulkanScreenUiPass::RecordSolidRectsFor(
     }
 
     RecordSolidRectsForPipeline(commandBuffer, frameIndex, extent, rects);
+}
+
+void VulkanScreenUiPass::UpdateUiSpriteDescriptorImages(const VkDevice device) {
+    if (device == VK_NULL_HANDLE || activeUiSpriteAtlas.view == VK_NULL_HANDLE || fontSampler == VK_NULL_HANDLE ||
+        spriteDescriptorSets.IsEmpty()) {
+        return;
+    }
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.sampler = fontSampler;
+    imageInfo.imageView = activeUiSpriteAtlas.view;
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    for (std::size_t i = 0; i < spriteDescriptorSets.GetSize(); ++i) {
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = spriteDescriptorSets[i];
+        write.dstBinding = 0;
+        write.dstArrayElement = 0;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.descriptorCount = 1;
+        write.pImageInfo = &imageInfo;
+        vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
+    }
 }
 
 void VulkanScreenUiPass::UpdateTextDescriptorImage(VkDevice device) {
@@ -1303,13 +1580,20 @@ void VulkanScreenUiPass::Record(
                          frameIndex < textDescriptorSets.GetSize();
     const Font* regFont = scene.uiFont.Get();
     const bool fontCpuOk = regFont != nullptr && regFont->IsValid();
+    const bool canSprite = PipelineForSpriteBlendMode(kSceneBlendModeDefault) != VK_NULL_HANDLE &&
+                           activeUiSpriteAtlas.view != VK_NULL_HANDLE && fontSampler != VK_NULL_HANDLE &&
+                           frameIndex < spriteDescriptorSets.GetSize();
 
-    if (!canSolid && !(canText && fontCpuOk)) {
+    if (!canSolid && !(canText && fontCpuOk) && !canSprite) {
         return;
     }
 
     if (canSolid && !scene.screenRects.IsEmpty()) {
         RecordSolidRectsFor(commandBuffer, frameIndex, extent, scene.screenRects);
+    }
+    if (!scene.screenSprites.IsEmpty()) {
+        UpdateUiSpriteDescriptorImages(this->device);
+        RecordSpritesFor(commandBuffer, frameIndex, extent, scene, scene.screenSprites);
     }
     if (fontCpuOk && canText && !scene.screenTexts.IsEmpty()) {
         RecordTextOverlaysFor(commandBuffer, frameIndex, extent, scene, scene.screenTexts);
@@ -1317,17 +1601,468 @@ void VulkanScreenUiPass::Record(
     if (canSolid && !scene.screenOverlayRects.IsEmpty()) {
         RecordSolidRectsFor(commandBuffer, frameIndex, extent, scene.screenOverlayRects);
     }
+    if (!scene.screenOverlaySprites.IsEmpty()) {
+        UpdateUiSpriteDescriptorImages(this->device);
+        RecordSpritesFor(commandBuffer, frameIndex, extent, scene, scene.screenOverlaySprites);
+    }
     if (fontCpuOk && canText && !scene.screenOverlayTexts.IsEmpty()) {
         RecordTextOverlaysFor(commandBuffer, frameIndex, extent, scene, scene.screenOverlayTexts);
     }
     if (canSolid && !scene.screenLateRects.IsEmpty()) {
         RecordSolidRectsFor(commandBuffer, frameIndex, extent, scene.screenLateRects);
     }
+    if (!scene.screenLateSprites.IsEmpty()) {
+        UpdateUiSpriteDescriptorImages(this->device);
+        RecordSpritesFor(commandBuffer, frameIndex, extent, scene, scene.screenLateSprites);
+    }
     if (fontCpuOk && canText && !scene.screenLateTexts.IsEmpty()) {
         RecordTextOverlaysFor(commandBuffer, frameIndex, extent, scene, scene.screenLateTexts);
     }
 
     VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullFramebufferScissor);
+}
+
+namespace {
+
+void StableSortSpriteDrawIndices(const Array<ScreenSpriteDraw>& sprites, Array<std::size_t>& indices) noexcept {
+    indices.Clear();
+    for (std::size_t i = 0; i < sprites.GetSize(); ++i) {
+        indices.PushBack(i);
+    }
+    const std::size_t n = indices.GetSize();
+    for (std::size_t i = 1; i < n; ++i) {
+        const std::size_t key = indices[i];
+        const std::uint8_t keyBlend = GetSceneBlendModePassOrder(sprites[key].blendMode);
+        const std::uint32_t keyPaint = sprites[key].paintOrder;
+        std::size_t j = i;
+        while (j > 0) {
+            const std::size_t prev = indices[j - 1];
+            const std::uint8_t prevBlend = GetSceneBlendModePassOrder(sprites[prev].blendMode);
+            if (prevBlend > keyBlend) {
+                indices[j] = prev;
+                --j;
+                continue;
+            }
+            if (prevBlend < keyBlend) {
+                break;
+            }
+            if (sprites[prev].paintOrder > keyPaint) {
+                indices[j] = prev;
+                --j;
+                continue;
+            }
+            break;
+        }
+        indices[j] = key;
+    }
+}
+
+bool SameSpriteBatch(const ScreenSpriteDraw& a, const ScreenSpriteDraw& b) noexcept {
+    if (GetSceneBlendModePassOrder(a.blendMode) != GetSceneBlendModePassOrder(b.blendMode)) {
+        return false;
+    }
+    return VulkanScreenUiClip::SameClip(
+            a.clipEnabled,
+            a.clipX,
+            a.clipY,
+            a.clipW,
+            a.clipH,
+            b.clipEnabled,
+            b.clipX,
+            b.clipY,
+            b.clipW,
+            b.clipH);
+}
+
+}  // namespace
+
+bool VulkanScreenUiPass::NeedsUiTextureUpload(const SceneRenderParams& scene) const noexcept {
+    if (scene.uiTextures.GetSize() != uploadedUiTexturePointers.GetSize()) {
+        return true;
+    }
+    for (std::size_t i = 0; i < scene.uiTextures.GetSize(); ++i) {
+        if (scene.uiTextures[i].Get() != uploadedUiTexturePointers[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void VulkanScreenUiPass::PrepareUiTextureUpload(
+        const VkPhysicalDevice physicalDevice,
+        const VkDevice device,
+        const SceneRenderParams& scene,
+        const std::uint64_t frameCounter,
+        const std::uint32_t maxFramesInFlight) {
+    uiSpriteUploadPending = false;
+    if (device == VK_NULL_HANDLE) {
+        return;
+    }
+    const bool atlasMissing =
+            activeUiSpriteAtlas.view == VK_NULL_HANDLE && !scene.uiTextures.IsEmpty();
+    if (!NeedsUiTextureUpload(scene) && !atlasMissing) {
+        return;
+    }
+
+    uiSpriteRetireAfterFrame = frameCounter + static_cast<std::uint64_t>(maxFramesInFlight);
+    DestroyFontAtlas(pendingUiSpriteAtlas, device);
+
+    if (scene.uiTextures.IsEmpty()) {
+        uiSpriteUploadClearsAtlas = true;
+        uiSpriteUploadPending = true;
+        pendingUiSpriteLayerCount = 0;
+        return;
+    }
+
+    std::uint32_t maxW = 1U;
+    std::uint32_t maxH = 1U;
+    for (std::size_t i = 0; i < scene.uiTextures.GetSize(); ++i) {
+        const Texture2D* tex = scene.uiTextures[i].Get();
+        if (tex == nullptr) {
+            continue;
+        }
+        maxW = std::max(maxW, tex->GetWidth());
+        maxH = std::max(maxH, tex->GetHeight());
+    }
+
+    const std::uint32_t layerCount = static_cast<std::uint32_t>(scene.uiTextures.GetSize());
+    pendingUiSpriteLayerBytes = static_cast<VkDeviceSize>(maxW) * static_cast<VkDeviceSize>(maxH) * 4U;
+    const VkDeviceSize stagingBytes = pendingUiSpriteLayerBytes * static_cast<VkDeviceSize>(layerCount);
+
+    if (uiSpriteStagingMapped == nullptr || uiSpriteStagingCapacity < stagingBytes) {
+        if (uiSpriteStagingMapped != nullptr) {
+            vkUnmapMemory(device, uiSpriteStagingMemory);
+            uiSpriteStagingMapped = nullptr;
+        }
+        if (uiSpriteStagingBuffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(device, uiSpriteStagingBuffer, nullptr);
+            uiSpriteStagingBuffer = VK_NULL_HANDLE;
+        }
+        if (uiSpriteStagingMemory != VK_NULL_HANDLE) {
+            vkFreeMemory(device, uiSpriteStagingMemory, nullptr);
+            uiSpriteStagingMemory = VK_NULL_HANDLE;
+        }
+        uiSpriteStagingCapacity = stagingBytes;
+        VulkanRendererGpu::CreateBuffer(
+                physicalDevice,
+                device,
+                uiSpriteStagingCapacity,
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                uiSpriteStagingBuffer,
+                uiSpriteStagingMemory);
+        if (vkMapMemory(device, uiSpriteStagingMemory, 0, uiSpriteStagingCapacity, 0, &uiSpriteStagingMapped) !=
+                VK_SUCCESS) {
+            throw std::runtime_error("VulkanScreenUiPass: ui sprite staging map failed");
+        }
+    }
+
+    auto* bytes = static_cast<std::uint8_t*>(uiSpriteStagingMapped);
+    for (std::size_t li = 0; li < scene.uiTextures.GetSize(); ++li) {
+        const Texture2D* tex = scene.uiTextures[li].Get();
+        std::uint8_t* layerBase =
+                bytes + static_cast<std::size_t>(pendingUiSpriteLayerBytes) * static_cast<std::size_t>(li);
+        const std::size_t layerPixels = static_cast<std::size_t>(maxW) * static_cast<std::size_t>(maxH);
+        std::memset(layerBase, 0, layerPixels * 4U);
+        if (tex == nullptr) {
+            continue;
+        }
+        const Array<std::uint8_t>& rgba = tex->GetRgba();
+        const std::uint32_t tw = tex->GetWidth();
+        const std::uint32_t th = tex->GetHeight();
+        for (std::uint32_t y = 0; y < th; ++y) {
+            const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(tw) * 4U;
+            const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(maxW) * 4U;
+            const std::size_t copyBytes = static_cast<std::size_t>(tw) * 4U;
+            if (srcRow + copyBytes <= rgba.GetSize()) {
+                std::memcpy(layerBase + dstRow, rgba.GetData() + srcRow, copyBytes);
+            }
+        }
+    }
+
+    VulkanRendererGpu::CreateImage2DArray(
+            physicalDevice,
+            device,
+            maxW,
+            maxH,
+            layerCount,
+            VK_FORMAT_R8G8B8A8_UNORM,
+            VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            pendingUiSpriteAtlas.image,
+            pendingUiSpriteAtlas.memory);
+    pendingUiSpriteAtlas.view = VulkanRendererGpu::CreateImageView2DArray(
+            device, pendingUiSpriteAtlas.image, VK_FORMAT_R8G8B8A8_UNORM, layerCount);
+    pendingUiSpriteAtlas.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    pendingUiSpriteAtlas.width = maxW;
+    pendingUiSpriteAtlas.height = maxH;
+    pendingUiSpriteLayerCount = layerCount;
+    uiSpriteUploadClearsAtlas = false;
+    uiSpriteUploadPending = true;
+    pendingUiTexturePointers.Clear();
+    for (std::size_t i = 0; i < scene.uiTextures.GetSize(); ++i) {
+        pendingUiTexturePointers.PushBack(scene.uiTextures[i].Get());
+    }
+}
+
+void VulkanScreenUiPass::RecordUiTextureUpload(const VkCommandBuffer commandBuffer, const VkDevice device) {
+    if (!uiSpriteUploadPending || device == VK_NULL_HANDLE) {
+        return;
+    }
+    uiSpriteUploadPending = false;
+
+    if (uiSpriteUploadClearsAtlas) {
+        RetiredFontAtlas retired{};
+        retired.atlas = activeUiSpriteAtlas;
+        retired.safeAfterFrame = uiSpriteRetireAfterFrame;
+        retiredUiSpriteAtlases.PushBack(retired);
+        activeUiSpriteAtlas = {};
+        uploadedUiTexturePointers.Clear();
+        return;
+    }
+
+    if (pendingUiSpriteAtlas.image == VK_NULL_HANDLE || pendingUiSpriteLayerCount == 0U) {
+        return;
+    }
+
+    VulkanRendererGpu::SceneTexBarrier(
+            commandBuffer,
+            pendingUiSpriteAtlas.image,
+            pendingUiSpriteLayerCount,
+            pendingUiSpriteAtlas.layout,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    Array<VkBufferImageCopy> regions;
+    regions.Resize(pendingUiSpriteLayerCount);
+    for (std::uint32_t i = 0; i < pendingUiSpriteLayerCount; ++i) {
+        VkBufferImageCopy& region = regions[i];
+        region.bufferOffset = static_cast<VkDeviceSize>(pendingUiSpriteLayerBytes) * static_cast<VkDeviceSize>(i);
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = i;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = {pendingUiSpriteAtlas.width, pendingUiSpriteAtlas.height, 1};
+    }
+    vkCmdCopyBufferToImage(
+            commandBuffer,
+            uiSpriteStagingBuffer,
+            pendingUiSpriteAtlas.image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            pendingUiSpriteLayerCount,
+            regions.GetData());
+
+    VulkanRendererGpu::SceneTexBarrier(
+            commandBuffer,
+            pendingUiSpriteAtlas.image,
+            pendingUiSpriteLayerCount,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    pendingUiSpriteAtlas.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    RetiredFontAtlas retired{};
+    retired.atlas = activeUiSpriteAtlas;
+    retired.safeAfterFrame = uiSpriteRetireAfterFrame;
+    retiredUiSpriteAtlases.PushBack(retired);
+    activeUiSpriteAtlas = pendingUiSpriteAtlas;
+    pendingUiSpriteAtlas = {};
+    uploadedUiTexturePointers = pendingUiTexturePointers;
+    pendingUiTexturePointers.Clear();
+
+    UpdateUiSpriteDescriptorImages(device);
+}
+
+void VulkanScreenUiPass::ReleaseRetiredUiTextureAtlases(const VkDevice device, const std::uint64_t frameCounter) {
+    if (device == VK_NULL_HANDLE) {
+        return;
+    }
+    std::size_t write = 0;
+    for (std::size_t i = 0; i < retiredUiSpriteAtlases.GetSize(); ++i) {
+        if (retiredUiSpriteAtlases[i].safeAfterFrame <= frameCounter) {
+            DestroyFontAtlas(retiredUiSpriteAtlases[i].atlas, device);
+        } else {
+            if (write != i) {
+                retiredUiSpriteAtlases[write] = retiredUiSpriteAtlases[i];
+            }
+            ++write;
+        }
+    }
+    retiredUiSpriteAtlases.Resize(write);
+}
+
+void VulkanScreenUiPass::AppendUiSpriteGeometry(const ScreenSpriteDraw& sd) {
+    auto pushV = [this](
+                        const float px,
+                        const float py,
+                        const float u,
+                        const float v,
+                        const float layer,
+                        const float r,
+                        const float g,
+                        const float b,
+                        const float a) {
+        spriteScratchVertices.PushBack(px);
+        spriteScratchVertices.PushBack(py);
+        spriteScratchVertices.PushBack(u);
+        spriteScratchVertices.PushBack(v);
+        spriteScratchVertices.PushBack(layer);
+        spriteScratchVertices.PushBack(r);
+        spriteScratchVertices.PushBack(g);
+        spriteScratchVertices.PushBack(b);
+        spriteScratchVertices.PushBack(a);
+    };
+    const float x0 = sd.x;
+    const float y0 = sd.y;
+    const float x1 = sd.x + sd.width;
+    const float y1 = sd.y + sd.height;
+    const float u0 = sd.uvRect.x;
+    const float v0 = sd.uvRect.y;
+    const float u1 = sd.uvRect.z;
+    const float v1 = sd.uvRect.w;
+    const float layer = static_cast<float>(sd.textureLayer);
+    const float r = sd.tint.x;
+    const float g = sd.tint.y;
+    const float b = sd.tint.z;
+    const float a = sd.alpha;
+    const std::uint32_t base = static_cast<std::uint32_t>(spriteScratchVertices.GetSize() / 9U);
+    pushV(x0, y0, u0, v0, layer, r, g, b, a);
+    pushV(x1, y0, u1, v0, layer, r, g, b, a);
+    pushV(x1, y1, u1, v1, layer, r, g, b, a);
+    pushV(x0, y1, u0, v1, layer, r, g, b, a);
+    spriteScratchIndices.PushBack(base);
+    spriteScratchIndices.PushBack(base + 1);
+    spriteScratchIndices.PushBack(base + 2);
+    spriteScratchIndices.PushBack(base);
+    spriteScratchIndices.PushBack(base + 2);
+    spriteScratchIndices.PushBack(base + 3);
+}
+
+void VulkanScreenUiPass::FlushAccumulatedUiSprites(
+        VkCommandBuffer commandBuffer,
+        const std::uint32_t frameIndex,
+        const VkExtent2D extent,
+        const ScreenSpriteDraw& clipRef,
+        const VkPipeline pipeline) {
+    if (pipeline == VK_NULL_HANDLE || spriteScratchIndices.IsEmpty() || frameIndex >= spriteFlightBuffers.GetSize() ||
+            activeUiSpriteAtlas.view == VK_NULL_HANDLE) {
+        spriteScratchVertices.Clear();
+        spriteScratchIndices.Clear();
+        return;
+    }
+    UiMeshFlightBuffers& mesh = spriteFlightBuffers[frameIndex];
+    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(spriteScratchVertices.GetSize());
+    const VkDeviceSize ibBytes = sizeof(std::uint32_t) * static_cast<VkDeviceSize>(spriteScratchIndices.GetSize());
+    if (vbBytes > kTextVertexBytes || ibBytes > kTextIndexBytes || mesh.vertexMapped == nullptr ||
+        mesh.indexMapped == nullptr) {
+        spriteScratchVertices.Clear();
+        spriteScratchIndices.Clear();
+        return;
+    }
+    std::memcpy(mesh.vertexMapped, spriteScratchVertices.GetData(), static_cast<std::size_t>(vbBytes));
+    std::memcpy(mesh.indexMapped, spriteScratchIndices.GetData(), static_cast<std::size_t>(ibBytes));
+
+    VkViewport vp{};
+    vp.width = static_cast<float>(extent.width);
+    vp.height = static_cast<float>(extent.height);
+    vp.minDepth = 0.0F;
+    vp.maxDepth = 1.0F;
+    vkCmdSetViewport(commandBuffer, 0, 1, &vp);
+
+    VkRect2D sc{};
+    if (!VulkanScreenUiClip::ScreenRectToVkScissor(
+                clipRef.clipEnabled, clipRef.clipX, clipRef.clipY, clipRef.clipW, clipRef.clipH, extent, sc)) {
+        spriteScratchVertices.Clear();
+        spriteScratchIndices.Clear();
+        return;
+    }
+    vkCmdSetScissor(commandBuffer, 0, 1, &sc);
+
+    TextPushConstants pc{};
+    pc.screenSize[0] = static_cast<float>(extent.width);
+    pc.screenSize[1] = static_cast<float>(extent.height);
+    vkCmdPushConstants(commandBuffer, spritePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pc), &pc);
+
+    const VkDeviceSize offsets[] = {0};
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            spritePipelineLayout,
+            0,
+            1,
+            &spriteDescriptorSets[frameIndex],
+            0,
+            nullptr);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &mesh.vertexBuffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdDrawIndexed(commandBuffer, static_cast<std::uint32_t>(spriteScratchIndices.GetSize()), 1, 0, 0, 0);
+    spriteScratchVertices.Clear();
+    spriteScratchIndices.Clear();
+}
+
+void VulkanScreenUiPass::RecordSpritesFor(
+        VkCommandBuffer commandBuffer,
+        const std::uint32_t frameIndex,
+        const VkExtent2D extent,
+        const SceneRenderParams& scene,
+        const Array<ScreenSpriteDraw>& sprites) {
+    (void)scene;
+    if (PipelineForSpriteBlendMode(kSceneBlendModeDefault) == VK_NULL_HANDLE || sprites.IsEmpty() ||
+            activeUiSpriteAtlas.view == VK_NULL_HANDLE || fontSampler == VK_NULL_HANDLE ||
+            frameIndex >= spriteDescriptorSets.GetSize()) {
+        return;
+    }
+
+    spriteScratchVertices.Clear();
+    spriteScratchIndices.Clear();
+    Array<std::size_t> drawOrder;
+    StableSortSpriteDrawIndices(sprites, drawOrder);
+
+    std::size_t batchClipIndex = 0;
+    bool haveBatch = false;
+    constexpr std::size_t kMaxSpriteFloats = static_cast<std::size_t>(kTextVertexBytes / sizeof(float));
+    constexpr std::size_t kMaxSpriteIndices = static_cast<std::size_t>(kTextIndexBytes / sizeof(std::uint32_t));
+
+    for (std::size_t oi = 0; oi < drawOrder.GetSize(); ++oi) {
+        const std::size_t li = drawOrder[oi];
+        const ScreenSpriteDraw& sd = sprites[li];
+        if (sd.textureLayer < 0) {
+            continue;
+        }
+        if (haveBatch && !SameSpriteBatch(sprites[batchClipIndex], sd)) {
+            FlushAccumulatedUiSprites(
+                    commandBuffer,
+                    frameIndex,
+                    extent,
+                    sprites[batchClipIndex],
+                    PipelineForSpriteBlendMode(sprites[batchClipIndex].blendMode));
+            haveBatch = false;
+        }
+        if (!haveBatch) {
+            batchClipIndex = li;
+            haveBatch = true;
+        }
+        if (spriteScratchVertices.GetSize() + 36U > kMaxSpriteFloats ||
+            spriteScratchIndices.GetSize() + 6U > kMaxSpriteIndices) {
+            FlushAccumulatedUiSprites(
+                    commandBuffer,
+                    frameIndex,
+                    extent,
+                    sprites[batchClipIndex],
+                    PipelineForSpriteBlendMode(sprites[batchClipIndex].blendMode));
+            batchClipIndex = li;
+            haveBatch = true;
+        }
+        AppendUiSpriteGeometry(sd);
+    }
+    if (haveBatch) {
+        FlushAccumulatedUiSprites(
+                commandBuffer,
+                frameIndex,
+                extent,
+                sprites[batchClipIndex],
+                PipelineForSpriteBlendMode(sprites[batchClipIndex].blendMode));
+    }
 }
 
 }  // namespace Spark

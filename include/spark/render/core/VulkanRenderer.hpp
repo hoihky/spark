@@ -37,6 +37,11 @@
 #include "spark/render/sprites2d/VulkanTilemapPass.hpp"
 #include "spark/render/platform/Window.hpp"
 
+#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/imgui/ImGuiLayerFactory.hpp"
+#include "spark/imgui/ImGuiLayerRegistry.hpp"
+#include "spark/memory/UniquePtr.hpp"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -79,6 +84,10 @@ public:
 
     void DrawFrame();
 
+    /** Dear ImGui integration (null object when <c>SPARK_ENABLE_IMGUI</c> is off). */
+    [[nodiscard]] IImGuiLayer& GetImGuiLayer() noexcept { return *imguiLayer; }
+    [[nodiscard]] const IImGuiLayer& GetImGuiLayer() const noexcept { return *imguiLayer; }
+
 private:
     void CreatePersistentSceneResources();
     void DestroyPersistentSceneResources();
@@ -98,6 +107,11 @@ private:
     void WriteUniformBuffer(std::uint32_t frameIndex);
 
     void RecordShadowMapPass(VkCommandBuffer commandBuffer, std::uint32_t frameIndex);
+
+    void InitImGuiBackend();
+    void InvalidateImGuiBackend() noexcept;
+    void ShutdownImGuiBackend() noexcept;
+    void RecordImGuiDrawData(VkCommandBuffer commandBuffer);
 
     VulkanDeviceContext deviceContext;
     VulkanFrameSync frameSync;
@@ -168,6 +182,9 @@ private:
 
     std::chrono::steady_clock::time_point recordingWallStart{};
     bool recordingWallClockValid = false;
+
+    Window* boundWindow = nullptr;
+    UniquePtr<IImGuiLayer> imguiLayer{};
 };
 
 }  // namespace Spark

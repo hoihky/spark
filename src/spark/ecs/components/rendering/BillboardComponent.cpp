@@ -26,10 +26,6 @@ void BillboardComponent::OnUpdate(
     int fbW = 0;
     int fbH = 0;
     context.GetFramebufferSize(fbW, fbH);
-    float aspect = 1.0F;
-    if (fbH > 0) {
-        aspect = static_cast<float>(fbW) / static_cast<float>(fbH);
-    }
     SceneCameraMatrices cam{};
     if (!TryBuildSceneCameraMatrices(owner.GetWorld(), static_cast<float>(fbW), static_cast<float>(fbH), cam)) {
         return;

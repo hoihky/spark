@@ -8,6 +8,7 @@
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/scene/Texture2D.hpp"
 #include "spark/text/Font.hpp"
 
 #include <algorithm>
@@ -37,6 +38,48 @@ namespace {
         return params->screenOverlayTexts;
     }
     return params->screenTexts;
+}
+
+[[nodiscard]] Array<ScreenSpriteDraw>& UiSpriteBucket(
+        SceneRenderParams* params, const int lateDepth, const int overlayDepth) noexcept {
+    if (lateDepth > 0) {
+        return params->screenLateSprites;
+    }
+    if (overlayDepth > 0) {
+        return params->screenOverlaySprites;
+    }
+    return params->screenSprites;
+}
+
+/** Matches <c>VulkanScreenUiPass::PrepareUiTextureUpload</c> — every atlas layer is padded to this size. */
+void ComputeUiAtlasLayerExtent(
+        const SceneRenderParams* params,
+        std::uint32_t& outMaxW,
+        std::uint32_t& outMaxH) noexcept {
+    outMaxW = 1U;
+    outMaxH = 1U;
+    if (params == nullptr) {
+        return;
+    }
+    for (std::size_t i = 0; i < params->uiTextures.GetSize(); ++i) {
+        const Texture2D* tex = params->uiTextures[i].Get();
+        if (tex == nullptr) {
+            continue;
+        }
+        outMaxW = std::max(outMaxW, tex->GetWidth());
+        outMaxH = std::max(outMaxH, tex->GetHeight());
+    }
+}
+
+/** UVs in slices are normalized to the source image; the GPU atlas layer may be larger (zero-padded). */
+[[nodiscard]] Vector4 ScaleUvToUiAtlasLayer(
+        const Vector4& uv,
+        const Texture2D& tex,
+        const std::uint32_t atlasW,
+        const std::uint32_t atlasH) noexcept {
+    const float uScale = static_cast<float>(tex.GetWidth()) / static_cast<float>(std::max(1U, atlasW));
+    const float vScale = static_cast<float>(tex.GetHeight()) / static_cast<float>(std::max(1U, atlasH));
+    return {uv.x * uScale, uv.y * vScale, uv.z * uScale, uv.w * vScale};
 }
 
 [[nodiscard]] float MeasureWidth(const Font* font, const Utf8String& s, float sizePixels, float charFallbackMul) {
@@ -325,6 +368,19 @@ bool GuiPaintContext::ClipAllowsImmediateDraw() const noexcept {
 }
 
 void GuiPaintContext::AttachClipTo(ScreenRectDraw& d) const noexcept {
+    if (clipStack.IsEmpty()) {
+        d.clipEnabled = false;
+        return;
+    }
+    const Rect& c = clipStack.GetLast();
+    d.clipEnabled = true;
+    d.clipX = c.x;
+    d.clipY = c.y;
+    d.clipW = c.width;
+    d.clipH = c.height;
+}
+
+void GuiPaintContext::AttachClipTo(ScreenSpriteDraw& d) const noexcept {
     if (clipStack.IsEmpty()) {
         d.clipEnabled = false;
         return;
@@ -648,6 +704,122 @@ void GuiPaintContext::EmitSprite(
     sd.sortOrder = sortOrder >= 0 ? sortOrder : guiSpriteSortCounter++;
     sd.blendMode = blend;
     params->sprites.PushBack(sd);
+}
+
+std::int32_t GuiPaintContext::AcquireUiTextureLayer(const SharedPtr<Texture2D>& texture) {
+    if (params == nullptr || !texture) {
+        return -1;
+    }
+    for (std::size_t i = 0; i < params->uiTextures.GetSize(); ++i) {
+        if (params->uiTextures[i].Get() == texture.Get()) {
+            return static_cast<std::int32_t>(i);
+        }
+    }
+    if (params->uiTextures.GetSize() >= SceneRenderParams::MaxUiTextures) {
+        return -1;
+    }
+    params->uiTextures.PushBack(texture);
+    return static_cast<std::int32_t>(params->uiTextures.GetSize() - 1U);
+}
+
+void GuiPaintContext::DrawSpriteSlice(
+        const GuiSpriteSlice& slice,
+        const float x,
+        const float y,
+        const float w,
+        const float h,
+        const Vector3& tint,
+        const float alpha,
+        const SceneBlendMode blend) {
+    if (!slice.IsValid() || params == nullptr || w <= 0.0F || h <= 0.0F || !ClipAllowsImmediateDraw()) {
+        return;
+    }
+    const std::int32_t layer = AcquireUiTextureLayer(slice.texture);
+    if (layer < 0) {
+        return;
+    }
+    const Texture2D* tex = slice.texture.Get();
+    std::uint32_t atlasW = 1U;
+    std::uint32_t atlasH = 1U;
+    ComputeUiAtlasLayerExtent(params, atlasW, atlasH);
+    ScreenSpriteDraw d{};
+    d.x = x;
+    d.y = y;
+    d.width = w;
+    d.height = h;
+    d.uvRect = tex != nullptr ? ScaleUvToUiAtlasLayer(slice.uvRect, *tex, atlasW, atlasH) : slice.uvRect;
+    d.textureLayer = layer;
+    d.tint = tint;
+    d.alpha = alpha;
+    d.blendMode = blend;
+    AttachClipTo(d);
+    d.paintOrder = params->NextUiPaintOrder();
+    UiSpriteBucket(params, lateDepth, overlayDepth).PushBack(d);
+}
+
+void GuiPaintContext::DrawNineSlice(
+        const GuiSpriteSlice& slice,
+        const float x,
+        const float y,
+        const float w,
+        const float h,
+        const Vector3& tint,
+        const float alpha,
+        const SceneBlendMode blend) {
+    if (!slice.IsValid() || slice.nineSlice.IsEmpty()) {
+        DrawSpriteSlice(slice, x, y, w, h, tint, alpha, blend);
+        return;
+    }
+    if (params == nullptr || w <= 0.0F || h <= 0.0F || !ClipAllowsImmediateDraw()) {
+        return;
+    }
+    const Texture2D* tex = slice.texture.Get();
+    if (tex == nullptr) {
+        return;
+    }
+    const float texW = static_cast<float>(std::max(1U, tex->GetWidth()));
+    const float texH = static_cast<float>(std::max(1U, tex->GetHeight()));
+    const float srcW = (slice.uvRect.z - slice.uvRect.x) * texW;
+    const float srcH = (slice.uvRect.w - slice.uvRect.y) * texH;
+    if (srcW <= 0.5F || srcH <= 0.5F) {
+        DrawSpriteSlice(slice, x, y, w, h, tint, alpha, blend);
+        return;
+    }
+    /** Border thickness stays at inset pixels (× UI scale), not stretched with dest/src ratio. */
+    const float uiPx = GetLayoutMetrics().Scaled(1.0F);
+    const float dl = slice.nineSlice.left * uiPx;
+    const float dr = slice.nineSlice.right * uiPx;
+    const float dt = slice.nineSlice.top * uiPx;
+    const float db = slice.nineSlice.bottom * uiPx;
+    const float centerW = std::max(0.0F, w - dl - dr);
+    const float centerH = std::max(0.0F, h - dt - db);
+    const float u0 = slice.uvRect.x;
+    const float v0 = slice.uvRect.y;
+    const float u1 = slice.uvRect.z;
+    const float v1 = slice.uvRect.w;
+    const float uMid0 = u0 + (slice.nineSlice.left / srcW) * (u1 - u0);
+    const float uMid1 = u1 - (slice.nineSlice.right / srcW) * (u1 - u0);
+    const float vMid0 = v0 + (slice.nineSlice.top / srcH) * (v1 - v0);
+    const float vMid1 = v1 - (slice.nineSlice.bottom / srcH) * (v1 - v0);
+
+    auto drawPart = [&](float px, float py, float pw, float ph, float pu0, float pv0, float pu1, float pv1) {
+        if (pw <= 0.0F || ph <= 0.0F) {
+            return;
+        }
+        GuiSpriteSlice part = slice;
+        part.uvRect = {pu0, pv0, pu1, pv1};
+        DrawSpriteSlice(part, px, py, pw, ph, tint, alpha, blend);
+    };
+
+    drawPart(x, y, dl, dt, u0, v0, uMid0, vMid0);
+    drawPart(x + dl, y, centerW, dt, uMid0, v0, uMid1, vMid0);
+    drawPart(x + dl + centerW, y, dr, dt, uMid1, v0, u1, vMid0);
+    drawPart(x, y + dt, dl, centerH, u0, vMid0, uMid0, vMid1);
+    drawPart(x + dl, y + dt, centerW, centerH, uMid0, vMid0, uMid1, vMid1);
+    drawPart(x + dl + centerW, y + dt, dr, centerH, uMid1, vMid0, u1, vMid1);
+    drawPart(x, y + dt + centerH, dl, db, u0, vMid1, uMid0, v1);
+    drawPart(x + dl, y + dt + centerH, centerW, db, uMid0, vMid1, uMid1, v1);
+    drawPart(x + dl + centerW, y + dt + centerH, dr, db, uMid1, vMid1, u1, v1);
 }
 
 }  // namespace Spark::Gui

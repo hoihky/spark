@@ -38,6 +38,11 @@ public:
             const VulkanSceneTextureUploader& sceneTextures,
             const SceneRenderParams& scene,
             bool sceneParamsValid) const noexcept;
+
+    /** UI sprite atlas is replaced wholesale; wait for in-flight frames before re-upload. */
+    [[nodiscard]] bool NeedsUiTextureGpuIdle(
+            const VulkanScreenUiPass& screenUi,
+            const SceneRenderParams& scene) const noexcept;
 };
 
 }  // namespace Spark

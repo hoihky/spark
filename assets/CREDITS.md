@@ -5,7 +5,7 @@ Spark ships third-party art for demos and sample games. All listed assets below 
 | Asset | Author | License | Used in |
 |-------|--------|---------|---------|
 | Kenney Simplified Platformer Pack (tilesheet, items, characters) | [Kenney](https://kenney.nl/) | CC0 | Platformer2D demo, platformer2d_game_template, scripting interop |
-| Kenney Tiny Dungeon (tilemap atlas) | Kenney | CC0 | TwoDDemo tilemap, BroadPhase2D / maze2D demo |
+| Kenney Tiny Dungeon (tilemap atlas) | Kenney | CC0 | BroadPhase2D / maze2D demo |
 | Kenney Retro Medieval / Fantasy tile textures (`assets/textures/`) | Kenney | CC0 | ThreeDDemo, Maze3DDemo, TerrainDemo, CharacterCameraDemo, MaterialShowcase3DDemo, FPS template ground |
 | Kenney character PNGs (`assets/sprites/kenney/`, CMake download) | Kenney | CC0 | Platformer2D player atlas fallback path |
 | Poly Haven HDR sky (`textures/sky/equirect_sky_1k.hdr`) | Poly Haven | CC0 | SkyDemo, Maze3DDemo, CharacterCameraDemo (CMake download) |

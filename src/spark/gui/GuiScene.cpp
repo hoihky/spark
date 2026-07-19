@@ -11,6 +11,9 @@
 #include "spark/gui/GuiInputState.hpp"
 #include "spark/gui/GuiLayoutMetrics.hpp"
 #include "spark/gui/GuiWidgetPopups.hpp"
+#include "spark/gui/toolkit/GuiToolkitSettings.hpp"
+#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/imgui/ImGuiLayerRegistry.hpp"
 #include "spark/gui/controls/Dropdown.hpp"
 #include "spark/gui/controls/List.hpp"
 #include "spark/gui/controls/MenuBar.hpp"
@@ -213,6 +216,20 @@ Gui::Widget* FindOpenPopupHover(Gui::Widget* w, const float x, const float y) {
 void ProcessGuiCanvasesInput(GameWorld& world, IInput& input, int framebufferWidth, int framebufferHeight,
         const float contentScaleX, const float contentScaleY) {
     Gui::RefreshSystemDpiScale(contentScaleX, contentScaleY);
+
+    if (!Gui::GuiToolkitSettings::ShouldProcessSparkGuiInput()) {
+        Gui::GuiFrameInput fin{};
+        input.GetCursorFramebufferPixels(fin.mouseX, fin.mouseY, framebufferWidth, framebufferHeight);
+        Gui::GuiPointerState ptrState{};
+        ptrState.mouseX = fin.mouseX;
+        ptrState.mouseY = fin.mouseY;
+        if (IImGuiLayer* imgui = GetActiveImGuiLayer(); imgui != nullptr && imgui->IsEnabled()) {
+            ptrState.pointerOverGui = imgui->WantsCaptureMouse();
+            ptrState.consumesGamePointer = imgui->WantsCaptureMouse() || imgui->WantsCaptureKeyboard();
+        }
+        Gui::SetGuiPointerState(ptrState);
+        return;
+    }
 
     static bool editorLayoutLoaded = false;
     if (!editorLayoutLoaded) {
@@ -442,6 +459,16 @@ void ProcessGuiCanvasesInput(GameWorld& world, IInput& input, int framebufferWid
             || (captureCanvas != nullptr && fin.leftDown);
     ptrState.scrollWheelConsumed = scrollWheelConsumed;
 
+    if (IImGuiLayer* imgui = GetActiveImGuiLayer(); imgui != nullptr && imgui->IsEnabled()) {
+        if (imgui->WantsCaptureMouse()) {
+            ptrState.pointerOverGui = true;
+            ptrState.consumesGamePointer = true;
+        }
+        if (imgui->WantsCaptureKeyboard()) {
+            ptrState.consumesGamePointer = true;
+        }
+    }
+
     GuiCanvasComponent* keyCanvas = nullptr;
     if (modalCanvas != nullptr) {
         keyCanvas = modalCanvas;
@@ -532,6 +559,10 @@ void PaintGuiCanvases(const GameWorld& world, SceneRenderParams& params, int fra
         ctx.ResetOverlayLayer();
         ctx.ResetLateLayer();
         ctx.SetTheme(&c->GetTheme());
+        ctx.SetSkin(c->GetSkinMutable());
+        if (Gui::GuiSkin* skin = c->GetSkinMutable()) {
+            skin->PrimeUiTextures(ctx);
+        }
         c->Paint(ctx);
         if (Gui::Widget* root = c->GetRoot()) {
             Gui::PaintOpenDropdownPopups(root, ctx);

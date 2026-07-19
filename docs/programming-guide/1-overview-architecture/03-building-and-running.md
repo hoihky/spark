@@ -28,6 +28,7 @@ cmake --build build -j
 | Option | Default | Effect |
 |--------|---------|--------|
 | `SPARK_BUILD_DEMO` | ON | Builds `SparkDemo` launcher |
+| `SPARK_ENABLE_IMGUI` | ON | Dear ImGui (docking) + Vulkan/GLFW backends for tool UI |
 | `SPARK_BUILD_SCRIPT_HOST` | OFF | CoreCLR C# scripting host |
 | `SPARK_BUILD_TESTS` | OFF | Unit tests |
 

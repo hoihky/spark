@@ -5,7 +5,7 @@ order: 0
 
 # Spark Game Engine — Programming Guide
 
-A comprehensive developer guide for building **2D and 3D games** with Spark — a **C++23** engine using GLFW, Vulkan, ECS-style entities, custom physics, AI modules, and retained-mode GUI.
+A comprehensive developer guide for building **2D and 3D games** with Spark — a **C++23** engine using GLFW, Vulkan, ECS-style entities, custom physics, AI modules, retained-mode GUI, and optional **Dear ImGui** tool UI.
 
 ## Who This Guide Is For
 
@@ -19,11 +19,11 @@ A comprehensive developer guide for building **2D and 3D games** with Spark — 
 - Vectors, matrices, basic rendering concepts
 - Spark repository cloned locally
 
-## Eight Parts (46 Chapters)
+## Eight Parts (47 Chapters)
 
 | Part | Folder | Focus |
 |------|--------|-------|
-| **1** | `1-overview-architecture/` | Engine loop, interfaces, ECS, **component reference**, render contract |
+| **1** | `1-overview-architecture/` | Engine loop, interfaces, ECS, **component reference**, **UI toolkits**, render contract |
 | **2** | `2-2d-graphics/` | Sprites, cameras, tilemaps, 2D pipeline |
 | **3** | `3-3d-graphics/` | Meshes, PBR, lighting, skinning, terrain |
 | **4** | `4-ai/` | Blackboard, FSM, GOAP, pathfinding, steering |

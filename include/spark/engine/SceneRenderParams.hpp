@@ -235,6 +235,26 @@ struct ScreenRectDraw {
     SceneBlendMode blendMode = kSceneBlendModeDefault;
 };
 
+/** Textured quad in framebuffer pixels (Y downward). Rendered in the UI pass between solids and text. */
+struct ScreenSpriteDraw {
+    float x = 0.0F;
+    float y = 0.0F;
+    float width = 0.0F;
+    float height = 0.0F;
+    /** (minU, minV, maxU, maxV) */
+    Vector4 uvRect{0.0F, 0.0F, 1.0F, 1.0F};
+    std::int32_t textureLayer = -1;
+    Vector3 tint{1.0F, 1.0F, 1.0F};
+    float alpha = 1.0F;
+    bool clipEnabled = false;
+    float clipX = 0.0F;
+    float clipY = 0.0F;
+    float clipW = 0.0F;
+    float clipH = 0.0F;
+    std::uint32_t paintOrder = 0;
+    SceneBlendMode blendMode = kSceneBlendModeDefault;
+};
+
 /** One line of UI text in framebuffer pixels (Y downward). Uses SceneRenderParams::uiFont when drawing. */
 struct ScreenTextDraw {
     Utf8String text{};
@@ -398,18 +418,24 @@ struct SceneRenderParams {
     SharedPtr<Font> uiBoldFont{};
     /** Solid quads (panels, control chrome). */
     Array<ScreenRectDraw> screenRects;
+    /** Textured UI quads (skin sprites, icons). Drawn after rects, before text, per layer. */
+    static constexpr std::uint32_t MaxUiTextures = 16;
+    Array<SharedPtr<Texture2D>> uiTextures;
+    Array<ScreenSpriteDraw> screenSprites;
     /** Screen-space labels (e.g. from <c>GuiPaintContext::DrawText</c>). */
     Array<ScreenTextDraw> screenTexts;
     /**
      * Optional layer after all main <c>screenRects</c> and <c>screenTexts</c> (solid pass then text pass).
      */
     Array<ScreenRectDraw> screenOverlayRects;
+    Array<ScreenSpriteDraw> screenOverlaySprites;
     Array<ScreenTextDraw> screenOverlayTexts;
     /**
      * Final UI layer after overlay (solid pass then text in <c>VulkanRenderer::RecordScreenUi</c>). Used for
      * e.g. dropdown lists so they composite on top without incorrect blending against semi-transparent parents.
      */
     Array<ScreenRectDraw> screenLateRects;
+    Array<ScreenSpriteDraw> screenLateSprites;
     Array<ScreenTextDraw> screenLateTexts;
     /** Increments for each emitted <c>ScreenRectDraw</c> / <c>ScreenTextDraw</c>; reset when clearing UI lists. */
     std::uint32_t uiPaintOrderNext = 0;

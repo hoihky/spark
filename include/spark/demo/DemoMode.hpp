@@ -13,12 +13,10 @@ constexpr float kCubeSpinRadPerSec = TwoPi * 0.35F;
 enum class DemoMode : std::uint8_t {
     Menu,
     ThreeD,
-    GuiShowcase,
     Sky,
     Particles,
     Terrain,
     Character,
-    TwoD,
     Platformer2D,
     BroadPhase2D,
     Maze3D,
@@ -32,7 +30,7 @@ enum class DemoMode : std::uint8_t {
     Connect3,
     SpaceInvaders2D,
     RenderLayers2D,
-    ComponentShowcase,
+    ImGuiShowcase,
 };
 
 }  // namespace Spark

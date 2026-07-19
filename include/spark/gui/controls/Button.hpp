@@ -39,6 +39,10 @@ public:
     /** Solid fill, no drop shadow — avoids see-through rows over 3D (e.g. scene editor lists). */
     void SetOpaqueSurface(bool v) noexcept { opaqueSurface = v; }
 
+    /** When true and the canvas has a <c>GuiSkin</c>, paints button states from skin sprites instead of theme gradients. */
+    void SetPreferSkinChrome(bool v) noexcept { preferSkinChrome = v; }
+    [[nodiscard]] bool GetPreferSkinChrome() const noexcept { return preferSkinChrome; }
+
     void Paint(GuiPaintContext& ctx) const override;
     void NotifyClick(const GuiFrameInput& in, GuiCanvasComponent& canvas) override;
 
@@ -50,6 +54,7 @@ private:
     bool labelBold = false;
     bool accentSelected = false;
     bool opaqueSurface = false;
+    bool preferSkinChrome = false;
     SharedPtr<Texture2D> iconTexture{};
     std::function<void()> onClick{};
     std::function<void(const GuiFrameInput&, GuiCanvasComponent&)> onClickWithFrame{};

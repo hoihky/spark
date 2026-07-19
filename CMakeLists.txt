@@ -315,6 +315,8 @@ set(SHADER_SOURCES
         ${SHADER_DIR}/text.frag
         ${SHADER_DIR}/ui_solid.vert
         ${SHADER_DIR}/ui_solid.frag
+        ${SHADER_DIR}/ui_sprite.vert
+        ${SHADER_DIR}/ui_sprite.frag
         ${SHADER_DIR}/tonemap.vert
         ${SHADER_DIR}/tonemap.frag
         ${SHADER_DIR}/post_process.frag
@@ -400,6 +402,8 @@ if (EXISTS "${SPARK_KENNEY_PLATFORMER_DIR}/platformChar_idle.png")
     file(COPY "${SPARK_KENNEY_PLATFORMER_DIR}" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/sprites")
 endif ()
 
+option(SPARK_ENABLE_IMGUI "Integrate Dear ImGui (docking branch) for immediate-mode tool UI" ON)
+
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/spark_config.hpp.in
         ${CMAKE_CURRENT_BINARY_DIR}/include/spark/config.hpp
@@ -415,7 +419,6 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/SparkShellDemo.cpp
         src/spark/demo/ShellDemoSceneUtil.cpp
         src/spark/demo/ShellDemoUi.cpp
-        src/spark/demo/TwoDDemo.cpp
         src/spark/demo/ThreeDDemo.cpp
         src/spark/demo/ToonShadingDemo.cpp
         src/spark/demo/MaterialShowcase3DDemo.cpp
@@ -439,7 +442,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/Maze3DDemo.cpp
         src/spark/demo/SteeringShowcase3DDemo.cpp
         src/spark/demo/SceneEditor3DDemo.cpp
-        src/spark/demo/ComponentShowcaseDemo.cpp
+        src/spark/demo/ImGuiShowcaseDemo.cpp
 )
 
 set(SPARK_ENGINE_EDITOR_SOURCES
@@ -524,6 +527,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gui/TextEditShared.cpp
         src/spark/gui/EditorLayoutStore.cpp
         src/spark/gui/GuiPaintContext.cpp
+        src/spark/gui/GuiSpriteSlice.cpp
         src/spark/gui/GuiTheme.cpp
         src/spark/gui/GuiThemeCatalog.cpp
         src/spark/gui/Widget.cpp
@@ -546,6 +550,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gui/controls/EditorSidebarLayout.cpp
         src/spark/gui/controls/GridPanel.cpp
         src/spark/gui/controls/GroupBox.cpp
+        src/spark/gui/controls/Image.cpp
         src/spark/gui/controls/Label.cpp
         src/spark/gui/controls/List.cpp
         src/spark/gui/controls/MenuBar.cpp
@@ -571,6 +576,9 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gui/controls/WrapPanel.cpp
         src/spark/gui/controls/WrappingLabel.cpp
         src/spark/gui/GuiScene.cpp
+        src/spark/gui/toolkit/GuiToolkitSettings.cpp
+        src/spark/imgui/ImGuiLayerRegistry.cpp
+        src/spark/imgui/ImGuiLayerFactory.cpp
         src/spark/render/platform/window.cpp
         src/spark/render/core/VulkanDeviceContext.cpp
         src/spark/render/core/VulkanFrameCapture.cpp
@@ -739,6 +747,13 @@ target_link_libraries(SparkEngine PUBLIC
         glfw
         Vulkan::Vulkan
 )
+
+if (SPARK_ENABLE_IMGUI)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkImGui.cmake)
+    spark_setup_imgui(SparkEngine)
+else ()
+    target_compile_definitions(SparkEngine PUBLIC SPARK_ENABLE_IMGUI=0)
+endif ()
 
 if (APPLE)
     target_link_libraries(SparkEngine PUBLIC

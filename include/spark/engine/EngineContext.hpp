@@ -7,6 +7,7 @@ namespace Spark {
 class Window;
 class IFramePresenter;
 class IInput;
+class IImGuiLayer;
 class SoundEngine;
 class Scene;
 
@@ -16,6 +17,7 @@ public:
     EngineContext(Window& window, IFramePresenter& presenter, IInput& input, SoundEngine& audio);
 
     void SetSceneBinding(Scene* scene) noexcept;
+    void BindImGuiLayer(IImGuiLayer& layer) noexcept;
 
     [[nodiscard]] Window& GetWindow() override;
     [[nodiscard]] IFramePresenter& GetFramePresenter() override;
@@ -24,6 +26,7 @@ public:
     void SetSceneRenderParams(const SceneRenderParams& params) override;
     [[nodiscard]] SoundEngine* TryGetSoundEngine() noexcept override;
     [[nodiscard]] Scene* TryGetScene() noexcept override;
+    [[nodiscard]] IImGuiLayer* TryGetImGuiLayer() noexcept override;
 
 private:
     Window& window;
@@ -31,6 +34,7 @@ private:
     IInput& input;
     SoundEngine& audio;
     Scene* sceneBinding = nullptr;
+    IImGuiLayer* imguiLayerBinding = nullptr;
 };
 
 }  // namespace Spark

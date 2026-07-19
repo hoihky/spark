@@ -1,8 +1,10 @@
 # GUI System & Game Editor — Roadmap & Tracked Tasks
 
-Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engine authoring tools** (scene, material, animation, scripting) and an **integrated editor** comparable in *workflow* to Unity, Unreal Editor, or Godot 4.5+ — built on Spark’s Vulkan forward renderer and ECS, not by adopting ImGui as the primary UI stack.
+Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engine authoring tools** (scene, material, animation, scripting) and an **integrated editor** comparable in *workflow* to Unity, Unreal Editor, or Godot 4.5+ — built on Spark’s Vulkan forward renderer and ECS.
 
-**Related:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.9 / §12, [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) (runtime GUI API only), [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md), demo **#12** `SceneEditor3DDemo`.
+**Dear ImGui** (`SPARK_ENABLE_IMGUI`) is available as an **optional immediate-mode layer** for internal tools and the docking demo (#19); retained GUI remains the primary stack for shipped menus and `SparkEditor`.
+
+**Related:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.9–§5.10 / §12, [`programming-guide/1-overview-architecture/08-ui-and-toolkits.md`](programming-guide/1-overview-architecture/08-ui-and-toolkits.md), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md), [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md), demo **#10** `SceneEditor3DDemo`.
 
 ---
 
@@ -50,11 +52,11 @@ Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engin
 
 | Consumer | What it proves |
 |----------|----------------|
-| **Shell menu (#0)** | `LauncherMenuLayout`, `List`, themes |
-| **GUI showcase (#1)** | Full control gallery (`BuildGuiShowcaseUi`) |
-| **Scene editor (#12)** | `SceneEditor3DDemo` — left strip UI + 3D pick/place (prototype) |
+| **Shell menu** | `LauncherMenuLayout`, `List`, themes |
+| **Scene editor (#10)** | `SceneEditor3DDemo` — left strip UI + 3D pick/place (prototype) |
+| **Dear ImGui (#19)** | `ImGuiShowcaseDemo` — docking tool panels, hotkey **G** |
 | **SparkEditor** | `spark_editor/SparkEditor` — dock shell, hierarchy/inspector stubs, fly viewport (`EditorApplication`) |
-| **Shell UI** | C++ `ShellDemoUi` / `GuiCanvasComponent` — launcher + showcase |
+| **Shell UI** | C++ `ShellDemoUi` / `GuiCanvasComponent` — launcher menu |
 
 ### 1.4 Scene editor prototype (not a general editor)
 
@@ -368,7 +370,8 @@ Adjust if team size > 3 or if editor is **tools-only** (no ship-as-product).
 | `include/spark/gui/GuiPaintContext.hpp` | Draw API |
 | `src/spark/demo/SceneEditor3DDemo.cpp` | Editor prototype |
 | `include/spark/demo/SceneEditor3DDemo_detail.hpp` | Sidebar layout |
-| `src/spark/demo/SparkShellDemo.cpp` | GUI showcase |
+| `src/spark/demo/SparkShellDemo.cpp` | Demo launcher shell |
+| `src/spark/demo/ImGuiShowcaseDemo.cpp` | Dear ImGui docking demo (#19) |
 | *(removed)* | Legacy `ShellUiNative.cpp` (C# UI builders) |
 | `include/spark/ecs/components/ui/GuiCanvasComponent.hpp` | Canvas ECS |
 
