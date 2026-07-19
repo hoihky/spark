@@ -1,5 +1,7 @@
 #include "spark/demo/Tetris2DDemo.hpp"
 
+#include "spark/audio/SoundFileLoader.hpp"
+#include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
@@ -130,10 +132,26 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         RandSeed(timingHackU32(context));
         ResetGame();
         context.GetInput().SetCursorCaptured(false);
+
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
+        audioEngine = context.TryGetSoundEngine();
+        if (audioEngine != nullptr && audioEngine->IsRunning()) {
+            if (Spark::SharedPtr<Spark::SoundClip> bgm =
+                        TryLoadSoundClipFromBundledAsset("assets/audio/JDSherbert-LinkCable.wav")) {
+                audioEngine->SetBackgroundMusic(bgm, 0.30F, true);
+            }
+        }
     }
 
 void Tetris2DDemo::Unload(Spark::GameWorld& w)
 {
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);

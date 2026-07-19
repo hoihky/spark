@@ -19,6 +19,7 @@
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/audio/SoundEngine.hpp"
 #include "spark/scene/Scene.hpp"
 
 #include <algorithm>
@@ -92,6 +93,8 @@ private:
     int gemsCollected = 0;
     int gemsTotal = 0;
     Spark::CharacterCameraRig rig{};
+
+    Spark::SoundEngine* audioEngine = nullptr;
 
 };
 

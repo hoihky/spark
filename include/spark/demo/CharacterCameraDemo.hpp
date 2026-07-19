@@ -2,10 +2,10 @@
 
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
-#include "spark/ecs/components/audio/AudioListenerComponent.hpp"
-#include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 
 namespace Spark {
 
@@ -43,6 +43,8 @@ private:
             float range);
 
     void ApplyAvatarModel(CharAvatarModel model);
+
+    void SpawnForestTrees(Spark::GameWorld& w);
 
     [[nodiscard]] const Spark::SkinnedGltfAsset& CachedAvatarAsset(CharAvatarModel model) const noexcept;
 
@@ -83,11 +85,9 @@ private:
     Spark::Utf8String characterAvatarHudName{};
     Spark::GameObject* fpsHudObject = nullptr;
     Spark::TextOverlayComponent* fpsText = nullptr;
-    Spark::GameObject* audioListenerGo = nullptr;
-    Spark::TransformComponent* audioListenerTr = nullptr;
-    Spark::SoundCueComponent* footstepCue = nullptr;
-    bool wasMovingLastFrame = false;
+    Spark::CharacterController3DComponent* characterController = nullptr;
     float fpsSmoothed = 0.0F;
+    Spark::SoundEngine* audioEngine = nullptr;
 
 };
 

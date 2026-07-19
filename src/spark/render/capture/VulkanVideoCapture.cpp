@@ -118,7 +118,7 @@ bool VulkanVideoCapture::BeginRecording(
     if (!recorder->Begin(settings, extent.width, extent.height)) {
         return false;
     }
-    recorder = MoveTemp(recorder);
+    this->recorder = MoveTemp(recorder);
     this->settings = settings;
     recordStartPts = 0.0;
     EnsureBuffer(extent);

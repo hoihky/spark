@@ -93,4 +93,11 @@ struct PlatformerEnemyAtlasResult {
 /** Small additive projectile sprite (used when no dedicated PNG is bundled). */
 [[nodiscard]] Texture2D MakeEnemyBulletTextureFallback();
 
+/** Cyan player shot — visually distinct from enemy projectiles. */
+[[nodiscard]] Texture2D MakePlayerBulletTextureFallback();
+
+[[nodiscard]] bool TryLoadSpaceShooterShips(Texture2D& out) noexcept;
+
+[[nodiscard]] bool TryLoadSpaceShooterProjectiles(Texture2D& out) noexcept;
+
 }  // namespace Spark::DemoAssets

@@ -27,6 +27,22 @@ namespace {
     return true;
 }
 
+[[nodiscard]] std::int32_t ReadS24Le(const std::uint8_t* bytes) noexcept {
+    std::int32_t v = static_cast<std::int32_t>(bytes[0]) | (static_cast<std::int32_t>(bytes[1]) << 8) |
+            (static_cast<std::int32_t>(bytes[2]) << 16);
+    if ((v & 0x800000) != 0) {
+        v |= ~0xFFFFFF;
+    }
+    return v;
+}
+
+[[nodiscard]] std::size_t BytesPerPcmSample(const std::uint16_t bitsPerSample) noexcept {
+    if (bitsPerSample == 24) {
+        return 3U;
+    }
+    return static_cast<std::size_t>(bitsPerSample / 8U);
+}
+
 }  // namespace
 
 SharedPtr<SoundClip> TryLoadSoundClipFromWavFile(const char* path) {
@@ -80,15 +96,10 @@ SharedPtr<SoundClip> TryLoadSoundClipFromWavFile(const char* path) {
             }
             haveFmt = true;
         } else if (std::memcmp(id, "data", 4) == 0) {
-            dataChunk.Clear();
-            dataChunk.Reserve(sz);
-            for (std::uint32_t i = 0; i < sz; ++i) {
-                int c = std::fgetc(f);
-                if (c < 0) {
-                    std::fclose(f);
-                    return SharedPtr<SoundClip>();
-                }
-                dataChunk.PushBack(static_cast<std::uint8_t>(c));
+            dataChunk.Resize(sz);
+            if (std::fread(dataChunk.GetData(), 1, sz, f) != sz) {
+                std::fclose(f);
+                return SharedPtr<SoundClip>();
             }
             break;
         } else {
@@ -102,36 +113,77 @@ SharedPtr<SoundClip> TryLoadSoundClipFromWavFile(const char* path) {
     }
     std::fclose(f);
 
-    if (!haveFmt || dataChunk.IsEmpty() || audioFormat != 1 || bitsPerSample != 16 ||
+    if (!haveFmt || dataChunk.IsEmpty() || audioFormat != 1 ||
+            (bitsPerSample != 8 && bitsPerSample != 16 && bitsPerSample != 24) ||
             (numChannels != 1 && numChannels != 2)) {
         return SharedPtr<SoundClip>();
     }
+    const std::size_t bytesPerSample = BytesPerPcmSample(bitsPerSample);
+    const std::size_t frameBytes = bytesPerSample * static_cast<std::size_t>(numChannels);
     const std::size_t dataBytes = dataChunk.GetSize();
-    const std::size_t sampleCount = dataBytes / sizeof(std::int16_t) / numChannels;
+    if (frameBytes == 0U || (dataBytes % frameBytes) != 0U) {
+        return SharedPtr<SoundClip>();
+    }
+    const std::size_t sampleCount = dataBytes / frameBytes;
     if (sampleCount == 0) {
         return SharedPtr<SoundClip>();
     }
 
     Array<float> stereo;
     stereo.Reserve(sampleCount * 2U);
-    const float inv = 1.0F / 32768.0F;
     const std::uint8_t* p = dataChunk.GetData();
-    if (numChannels == 1) {
-        for (std::size_t i = 0; i < sampleCount; ++i) {
-            std::int16_t v = 0;
-            std::memcpy(&v, p + i * sizeof(std::int16_t), sizeof(v));
-            const float s = static_cast<float>(v) * inv;
-            stereo.PushBack(s);
-            stereo.PushBack(s);
+    if (bitsPerSample == 16) {
+        const float inv = 1.0F / 32768.0F;
+        if (numChannels == 1) {
+            for (std::size_t i = 0; i < sampleCount; ++i) {
+                std::int16_t v = 0;
+                std::memcpy(&v, p + i * sizeof(std::int16_t), sizeof(v));
+                const float s = static_cast<float>(v) * inv;
+                stereo.PushBack(s);
+                stereo.PushBack(s);
+            }
+        } else {
+            for (std::size_t i = 0; i < sampleCount; ++i) {
+                std::int16_t lv = 0;
+                std::int16_t rv = 0;
+                std::memcpy(&lv, p + i * 2U * sizeof(std::int16_t), sizeof(lv));
+                std::memcpy(&rv, p + i * 2U * sizeof(std::int16_t) + sizeof(lv), sizeof(rv));
+                stereo.PushBack(static_cast<float>(lv) * inv);
+                stereo.PushBack(static_cast<float>(rv) * inv);
+            }
+        }
+    } else if (bitsPerSample == 24) {
+        const float inv = 1.0F / 8388608.0F;
+        if (numChannels == 1) {
+            for (std::size_t i = 0; i < sampleCount; ++i) {
+                const float s = static_cast<float>(ReadS24Le(p + i * 3U)) * inv;
+                stereo.PushBack(s);
+                stereo.PushBack(s);
+            }
+        } else {
+            for (std::size_t i = 0; i < sampleCount; ++i) {
+                const std::size_t base = i * 6U;
+                const float l = static_cast<float>(ReadS24Le(p + base)) * inv;
+                const float r = static_cast<float>(ReadS24Le(p + base + 3U)) * inv;
+                stereo.PushBack(l);
+                stereo.PushBack(r);
+            }
         }
     } else {
-        for (std::size_t i = 0; i < sampleCount; ++i) {
-            std::int16_t lv = 0;
-            std::int16_t rv = 0;
-            std::memcpy(&lv, p + i * 2U * sizeof(std::int16_t), sizeof(lv));
-            std::memcpy(&rv, p + i * 2U * sizeof(std::int16_t) + sizeof(lv), sizeof(rv));
-            stereo.PushBack(static_cast<float>(lv) * inv);
-            stereo.PushBack(static_cast<float>(rv) * inv);
+        const float inv = 1.0F / 128.0F;
+        if (numChannels == 1) {
+            for (std::size_t i = 0; i < sampleCount; ++i) {
+                const float s = (static_cast<float>(p[i]) - 128.0F) * inv;
+                stereo.PushBack(s);
+                stereo.PushBack(s);
+            }
+        } else {
+            for (std::size_t i = 0; i < sampleCount; ++i) {
+                const float l = (static_cast<float>(p[i * 2U]) - 128.0F) * inv;
+                const float r = (static_cast<float>(p[i * 2U + 1U]) - 128.0F) * inv;
+                stereo.PushBack(l);
+                stereo.PushBack(r);
+            }
         }
     }
     auto* clip = new SoundClip(MoveTemp(stereo), sampleRate);

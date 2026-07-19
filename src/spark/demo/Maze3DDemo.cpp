@@ -1,6 +1,8 @@
 #include "spark/demo/Maze3DDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
+#include "spark/audio/SoundFileLoader.hpp"
+#include "spark/audio/SoundEngine.hpp"
 #include "spark/ai/GameAiSubsystem.hpp"
 
 namespace Spark {
@@ -499,10 +501,26 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         rig.characterRootBindOrientation = humanModelBindFix;
 
         context.GetInput().SetCursorCaptured(true);
+
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
+        audioEngine = context.TryGetSoundEngine();
+        if (audioEngine != nullptr && audioEngine->IsRunning()) {
+            if (Spark::SharedPtr<Spark::SoundClip> bgm =
+                        TryLoadSoundClipFromBundledAsset("assets/audio/Medieval_2_6_loop.wav")) {
+                audioEngine->SetBackgroundMusic(bgm, 0.28F, true);
+            }
+        }
     }
 
 void Maze3DDemo::Unload(Spark::GameWorld& w)
 {
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
         for (std::size_t i = 0; i < gemObjects.GetSize(); ++i) {
             if (gemObjects[i] != nullptr) {
                 w.DestroyGameObject(gemObjects[i]);

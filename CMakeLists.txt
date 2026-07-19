@@ -426,6 +426,11 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/CharacterCameraDemo.cpp
         src/spark/demo/BroadPhase2DDemo.cpp
         src/spark/demo/Platformer2DDemo.cpp
+        src/spark/demo/platformer2d/Platformer2DBulletPool.cpp
+        src/spark/demo/platformer2d/Platformer2DExplosionFx.cpp
+        src/spark/demo/platformer2d/Platformer2DHealthHud.cpp
+        src/spark/demo/platformer2d/Platformer2DEnemySquad.cpp
+        src/spark/demo/platformer2d/Platformer2DPlayerCombat.cpp
         src/spark/demo/Connect3Demo.cpp
         src/spark/demo/Tetris2DDemo.cpp
         src/spark/demo/SpaceInvaders2DDemo.cpp

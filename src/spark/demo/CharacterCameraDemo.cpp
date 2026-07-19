@@ -1,16 +1,136 @@
 #include "spark/demo/CharacterCameraDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
-#include "spark/demo/DemoProceduralSound.hpp"
+
+#include "spark/audio/SoundFileLoader.hpp"
+#include "spark/audio/SoundEngine.hpp"
 
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
-#include "spark/ecs/components/audio/AudioListenerComponent.hpp"
-#include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/camera/SpringArm3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
+#include "spark/physics/CharacterController3D.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <print>
 
 namespace Spark {
+
+namespace {
+
+/** Character camera demo ground: scale the built-in 64×64 m GroundPlane slot by this factor. */
+constexpr float kCharGroundLayoutScale = 3.0F;
+constexpr float kCharGroundHalfExtent = Spark::kSceneGroundHalfExtent * kCharGroundLayoutScale;
+constexpr float kCharTreeGroundInset = 8.0F;
+constexpr float kCharTreeMaxRadius = kCharGroundHalfExtent - kCharTreeGroundInset;
+/** Ground plane mesh vertices sit at Y=0 (see Mesh::CreateGroundPlane). */
+constexpr float kCharGroundPlaneY = 0.0F;
+/**
+ * Billboard tree glTF roots sit at the trunk base (local Y=0). Do not use mesh AABB min Y — crossed
+ * card geometry extends below the visible trunk and causes floating if aligned to boundsMin.
+ */
+constexpr float kTreeGroundAnchorLocalY = 0.0F;
+
+struct CharTreePlacement {
+    float x = 0.0F;
+    float z = 0.0F;
+    float yawRadians = 0.0F;
+    float targetHeightM = 4.0F;
+    bool useLargeTree = true;
+};
+
+/** Normalized XZ offset in [-1, 1] before scaling to @ref kCharTreeMaxRadius. */
+struct CharTreeLayoutSpec {
+    float normX = 0.0F;
+    float normZ = 0.0F;
+    float yawRadians = 0.0F;
+    float targetHeightM = 4.0F;
+    bool useLargeTree = true;
+};
+
+[[nodiscard]] CharTreePlacement MakeTreePlacement(const CharTreeLayoutSpec& spec) noexcept {
+    CharTreePlacement out{};
+    float x = spec.normX * kCharTreeMaxRadius;
+    float z = spec.normZ * kCharTreeMaxRadius;
+    const float radiusSq = x * x + z * z;
+    const float maxRadiusSq = kCharTreeMaxRadius * kCharTreeMaxRadius;
+    if (radiusSq > maxRadiusSq && radiusSq > 1.0e-8F) {
+        const float shrink = kCharTreeMaxRadius / std::sqrt(radiusSq);
+        x *= shrink;
+        z *= shrink;
+    }
+    out.x = x;
+    out.z = z;
+    out.yawRadians = spec.yawRadians;
+    out.targetHeightM = spec.targetHeightM;
+    out.useLargeTree = spec.useLargeTree;
+    return out;
+}
+
+[[nodiscard]] Spark::GameObject* SpawnCharacterCameraTree(
+        Spark::GameWorld& w,
+        Spark::Array<Spark::GameObject*>& roots,
+        const Spark::GltfAsset& asset,
+        const CharTreePlacement& placement,
+        const char* name) {
+    if (!asset.mesh) {
+        return nullptr;
+    }
+
+    Spark::Vector3 boundsMin{};
+    Spark::Vector3 boundsMax{};
+    float uniformScale = 1.0F;
+    if (asset.mesh->TryComputeAxisAlignedBounds(boundsMin, boundsMax)) {
+        const float height = std::max(1.0e-4F, boundsMax.y - boundsMin.y);
+        uniformScale = placement.targetHeightM / height;
+    }
+
+    Spark::GameObject* tree = w.CreateGameObject();
+    tree->GetName() = Spark::Utf8String(name);
+    Spark::TransformComponent* tr = tree->AddComponent<Spark::TransformComponent>();
+    tr->SetUniformScale(uniformScale);
+    tr->SetTranslation({
+            placement.x,
+            kCharGroundPlaneY - kTreeGroundAnchorLocalY * uniformScale,
+            placement.z});
+    tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, placement.yawRadians));
+    const Spark::Vector3 meshAlbedo =
+            asset.baseColorTexture ? Spark::Vector3::One : Spark::Vector3{0.42F, 0.68F, 0.34F};
+    tree->AddComponent<Spark::MeshComponent>(asset.mesh, Spark::SceneMeshSlot::Custom, meshAlbedo);
+    if (asset.baseColorTexture) {
+        if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>(
+                    asset.baseColorTexture, Spark::Vector3::One)) {
+            mat->SetMetallic(0.0F);
+            mat->SetRoughness(0.6F);
+        }
+    } else if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>()) {
+        mat->SetTint(meshAlbedo);
+        mat->SetMetallic(0.0F);
+        mat->SetRoughness(0.72F);
+    }
+
+    if (placement.useLargeTree) {
+        tree->AddComponent<Spark::CapsuleCollider3DComponent>(
+                0.55F,
+                6.0F,
+                Spark::CapsuleDirection3D::Y,
+                Spark::Vector3{0.0F, 3.0F, 0.0F});
+    } else {
+        tree->AddComponent<Spark::CapsuleCollider3DComponent>(
+                0.4F,
+                2.6F,
+                Spark::CapsuleDirection3D::Y,
+                Spark::Vector3{0.0F, 1.3F, 0.0F});
+    }
+
+    roots.PushBack(tree);
+    return tree;
+}
+
+}  // namespace
 
 void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
@@ -21,10 +141,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterVisualTr = nullptr;
         fpsHudObject = nullptr;
         fpsText = nullptr;
-        audioListenerGo = nullptr;
-        audioListenerTr = nullptr;
-        footstepCue = nullptr;
-        wasMovingLastFrame = false;
+        characterController = nullptr;
         playerAnimator = nullptr;
         useSkinnedAvatar = false;
         skyTransform = nullptr;
@@ -61,8 +178,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
             w.RegisterTexture(groundDiffTex, "spark/char/ground_soil");
         }
 
-        const float groundUvRepeat =
-                DemoAssets::ProceduralTextureSpanWorldUnits(Spark::kSceneGroundHalfExtent);
+        const float groundUvRepeat = DemoAssets::ProceduralTextureSpanWorldUnits(kCharGroundHalfExtent);
         groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("CharGroundMesh"));
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent, groundUvRepeat);
         w.RegisterMesh(groundAsset, kGround);
@@ -72,7 +188,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         w.RegisterMesh(unitCubeAsset, kCube);
 
         skyBoxMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("CharSkySphere"));
-        *skyBoxMesh = Spark::Mesh::CreateSkySphere(1.0F, 20, 40);
+        *skyBoxMesh = Spark::Mesh::CreateSkySphere(1.0F, 16, 32);
         skyEquirectTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("CharSkyEquirect"));
         Spark::Texture2D skyDecoded;
         if (Spark::Texture2D::TryLoadFromFile(SPARK_SKY_TEXTURE_PATH, skyDecoded)) {
@@ -100,7 +216,8 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
 
         Spark::GameObject* ground = w.CreateGameObject();
         ground->GetName() = Spark::Utf8String("CharGround");
-        ground->AddComponent<Spark::TransformComponent>();
+        Spark::TransformComponent* groundTr = ground->AddComponent<Spark::TransformComponent>();
+        groundTr->SetUniformScale(kCharGroundLayoutScale);
         ground->AddComponent<Spark::MeshComponent>(
                 groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3::One);
         if (Spark::MaterialComponent* gm = ground->AddComponent<Spark::MaterialComponent>(
@@ -108,7 +225,11 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
             gm->SetMetallic(0.0F);
             gm->SetRoughness(0.82F);
         }
+        ground->AddComponent<Spark::SceneSpatialPolicyComponent>(
+                Spark::ScenePartitionKind::BoundingVolumeHierarchy);
         roots.PushBack(ground);
+
+        SpawnForestTrees(w);
 
         characterRoot = w.CreateGameObject();
         characterRoot->GetName() = Spark::Utf8String("Player");
@@ -116,7 +237,10 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterRootTr->SetTranslation(rig.characterPosition);
         characterRootTr->SetRotation(
                 Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, rig.characterVisualYaw));
-        footstepCue = characterRoot->AddComponent<Spark::SoundCueComponent>();
+        characterController = characterRoot->AddComponent<Spark::CharacterController3DComponent>(
+                0.36F, Spark::Vector3{0.0F, 0.88F, 0.0F});
+        characterController->SetGravityScale(0.0F);
+        characterController->SetStepOffset(0.2F);
         roots.PushBack(characterRoot);
 
         characterVisualFootOffsetY = 0.0F;
@@ -188,12 +312,6 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
                         .c_str()));
         roots.PushBack(fpsHudObject);
 
-        audioListenerGo = w.CreateGameObject();
-        audioListenerGo->GetName() = Spark::Utf8String("CharAudioListener");
-        audioListenerTr = audioListenerGo->AddComponent<Spark::TransformComponent>();
-        audioListenerGo->AddComponent<Spark::AudioListenerComponent>()->SetPriority(10);
-        roots.PushBack(audioListenerGo);
-
         Spark::GameObject* springArmRig = w.CreateGameObject();
         springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
         springArmRig->SetParent(characterRoot);
@@ -206,11 +324,27 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         springArm->SetPitchRadians(-0.22F);
         roots.PushBack(springArmRig);
 
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
+        audioEngine = context.TryGetSoundEngine();
+        if (audioEngine != nullptr && audioEngine->IsRunning()) {
+            if (Spark::SharedPtr<Spark::SoundClip> bgm =
+                        Spark::TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.mp3")) {
+                audioEngine->SetBackgroundMusic(bgm, 0.28F, true);
+            }
+        }
+
         context.GetInput().SetCursorCaptured(true);
     }
 
 void CharacterCameraDemo::Unload(Spark::GameWorld& w)
 {
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -223,10 +357,7 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         characterVisualTr = nullptr;
         fpsHudObject = nullptr;
         fpsText = nullptr;
-        audioListenerGo = nullptr;
-        audioListenerTr = nullptr;
-        footstepCue = nullptr;
-        wasMovingLastFrame = false;
+        characterController = nullptr;
         playerAnimator = nullptr;
         charAnimFsm = nullptr;
         characterSkinnedMesh = nullptr;
@@ -272,7 +403,34 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                 rig.AddLook(in.GetMouseDeltaX(), in.GetMouseDeltaY());
             }
         }
+        const Spark::Vector3 posBeforeWalk = rig.characterPosition;
         rig.ProcessWalk(in, timing.deltaTimeSeconds);
+        Spark::Vector3 wishVel = Spark::Vector3::Zero;
+        if (timing.deltaTimeSeconds > 1.0e-6F) {
+            wishVel = (rig.characterPosition - posBeforeWalk) * (1.0F / timing.deltaTimeSeconds);
+            wishVel.y = 0.0F;
+        }
+        rig.characterPosition = posBeforeWalk;
+
+        if (characterController != nullptr && characterRoot != nullptr && characterRootTr != nullptr) {
+            characterRootTr->SetTranslation(rig.characterPosition);
+            characterController->SetMoveInput(wishVel);
+            Spark::CharacterController3DSettings ccSettings{};
+            ccSettings.gravityY = 0.0F;
+            ccSettings.maxFallSpeed = 0.0F;
+            ccSettings.broadPhaseCellSize = 4.0F;
+            Spark::SimulateCharacterControllers3D(characterRoot->GetWorld(), timing, ccSettings);
+            const Spark::Vector3 resolved = characterRootTr->GetLocalTransform().translation;
+            rig.characterPosition.x = resolved.x;
+            rig.characterPosition.y = rig.groundY;
+            rig.characterPosition.z = resolved.z;
+            characterRootTr->SetTranslation(rig.characterPosition);
+        } else if (timing.deltaTimeSeconds > 1.0e-6F) {
+            rig.characterPosition.x = posBeforeWalk.x + wishVel.x * timing.deltaTimeSeconds;
+            rig.characterPosition.z = posBeforeWalk.z + wishVel.z * timing.deltaTimeSeconds;
+            rig.characterPosition.y = rig.groundY;
+        }
+
         const bool moving = in.IsKeyDown(GLFW_KEY_W) || in.IsKeyDown(GLFW_KEY_S) || in.IsKeyDown(GLFW_KEY_A)
                 || in.IsKeyDown(GLFW_KEY_D);
         const bool sprint = moving
@@ -330,19 +488,6 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             characterRootTr->SetRotation(
                     useSkinnedAvatar ? (qYaw * humanModelBindFix).Normalized() : qYaw);
         }
-        if (audioListenerTr != nullptr) {
-            const Spark::Vector3 camPos = rig.CameraWorldPosition();
-            const Spark::Vector3 fwd = rig.ForwardWorld().Normalized();
-            audioListenerTr->SetTranslation(camPos);
-            if (fwd.LengthSquared() > 1.0e-8F) {
-                const float yaw = std::atan2(fwd.x, -fwd.z);
-                audioListenerTr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, yaw));
-            }
-        }
-        if (moving && !wasMovingLastFrame && footstepCue != nullptr && characterRoot != nullptr) {
-            DemoAudio::QueueCue(*characterRoot, DemoSfx::ClipPhysicsThrow(), 0.22F);
-        }
-        wasMovingLastFrame = moving;
         if (fpsText != nullptr) {
             const float dt = timing.deltaTimeSeconds;
             const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
@@ -419,6 +564,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
         params.lightColor = {1.0F, 0.97F, 0.9F};
         params.lightIntensity = 0.92F;
         params.ambientColor = {0.10F, 0.12F, 0.15F};
+        params.punctualShadowsEnabled = false;
 
         params.draws.Clear();
         params.sceneTextures.Clear();
@@ -432,7 +578,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
         params.screenLateTexts.Clear();
         params.uiFont = world.GetUiFont();
         params.uiBoldFont = world.GetUiBoldFont();
-        params.draws.Reserve(48);
+        params.draws.Reserve(160);
 
         scene.ForEachPointLight([&params](const Spark::PointLightComponent& pl, const Spark::Matrix4& worldMat) {
             if (params.pointLights.GetSize() >= Spark::SceneRenderParams::MaxPointLights) {
@@ -464,7 +610,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
-        drawList.Reserve(32);
+        drawList.Reserve(128);
 
         scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
                                  const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
@@ -485,7 +631,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             drawList.PushBack(item);
         });
 
-        scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
+        scene.ForEachDrawableInViewFrustum(viewProj, [&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
                                      const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
             if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
                 return;
@@ -495,6 +641,9 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             item.mesh = mc.GetSlot();
             if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
                 item.customMesh = mc.GetMesh();
+            }
+            if (mc.GetSlot() == Spark::SceneMeshSlot::GroundPlane) {
+                item.doubleSided = true;
             }
             Spark::Vector3 alb = mc.GetAlbedo();
             item.textureLayer = -1;
@@ -591,7 +740,7 @@ void CharacterCameraDemo::UpdateCharacterSkyTransform()
         }
         skyTransform->SetTranslation(rig.CameraWorldPosition());
         skyTransform->SetRotation(Spark::Quaternion::Identity);
-        skyTransform->SetUniformScale(98.0F);
+        skyTransform->SetUniformScale(98.0F * kCharGroundLayoutScale);
     }
 
 void CharacterCameraDemo::AddPointLight(
@@ -605,7 +754,7 @@ void CharacterCameraDemo::AddPointLight(
         light->GetName() = Spark::Utf8String("CharPointLight");
         Spark::TransformComponent* tr = light->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation(position);
-        light->AddComponent<Spark::PointLightComponent>(color, intensity, range)->SetCastsShadow(true);
+        light->AddComponent<Spark::PointLightComponent>(color, intensity, range)->SetCastsShadow(false);
         roots.PushBack(light);
     }
 
@@ -615,6 +764,93 @@ const Spark::SkinnedGltfAsset& CharacterCameraDemo::CachedAvatarAsset(const Char
 
 bool CharacterCameraDemo::IsAvatarAssetReady(const CharAvatarModel model) const noexcept {
     return model == CharAvatarModel::Fox ? foxAssetReady : cesiumAssetReady;
+}
+
+void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
+    Spark::Utf8String treeLargePath(SPARK_ASSETS_DIR);
+    treeLargePath.AppendUtf8("/models/Tree_1_C_Color1.gltf");
+    Spark::Utf8String treeSmallPath(SPARK_ASSETS_DIR);
+    treeSmallPath.AppendUtf8("/models/Tree_3_A_Color1.gltf");
+
+    const Spark::GltfAsset treeLarge = w.LoadGltf(treeLargePath.CStr());
+    const Spark::GltfAsset treeSmall = w.LoadGltf(treeSmallPath.CStr());
+    if (!treeLarge.mesh && !treeSmall.mesh) {
+        std::println(
+                std::cerr,
+                "Spark: CharacterCamera — tree glTF not loaded from {} / {}",
+                treeLargePath.CStr(),
+                treeSmallPath.CStr());
+        return;
+    }
+
+    if (treeLarge.baseColorTexture) {
+        w.RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_large_basecolor");
+    }
+    if (treeSmall.baseColorTexture) {
+        w.RegisterTexture(treeSmall.baseColorTexture, "spark/char/tree_small_basecolor");
+    } else if (treeLarge.baseColorTexture) {
+        w.RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_small_basecolor");
+    }
+
+    static constexpr CharTreeLayoutSpec kTreeLayouts[] = {
+            {0.72F, 0.55F, 0.35F, 6.8F, true},
+            {-0.68F, 0.58F, 1.85F, 6.2F, true},
+            {0.64F, -0.22F, 2.65F, 7.0F, true},
+            {-0.62F, -0.66F, 4.1F, 6.5F, true},
+            {0.22F, 0.74F, 5.2F, 6.9F, true},
+            {-0.28F, -0.72F, 0.9F, 6.4F, true},
+            {0.58F, -0.62F, 3.4F, 6.6F, true},
+            {-0.70F, 0.18F, 2.1F, 7.1F, true},
+            {0.52F, -0.70F, 1.4F, 6.7F, true},
+            {-0.16F, 0.76F, 3.8F, 6.3F, true},
+            {0.48F, 0.38F, 0.35F, 6.8F, true},
+            {-0.52F, 0.32F, 1.85F, 6.2F, true},
+            {0.55F, -0.18F, 2.65F, 7.0F, true},
+            {-0.44F, -0.46F, 4.1F, 6.5F, true},
+            {0.18F, 0.58F, 5.2F, 6.9F, true},
+            {-0.24F, -0.54F, 0.9F, 6.4F, true},
+            {0.42F, -0.48F, 3.4F, 6.6F, true},
+            {-0.58F, 0.12F, 2.1F, 7.1F, true},
+            {0.34F, 0.16F, 1.2F, 3.6F, false},
+            {-0.36F, 0.22F, 0.6F, 3.4F, false},
+            {0.26F, -0.30F, 4.8F, 3.5F, false},
+            {-0.22F, -0.26F, 3.1F, 3.3F, false},
+            {0.38F, -0.10F, 2.4F, 3.7F, false},
+            {-0.40F, -0.06F, 5.6F, 3.5F, false},
+            {0.14F, 0.42F, 1.7F, 3.6F, false},
+            {-0.30F, 0.48F, 0.2F, 3.4F, false},
+            {0.50F, 0.06F, 3.9F, 3.8F, false},
+            {-0.12F, 0.52F, 2.8F, 3.5F, false},
+            {0.32F, -0.38F, 4.4F, 3.6F, false},
+            {-0.46F, -0.32F, 1.5F, 3.7F, false},
+            {0.44F, 0.62F, 2.2F, 3.5F, false},
+            {-0.56F, 0.42F, 4.6F, 3.6F, false},
+            {0.66F, 0.30F, 1.1F, 3.7F, false},
+            {-0.34F, -0.60F, 3.3F, 3.4F, false},
+            {0.10F, -0.50F, 5.0F, 3.8F, false},
+            {-0.48F, -0.16F, 0.8F, 3.5F, false},
+    };
+
+    std::size_t spawned = 0;
+    for (const CharTreeLayoutSpec& layout : kTreeLayouts) {
+        const CharTreePlacement placement = MakeTreePlacement(layout);
+        Spark::GltfAsset asset = placement.useLargeTree ? treeLarge : treeSmall;
+        if (!asset.baseColorTexture && treeLarge.baseColorTexture) {
+            asset.baseColorTexture = treeLarge.baseColorTexture;
+        }
+        const char* name = placement.useLargeTree ? "CharTreeLarge" : "CharTreeSmall";
+        if (SpawnCharacterCameraTree(w, roots, asset, placement, name) != nullptr) {
+            ++spawned;
+        }
+    }
+
+    std::println(
+            std::cerr,
+            "Spark: CharacterCamera — spawned {} trees (large mesh={}, small mesh={}, forest texture={})",
+            spawned,
+            treeLarge.mesh ? "ok" : "missing",
+            treeSmall.mesh ? "ok" : "missing",
+            (treeLarge.baseColorTexture || treeSmall.baseColorTexture) ? "ok" : "missing");
 }
 
 void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {

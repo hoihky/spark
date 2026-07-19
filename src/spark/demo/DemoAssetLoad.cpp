@@ -203,6 +203,17 @@ bool TryLoadKenneyTinyDungeonAtlas(Texture2D& out) noexcept {
             "KenneyTinyDungeonPacked");
 }
 
+bool TryLoadSpaceShooterShips(Texture2D& out) noexcept {
+    return TryLoadRelativeAsset(out, "/sprites/SpaceShooterAssets/Ships.png", "SpaceShooterShips");
+}
+
+bool TryLoadSpaceShooterProjectiles(Texture2D& out) noexcept {
+    return TryLoadRelativeAsset(
+            out,
+            "/sprites/SpaceShooterAssets/Projectiles.png",
+            "SpaceShooterProjectiles");
+}
+
 bool TryLoadBrickTexture(Texture2D& out) noexcept {
     return TryLoadRelativeAsset(out, "/textures/bricks.png", "KenneyBricks");
 }
@@ -440,6 +451,33 @@ Texture2D MakeEnemyBulletTextureFallback() {
             bytes[i] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.55F + 0.45F * core), 0.0F, 255.0F));
             bytes[i + 1U] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.35F + 0.45F * halo), 0.0F, 255.0F));
             bytes[i + 2U] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.18F + 0.25F * core), 0.0F, 255.0F));
+            bytes[i + 3U] = static_cast<std::uint8_t>(std::clamp(a * 255.0F, 0.0F, 255.0F));
+        }
+    }
+    t.SetPixels(kW, kH, MoveTemp(bytes));
+    return t;
+}
+
+Texture2D MakePlayerBulletTextureFallback() {
+    constexpr std::uint32_t kW = 12U;
+    constexpr std::uint32_t kH = 5U;
+    Texture2D t(Utf8String("PlatPlayerBullet"));
+    Array<std::uint8_t> bytes;
+    bytes.Resize(static_cast<std::size_t>(kW) * static_cast<std::size_t>(kH) * 4U);
+    for (std::uint32_t y = 0; y < kH; ++y) {
+        for (std::uint32_t x = 0; x < kW; ++x) {
+            const float cx = (static_cast<float>(kW) - 1.0F) * 0.5F;
+            const float cy = (static_cast<float>(kH) - 1.0F) * 0.5F;
+            const float dx = (static_cast<float>(x) - cx) / (cx + 0.25F);
+            const float dy = (static_cast<float>(y) - cy) / (cy + 0.45F);
+            const float r2 = dx * dx + dy * dy;
+            const float core = std::exp(-r2 * 3.4F);
+            const float halo = std::exp(-r2 * 1.2F);
+            const float a = std::clamp(core * 0.98F + halo * 0.28F, 0.0F, 1.0F);
+            const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(kW) + x) * 4U;
+            bytes[i] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.25F + 0.75F * core), 0.0F, 255.0F));
+            bytes[i + 1U] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.55F + 0.45F * halo), 0.0F, 255.0F));
+            bytes[i + 2U] = static_cast<std::uint8_t>(std::clamp(255.0F * (0.95F * core + 0.35F * halo), 0.0F, 255.0F));
             bytes[i + 3U] = static_cast<std::uint8_t>(std::clamp(a * 255.0F, 0.0F, 255.0F));
         }
     }

@@ -7,6 +7,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/audio/SoundEngine.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
 
 #include <algorithm>
@@ -148,6 +149,8 @@ private:
     int level = 1;
     bool gameOver = false;
     std::uint32_t rng = 1;
+
+    Spark::SoundEngine* audioEngine = nullptr;
 
 };
 
