@@ -400,16 +400,18 @@
 }
 </code></pre>
 <h2 id="level-layout">Level Layout</h2>
-<pre><code class="language-cpp">tileTex = MakeShared&lt;Texture2D&gt;(Utf8String("Tiles"));
+<pre><code class="language-cpp">tileTex = MakeShared&lt;Texture2D&gt;(Utf8String(&quot;Tiles&quot;));
 *tileTex = Texture2D::CreateCheckerboard(256, 32,
     Vector3{0.38F, 0.34F, 0.30F}, Vector3{0.16F, 0.48F, 0.30F});
-world.RegisterTexture(tileTex, "platformer2d_template/tiles");
+world.RegisterTexture(tileTex, &quot;platformer2d_template/tiles&quot;);
 
 AddSolidPlatform(world, roots, tileTex, -12, -3, 24, kGroundTopY, 10, ...);
 AddSolidPlatform(world, roots, tileTex, -2, -0.2, 2.5, 0.55, 20, ...);
 AddSolidPlatform(world, roots, tileTex, 11, 2.4, 16.5, 3.05, 22, ...);
 </code></pre>
 <p>Z offsets separate draw order among platforms.</p>
+<h2 id="tilemaps-alternative-to-sprite-platforms">Tilemaps (alternative to sprite platforms)</h2>
+<p>For grid-based levels, use <code>TilemapComponent</code> with stacked layers, <code>TilemapCollider2DComponent</code>, and optional <code>TilemapGameplayGridComponent</code> for AI pathfinding. SparkDemo <strong>#19</strong> loads Kenney <code>sampleMap.tmx</code> at runtime. See <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a>.</p>
 <p>Next: <a href="04-player-controller.html">Player Controller</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -432,6 +434,10 @@ AddSolidPlatform(world, roots, tileTex, 11, 2.4, 16.5, 3.05, 22, ...);
                         
                         <li class="toc-h2">
                           <a href="#level-layout">Level Layout</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#tilemaps-alternative-to-sprite-platforms">Tilemaps (alternative to sprite platforms)</a>
                         </li>
                         
                   </ul>

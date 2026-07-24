@@ -55,4 +55,15 @@ target_compile_features(MyGame PRIVATE cxx_std_23)
 
 Copy `game_template/` or `samples/platformer2d_game_template/` as a starting point.
 
+## SparkDemo built-in scenes (selected)
+
+| # | Scene | Highlights |
+|---|--------|------------|
+| 6 | 2D platformer | Kenney tiles, character FSM |
+| 12 | Match-3 | `Camera2D` + grid pick |
+| **19** | **Tilemap showcase** | Layers, autotile, animation, gameplay grid, pathfinding; **L** loads Kenney `sampleMap.tmx`, **R** resets procedural map |
+| 20 | Dear ImGui | Docking tool UI (`SPARK_ENABLE_IMGUI`) |
+
+Full list: `SparkShellDemo` menu in `src/spark/demo/SparkShellDemo.cpp`.
+
 Next: [The Engine Loop](overview-architecture/04-engine-loop.html).

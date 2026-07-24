@@ -451,6 +451,8 @@ camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
 <li>Set <code>halfExtentY</code> so one world unit ≈ N screen pixels at your target resolution.</li>
 <li>Separate <strong>sortOrder layers</strong>: background <code>10</code>, gameplay <code>100</code>, VFX <code>200</code>, HUD via <code>TextOverlayComponent</code> or GUI.</li>
 </ul>
+<h2 id="screen-world-picking">Screen → world (picking)</h2>
+<p>Framebuffer coordinates match <code>gl_FragCoord</code> (origin top-left, Y down). With <code>Camera2D::ViewProjection</code> + <code>OrthographicVulkan</code>, unproject using <code>TerrainScreenToWorldRay</code> (<code>spark/demo/ShellDemoSceneUtil.hpp</code>) — <strong>do not</strong> apply an extra OpenGL-style <code>ndcY = 1 - y</code> flip. See <a href="03-tilemaps.html#screen--cell-picking-2d">Tilemaps</a>.</p>
 <p>Next: <a href="03-tilemaps.html">Tilemaps</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -481,6 +483,10 @@ camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
                         
                         <li class="toc-h2">
                           <a href="#pixel-perfect-tips">Pixel-Perfect Tips</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#screen-world-picking">Screen → world (picking)</a>
                         </li>
                         
                   </ul>

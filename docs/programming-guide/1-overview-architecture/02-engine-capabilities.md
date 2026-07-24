@@ -48,7 +48,8 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.html).
 | Feature | Types |
 |---------|-------|
 | Sprites | `SpriteComponent` → `SceneSpriteDraw` |
-| Tilemaps | `TilemapComponent` |
+| Tilemaps | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, layers/autotile/animator/object helpers |
+| TMX import | `TmxImporter`, `ApplyTilemapDocument`, `ResolveTilemapAssetPath` |
 | Orthographic camera | `Camera2DComponent`, `Camera2DRigComponent` |
 | Y-sort occlusion | `SceneSpriteSortMode::SortOrderThenWorldY` |
 | 2D sprite lighting modes | `SpriteLighting2DMode` on draw items |
@@ -65,7 +66,7 @@ Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flu
 Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
 ```
 
-**64 built-in components** — full reference: [Game Component Reference](07-game-component-reference.html).
+**70 built-in components** — full reference: [Game Component Reference](07-game-component-reference.html).
 
 ## Asset Loading on GameWorld
 

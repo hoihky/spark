@@ -17,7 +17,7 @@ Spark is a **C++23** codebase that provides:
 - Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
 
-The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **19** built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, Dear ImGui docking demo, etc.).
+The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **20** built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, Dear ImGui docking demo, etc.).
 
 ---
 
@@ -237,7 +237,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 |--------|------|------------------------|
 | **Sprites** | Textured quads, sorting, optional 2D lighting modes | `SpriteComponent`, `SceneSpriteDraw`, `SpriteLighting2DMode` (`spark/render/sprites2d/SpriteLighting2D.hpp`) |
 | **Sprite animation** | Flipbook / state machine hooks | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` |
-| **Tilemaps** | Grid of tiles | `TilemapComponent` |
+| **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
 | **2D camera** | Ortho view-projection helper | `Camera2D` (`spark/scene/Camera2D.hpp`) |
 | **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `SimulatePhysics2D`, `PhysicsQueries2D` (see §11) |
 
@@ -290,7 +290,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Vulkan hook** | Record draw lists after screen UI in present pass | `IImGuiVulkanBackend`, `VulkanRenderer::RecordImGuiDrawData` |
 | **Input capture** | Gate game pointer when ImGui hovers widgets | `WantsCaptureMouse`, `WantsCaptureKeyboard` |
 | **GLFW chaining** | Install callbacks after `GlfwInput::WireToWindow` | `IImGuiLayer::InstallPlatformCallbacks` |
-| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **19** (hotkey **G**) |
+| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **20** (hotkey **G**) |
 
 ImGui UI must be built in **`IGame::OnRender`** (after engine `BeginFrame`, before `EndFrame`). Retained GUI remains the primary stack for shipped menus and `SparkEditor`.
 
@@ -484,10 +484,14 @@ Representative **3D / rendering** components:
 | `SpriteLighting2DComponent` | Modes consumed by `SceneSpriteDraw::lightingMode`. |
 | `Sprite2DCharacterAnimFsmComponent` | Higher-level 2D character animation state. |
 | `Character3DAnimFsmComponent` | Locomotion / attack overlay for `AnimatorComponent` (add before animator on same object). |
-| `TilemapComponent` | Tile grid for 2D levels. |
+| `TilemapComponent` | Multi-layer tile grid + shared `Tileset` (paint/display cells, per-layer collision/gameplay flags). |
+| `TilemapGameplayGridComponent` | Baked walkability + `TilemapGridFrame` for pathfinding (pairs with `GridPathfinder`). |
+| `TilemapMapSourceComponent` | Import `.tmx` / `.sparkmap`, hot reload, `pixelsPerWorldUnit`. |
+| `TilemapAutotileComponent` / `TilemapTileAnimatorComponent` | Autotile rebuild and animated tile clips. |
+| `TilemapObjectLayerComponent` / `TilemapObjectSpawnComponent` / `TilemapObjectGizmoComponent` | Object markers, spawn registry, editor gizmos. |
 | `BoxCollider2DComponent` / `CircleCollider2DComponent` | 2D colliders. |
 | `PolygonCollider2DComponent` | Convex static polygon (max 16 verts). |
-| `TilemapCollider2DComponent` | Bakes one static box per solid tile on sibling `TilemapComponent` into `SimulatePhysics2D`. |
+| `TilemapCollider2DComponent` | Bakes static colliders from `TileDefinition` on sibling `TilemapComponent` layers with `contributeCollision`. |
 | `Rigidbody2DComponent` | 2D dynamics body. |
 
 **3D physics (minimal solver):**
@@ -512,7 +516,7 @@ Representative **3D / rendering** components:
 | `SpringArm3DComponent` | 3D orbit arm behind pivot (priority 295). |
 | `CameraFollow3DComponent` | 3D smooth follow + look-at (priority 300). |
 
-The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**51** concrete types + `Unknown`).
+The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**70** concrete types + `Unknown`).
 
 **Full usage reference:** [`docs/programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).
 

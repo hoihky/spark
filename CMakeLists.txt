@@ -438,6 +438,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/Tetris2DDemo.cpp
         src/spark/demo/SpaceInvaders2DDemo.cpp
         src/spark/demo/RenderLayers2DDemo.cpp
+        src/spark/demo/TilemapShowcase2DDemo.cpp
         src/spark/demo/PhysicsBallThrow3DDemo.cpp
         src/spark/demo/Maze3DDemo.cpp
         src/spark/demo/SteeringShowcase3DDemo.cpp
@@ -469,6 +470,27 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.cpp
         src/spark/ecs/components/animation/Character3DAnimFsmComponent.cpp
         src/spark/ecs/components/rendering/TilemapComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapGameplayGridComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapTileAnimatorComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapAutotileComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapObjectLayerComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapObjectSpawnComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapObjectGizmoComponent.cpp
+        src/spark/ecs/components/tilemap/TilemapMapSourceComponent.cpp
+        src/spark/scene/tilemap/TilemapObjectQuery.cpp
+        src/spark/scene/tilemap/TilemapObjectSpawnRegistry.cpp
+        src/spark/scene/tilemap/TilemapFileResolve.cpp
+        src/spark/scene/tilemap/TmxImporter.cpp
+        src/spark/scene/tilemap/TilemapDocumentApply.cpp
+        src/spark/scene/tilemap/TilemapDocumentSerializer.cpp
+        src/spark/scene/tilemap/Tileset.cpp
+        src/spark/scene/tilemap/TilemapLayerSort.cpp
+        src/spark/scene/tilemap/TilemapGameplayRules.cpp
+        src/spark/scene/tilemap/TilemapGameplayGrid.cpp
+        src/spark/scene/tilemap/TilemapGameplayGridBake.cpp
+        src/spark/scene/tilemap/TilemapGridCoordinates.cpp
+        src/spark/scene/tilemap/TileAnimationResolve.cpp
+        src/spark/scene/tilemap/TileAutotileBake.cpp
         src/spark/ecs/components/rendering/MaterialComponent.cpp
         src/spark/ecs/components/lighting/PointLightComponent.cpp
         src/spark/ecs/components/lighting/DirectionalLightComponent.cpp
@@ -637,6 +659,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/SceneManager.cpp
         src/spark/physics/Collision2D.cpp
         src/spark/physics/TilemapCollider2D.cpp
+        src/spark/physics/TilemapCollisionBake.cpp
         src/spark/physics/PhysicsMaterial2D.cpp
         src/spark/physics/MeshCollider3D.cpp
         src/spark/physics/PhysicsJoints.cpp

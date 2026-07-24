@@ -7,9 +7,9 @@
 namespace Spark {
 
 /**
- * Bakes one axis-aligned static box per non-empty tile on the sibling <c>TilemapComponent</c> into the 2D physics
- * broad-phase each <c>SimulatePhysics2D</c> step. Tile cells use the same local grid as rendering:
- * origin corner (0,0), +X/+Y along grid axes, cell size = <c>TilemapComponent::GetTileWorldSize()</c>.
+ * Bakes static colliders from non-empty tiles on the sibling <c>TilemapComponent</c> (per-tile shapes from
+ * <c>TileDefinition</c>, optional per-map-layer via <c>TilemapLayer::contributeCollision</c>) each physics step.
+ * Grid: origin corner (0,0), +X/+Y along axes, cell size = <c>GetTileWorldSize()</c>.
  */
 class TilemapCollider2DComponent final : public GameComponent {
 public:

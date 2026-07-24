@@ -14,6 +14,7 @@
 #include "spark/demo/Platformer2DDemo.hpp"
 #include "spark/demo/BroadPhase2DDemo.hpp"
 #include "spark/demo/RenderLayers2DDemo.hpp"
+#include "spark/demo/TilemapShowcase2DDemo.hpp"
 #include "spark/demo/ImGuiShowcaseDemo.hpp"
 #include "spark/demo/Maze3DDemo.hpp"
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
@@ -138,6 +139,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::TilemapShowcase2D) {
+            tilemapShowcase2DDemo.Simulate(timing, context);
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
         } else if (mode == DemoMode::Platformer2D) {
             platformer2DDemo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
@@ -232,6 +238,10 @@ public:
             renderLayers2DDemo.Render(GetScene(), GetWorld(), context);
             return;
         }
+        if (mode == DemoMode::TilemapShowcase2D) {
+            tilemapShowcase2DDemo.Render(GetScene(), GetWorld(), context);
+            return;
+        }
         if (mode == DemoMode::Platformer2D) {
             platformer2DDemo.Render(GetScene(), GetWorld(), context);
             return;
@@ -322,6 +332,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -387,6 +401,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -454,6 +472,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -511,6 +533,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -577,6 +603,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -648,6 +678,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -709,6 +743,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -772,6 +810,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -825,6 +867,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -888,6 +934,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -949,6 +999,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -1024,6 +1078,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -1087,6 +1145,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -1152,6 +1214,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -1164,6 +1230,76 @@ public:
             menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::RenderLayers2D;
+        context.GetInput().SetCursorCaptured(false);
+    }
+
+    void EnterTilemapShowcase2DDemo(IEngineContext& context) {
+        UnloadPhysicsBall3DDemoIfAny();
+        UnloadTimeOfDayDemoIfAny();
+        if (threeDLoaded) {
+            threeD.Unload(GetWorld());
+            threeDLoaded = false;
+        }
+        if (skyDemoLoaded) {
+            skyDemo.Unload(GetWorld());
+            skyDemoLoaded = false;
+        }
+        if (timeOfDayDemoLoaded) {
+            timeOfDayDemo.Unload(GetWorld());
+            timeOfDayDemoLoaded = false;
+        }
+        if (particleDemoLoaded) {
+            particleDemo.Unload(GetWorld());
+            particleDemoLoaded = false;
+        }
+        if (terrainDemoLoaded) {
+            terrainDemo.Unload(GetWorld());
+            terrainDemoLoaded = false;
+        }
+        if (characterDemoLoaded) {
+            characterDemo.Unload(GetWorld());
+            characterDemoLoaded = false;
+        }
+        if (tetris2DLoaded) {
+            tetris2DDemo.Unload(GetWorld());
+            tetris2DLoaded = false;
+        }
+        if (connect3Loaded) {
+            connect3Demo.Unload(GetWorld());
+            connect3Loaded = false;
+        }
+        if (spaceInvaders2DLoaded) {
+            spaceInvaders2DDemo.Unload(GetWorld());
+            spaceInvaders2DLoaded = false;
+        }
+        if (platformer2DLoaded) {
+            platformer2DDemo.Unload(GetWorld());
+            platformer2DLoaded = false;
+        }
+        if (broadPhase2DLoaded) {
+            broadPhase2DDemo.Unload(GetWorld());
+            broadPhase2DLoaded = false;
+        }
+        if (renderLayers2DLoaded) {
+            renderLayers2DDemo.Unload(GetWorld());
+            renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
+        if (maze3DLoaded) {
+            maze3DDemo.Unload(GetWorld());
+            maze3DLoaded = false;
+        }
+        if (!tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Load(GetWorld(), context);
+            tilemapShowcase2DLoaded = true;
+        }
+        if (menuCanvas != nullptr) {
+            menuCanvas->SetCanvasEnabled(false);
+        }
+        mode = DemoMode::TilemapShowcase2D;
         context.GetInput().SetCursorCaptured(false);
     }
 
@@ -1217,6 +1353,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -1281,6 +1421,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -1342,6 +1486,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -1406,6 +1554,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -1473,6 +1625,10 @@ public:
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
         }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
@@ -1537,6 +1693,10 @@ public:
         if (renderLayers2DLoaded) {
             renderLayers2DDemo.Unload(GetWorld());
             renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
         }
         if (maze3DLoaded) {
             maze3DDemo.Unload(GetWorld());
@@ -1658,7 +1818,8 @@ private:
         items.PushBack(Spark::Utf8String("16 — Material ball"));
         items.PushBack(Spark::Utf8String("17 — Time of day"));
         items.PushBack(Spark::Utf8String("18 — Farming RPG render layers"));
-        items.PushBack(Spark::Utf8String("19 — Dear ImGui tools (docking)"));
+        items.PushBack(Spark::Utf8String("19 — Tilemap layers, animation & pathfinding"));
+        items.PushBack(Spark::Utf8String("20 — Dear ImGui tools (docking)"));
         demoList->SetItems(Spark::MoveTemp(items));
         demoList->SetOnSelectionChanged([self](int idx) {
             if (self->engineCtx == nullptr) {
@@ -1701,6 +1862,8 @@ private:
             } else if (idx == 17) {
                 self->EnterRenderLayers2DDemo(*self->engineCtx);
             } else if (idx == 18) {
+                self->EnterTilemapShowcase2DDemo(*self->engineCtx);
+            } else if (idx == 19) {
                 self->EnterImGuiShowcase(*self->engineCtx);
             }
         });
@@ -1797,6 +1960,8 @@ private:
     bool broadPhase2DLoaded = false;
     RenderLayers2DDemo renderLayers2DDemo{};
     bool renderLayers2DLoaded = false;
+    TilemapShowcase2DDemo tilemapShowcase2DDemo{};
+    bool tilemapShowcase2DLoaded = false;
     Maze3DDemo maze3DDemo{};
     bool maze3DLoaded = false;
     PhysicsBallThrow3DDemo physicsBall3D{};

@@ -9,8 +9,9 @@ namespace Spark {
  * Named sorting layer + optional order-in-layer for 2D drawables on the same object.
  * When absent, submit uses the <c>Default</c> layer and the drawable's native sort field.
  *
- * Pair with <c>SpriteComponent</c> or <c>TilemapComponent</c>. Order-in-layer is explicit only when
- * <c>SetOrderInLayer</c> was called; otherwise <c>SpriteComponent::sortOrder</c> / tilemap base order apply.
+ * Pair with <c>SpriteComponent</c> or <c>TilemapComponent</c> (each stacked <c>TilemapLayer</c> is a separate draw).
+ * Order-in-layer is explicit only when <c>SetOrderInLayer</c> was called; otherwise
+ * <c>SpriteComponent::sortOrder</c> / tilemap base order (+ per-layer offsets) apply.
  */
 class RenderLayerComponent final : public GameComponent {
 public:

@@ -378,8 +378,8 @@
             <h1>Game Component Reference</h1>
           </header>
           <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
-<p>Complete reference for all <strong>64</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
-<p><strong>Includes:</strong> <code>#include &quot;spark/ecs/Ecs.hpp&quot;</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
+<p>Complete reference for all <strong>70</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
+<p><strong>Includes:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
 <p>**Subsystem tick order (typical frame)😗*</p>
 <ol>
 <li><code>UpdateGameObjects</code> — component <code>OnUpdate</code> (billboards, springs, …)</li>
@@ -388,7 +388,7 @@
 <li><code>ProcessSoundCues</code> — <code>ProcessAudioListeners</code>, <code>ProcessAmbientZones</code>, cue flush</li>
 <li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
 </ol>
-<hr />
+<hr>
 <h2 id="quick-index">Quick index</h2>
 <table class="table">
 <thead>
@@ -405,6 +405,10 @@
 <tr>
 <td><a href="#rendering">Rendering</a></td>
 <td><code>Mesh</code>, <code>Material</code>, <code>SkinnedMesh</code>, <code>Sprite</code>, <code>Tilemap</code>, <code>Sky</code>, <code>Terrain</code>, <code>ParticleEmitter</code>, <code>TextOverlay</code>, <code>Billboard</code>, <code>DecalProjector</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>BlendMode</code>, <code>RenderLayer</code>, <code>SortingGroup</code>, <code>SpriteLighting2D</code></td>
+</tr>
+<tr>
+<td><a href="#tilemap">Tilemap</a></td>
+<td><code>TilemapGameplayGrid</code>, <code>TilemapTileAnimator</code>, <code>TilemapAutotile</code>, <code>TilemapObjectLayer</code>, <code>TilemapObjectSpawn</code>, <code>TilemapObjectGizmo</code>, <code>TilemapMapSource</code></td>
 </tr>
 <tr>
 <td><a href="#lighting">Lighting</a></td>
@@ -448,7 +452,7 @@
 </tr>
 </tbody>
 </table>
-<hr />
+<hr>
 <h2 id="update-priorities">Update priorities</h2>
 <table class="table">
 <thead>
@@ -502,7 +506,7 @@
 </tbody>
 </table>
 <p><strong>Rule of thumb:</strong> add animation <strong>drivers</strong> (FSM) before <strong>playback</strong> (<code>Animator</code> / <code>SpriteAnimator</code>) on the same <code>GameObject</code>.</p>
-<hr />
+<hr>
 <h2 id="signals-sparkecssignal.hpp">Signals (<code>spark/ecs/Signal.hpp</code>)</h2>
 <table class="table">
 <thead>
@@ -575,11 +579,11 @@
     }
 }
 </code></pre>
-<hr />
+<hr>
 <h2 id="core">Core</h2>
 <h3 id="transformcomponent"><code>TransformComponent</code></h3>
-<p><strong>Header:</strong> <code>spark/ecs/components/core/TransformComponent.hpp</code><br />
-<strong>Kind:</strong> <code>ComponentKind::Transform</code><br />
+<p><strong>Header:</strong> <code>spark/ecs/components/core/TransformComponent.hpp</code><br>
+<strong>Kind:</strong> <code>ComponentKind::Transform</code><br>
 <strong>Consumed by:</strong> Everything that needs pose (render, physics, audio, cameras).</p>
 <p>Local translation / rotation / quaternion scale. Parent chain composes <code>GameObject::GetWorldMatrix()</code>.</p>
 <pre><code class="language-cpp">GameObject* player = world.CreateGameObject();
@@ -588,18 +592,18 @@ tr-&gt;SetTranslation({0.0F, 1.0F, 0.0F});
 tr-&gt;SetUniformScale(1.5F);
 tr-&gt;SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
 </code></pre>
-<hr />
+<hr>
 <h2 id="rendering">Rendering</h2>
 <h3 id="meshcomponent"><code>MeshComponent</code></h3>
 <p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
 <p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
-<pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh(&quot;assets/models/cube.obj&quot;);
+<pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh("assets/models/cube.obj");
 auto* mesh = go-&gt;AddComponent&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
 mesh-&gt;SetAlbedo({0.8F, 0.2F, 0.2F});
 </code></pre>
 <h3 id="materialcomponent"><code>MaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Material</code> · <strong>Consumed by:</strong> Scene submit (PBR / toon, transparency partition)</p>
-<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture(&quot;assets/brick.png&quot;);
+<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture("assets/brick.png");
 go-&gt;AddComponent&lt;MaterialComponent&gt;(albedo, Vector3::One);
 auto* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;();
 mat-&gt;SetMetallic(0.1F);
@@ -610,7 +614,7 @@ mat-&gt;SetOpacity(0.85F);  // → transparent pass
 </code></pre>
 <h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
-<pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/Fox.glb&quot;);
+<pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/Fox.glb");
 go-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(fox.mesh);
 go-&gt;AddComponent&lt;MaterialComponent&gt;(fox.baseColorTexture);
 auto* anim = go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, 0, 1.0F);
@@ -619,7 +623,7 @@ anim-&gt;SetClipIndexWithCrossfade(1, 0.25F);
 </code></pre>
 <h3 id="spritecomponent"><code>SpriteComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sprite</code> · <strong>Consumed by:</strong> Sprite pass in <code>SceneRenderParams</code></p>
-<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture(&quot;assets/hero.png&quot;);
+<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture("assets/hero.png");
 auto* sprite = go-&gt;AddComponent&lt;SpriteComponent&gt;(sheet, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 10);
 sprite-&gt;SetSortOrder(5);  // higher draws on top within layer
 </code></pre>
@@ -639,16 +643,46 @@ sa-&gt;AddClip(idle);
 sa-&gt;SetClipIndex(0);
 </code></pre>
 <h3 id="tilemapcomponent"><code>TilemapComponent</code></h3>
-<p><strong>Kind:</strong> <code>Tilemap</code> · <strong>Consumed by:</strong> Tilemap pass</p>
-<pre><code class="language-cpp">auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(atlas, 32, 24, 8, 8, 1.0F, 0);
-tm-&gt;SetTile(10, 5, 42);  // tile index in atlas
+<p><strong>Kind:</strong> <code>Tilemap</code> · <strong>Consumed by:</strong> Tilemap pass · <strong>Guide:</strong> <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a></p>
+<p>Multi-layer grid; each <code>TilemapLayer</code> holds <code>TileCell</code> data. Rendering uses <code>Tileset</code> atlas layout (including Tiled margin/spacing when set).</p>
+<pre><code class="language-cpp">SharedPtr&lt;Tileset&gt; set = CreateTilesetFromAtlas(atlas, 12, 11);
+auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(set, 32, 20, 1.0F, 0);
+static_cast&lt;void&gt;(tm-&gt;AddLayer("Dungeon"));
+tm-&gt;SetPaintTile(0, x, y, floorPaintId);
+tm-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 </code></pre>
 <h3 id="tilemapcollider2dcomponent"><code>TilemapCollider2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapCollider2D</code> · <strong>Sibling:</strong> <code>TilemapComponent</code> · <strong>Consumed by:</strong> <code>SimulatePhysics2D</code></p>
+<p>Bakes static colliders from <code>TileDefinition</code> on layers with <code>contributeCollision</code>.</p>
 <pre><code class="language-cpp">auto* tc = go-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
-tc-&gt;SetCategoryBits(1u &lt;&lt; 1);  // environment layer
+tc-&gt;SetCategoryBits(1u &lt;&lt; 1);
 tc-&gt;SetMaskBits(0xFFFF);
 </code></pre>
+<hr>
+<h2 id="tilemap">Tilemap</h2>
+<h3 id="tilemapgameplaygridcomponent"><code>TilemapGameplayGridComponent</code></h3>
+<p><strong>Kind:</strong> <code>TilemapGameplayGrid</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
+<p>Caches a walkability grid and <code>TilemapGridFrame</code> for pathfinding / gameplay queries.</p>
+<pre><code class="language-cpp">auto* grid = go-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
+grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid-&gt;SetAutoRebake(true);
+grid-&gt;RebakeIfNeeded(*go);
+</code></pre>
+<h3 id="tilemapmapsourcecomponent"><code>TilemapMapSourceComponent</code></h3>
+<p><strong>Kind:</strong> <code>TilemapMapSource</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
+<p>Imports <code>.tmx</code> or <code>.sparkmap</code> via <code>ImportNow</code>, optional hot reload. Sets <code>pixelsPerWorldUnit</code> on <code>TilemapDocumentApplyOptions</code>.</p>
+<pre><code class="language-cpp">auto* source = go-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
+source-&gt;SetTmxPath("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx");
+source-&gt;SetPixelsPerWorldUnit(16.0F);
+source-&gt;ImportNow(*go, world);
+</code></pre>
+<h3 id="tilemapautotilecomponent-tilemaptileanimatorcomponent"><code>TilemapAutotileComponent</code> / <code>TilemapTileAnimatorComponent</code></h3>
+<p><strong>Kinds:</strong> <code>TilemapAutotile</code>, <code>TilemapTileAnimator</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
+<p>Autotile rebuild from painted terrain groups; global time for tile animation clips on the tileset.</p>
+<h3 id="tilemapobjectlayercomponent-tilemapobjectspawncomponent-tilemapobjectgizmocomponent"><code>TilemapObjectLayerComponent</code> / <code>TilemapObjectSpawnComponent</code> / <code>TilemapObjectGizmoComponent</code></h3>
+<p><strong>Kinds:</strong> <code>TilemapObjectLayer</code>, <code>TilemapObjectSpawn</code>, <code>TilemapObjectGizmo</code></p>
+<p>Tiled-style markers (cell + offset), registry-based spawning (<code>TilemapObjectSpawnRegistry</code>), and debug gizmo sprites.</p>
+<hr>
 <h3 id="skycomponent"><code>SkyComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sky</code> · <strong>Siblings:</strong> <code>MeshComponent</code> (sky mesh), <code>TransformComponent</code></p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;MeshComponent&gt;(skyBoxMesh, SceneMeshSlot::Custom);
@@ -709,7 +743,7 @@ pp-&gt;SetPriority(2);
 <p><strong>Kind:</strong> <code>TextOverlay</code> · <strong>Consumed by:</strong> Screen UI pass</p>
 <pre><code class="language-cpp">world.SetUiFont(font);
 auto* hud = hudGo-&gt;AddComponent&lt;TextOverlayComponent&gt;();
-hud-&gt;SetText(&quot;HP: 100&quot;);
+hud-&gt;SetText("HP: 100");
 hud-&gt;SetScreenPosition({24.0F, 24.0F});
 hud-&gt;SetFontSizePixels(18.0F);
 </code></pre>
@@ -718,12 +752,12 @@ hud-&gt;SetFontSizePixels(18.0F);
 go-&gt;AddComponent&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
 
 // Named layer from RenderLayerRegistry
-go-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
+go-&gt;AddComponent&lt;RenderLayerComponent&gt;("Characters", 10);
 
 // Batch sort for subtree (descendant sprites/tilemaps)
 parent-&gt;AddComponent&lt;SortingGroupComponent&gt;(100);
 </code></pre>
-<hr />
+<hr>
 <h2 id="lighting">Lighting</h2>
 <h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
 <p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>FillStandardLitSceneFromWorld</code></p>
@@ -738,7 +772,7 @@ sunGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetRotation(
 auto* spot = go-&gt;AddComponent&lt;SpotLightComponent&gt;(Vector3::One, 6.0F, 15.0F, 25.0F, 40.0F);
 // Cone axis = local −Z in world space
 </code></pre>
-<hr />
+<hr>
 <h2 id="camera">Camera</h2>
 <h3 id="cameracomponent-3d"><code>CameraComponent</code> (3D)</h3>
 <p><strong>Kind:</strong> <code>Camera</code> · <strong>Consumed by:</strong> <code>TryResolveMainCamera</code>, scene submit</p>
@@ -747,7 +781,7 @@ cam-&gt;SetProjectionMode(CameraProjectionMode::Perspective);
 cam-&gt;SetFovYDegrees(72.0F);
 cam-&gt;SetNearPlane(0.1F);
 cam-&gt;SetFarPlane(500.0F);
-cam-&gt;SetPriority(10);  // higher wins as &quot;main&quot; camera
+cam-&gt;SetPriority(10);  // higher wins as "main" camera
 </code></pre>
 <h3 id="camera2dcomponent-camera2drigcomponent"><code>Camera2DComponent</code> + <code>Camera2DRigComponent</code></h3>
 <pre><code class="language-cpp">auto* cam2d = cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;();
@@ -779,7 +813,7 @@ follow-&gt;SetTarget(player);
 follow-&gt;SetTargetOffset({0.0F, 1.6F, 0.0F});
 follow-&gt;SetLookAtTarget(true);
 </code></pre>
-<hr />
+<hr>
 <h2 id="physics-2d">Physics 2D</h2>
 <p>Call each frame from <code>OnUpdate</code> (after gameplay input, before render):</p>
 <pre><code class="language-cpp">SimulatePhysics2D(world, timing);
@@ -830,7 +864,7 @@ hj-&gt;SetLocalAnchorB({0.0F, -0.5F});
 <h3 id="layer-filter">Layer filter</h3>
 <pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
 </code></pre>
-<hr />
+<hr>
 <h2 id="physics-3d">Physics 3D</h2>
 <pre><code class="language-cpp">SimulatePhysics3D(world, timing, settings);
 SimulateCharacterControllers3D(world, timing);
@@ -874,7 +908,7 @@ auto* joint = ballA-&gt;GetComponent&lt;DistanceJoint3DComponent&gt;();
 joint-&gt;SetStiffness(0.9F);
 </code></pre>
 <h3 id="hingejoint3dcomponent-springjoint3dcomponent"><code>HingeJoint3DComponent</code> / <code>SpringJoint3DComponent</code></h3>
-<p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br />
+<p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br>
 <strong>Spring:</strong> velocity spring-damper along the line between sphere centers.</p>
 <pre><code class="language-cpp">doorA-&gt;AddComponent&lt;HingeJoint3DComponent&gt;(doorB);
 auto* hinge = doorA-&gt;GetComponent&lt;HingeJoint3DComponent&gt;();
@@ -890,7 +924,7 @@ spring-&gt;SetDamping(5.0F);
 <p>Simple world-space sphere bounds; used by some probe paths.</p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;CollisionComponent&gt;(0.5F, Vector3::Zero);
 </code></pre>
-<hr />
+<hr>
 <h2 id="animation">Animation</h2>
 <h3 id="character3danimfsmcomponent"><code>Character3DAnimFsmComponent</code></h3>
 <p><strong>Priority:</strong> 100 · Add <strong>before</strong> <code>AnimatorComponent</code> on same object.</p>
@@ -903,8 +937,8 @@ fsm-&gt;RequestAttack();
 <h3 id="animationeventreceivercomponent"><code>AnimationEventReceiverComponent</code></h3>
 <p><strong>Priority:</strong> 210 · <strong>Sibling:</strong> <code>AnimatorComponent</code></p>
 <pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
-recv-&gt;AddMarker(0, 0.35F, &quot;Footstep&quot;);
-recv-&gt;AddMarker(0, 0.72F, &quot;Footstep&quot;);
+recv-&gt;AddMarker(0, 0.35F, "Footstep");
+recv-&gt;AddMarker(0, 0.72F, "Footstep");
 
 class FootstepHandler final : public GameComponent {
 public:
@@ -936,7 +970,7 @@ auto* fsm = go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
 fsm-&gt;RequestAttack();
 fsm-&gt;RequestHurt();
 </code></pre>
-<hr />
+<hr>
 <h2 id="ai">AI</h2>
 <p><code>SimulateGameAi</code> runs, in order: <code>ProcessNavMeshAgents</code> → <code>ProcessPerceptionSensors</code> → each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
 <h3 id="aiagentcomponent"><code>AiAgentComponent</code></h3>
@@ -979,7 +1013,7 @@ for (GameObject* target : sense-&gt;GetDetectedObjects()) {
     (void)target;
 }
 </code></pre>
-<hr />
+<hr>
 <h2 id="audio">Audio</h2>
 <p><code>Game::OnUpdate</code> calls <code>ProcessSoundCues</code>, which runs <code>ProcessAudioListeners</code>, then <code>ProcessAmbientZones</code>, then flushes cues.</p>
 <h3 id="audiolistenercomponent"><code>AudioListenerComponent</code></h3>
@@ -1004,7 +1038,7 @@ zone-&gt;SetHalfExtents({10.0F, 10.0F, 10.0F});
 zone-&gt;SetVolumeScale(0.7F);
 zone-&gt;SetPriority(3);
 </code></pre>
-<hr />
+<hr>
 <h2 id="ui">UI</h2>
 <h3 id="guicanvascomponent"><code>GuiCanvasComponent</code></h3>
 <pre><code class="language-cpp">auto canvas = uiRoot-&gt;AddComponent&lt;GuiCanvasComponent&gt;();
@@ -1014,7 +1048,7 @@ canvas-&gt;SetRoot&lt;Gui::Panel&gt;(MakeUnique&lt;Gui::Panel&gt;());
 ProcessGuiCanvasesInput(world, input, fbW, fbH);
 PaintGuiCanvases(world, params, fbW, fbH);
 </code></pre>
-<hr />
+<hr>
 <h2 id="world">World</h2>
 <h3 id="scenespatialpolicycomponent"><code>SceneSpatialPolicyComponent</code></h3>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::Bvh);
@@ -1029,7 +1063,7 @@ tod-&gt;SetDayLengthSeconds(90.0F);
 tod-&gt;SetLooping(true);
 tod-&gt;SetPriority(1);
 </code></pre>
-<hr />
+<hr>
 <h2 id="gameplay">Gameplay</h2>
 <h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
 <pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
@@ -1050,7 +1084,7 @@ hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
     }
 }
 </code></pre>
-<hr />
+<hr>
 <h2 id="typical-object-recipes">Typical object recipes</h2>
 <h3 id="d-platformer-player">2D platformer player</h3>
 <pre><code class="language-cpp">player-&gt;AddComponent&lt;TransformComponent&gt;();
@@ -1087,11 +1121,11 @@ enemy-&gt;AddComponent&lt;HealthComponent&gt;(80.0F);
 level-&gt;AddComponent&lt;TilemapComponent&gt;(...);
 level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
 </code></pre>
-<hr />
+<hr>
 <h2 id="serialization">Serialization</h2>
 <p>Scene format <strong><code>spark_scene_v4</code></strong> captures a subset of components via <code>ComponentSnapshotRegistry</code>. Registered kinds include Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, and more — see <code>SceneSerializer.cpp</code> <code>kCaptureOrder</code>.</p>
 <p>Components without handlers still work at runtime; they are omitted from saved scenes until a handler is added.</p>
-<hr />
+<hr>
 <h2 id="related-chapters">Related chapters</h2>
 <ul>
 <li><a href="06-ecs-and-scene.html">ECS and Scene</a> — <code>GameObject</code>, signals, submit hand-off</li>
@@ -1137,6 +1171,18 @@ level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
                         
                         <li class="toc-h3">
                           <a href="#"> + </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#tilemap">Tilemap</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> / </a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#"> /  / </a>
                         </li>
                         
                         <li class="toc-h3">

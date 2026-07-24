@@ -484,7 +484,11 @@
 </tr>
 <tr>
 <td>Tilemaps</td>
-<td><code>TilemapComponent</code></td>
+<td><code>TilemapComponent</code>, <code>TilemapGameplayGridComponent</code>, <code>TilemapMapSourceComponent</code>, layers/autotile/animator/object helpers</td>
+</tr>
+<tr>
+<td>TMX import</td>
+<td><code>TmxImporter</code>, <code>ApplyTilemapDocument</code>, <code>ResolveTilemapAssetPath</code></td>
 </tr>
 <tr>
 <td>Orthographic camera</td>
@@ -509,7 +513,7 @@ Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flush
 Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
 </code></pre>
-<p><strong>64 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
+<p><strong>70 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
 <h2 id="asset-loading-on-gameworld">Asset Loading on GameWorld</h2>
 <pre><code class="language-cpp">Spark::GltfAsset asset = world.LoadGltf("assets/models/Cube.glb");
 Spark::SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");

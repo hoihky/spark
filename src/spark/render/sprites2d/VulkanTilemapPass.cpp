@@ -4,12 +4,16 @@
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 #include "spark/render/sprites2d/VulkanSpritePass.hpp"
 #include "spark/scene/SceneTileAtlas.hpp"
+#include "spark/scene/tilemap/TileTransform.hpp"
 
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/math/Quaternion.hpp"
+#include "spark/math/Vector3.hpp"
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
 
+#include <cmath>
 #include <cstring>
 #include <stdexcept>
 
@@ -22,22 +26,41 @@ void FillTileInstanceGpu(
         const SceneTilemapTileInstance& tile,
         VulkanSpriteInstanceGpu& out) noexcept {
     Vector4 uv{};
-    TileIdToAtlasUvRect(tile.tileId, layer.atlasTilesU, layer.atlasTilesV, uv);
+    TileIdToAtlasUvRect(
+            tile.tileId,
+            layer.atlasTilesU,
+            layer.atlasTilesV,
+            layer.atlasMarginPixels,
+            layer.atlasSpacingPixels,
+            layer.atlasTextureWidth,
+            layer.atlasTextureHeight,
+            layer.atlasTilePixelWidth,
+            layer.atlasTilePixelHeight,
+            uv);
 
     const float ts = layer.tileWorldSize;
+    const float flipH =
+            (tile.transformFlags & static_cast<std::uint8_t>(TileTransformFlags::FlipH)) != 0 ? -1.0F : 1.0F;
+    const float flipV =
+            (tile.transformFlags & static_cast<std::uint8_t>(TileTransformFlags::FlipV)) != 0 ? -1.0F : 1.0F;
+    const std::uint8_t rotCount = TileTransformRotation90Count(tile.transformFlags);
+    const float angleRad = static_cast<float>(rotCount) * (3.14159265F * 0.5F);
+    const Matrix4 rotZ = Matrix4::Rotation(Quaternion::FromAxisAngle(Vector3::UnitZ, angleRad));
+
     const Matrix4 tileModel =
             layer.worldTransform *
             Matrix4::Translation(
-                    {(static_cast<float>(tile.gridX) + 0.5F) * ts,
-                     (static_cast<float>(tile.gridY) + 0.5F) * ts,
+                    {(static_cast<float>(tile.gridX) + tile.anchorNormX) * ts,
+                     (static_cast<float>(tile.gridY) + tile.anchorNormY) * ts,
                      0.0F}) *
-            Matrix4::Scale({ts, ts, 1.0F});
+            rotZ * Matrix4::Scale({ts * flipH, ts * flipV, 1.0F});
 
     std::memcpy(out.model, tileModel.m, sizeof(out.model));
-    out.tint[0] = 1.0F;
-    out.tint[1] = 1.0F;
-    out.tint[2] = 1.0F;
-    out.tint[3] = 1.0F;
+    const float inv255 = 1.0F / 255.0F;
+    out.tint[0] = static_cast<float>(tile.tintR) * inv255;
+    out.tint[1] = static_cast<float>(tile.tintG) * inv255;
+    out.tint[2] = static_cast<float>(tile.tintB) * inv255;
+    out.tint[3] = static_cast<float>(tile.tintA) * inv255;
     out.uvRect[0] = uv.x;
     out.uvRect[1] = uv.y;
     out.uvRect[2] = uv.z;

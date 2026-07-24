@@ -45,4 +45,8 @@ AddSolidPlatform(world, roots, tileTex, 11, 2.4, 16.5, 3.05, 22, ...);
 
 Z offsets separate draw order among platforms.
 
-Next: [Player Controller](7-2d-game/04-player-controller.html).
+## Tilemaps (alternative to sprite platforms)
+
+For grid-based levels, use `TilemapComponent` with stacked layers, `TilemapCollider2DComponent`, and optional `TilemapGameplayGridComponent` for AI pathfinding. SparkDemo **#19** loads Kenney `sampleMap.tmx` at runtime. See [Tilemaps](../2-2d-graphics/03-tilemaps.html).
+
+Next: [Player Controller](04-player-controller.html).

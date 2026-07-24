@@ -13,6 +13,7 @@
 #include "spark/scene/Mesh.hpp"
 #include "spark/scene/SkinnedMesh.hpp"
 #include "spark/scene/Texture2D.hpp"
+#include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/text/Font.hpp"
 
 #include <cstdint>
@@ -131,7 +132,13 @@ struct SceneTilemapTileInstance {
     std::uint16_t gridX = 0;
     std::uint16_t gridY = 0;
     std::uint16_t tileId = 0;
-    std::uint16_t pad = 0;
+    std::uint8_t transformFlags = 0;
+    std::uint8_t tintR = 255;
+    std::uint8_t tintG = 255;
+    std::uint8_t tintB = 255;
+    std::uint8_t tintA = 255;
+    float anchorNormX = 0.5F;
+    float anchorNormY = 0.5F;
 };
 
 /**
@@ -143,12 +150,21 @@ struct SceneTilemapDraw {
     float tileWorldSize = 1.0F;
     std::uint32_t atlasTilesU = 1;
     std::uint32_t atlasTilesV = 1;
+    float atlasMarginPixels = 0.0F;
+    float atlasSpacingPixels = 0.0F;
+    std::uint32_t atlasTextureWidth = 1;
+    std::uint32_t atlasTextureHeight = 1;
+    std::uint32_t atlasTilePixelWidth = 0;
+    std::uint32_t atlasTilePixelHeight = 0;
     std::int32_t textureLayer = -1;
     std::int32_t sortOrderBase = 0;
     std::int16_t sortingLayerOrder = 0;
     SceneBlendMode blendMode = kSceneBlendModeDefault;
     std::uint32_t tileBegin = 0;
     std::uint32_t tileCount = 0;
+    TilemapLayerSortMode instanceSortMode = TilemapLayerSortMode::GridOrder;
+    /** Tie-break vs sprites at the same sorting layer + order (see <c>SceneSpriteSortMode</c>). */
+    float sortWorldYAnchor = 0.0F;
 };
 
 struct SceneDrawItem {

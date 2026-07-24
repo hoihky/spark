@@ -6,6 +6,16 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 
 
+def chapter_body_from_md(rel: str) -> str:
+    """Use on-disk chapter body (skip YAML front matter) so MD edits are not lost."""
+    raw = (ROOT / rel).read_text(encoding="utf-8")
+    if raw.startswith("---"):
+        end = raw.find("---", 3)
+        if end != -1:
+            return raw[end + 3 :].lstrip("\n")
+    return raw.strip() + "\n"
+
+
 def write(rel: str, content: str) -> None:
     p = ROOT / rel
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -704,87 +714,14 @@ camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
 - Set `halfExtentY` so one world unit ≈ N screen pixels at your target resolution.
 - Separate **sortOrder layers**: background `10`, gameplay `100`, VFX `200`, HUD via `TextOverlayComponent` or GUI.
 
+## Screen → world (picking)
+
+Framebuffer coordinates match `gl_FragCoord` (origin top-left, Y down). With `Camera2D::ViewProjection` + `OrthographicVulkan`, unproject using `TerrainScreenToWorldRay` (`spark/demo/ShellDemoSceneUtil.hpp`) — **do not** apply an extra OpenGL-style `ndcY = 1 - y` flip. See [Tilemaps](2d-graphics/03-tilemaps.html#screen--cell-picking-2d).
+
 Next: [Tilemaps](2d-graphics/03-tilemaps.html).
 """)
 
-chapter(P2, "03-tilemaps.md", "Tilemaps", 3, """
-# Tilemaps
-
-## Class Design: `TilemapComponent`
-
-Renders a dense 2D grid of tiles from a single atlas texture.
-
-```cpp
-class TilemapComponent final : public GameComponent {
-public:
-    static constexpr std::uint16_t kEmptyTile = 0xFFFF;
-
-    TilemapComponent(SharedPtr<Texture2D> inAtlas,
-                     std::uint32_t mapW, std::uint32_t mapH,
-                     std::uint32_t atlasTilesU, std::uint32_t atlasTilesV,
-                     float inTileWorldSize, std::int32_t inSortOrderBase) noexcept;
-
-    void Resize(std::uint32_t mapW, std::uint32_t mapH);
-    void SetTile(std::uint32_t x, std::uint32_t y, std::uint16_t tileId);
-    std::uint16_t GetTile(std::uint32_t x, std::uint32_t y) const noexcept;
-};
-```
-
-| Parameter | Meaning |
-|-----------|---------|
-| `atlasTilesU/V` | Columns/rows in atlas |
-| `tileWorldSize` | World units per tile edge |
-| `sortOrderBase` | Base draw order for the map layer |
-| `tileId` | Atlas cell index; `kEmptyTile` = hole |
-
-## Build a Level Grid
-
-```cpp
-constexpr std::uint32_t kMapW = 40;
-constexpr std::uint32_t kMapH = 12;
-constexpr std::uint32_t kAtlasCols = 8;
-constexpr std::uint32_t kAtlasRows = 4;
-
-auto* mapGo = world.CreateGameObject();
-mapGo->AddComponent<TransformComponent>()->SetTranslation({0.0F, 0.0F, 0.0F});
-
-auto* map = mapGo->AddComponent<TilemapComponent>(
-    tileAtlas, kMapW, kMapH, kAtlasCols, kAtlasRows, 1.0F, 5);
-
-for (std::uint32_t x = 0; x < kMapW; ++x) {
-    map->SetTile(x, 0, 3);           // ground row
-    map->SetTile(x, kMapH - 1, 1);   // ceiling
-}
-map->SetTile(10, 4, TilemapComponent::kEmptyTile);  // gap
-```
-
-## Collision Pairing
-
-Tilemaps are **visual only**. Add static colliders separately:
-
-```cpp
-void AddSolidPlatform(GameWorld& w, float x0, float y0, float x1, float y1) {
-    GameObject* go = w.CreateGameObject();
-    TransformComponent* tr = go->AddComponent<TransformComponent>();
-    tr->SetTranslation({(x0+x1)*0.5F, (y0+y1)*0.5F, 0.01F});
-    tr->SetScale({std::fabs(x1-x0), std::fabs(y1-y0), 1.0F});
-    go->AddComponent<SpriteComponent>(tex, tint, Vector4{0,0,1,1}, 10);
-    go->AddComponent<BoxCollider2DComponent>();
-    go->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
-}
-```
-
-## Procedural Atlas (No External Assets)
-
-```cpp
-tileTex = MakeShared<Texture2D>(Utf8String("Tiles"));
-*tileTex = Texture2D::CreateCheckerboard(256, 32,
-    Vector3{0.38F, 0.34F, 0.30F}, Vector3{0.16F, 0.48F, 0.30F});
-world.RegisterTexture(tileTex, "level/tiles");
-```
-
-Next: [2D Animation](2d-graphics/04-2d-animation.html).
-""")
+chapter(P2, "03-tilemaps.md", "Tilemaps", 3, chapter_body_from_md("2-2d-graphics/03-tilemaps.md"))
 
 chapter(P2, "04-2d-animation.md", "2D Animation", 4, """
 # 2D Animation
@@ -1630,64 +1567,7 @@ See `GoapDemo` in `SparkDemo`.
 Next: [Pathfinding](4-ai/05-pathfinding.html).
 """)
 
-chapter(P4, "05-pathfinding.md", "Pathfinding", 5, """
-# Pathfinding
-
-## Class Design: `GridPathfinder`
-
-```cpp
-#include "spark/ai/path/GridPathfinder.hpp"
-
-class IGridWalkability {
-public:
-    virtual bool IsWalkable(int cellX, int cellZ) const = 0;
-};
-
-class GridBitmapWalkability final : public IGridWalkability { /* ... */ };
-
-struct Cell { int x = 0; int z = 0; };
-
-static bool FindPath4(const IGridWalkability& grid, const Cell& start,
-                      const Cell& goal, Array<Cell>& outCells);
-static void CellsToWorldPolyline(const Array<Cell>& cells, const Vector2& gridOriginXZ,
-                                 float cellSize, Array<Vector2>& outWorldXZ);
-```
-
-4-connected A* on a grid abstraction.
-
-## Build Walkability from Tilemap
-
-```cpp
-GridBitmapWalkability walk;
-walk.Resize(mapW, mapH);
-for (uint32_t y = 0; y < mapH; ++y)
-  for (uint32_t x = 0; x < mapW; ++x)
-    walk.SetWalkable(x, y, map->GetTile(x, y) != TilemapComponent::kEmptyTile);
-```
-
-## Store Path on Agent
-
-```cpp
-Array<Cell> cells;
-Cell start{playerCellX, playerCellZ};
-Cell goal{targetCellX, targetCellZ};
-if (GridPathfinder::FindPath4(walk, start, goal, cells)) {
-    auto& poly = agent->GetPathWorldPolylineXZ();
-    GridPathfinder::CellsToWorldPolyline(cells, Vector2{-20, -5}, 1.0F, poly);
-    agent->SetPathIndex(0);
-}
-```
-
-## Follow Polyline
-
-Advance `pathIndex` when within `arriveRadius` of each waypoint; steer toward `poly[pathIndex]`.
-
-## Fuzzy Logic (Optional)
-
-`FuzzyAdvisoryModule` (`spark/ai/fuzzy/FuzzyLogic.hpp`) blends continuous inputs (health, distance) into action weights — enable via `agent->SetFuzzyEnabled(true)`.
-
-Part 4 complete → **Part 5**: [Physics Overview](5-physics/01-physics-overview.html).
-""")
+chapter(P4, "05-pathfinding.md", "Pathfinding", 5, chapter_body_from_md("4-ai/05-pathfinding.md"))
 
 print("Part 4 done")
 

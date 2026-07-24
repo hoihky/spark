@@ -5,7 +5,7 @@ order: 7
 
 # Game Component Reference
 
-Complete reference for all **64** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **70** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -25,6 +25,7 @@ Complete reference for all **64** built-in `GameComponent` types in Spark (`incl
 |--------|------------|
 | [Core](#core) | `TransformComponent` |
 | [Rendering](#rendering) | `Mesh`, `Material`, `SkinnedMesh`, `Sprite`, `Tilemap`, `Sky`, `Terrain`, `ParticleEmitter`, `TextOverlay`, `Billboard`, `DecalProjector`, `FogVolume`, `PostProcessVolume`, `BlendMode`, `RenderLayer`, `SortingGroup`, `SpriteLighting2D` |
+| [Tilemap](#tilemap) | `TilemapGameplayGrid`, `TilemapTileAnimator`, `TilemapAutotile`, `TilemapObjectLayer`, `TilemapObjectSpawn`, `TilemapObjectGizmo`, `TilemapMapSource` |
 | [Lighting](#lighting) | `DirectionalLight`, `PointLight`, `SpotLight` |
 | [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `CameraFollow3D`, `SpringArm3D` |
 | [Physics 2D](#physics-2d) | `BoxCollider2D`, `CircleCollider2D`, `PolygonCollider2D`, `Rigidbody2D`, `TilemapCollider2D`, `PhysicsMaterial2D`, `DistanceJoint2D`, `HingeJoint2D` |
@@ -185,22 +186,73 @@ sa->SetClipIndex(0);
 
 ### `TilemapComponent`
 
-**Kind:** `Tilemap` · **Consumed by:** Tilemap pass
+**Kind:** `Tilemap` · **Consumed by:** Tilemap pass · **Guide:** [Tilemaps](../../2-2d-graphics/03-tilemaps.html)
+
+Multi-layer grid; each `TilemapLayer` holds `TileCell` data. Rendering uses `Tileset` atlas layout (including Tiled margin/spacing when set).
 
 ```cpp
-auto* tm = go->AddComponent<TilemapComponent>(atlas, 32, 24, 8, 8, 1.0F, 0);
-tm->SetTile(10, 5, 42);  // tile index in atlas
+SharedPtr<Tileset> set = CreateTilesetFromAtlas(atlas, 12, 11);
+auto* tm = go->AddComponent<TilemapComponent>(set, 32, 20, 1.0F, 0);
+static_cast<void>(tm->AddLayer("Dungeon"));
+tm->SetPaintTile(0, x, y, floorPaintId);
+tm->BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 ```
 
 ### `TilemapCollider2DComponent`
 
 **Kind:** `TilemapCollider2D` · **Sibling:** `TilemapComponent` · **Consumed by:** `SimulatePhysics2D`
 
+Bakes static colliders from `TileDefinition` on layers with `contributeCollision`.
+
 ```cpp
 auto* tc = go->AddComponent<TilemapCollider2DComponent>();
-tc->SetCategoryBits(1u << 1);  // environment layer
+tc->SetCategoryBits(1u << 1);
 tc->SetMaskBits(0xFFFF);
 ```
+
+---
+
+## Tilemap
+
+### `TilemapGameplayGridComponent`
+
+**Kind:** `TilemapGameplayGrid` · **Sibling:** `TilemapComponent`
+
+Caches a walkability grid and `TilemapGridFrame` for pathfinding / gameplay queries.
+
+```cpp
+auto* grid = go->AddComponent<TilemapGameplayGridComponent>();
+grid->SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid->SetAutoRebake(true);
+grid->RebakeIfNeeded(*go);
+```
+
+### `TilemapMapSourceComponent`
+
+**Kind:** `TilemapMapSource` · **Sibling:** `TilemapComponent`
+
+Imports `.tmx` or `.sparkmap` via `ImportNow`, optional hot reload. Sets `pixelsPerWorldUnit` on `TilemapDocumentApplyOptions`.
+
+```cpp
+auto* source = go->AddComponent<TilemapMapSourceComponent>();
+source->SetTmxPath("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx");
+source->SetPixelsPerWorldUnit(16.0F);
+source->ImportNow(*go, world);
+```
+
+### `TilemapAutotileComponent` / `TilemapTileAnimatorComponent`
+
+**Kinds:** `TilemapAutotile`, `TilemapTileAnimator` · **Sibling:** `TilemapComponent`
+
+Autotile rebuild from painted terrain groups; global time for tile animation clips on the tileset.
+
+### `TilemapObjectLayerComponent` / `TilemapObjectSpawnComponent` / `TilemapObjectGizmoComponent`
+
+**Kinds:** `TilemapObjectLayer`, `TilemapObjectSpawn`, `TilemapObjectGizmo`
+
+Tiled-style markers (cell + offset), registry-based spawning (`TilemapObjectSpawnRegistry`), and debug gizmo sprites.
+
+---
 
 ### `SkyComponent`
 

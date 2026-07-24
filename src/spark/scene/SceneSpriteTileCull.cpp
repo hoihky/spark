@@ -1,6 +1,7 @@
 #include "spark/scene/SceneSpriteTileCull.hpp"
 
 #include "spark/math/AxisAlignedBox.hpp"
+#include "spark/scene/tilemap/TileAnimationResolve.hpp"
 
 #include <algorithm>
 
@@ -46,8 +47,17 @@ std::uint32_t SceneSpriteTileCull::CollectVisibleTiles(
         const Matrix4& world,
         const float tileWorldSize,
         const TilemapComponent& tilemap,
+        const std::uint32_t layerIndex,
         Array<SceneTilemapTileInstance>& outTiles,
-        const std::uint32_t maxTiles) const noexcept {
+        const std::uint32_t maxTiles,
+        const float tileAnimationTimeSeconds) const noexcept {
+    if (layerIndex >= tilemap.GetLayerCount()) {
+        return 0;
+    }
+    const TilemapLayer& layer = tilemap.GetLayer(layerIndex);
+    if (!layer.visible) {
+        return 0;
+    }
     const std::uint32_t mw = tilemap.GetMapWidth();
     const std::uint32_t mh = tilemap.GetMapHeight();
     if (mw == 0 || mh == 0 || tileWorldSize <= 0.0F) {
@@ -94,14 +104,39 @@ std::uint32_t SceneSpriteTileCull::CollectVisibleTiles(
                     if (outTiles.GetSize() >= static_cast<std::size_t>(maxTiles)) {
                         return appended;
                     }
-                    const std::uint16_t tid = tilemap.GetTile(ix, iy);
-                    if (tid == TilemapComponent::kEmptyTile) {
+                    const TileCell cell = tilemap.GetTileCell(layerIndex, ix, iy);
+                    if (!cell.HasVisual()) {
                         continue;
                     }
+                    const SharedPtr<Tileset>& tilesetPtr = tilemap.GetTileset();
+                    std::uint16_t displayTileId = cell.tileId;
+                    if (tilesetPtr) {
+                        const std::uint16_t paintId = cell.GetPaintTileId();
+                        const std::uint16_t animated =
+                                ResolveAnimatedTileId(*tilesetPtr, paintId, tileAnimationTimeSeconds);
+                        if (animated != paintId) {
+                            displayTileId = animated;
+                        }
+                        if (displayTileId >= tilesetPtr->GetCellCount()) {
+                            continue;
+                        }
+                    }
+                    if (displayTileId == TileCell::kEmptyTileId) {
+                        continue;
+                    }
+                    const TileDefinition& def =
+                            tilemap.GetDefinitionForTileId(displayTileId);
                     SceneTilemapTileInstance inst{};
                     inst.gridX = static_cast<std::uint16_t>(ix);
                     inst.gridY = static_cast<std::uint16_t>(iy);
-                    inst.tileId = tid;
+                    inst.tileId = displayTileId;
+                    inst.transformFlags = cell.transformFlags;
+                    inst.tintR = cell.tintR;
+                    inst.tintG = cell.tintG;
+                    inst.tintB = cell.tintB;
+                    inst.tintA = cell.tintA;
+                    inst.anchorNormX = def.anchor.normalizedX;
+                    inst.anchorNormY = def.anchor.normalizedY;
                     outTiles.PushBack(inst);
                     ++appended;
                 }

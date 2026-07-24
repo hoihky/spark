@@ -26,6 +26,13 @@
 #include "spark/ecs/components/rendering/TerrainComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapAutotileComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapObjectGizmoComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
 
 // Lighting
 #include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"

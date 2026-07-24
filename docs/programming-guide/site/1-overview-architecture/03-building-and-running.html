@@ -459,6 +459,39 @@ target_link_libraries(MyGame PRIVATE SparkEngine)
 target_compile_features(MyGame PRIVATE cxx_std_23)
 </code></pre>
 <p>Copy <code>game_template/</code> or <code>samples/platformer2d_game_template/</code> as a starting point.</p>
+<h2 id="sparkdemo-built-in-scenes-selected">SparkDemo built-in scenes (selected)</h2>
+<table class="table">
+<thead>
+<tr>
+<th>#</th>
+<th>Scene</th>
+<th>Highlights</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6</td>
+<td>2D platformer</td>
+<td>Kenney tiles, character FSM</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Match-3</td>
+<td><code>Camera2D</code> + grid pick</td>
+</tr>
+<tr>
+<td><strong>19</strong></td>
+<td><strong>Tilemap showcase</strong></td>
+<td>Layers, autotile, animation, gameplay grid, pathfinding; <strong>L</strong> loads Kenney <code>sampleMap.tmx</code>, <strong>R</strong> resets procedural map</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Dear ImGui</td>
+<td>Docking tool UI (<code>SPARK_ENABLE_IMGUI</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Full list: <code>SparkShellDemo</code> menu in <code>src/spark/demo/SparkShellDemo.cpp</code>.</p>
 <p>Next: <a href="04-engine-loop.html">The Engine Loop</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -493,6 +526,10 @@ target_compile_features(MyGame PRIVATE cxx_std_23)
                         
                         <li class="toc-h2">
                           <a href="#your-own-target">Your Own Target</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#sparkdemo-built-in-scenes-selected">SparkDemo built-in scenes (selected)</a>
                         </li>
                         
                   </ul>

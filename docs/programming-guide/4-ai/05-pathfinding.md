@@ -12,54 +12,88 @@ order: 5
 
 class IGridWalkability {
 public:
-    virtual bool IsWalkable(int cellX, int cellZ) const = 0;
+    virtual bool IsWalkable(int cellX, int cellY) const = 0;
 };
 
 class GridBitmapWalkability final : public IGridWalkability { /* ... */ };
 
-struct Cell { int x = 0; int z = 0; };
+struct Cell { int x = 0; int y = 0; };
 
 static bool FindPath4(const IGridWalkability& grid, const Cell& start,
                       const Cell& goal, Array<Cell>& outCells);
-static void CellsToWorldPolyline(const Array<Cell>& cells, const Vector2& gridOriginXZ,
-                                 float cellSize, Array<Vector2>& outWorldXZ);
 ```
 
-4-connected A* on a grid abstraction.
+4-connected A* on a grid abstraction. **Start and goal must both be walkable** or `FindPath4` returns false.
 
-## Build Walkability from Tilemap
+## Tilemap gameplay grid (recommended)
+
+Prefer baking from `TilemapComponent` instead of hand-maintaining a bitmap:
+
+```cpp
+#include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
+#include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
+
+auto* gridComp = mapGo->AddComponent<TilemapGameplayGridComponent>();
+gridComp->SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+gridComp->SetAutoRebake(true);
+gridComp->RebakeIfNeeded(*mapGo);
+
+const TilemapGameplayGrid& walk = gridComp->GetGrid();
+const TilemapGridFrame& frame = gridComp->GetGridFrame();
+
+GridPathfinder::Cell start = frame.WorldXYToCell(playerWorldXY);
+GridPathfinder::Cell goal{targetX, targetY};
+Array<GridPathfinder::Cell> cells;
+if (GridPathfinder::FindPath4(gridComp->GetWalkability(), start, goal, cells)) {
+    for (std::size_t i = 0; i < cells.GetSize(); ++i) {
+        Vector2 wp = frame.CellCenterToWorldXY(cells[i]);
+        // move agent toward wp
+    }
+}
+```
+
+Walkability honors per-layer `contributeGameplayGrid` and per-tile `TileDefinition` flags (see [Tilemaps](../2-2d-graphics/03-tilemaps.html)).
+
+One-shot bake without the component:
+
+```cpp
+TilemapGameplayGrid grid;
+tilemap->BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
+```
+
+## Manual `GridBitmapWalkability`
 
 ```cpp
 GridBitmapWalkability walk;
 walk.Resize(mapW, mapH);
-for (uint32_t y = 0; y < mapH; ++y)
-  for (uint32_t x = 0; x < mapW; ++x)
-    walk.SetWalkable(x, y, map->GetTile(x, y) != TilemapComponent::kEmptyTile);
-```
-
-## Store Path on Agent
-
-Manual grid path:
-
-```cpp
-Array<GridPathfinder::Cell> cells;
-GridPathfinder::Cell start{playerCellX, playerCellZ};
-GridPathfinder::Cell goal{targetCellX, targetCellZ};
-if (GridPathfinder::FindPath4(walk, start, goal, cells)) {
-    auto& poly = agent->GetPathWorldPolylineXZ();
-    GridPathfinder::CellsToWorldPolyline(cells, Vector2{-20, -5}, 1.0F, poly);
-    agent->SetPathIndex(0);
+for (std::int32_t y = 0; y < mapH; ++y) {
+    for (std::int32_t x = 0; x < mapW; ++x) {
+        walk.SetBlocked(x, y, /* blocked if wall */);
+    }
 }
 ```
 
-Or use **NavMeshAgentComponent** + **PatrolPathComponent** (see [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#patrolpathcomponent--navmeshagentcomponent)) — `ProcessNavMeshAgents` fills the polyline before steering runs.
+## World polyline helpers
 
-## Follow Polyline
+```cpp
+Array<Vector2> poly;
+TilemapGameplayGrid::CellsToWorldPolylineXY(
+    cells, gridOriginXY, cellSize, poly);
+
+// Legacy XZ naming (same math, Y stored in Vector2::y):
+GridPathfinder::CellsToWorldPolyline(cells, gridOriginXZ, cellSize, outWorldXZ);
+```
+
+## NavMesh agents (3D / hybrid)
+
+Or use **NavMeshAgentComponent** + **PatrolPathComponent** — `ProcessNavMeshAgents` fills the polyline before steering runs (see [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#patrolpathcomponent--navmeshagentcomponent)).
+
+## Follow polyline
 
 Advance `pathIndex` when within `arriveRadius` of each waypoint; steer toward `poly[pathIndex]`.
 
-## Fuzzy Logic (Optional)
+## Fuzzy logic (optional)
 
 `FuzzyAdvisoryModule` (`spark/ai/fuzzy/FuzzyLogic.hpp`) blends continuous inputs (health, distance) into action weights — enable via `agent->SetFuzzyEnabled(true)`.
 
-Part 4 complete → **Part 5**: [Physics Overview](5-physics/01-physics-overview.html).
+Part 4 complete → **Part 5**: [Physics Overview](../5-physics/01-physics-overview.html).

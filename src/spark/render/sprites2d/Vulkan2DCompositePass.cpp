@@ -1,7 +1,9 @@
+#include "spark/engine/SceneRenderParams.hpp"
 #include "spark/render/sprites2d/Vulkan2DCompositePass.hpp"
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
+#include "spark/engine/SceneRenderParams.hpp"
 #include "spark/scene/DrawableSortKey.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 
@@ -14,13 +16,23 @@ struct Composite2DEntry {
     std::size_t index = 0;
     std::int16_t sortingLayerOrder = 0;
     std::int32_t sortOrder = 0;
+    float sortWorldY = 0.0F;
 };
 
-void StableSortCompositeEntries(Array<Composite2DEntry>& entries) noexcept {
-    const auto moreInFront = [](const Composite2DEntry& a, const Composite2DEntry& b) noexcept -> bool {
+void StableSortCompositeEntries(Array<Composite2DEntry>& entries, const SceneSpriteSortMode spriteSortMode) noexcept {
+    const auto moreInFront = [spriteSortMode](const Composite2DEntry& a, const Composite2DEntry& b) noexcept -> bool {
         const DrawableSortKey keyA{a.sortingLayerOrder, a.sortOrder};
         const DrawableSortKey keyB{b.sortingLayerOrder, b.sortOrder};
-        return DrawableSortMoreInFront(keyA, keyB);
+        if (DrawableSortMoreInFront(keyA, keyB)) {
+            return true;
+        }
+        if (DrawableSortMoreInFront(keyB, keyA)) {
+            return false;
+        }
+        if (spriteSortMode == SceneSpriteSortMode::SortOrderThenWorldY) {
+            return a.sortWorldY < b.sortWorldY;
+        }
+        return false;
     };
     const std::size_t n = entries.GetSize();
     for (std::size_t i = 1; i < n; ++i) {
@@ -124,6 +136,7 @@ void Vulkan2DCompositePass::Record(
             entry.index = ti;
             entry.sortingLayerOrder = layer.sortingLayerOrder;
             entry.sortOrder = layer.sortOrderBase;
+            entry.sortWorldY = layer.sortWorldYAnchor;
             entries.PushBack(entry);
         }
 
@@ -141,10 +154,11 @@ void Vulkan2DCompositePass::Record(
             entry.index = si;
             entry.sortingLayerOrder = sprite.sortingLayerOrder;
             entry.sortOrder = sprite.sortOrder;
+            entry.sortWorldY = sprite.sortWorldY;
             entries.PushBack(entry);
         }
 
-        StableSortCompositeEntries(entries);
+        StableSortCompositeEntries(entries, scene.spriteSortMode);
 
         bool batchActive = false;
         std::int32_t batchTextureLayer = -2;

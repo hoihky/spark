@@ -73,6 +73,13 @@ enum class ComponentKind : std::uint32_t {
     SpringJoint3D,
     DistanceJoint2D,
     HingeJoint2D,
+    TilemapGameplayGrid,
+    TilemapTileAnimator,
+    TilemapAutotile,
+    TilemapObjectLayer,
+    TilemapObjectSpawn,
+    TilemapObjectGizmo,
+    TilemapMapSource,
     TimeOfDayDriver,
 };
 

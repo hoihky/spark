@@ -378,84 +378,170 @@
             <h1>Tilemaps</h1>
           </header>
           <div class="doc-body"><h1 id="tilemaps">Tilemaps</h1>
-<h2 id="class-design-tilemapcomponent">Class Design: <code>TilemapComponent</code></h2>
-<p>Renders a dense 2D grid of tiles from a single atlas texture.</p>
-<pre><code class="language-cpp">class TilemapComponent final : public GameComponent {
-public:
-    static constexpr std::uint16_t kEmptyTile = 0xFFFF;
-
-    TilemapComponent(SharedPtr&lt;Texture2D&gt; inAtlas,
-                     std::uint32_t mapW, std::uint32_t mapH,
-                     std::uint32_t atlasTilesU, std::uint32_t atlasTilesV,
-                     float inTileWorldSize, std::int32_t inSortOrderBase) noexcept;
-
-    void Resize(std::uint32_t mapW, std::uint32_t mapH);
-    void SetTile(std::uint32_t x, std::uint32_t y, std::uint16_t tileId);
-    std::uint16_t GetTile(std::uint32_t x, std::uint32_t y) const noexcept;
-};
-</code></pre>
+<p>Spark tilemaps are <strong>multi-layer grids</strong> backed by a shared <strong><code>Tileset</code></strong> (atlas + per-tile <code>TileDefinition</code> metadata). They render through the 2D tilemap pass (<code>VulkanTilemapPass</code>) with per-layer sort offsets, optional world-Y sort, flip/rotate flags, tint, and clip animation.</p>
+<p><strong>Try it:</strong> SparkDemo launcher item <strong>19 — Tilemap layers, animation &amp; pathfinding</strong> (<code>TilemapShowcase2DDemo</code>).</p>
+<h2 id="coordinate-system">Coordinate system</h2>
 <table class="table">
 <thead>
 <tr>
-<th>Parameter</th>
-<th>Meaning</th>
+<th>Space</th>
+<th>Convention</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>atlasTilesU/V</code></td>
-<td>Columns/rows in atlas</td>
+<td>World</td>
+<td>+X right, +Y up (same as <code>Camera2D</code>)</td>
 </tr>
 <tr>
-<td><code>tileWorldSize</code></td>
-<td>World units per tile edge</td>
+<td>Grid cell <code>(x, y)</code></td>
+<td>Origin at the <strong>bottom-left</strong> corner of the map; cell <code>(0, 0)</code> sits on the bottom row</td>
 </tr>
 <tr>
-<td><code>sortOrderBase</code></td>
-<td>Base draw order for the map layer</td>
-</tr>
-<tr>
-<td><code>tileId</code></td>
-<td>Atlas cell index; <code>kEmptyTile</code> = hole</td>
+<td>TMX import</td>
+<td>CSV rows are flipped on import so Tiled’s top row maps to high <code>y</code> in Spark storage</td>
 </tr>
 </tbody>
 </table>
-<h2 id="build-a-level-grid">Build a Level Grid</h2>
-<pre><code class="language-cpp">constexpr std::uint32_t kMapW = 40;
-constexpr std::uint32_t kMapH = 12;
-constexpr std::uint32_t kAtlasCols = 8;
-constexpr std::uint32_t kAtlasRows = 4;
+<p>Object markers from TMX use the same grid: Tiled top-down pixel <code>y</code> is converted to Spark <code>cellY</code> when parsing <code>objectgroup</code> layers.</p>
+<h2 id="tilemapcomponent-and-tileset"><code>TilemapComponent</code> and <code>Tileset</code></h2>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/TilemapComponent.hpp&quot;
+#include &quot;spark/scene/tilemap/Tileset.hpp&quot;
+
+SharedPtr&lt;Tileset&gt; tileset = CreateTilesetFromAtlas(atlas, atlasCols, atlasRows);
+tileset-&gt;Definition(wallTileId).collisionShape = TileCollisionShape::FullCell;
+tileset-&gt;Definition(wallTileId).flags = TileDefinitionFlags::BlocksPathfinding;
+tileset-&gt;Definition(floorTileId).collisionShape = TileCollisionShape::None;
 
 auto* mapGo = world.CreateGameObject();
-mapGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({0.0F, 0.0F, 0.0F});
+auto* tilemap = mapGo-&gt;AddComponent&lt;TilemapComponent&gt;(
+        tileset, mapW, mapH, 1.0F, /*sortOrderBase=*/0);
+static_cast&lt;void&gt;(tilemap-&gt;AddLayer(&quot;Terrain&quot;));
+tilemap-&gt;SetPaintTile(0, x, y, grassPaintId);
+tilemap-&gt;SetTileCell(1, x, y, TileCell::FromTileId(waterTileId));
+</code></pre>
+<table class="table">
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SetPaintTile</code> / <code>GetPaintTileId</code></td>
+<td>Terrain paint id (autotile source)</td>
+</tr>
+<tr>
+<td><code>SetTileCell</code> / <code>GetTileCell</code></td>
+<td>Full <code>TileCell</code> (display id, flips, tint, paint id)</td>
+</tr>
+<tr>
+<td><code>GetLayer</code></td>
+<td>Per-layer flags: <code>contributeCollision</code>, <code>contributeGameplayGrid</code>, <code>sortMode</code></td>
+</tr>
+<tr>
+<td><code>Tileset::Definition(id)</code></td>
+<td>Collision shape, path flags, autotile group, animation clip index</td>
+</tr>
+</tbody>
+</table>
+<p>Kenney <em>Tiny Dungeon</em> packed atlases use <strong>bottom-row tile indexing</strong>; TMX import calls <code>TiledLocalTileIndexToSparkAtlasIndex</code> so atlas UVs match the packed sheet.</p>
+<h2 id="stacked-layers">Stacked layers</h2>
+<pre><code class="language-cpp">TilemapLayer&amp; props = tilemap-&gt;GetLayer(2);
+props.orderInLayerOffset = 16;
+props.contributeGameplayGrid = false;  // decor only
+props.sortMode = TilemapLayerSortMode::WorldY;
+</code></pre>
+<p>Pair with:</p>
+<ul>
+<li><strong><code>TilemapTileAnimatorComponent</code></strong> — advances clip time for animated tiles on the map.</li>
+<li><strong><code>TilemapAutotileComponent</code></strong> — rebuilds display tiles from painted terrain groups on a chosen layer.</li>
+<li><strong><code>TilemapCollider2DComponent</code></strong> — static colliders from <code>TileDefinition</code> shapes on layers with <code>contributeCollision</code>.</li>
+</ul>
+<h2 id="gameplay-grid-and-pathfinding">Gameplay grid and pathfinding</h2>
+<p>Bake walkability once (or auto-rebake each frame) from tile layers:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;
 
-auto* map = mapGo-&gt;AddComponent&lt;TilemapComponent&gt;(
-    tileAtlas, kMapW, kMapH, kAtlasCols, kAtlasRows, 1.0F, 5);
+auto* grid = mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
+grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid-&gt;SetAutoRebake(true);
 
-for (std::uint32_t x = 0; x &lt; kMapW; ++x) {
-    map-&gt;SetTile(x, 0, 3);           // ground row
-    map-&gt;SetTile(x, kMapH - 1, 1);   // ceiling
-}
-map-&gt;SetTile(10, 4, TilemapComponent::kEmptyTile);  // gap
+// After editing tiles:
+grid-&gt;RequestRebake();
+grid-&gt;RebakeIfNeeded(*mapGo);
+
+const TilemapGridFrame&amp; frame = grid-&gt;GetGridFrame();
+Vector2 world = frame.CellCenterToWorldXY({cellX, cellY});
 </code></pre>
-<h2 id="collision-pairing">Collision Pairing</h2>
-<p>Tilemaps are <strong>visual only</strong>. Add static colliders separately:</p>
-<pre><code class="language-cpp">void AddSolidPlatform(GameWorld&amp; w, float x0, float y0, float x1, float y1) {
-    GameObject* go = w.CreateGameObject();
-    TransformComponent* tr = go-&gt;AddComponent&lt;TransformComponent&gt;();
-    tr-&gt;SetTranslation({(x0+x1)*0.5F, (y0+y1)*0.5F, 0.01F});
-    tr-&gt;SetScale({std::fabs(x1-x0), std::fabs(y1-y0), 1.0F});
-    go-&gt;AddComponent&lt;SpriteComponent&gt;(tex, tint, Vector4{0,0,1,1}, 10);
-    go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
-    go-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);
-}
+<table class="table">
+<thead>
+<tr>
+<th><code>TilemapGameplayWalkRule</code></th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OccupiedWalkable</code></td>
+<td>Any non-empty gameplay-layer cell is walkable</td>
+</tr>
+<tr>
+<td><code>DefinitionAndFlags</code></td>
+<td>Respects <code>BlocksPathfinding</code> / <code>ForceWalkable</code>, then tile collision</td>
+</tr>
+<tr>
+<td><code>CollisionAligned</code></td>
+<td>Blocked when the tile would contribute physics collision</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../4-ai/05-pathfinding.html">Pathfinding</a> for <code>GridPathfinder::FindPath4</code> and mouse picking.</p>
+<h2 id="tmx.sparkmap-import">TMX / <code>.sparkmap</code> import</h2>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp&quot;
+
+auto* source = mapGo-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
+source-&gt;SetImportOnAttach(false);
+source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;);
+source-&gt;SetPixelsPerWorldUnit(16.0F);  // tileWorldSize = tilePixelWidth / PPU
+source-&gt;SetHotReload(true);
+source-&gt;ImportNow(*mapGo, world);
 </code></pre>
-<h2 id="procedural-atlas-no-external-assets">Procedural Atlas (No External Assets)</h2>
-<pre><code class="language-cpp">tileTex = MakeShared&lt;Texture2D&gt;(Utf8String("Tiles"));
-*tileTex = Texture2D::CreateCheckerboard(256, 32,
-    Vector3{0.38F, 0.34F, 0.30F}, Vector3{0.16F, 0.48F, 0.30F});
-world.RegisterTexture(tileTex, "level/tiles");
+<p><code>ApplyTilemapDocument</code> (<code>spark/scene/tilemap/TilemapDocumentApply.hpp</code>):</p>
+<ul>
+<li>Loads the primary tileset texture via <code>GameWorld::LoadTexture</code> and <code>ResolveTilemapAssetPath</code>.</li>
+<li>For Kenney packed dungeon atlases, swaps to <code>tilemap_packed.png</code>, clears margin/spacing, applies gameplay tile definitions, and disables gameplay-grid contribution on <strong>Objects</strong> / <strong>Carts</strong> layers.</li>
+<li>Leaves <code>tileWorldSize</code> at <strong>0</strong> in the TMX document so apply derives size from <code>pixelsPerWorldUnit</code>.</li>
+</ul>
+<p>Importer: <code>TmxImporter</code> (CSV layers, external <code>.tsx</code> tilesets, GID flip bits).</p>
+<h2 id="object-layers-markers-spawns-gizmos">Object layers (markers, spawns, gizmos)</h2>
+<pre><code class="language-cpp">auto* objects = mapGo-&gt;AddComponent&lt;TilemapObjectLayerComponent&gt;();
+const std::uint32_t li = objects-&gt;AddObjectLayer(&quot;GameplayObjects&quot;);
+
+TilemapObjectMarker chest{};
+chest.typeId = Utf8String(&quot;chest&quot;);
+chest.cellX = 10;
+chest.cellY = 6;
+static_cast&lt;void&gt;(objects-&gt;AddMarker(li, chest));
+
+mapGo-&gt;AddComponent&lt;TilemapObjectSpawnComponent&gt;();  // uses TilemapObjectSpawnRegistry
+mapGo-&gt;AddComponent&lt;TilemapObjectGizmoComponent&gt;();  // editor-style markers
 </code></pre>
+<p><code>TilemapObjectMarkerWorldPosition</code> maps cell + normalized offset through <code>TilemapGridFrame</code>.</p>
+<h2 id="screen-cell-picking-2d">Screen → cell picking (2D)</h2>
+<p>Use the same NDC convention as the rest of Spark demos (<code>TerrainScreenToWorldRay</code> in <code>spark/demo/ShellDemoSceneUtil.hpp</code>): framebuffer Y grows <strong>downward</strong> (do not apply an OpenGL-style <code>1 - y</code> flip on top of <code>OrthographicVulkan</code>).</p>
+<pre><code class="language-cpp">Matrix4 invVp{};
+camera.ViewProjection(fbW, fbH).TryInvert(invVp);
+Vector3 ro{}, rd{};
+TerrainScreenToWorldRay(fbW, fbH, mx, my, invVp, ro, rd);
+const float t = -ro.z / rd.z;
+const Vector2 world{ro.x + rd.x * t, ro.y + rd.y * t};
+GridPathfinder::Cell cell = grid-&gt;GetGridFrame().WorldXYToCell(world);
+</code></pre>
+<p>Reference: <code>TilemapShowcase2DDemo</code>, <code>Connect3Demo</code>.</p>
+<h2 id="collision-pairing">Collision pairing</h2>
+<p><code>TilemapCollider2DComponent</code> bakes <strong>per-tile</strong> shapes from definitions (full cell, half cell, custom convex). Visual-only decor should use <code>TileCollisionShape::None</code> on the tileset.</p>
+<p>For manual platforms (no tilemap), use scaled sprites + <code>BoxCollider2DComponent</code> as in the platformer sample.</p>
 <p>Next: <a href="04-2d-animation.html">2D Animation</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -473,19 +559,35 @@ world.RegisterTexture(tileTex, "level/tiles");
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#class-design">Class Design: </a>
+                          <a href="#coordinate-system">Coordinate system</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#build-a-level-grid">Build a Level Grid</a>
+                          <a href="#and"> and </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#collision-pairing">Collision Pairing</a>
+                          <a href="#stacked-layers">Stacked layers</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#procedural-atlas-no-external-assets">Procedural Atlas (No External Assets)</a>
+                          <a href="#gameplay-grid-and-pathfinding">Gameplay grid and pathfinding</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#tmx-import">TMX /  import</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#object-layers-markers-spawns-gizmos">Object layers (markers, spawns, gizmos)</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#screen-cell-picking-2d">Screen → cell picking (2D)</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#collision-pairing">Collision pairing</a>
                         </li>
                         
                   </ul>

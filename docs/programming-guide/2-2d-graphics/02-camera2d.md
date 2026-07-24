@@ -64,4 +64,8 @@ camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
 - Set `halfExtentY` so one world unit ≈ N screen pixels at your target resolution.
 - Separate **sortOrder layers**: background `10`, gameplay `100`, VFX `200`, HUD via `TextOverlayComponent` or GUI.
 
-Next: [Tilemaps](2d-graphics/03-tilemaps.html).
+## Screen → world (picking)
+
+Framebuffer coordinates match `gl_FragCoord` (origin top-left, Y down). With `Camera2D::ViewProjection` + `OrthographicVulkan`, unproject using `TerrainScreenToWorldRay` (`spark/demo/ShellDemoSceneUtil.hpp`) — **do not** apply an extra OpenGL-style `ndcY = 1 - y` flip. See [Tilemaps](03-tilemaps.html#screen--cell-picking-2d).
+
+Next: [Tilemaps](03-tilemaps.html).

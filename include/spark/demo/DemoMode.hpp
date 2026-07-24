@@ -30,6 +30,7 @@ enum class DemoMode : std::uint8_t {
     Connect3,
     SpaceInvaders2D,
     RenderLayers2D,
+    TilemapShowcase2D,
     ImGuiShowcase,
 };
 

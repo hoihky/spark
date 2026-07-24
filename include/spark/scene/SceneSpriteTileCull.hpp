@@ -46,8 +46,10 @@ public:
             const Matrix4& world,
             float tileWorldSize,
             const TilemapComponent& tilemap,
+            std::uint32_t layerIndex,
             Array<SceneTilemapTileInstance>& outTiles,
-            std::uint32_t maxTiles) const noexcept;
+            std::uint32_t maxTiles,
+            float tileAnimationTimeSeconds = 0.0F) const noexcept;
 
 private:
     Frustum frustum{};
