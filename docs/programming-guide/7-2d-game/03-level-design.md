@@ -1,8 +1,3 @@
----
-title: Level Design
-order: 3
----
-
 # Building the Level
 
 ## `AddSolidPlatform` Helper
@@ -47,6 +42,6 @@ Z offsets separate draw order among platforms.
 
 ## Tilemaps (alternative to sprite platforms)
 
-For grid-based levels, use `TilemapComponent` with stacked layers, `TilemapCollider2DComponent`, and optional `TilemapGameplayGridComponent` for AI pathfinding. SparkDemo **#19** loads Kenney `sampleMap.tmx` at runtime. See [Tilemaps](../2-2d-graphics/03-tilemaps.html).
+For grid-based levels, use `TilemapComponent` with stacked layers, `TilemapCollider2DComponent`, and optional `TilemapGameplayGridComponent` for AI pathfinding. SparkDemo **#19** loads Kenney `sampleMap.tmx` at runtime. See [Tilemaps](../2-2d-graphics/03-tilemaps.md).
 
-Next: [Player Controller](04-player-controller.html).
+Next: [Player Controller](04-player-controller.md).

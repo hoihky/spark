@@ -1,8 +1,3 @@
----
-title: Physics 3D
-order: 5
----
-
 # Physics 3D
 
 Call each frame from `OnUpdate` (order matters):
@@ -82,8 +77,8 @@ bob->AddComponent<SpringJoint3DComponent>(anchor, 4.0F);
 
 ## ECS vs demo cameras
 
-The FPS sample may use **FlyCamera** without rigidbody. For shipped games prefer `CameraComponent` + `SpringArm3DComponent` + `CameraFollow3DComponent` (see [Cameras in 3D](../3-3d-graphics/02-cameras-3d.html)).
+The FPS sample may use **FlyCamera** without rigidbody. For shipped games prefer `CameraComponent` + `SpringArm3DComponent` + `CameraFollow3DComponent` (see [Cameras in 3D](../3-3d-graphics/02-cameras-3d.md)).
 
-See [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#physics-3d).
+See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#physics-3d).
 
-Next: [Tips and Patterns](5-physics/06-tips.html).
+Next: [Tips and Patterns](06-tips.md).

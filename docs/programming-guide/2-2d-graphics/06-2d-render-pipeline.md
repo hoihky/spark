@@ -1,8 +1,3 @@
----
-title: 2D Render Pipeline
-order: 6
----
-
 # 2D Render Pipeline
 
 ## Class Design: `SceneRenderParams` (2D subset)
@@ -67,4 +62,4 @@ void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
 }
 ```
 
-Part 2 complete → **Part 3**: [Meshes and Materials](3d-graphics/01-meshes-and-materials.html).
+Part 2 complete → **Part 3**: [Meshes and Materials](../3-3d-graphics/01-meshes-and-materials.md).

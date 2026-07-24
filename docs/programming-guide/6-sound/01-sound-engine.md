@@ -1,8 +1,3 @@
----
-title: Sound Engine
-order: 1
----
-
 # Sound Engine
 
 ## Class Design
@@ -47,4 +42,4 @@ if (audio) {
 }
 ```
 
-Next: [Sound Clips](6-sound/02-clips.html).
+Next: [Sound Clips](02-clips.md).

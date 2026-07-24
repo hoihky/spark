@@ -1,8 +1,3 @@
----
-title: Tilemaps
-order: 3
----
-
 # Tilemaps
 
 Spark tilemaps are **multi-layer grids** backed by a shared **`Tileset`** (atlas + per-tile `TileDefinition` metadata). They render through the 2D tilemap pass (`VulkanTilemapPass`) with per-layer sort offsets, optional world-Y sort, flip/rotate flags, tint, and clip animation.
@@ -87,7 +82,7 @@ Vector2 world = frame.CellCenterToWorldXY({cellX, cellY});
 | `DefinitionAndFlags` | Respects `BlocksPathfinding` / `ForceWalkable`, then tile collision |
 | `CollisionAligned` | Blocked when the tile would contribute physics collision |
 
-See [Pathfinding](../4-ai/05-pathfinding.html) for `GridPathfinder::FindPath4` and mouse picking.
+See [Pathfinding](../4-ai/05-pathfinding.md) for `GridPathfinder::FindPath4` and mouse picking.
 
 ## TMX / `.sparkmap` import
 
@@ -150,4 +145,4 @@ Reference: `TilemapShowcase2DDemo`, `Connect3Demo`.
 
 For manual platforms (no tilemap), use scaled sprites + `BoxCollider2DComponent` as in the platformer sample.
 
-Next: [2D Animation](04-2d-animation.html).
+Next: [2D Animation](04-2d-animation.md).

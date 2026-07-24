@@ -1,8 +1,3 @@
----
-title: Polish and Ship
-order: 6
----
-
 # Polish and Ship
 
 ## Sound
@@ -48,4 +43,4 @@ Swap `CreateCheckerboard` for `Texture2D::TryLoadFromFile("assets/tiles.png", ..
 - [ ] Test on target DPI / resolution
 - [ ] Verify `SPARK_BUILD_ASSETS_DIR` paths
 
-Part 7 complete → **Part 8**: [FPS Introduction](8-3d-game/01-fps-intro.html).
+Part 7 complete → **Part 8**: [FPS Introduction](../8-3d-game/01-fps-intro.md).

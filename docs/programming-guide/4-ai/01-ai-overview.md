@@ -1,8 +1,3 @@
----
-title: AI Overview
-order: 1
----
-
 # AI Overview
 
 ## Architecture
@@ -63,4 +58,4 @@ agent->SetFsm(MakeUnique<FsmStateMachine>(/* ... */));
 | `XzWorld` | World XZ (`Vector2.x` = X, `.y` = Z) |
 | `XyRigidbody2D` | `Rigidbody2DComponent` velocity XY |
 
-Next: [Steering Behaviors](4-ai/02-steering.html).
+Next: [Steering Behaviors](02-steering.md).

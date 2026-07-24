@@ -1,8 +1,3 @@
----
-title: Spark Game Engine Programming Guide
-order: 0
----
-
 # Spark Game Engine — Programming Guide
 
 A comprehensive developer guide for building **2D and 3D games** with Spark — a **C++23** engine using GLFW, Vulkan, ECS-style entities, custom physics, AI modules, retained-mode GUI, and optional **Dear ImGui** tool UI.
@@ -48,4 +43,4 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
 ./build/SparkDemo
 ```
 
-Start with [Introduction](overview-architecture/01-introduction.html).
+Start with [Introduction](1-overview-architecture/01-introduction.md).

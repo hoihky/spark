@@ -405,8 +405,8 @@
 </table>
 <p>Object markers from TMX use the same grid: Tiled top-down pixel <code>y</code> is converted to Spark <code>cellY</code> when parsing <code>objectgroup</code> layers.</p>
 <h2 id="tilemapcomponent-and-tileset"><code>TilemapComponent</code> and <code>Tileset</code></h2>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/TilemapComponent.hpp&quot;
-#include &quot;spark/scene/tilemap/Tileset.hpp&quot;
+<pre><code class="language-cpp">#include "spark/ecs/components/rendering/TilemapComponent.hpp"
+#include "spark/scene/tilemap/Tileset.hpp"
 
 SharedPtr&lt;Tileset&gt; tileset = CreateTilesetFromAtlas(atlas, atlasCols, atlasRows);
 tileset-&gt;Definition(wallTileId).collisionShape = TileCollisionShape::FullCell;
@@ -416,7 +416,7 @@ tileset-&gt;Definition(floorTileId).collisionShape = TileCollisionShape::None;
 auto* mapGo = world.CreateGameObject();
 auto* tilemap = mapGo-&gt;AddComponent&lt;TilemapComponent&gt;(
         tileset, mapW, mapH, 1.0F, /*sortOrderBase=*/0);
-static_cast&lt;void&gt;(tilemap-&gt;AddLayer(&quot;Terrain&quot;));
+static_cast&lt;void&gt;(tilemap-&gt;AddLayer("Terrain"));
 tilemap-&gt;SetPaintTile(0, x, y, grassPaintId);
 tilemap-&gt;SetTileCell(1, x, y, TileCell::FromTileId(waterTileId));
 </code></pre>
@@ -461,7 +461,7 @@ props.sortMode = TilemapLayerSortMode::WorldY;
 </ul>
 <h2 id="gameplay-grid-and-pathfinding">Gameplay grid and pathfinding</h2>
 <p>Bake walkability once (or auto-rebake each frame) from tile layers:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;
+<pre><code class="language-cpp">#include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 
 auto* grid = mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
 grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
@@ -498,11 +498,11 @@ Vector2 world = frame.CellCenterToWorldXY({cellX, cellY});
 </table>
 <p>See <a href="../4-ai/05-pathfinding.html">Pathfinding</a> for <code>GridPathfinder::FindPath4</code> and mouse picking.</p>
 <h2 id="tmx.sparkmap-import">TMX / <code>.sparkmap</code> import</h2>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp&quot;
+<pre><code class="language-cpp">#include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
 
 auto* source = mapGo-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
 source-&gt;SetImportOnAttach(false);
-source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;);
+source-&gt;SetTmxPath("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx");
 source-&gt;SetPixelsPerWorldUnit(16.0F);  // tileWorldSize = tilePixelWidth / PPU
 source-&gt;SetHotReload(true);
 source-&gt;ImportNow(*mapGo, world);
@@ -516,10 +516,10 @@ source-&gt;ImportNow(*mapGo, world);
 <p>Importer: <code>TmxImporter</code> (CSV layers, external <code>.tsx</code> tilesets, GID flip bits).</p>
 <h2 id="object-layers-markers-spawns-gizmos">Object layers (markers, spawns, gizmos)</h2>
 <pre><code class="language-cpp">auto* objects = mapGo-&gt;AddComponent&lt;TilemapObjectLayerComponent&gt;();
-const std::uint32_t li = objects-&gt;AddObjectLayer(&quot;GameplayObjects&quot;);
+const std::uint32_t li = objects-&gt;AddObjectLayer("GameplayObjects");
 
 TilemapObjectMarker chest{};
-chest.typeId = Utf8String(&quot;chest&quot;);
+chest.typeId = Utf8String("chest");
 chest.cellX = 10;
 chest.cellY = 6;
 static_cast&lt;void&gt;(objects-&gt;AddMarker(li, chest));

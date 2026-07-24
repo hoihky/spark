@@ -1,8 +1,3 @@
----
-title: Platformer Introduction
-order: 1
----
-
 # Platformer Introduction
 
 We walk through `samples/platformer2d_game_template/` — a complete side-scroller with:
@@ -49,4 +44,4 @@ constexpr float kGroundTopY = -1.0F;
 constexpr float kGoalMinX = 15.5F;
 ```
 
-Next: [Project Setup](7-2d-game/02-project-setup.html).
+Next: [Project Setup](02-project-setup.md).

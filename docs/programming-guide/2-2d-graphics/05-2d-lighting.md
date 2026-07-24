@@ -1,8 +1,3 @@
----
-title: 2D Lighting
-order: 5
----
-
 # 2D Lighting
 
 ## `SpriteLighting2DMode`
@@ -52,4 +47,4 @@ Spawn additive-style sprites at lamp positions with high `sortOrder` and soft gr
 
 See `docs/2D_ARPG_FEATURES.md` for ARPG-specific roadmap notes.
 
-Next: [2D Render Pipeline](2d-graphics/06-2d-render-pipeline.html).
+Next: [2D Render Pipeline](06-2d-render-pipeline.md).

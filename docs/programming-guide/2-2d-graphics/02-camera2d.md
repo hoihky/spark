@@ -1,8 +1,3 @@
----
-title: Camera2D
-order: 2
----
-
 # Camera2D
 
 ## Class Design: `Camera2D`
@@ -66,6 +61,6 @@ camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
 
 ## Screen → world (picking)
 
-Framebuffer coordinates match `gl_FragCoord` (origin top-left, Y down). With `Camera2D::ViewProjection` + `OrthographicVulkan`, unproject using `TerrainScreenToWorldRay` (`spark/demo/ShellDemoSceneUtil.hpp`) — **do not** apply an extra OpenGL-style `ndcY = 1 - y` flip. See [Tilemaps](03-tilemaps.html#screen--cell-picking-2d).
+Framebuffer coordinates match `gl_FragCoord` (origin top-left, Y down). With `Camera2D::ViewProjection` + `OrthographicVulkan`, unproject using `TerrainScreenToWorldRay` (`spark/demo/ShellDemoSceneUtil.hpp`) — **do not** apply an extra OpenGL-style `ndcY = 1 - y` flip. See [Tilemaps](03-tilemaps.md#screen--cell-picking-2d).
 
-Next: [Tilemaps](03-tilemaps.html).
+Next: [Tilemaps](03-tilemaps.md).

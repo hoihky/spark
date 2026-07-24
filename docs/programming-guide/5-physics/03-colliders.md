@@ -1,8 +1,3 @@
----
-title: Colliders
-order: 3
----
-
 # Colliders
 
 ## 2D Colliders
@@ -120,6 +115,6 @@ if (id == SignalId::Physics3DTriggerExit) {
 
 Or use `TriggerVolume3DComponent::SetOnEnter` / `SetOnExit` callbacks.
 
-See also: [Game Component Reference](../1-overview-architecture/07-game-component-reference.html).
+See also: [Game Component Reference](../1-overview-architecture/07-game-component-reference.md).
 
-Next: [Physics Queries](5-physics/04-queries.html).
+Next: [Physics Queries](04-queries.md).

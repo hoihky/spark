@@ -1,8 +1,3 @@
----
-title: Game Component Reference
-order: 7
----
-
 # Game Component Reference
 
 Complete reference for all **70** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
@@ -186,7 +181,7 @@ sa->SetClipIndex(0);
 
 ### `TilemapComponent`
 
-**Kind:** `Tilemap` · **Consumed by:** Tilemap pass · **Guide:** [Tilemaps](../../2-2d-graphics/03-tilemaps.html)
+**Kind:** `Tilemap` · **Consumed by:** Tilemap pass · **Guide:** [Tilemaps](../2-2d-graphics/03-tilemaps.md)
 
 Multi-layer grid; each `TilemapLayer` holds `TileCell` data. Rendering uses `Tileset` atlas layout (including Tiled margin/spacing when set).
 
@@ -911,8 +906,8 @@ Components without handlers still work at runtime; they are omitted from saved s
 
 ## Related chapters
 
-- [ECS and Scene](06-ecs-and-scene.html) — `GameObject`, signals, submit hand-off
-- [Colliders](../5-physics/03-colliders.html) — layer masks, triggers
-- [Sound Cues](../6-sound/03-cues.html) — mixer and spatial audio
-- [Cameras in 3D](../3-3d-graphics/02-cameras-3d.html) — fly camera vs ECS rigs
+- [ECS and Scene](06-ecs-and-scene.md) — `GameObject`, signals, submit hand-off
+- [Colliders](../5-physics/03-colliders.md) — layer masks, triggers
+- [Sound Cues](../6-sound/03-cues.md) — mixer and spatial audio
+- [Cameras in 3D](../3-3d-graphics/02-cameras-3d.md) — fly camera vs ECS rigs
 - [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md) — contributor deep-dive

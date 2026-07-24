@@ -1,8 +1,3 @@
----
-title: FPS Introduction
-order: 1
----
-
 # FPS Introduction
 
 `samples/fps_game_template/` demonstrates a minimal **first-person arena**:
@@ -31,4 +26,4 @@ struct TracerBullet {
 };
 ```
 
-Next: [Project Setup](8-3d-game/02-project-setup.html).
+Next: [Project Setup](02-project-setup.md).

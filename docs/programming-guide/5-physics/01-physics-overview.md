@@ -1,8 +1,3 @@
----
-title: Physics Overview
-order: 1
----
-
 # Physics Overview
 
 ## Design: Explicit Simulation
@@ -55,4 +50,4 @@ void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
 }
 ```
 
-Next: [Rigidbody 2D](5-physics/02-rigidbody-2d.html).
+Next: [Rigidbody 2D](02-rigidbody-2d.md).

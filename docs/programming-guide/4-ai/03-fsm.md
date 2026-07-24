@@ -1,8 +1,3 @@
----
-title: Finite State Machines
-order: 3
----
-
 # Finite State Machines
 
 ## Class Design: `FsmStateMachine`
@@ -69,4 +64,4 @@ if (distanceToPlayer < 12.0F)
 
 `AiAgentComponent::SubsystemTick` calls `fsm->Tick` when `fsmEnabled`.
 
-Next: [GOAP](4-ai/04-goap.html).
+Next: [GOAP](04-goap.md).

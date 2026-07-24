@@ -1,8 +1,3 @@
----
-title: Engine Capabilities
-order: 2
----
-
 # Engine Capabilities
 
 ## Rendering Pipeline (High Level)
@@ -24,7 +19,7 @@ flowchart LR
 | **Spark GUI** (retained) | Menus, editor chrome, themed HUD | `GuiCanvasComponent`, `ProcessGuiCanvasesInput`, `PaintGuiCanvases` |
 | **Dear ImGui** (optional, `SPARK_ENABLE_IMGUI`) | Docking tools, debug panels | `IImGuiLayer`, `GuiToolkitSettings`, build UI in `OnRender` |
 
-Full guide: [UI and Toolkits](08-ui-and-toolkits.html).
+Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 
 ## 3D Rendering
 
@@ -66,7 +61,7 @@ Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flu
 Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
 ```
 
-**70 built-in components** — full reference: [Game Component Reference](07-game-component-reference.html).
+**70 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
 
 ## Asset Loading on GameWorld
 
@@ -78,4 +73,4 @@ world.RegisterMesh(mesh, "my_game/hero");
 world.RegisterTexture(tex, "my_game/hero_albedo");
 ```
 
-Next: [Building and Running](overview-architecture/03-building-and-running.html).
+Next: [Building and Running](03-building-and-running.md).

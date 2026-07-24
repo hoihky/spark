@@ -1,8 +1,3 @@
----
-title: Sprites
-order: 1
----
-
 # Sprites
 
 ## Class Design: `SpriteComponent`
@@ -90,4 +85,4 @@ params.sprites.PushBack(draw);
 
 World space is **+Y up**. Framebuffer Y increases downward after `OrthographicVulkan` projection — `Camera2D` handles this conversion.
 
-Next: [Camera2D](2d-graphics/02-camera2d.html).
+Next: [Camera2D](02-camera2d.md).

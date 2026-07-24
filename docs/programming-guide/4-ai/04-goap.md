@@ -1,8 +1,3 @@
----
-title: GOAP
-order: 4
----
-
 # Goal-Oriented Action Planning
 
 ## Class Design: `GoapActionSpec`
@@ -60,4 +55,4 @@ GOAP plans **what** to do; combine with pathfinding/steering for **how** to move
 
 See `GoapDemo` in `SparkDemo`.
 
-Next: [Pathfinding](4-ai/05-pathfinding.html).
+Next: [Pathfinding](05-pathfinding.md).

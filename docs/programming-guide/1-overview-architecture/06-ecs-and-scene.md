@@ -1,8 +1,3 @@
----
-title: ECS and Scene
-order: 6
----
-
 # ECS and Scene
 
 ## Class Design: `GameObject`
@@ -58,7 +53,7 @@ Built-in priorities (`ComponentUpdatePriority`):
 | — | 295 | `SpringArm3D` |
 | — | 300 | `Camera2DRig`, `CameraFollow3D` |
 
-Full per-component tables: [Game Component Reference](07-game-component-reference.html).
+Full per-component tables: [Game Component Reference](07-game-component-reference.md).
 
 ## Class Design: `GameWorld`
 
@@ -119,7 +114,7 @@ void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) over
 }
 ```
 
-See [Game Component Reference](07-game-component-reference.html) for every component and signal payload.
+See [Game Component Reference](07-game-component-reference.md) for every component and signal payload.
 
 ## Rendering Hand-off
 
@@ -133,4 +128,4 @@ Spark::PaintGuiCanvases(world, params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
 
-Part 1 complete → [Game Component Reference](07-game-component-reference.html) · **Part 2**: [Sprites](2d-graphics/01-sprites.html).
+Part 1 complete → [Game Component Reference](07-game-component-reference.md) · **Part 2**: [Sprites](../2-2d-graphics/01-sprites.md).

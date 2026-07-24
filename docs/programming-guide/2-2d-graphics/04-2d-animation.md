@@ -1,8 +1,3 @@
----
-title: 2D Animation
-order: 4
----
-
 # 2D Animation
 
 ## Sprite Sheet Playback
@@ -67,7 +62,7 @@ recv->AddMarker(0, 0.5F, "Footstep");
 
 Fires `SignalId::AnimationEvent` to sibling components when the animator crosses each marker.
 
-See [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#animation).
+See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#animation).
 
 ## Flip Without Extra Textures
 
@@ -99,4 +94,4 @@ const float stretch = 1.0F + std::clamp(vy * 0.02F, -0.15F, 0.15F);
 playerTr->SetScale({baseScaleX / stretch, baseScaleY * stretch, 1.0F});
 ```
 
-Next: [2D Lighting](2d-graphics/05-2d-lighting.html).
+Next: [2D Lighting](05-2d-lighting.md).

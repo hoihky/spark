@@ -1,8 +1,3 @@
----
-title: Player Controller
-order: 4
----
-
 # Player Controller
 
 ## Spawn Player
@@ -54,4 +49,4 @@ if (!goalReached && p.x >= kGoalMinX)
     goalReached = true;
 ```
 
-Next: [Camera and HUD](7-2d-game/05-camera-hud.html).
+Next: [Camera and HUD](05-camera-hud.md).

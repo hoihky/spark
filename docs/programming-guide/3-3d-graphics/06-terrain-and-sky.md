@@ -1,8 +1,3 @@
----
-title: Terrain and Sky
-order: 6
----
-
 # Terrain and Sky
 
 ## Class Design: `TerrainComponent`
@@ -58,4 +53,4 @@ worldRoot->AddComponent<TimeOfDayDriverComponent>()->SetDayLengthSeconds(120.0F)
 
 Regional fog: add `FogVolumeComponent` on a trigger volume (camera-inside test at submit).
 
-Next: [Particles](3d-graphics/07-particles.html).
+Next: [Particles](07-particles.md).

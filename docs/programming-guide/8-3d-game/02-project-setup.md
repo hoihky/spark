@@ -1,8 +1,3 @@
----
-title: Project Setup
-order: 2
----
-
 # Project Setup
 
 ```bash
@@ -35,4 +30,4 @@ world.RegisterMesh(mesh, "unique/key");
 go->AddComponent<MeshComponent>(mesh, SceneMeshSlot::Custom, albedo);
 ```
 
-Next: [Arena and Targets](8-3d-game/03-arena.html).
+Next: [Arena and Targets](03-arena.md).

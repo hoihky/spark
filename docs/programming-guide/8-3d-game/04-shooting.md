@@ -1,8 +1,3 @@
----
-title: Shooting and Tracers
-order: 4
----
-
 # Shooting and Tracers
 
 ## Camera Update
@@ -60,4 +55,4 @@ void SpawnTracerBullet(const Vector3& origin, const Vector3& dirUnit) {
 }
 ```
 
-Next: [Rendering the 3D Scene](8-3d-game/05-rendering.html).
+Next: [Rendering the 3D Scene](05-rendering.md).

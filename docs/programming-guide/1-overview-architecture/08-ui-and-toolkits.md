@@ -1,8 +1,3 @@
----
-title: UI and Toolkits
-order: 8
----
-
 # UI and Toolkits
 
 Spark supports **two complementary UI stacks** for tools, menus, and HUD:
@@ -118,4 +113,4 @@ cmake -S . -B build -DSPARK_ENABLE_IMGUI=OFF
 
 **`GuiToolkitSettings::ShouldProcessSparkGuiInput()`** returns `false` when the preferred toolkit is `DearImGui`, so retained canvases skip hit testing while ImGui is active.
 
-Next: [Sprites](../2-2d-graphics/01-sprites.html) (Part 2) or continue with [Game Component Reference](07-game-component-reference.html) for `GuiCanvasComponent`.
+Next: [Sprites](../2-2d-graphics/01-sprites.md) (Part 2) or continue with [Game Component Reference](07-game-component-reference.md) for `GuiCanvasComponent`.

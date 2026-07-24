@@ -400,10 +400,10 @@
 }
 </code></pre>
 <h2 id="level-layout">Level Layout</h2>
-<pre><code class="language-cpp">tileTex = MakeShared&lt;Texture2D&gt;(Utf8String(&quot;Tiles&quot;));
+<pre><code class="language-cpp">tileTex = MakeShared&lt;Texture2D&gt;(Utf8String("Tiles"));
 *tileTex = Texture2D::CreateCheckerboard(256, 32,
     Vector3{0.38F, 0.34F, 0.30F}, Vector3{0.16F, 0.48F, 0.30F});
-world.RegisterTexture(tileTex, &quot;platformer2d_template/tiles&quot;);
+world.RegisterTexture(tileTex, "platformer2d_template/tiles");
 
 AddSolidPlatform(world, roots, tileTex, -12, -3, 24, kGroundTopY, 10, ...);
 AddSolidPlatform(world, roots, tileTex, -2, -0.2, 2.5, 0.55, 20, ...);

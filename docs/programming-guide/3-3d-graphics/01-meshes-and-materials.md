@@ -1,8 +1,3 @@
----
-title: Meshes and Materials
-order: 1
----
-
 # Meshes and Materials
 
 ## Class Design: `Mesh`
@@ -80,4 +75,4 @@ target->AddComponent<MeshComponent>(unitCube, SceneMeshSlot::Custom, Vector3{0.9
 target->AddComponent<MaterialComponent>(nullptr)->SetRoughness(0.35F);
 ```
 
-Next: [Cameras in 3D](3d-graphics/02-cameras-3d.html).
+Next: [Cameras in 3D](02-cameras-3d.md).

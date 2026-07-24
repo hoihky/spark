@@ -1,8 +1,3 @@
----
-title: Shadows
-order: 4
----
-
 # Shadows
 
 ## Directional CSM
@@ -46,4 +41,4 @@ Toon materials still receive shadow terms — see `ToonShadingDemo`.
 | Shadow acne | Increase `shadowNormalBias` |
 | Shimmering CSM | Adjust cascade splits in renderer settings |
 
-Next: [Skinned Characters](3d-graphics/05-skinned-characters.html).
+Next: [Skinned Characters](05-skinned-characters.md).

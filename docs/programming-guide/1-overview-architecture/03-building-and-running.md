@@ -1,8 +1,3 @@
----
-title: Building and Running
-order: 3
----
-
 # Building and Running
 
 ## Requirements
@@ -66,4 +61,4 @@ Copy `game_template/` or `samples/platformer2d_game_template/` as a starting poi
 
 Full list: `SparkShellDemo` menu in `src/spark/demo/SparkShellDemo.cpp`.
 
-Next: [The Engine Loop](overview-architecture/04-engine-loop.html).
+Next: [The Engine Loop](04-engine-loop.md).

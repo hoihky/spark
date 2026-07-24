@@ -1,8 +1,3 @@
----
-title: Rendering the 3D Scene
-order: 5
----
-
 # Rendering the 3D Scene
 
 ## Full OnRender
@@ -42,4 +37,4 @@ hudText->SetText(Utf8String(std::format(
 
 `TextOverlayComponent` is collected by `FillStandardLitSceneFromWorld`.
 
-Next: [Extending the FPS](8-3d-game/06-extending.html).
+Next: [Extending the FPS](06-extending.md).

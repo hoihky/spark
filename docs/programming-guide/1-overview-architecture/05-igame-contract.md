@@ -1,8 +1,3 @@
----
-title: IGame and Game
-order: 5
----
-
 # IGame and Game
 
 ## Class Design: `IGame`
@@ -106,4 +101,4 @@ void OnDetach() override {
 }
 ```
 
-Next: [ECS and Scene](overview-architecture/06-ecs-and-scene.html).
+Next: [ECS and Scene](06-ecs-and-scene.md).

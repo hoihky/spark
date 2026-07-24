@@ -379,7 +379,7 @@
           </header>
           <div class="doc-body"><h1 id="pathfinding">Pathfinding</h1>
 <h2 id="class-design-gridpathfinder">Class Design: <code>GridPathfinder</code></h2>
-<pre><code class="language-cpp">#include &quot;spark/ai/path/GridPathfinder.hpp&quot;
+<pre><code class="language-cpp">#include "spark/ai/path/GridPathfinder.hpp"
 
 class IGridWalkability {
 public:
@@ -396,8 +396,8 @@ static bool FindPath4(const IGridWalkability&amp; grid, const Cell&amp; start,
 <p>4-connected A* on a grid abstraction. <strong>Start and goal must both be walkable</strong> or <code>FindPath4</code> returns false.</p>
 <h2 id="tilemap-gameplay-grid-recommended">Tilemap gameplay grid (recommended)</h2>
 <p>Prefer baking from <code>TilemapComponent</code> instead of hand-maintaining a bitmap:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;
-#include &quot;spark/scene/tilemap/TilemapGridCoordinates.hpp&quot;
+<pre><code class="language-cpp">#include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
+#include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
 
 auto* gridComp = mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
 gridComp-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);

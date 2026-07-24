@@ -403,7 +403,7 @@
 <p>Both can coexist in one build when <code>SPARK_ENABLE_IMGUI=ON</code> (default). Use <strong><code>GuiToolkitSettings</code></strong> to choose which stack receives pointer/keyboard routing for a mode.</p>
 <h2 id="spark-retained-gui-default">Spark Retained GUI (default)</h2>
 <p>Attach a <strong><code>GuiCanvasComponent</code></strong> to a <code>GameObject</code>, set a root <strong><code>Widget</code></strong> tree, then each frame:</p>
-<pre><code class="language-cpp">#include &quot;spark/gui/GuiScene.hpp&quot;
+<pre><code class="language-cpp">#include "spark/gui/GuiScene.hpp"
 
 Spark::ProcessGuiCanvasesInput(world, input, fbW, fbH, contentScaleX, contentScaleY);
 // … after building SceneRenderParams …
@@ -419,8 +419,8 @@ Spark::PaintGuiCanvases(world, params, fbW, fbH);
 <h2 id="dear-imgui-optional">Dear ImGui (optional)</h2>
 <p>CMake option <strong><code>SPARK_ENABLE_IMGUI</code></strong> (default <strong>ON</strong>) links the <strong>docking</strong> branch of Dear ImGui with GLFW + Vulkan backends (<code>cmake/SparkImGui.cmake</code>).</p>
 <h3 id="access-from-gameplay">Access from gameplay</h3>
-<pre><code class="language-cpp">#include &quot;spark/imgui/IImGuiLayer.hpp&quot;
-#include &quot;spark/gui/toolkit/GuiToolkitSettings.hpp&quot;
+<pre><code class="language-cpp">#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/gui/toolkit/GuiToolkitSettings.hpp"
 
 void MyToolMode::Enter(Spark::IEngineContext&amp; context) {
     Spark::Gui::GuiToolkitSettings::SetPreferred(Spark::Gui::GuiToolkitKind::DearImGui);
@@ -441,8 +441,8 @@ void MyToolMode::Leave(Spark::IEngineContext&amp; context) noexcept {
 #include &lt;imgui.h&gt;
 
 void MyToolMode::OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; context) {
-    if (ImGui::Begin(&quot;Inspector&quot;)) {
-        ImGui::SliderFloat(&quot;Exposure&quot;, &amp;exposure, 0.1F, 3.0F);
+    if (ImGui::Begin("Inspector")) {
+        ImGui::SliderFloat("Exposure", &amp;exposure, 0.1F, 3.0F);
     }
     ImGui::End();
     // … set SceneRenderParams for 3D backdrop …
@@ -455,12 +455,12 @@ void MyToolMode::OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; c
     participant G as IGame
     participant I as IImGuiLayer
     participant V as VulkanRenderer
-    E->>E: PollEvents + input BeginFrame
-    E->>G: OnUpdate (simulation; may enable ImGui)
-    E->>I: BeginFrame (NewFrame)
-    E->>G: OnRender (build ImGui windows)
-    E->>I: EndFrame (Render)
-    E->>V: PresentFrame (record ImGui after screen UI)
+    E-&gt;&gt;E: PollEvents + input BeginFrame
+    E-&gt;&gt;G: OnUpdate (simulation; may enable ImGui)
+    E-&gt;&gt;I: BeginFrame (NewFrame)
+    E-&gt;&gt;G: OnRender (build ImGui windows)
+    E-&gt;&gt;I: EndFrame (Render)
+    E-&gt;&gt;V: PresentFrame (record ImGui after screen UI)
 </pre>
 <p><strong>Rules:</strong></p>
 <ol>

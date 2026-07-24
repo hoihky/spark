@@ -1,8 +1,3 @@
----
-title: Physics Queries
-order: 4
----
-
 # Physics Queries
 
 ## Class Design: `PhysicsQueries2D`
@@ -66,4 +61,4 @@ bool grounded = PhysicsQueries2D::RaycastWorld2D(
 
 Or use `Rigidbody2DComponent::IsGrounded()` after simulation.
 
-Next: [Physics 3D](5-physics/05-physics-3d.html).
+Next: [Physics 3D](05-physics-3d.md).

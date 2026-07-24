@@ -1,8 +1,3 @@
----
-title: The Engine Loop
-order: 4
----
-
 # The Engine Loop
 
 ## Class Design: `Engine`
@@ -51,7 +46,7 @@ sequenceDiagram
     E->>V: PresentFrame
 ```
 
-When Dear ImGui is enabled, build all `ImGui::Begin` / widget code inside **`OnRender`**, not `OnUpdate`. See [UI and Toolkits](08-ui-and-toolkits.html).
+When Dear ImGui is enabled, build all `ImGui::Begin` / widget code inside **`OnRender`**, not `OnUpdate`. See [UI and Toolkits](08-ui-and-toolkits.md).
 
 ## FrameTiming
 
@@ -93,4 +88,4 @@ void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
 
 F12 captures the framebuffer to `spark_runtime_assets/screenshots/`.
 
-Next: [IGame and Game](overview-architecture/05-igame-contract.html).
+Next: [IGame and Game](05-igame-contract.md).

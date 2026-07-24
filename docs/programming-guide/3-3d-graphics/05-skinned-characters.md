@@ -1,8 +1,3 @@
----
-title: Skinned Characters
-order: 5
----
-
 # Skinned Characters
 
 ## Class Design: `SkinnedGltfAsset`
@@ -66,6 +61,6 @@ events->AddMarker(0, 0.35F, "Footstep");
 // Listen via SignalId::AnimationEvent on a sibling GameComponent
 ```
 
-See [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#animation).
+See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#animation).
 
-Next: [Terrain and Sky](3d-graphics/06-terrain-and-sky.html).
+Next: [Terrain and Sky](06-terrain-and-sky.md).

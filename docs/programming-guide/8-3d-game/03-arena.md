@@ -1,8 +1,3 @@
----
-title: Arena and Targets
-order: 3
----
-
 # Arena and Targets
 
 ## Ground
@@ -43,4 +38,4 @@ GetScene().SetSpatialPartitionKind(ScenePartitionKind::BoundingVolumeHierarchy);
 
 Improves frustum culling for many static meshes.
 
-Next: [Shooting and Tracers](8-3d-game/04-shooting.html).
+Next: [Shooting and Tracers](04-shooting.md).

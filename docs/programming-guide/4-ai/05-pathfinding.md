@@ -1,8 +1,3 @@
----
-title: Pathfinding
-order: 5
----
-
 # Pathfinding
 
 ## Class Design: `GridPathfinder`
@@ -52,7 +47,7 @@ if (GridPathfinder::FindPath4(gridComp->GetWalkability(), start, goal, cells)) {
 }
 ```
 
-Walkability honors per-layer `contributeGameplayGrid` and per-tile `TileDefinition` flags (see [Tilemaps](../2-2d-graphics/03-tilemaps.html)).
+Walkability honors per-layer `contributeGameplayGrid` and per-tile `TileDefinition` flags (see [Tilemaps](../2-2d-graphics/03-tilemaps.md)).
 
 One-shot bake without the component:
 
@@ -86,7 +81,7 @@ GridPathfinder::CellsToWorldPolyline(cells, gridOriginXZ, cellSize, outWorldXZ);
 
 ## NavMesh agents (3D / hybrid)
 
-Or use **NavMeshAgentComponent** + **PatrolPathComponent** — `ProcessNavMeshAgents` fills the polyline before steering runs (see [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#patrolpathcomponent--navmeshagentcomponent)).
+Or use **NavMeshAgentComponent** + **PatrolPathComponent** — `ProcessNavMeshAgents` fills the polyline before steering runs (see [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#patrolpathcomponent--navmeshagentcomponent)).
 
 ## Follow polyline
 
@@ -96,4 +91,4 @@ Advance `pathIndex` when within `arriveRadius` of each waypoint; steer toward `p
 
 `FuzzyAdvisoryModule` (`spark/ai/fuzzy/FuzzyLogic.hpp`) blends continuous inputs (health, distance) into action weights — enable via `agent->SetFuzzyEnabled(true)`.
 
-Part 4 complete → **Part 5**: [Physics Overview](../5-physics/01-physics-overview.html).
+Part 4 complete → **Part 5**: [Physics Overview](../5-physics/01-physics-overview.md).

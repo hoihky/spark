@@ -1,8 +1,3 @@
----
-title: Camera and HUD
-order: 5
----
-
 # Camera and HUD
 
 ## Camera Follow
@@ -42,4 +37,4 @@ SubmitStandardLitSceneFromWorld(
     SceneSpriteSortMode::SortOrderThenWorldY);
 ```
 
-Next: [Polish and Ship](7-2d-game/06-polish.html).
+Next: [Polish and Ship](06-polish.md).

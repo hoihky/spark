@@ -1,8 +1,3 @@
----
-title: Lighting
-order: 3
----
-
 # Lighting
 
 ## ECS Light Components
@@ -46,4 +41,4 @@ SubmitStandardLitSceneFromWorld(
 
 Read engine docs: `docs/LIGHTING_AND_SHADOWS.md`, `docs/MATERIALS_AND_LIGHTING.md`.
 
-Next: [Shadows](3d-graphics/04-shadows.html).
+Next: [Shadows](04-shadows.md).

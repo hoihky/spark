@@ -1,8 +1,3 @@
----
-title: Joints and Tips
-order: 6
----
-
 # Tips and Patterns
 
 ## Fixed Timestep
@@ -42,4 +37,4 @@ std::format("v=({:.1f},{:.1f})", v.x, v.y);
 
 Grid-based tactics, visual novels, and menu scenes need no solver — omit `SimulatePhysics*`.
 
-Part 5 complete → **Part 6**: [Sound Engine](6-sound/01-sound-engine.html).
+Part 5 complete → **Part 6**: [Sound Engine](../6-sound/01-sound-engine.md).

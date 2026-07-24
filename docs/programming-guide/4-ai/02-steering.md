@@ -1,8 +1,3 @@
----
-title: Steering Behaviors
-order: 2
----
-
 # Steering Behaviors
 
 ## Class Design: `ISteeringBehavior` (2D)
@@ -61,4 +56,4 @@ vel = vel.ClampLength(agent->GetMaxSpeed());
 rb->SetVelocity(vel);
 ```
 
-Next: [Finite State Machines](4-ai/03-fsm.html).
+Next: [Finite State Machines](03-fsm.md).

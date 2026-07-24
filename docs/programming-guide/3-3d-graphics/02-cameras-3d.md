@@ -1,8 +1,3 @@
----
-title: Cameras in 3D
-order: 2
----
-
 # Cameras in 3D
 
 ## ECS cameras (`CameraComponent`)
@@ -98,6 +93,6 @@ For third-person characters without ECS rigs, see `spark/scene/CharacterCameraRi
 
 `BillboardComponent` orients its owner's transform toward the main camera each frame (priority 50). Used for particles, pickups, and impostor sprites in 3D.
 
-See [Game Component Reference](../1-overview-architecture/07-game-component-reference.html#camera).
+See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#camera).
 
-Next: [Lighting](3d-graphics/03-lighting.html).
+Next: [Lighting](03-lighting.md).

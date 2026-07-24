@@ -1,8 +1,3 @@
----
-title: Sound Cues
-order: 3
----
-
 # Sound Cues
 
 ## Class Design: `SoundCueComponent`
@@ -80,4 +75,4 @@ se->ClearBackgroundMusic();
 
 `SoundMixer` multiplexes one-shots — rapid `Queue` calls overlap without cutting off prior sounds (within voice pool limits). Spatial voices apply stereo pan and distance attenuation from the resolved listener.
 
-Part 6 complete → **Part 7**: [Platformer Introduction](7-2d-game/01-platformer-intro.html).
+Part 6 complete → **Part 7**: [Platformer Introduction](../7-2d-game/01-platformer-intro.md).

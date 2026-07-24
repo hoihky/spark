@@ -1,8 +1,3 @@
----
-title: Project Setup
-order: 2
----
-
 # Project Setup
 
 ## Copy Template
@@ -44,4 +39,4 @@ void OnDetach() override {
 }
 ```
 
-Next: [Building the Level](7-2d-game/03-level-design.html).
+Next: [Building the Level](03-level-design.md).

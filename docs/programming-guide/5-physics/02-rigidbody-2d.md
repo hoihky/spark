@@ -1,8 +1,3 @@
----
-title: Rigidbody 2D
-order: 2
----
-
 # Rigidbody 2D
 
 ## Class Design: `Rigidbody2DComponent`
@@ -53,4 +48,4 @@ go->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
 
 Transform scale defines collider world size when using default `BoxCollider2DComponent` half-extents.
 
-Next: [Colliders](5-physics/03-colliders.html).
+Next: [Colliders](03-colliders.md).

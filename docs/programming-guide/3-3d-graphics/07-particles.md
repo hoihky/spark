@@ -1,8 +1,3 @@
----
-title: Particles
-order: 7
----
-
 # Particles
 
 ## Class Design: `ParticleEmitterComponent`
@@ -55,4 +50,4 @@ struct SceneParticleInstance {
 
 See `ParticleDemo` for colored bursts and muzzle flash patterns.
 
-Part 3 complete → **Part 4**: [AI Overview](4-ai/01-ai-overview.html).
+Part 3 complete → **Part 4**: [AI Overview](../4-ai/01-ai-overview.md).

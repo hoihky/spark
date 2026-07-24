@@ -1,8 +1,3 @@
----
-title: Introduction to Spark
-order: 1
----
-
 # Introduction to Spark
 
 Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted **retained GUI** toolkit, and optional **Dear ImGui** for immediate-mode tools.
@@ -53,4 +48,4 @@ int main() {
 
 `src/main.cpp` constructs `Engine` with `NewShellDemoGame()` — an interactive launcher with **19** built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, **Dear ImGui docking demo**, and more).
 
-Next: [Engine Capabilities](overview-architecture/02-engine-capabilities.html).
+Next: [Engine Capabilities](02-engine-capabilities.md).

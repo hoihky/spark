@@ -1,8 +1,3 @@
----
-title: Sound Clips
-order: 2
----
-
 # Sound Clips
 
 ## Class Design: `SoundClip`
@@ -40,4 +35,4 @@ SharedPtr<SoundClip> clip = /* load from assets/audio/jump.wav */;
 
 Supported formats depend on build configuration — WAV is always safe.
 
-Next: [Sound Cues](6-sound/03-cues.html).
+Next: [Sound Cues](03-cues.md).
