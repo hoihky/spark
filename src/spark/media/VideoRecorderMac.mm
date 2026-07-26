@@ -161,6 +161,7 @@ public:
         outputWidth = outW;
         outputHeight = outH;
         audioSamplesWritten = 0;
+        videoFramesAppended = 0;
         sessionStarted = YES;
         active = YES;
         outputPath = settings.outputPath;
@@ -230,6 +231,8 @@ public:
         CVPixelBufferRelease(pixelBuffer);
         if (!ok) {
             std::fprintf(stderr, "Spark: failed to append video frame at %.3f s\n", ptsSeconds);
+        } else {
+            ++videoFramesAppended;
         }
     }
 
@@ -304,6 +307,10 @@ public:
         }
         active = false;
 
+        if (videoFramesAppended == 0) {
+            std::fprintf(stderr, "Spark: recording had no video frames; output may not be playable\n");
+        }
+
         [videoInput markAsFinished];
         [audioInput markAsFinished];
 
@@ -334,6 +341,7 @@ public:
         }
         sessionStarted = NO;
         audioSamplesWritten = 0;
+        videoFramesAppended = 0;
         outputWidth = 0;
         outputHeight = 0;
         return finished && success;
@@ -348,6 +356,7 @@ private:
     AVAssetWriterInputPixelBufferAdaptor* pixelAdaptor = nil;
     CMAudioFormatDescriptionRef audioFormat = nullptr;
     int64_t audioSamplesWritten = 0;
+    std::uint64_t videoFramesAppended = 0;
     bool sessionStarted = NO;
     bool active = false;
     Utf8String outputPath;

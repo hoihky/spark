@@ -1,6 +1,29 @@
+<p align="center">
+  <img src="docs/media/spark-engine-logo.jpg" alt="Spark game engine logo" width="360" />
+</p>
+
 # Spark
 
 Spark is a **C++23** game engine with a Vulkan forward renderer, entity–component scene model, retained-mode GUI, optional **Dear ImGui** tool UI, optional C# scripting, and an in-progress editor.
+
+## Showcase
+
+In-engine captures from **SparkDemo** (F12 screenshot, F9 video recording).
+
+### Screenshots
+
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/media/showcase-01.png" alt="Spark demo screenshot 1" width="400" /> | <img src="docs/media/showcase-02.png" alt="Spark demo screenshot 2" width="400" /> | <img src="docs/media/showcase-03.png" alt="Spark demo screenshot 3" width="400" /> |
+| <img src="docs/media/showcase-04.png" alt="Spark demo screenshot 4" width="400" /> | <img src="docs/media/showcase-05.png" alt="Spark demo screenshot 5" width="400" /> | <img src="docs/media/showcase-06.png" alt="Spark demo screenshot 6" width="400" /> |
+| <img src="docs/media/showcase-07.png" alt="Spark demo screenshot 7" width="400" /> | <img src="docs/media/showcase-08.png" alt="Spark demo screenshot 8" width="400" /> | <img src="docs/media/showcase-09.png" alt="Spark demo screenshot 9" width="400" /> |
+
+### Video
+
+| | |
+|:---:|:---:|
+| <video src="docs/media/showcase-01.mp4" controls width="100%"><a href="docs/media/showcase-01.mp4">showcase-01.mp4</a></video> | <video src="docs/media/showcase-02.mp4" controls width="100%"><a href="docs/media/showcase-02.mp4">showcase-02.mp4</a></video> |
+| <video src="docs/media/showcase-03.mp4" controls width="100%"><a href="docs/media/showcase-03.mp4">showcase-03.mp4</a></video> | <video src="docs/media/showcase-04.mp4" controls width="100%"><a href="docs/media/showcase-04.mp4">showcase-04.mp4</a></video> |
 
 ## Quick start
 

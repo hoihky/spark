@@ -35,6 +35,12 @@ public:
         (void)params;
     }
 
+    /** When implemented, returns the params last passed to <c>SetSceneRenderParams</c> for read-modify-write (e.g. FPS HUD). */
+    [[nodiscard]] virtual bool TryGetMutableSceneRenderParams(SceneRenderParams*& outParams) noexcept {
+        (void)outParams;
+        return false;
+    }
+
     /**
      * Request a PNG capture of the next presented frame (swapchain after UI).
      * Default no-op; VulkanRenderer implements readback (use F12 in Engine on macOS).

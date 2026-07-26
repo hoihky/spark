@@ -1,6 +1,7 @@
 #include "spark/render/core/VulkanFrameCapture.hpp"
 
 #include "spark/media/VideoRecorder.hpp"
+#include "spark/render/core/VulkanFrameSync.hpp"
 
 namespace Spark {
 
@@ -12,7 +13,9 @@ void VulkanFrameCapture::RecreateSwapchainResources(
     screenshotCapture.Create(physicalDevice, device, swapchainFormat);
     screenshotCapture.EnsureBuffer(extent);
     videoCapture.Create(physicalDevice, device, swapchainFormat);
-    videoCapture.EnsureBuffer(extent);
+    if (!videoCapture.IsRecording()) {
+        videoCapture.EnsureBuffer(extent);
+    }
 }
 
 void VulkanFrameCapture::Destroy(VkDevice device) noexcept {
@@ -50,18 +53,28 @@ bool VulkanFrameCapture::NeedsPostSubmitWork() const noexcept {
 void VulkanFrameCapture::RecordCopyFromSwapchain(
         VkCommandBuffer commandBuffer,
         VkImage swapchainImage,
-        VkExtent2D extent) {
-    screenshotCapture.RecordCopyFromSwapchain(commandBuffer, swapchainImage, extent);
-    videoCapture.RecordCopyFromSwapchain(commandBuffer, swapchainImage, extent);
+        VkExtent2D extent,
+        const std::uint32_t flightIndex) {
+    videoCapture.RecordCopyFromSwapchain(commandBuffer, swapchainImage, extent, flightIndex);
+    screenshotCapture.RecordCopyFromSwapchain(commandBuffer, swapchainImage, extent, flightIndex);
 }
 
-void VulkanFrameCapture::TrySavePendingPng() {
-    screenshotCapture.TrySavePendingPng();
-}
-
-void VulkanFrameCapture::TryCommitFrameAfterFence(double ptsSeconds) noexcept {
+void VulkanFrameCapture::OnFlightFenceSignaled(const std::uint32_t waitedFlightIndex) noexcept {
+    (void)screenshotCapture.TrySavePendingPngForFlight(waitedFlightIndex);
     if (videoCapture.IsRecording()) {
-        videoCapture.TryCommitFrameAfterFence(ptsSeconds);
+        videoCapture.TryCommitFlightCapture(waitedFlightIndex);
+    }
+}
+
+void VulkanFrameCapture::FlushPendingCaptures(VkDevice device, const VkFence* inFlightFences) noexcept {
+    if (videoCapture.IsRecording()) {
+        videoCapture.FlushPendingCaptures(device, inFlightFences);
+    }
+    if (screenshotCapture.HasPendingCapture() && inFlightFences != nullptr) {
+        for (std::uint32_t i = 0; i < VulkanFrameSync::kMaxFramesInFlight; ++i) {
+            vkWaitForFences(device, 1, &inFlightFences[i], VK_TRUE, UINT64_MAX);
+            (void)screenshotCapture.TrySavePendingPngForFlight(i);
+        }
     }
 }
 

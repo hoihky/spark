@@ -38,6 +38,7 @@ public:
         Spark::Gui::TryLoadSceneEditorLayout(layout);
         MountUiFont(GetWorld());
         BuildLauncherUi();
+        fpsOverlay.EnsureMounted(GetWorld());
         context.GetInput().SetCursorCaptured(false);
     }
 
@@ -52,6 +53,9 @@ public:
             context.GetInput().SetCursorCaptured(false);
         }
         Spark::ProcessGuiCanvasesInput(GetScene(), context.GetInput(), fbW, fbH, contentScaleX, contentScaleY);
+
+        fpsOverlay.SyncVisibilityFromGlobal();
+        fpsOverlay.Update(timing, fbW);
 
         if (mode == DemoMode::Menu && engineCtx != nullptr) {
             Spark::IInput& in = context.GetInput();
@@ -204,85 +208,48 @@ public:
         context.GetFramebufferSize(fbW, fbH);
         if (mode == DemoMode::ThreeD) {
             threeD.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Sky) {
+        } else if (mode == DemoMode::Sky) {
             skyDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Particles) {
+        } else if (mode == DemoMode::Particles) {
             particleDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Terrain) {
+        } else if (mode == DemoMode::Terrain) {
             terrainDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Character) {
+        } else if (mode == DemoMode::Character) {
             characterDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Tetris2D) {
+        } else if (mode == DemoMode::Tetris2D) {
             tetris2DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Connect3) {
+        } else if (mode == DemoMode::Connect3) {
             connect3Demo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::SpaceInvaders2D) {
+        } else if (mode == DemoMode::SpaceInvaders2D) {
             spaceInvaders2DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::RenderLayers2D) {
+        } else if (mode == DemoMode::RenderLayers2D) {
             renderLayers2DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::TilemapShowcase2D) {
+        } else if (mode == DemoMode::TilemapShowcase2D) {
             tilemapShowcase2DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Platformer2D) {
+        } else if (mode == DemoMode::Platformer2D) {
             platformer2DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::BroadPhase2D) {
+        } else if (mode == DemoMode::BroadPhase2D) {
             broadPhase2DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::Maze3D) {
+        } else if (mode == DemoMode::Maze3D) {
             maze3DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::PhysicsBall3D) {
+        } else if (mode == DemoMode::PhysicsBall3D) {
             physicsBall3D.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::SteeringShowcase3D) {
+        } else if (mode == DemoMode::SteeringShowcase3D) {
             steeringShowcase3D.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::SceneEditor3D) {
+        } else if (mode == DemoMode::SceneEditor3D) {
             sceneEditor3D.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::ToonShading) {
+        } else if (mode == DemoMode::ToonShading) {
             toonShadingDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::MaterialShowcase3D) {
+        } else if (mode == DemoMode::MaterialShowcase3D) {
             materialShowcase3DDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::TimeOfDay) {
+        } else if (mode == DemoMode::TimeOfDay) {
             timeOfDayDemo.Render(GetScene(), GetWorld(), context);
-            return;
-        }
-        if (mode == DemoMode::ImGuiShowcase) {
+        } else if (mode == DemoMode::ImGuiShowcase) {
             imguiShowcaseDemo.Render(GetScene(), GetWorld(), context);
-            return;
+        } else {
+            RenderUiOnly(context, fbW, fbH);
         }
-        RenderUiOnly(context, fbW, fbH);
+        fpsOverlay.PatchSceneRenderParams(context);
     }
 
     void EnterThreeD(IEngineContext& context) {
@@ -1983,6 +1950,7 @@ private:
     Spark::Gui::ScrollPanel* demoListScroll = nullptr;
     Spark::Gui::List* demoList = nullptr;
     LauncherThemeRow* menuThemeRow = nullptr;
+    DemoFpsToggleOverlay fpsOverlay{};
 };
 
 UniquePtr<IGame> NewShellDemoGame() {

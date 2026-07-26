@@ -35,9 +35,13 @@ public:
     void RecordCopyFromSwapchain(
             VkCommandBuffer commandBuffer,
             VkImage swapchainImage,
-            VkExtent2D extent);
-    void TrySavePendingPng();
-    void TryCommitFrameAfterFence(double ptsSeconds) noexcept;
+            VkExtent2D extent,
+            std::uint32_t flightIndex);
+
+    /** After the per-flight fence has been waited on at frame start. */
+    void OnFlightFenceSignaled(std::uint32_t waitedFlightIndex) noexcept;
+
+    void FlushPendingCaptures(VkDevice device, const VkFence* inFlightFences) noexcept;
 
 private:
     VulkanScreenshotCapture screenshotCapture;

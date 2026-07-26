@@ -24,6 +24,7 @@ public:
     [[nodiscard]] IInput& GetInput() override;
     void GetFramebufferSize(int& outWidth, int& outHeight) const override;
     void SetSceneRenderParams(const SceneRenderParams& params) override;
+    [[nodiscard]] bool TryGetMutableSceneRenderParams(SceneRenderParams*& outParams) noexcept override;
     [[nodiscard]] SoundEngine* TryGetSoundEngine() noexcept override;
     [[nodiscard]] Scene* TryGetScene() noexcept override;
     [[nodiscard]] IImGuiLayer* TryGetImGuiLayer() noexcept override;

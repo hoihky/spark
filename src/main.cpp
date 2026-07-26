@@ -40,6 +40,7 @@ void PrintUsage(const char* argv0) {
             "Usage: {} [--record [output.mp4]] [--record-fps N] [--record-preset native|720|1080] "
             "[--record-video-bitrate BPS] [--record-audio-bitrate BPS] [--no-record-watermark]",
             argv0 != nullptr ? argv0 : "SparkDemo");
+    std::println(std::cerr, "  F3 or F4 toggles FPS overlay.");
     std::println(std::cerr, "  F9 toggles MP4 recording (H.264 + AAC) while the demo runs.");
     std::println(std::cerr, "  F12 saves a PNG screenshot.");
 }

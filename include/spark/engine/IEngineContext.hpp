@@ -28,6 +28,12 @@ public:
     /** Forwards to the frame presenter (Vulkan, etc.); no need to include IFramePresenter. */
     virtual void SetSceneRenderParams(const SceneRenderParams& params) = 0;
 
+    /** Read-modify-write last scene params (Vulkan presenter). */
+    [[nodiscard]] virtual bool TryGetMutableSceneRenderParams(SceneRenderParams*& outParams) noexcept {
+        (void)outParams;
+        return false;
+    }
+
     /** Global mixer/output; nullptr only if the host omitted audio construction. */
     [[nodiscard]] virtual SoundEngine* TryGetSoundEngine() noexcept = 0;
 

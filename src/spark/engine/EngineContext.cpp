@@ -42,6 +42,10 @@ void EngineContext::SetSceneRenderParams(const SceneRenderParams& params) {
     presenter.SetSceneRenderParams(params);
 }
 
+bool EngineContext::TryGetMutableSceneRenderParams(SceneRenderParams*& outParams) noexcept {
+    return presenter.TryGetMutableSceneRenderParams(outParams);
+}
+
 SoundEngine* EngineContext::TryGetSoundEngine() noexcept {
     return &audio;
 }

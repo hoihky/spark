@@ -50,6 +50,7 @@ void VulkanScreenshotCapture::Destroy(VkDevice device) {
     rowPitch = 0;
     bufferExtent = {};
     pendingCapture = false;
+    copyQueued = false;
     pendingPath[0] = '\0';
     this->device = VK_NULL_HANDLE;
     this->physicalDevice = VK_NULL_HANDLE;
@@ -107,19 +108,22 @@ void VulkanScreenshotCapture::RequestSave(const char* pathUtf8) {
 void VulkanScreenshotCapture::RecordCopyFromSwapchain(
         VkCommandBuffer commandBuffer,
         VkImage swapchainImage,
-        const VkExtent2D extent) {
-    if (!pendingCapture || swapchainImage == VK_NULL_HANDLE || extent.width == 0 || extent.height == 0) {
+        const VkExtent2D extent,
+        const std::uint32_t flightIndex) {
+    if (!pendingCapture || copyQueued || swapchainImage == VK_NULL_HANDLE || extent.width == 0 || extent.height == 0) {
         return;
     }
 
     EnsureBuffer(extent);
     captureExtent = extent;
+    captureFlightIndex = flightIndex;
+    copyQueued = true;
 
     VkImageMemoryBarrier toSrc{};
     toSrc.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    toSrc.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    toSrc.srcAccessMask = 0;
     toSrc.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    toSrc.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    toSrc.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     toSrc.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     toSrc.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     toSrc.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -178,10 +182,18 @@ void VulkanScreenshotCapture::RecordCopyFromSwapchain(
             &toPresent);
 }
 
-bool VulkanScreenshotCapture::TrySavePendingPng() {
-    if (!pendingCapture || stagingMapped == nullptr || captureExtent.width == 0 || captureExtent.height == 0) {
-        pendingCapture = false;
+bool VulkanScreenshotCapture::TrySavePendingPngForFlight(const std::uint32_t flightIndex) {
+    if (!pendingCapture || !copyQueued || captureFlightIndex != flightIndex || stagingMapped == nullptr ||
+        captureExtent.width == 0 || captureExtent.height == 0 || device == VK_NULL_HANDLE) {
         return false;
+    }
+
+    if (stagingMemory != VK_NULL_HANDLE) {
+        VkMappedMemoryRange range{};
+        range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        range.memory = stagingMemory;
+        range.size = stagingBytes;
+        (void)vkInvalidateMappedMemoryRanges(device, 1, &range);
     }
 
     const std::uint32_t width = captureExtent.width;
@@ -223,6 +235,7 @@ bool VulkanScreenshotCapture::TrySavePendingPng() {
     }
 
     pendingCapture = false;
+    copyQueued = false;
     pendingPath[0] = '\0';
     captureExtent = {};
     return saved;

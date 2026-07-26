@@ -25,10 +25,11 @@ public:
     void RecordCopyFromSwapchain(
             VkCommandBuffer commandBuffer,
             VkImage swapchainImage,
-            VkExtent2D extent);
+            VkExtent2D extent,
+            std::uint32_t flightIndex);
 
-    /** Call after the submit fence signals. Returns whether a file was written. */
-    bool TrySavePendingPng();
+    /** Call after <c>flightIndex</c>'s in-flight fence has signaled. Returns whether a file was written. */
+    bool TrySavePendingPngForFlight(std::uint32_t flightIndex);
 
 private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -44,6 +45,8 @@ private:
 
     char pendingPath[512]{};
     bool pendingCapture = false;
+    bool copyQueued = false;
+    std::uint32_t captureFlightIndex = 0;
     VkExtent2D captureExtent{};
 };
 

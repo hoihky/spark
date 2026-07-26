@@ -75,6 +75,7 @@ public:
     void PresentFrame() override;
     void NotifySwapchainResize() override;
     void SetSceneRenderParams(const SceneRenderParams& params) override;
+    [[nodiscard]] bool TryGetMutableSceneRenderParams(SceneRenderParams*& outParams) noexcept override;
     void RequestScreenshotSave(const char* pathUtf8) override;
     [[nodiscard]] bool BeginVideoRecording(const VideoRecordingSettings& settings) override;
     void EndVideoRecording() override;

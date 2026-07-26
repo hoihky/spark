@@ -1,13 +1,19 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
+#include "spark/core/Utf8String.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/GameWorld.hpp"
 
+#include "spark/engine/FrameTiming.hpp"
+#include "spark/engine/SceneRenderParams.hpp"
+
 #include <cstdint>
 
 namespace Spark {
+
+class IEngineContext;
 
 class GameObject;
 class SoundClip;
@@ -69,5 +75,24 @@ constexpr float kTextAlpha = 1.0F;
 void Apply(TextOverlayComponent& overlay, bool lightTextOnDarkBackground = true) noexcept;
 
 }  // namespace DemoHud
+
+/** Global F3 toggle (handled in <c>Engine</c> before game input). */
+void ToggleDemoFpsOverlayVisible() noexcept;
+[[nodiscard]] bool IsDemoFpsOverlayVisible() noexcept;
+
+/** Shell-wide FPS readout (top-right); toggled with F3 in SparkDemo. */
+class DemoFpsToggleOverlay {
+public:
+    void EnsureMounted(GameWorld& world);
+    void SyncVisibilityFromGlobal() noexcept;
+    void Update(const FrameTiming& timing, int framebufferWidth) noexcept;
+    void PatchSceneRenderParams(IEngineContext& context) noexcept;
+
+private:
+    GameObject* object = nullptr;
+    TextOverlayComponent* text = nullptr;
+    bool visible = false;
+    DemoSmoothedFps fps{};
+};
 
 }  // namespace Spark

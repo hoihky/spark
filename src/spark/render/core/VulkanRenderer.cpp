@@ -374,7 +374,8 @@ void VulkanRenderer::RecordSceneCommandBuffer(
         frameCapture.RecordCopyFromSwapchain(
                 commandBuffer,
                 presentSwapchain().images[imageIndex],
-                presentSwapchain().extent);
+                presentSwapchain().extent,
+                frameIndex);
     }
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
@@ -402,6 +403,9 @@ void VulkanRenderer::DrawFrame() {
     }
 
     frameSync.WaitForCurrentFrameFence(device());
+
+    const std::uint32_t currentFrame = frameSync.CurrentFrameIndex();
+
     customMeshPool.ReleaseRetiredBuffers(submittedFrameCounter);
     screenUi.ReleaseRetiredFontAtlases(device(), submittedFrameCounter);
     screenUi.ReleaseRetiredUiTextureAtlases(device(), submittedFrameCounter);
@@ -440,9 +444,12 @@ void VulkanRenderer::DrawFrame() {
     customMeshPool.FillCustomDrawPacked(pendingScene, customDrawPacked, customDrawPackedTransparent);
     ++submittedFrameCounter;
 
+    if (frameCapture.NeedsPostSubmitWork()) {
+        frameCapture.OnFlightFenceSignaled(currentFrame);
+    }
+
     frameSync.ResetCurrentFrameFence(device());
 
-    const std::uint32_t currentFrame = frameSync.CurrentFrameIndex();
     WriteUniformBuffer(currentFrame);
 
     if (vkResetCommandBuffer(commandBuffers[imageIndex], 0) != VK_SUCCESS) {
@@ -451,19 +458,6 @@ void VulkanRenderer::DrawFrame() {
     RecordSceneCommandBuffer(commandBuffers[imageIndex], imageIndex, currentFrame);
 
     frameSync.SubmitFrame(graphicsQueue(), commandBuffers[imageIndex], imageIndex);
-
-    if (frameCapture.NeedsPostSubmitWork()) {
-        frameSync.WaitForSubmittedFrame(device());
-        frameCapture.TrySavePendingPng();
-        if (frameCapture.IsVideoRecording()) {
-            double ptsSeconds = 0.0;
-            if (recordingWallClockValid) {
-                const auto now = std::chrono::steady_clock::now();
-                ptsSeconds = std::chrono::duration<double>(now - recordingWallStart).count();
-            }
-            frameCapture.TryCommitFrameAfterFence(ptsSeconds);
-        }
-    }
 
     const VkResult presentResult =
             frameSync.PresentFrame(presentQueue(), presentSwapchain().khr, imageIndex);
@@ -490,7 +484,17 @@ bool VulkanRenderer::BeginVideoRecording(const VideoRecordingSettings& settings)
         return false;
     }
     const VkExtent2D extent = presentSwapchain().extent;
-    if (!frameCapture.BeginVideoRecording(MoveTemp(recorder), settings, extent)) {
+    VideoRecordingSettings effectiveSettings = settings;
+    if (effectiveSettings.preset == VideoRecordingPreset::Native &&
+        (extent.width > 1920U || extent.height > 1080U)) {
+        effectiveSettings.preset = VideoRecordingPreset::Hd1080;
+        std::fprintf(
+                stderr,
+                "Spark: framebuffer %ux%u — recording at 1080p to preserve frame rate (use --record-preset native to force full resolution)\n",
+                extent.width,
+                extent.height);
+    }
+    if (!frameCapture.BeginVideoRecording(MoveTemp(recorder), effectiveSettings, extent)) {
         return false;
     }
     recordingWallStart = std::chrono::steady_clock::now();
@@ -499,6 +503,9 @@ bool VulkanRenderer::BeginVideoRecording(const VideoRecordingSettings& settings)
 }
 
 void VulkanRenderer::EndVideoRecording() {
+    if (frameCapture.IsVideoRecording()) {
+        frameCapture.FlushPendingCaptures(device(), frameSync.InFlightFences());
+    }
     frameCapture.EndVideoRecording();
     recordingWallClockValid = false;
 }
@@ -515,6 +522,14 @@ void VulkanRenderer::SetSceneRenderParams(const SceneRenderParams& params) {
     pendingScene = params;
     sceneParamsValid = true;
     resolvedLighting = SceneLightingResolver::Resolve(pendingScene);
+}
+
+bool VulkanRenderer::TryGetMutableSceneRenderParams(SceneRenderParams*& outParams) noexcept {
+    if (!sceneParamsValid) {
+        return false;
+    }
+    outParams = &pendingScene;
+    return true;
 }
 
 void VulkanRenderer::CreateDepthResources() {

@@ -46,6 +46,7 @@ public:
 
     [[nodiscard]] std::uint32_t CurrentFrameIndex() const noexcept { return currentFrame; }
     [[nodiscard]] static constexpr std::uint32_t MaxFramesInFlight() noexcept { return kMaxFramesInFlight; }
+    [[nodiscard]] const VkFence* InFlightFences() const noexcept { return inFlightFences.GetData(); }
 
 private:
     Array<VkSemaphore> imageAvailableSemaphores;
