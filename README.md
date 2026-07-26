@@ -22,8 +22,8 @@ In-engine captures from **SparkDemo** (F12 screenshot, F9 video recording).
 
 | | |
 |:---:|:---:|
-| <video src="docs/media/showcase-01.mp4"></video> | <video src="docs/media/showcase-02.mp4"></video> |
-| <video src="docs/media/showcase-03.mp4" ></video> | <video src="docs/media/showcase-04.mp4" ></video> |
+| <video src="https://github.com/hoihky/spark/blob/main/docs/media/showcase-01.mp4"></video> | <video src="https://github.com/hoihky/spark/blob/main/docs/media/showcase-02.mp4"></video> |
+| <video src="https://github.com/hoihky/spark/blob/main/docs/media/showcase-03.mp4" ></video> | <video src="https://github.com/hoihky/spark/blob/main/docs/media/showcase-04.mp4" ></video> |
 
 ## Quick start
 
