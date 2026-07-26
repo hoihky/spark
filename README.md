@@ -17,10 +17,7 @@ In-engine captures from **SparkDemo** (F12 screenshot, F9 video recording).
 | <img src="docs/media/showcase-01.png" alt="Spark demo screenshot 1" width="400" /> | <img src="docs/media/showcase-02.png" alt="Spark demo screenshot 2" width="400" /> | <img src="docs/media/showcase-03.png" alt="Spark demo screenshot 3" width="400" /> |
 | <img src="docs/media/showcase-04.png" alt="Spark demo screenshot 4" width="400" /> | <img src="docs/media/showcase-05.png" alt="Spark demo screenshot 5" width="400" /> | <img src="docs/media/showcase-06.png" alt="Spark demo screenshot 6" width="400" /> |
 | <img src="docs/media/showcase-07.png" alt="Spark demo screenshot 7" width="400" /> | <img src="docs/media/showcase-08.png" alt="Spark demo screenshot 8" width="400" /> | <img src="docs/media/showcase-09.png" alt="Spark demo screenshot 9" width="400" /> |
-
-### Video
-
-<video src="https://github.com/hoihky/spark/blob/main/docs/media/showcase-02.mp4" width="400" height="350"></video> 
+ 
 
 ## Quick start
 
