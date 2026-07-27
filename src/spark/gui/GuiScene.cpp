@@ -12,8 +12,6 @@
 #include "spark/gui/GuiLayoutMetrics.hpp"
 #include "spark/gui/GuiWidgetPopups.hpp"
 #include "spark/gui/toolkit/GuiToolkitSettings.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
-#include "spark/imgui/ImGuiLayerRegistry.hpp"
 #include "spark/gui/controls/Dropdown.hpp"
 #include "spark/gui/controls/List.hpp"
 #include "spark/gui/controls/MenuBar.hpp"
@@ -27,6 +25,8 @@
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Scene.hpp"
 #include "spark/text/Font.hpp"
+#include "spark/gui/internal/SparkNativeRetainedGuiBridge.hpp"
+#include "spark/gui/api/GuiSystem.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -213,23 +213,9 @@ Gui::Widget* FindOpenPopupHover(Gui::Widget* w, const float x, const float y) {
 
 }  // namespace
 
-void ProcessGuiCanvasesInput(GameWorld& world, IInput& input, int framebufferWidth, int framebufferHeight,
+void ProcessSparkRetainedCanvasesInput(GameWorld& world, IInput& input, int framebufferWidth, int framebufferHeight,
         const float contentScaleX, const float contentScaleY) {
     Gui::RefreshSystemDpiScale(contentScaleX, contentScaleY);
-
-    if (!Gui::GuiToolkitSettings::ShouldProcessSparkGuiInput()) {
-        Gui::GuiFrameInput fin{};
-        input.GetCursorFramebufferPixels(fin.mouseX, fin.mouseY, framebufferWidth, framebufferHeight);
-        Gui::GuiPointerState ptrState{};
-        ptrState.mouseX = fin.mouseX;
-        ptrState.mouseY = fin.mouseY;
-        if (IImGuiLayer* imgui = GetActiveImGuiLayer(); imgui != nullptr && imgui->IsEnabled()) {
-            ptrState.pointerOverGui = imgui->WantsCaptureMouse();
-            ptrState.consumesGamePointer = imgui->WantsCaptureMouse() || imgui->WantsCaptureKeyboard();
-        }
-        Gui::SetGuiPointerState(ptrState);
-        return;
-    }
 
     static bool editorLayoutLoaded = false;
     if (!editorLayoutLoaded) {
@@ -459,16 +445,6 @@ void ProcessGuiCanvasesInput(GameWorld& world, IInput& input, int framebufferWid
             || (captureCanvas != nullptr && fin.leftDown);
     ptrState.scrollWheelConsumed = scrollWheelConsumed;
 
-    if (IImGuiLayer* imgui = GetActiveImGuiLayer(); imgui != nullptr && imgui->IsEnabled()) {
-        if (imgui->WantsCaptureMouse()) {
-            ptrState.pointerOverGui = true;
-            ptrState.consumesGamePointer = true;
-        }
-        if (imgui->WantsCaptureKeyboard()) {
-            ptrState.consumesGamePointer = true;
-        }
-    }
-
     GuiCanvasComponent* keyCanvas = nullptr;
     if (modalCanvas != nullptr) {
         keyCanvas = modalCanvas;
@@ -519,12 +495,18 @@ void ProcessGuiCanvasesInput(GameWorld& world, IInput& input, int framebufferWid
     Gui::SetGuiPointerState(ptrState);
 }
 
+void ProcessGuiCanvasesInput(GameWorld& world, IInput& input, int framebufferWidth, int framebufferHeight,
+        const float contentScaleX, const float contentScaleY) {
+    Gui::GuiSystem::Get().ProcessInput(
+            world, input, framebufferWidth, framebufferHeight, contentScaleX, contentScaleY);
+}
+
 void ProcessGuiCanvasesInput(Scene& scene, IInput& input, int framebufferWidth, int framebufferHeight,
         const float contentScaleX, const float contentScaleY) {
     ProcessGuiCanvasesInput(scene.GetWorld(), input, framebufferWidth, framebufferHeight, contentScaleX, contentScaleY);
 }
 
-void PaintGuiCanvases(const GameWorld& world, SceneRenderParams& params, int framebufferWidth, int framebufferHeight) {
+void PaintSparkRetainedCanvases(const GameWorld& world, SceneRenderParams& params, int framebufferWidth, int framebufferHeight) {
     Array<GuiCanvasComponent*> list;
     CollectCanvases(world, list);
     SortCanvasesByOrder(list);
@@ -577,6 +559,10 @@ void PaintGuiCanvases(const GameWorld& world, SceneRenderParams& params, int fra
     if (ps.showTooltip && ps.tooltipSource != nullptr) {
         PaintTooltipForWidget(ctx, *ps.tooltipSource, ps.mouseX, ps.mouseY);
     }
+}
+
+void PaintGuiCanvases(const GameWorld& world, SceneRenderParams& params, int framebufferWidth, int framebufferHeight) {
+    Gui::GuiSystem::Get().Paint(world, params, framebufferWidth, framebufferHeight);
 }
 
 void PaintGuiCanvases(const Scene& scene, SceneRenderParams& params, int framebufferWidth, int framebufferHeight) {

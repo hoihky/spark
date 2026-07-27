@@ -1,20 +1,21 @@
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
 
-#include "spark/gui/GuiThemeCatalog.hpp"
+#include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/demo/DemoGuiFrame.hpp"
+#include "spark/gui/api/GuiApi.hpp"
+#include "spark/gui/GuiLayoutMetrics.hpp"
 
 namespace Spark {
 
 void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
         roots.Clear();
-        ClearGuiRefs();
         cubeObjects.Clear();
         cubeRubber.Clear();
         ballRb = nullptr;
         ballTr = nullptr;
         pendulumBobRb = nullptr;
         fpsText = nullptr;
-        guiCanvasGo = nullptr;
 
         skyMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("PhysBallSky"));
         *skyMesh = Spark::Mesh::CreateSkySphere(1.0F, 16, 32);
@@ -151,13 +152,6 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
                 "Physics — panel right · LMB throw · R reset · SpringJoint3D pendulum left · WASD+mouse · F1 · ESC"));
         roots.PushBack(hud);
 
-        guiCanvasGo = w.CreateGameObject();
-        guiCanvasGo->GetName() = Spark::Utf8String("PhysBallGui");
-        Spark::GuiCanvasComponent* guiCv = guiCanvasGo->AddComponent<Spark::GuiCanvasComponent>();
-        guiCv->SetSortOrder(260);
-        BuildPhysTuningPanel(*guiCv);
-        roots.PushBack(guiCanvasGo);
-
         ApplyTuningFromGui();
 
         camera.position = {0.0F, 2.1F, 10.0F};
@@ -177,14 +171,12 @@ void PhysicsBallThrow3DDemo::Unload(Spark::GameWorld& w)
             }
         }
         roots.Clear();
-        ClearGuiRefs();
         cubeObjects.Clear();
         cubeRubber.Clear();
         ballRb = nullptr;
         ballTr = nullptr;
         pendulumBobRb = nullptr;
         fpsText = nullptr;
-        guiCanvasGo = nullptr;
     }
 
 void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
@@ -206,9 +198,9 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
                 const Spark::Vector3 spawn = camera.position + dir * 0.55F;
                 ballTr->SetTranslation(spawn);
                 /** Small upward component (m/s) for a natural arc; scales slightly with throw speed. */
-                const float upKick = 0.35F + throwSpeed * 0.06F;
+                const float upKick = 0.35F + guiThrow * 0.06F;
                 ballRb->SetAngularVelocity(Spark::Vector3::Zero);
-                ballRb->SetVelocity(dir * throwSpeed + Spark::Vector3::UnitY * upKick);
+                ballRb->SetVelocity(dir * guiThrow + Spark::Vector3::UnitY * upKick);
                 DemoPlayProceduralClip(context, DemoSfx::ClipPhysicsThrow(), 1.0F);
             }
             if (in.IsKeyPressedThisFrame(GLFW_KEY_R)) {
@@ -225,7 +217,7 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
         }
 
         Spark::PhysicsWorld3DSettings phys{};
-        phys.gravityY = gravityY;
+        phys.gravityY = guiGravityY;
         phys.maxFallSpeed = 130.0F;
         phys.resolveIterations = 10;
         phys.substeps = 3;
@@ -372,135 +364,47 @@ void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
-        Spark::PaintGuiCanvases(world, params, fbW, fbH);
+        BuildPortableUi(context, params, world);
         context.SetSceneRenderParams(params);
     }
 
-void PhysicsBallThrow3DDemo::ClearGuiRefs() noexcept
-{
-        guiGravity = nullptr;
-        guiBallMass = nullptr;
-        guiThrow = nullptr;
-        guiCubeBounce = nullptr;
-        guiCubeMass = nullptr;
+void PhysicsBallThrow3DDemo::BuildPortableUi(
+        Spark::IEngineContext& context,
+        SceneRenderParams& params,
+        const Spark::GameWorld& world) {
+    const Gui::GuiFrameContext frame = DemoGui::MakeFrameContext(context, params, world, 0.0F);
+    Gui::GuiSystem::Get().BeginImmediateFrame(frame);
+    Gui::IGuiFrame& ui = Gui::Ui();
+
+    const Gui::GuiLayoutMetrics& layout = Gui::GetActiveGuiLayoutMetrics();
+    const float panelW = DemoGui::kDemoSidePanelWidth * layout.uiScale;
+    const float panelX = static_cast<float>((std::max)(1, frame.framebufferWidth)) - panelW - layout.Padding();
+    const float panelY = layout.Padding();
+    const float panelH =
+            static_cast<float>((std::max)(1, frame.framebufferHeight)) - panelY * 2.0F;
+    ui.SetNextPanelSize(panelW, panelH);
+    ui.SetCursorPos(panelX, panelY);
+    if (ui.BeginPanel("phys_tune", "Physics tuning")) {
+        ui.Text("F1 toggles mouse capture. Sliders use SI units.");
+        ui.Separator();
+        ui.SliderFloat("grav", "Gravity Y (m/s²)", guiGravityY, -18.0F, -4.0F);
+        ui.SliderFloat("mass", "Ball mass (kg)", guiBallMass, 0.2F, 8.0F);
+        ui.SliderFloat("throw", "Throw speed (m/s)", guiThrow, 3.0F, 28.0F);
+        ui.SliderFloat("bounce", "Cube bounciness", guiCubeBounce, 0.0F, 1.0F);
+        ui.SliderFloat("cmass", "Cube mass (kg)", guiCubeMass, 40.0F, 220.0F);
+        ui.EndPanel();
     }
-
-void PhysicsBallThrow3DDemo::BuildPhysTuningPanel(Spark::GuiCanvasComponent& canvas)
-{
-        ClearGuiRefs();
-
-        const Spark::Gui::GuiTheme skin =
-                Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
-        canvas.SetTheme(skin);
-
-        auto root = Spark::MakeUnique<PhysicsBallGuiDockRoot>();
-        auto shell = Spark::MakeUnique<Spark::Gui::Panel>();
-        shell->SetPadding(16.0F);
-        shell->SetChromeEnabled(true);
-        shell->SetDropShadowEnabled(true);
-        shell->SetBackgroundGradient(skin.panelElevatedTop, skin.panelElevatedBottom, skin.panelElevatedAlpha);
-
-        auto stack = Spark::MakeUnique<Spark::Gui::StackPanel>();
-        stack->SetOrientation(Spark::Gui::StackOrientation::Vertical);
-        stack->SetSpacing(8.0F);
-
-        auto title = Spark::MakeUnique<Spark::Gui::Label>();
-        title->SetText(Spark::Utf8String("Physics tuning"));
-        title->SetFontSize(26.0F);
-        title->SetBold(true);
-        stack->AddChild(Spark::MoveTemp(title));
-
-        auto help = Spark::MakeUnique<Spark::Gui::WrappingLabel>();
-        help->SetText(Spark::Utf8String(
-                "F1 toggles mouse capture. Sliders use SI-style units (m/s², kg). Bounce uses ball + surface "
-                "materials (geometric mean) in the solver; cube bounciness retunes dull vs rubber crates."));
-        help->SetFontSize(17.0F);
-        help->SetTone(Spark::Gui::LabelTone::Muted);
-        stack->AddChild(Spark::MoveTemp(help));
-
-        PhysicsBallThrow3DDemo* self = this;
-        auto addSliderRow = [&stack](const char* title, const float r0, const float r1, Spark::Gui::Slider*& outPtr) {
-            auto row = Spark::MakeUnique<Spark::Gui::StackPanel>();
-            row->SetOrientation(Spark::Gui::StackOrientation::Horizontal);
-            row->SetSpacing(10.0F);
-            auto lab = Spark::MakeUnique<Spark::Gui::Label>();
-            lab->SetText(Spark::Utf8String(title));
-            lab->SetFontSize(18.0F);
-            lab->SetTone(Spark::Gui::LabelTone::Muted);
-            auto sl = Spark::MakeUnique<Spark::Gui::Slider>();
-            outPtr = sl.Get();
-            sl->SetRange(r0, r1);
-            row->AddChild(Spark::MoveTemp(lab));
-            row->AddChild(Spark::MoveTemp(sl));
-            stack->AddChild(Spark::MoveTemp(row));
-        };
-
-        addSliderRow("Gravity Y (m/s²)", -18.0F, -4.0F, guiGravity);
-        addSliderRow("Ball mass (kg)", 0.2F, 8.0F, guiBallMass);
-        addSliderRow("Throw speed (m/s)", 3.0F, 28.0F, guiThrow);
-        addSliderRow("Cube bounciness", 0.0F, 1.0F, guiCubeBounce);
-        addSliderRow("Cube mass (kg)", 40.0F, 220.0F, guiCubeMass);
-
-        if (guiGravity != nullptr) {
-            guiGravity->SetValue(-9.81F);
-        }
-        if (guiBallMass != nullptr) {
-            guiBallMass->SetValue(0.62F);
-        }
-        if (guiThrow != nullptr) {
-            guiThrow->SetValue(12.0F);
-        }
-        if (guiCubeBounce != nullptr) {
-            guiCubeBounce->SetValue(0.48F);
-        }
-        if (guiCubeMass != nullptr) {
-            guiCubeMass->SetValue(95.0F);
-        }
-
-        if (guiGravity != nullptr) {
-            guiGravity->SetOnChanged([self](const float v) {
-                self->gravityY = v;
-            });
-        }
-        if (guiBallMass != nullptr) {
-            guiBallMass->SetOnChanged([self](const float v) {
-                if (self->ballRb != nullptr) {
-                    self->ballRb->SetInverseMass(1.0F / (std::max)(0.08F, v));
-                }
-            });
-        }
-        if (guiThrow != nullptr) {
-            guiThrow->SetOnChanged([self](const float v) { self->throwSpeed = v; });
-        }
-        if (guiCubeBounce != nullptr) {
-            guiCubeBounce->SetOnChanged([self](const float v) { self->ApplyCubeBounciness(v); });
-        }
-        if (guiCubeMass != nullptr) {
-            guiCubeMass->SetOnChanged([self](const float v) { self->ApplyCubeMassScale(v); });
-        }
-
-        shell->AddChild(Spark::MoveTemp(stack));
-        root->AddChild(Spark::MoveTemp(shell));
-        canvas.SetRoot(Spark::MoveTemp(root));
-    }
+    Gui::GuiSystem::Get().EndImmediateFrame();
+    ApplyTuningFromGui();
+}
 
 void PhysicsBallThrow3DDemo::ApplyTuningFromGui() noexcept
 {
-        if (guiGravity != nullptr) {
-            gravityY = guiGravity->GetValue();
+        if (ballRb != nullptr) {
+            ballRb->SetInverseMass(1.0F / (std::max)(0.08F, guiBallMass));
         }
-        if (guiThrow != nullptr) {
-            throwSpeed = guiThrow->GetValue();
-        }
-        if (ballRb != nullptr && guiBallMass != nullptr) {
-            ballRb->SetInverseMass(1.0F / (std::max)(0.08F, guiBallMass->GetValue()));
-        }
-        if (guiCubeBounce != nullptr) {
-            ApplyCubeBounciness(guiCubeBounce->GetValue());
-        }
-        if (guiCubeMass != nullptr) {
-            ApplyCubeMassScale(guiCubeMass->GetValue());
-        }
+        ApplyCubeBounciness(guiCubeBounce);
+        ApplyCubeMassScale(guiCubeMass);
     }
 
 void PhysicsBallThrow3DDemo::ApplyCubeBounciness(const float tIn) noexcept

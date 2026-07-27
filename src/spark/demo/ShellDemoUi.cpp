@@ -170,50 +170,5 @@ void GuiStackPanel::Paint(Spark::Gui::GuiPaintContext& ctx) const {
     PaintChildren(ctx);
 }
 
-void MountUiFont(Spark::GameWorld& w) {
-    auto uiFont = Spark::MakeShared<Spark::Font>();
-    constexpr float kUiFontEmPx = 42.0F;
-    bool fontOk = uiFont->TryLoadTrueTypeFromFile(SPARK_UI_FONT_PATH, kUiFontEmPx);
-    if (!fontOk) {
-        Spark::Utf8String buildTree(SPARK_BUILD_ASSETS_DIR);
-        buildTree.AppendUtf8("/fonts/Roboto-Regular.ttf");
-        fontOk = uiFont->TryLoadTrueTypeFromFile(buildTree.CStr(), kUiFontEmPx);
-    }
-    if (!fontOk) {
-        Spark::Utf8String srcTree(SPARK_ASSETS_DIR);
-        srcTree.AppendUtf8("/fonts/Roboto-Regular.ttf");
-        fontOk = uiFont->TryLoadTrueTypeFromFile(srcTree.CStr(), kUiFontEmPx);
-    }
-    if (!fontOk) {
-        fontOk = uiFont->TryLoadTrueTypeFromFile("assets/fonts/Roboto-Regular.ttf", kUiFontEmPx);
-    }
-    if (fontOk) {
-        w.SetUiFont(uiFont);
-        auto uiBold = Spark::MakeShared<Spark::Font>();
-        bool boldOk = uiBold->TryLoadTrueTypeFromFile(SPARK_UI_BOLD_FONT_PATH, kUiFontEmPx);
-        if (!boldOk) {
-            Spark::Utf8String boldBuild(SPARK_BUILD_ASSETS_DIR);
-            boldBuild.AppendUtf8("/fonts/Roboto-Bold.ttf");
-            boldOk = uiBold->TryLoadTrueTypeFromFile(boldBuild.CStr(), kUiFontEmPx);
-        }
-        if (!boldOk) {
-            Spark::Utf8String boldSrc(SPARK_ASSETS_DIR);
-            boldSrc.AppendUtf8("/fonts/Roboto-Bold.ttf");
-            boldOk = uiBold->TryLoadTrueTypeFromFile(boldSrc.CStr(), kUiFontEmPx);
-        }
-        if (!boldOk) {
-            boldOk = uiBold->TryLoadTrueTypeFromFile("assets/fonts/Roboto-Bold.ttf", kUiFontEmPx);
-        }
-        if (boldOk) {
-            w.SetUiBoldFont(uiBold);
-        }
-    } else {
-        std::println(
-                std::cerr,
-                "Spark: UI font not loaded — place Roboto-Regular.ttf under assets/fonts/ "
-                "or re-run CMake with network so it can download (tried SPARK_UI_FONT_PATH, "
-                "build assets, source assets, cwd assets).");
-    }
-}
 
 }  // namespace Spark

@@ -55,6 +55,4 @@ private:
     float spacing = 8.0F;
 };
 
-void MountUiFont(GameWorld& w);
-
 }  // namespace Spark

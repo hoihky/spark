@@ -599,6 +599,10 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gui/controls/WrappingLabel.cpp
         src/spark/gui/GuiScene.cpp
         src/spark/gui/toolkit/GuiToolkitSettings.cpp
+        src/spark/gui/api/GuiSystem.cpp
+        src/spark/gui/api/SparkNativeGuiBackend.cpp
+        src/spark/gui/api/SparkNativeImmediateGuiFrame.cpp
+        src/spark/gui/api/DearImGuiGuiBackend.cpp
         src/spark/imgui/ImGuiLayerRegistry.cpp
         src/spark/imgui/ImGuiLayerFactory.cpp
         src/spark/render/platform/window.cpp

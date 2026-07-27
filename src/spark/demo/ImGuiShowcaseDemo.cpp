@@ -1,10 +1,10 @@
 #include "spark/demo/ImGuiShowcaseDemo.hpp"
 
 #include "spark/config.hpp"
+#include "spark/demo/DemoGuiFrame.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/gui/GuiScene.hpp"
 #include "spark/gui/GuiThemeCatalog.hpp"
 #include "spark/gui/toolkit/GuiToolkitSettings.hpp"
 #include "spark/imgui/IImGuiLayer.hpp"
@@ -12,6 +12,8 @@
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Scene.hpp"
+
+#include <cstdio>
 
 #if SPARK_ENABLE_IMGUI
 #include <imgui.h>
@@ -24,6 +26,14 @@ void ImGuiShowcaseDemo::Enter(IEngineContext& context) {
     if (IImGuiLayer* layer = context.TryGetImGuiLayer()) {
         layer->SetEnabled(layer->IsAvailable());
     }
+#if SPARK_ENABLE_IMGUI
+    if (!styleScaled) {
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.FontScaleMain = DemoGui::kImGuiShowcaseUiScale;
+        style.ScaleAllSizes(DemoGui::kImGuiShowcaseUiScale);
+        styleScaled = true;
+    }
+#endif
     context.GetInput().SetCursorCaptured(false);
     (void)context;
 }
@@ -32,6 +42,15 @@ void ImGuiShowcaseDemo::Leave(IEngineContext& context) noexcept {
     if (IImGuiLayer* layer = context.TryGetImGuiLayer()) {
         layer->SetEnabled(false);
     }
+#if SPARK_ENABLE_IMGUI
+    if (styleScaled) {
+        const float inv = 1.0F / DemoGui::kImGuiShowcaseUiScale;
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.FontScaleMain = 1.0F;
+        style.ScaleAllSizes(inv);
+        styleScaled = false;
+    }
+#endif
     Gui::GuiToolkitSettings::SetPreferred(Gui::GuiToolkitKind::SparkNative);
     (void)context;
 }
@@ -50,7 +69,6 @@ void ImGuiShowcaseDemo::BuildToolUi(const FrameTiming& timing, IEngineContext& c
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
-    ImGui::SetNextWindowViewport(viewport->ID);
     ImGuiWindowFlags rootFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     rootFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                  ImGuiWindowFlags_NoMove;
@@ -64,7 +82,7 @@ void ImGuiShowcaseDemo::BuildToolUi(const FrameTiming& timing, IEngineContext& c
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            ImGui::TextDisabled("Use ESC to return to launcher");
+            ImGui::MenuItem("Use ESC to return to launcher", nullptr, false, false);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("View")) {
@@ -75,20 +93,23 @@ void ImGuiShowcaseDemo::BuildToolUi(const FrameTiming& timing, IEngineContext& c
         ImGui::EndMenuBar();
     }
 
-    ImGuiID dockspaceId = ImGui::GetID("SparkToolDockSpace");
+    const ImGuiID dockspaceId = ImGui::GetID("SparkToolDockSpace");
     ImGui::DockSpace(dockspaceId, ImVec2(0.0F, 0.0F), ImGuiDockNodeFlags_PassthruCentralNode);
+    ImGui::End();
 
-    if (ImGui::Begin("Hierarchy")) {
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Hierarchy###SparkHierarchy")) {
         ImGui::TextUnformatted("Scene");
         ImGui::Separator();
-        ImGui::Selectable("Main Camera", true);
-        ImGui::Selectable("Directional Light");
-        ImGui::Selectable("Player");
-        ImGui::Selectable("Terrain");
+        ImGui::TextUnformatted("Main Camera");
+        ImGui::TextUnformatted("Directional Light");
+        ImGui::TextUnformatted("Player");
+        ImGui::TextUnformatted("Terrain");
     }
     ImGui::End();
 
-    if (ImGui::Begin("Inspector")) {
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Inspector###SparkInspector")) {
         ImGui::TextUnformatted("Transform");
         static float position[3] = {0.0F, 1.2F, 4.0F};
         ImGui::DragFloat3("Position", position, 0.05F);
@@ -101,16 +122,16 @@ void ImGuiShowcaseDemo::BuildToolUi(const FrameTiming& timing, IEngineContext& c
     }
     ImGui::End();
 
-    if (ImGui::Begin("Console")) {
-        ImGui::TextWrapped(
-                "Dear ImGui docking branch is active. Spark retained GUI remains available when "
-                "GuiToolkitSettings::SetPreferred(SparkNative) and ImGuiLayer::SetEnabled(false).");
+    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Console###SparkConsole")) {
+        ImGui::TextUnformatted(
+                "Dear ImGui docking showcase. Set GuiToolkitSettings::SetPreferred(SparkNative) for Spark widgets.");
         ImGui::Separator();
-        ImGui::Text("Frame %.3f ms", timing.deltaTimeSeconds * 1000.0F);
-        ImGui::Text("UI toolkit: Dear ImGui");
+        char frameMs[64];
+        std::snprintf(frameMs, sizeof(frameMs), "Frame %.3f ms", timing.deltaTimeSeconds * 1000.0F);
+        ImGui::TextUnformatted(frameMs);
+        ImGui::TextUnformatted("UI backend: Dear ImGui");
     }
-    ImGui::End();
-
     ImGui::End();
 
     if (showDemoWindow) {

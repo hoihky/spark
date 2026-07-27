@@ -6,7 +6,7 @@ namespace Spark::Gui {
 
 /**
  * Process-wide preference for which UI toolkit new game/editor code should use.
- * The engine always supports both stacks when ImGui is compiled in; this only documents routing policy.
+ * Prefer the portable API in <c>spark/gui/api/GuiApi.hpp</c> (<c>Gui::Ui()</c>) so implementations can be swapped.
  */
 class GuiToolkitSettings {
 public:

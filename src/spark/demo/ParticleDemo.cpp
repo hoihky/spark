@@ -1,6 +1,8 @@
 #include "spark/demo/ParticleDemo.hpp"
 
-#include "spark/gui/GuiThemeCatalog.hpp"
+#include "spark/demo/DemoGuiFrame.hpp"
+#include "spark/gui/api/GuiApi.hpp"
+#include "spark/gui/GuiLayoutMetrics.hpp"
 
 namespace Spark {
 
@@ -64,15 +66,7 @@ void ParticleDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsText->SetText(Spark::Utf8String("Particles — Fire · Snow · Smoke · Magic — GUI panel"));
         roots.PushBack(fpsHudObject);
 
-        guiObject = w.CreateGameObject();
-        guiObject->GetName() = Spark::Utf8String("ParticleDemoGui");
-        Spark::GuiCanvasComponent* canvas = guiObject->AddComponent<Spark::GuiCanvasComponent>();
-        canvas->SetSortOrder(240);
-        BuildGuiPanel(*canvas);
-        roots.PushBack(guiObject);
-
         guiSelectedEffect = 0;
-        SyncGuiFromSelectedEmitter();
 
         context.GetInput().SetCursorCaptured(false);
         camera.position = {0.0F, 3.2F, 10.0F};
@@ -95,8 +89,6 @@ void ParticleDemo::Unload(Spark::GameWorld& w)
         }
         fpsHudObject = nullptr;
         fpsText = nullptr;
-        guiObject = nullptr;
-        ClearGuiWidgetRefs();
     }
 
 void ParticleDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context)
@@ -200,7 +192,7 @@ void ParticleDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::I
             params.draws.PushBack(item);
         });
 
-        Spark::PaintGuiCanvases(world, params, fbW, fbH);
+        BuildPortableUi(context, params, world);
 
         scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
             Spark::ScreenTextDraw d{};
@@ -216,24 +208,7 @@ void ParticleDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::I
         context.SetSceneRenderParams(params);
     }
 
-void ParticleDemo::ClearGuiWidgetRefs() noexcept
-{
-        for (std::size_t i = 0; i < Detail::kParticleDemoEffectCount; ++i) {
-            guiEffectButtons[i] = nullptr;
-        }
-        guiEmission = nullptr;
-        guiLifeMin = nullptr;
-        guiLifeMax = nullptr;
-        guiSizeStart = nullptr;
-        guiSizeEnd = nullptr;
-        guiSpread = nullptr;
-        guiSpeedMin = nullptr;
-        guiSpeedMax = nullptr;
-        guiGravY = nullptr;
-        guiEnabledSwitch = nullptr;
-    }
-
-[[nodiscard]] Spark::ParticleEmitterComponent* ParticleDemo::SelectedEmitter() noexcept
+Spark::ParticleEmitterComponent* ParticleDemo::SelectedEmitter() noexcept
 {
         if (guiSelectedEffect < 0 || guiSelectedEffect >= Detail::kParticleDemoEffectCount) {
             return nullptr;
@@ -241,245 +216,100 @@ void ParticleDemo::ClearGuiWidgetRefs() noexcept
         return effectEmitters[static_cast<std::size_t>(guiSelectedEffect)];
     }
 
-void ParticleDemo::SyncGuiFromSelectedEmitter()
-{
-        for (int i = 0; i < Detail::kParticleDemoEffectCount; ++i) {
-            if (guiEffectButtons[static_cast<std::size_t>(i)] != nullptr) {
-                guiEffectButtons[static_cast<std::size_t>(i)]->SetAccentSelected(i == guiSelectedEffect);
-            }
-        }
-        Spark::ParticleEmitterComponent* pe = SelectedEmitter();
-        if (pe == nullptr) {
-            return;
-        }
-        if (guiEmission != nullptr) {
-            guiEmission->SetRange(0.0F, 320.0F);
-            guiEmission->SetValue(pe->GetEmissionRate());
-        }
-        if (guiLifeMin != nullptr) {
-            guiLifeMin->SetRange(0.05F, 4.0F);
-            guiLifeMin->SetValue(pe->GetLifetimeMin());
-        }
-        if (guiLifeMax != nullptr) {
-            guiLifeMax->SetRange(0.1F, 5.0F);
-            guiLifeMax->SetValue(pe->GetLifetimeMax());
-        }
-        if (guiSizeStart != nullptr) {
-            guiSizeStart->SetRange(0.02F, 0.55F);
-            guiSizeStart->SetValue(pe->GetStartSize());
-        }
-        if (guiSizeEnd != nullptr) {
-            guiSizeEnd->SetRange(0.01F, 0.55F);
-            guiSizeEnd->SetValue(pe->GetEndSize());
-        }
-        if (guiSpread != nullptr) {
-            guiSpread->SetRange(0.0F, 3.14159F);
-            guiSpread->SetValue(pe->GetSpreadAngleRadians());
-        }
-        if (guiSpeedMin != nullptr) {
-            guiSpeedMin->SetRange(0.0F, 8.0F);
-            guiSpeedMin->SetValue(pe->GetSpeedMin());
-        }
-        if (guiSpeedMax != nullptr) {
-            guiSpeedMax->SetRange(0.0F, 12.0F);
-            guiSpeedMax->SetValue(pe->GetSpeedMax());
-        }
-        if (guiGravY != nullptr) {
-            guiGravY->SetRange(-12.0F, 8.0F);
-            guiGravY->SetValue(pe->GetGravity().y);
-        }
-        if (guiEnabledSwitch != nullptr) {
-            guiEnabledSwitch->SetOn(pe->IsEmitterEnabled());
-        }
+void ParticleDemo::BuildPortableUi(
+        Spark::IEngineContext& context,
+        SceneRenderParams& params,
+        const Spark::GameWorld& world) {
+    Spark::ParticleEmitterComponent* pe = SelectedEmitter();
+    if (pe == nullptr) {
+        return;
     }
 
-void ParticleDemo::BuildGuiPanel(Spark::GuiCanvasComponent& canvas)
-{
-        ClearGuiWidgetRefs();
+    float emission = pe->GetEmissionRate();
+    float lifeMin = pe->GetLifetimeMin();
+    float lifeMax = pe->GetLifetimeMax();
+    float sizeStart = pe->GetStartSize();
+    float sizeEnd = pe->GetEndSize();
+    float spread = pe->GetSpreadAngleRadians();
+    float speedMin = pe->GetSpeedMin();
+    float speedMax = pe->GetSpeedMax();
+    float gravY = pe->GetGravity().y;
+    bool enabled = pe->IsEmitterEnabled();
 
-        const Spark::Gui::GuiTheme skin =
-                Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
-        canvas.SetTheme(skin);
+    const Gui::GuiFrameContext frame = DemoGui::MakeFrameContext(context, params, world, 0.0F);
+    Gui::GuiSystem::Get().BeginImmediateFrame(frame);
+    Gui::IGuiFrame& ui = Gui::Ui();
 
-        auto root = Spark::MakeUnique<ParticleEffectsRightDockRoot>();
-        auto shell = Spark::MakeUnique<Spark::Gui::Panel>();
-        shell->SetPadding(18.0F);
-        shell->SetChromeEnabled(true);
-        shell->SetDropShadowEnabled(true);
-        shell->SetBackgroundGradient(skin.panelElevatedTop, skin.panelElevatedBottom, skin.panelElevatedAlpha);
-
-        auto layout = Spark::MakeUnique<ParticleGuiEmitterOverlayLayout>();
-
-        auto lowerStack = Spark::MakeUnique<Spark::Gui::StackPanel>();
-        lowerStack->SetOrientation(Spark::Gui::StackOrientation::Vertical);
-        lowerStack->SetSpacing(9.0F);
-
-        auto title = Spark::MakeUnique<Spark::Gui::Label>();
-        title->SetText(Spark::Utf8String("Particle effects"));
-        title->SetFontSize(30.0F);
-        title->SetBold(true);
-
-        ParticleDemo* self = this;
-
-        auto pickLbl = Spark::MakeUnique<Spark::Gui::Label>();
-        pickLbl->SetText(Spark::Utf8String("Emitter"));
-        pickLbl->SetFontSize(21.0F);
-        pickLbl->SetTone(Spark::Gui::LabelTone::Muted);
-
-        auto emitterPick = Spark::MakeUnique<Spark::Gui::StackPanel>();
-        emitterPick->SetOrientation(Spark::Gui::StackOrientation::Vertical);
-        emitterPick->SetSpacing(6.0F);
+    const Gui::GuiLayoutMetrics& layout = Gui::GetActiveGuiLayoutMetrics();
+    const float panelW = DemoGui::kDemoSidePanelWidth * layout.uiScale;
+    const float panelX = static_cast<float>((std::max)(1, frame.framebufferWidth)) - panelW - layout.Padding();
+    const float panelY = layout.Padding();
+    const float panelH =
+            static_cast<float>((std::max)(1, frame.framebufferHeight)) - panelY * 2.0F;
+    ui.SetNextPanelSize(panelW, panelH);
+    ui.SetCursorPos(panelX, panelY);
+    if (ui.BeginPanel("particles", "Particle effects")) {
+        ui.Text("Emitter");
         static constexpr const char* kEmitterNames[Detail::kParticleDemoEffectCount] = {
                 "Fire (campfire)", "Snow", "Smoke", "Magic sparkles"};
         for (int ei = 0; ei < Detail::kParticleDemoEffectCount; ++ei) {
-            auto eb = Spark::MakeUnique<Spark::Gui::Button>();
-            guiEffectButtons[static_cast<std::size_t>(ei)] = eb.Get();
-            eb->SetLabel(Spark::Utf8String(kEmitterNames[static_cast<std::size_t>(ei)]));
-            eb->SetFontSize(19.0F);
-            eb->SetOpaqueSurface(true);
-            const int preset = ei;
-            eb->SetOnClick([self, preset]() {
-                self->guiSelectedEffect = preset;
-                self->SyncGuiFromSelectedEmitter();
-            });
-            emitterPick->AddChild(Spark::MoveTemp(eb));
-        }
-
-        auto help = Spark::MakeUnique<Spark::Gui::WrappingLabel>();
-        help->SetText(Spark::Utf8String(
-                "Choose an emitter preset above, then tune sliders or reset. "
-                "F1 toggles fly camera vs mouse for this panel."));
-        help->SetFontSize(21.0F);
-        help->SetTone(Spark::Gui::LabelTone::Muted);
-        lowerStack->AddChild(Spark::MoveTemp(help));
-
-        auto addLabeledSlider =
-                [&lowerStack](const char* title, float r0, float r1, Spark::Gui::Slider*& outPtr) {
-                    auto row = Spark::MakeUnique<Spark::Gui::StackPanel>();
-                    row->SetOrientation(Spark::Gui::StackOrientation::Horizontal);
-                    row->SetSpacing(10.0F);
-                    auto lab = Spark::MakeUnique<Spark::Gui::Label>();
-                    lab->SetText(Spark::Utf8String(title));
-                    lab->SetFontSize(20.0F);
-                    lab->SetTone(Spark::Gui::LabelTone::Muted);
-                    auto sl = Spark::MakeUnique<Spark::Gui::Slider>();
-                    outPtr = sl.Get();
-                    sl->SetRange(r0, r1);
-                    row->AddChild(Spark::MoveTemp(lab));
-                    row->AddChild(Spark::MoveTemp(sl));
-                    lowerStack->AddChild(Spark::MoveTemp(row));
-                };
-
-        addLabeledSlider("Emission / sec", 0.0F, 320.0F, guiEmission);
-        addLabeledSlider("Lifetime min (s)", 0.05F, 4.0F, guiLifeMin);
-        addLabeledSlider("Lifetime max (s)", 0.1F, 5.0F, guiLifeMax);
-        addLabeledSlider("Size start", 0.02F, 0.55F, guiSizeStart);
-        addLabeledSlider("Size end", 0.01F, 0.55F, guiSizeEnd);
-        addLabeledSlider("Spread (rad)", 0.0F, 3.14159F, guiSpread);
-        addLabeledSlider("Speed min", 0.0F, 8.0F, guiSpeedMin);
-        addLabeledSlider("Speed max", 0.0F, 12.0F, guiSpeedMax);
-        addLabeledSlider("Gravity Y", -12.0F, 8.0F, guiGravY);
-
-        if (guiEmission != nullptr) {
-            guiEmission->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetEmissionRate(v);
+            char idBuf[32];
+            snprintf(idBuf, sizeof(idBuf), "fx_%d", ei);
+            if (ui.Selectable(idBuf, kEmitterNames[ei], guiSelectedEffect == ei)) {
+                guiSelectedEffect = ei;
+                pe = SelectedEmitter();
+                if (pe != nullptr) {
+                    emission = pe->GetEmissionRate();
+                    lifeMin = pe->GetLifetimeMin();
+                    lifeMax = pe->GetLifetimeMax();
+                    sizeStart = pe->GetStartSize();
+                    sizeEnd = pe->GetEndSize();
+                    spread = pe->GetSpreadAngleRadians();
+                    speedMin = pe->GetSpeedMin();
+                    speedMax = pe->GetSpeedMax();
+                    gravY = pe->GetGravity().y;
+                    enabled = pe->IsEmitterEnabled();
                 }
-            });
-        }
-        if (guiLifeMin != nullptr) {
-            guiLifeMin->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetLifetime(v, std::max(v, pe->GetLifetimeMax()));
-                }
-            });
-        }
-        if (guiLifeMax != nullptr) {
-            guiLifeMax->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetLifetime(std::min(pe->GetLifetimeMin(), v), v);
-                }
-            });
-        }
-        if (guiSizeStart != nullptr) {
-            guiSizeStart->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetStartEndSize(v, pe->GetEndSize());
-                }
-            });
-        }
-        if (guiSizeEnd != nullptr) {
-            guiSizeEnd->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetStartEndSize(pe->GetStartSize(), v);
-                }
-            });
-        }
-        if (guiSpread != nullptr) {
-            guiSpread->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetSpreadAngleRadians(v);
-                }
-            });
-        }
-        if (guiSpeedMin != nullptr) {
-            guiSpeedMin->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetSpeedRange(v, std::max(v, pe->GetSpeedMax()));
-                }
-            });
-        }
-        if (guiSpeedMax != nullptr) {
-            guiSpeedMax->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    pe->SetSpeedRange(std::min(pe->GetSpeedMin(), v), v);
-                }
-            });
-        }
-        if (guiGravY != nullptr) {
-            guiGravY->SetOnChanged([self](float v) {
-                if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                    const Spark::Vector3 g = pe->GetGravity();
-                    pe->SetGravity({g.x, v, g.z});
-                }
-            });
-        }
-
-        auto swRow = Spark::MakeUnique<Spark::Gui::StackPanel>();
-        swRow->SetOrientation(Spark::Gui::StackOrientation::Horizontal);
-        swRow->SetSpacing(12.0F);
-        auto swLab = Spark::MakeUnique<Spark::Gui::Label>();
-        swLab->SetText(Spark::Utf8String("Emitter enabled"));
-        swLab->SetFontSize(21.0F);
-        swLab->SetTextColor({0.86F, 0.90F, 0.95F});
-        auto sw = Spark::MakeUnique<Spark::Gui::Switch>();
-        guiEnabledSwitch = sw.Get();
-        sw->SetOnChanged([self](bool on) {
-            if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                pe->SetEmitterEnabled(on);
             }
-        });
-        swRow->AddChild(Spark::MoveTemp(swLab));
-        swRow->AddChild(Spark::MoveTemp(sw));
-        lowerStack->AddChild(Spark::MoveTemp(swRow));
-
-        auto resetBtn = Spark::MakeUnique<Spark::Gui::Button>();
-        resetBtn->SetLabel(Spark::Utf8String("Reset selected preset"));
-        resetBtn->SetFontSize(23.0F);
-        resetBtn->SetOnClick([self]() {
-            if (Spark::ParticleEmitterComponent* pe = self->SelectedEmitter()) {
-                Detail::ApplyParticlePreset(self->guiSelectedEffect, *pe);
-                self->SyncGuiFromSelectedEmitter();
-            }
-        });
-        lowerStack->AddChild(Spark::MoveTemp(resetBtn));
-
-        layout->AddChild(Spark::MoveTemp(lowerStack));
-        layout->AddChild(Spark::MoveTemp(title));
-        layout->AddChild(Spark::MoveTemp(pickLbl));
-        layout->AddChild(Spark::MoveTemp(emitterPick));
-        shell->AddChild(Spark::MoveTemp(layout));
-        root->AddChild(Spark::MoveTemp(shell));
-        canvas.SetRoot(Spark::MoveTemp(root));
+        }
+        ui.Separator();
+        ui.TextDisabled("Tune the selected emitter; F1 toggles fly camera.");
+        if (ui.SliderFloat("emission", "Emission / sec", emission, 0.0F, 320.0F)) {
+            pe->SetEmissionRate(emission);
+        }
+        if (ui.SliderFloat("lmin", "Lifetime min (s)", lifeMin, 0.05F, 4.0F)) {
+            pe->SetLifetime(lifeMin, std::max(lifeMin, pe->GetLifetimeMax()));
+        }
+        if (ui.SliderFloat("lmax", "Lifetime max (s)", lifeMax, 0.1F, 5.0F)) {
+            pe->SetLifetime(std::min(pe->GetLifetimeMin(), lifeMax), lifeMax);
+        }
+        if (ui.SliderFloat("sz0", "Size start", sizeStart, 0.02F, 0.55F)) {
+            pe->SetStartEndSize(sizeStart, pe->GetEndSize());
+        }
+        if (ui.SliderFloat("sz1", "Size end", sizeEnd, 0.01F, 0.55F)) {
+            pe->SetStartEndSize(pe->GetStartSize(), sizeEnd);
+        }
+        if (ui.SliderFloat("spread", "Spread (rad)", spread, 0.0F, 3.14159F)) {
+            pe->SetSpreadAngleRadians(spread);
+        }
+        if (ui.SliderFloat("spmin", "Speed min", speedMin, 0.0F, 8.0F)) {
+            pe->SetSpeedRange(speedMin, std::max(speedMin, pe->GetSpeedMax()));
+        }
+        if (ui.SliderFloat("spmax", "Speed max", speedMax, 0.0F, 12.0F)) {
+            pe->SetSpeedRange(std::min(pe->GetSpeedMin(), speedMax), speedMax);
+        }
+        if (ui.SliderFloat("grav", "Gravity Y", gravY, -12.0F, 8.0F)) {
+            const Vector3 g = pe->GetGravity();
+            pe->SetGravity({g.x, gravY, g.z});
+        }
+        if (ui.Checkbox("enabled", "Emitter enabled", enabled)) {
+            pe->SetEmitterEnabled(enabled);
+        }
+        if (ui.Button("reset", "Reset selected preset")) {
+            Detail::ApplyParticlePreset(guiSelectedEffect, *pe);
+        }
+        ui.EndPanel();
     }
+    Gui::GuiSystem::Get().EndImmediateFrame();
+}
 }  // namespace Spark

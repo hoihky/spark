@@ -510,7 +510,6 @@ void SteeringShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
             params.screenTexts.PushBack(MoveTemp(d));
         });
 
-        PaintGuiCanvases(world, params, fbW, fbH);
         context.SetSceneRenderParams(params);
     }
 

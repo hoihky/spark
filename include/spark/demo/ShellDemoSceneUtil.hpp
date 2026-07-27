@@ -9,6 +9,11 @@
 
 namespace Spark {
 
+class GameWorld;
+
+/** Loads Roboto UI fonts into <c>world</c> for demo HUD / portable GUI text. */
+void MountUiFont(GameWorld& world);
+
 Quaternion QuaternionFromRotationColumns(
         const Vector3& col0, const Vector3& col1, const Vector3& col2) noexcept;
 

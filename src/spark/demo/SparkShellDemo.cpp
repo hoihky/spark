@@ -1,6 +1,9 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoMode.hpp"
-#include "spark/demo/ShellDemoUi.hpp"
+#include "spark/demo/DemoGuiFrame.hpp"
+#include "spark/gui/api/GuiApi.hpp"
+#include "spark/gui/GuiLayoutMetrics.hpp"
+#include "spark/gui/EditorLayoutStore.hpp"
 #include "spark/demo/ThreeDDemo.hpp"
 #include "spark/demo/ToonShadingDemo.hpp"
 #include "spark/demo/MaterialShowcase3DDemo.hpp"
@@ -23,6 +26,8 @@
 #include "spark/demo/TimeOfDayDemo.hpp"
 #include "spark/gui/EditorLayoutStore.hpp"
 #include "spark/gui/GuiThemeCatalog.hpp"
+#include "spark/gui/toolkit/GuiToolkitSettings.hpp"
+#include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 
 #include <cstdio>
@@ -36,8 +41,8 @@ public:
         engineCtx = &context;
         Spark::Gui::SceneEditorLayoutSettings layout{};
         Spark::Gui::TryLoadSceneEditorLayout(layout);
+        Spark::Gui::SetActiveGuiThemePreset(layout.guiTheme);
         MountUiFont(GetWorld());
-        BuildLauncherUi();
         fpsOverlay.EnsureMounted(GetWorld());
         context.GetInput().SetCursorCaptured(false);
     }
@@ -57,44 +62,38 @@ public:
         fpsOverlay.SyncVisibilityFromGlobal();
         fpsOverlay.Update(timing, fbW);
 
+        if (mode == DemoMode::Menu && engineCtx != nullptr && pendingDemoLaunch >= 0) {
+            const int idx = pendingDemoLaunch;
+            pendingDemoLaunch = -1;
+            EnterDemoByListIndex(idx);
+        }
+
         if (mode == DemoMode::Menu && engineCtx != nullptr) {
             Spark::IInput& in = context.GetInput();
-            if (in.IsKeyPressedThisFrame(GLFW_KEY_1)) {
-                EnterThreeD(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_2)) {
-                EnterSkyDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_3)) {
-                EnterParticleDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_4)) {
-                EnterTerrainDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_5)) {
-                EnterCharacterDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_6)) {
-                EnterPlatformer2DDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_7)) {
-                EnterBroadPhase2DDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_0)) {
-                EnterMaze3DDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_MINUS)) {
-                EnterPhysicsBall3DDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_EQUAL)) {
-                EnterSceneEditor3DDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_SEMICOLON)) {
-                EnterSteeringShowcase3DDemo(*engineCtx);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_T)) {
-                EnterTetris2DDemo(*engineCtx);
+            for (int key = GLFW_KEY_1; key <= GLFW_KEY_9; ++key) {
+                if (in.IsKeyPressedThisFrame(key)) {
+                    EnterDemoByListIndex(key - GLFW_KEY_1);
+                }
+            }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_0)) {
+                EnterDemoByListIndex(9);
+            }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_T)) {
+                EnterDemoByListIndex(10);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_C)) {
-                EnterConnect3Demo(*engineCtx);
+                EnterDemoByListIndex(11);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_I)) {
-                EnterSpaceInvaders2DDemo(*engineCtx);
+                EnterDemoByListIndex(12);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_SEMICOLON)) {
+                EnterDemoByListIndex(13);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Y)) {
-                EnterToonShadingDemo(*engineCtx);
+                EnterDemoByListIndex(14);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_B)) {
-                EnterMaterialShowcase3DDemo(*engineCtx);
+                EnterDemoByListIndex(15);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_N)) {
-                EnterTimeOfDayDemo(*engineCtx);
+                EnterDemoByListIndex(16);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_G)) {
-                EnterImGuiShowcase(*engineCtx);
+                EnterDemoByListIndex(19);
             }
         }
 
@@ -311,9 +310,6 @@ public:
             threeD.Load(GetWorld(), context);
             threeDLoaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::ThreeD;
         context.GetInput().SetCursorCaptured(true);
     }
@@ -380,9 +376,6 @@ public:
         if (!toonShadingLoaded) {
             toonShadingDemo.Load(GetWorld(), context);
             toonShadingLoaded = true;
-        }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::ToonShading;
         context.GetInput().SetCursorCaptured(true);
@@ -451,9 +444,6 @@ public:
             materialShowcase3DDemo.Load(GetWorld(), context);
             materialShowcaseLoaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::MaterialShowcase3D;
         context.GetInput().SetCursorCaptured(true);
     }
@@ -512,9 +502,6 @@ public:
         if (!skyDemoLoaded) {
             skyDemo.Load(GetWorld(), context);
             skyDemoLoaded = true;
-        }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::Sky;
         context.GetInput().SetCursorCaptured(true);
@@ -591,9 +578,6 @@ public:
             timeOfDayDemo.Load(GetWorld(), context);
             timeOfDayDemoLoaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::TimeOfDay;
         context.GetInput().SetCursorCaptured(true);
     }
@@ -656,9 +640,6 @@ public:
         if (!particleDemoLoaded) {
             particleDemo.Load(GetWorld(), context);
             particleDemoLoaded = true;
-        }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::Particles;
         context.GetInput().SetCursorCaptured(false);
@@ -723,9 +704,6 @@ public:
             terrainDemo.Load(GetWorld(), context);
             terrainDemoLoaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::Terrain;
         context.GetInput().SetCursorCaptured(true);
     }
@@ -788,9 +766,6 @@ public:
         if (!characterDemoLoaded) {
             characterDemo.Load(GetWorld(), context);
             characterDemoLoaded = true;
-        }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::Character;
         context.GetInput().SetCursorCaptured(true);
@@ -855,9 +830,6 @@ public:
             tetris2DDemo.Load(GetWorld(), context);
             tetris2DLoaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::Tetris2D;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -921,9 +893,6 @@ public:
             connect3Demo.Load(GetWorld(), context);
             connect3Loaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::Connect3;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -986,9 +955,6 @@ public:
         if (!spaceInvaders2DLoaded) {
             spaceInvaders2DDemo.Load(GetWorld(), context);
             spaceInvaders2DLoaded = true;
-        }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::SpaceInvaders2D;
         context.GetInput().SetCursorCaptured(false);
@@ -1055,9 +1021,6 @@ public:
         }
         platformer2DDemo.Load(GetWorld(), context);
         platformer2DLoaded = true;
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::Platformer2D;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -1123,9 +1086,6 @@ public:
         }
         broadPhase2DDemo.Load(GetWorld(), context);
         broadPhase2DLoaded = true;
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::BroadPhase2D;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -1192,9 +1152,6 @@ public:
         if (!renderLayers2DLoaded) {
             renderLayers2DDemo.Load(GetWorld(), context);
             renderLayers2DLoaded = true;
-        }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
         }
         mode = DemoMode::RenderLayers2D;
         context.GetInput().SetCursorCaptured(false);
@@ -1263,9 +1220,6 @@ public:
             tilemapShowcase2DDemo.Load(GetWorld(), context);
             tilemapShowcase2DLoaded = true;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::TilemapShowcase2D;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -1330,9 +1284,6 @@ public:
             maze3DLoaded = false;
         }
         imguiShowcaseDemo.Enter(context);
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::ImGuiShowcase;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -1398,9 +1349,6 @@ public:
         }
         maze3DDemo.Load(GetWorld(), context);
         maze3DLoaded = true;
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::Maze3D;
         context.GetInput().SetCursorCaptured(true);
     }
@@ -1466,9 +1414,6 @@ public:
         UnloadTimeOfDayDemoIfAny();
         physicsBall3D.Load(GetWorld(), context);
         physicsBall3DLoaded = true;
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::PhysicsBall3D;
         /** <c>PhysicsBallThrow3DDemo::Load</c> leaves capture off for LMB throw + right panel; use F1 to look. */
     }
@@ -1534,9 +1479,6 @@ public:
         UnloadTimeOfDayDemoIfAny();
         steeringShowcase3D.Load(GetWorld(), context);
         steeringShowcase3DLoaded = true;
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::SteeringShowcase3D;
         context.GetInput().SetCursorCaptured(true);
     }
@@ -1602,15 +1544,14 @@ public:
         }
         sceneEditor3D.Load(GetWorld(), context);
         sceneEditor3DLoaded = true;
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(false);
-        }
         mode = DemoMode::SceneEditor3D;
         context.GetInput().SetCursorCaptured(false);
     }
 
     void ReturnToMenu(IEngineContext& context) {
-        imguiShowcaseDemo.Leave(context);
+        if (mode == DemoMode::ImGuiShowcase) {
+            imguiShowcaseDemo.Leave(context);
+        }
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
         if (threeDLoaded) {
@@ -1669,17 +1610,10 @@ public:
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
         }
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetCanvasEnabled(true);
-        }
-        if (demoListScroll != nullptr) {
-            demoListScroll->ScrollToTop();
-        }
-        if (demoList != nullptr) {
-            demoList->SetSelectedIndex(-1);
-        }
         GetScene().SetSpatialPartitionKind(Spark::ScenePartitionKind::None);
         mode = DemoMode::Menu;
+        launcherSelectedIndex = -1;
+        pendingDemoLaunch = -1;
         context.GetInput().SetCursorCaptured(false);
     }
 
@@ -1726,120 +1660,120 @@ private:
         }
     }
 
-    void BuildLauncherUi() {
-        menuGo = GetWorld().CreateGameObject();
-        menuGo->GetName() = Spark::Utf8String("Launcher");
-        menuCanvas = menuGo->AddComponent<Spark::GuiCanvasComponent>();
-        menuCanvas->SetSortOrder(200);
-        const Spark::Gui::GuiTheme skin = Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
-        menuCanvas->SetTheme(skin);
-
-        auto backdrop = Spark::MakeUnique<Spark::Gui::Panel>();
-        menuBackdrop = backdrop.Get();
-        backdrop->SetPadding(0.0F);
-        backdrop->SetBackgroundGradient(skin.shellBackdropTop, skin.shellBackdropBottom, skin.shellBackdropAlpha);
-        backdrop->SetDropShadowEnabled(false);
-        backdrop->SetChromeEnabled(false);
-
-        auto layout = Spark::MakeUnique<LauncherMenuLayout>(880.0F);
-
-        auto themeRow = Spark::MakeUnique<LauncherThemeRow>();
-        menuThemeRow = themeRow.Get();
-        ShellGame* self = this;
-        themeRow->SetOnThemeCycle([self](const int delta) {
-            const int n = Spark::Gui::GuiThemePresetCount();
-            int cur = static_cast<int>(Spark::Gui::GetActiveGuiThemePreset());
-            cur = ((cur + delta) % n + n) % n;
-            self->OnShellThemeSelected(cur);
-        });
-        layout->AddChild(Spark::MoveTemp(themeRow));
-
-        auto scroll = Spark::MakeUnique<Spark::Gui::ScrollPanel>();
-        demoListScroll = scroll.Get();
-        scroll->SetViewportFillGradient(
-                skin.scrollViewportTop, skin.scrollViewportBottom, skin.scrollViewportAlpha);
-
-        auto lst = Spark::MakeUnique<Spark::Gui::List>();
-        demoList = lst.Get();
-        demoList->SetRowHeight(72.0F);
-        demoList->SetItemFontSize(36.0F);
-        demoList->SetItemBold(true);
-        demoList->SetOpaqueRows(true);
-        demoList->SetVerticalScrollingEnabled(false);
-        Spark::Array<Spark::Utf8String> items;
-        items.PushBack(Spark::Utf8String("1  — Basic 3D scene"));
-        items.PushBack(Spark::Utf8String("2  — Sky: box, dome, plane"));
-        items.PushBack(Spark::Utf8String("3  — Particles"));
-        items.PushBack(Spark::Utf8String("4  — Terrain"));
-        items.PushBack(Spark::Utf8String("5  — Character (1st / 3rd person)"));
-        items.PushBack(Spark::Utf8String("6  — 2D platformer"));
-        items.PushBack(Spark::Utf8String("7  — 2D Maze"));
-        items.PushBack(Spark::Utf8String("8  — 3D maze"));
-        items.PushBack(Spark::Utf8String("9  — 3D physics"));
-        items.PushBack(Spark::Utf8String("10 — 3D scene editor"));
-        items.PushBack(Spark::Utf8String("11 — Tetris"));
-        items.PushBack(Spark::Utf8String("12 — Match-3"));
-        items.PushBack(Spark::Utf8String("13 — Space Invaders"));
-        items.PushBack(Spark::Utf8String("14 — 3D steering"));
-        items.PushBack(Spark::Utf8String("15 — Toon/cel shading"));
-        items.PushBack(Spark::Utf8String("16 — Material ball"));
-        items.PushBack(Spark::Utf8String("17 — Time of day"));
-        items.PushBack(Spark::Utf8String("18 — Farming RPG render layers"));
-        items.PushBack(Spark::Utf8String("19 — Tilemap layers, animation & pathfinding"));
-        items.PushBack(Spark::Utf8String("20 — Dear ImGui tools (docking)"));
-        demoList->SetItems(Spark::MoveTemp(items));
-        demoList->SetOnSelectionChanged([self](int idx) {
-            if (self->engineCtx == nullptr) {
-                return;
+    void EnterDemoByListIndex(const int idx) {
+        if (engineCtx == nullptr) {
+            return;
+        }
+        constexpr int kImGuiShowcaseIndex = 19;
+        if (idx != kImGuiShowcaseIndex) {
+            Spark::Gui::GuiToolkitSettings::SetPreferred(Spark::Gui::GuiToolkitKind::SparkNative);
+            if (IImGuiLayer* layer = engineCtx->TryGetImGuiLayer()) {
+                layer->SetEnabled(false);
             }
-            if (idx == 0) {
-                self->EnterThreeD(*self->engineCtx);
-            } else if (idx == 1) {
-                self->EnterSkyDemo(*self->engineCtx);
-            } else if (idx == 2) {
-                self->EnterParticleDemo(*self->engineCtx);
-            } else if (idx == 3) {
-                self->EnterTerrainDemo(*self->engineCtx);
-            } else if (idx == 4) {
-                self->EnterCharacterDemo(*self->engineCtx);
-            } else if (idx == 5) {
-                self->EnterPlatformer2DDemo(*self->engineCtx);
-            } else if (idx == 6) {
-                self->EnterBroadPhase2DDemo(*self->engineCtx);
-            } else if (idx == 7) {
-                self->EnterMaze3DDemo(*self->engineCtx);
-            } else if (idx == 8) {
-                self->EnterPhysicsBall3DDemo(*self->engineCtx);
-            } else if (idx == 9) {
-                self->EnterSceneEditor3DDemo(*self->engineCtx);
-            } else if (idx == 10) {
-                self->EnterTetris2DDemo(*self->engineCtx);
-            } else if (idx == 11) {
-                self->EnterConnect3Demo(*self->engineCtx);
-            } else if (idx == 12) {
-                self->EnterSpaceInvaders2DDemo(*self->engineCtx);
-            } else if (idx == 13) {
-                self->EnterSteeringShowcase3DDemo(*self->engineCtx);
-            } else if (idx == 14) {
-                self->EnterToonShadingDemo(*self->engineCtx);
-            } else if (idx == 15) {
-                self->EnterMaterialShowcase3DDemo(*self->engineCtx);
-            } else if (idx == 16) {
-                self->EnterTimeOfDayDemo(*self->engineCtx);
-            } else if (idx == 17) {
-                self->EnterRenderLayers2DDemo(*self->engineCtx);
-            } else if (idx == 18) {
-                self->EnterTilemapShowcase2DDemo(*self->engineCtx);
-            } else if (idx == 19) {
-                self->EnterImGuiShowcase(*self->engineCtx);
-            }
-        });
-        scroll->AddChild(Spark::MoveTemp(lst));
-        scroll->ScrollToTop();
-        layout->AddChild(Spark::MoveTemp(scroll));
+        }
+        using EnterFn = void (ShellGame::*)(IEngineContext&);
+        static constexpr EnterFn kDemoEnter[] = {
+                &ShellGame::EnterThreeD,
+                &ShellGame::EnterSkyDemo,
+                &ShellGame::EnterParticleDemo,
+                &ShellGame::EnterTerrainDemo,
+                &ShellGame::EnterCharacterDemo,
+                &ShellGame::EnterPlatformer2DDemo,
+                &ShellGame::EnterBroadPhase2DDemo,
+                &ShellGame::EnterMaze3DDemo,
+                &ShellGame::EnterPhysicsBall3DDemo,
+                &ShellGame::EnterSceneEditor3DDemo,
+                &ShellGame::EnterTetris2DDemo,
+                &ShellGame::EnterConnect3Demo,
+                &ShellGame::EnterSpaceInvaders2DDemo,
+                &ShellGame::EnterSteeringShowcase3DDemo,
+                &ShellGame::EnterToonShadingDemo,
+                &ShellGame::EnterMaterialShowcase3DDemo,
+                &ShellGame::EnterTimeOfDayDemo,
+                &ShellGame::EnterRenderLayers2DDemo,
+                &ShellGame::EnterTilemapShowcase2DDemo,
+                &ShellGame::EnterImGuiShowcase,
+        };
+        static_assert(
+                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == 20,
+                "kDemoEnter must match launcher demo list count");
+        if (idx < 0 || idx >= static_cast<int>(sizeof(kDemoEnter) / sizeof(kDemoEnter[0]))) {
+            return;
+        }
+        (this->*kDemoEnter[idx])(*engineCtx);
+    }
 
-        backdrop->AddChild(Spark::MoveTemp(layout));
-        menuCanvas->SetRoot(Spark::MoveTemp(backdrop));
+    void BuildLauncherPortableUi(IEngineContext& context, SceneRenderParams& params) {
+        static constexpr const char* kDemoLabels[] = {
+                "1  — Basic 3D scene",
+                "2  — Sky: box, dome, plane",
+                "3  — Particles",
+                "4  — Terrain",
+                "5  — Character (1st / 3rd person)",
+                "6  — 2D platformer",
+                "7  — 2D Maze",
+                "8  — 3D maze",
+                "9  — 3D physics",
+                "10 — 3D scene editor",
+                "11 — Tetris",
+                "12 — Match-3",
+                "13 — Space Invaders",
+                "14 — 3D steering",
+                "15 — Toon/cel shading",
+                "16 — Material ball",
+                "17 — Time of day",
+                "18 — Farming RPG render layers",
+                "19 — Tilemap layers, animation & pathfinding",
+                "20 — Dear ImGui tools (docking)",
+        };
+        constexpr int kDemoCount = static_cast<int>(sizeof(kDemoLabels) / sizeof(kDemoLabels[0]));
+
+        const Gui::GuiFrameContext frame = DemoGui::MakeFrameContext(context, params, GetWorld(), 0.0F);
+        Gui::GuiSystem::Get().BeginImmediateFrame(frame);
+        Gui::IGuiFrame& ui = Gui::Ui();
+
+        const Gui::GuiLayoutMetrics& layout = Gui::GetActiveGuiLayoutMetrics();
+        const float fbW = static_cast<float>((std::max)(1, frame.framebufferWidth));
+        const float fbH = static_cast<float>((std::max)(1, frame.framebufferHeight));
+        const float panelW = DemoGui::kDemoLauncherPanelWidth * layout.uiScale;
+        const float rowStep = layout.ListRowHeight() + layout.ControlGap();
+        const float panelH = layout.Padding() * 4.0F + layout.FontLabel() + layout.FormRowHeight() * 4.5F +
+                             static_cast<float>(kDemoCount) * rowStep;
+        const float panelX = (fbW - panelW) * 0.5F;
+        const float panelY = std::max(layout.Padding(), (fbH - panelH) * 0.5F);
+        ui.SetNextPanelSize(panelW, panelH);
+        ui.SetCursorPos(panelX, panelY);
+
+        if (ui.BeginPanel("launcher", "Spark Demo Launcher")) {
+            const Gui::GuiThemePreset preset = Gui::GetActiveGuiThemePreset();
+            ui.Text(Gui::GetGuiThemePresetDisplayName(preset));
+            ui.SameLine();
+            if (ui.Button("theme_prev", "<")) {
+                const int n = Gui::GuiThemePresetCount();
+                int cur = static_cast<int>(Gui::GetActiveGuiThemePreset());
+                cur = ((cur - 1) % n + n) % n;
+                OnShellThemeSelected(cur);
+            }
+            ui.SameLine();
+            if (ui.Button("theme_next", ">")) {
+                const int n = Gui::GuiThemePresetCount();
+                int cur = static_cast<int>(Gui::GetActiveGuiThemePreset());
+                cur = ((cur + 1) % n) % n;
+                OnShellThemeSelected(cur);
+            }
+            ui.Separator();
+            ui.TextDisabled("Click a demo to launch (keyboard shortcuts still work).");
+            for (int i = 0; i < kDemoCount; ++i) {
+                char idBuf[24];
+                snprintf(idBuf, sizeof(idBuf), "demo_%d", i);
+                if (ui.Selectable(idBuf, kDemoLabels[i], launcherSelectedIndex == i)) {
+                    launcherSelectedIndex = i;
+                    pendingDemoLaunch = i;
+                }
+            }
+            ui.EndPanel();
+        }
+        Gui::GuiSystem::Get().EndImmediateFrame();
     }
 
     void SaveShellGuiPreferences() {
@@ -1849,27 +1783,8 @@ private:
         Spark::Gui::SaveSceneEditorLayout(layout);
     }
 
-    void ApplyShellTheme() {
-        const Spark::Gui::GuiTheme skin = Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
-        if (menuCanvas != nullptr) {
-            menuCanvas->SetTheme(skin);
-        }
-        if (menuBackdrop != nullptr) {
-            menuBackdrop->SetBackgroundGradient(
-                    skin.shellBackdropTop, skin.shellBackdropBottom, skin.shellBackdropAlpha);
-        }
-        if (menuThemeRow != nullptr) {
-            menuThemeRow->RefreshThemeName();
-        }
-        if (demoListScroll != nullptr) {
-            demoListScroll->SetViewportFillGradient(
-                    skin.scrollViewportTop, skin.scrollViewportBottom, skin.scrollViewportAlpha);
-        }
-    }
-
     void OnShellThemeSelected(const int idx) {
         Spark::Gui::SetActiveGuiThemePreset(Spark::Gui::GuiThemePresetFromId(idx));
-        ApplyShellTheme();
         SaveShellGuiPreferences();
     }
 
@@ -1898,13 +1813,17 @@ private:
                 menuSkin.shellBackdropBottom.z * 0.14F};
         params.uiFont = GetWorld().GetUiFont();
         params.uiBoldFont = GetWorld().GetUiBoldFont();
-        Spark::PaintGuiCanvases(GetScene(), params, fbW, fbH);
+        if (mode == DemoMode::Menu) {
+            BuildLauncherPortableUi(context, params);
+        }
         context.SetSceneRenderParams(params);
     }
 
     IEngineContext* engineCtx = nullptr;
 
     DemoMode mode = DemoMode::Menu;
+    int launcherSelectedIndex = -1;
+    int pendingDemoLaunch = -1;
     ThreeDDemo threeD{};
     bool threeDLoaded = false;
     SkyDemo skyDemo{};
@@ -1944,12 +1863,6 @@ private:
     TimeOfDayDemo timeOfDayDemo{};
     bool timeOfDayDemoLoaded = false;
     ImGuiShowcaseDemo imguiShowcaseDemo{};
-    Spark::GameObject* menuGo = nullptr;
-    Spark::GuiCanvasComponent* menuCanvas = nullptr;
-    Spark::Gui::Panel* menuBackdrop = nullptr;
-    Spark::Gui::ScrollPanel* demoListScroll = nullptr;
-    Spark::Gui::List* demoList = nullptr;
-    LauncherThemeRow* menuThemeRow = nullptr;
     DemoFpsToggleOverlay fpsOverlay{};
 };
 

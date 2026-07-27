@@ -28,6 +28,7 @@ private:
     float sceneExposure = 1.0F;
     int selectedToolTab = 0;
     FrameTiming lastFrameTiming{};
+    bool styleScaled = false;
 };
 
 }  // namespace Spark

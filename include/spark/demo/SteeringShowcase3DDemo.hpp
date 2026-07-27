@@ -8,7 +8,6 @@
 #include "spark/ai/steering/SteeringEnvironment3D.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/demo/ShellDemoUi.hpp"
 #include "spark/demo/DemoProceduralSound.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
