@@ -1,3 +1,5 @@
+> **Disclaimer:** This project is an experimental, work-in-progress prototype built with the help of "vibe coding". Things will break. Features are currently missing, and the build scripts might not work at all. It is shared purely for educational or entertainment purposes.
+
 <p align="center">
   <img src="docs/media/spark-engine-logo.jpg" alt="Spark game engine logo" width="360" />
 </p>
@@ -101,6 +103,10 @@ Games implement `IGame` (`spark/engine/IGame.hpp`). Optional `Game` base owns a 
 - [`samples/platformer2d_game_template/`](samples/platformer2d_game_template/README.md) — 2D platformer starter
 
 Set `SPARK_ROOT` to this repository when building templates.
+
+## License
+
+Spark is licensed under the [MIT License](LICENSE) with the [Commons Clause](https://commonsclause.com) restriction, which prohibits selling the software itself.
 
 ## Asset credits
 

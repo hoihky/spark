@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="SparkEditor" type="CMakeRunConfiguration" factoryName="Application">
-    <option name="TARGET_NAME" value="SparkEditor" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
-    <method v="2">
-      <option name="CMAKE_BUILD_TARGET" value="SparkEditor" />
-    </method>
-  </configuration>
-</component>
