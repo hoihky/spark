@@ -56,7 +56,7 @@ context.SetSceneRenderParams(params);
 ```cpp
 void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
     // 1. Read input, set velocities
-    // 2. SimulatePhysics2D(world, t, settings)  — explicit call!
+    // 2. physics.Simulate2D(world, t)  — explicit call via PhysicsSubsystem!
     // 3. Gameplay rules (respawn, goals)
     Game::OnUpdate(t, ctx);  // component OnUpdate + sound cues
 }

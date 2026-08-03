@@ -2,6 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/HashMap.hpp"
+#include "spark/physics/colliders/Collider2D.hpp"
 #include "spark/physics/Collision2D.hpp"
 
 #include <cstdint>
@@ -12,7 +13,7 @@ class GameWorld;
 
 /**
  * Uniform-cell spatial hash for 2D broad-phase: O(1) cell buckets, conservative insertion of
- * indexed AABBs, unique index queries. Pairs with parallel StaticCollider2D[] built from ECS
+ * indexed AABBs, unique index queries. Pairs with parallel <c>Collider2D</c>[] built from ECS
  * (static BoxCollider2D, CircleCollider2D, and/or TilemapCollider2D).
  */
 class SpatialHashGrid2D {
@@ -52,16 +53,5 @@ private:
     mutable HashMap<std::uint32_t, std::uint8_t, DefaultHash<std::uint32_t>, DefaultKeyEqual<std::uint32_t>>
             queryDedupe{};
 };
-
-/**
- * Collects every static 2D collider (box and/or circle on non-dynamic rigidbodies) into outStatics
- * and inserts each entry's conservative world AABB into the spatial hash. Payload indices match
- * outStatics order.
- */
-void RebuildBroadPhaseFromStaticColliders2D(
-        GameWorld& world,
-        float cellWorldSize,
-        Array<StaticCollider2D>& outStatics,
-        SpatialHashGrid2D& outGrid);
 
 }  // namespace Spark

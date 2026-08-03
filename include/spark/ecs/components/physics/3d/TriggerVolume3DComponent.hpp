@@ -14,6 +14,7 @@ class GameObject;
 class GameWorld;
 struct FrameTiming;
 struct TriggerVolume3DSettings;
+class TriggerVolumeWorld3D;
 
 /** Local shape stored on <c>TriggerVolume3DComponent</c> (mirrors collider conventions). */
 enum class TriggerVolume3DShape : std::uint8_t {
@@ -72,6 +73,7 @@ public:
 
 private:
     friend void SimulateTriggerVolumes3D(GameWorld& world, const FrameTiming& timing, const TriggerVolume3DSettings& settings);
+    friend class TriggerVolumeWorld3D;
 
     void NotifyEnter(GameObject& other);
     void NotifyExit(GameObject& other);

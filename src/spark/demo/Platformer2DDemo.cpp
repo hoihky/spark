@@ -89,6 +89,15 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     healthHud.Shutdown(w);
 
     gemsCollected = 0;
+    gemsTotal = 0;
+    goalReached = false;
+    sceneTime = 0.0F;
+
+    PhysicsWorld2DSettings& phys = physics.GetWorld2D().GetSettings();
+    phys.gravityY = -32.0F;
+    phys.maxFallSpeed = 46.0F;
+    phys.resolveDynamicVsDynamic = false;
+    phys.jointIterations = 4;
     gemsTotal = kGemCount;
     goalReached = false;
     facingLeft = false;
@@ -371,10 +380,7 @@ void Platformer2DDemo::Simulate(
         }
         playerRb->SetVelocity(v);
 
-        Spark::PhysicsWorld2DSettings phys{};
-        phys.gravityY = -32.0F;
-        phys.maxFallSpeed = 46.0F;
-        Spark::SimulatePhysics2D(world, timing, phys);
+        physics.Simulate2D(world, timing);
 
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
         playerCombat.TryFireOnAttackPressed(

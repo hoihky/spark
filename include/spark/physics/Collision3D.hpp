@@ -7,6 +7,7 @@
 namespace Spark {
 
 class GameObject;
+class Collider3D;
 class BoxCollider3DComponent;
 class CapsuleCollider3DComponent;
 class SphereCollider3DComponent;
@@ -135,13 +136,26 @@ void ComputeCapsuleCollider3WorldAabb(
 /** Conservative overlap test for a sphere against a static collider entry. */
 [[nodiscard]] bool StaticCollider3DOverlapsSphere(
         const StaticCollider3DSim& collider, const Vector3& center, float radius) noexcept;
+[[nodiscard]] bool Collider3DOverlapsSphere(const Collider3D& collider, const Vector3& center, float radius) noexcept;
 
 /** Pushes <c>center</c> out of <c>box</c> along the contact normal when penetrating. */
 [[nodiscard]] bool SeparateSphereFromAabb(Vector3& center, float radius, const CollisionAabb3& box) noexcept;
 
+[[nodiscard]] bool ComputeSphereStaticCollider3Contact(
+        const Vector3& center,
+        float radius,
+        const Collider3D& collider,
+        float& outNormalX,
+        float& outNormalY,
+        float& outNormalZ,
+        float& outPenetration,
+        float separationSlop = 0.0F) noexcept;
+
 /** Pushes <c>center</c> out of a static collider along the contact normal when penetrating. */
 [[nodiscard]] bool SeparateSphereFromStaticCollider3(
         Vector3& center, float radius, const StaticCollider3DSim& collider) noexcept;
+[[nodiscard]] bool SeparateSphereFromStaticCollider3(
+        Vector3& center, float radius, const Collider3D& collider) noexcept;
 
 /**
  * Static 3D colliders: <c>BoxCollider3DComponent</c> and/or <c>CapsuleCollider3DComponent</c> on objects without a

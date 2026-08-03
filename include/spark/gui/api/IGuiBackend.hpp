@@ -49,7 +49,7 @@ public:
     [[nodiscard]] virtual bool WantsCaptureKeyboard() const noexcept = 0;
 
     /** Engine hook before game <c>OnRender</c> (Dear ImGui <c>NewFrame</c>). */
-    virtual void OnEnginePreRender(Window& window, IInput& input, float deltaTimeSeconds) {}
+    virtual void OnEnginePreRender(Window& /*window*/, IInput& /*input*/, float /*deltaTimeSeconds*/) {}
     /** Engine hook after game <c>OnRender</c> (Dear ImGui <c>Render</c>). */
     virtual void OnEnginePostRender() {}
 };

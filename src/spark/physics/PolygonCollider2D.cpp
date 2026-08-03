@@ -3,9 +3,9 @@
 #include "spark/ecs/components/physics/2d/PolygonCollider2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/colliders/ColliderBake2D.hpp"
 #include "spark/physics/PhysicsMaterial2D.hpp"
-#include "spark/physics/SpatialHashGrid2D.hpp"
+#include "spark/physics/shapes/ShapeFactory2D.hpp"
 
 namespace Spark {
 
@@ -24,22 +24,19 @@ bool ContributesPolygonCollider2DStatic(GameObject& object) noexcept {
 void AppendPolygonCollider2DStatic(
         GameObject& owner,
         const PolygonCollider2DComponent& collider,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid) {
     if (collider.GetVertexCount() < 3) {
         return;
     }
-    StaticCollider2D sc{};
-    sc.shape = StaticCollider2DShape::ConvexPolygon;
-    sc.categoryBits = collider.GetCategoryBits();
-    sc.maskBits = collider.GetMaskBits();
-    sc.owner = &owner;
-    sc.isTrigger = collider.GetIsTrigger();
-    ComputePolygonCollider2DWorld(owner, collider, sc);
-    ApplyPhysicsMaterial2DToStaticRecord(owner, sc);
-    const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
-    outStatics.PushBack(sc);
-    outGrid.InsertIndexedAabb(idx, sc.aabb);
+    ColliderFilter filter{};
+    filter.categoryBits = collider.GetCategoryBits();
+    filter.maskBits = collider.GetMaskBits();
+    filter.isTrigger = collider.GetIsTrigger();
+    ColliderMaterial material{};
+    ApplyPhysicsMaterial2DToCollider(owner, material);
+    UniquePtr<IShape2D> shape = ShapeFactory2D::CreateFromPolygonCollider(owner, collider);
+    PushCollider2D(outColliders, outGrid, Collider2D::Create(MoveTemp(shape), filter, material, &owner));
 }
 
 }  // namespace Spark

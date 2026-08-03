@@ -43,7 +43,7 @@ Same engine cache toggles as `game_template`: shared engine, no `SparkDemo` by d
 
 ## Next steps for a real FPS
 
-Add **physics** (`SimulatePhysics3D`, colliders), **weapon models**, **projectiles** that damage via overlap instead of the template’s cosmetic tracers + separate hitscan, **AI**, **audio**, and asset loading under your own content paths. Keep `SubmitStandardLitSceneFromWorld` or switch to a custom `SceneRenderParams` build if you need more control.
+Add **physics** (`PhysicsSubsystem::Simulate3D`, colliders), **weapon models**, **projectiles** that damage via overlap instead of the template’s cosmetic tracers + separate hitscan, **AI**, **audio**, and asset loading under your own content paths. Keep `SubmitStandardLitSceneFromWorld` or switch to a custom `SceneRenderParams` build if you need more control.
 
 ## Vulkan SDK
 

@@ -86,7 +86,7 @@ C <kind> <payload>
 
 | API | Role |
 |-----|------|
-| `SimulatePhysics2D` / `SimulatePhysics3D` | Minimal solvers; call from `OnUpdate` |
+| `SimulatePhysics2D` / `SimulatePhysics3D` | Minimal solvers; call from `OnUpdate` via `PhysicsSubsystem` |
 | `PhysicsQueries2D` | Overlap / raycast helpers |
 | `AnimatorComponent`, `Skeleton`, `AnimLoopMode` | Skeletal playback, crossfade, joint palette |
 | `SoundEngine`, `SoundCueComponent` | Playback stack |

@@ -1,5 +1,17 @@
 # Colliders
 
+## OOP Collider Snapshots
+
+Spark bakes ECS components into collider objects before simulation and queries:
+
+| Type | Header | Use |
+|------|--------|-----|
+| `Collider2D` / `Collider3D` | `PhysicsColliders.hpp` | Static baked shapes |
+| `DynamicCollider2D` / `DynamicCollider3D` | `PhysicsColliders.hpp` | Dynamic runtime shapes |
+| `ColliderBakePipeline2D/3D` | `PhysicsColliders.hpp` | Strategy registry for baking |
+
+Each collider owns a polymorphic `IShape2D` / `IShape3D`, plus `ColliderFilter` and `ColliderMaterial`.
+
 ## 2D Colliders
 
 **BoxCollider2DComponent:**
@@ -16,7 +28,7 @@ CircleCollider2DComponent(float localRadius = 0.5F,
                           Vector2 localOffset = Vector2::Zero);
 ```
 
-If both exist on a dynamic body, **circle wins** for simulation.
+If both exist on a dynamic body, **circle wins** for static simulation and the primary `DynamicCollider2D` snapshot. Dynamic–dynamic overlap tests still consider **all** circle/box pairs on each body (triggers and `resolveDynamicVsDynamic`).
 
 **PolygonCollider2DComponent** (convex, static only, max 16 vertices):
 

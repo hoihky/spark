@@ -36,15 +36,32 @@ struct PhysicsWorld3DSettings {
 };
 
 /**
- * Integrates dynamic rigidbodies with <c>SphereCollider3DComponent</c> or <c>CapsuleCollider3DComponent</c> against static
- * <c>BoxCollider3DComponent</c> and <c>CapsuleCollider3DComponent</c>,
- * dynamic sphere/capsule pairs (sphere–sphere, sphere–capsule, capsule–capsule), <c>DistanceJoint3DComponent</c> constraints, and optional
- * <c>PhysicsMaterial3DComponent</c> on surfaces. Rebuilds a 3D spatial hash of statics each step.
- * Solid spheres use <c>I = 2/5 m r²</c> (or <c>Rigidbody3DComponent::inverseInertiaTensorScale</c> when set);
- * contact impulses apply torque <c>Δω = I⁻¹ (r × J)</c>. Translation is swept against statics before integration
- * when <c>sweptStaticCcdBinaryIterations > 0</c>. Restitution, friction, contact torque, and Baumgarte run only on the
- * first position iteration; later iterations apply positional separation only so contacts do not "glue" or damp bounces.
+ * 3D physics simulation world. Integrates dynamic sphere/capsule rigidbodies against static box/capsule geometry,
+ * with optional swept CCD, Baumgarte contact bias, and joint constraints.
  */
+class PhysicsWorld3D {
+public:
+    static constexpr float DefaultBroadPhaseCellSize = 2.0F;
+
+    PhysicsWorld3D() = default;
+    explicit PhysicsWorld3D(PhysicsWorld3DSettings settingsIn) noexcept : settings(settingsIn) {}
+
+    void Simulate(GameWorld& world, const FrameTiming& timing);
+
+    [[nodiscard]] PhysicsWorld3DSettings& GetSettings() noexcept { return settings; }
+    [[nodiscard]] const PhysicsWorld3DSettings& GetSettings() const noexcept { return settings; }
+    void SetSettings(PhysicsWorld3DSettings settingsIn) noexcept { settings = settingsIn; }
+
+    void SetBroadPhaseCellSize(float cellWorldSize) noexcept { broadPhaseCellSize = cellWorldSize; }
+    [[nodiscard]] float GetBroadPhaseCellSize() const noexcept { return broadPhaseCellSize; }
+
+private:
+    PhysicsWorld3DSettings settings{};
+    float broadPhaseCellSize = DefaultBroadPhaseCellSize;
+};
+
+/** @deprecated Prefer <c>PhysicsSubsystem::Simulate3D</c> or <c>PhysicsWorld3D::Simulate</c>. */
+[[deprecated("Use PhysicsSubsystem::Simulate3D or PhysicsWorld3D::Simulate")]]
 void SimulatePhysics3D(GameWorld& world, const FrameTiming& timing, const PhysicsWorld3DSettings& settings = {});
 
 }  // namespace Spark

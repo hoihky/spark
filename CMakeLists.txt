@@ -661,6 +661,32 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/serialization/SceneSerializer.cpp
         src/spark/scene/GameWorldAssetLoader.cpp
         src/spark/scene/SceneManager.cpp
+        src/spark/physics/BroadPhase2D.cpp
+        src/spark/physics/BroadPhase3D.cpp
+        src/spark/physics/colliders/Collider2D.cpp
+        src/spark/physics/colliders/Collider3D.cpp
+        src/spark/physics/colliders/ColliderBakePipeline2D.cpp
+        src/spark/physics/colliders/ColliderBakePipeline3D.cpp
+        src/spark/physics/colliders/ColliderBakeStrategies2D.cpp
+        src/spark/physics/colliders/ColliderBakeStrategies3D.cpp
+        src/spark/physics/colliders/DynamicCollider2D.cpp
+        src/spark/physics/colliders/DynamicCollider3D.cpp
+        src/spark/physics/colliders/DynamicBody2D.cpp
+        src/spark/physics/colliders/DynamicBody3D.cpp
+        src/spark/physics/core/ColliderFilter.cpp
+        src/spark/physics/core/ColliderMaterial.cpp
+        src/spark/physics/shapes/BoxShape2D.cpp
+        src/spark/physics/shapes/CircleShape2D.cpp
+        src/spark/physics/shapes/ConvexPolygonShape2D.cpp
+        src/spark/physics/shapes/ShapeContact2DDetail.cpp
+        src/spark/physics/shapes/NarrowPhase2D.cpp
+        src/spark/physics/shapes/ShapeFactory2D.cpp
+        src/spark/physics/shapes/BoxShape3D.cpp
+        src/spark/physics/shapes/SphereShape3D.cpp
+        src/spark/physics/shapes/CapsuleShape3D.cpp
+        src/spark/physics/shapes/ShapeContact3DDetail.cpp
+        src/spark/physics/shapes/NarrowPhase3D.cpp
+        src/spark/physics/shapes/ShapeFactory3D.cpp
         src/spark/physics/Collision2D.cpp
         src/spark/physics/TilemapCollider2D.cpp
         src/spark/physics/TilemapCollisionBake.cpp
@@ -669,10 +695,18 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/PhysicsJoints.cpp
         src/spark/physics/PolygonCollider2D.cpp
         src/spark/physics/SpatialHashGrid2D.cpp
+        src/spark/physics/PhysicsSubsystem.cpp
         src/spark/physics/PhysicsWorld2D.cpp
+        src/spark/physics/simulation/ContactResolver2D.cpp
+        src/spark/physics/simulation/ContactResolver3D.cpp
+        src/spark/physics/simulation/JointSolver2D.cpp
+        src/spark/physics/simulation/JointSolver3D.cpp
+        src/spark/physics/simulation/RigidbodyIntegrator2D.cpp
+        src/spark/physics/simulation/RigidbodyIntegrator3D.cpp
+        src/spark/physics/simulation/SweptCcd3D.cpp
+        src/spark/physics/simulation/TriggerDispatcher2D.cpp
         src/spark/physics/PhysicsQueries2D.cpp
         src/spark/physics/Collision3D.cpp
-        src/spark/physics/DynamicCollider3D.cpp
         src/spark/physics/SpatialHashGrid3D.cpp
         src/spark/physics/PhysicsWorld3D.cpp
         src/spark/physics/CharacterController3D.cpp
@@ -709,6 +743,7 @@ else ()
     list(APPEND SPARK_ENGINE_SOURCES src/spark/audio/SoundOutputNull.cpp)
 endif ()
 
+option(SPARK_BUILD_TESTS "Build Spark unit tests (GoogleTest)" OFF)
 option(SPARK_BUILD_ENGINE_SHARED "Build SparkEngine as a shared library (OFF = static)" OFF)
 option(SPARK_BUILD_ENGINE_DEMOS "Compile shell/demo sources into SparkEngine (OFF for slim editor/game DLL)" ON)
 option(SPARK_BUILD_EDITOR "Compile spark/editor authoring module into SparkEngine" OFF)
@@ -793,6 +828,11 @@ if (SPARK_BUILD_SCRIPT_HOST)
 elseif (SPARK_BUILD_DEMO)
     message(STATUS "SparkScriptHost disabled (SPARK_BUILD_SCRIPT_HOST=OFF). "
             "Set -DSPARK_BUILD_SCRIPT_HOST=ON and Reload CMake for .run/SparkScriptHost.run.xml")
+endif ()
+
+if (SPARK_BUILD_TESTS)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkTests.cmake)
+    spark_add_physics_tests()
 endif ()
 
 # CLion / strict warnings

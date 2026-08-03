@@ -56,6 +56,26 @@ private:
 };
 
 template<typename T>
+[[nodiscard]] constexpr bool operator==(const UniquePtr<T>& lhs, std::nullptr_t) noexcept {
+    return lhs.Get() == nullptr;
+}
+
+template<typename T>
+[[nodiscard]] constexpr bool operator!=(const UniquePtr<T>& lhs, std::nullptr_t) noexcept {
+    return lhs.Get() != nullptr;
+}
+
+template<typename T>
+[[nodiscard]] constexpr bool operator==(std::nullptr_t, const UniquePtr<T>& rhs) noexcept {
+    return rhs.Get() == nullptr;
+}
+
+template<typename T>
+[[nodiscard]] constexpr bool operator!=(std::nullptr_t, const UniquePtr<T>& rhs) noexcept {
+    return rhs.Get() != nullptr;
+}
+
+template<typename T>
 class UniquePtr<T[]> {
 public:
     constexpr UniquePtr() noexcept = default;
@@ -98,6 +118,26 @@ public:
 private:
     T* ptr = nullptr;
 };
+
+template<typename T>
+[[nodiscard]] constexpr bool operator==(const UniquePtr<T[]>& lhs, std::nullptr_t) noexcept {
+    return lhs.Get() == nullptr;
+}
+
+template<typename T>
+[[nodiscard]] constexpr bool operator!=(const UniquePtr<T[]>& lhs, std::nullptr_t) noexcept {
+    return lhs.Get() != nullptr;
+}
+
+template<typename T>
+[[nodiscard]] constexpr bool operator==(std::nullptr_t, const UniquePtr<T[]>& rhs) noexcept {
+    return rhs.Get() == nullptr;
+}
+
+template<typename T>
+[[nodiscard]] constexpr bool operator!=(std::nullptr_t, const UniquePtr<T[]>& rhs) noexcept {
+    return rhs.Get() != nullptr;
+}
 
 template<typename T, typename... Args>
 [[nodiscard]] UniquePtr<T> MakeUnique(Args&&... args) {

@@ -33,9 +33,14 @@ if (playerRb->IsGrounded() && in.IsKeyPressedThisFrame(GLFW_KEY_SPACE))
     v.y = kJumpSpeed;
 playerRb->SetVelocity(v);
 
-PhysicsWorld2DSettings phys{};
-phys.gravityY = -30.0F;
-SimulatePhysics2D(GetWorld(), timing, phys);
+physics.Simulate2D(GetWorld(), timing);
+```
+
+Configure gravity once in `OnAttach`:
+
+```cpp
+physics.GetWorld2D().GetSettings().gravityY = -30.0F;
+physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
 ```
 
 ## Respawn + Goal

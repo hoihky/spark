@@ -7,6 +7,8 @@
 #include "spark/math/Constants.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/physics/colliders/Collider3D.hpp"
+#include "spark/physics/colliders/ColliderBakePipeline3D.hpp"
 #include "spark/physics/Collision3D.hpp"
 #include "spark/physics/SpatialHashGrid3D.hpp"
 #include "spark/scene/GameWorld.hpp"
@@ -61,7 +63,7 @@ void ApplyTranslationDelta(TransformComponent& transform, const Vector3& centerD
 [[nodiscard]] bool AnyStaticOverlap(
         const Vector3& center,
         const float radius,
-        const Array<StaticCollider3DSim>& statics,
+        const Array<Collider3D>& colliders,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
     CollisionAabb3 query{};
@@ -74,10 +76,10 @@ void ApplyTranslationDelta(TransformComponent& transform, const Vector3& centerD
     broadPhase.QueryUniquePayloadIndices(query, scratch);
     for (std::size_t i = 0; i < scratch.GetSize(); ++i) {
         const std::uint32_t idx = scratch[i];
-        if (idx >= statics.GetSize()) {
+        if (idx >= colliders.GetSize()) {
             continue;
         }
-        if (StaticCollider3DOverlapsSphere(statics[idx], center, radius)) {
+        if (Collider3DOverlapsSphere(colliders[idx], center, radius)) {
             return true;
         }
     }
@@ -89,16 +91,16 @@ void ApplyTranslationDelta(TransformComponent& transform, const Vector3& centerD
         const Vector3& endCenter,
         const float radius,
         const int binaryIterations,
-        const Array<StaticCollider3DSim>& statics,
+        const Array<Collider3D>& colliders,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
     if (binaryIterations <= 0) {
         return 1.0F;
     }
-    if (!AnyStaticOverlap(endCenter, radius, statics, broadPhase, scratch)) {
+    if (!AnyStaticOverlap(endCenter, radius, colliders, broadPhase, scratch)) {
         return 1.0F;
     }
-    if (!AnyStaticOverlap(startCenter, radius, statics, broadPhase, scratch)) {
+    if (!AnyStaticOverlap(startCenter, radius, colliders, broadPhase, scratch)) {
         float lo = 0.0F;
         float hi = 1.0F;
         for (int k = 0; k < binaryIterations; ++k) {
@@ -107,7 +109,7 @@ void ApplyTranslationDelta(TransformComponent& transform, const Vector3& centerD
                     startCenter.x + (endCenter.x - startCenter.x) * mid,
                     startCenter.y + (endCenter.y - startCenter.y) * mid,
                     startCenter.z + (endCenter.z - startCenter.z) * mid};
-            if (AnyStaticOverlap(midCenter, radius, statics, broadPhase, scratch)) {
+            if (AnyStaticOverlap(midCenter, radius, colliders, broadPhase, scratch)) {
                 hi = mid;
             } else {
                 lo = mid;
@@ -122,7 +124,7 @@ void DepenetrateSphere(
         Vector3& center,
         const float radius,
         const float skinWidth,
-        const Array<StaticCollider3DSim>& statics,
+        const Array<Collider3D>& colliders,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
     constexpr int kMaxPasses = 6;
@@ -143,14 +145,14 @@ void DepenetrateSphere(
         bool found = false;
         for (std::size_t i = 0; i < scratch.GetSize(); ++i) {
             const std::uint32_t idx = scratch[i];
-            if (idx >= statics.GetSize()) {
+            if (idx >= colliders.GetSize()) {
                 continue;
             }
             float pen = 0.0F;
             float cx = 0.0F;
             float cy = 0.0F;
             float cz = 0.0F;
-            if (!ComputeSphereStaticCollider3Contact(center, radius, statics[idx], cx, cy, cz, pen, skinWidth)) {
+            if (!ComputeSphereStaticCollider3Contact(center, radius, colliders[idx], cx, cy, cz, pen, skinWidth)) {
                 continue;
             }
             if (!found || pen > bestPen) {
@@ -177,7 +179,7 @@ void MoveSphereWithSlide(
         const float skinWidth,
         const int slideIterations,
         const int sweepBinaryIterations,
-        const Array<StaticCollider3DSim>& statics,
+        const Array<Collider3D>& colliders,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
     Vector3 center{};
@@ -196,7 +198,7 @@ void MoveSphereWithSlide(
         const Vector3 targetCenter{
                 center.x + displacement.x, center.y + displacement.y, center.z + displacement.z};
         const float lambda = ComputeTranslationLambdaAgainstStatics(
-                startCenter, targetCenter, useRadius, sweepBinaryIterations, statics, broadPhase, scratch);
+                startCenter, targetCenter, useRadius, sweepBinaryIterations, colliders, broadPhase, scratch);
         const Vector3 moved{
                 startCenter.x + displacement.x * lambda,
                 startCenter.y + displacement.y * lambda,
@@ -226,14 +228,14 @@ void MoveSphereWithSlide(
         bool hit = false;
         for (std::size_t i = 0; i < scratch.GetSize(); ++i) {
             const std::uint32_t idx = scratch[i];
-            if (idx >= statics.GetSize()) {
+            if (idx >= colliders.GetSize()) {
                 continue;
             }
             float cx = 0.0F;
             float cy = 0.0F;
             float cz = 0.0F;
             float cp = 0.0F;
-            if (!ComputeSphereStaticCollider3Contact(center, useRadius, statics[idx], cx, cy, cz, cp, skinWidth)) {
+            if (!ComputeSphereStaticCollider3Contact(center, useRadius, colliders[idx], cx, cy, cz, cp, skinWidth)) {
                 continue;
             }
             if (!hit || cp > pen) {
@@ -256,7 +258,7 @@ void MoveSphereWithSlide(
         displacement.z = remaining.z - nz * into;
     }
 
-    DepenetrateSphere(center, useRadius, skinWidth, statics, broadPhase, scratch);
+    DepenetrateSphere(center, useRadius, skinWidth, colliders, broadPhase, scratch);
     const Vector3 finalCenter = center;
     Vector3 currentCenter{};
     float ignored = 0.0F;
@@ -271,7 +273,7 @@ void MoveSphereWithSlide(
         const float radius,
         const float skinWidth,
         const float slopeLimitCos,
-        const Array<StaticCollider3DSim>& statics,
+        const Array<Collider3D>& colliders,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
     const Vector3 probe{center.x, center.y - skinWidth - radius * 0.08F, center.z};
@@ -286,14 +288,14 @@ void MoveSphereWithSlide(
 
     for (std::size_t i = 0; i < scratch.GetSize(); ++i) {
         const std::uint32_t idx = scratch[i];
-        if (idx >= statics.GetSize()) {
+        if (idx >= colliders.GetSize()) {
             continue;
         }
         float nx = 0.0F;
         float ny = 0.0F;
         float nz = 0.0F;
         float pen = 0.0F;
-        if (!ComputeSphereStaticCollider3Contact(probe, radius, statics[idx], nx, ny, nz, pen, skinWidth)) {
+        if (!ComputeSphereStaticCollider3Contact(probe, radius, colliders[idx], nx, ny, nz, pen, skinWidth)) {
             continue;
         }
         if (ny >= slopeLimitCos) {
@@ -309,7 +311,7 @@ void TryStepOffset(
         const float radius,
         const float stepOffset,
         const float skinWidth,
-        const Array<StaticCollider3DSim>& statics,
+        const Array<Collider3D>& colliders,
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch) noexcept {
     if (stepOffset <= 1.0e-5F) {
@@ -323,7 +325,7 @@ void TryStepOffset(
     const Vector3 upStep{0.0F, stepOffset, 0.0F};
     Vector3 stepped = center;
     stepped.y += stepOffset;
-    if (AnyStaticOverlap(stepped, radius, statics, broadPhase, scratch)) {
+    if (AnyStaticOverlap(stepped, radius, colliders, broadPhase, scratch)) {
         return;
     }
     ApplyTranslationDelta(*body.transform, upStep);
@@ -331,7 +333,7 @@ void TryStepOffset(
     Vector3 afterForward = stepped;
     afterForward.x += horizontalDelta.x;
     afterForward.z += horizontalDelta.z;
-    if (AnyStaticOverlap(afterForward, radius, statics, broadPhase, scratch)) {
+    if (AnyStaticOverlap(afterForward, radius, colliders, broadPhase, scratch)) {
         ApplyTranslationDelta(*body.transform, {0.0F, -stepOffset, 0.0F});
         return;
     }
@@ -340,7 +342,7 @@ void TryStepOffset(
     Vector3 downTarget = afterForward;
     downTarget.y -= stepOffset;
     const float lambda = ComputeTranslationLambdaAgainstStatics(
-            afterForward, downTarget, radius, 8, statics, broadPhase, scratch);
+            afterForward, downTarget, radius, 8, colliders, broadPhase, scratch);
     const float drop = stepOffset * lambda;
     ApplyTranslationDelta(*body.transform, {0.0F, -drop, 0.0F});
     (void)skinWidth;
@@ -367,18 +369,15 @@ void CollectControllers(GameWorld& world, Array<ControllerBody>& out) noexcept {
 
 }  // namespace
 
-void SimulateCharacterControllers3D(
-        GameWorld& world,
-        const FrameTiming& timing,
-        const CharacterController3DSettings& settings) {
+void CharacterControllerWorld3D::Simulate(GameWorld& world, const FrameTiming& timing) {
     const float dt = timing.deltaTimeSeconds;
     if (dt <= 0.0F) {
         return;
     }
 
-    Array<StaticCollider3DSim> statics;
+    Array<Collider3D> colliders;
     SpatialHashGrid3D broadPhase;
-    RebuildBroadPhaseFromStaticColliders3D(world, settings.broadPhaseCellSize, statics, broadPhase);
+    ColliderBakePipeline3D::GetDefault().Rebuild(world, settings.broadPhaseCellSize, colliders, broadPhase);
 
     Array<std::uint32_t> scratch;
     Array<ControllerBody> controllers;
@@ -402,7 +401,7 @@ void SimulateCharacterControllers3D(
         ComputeCharacterControllerWorld(*body.obj, cc, center, radius);
 
         const float slopeLimitCos = std::cos(cc.slopeLimitDegrees * (Pi / 180.0F));
-        cc.grounded = ProbeGrounded(center, radius, cc.skinWidth, slopeLimitCos, statics, broadPhase, scratch);
+        cc.grounded = ProbeGrounded(center, radius, cc.skinWidth, slopeLimitCos, colliders, broadPhase, scratch);
         if (cc.grounded && velocity.y < 0.0F) {
             velocity.y = 0.0F;
         }
@@ -419,14 +418,14 @@ void SimulateCharacterControllers3D(
                     cc.skinWidth,
                     settings.slideIterations,
                     settings.sweepBinaryIterations,
-                    statics,
+                    colliders,
                     broadPhase,
                     scratch);
             const Vector3 after = body.transform->GetLocalTransform().translation;
             const Vector3 applied{after.x - before.x, after.y - before.y, after.z - before.z};
             if ((applied.x * applied.x + applied.z * applied.z) <
                     (horizontalDelta.x * horizontalDelta.x + horizontalDelta.z * horizontalDelta.z) * 0.25F) {
-                TryStepOffset(body, horizontalDelta, radius, cc.stepOffset, cc.skinWidth, statics, broadPhase, scratch);
+                TryStepOffset(body, horizontalDelta, radius, cc.stepOffset, cc.skinWidth, colliders, broadPhase, scratch);
             }
         }
 
@@ -438,12 +437,12 @@ void SimulateCharacterControllers3D(
                 cc.skinWidth,
                 settings.slideIterations,
                 settings.sweepBinaryIterations,
-                statics,
+                colliders,
                 broadPhase,
                 scratch);
 
         ComputeCharacterControllerWorld(*body.obj, cc, center, radius);
-        cc.grounded = ProbeGrounded(center, radius, cc.skinWidth, slopeLimitCos, statics, broadPhase, scratch);
+        cc.grounded = ProbeGrounded(center, radius, cc.skinWidth, slopeLimitCos, colliders, broadPhase, scratch);
         if (cc.grounded && velocity.y < 0.0F) {
             velocity.y = 0.0F;
         }
@@ -451,6 +450,14 @@ void SimulateCharacterControllers3D(
         cc.velocity = velocity;
         cc.moveInput = Vector3::Zero;
     }
+}
+
+void SimulateCharacterControllers3D(
+        GameWorld& world,
+        const FrameTiming& timing,
+        const CharacterController3DSettings& settings) {
+    CharacterControllerWorld3D controllerWorld(settings);
+    controllerWorld.Simulate(world, timing);
 }
 
 }  // namespace Spark

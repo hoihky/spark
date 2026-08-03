@@ -223,10 +223,7 @@ bool TriggerVolume3DOverlapsProbe(const TriggerVolume3DWorld& volume, const Dyna
     return ComputeCapsuleCapsuleContact(volume.capsule, probe.capsule, nx, ny, nz, pen);
 }
 
-void SimulateTriggerVolumes3D(
-        GameWorld& world,
-        const FrameTiming& timing,
-        const TriggerVolume3DSettings& settings) {
+void TriggerVolumeWorld3D::Simulate(GameWorld& world, const FrameTiming& timing) {
     (void)timing;
 
     Array<TriggerVolumeEntry> volumes;
@@ -310,6 +307,14 @@ void SimulateTriggerVolumes3D(
 
         volume.SetOverlappingIds(MoveTemp(current));
     }
+}
+
+void SimulateTriggerVolumes3D(
+        GameWorld& world,
+        const FrameTiming& timing,
+        const TriggerVolume3DSettings& settings) {
+    TriggerVolumeWorld3D triggerWorld(settings);
+    triggerWorld.Simulate(world, timing);
 }
 
 }  // namespace Spark

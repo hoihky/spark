@@ -1,0 +1,17 @@
+#pragma once
+
+#include "spark/physics/colliders/Collider2D.hpp"
+#include "spark/physics/colliders/Collider3D.hpp"
+#include "spark/physics/colliders/ColliderBake2D.hpp"
+#include "spark/physics/colliders/ColliderBake3D.hpp"
+#include "spark/physics/colliders/ColliderBakeContext2D.hpp"
+#include "spark/physics/colliders/ColliderBakeContext3D.hpp"
+#include "spark/physics/colliders/ColliderBakeHelpers3D.hpp"
+#include "spark/physics/colliders/ColliderBakePipeline2D.hpp"
+#include "spark/physics/colliders/ColliderBakePipeline3D.hpp"
+#include "spark/physics/colliders/DynamicBody2D.hpp"
+#include "spark/physics/colliders/DynamicBody3D.hpp"
+#include "spark/physics/colliders/DynamicCollider2D.hpp"
+#include "spark/physics/colliders/DynamicCollider3D.hpp"
+#include "spark/physics/colliders/IColliderBakeStrategy2D.hpp"
+#include "spark/physics/colliders/IColliderBakeStrategy3D.hpp"

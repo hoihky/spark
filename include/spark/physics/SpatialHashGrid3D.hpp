@@ -2,6 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/HashMap.hpp"
+#include "spark/physics/colliders/Collider3D.hpp"
 #include "spark/physics/Collision3D.hpp"
 
 #include <cstdint>
@@ -53,12 +54,5 @@ private:
     mutable HashMap<std::uint32_t, std::uint8_t, DefaultHash<std::uint32_t>, DefaultKeyEqual<std::uint32_t>>
             queryDedupe{};
 };
-
-/** Fills <c>outStatics</c> then builds the hash (payload index maps to <c>outStatics</c> entries). */
-void RebuildBroadPhaseFromStaticColliders3D(
-        GameWorld& world,
-        float cellWorldSize,
-        Array<StaticCollider3DSim>& outStatics,
-        SpatialHashGrid3D& outGrid);
 
 }  // namespace Spark

@@ -15,7 +15,7 @@
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/memory/UniquePtr.hpp"
-#include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/Scene.hpp"
 
@@ -63,6 +63,7 @@ private:
     float guiCubeBounce = 0.48F;
     float guiCubeMass = 95.0F;
     float fpsSmoothed = 0.0F;
+    PhysicsSubsystem physics{};
 };
 
 }  // namespace Spark

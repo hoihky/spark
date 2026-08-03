@@ -52,14 +52,17 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 ## Simulation & Tools
 
 ```cpp
-Spark::SimulatePhysics2D(world, timing, settings);
-Spark::SimulatePhysics3D(world, timing, settings);
-Spark::SimulateCharacterControllers3D(world, timing);
-Spark::SimulateTriggerVolumes3D(world, timing);
+#include "spark/physics/PhysicsSubsystem.hpp"
+
+PhysicsSubsystem physics;
+physics.Simulate2D(world, timing);
+physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers
 Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flush
 Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
 ```
+
+Legacy free functions (`SimulatePhysics2D`, `SimulatePhysics3D`, …) remain but are **deprecated** — prefer `PhysicsSubsystem`.
 
 **70 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
 

@@ -2,6 +2,7 @@
 
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
+#include "spark/physics/Collision2D.hpp"
 
 #include <cmath>
 
@@ -12,6 +13,15 @@ void ApplyPhysicsMaterial2DToStaticRecord(const GameObject& object, StaticCollid
         rec.hasMaterial = true;
         rec.restitution = mat->GetRestitution();
         rec.dynamicFriction = mat->GetDynamicFriction();
+    }
+}
+
+void ApplyPhysicsMaterial2DToCollider(const GameObject& object, ColliderMaterial& material) noexcept {
+    if (const PhysicsMaterial2DComponent* mat = object.GetComponent<PhysicsMaterial2DComponent>()) {
+        material.isDefined = true;
+        material.restitution = mat->GetRestitution();
+        material.dynamicFriction = mat->GetDynamicFriction();
+        material.staticFriction = mat->GetDynamicFriction();
     }
 }
 

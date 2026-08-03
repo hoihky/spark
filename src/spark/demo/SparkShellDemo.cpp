@@ -40,7 +40,7 @@ public:
     void OnAttach(IEngineContext& context) override {
         engineCtx = &context;
         Spark::Gui::SceneEditorLayoutSettings layout{};
-        Spark::Gui::TryLoadSceneEditorLayout(layout);
+        (void)Spark::Gui::TryLoadSceneEditorLayout(layout);
         Spark::Gui::SetActiveGuiThemePreset(layout.guiTheme);
         MountUiFont(GetWorld());
         fpsOverlay.EnsureMounted(GetWorld());
@@ -1778,9 +1778,9 @@ private:
 
     void SaveShellGuiPreferences() {
         Spark::Gui::SceneEditorLayoutSettings layout{};
-        Spark::Gui::TryLoadSceneEditorLayout(layout);
+        (void)Spark::Gui::TryLoadSceneEditorLayout(layout);
         layout.guiTheme = Spark::Gui::GetActiveGuiThemePreset();
-        Spark::Gui::SaveSceneEditorLayout(layout);
+        (void)Spark::Gui::SaveSceneEditorLayout(layout);
     }
 
     void OnShellThemeSelected(const int idx) {

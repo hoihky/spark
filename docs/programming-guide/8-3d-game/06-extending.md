@@ -37,7 +37,7 @@ Replace tracers with:
 ```cpp
 go->AddComponent<SphereCollider3DComponent>(0.1F);
 go->AddComponent<Rigidbody3DComponent>()->SetVelocity(dir * 30.0F);
-SimulatePhysics3D(world, timing, settings);
+physics.Simulate3D(world, timing);
 ```
 
 ## glTF Weapons + Skinned Hands

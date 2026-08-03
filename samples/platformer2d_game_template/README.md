@@ -1,6 +1,6 @@
 # Spark 2D platformer game template
 
-Separate CMake project under `samples/platformer2d_game_template` that links **Spark** as a **shared** `SparkEngine` library. It is a minimal **side-scrolling platformer**: procedural checker **tile** texture, a few **static** platforms + **dynamic** player (`Rigidbody2D` + `BoxCollider2D`), **`SimulatePhysics2D`**, **`Camera2D`**, and **`SubmitStandardLitSceneFromWorld`** with **`SortOrderThenWorldY`** for sprite depth.
+Separate CMake project under `samples/platformer2d_game_template` that links **Spark** as a **shared** `SparkEngine` library. It is a minimal **side-scrolling platformer**: procedural checker **tile** texture, a few **static** platforms + **dynamic** player (`Rigidbody2D` + `BoxCollider2D`), **`PhysicsSubsystem`**, **`Camera2D`**, and **`SubmitStandardLitSceneFromWorld`** with **`SortOrderThenWorldY`** for sprite depth.
 
 ## Layout
 

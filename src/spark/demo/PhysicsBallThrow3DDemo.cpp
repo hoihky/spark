@@ -216,7 +216,7 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
             ballVelBeforeStep = ballRb->GetVelocity();
         }
 
-        Spark::PhysicsWorld3DSettings phys{};
+        PhysicsWorld3DSettings& phys = physics.GetWorld3D().GetSettings();
         phys.gravityY = guiGravityY;
         phys.maxFallSpeed = 130.0F;
         phys.resolveIterations = 10;
@@ -224,7 +224,7 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
         phys.jointIterations = 8;
         /** Impulses are first-iter only in the solver; Baumgarte here fights clean bouncing. */
         phys.baumgarteContactBias = 0.0F;
-        Spark::SimulatePhysics3D(world, timing, phys);
+        physics.Simulate3D(world, timing);
 
         if (ballRb != nullptr) {
             const Spark::Vector3 va = ballRb->GetVelocity();

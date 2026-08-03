@@ -118,7 +118,7 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
 
 void FillStandardLitSceneFromWorld(
         GameWorld& world,
-        IEngineContext& context,
+        IEngineContext& /*context*/,
         const Matrix4& viewProjection,
         const Vector3& cameraPositionWorld,
         const Vector3& lightDirectionWorld,

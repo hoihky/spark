@@ -9,7 +9,10 @@
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/ecs/components/physics/2d/HingeJoint2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
+#include "spark/physics/colliders/Collider2D.hpp"
+#include "spark/physics/colliders/ColliderBakePipeline2D.hpp"
 #include "spark/physics/Collision2D.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/physics/SpatialHashGrid2D.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
 
@@ -57,7 +60,7 @@ private:
     Spark::Array<Spark::GameObject*> gemObjects{};
     Spark::Camera2D camera{};
     Spark::SharedPtr<Spark::Texture2D> dungeonAtlasTex{};
-    Array<StaticCollider2D> staticColliders{};
+    Array<Collider2D> staticColliders{};
     SpatialHashGrid2D broadGrid{};
     Array<std::uint32_t> queryScratch{};
     int wallCount = 0;
@@ -72,6 +75,7 @@ private:
     int gemsTotal = 0;
     std::uint32_t lastBroadCandidates = 0;
     std::uint32_t lastNarrowHits = 0;
+    PhysicsSubsystem physics{};
     /** Cleared in <c>Unload</c> so background music stops when leaving the demo. */
     Spark::SoundEngine* mazeAudioEngine = nullptr;
 

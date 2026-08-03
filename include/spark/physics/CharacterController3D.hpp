@@ -17,11 +17,25 @@ struct CharacterController3DSettings {
 };
 
 /**
- * Integrates every active <c>CharacterController3DComponent</c> against static <c>BoxCollider3DComponent</c> and
- * <c>CapsuleCollider3DComponent</c>
- * geometry (same broad-phase as <c>SimulatePhysics3D</c>). Objects with a character controller are excluded from
- * dynamic sphere rigidbody simulation.
+ * 3D kinematic character-controller motor. Integrates every active <c>CharacterController3DComponent</c>
+ * against static box/capsule geometry (same broad-phase as <c>PhysicsWorld3D</c>).
  */
+class CharacterControllerWorld3D {
+public:
+    CharacterControllerWorld3D() = default;
+    explicit CharacterControllerWorld3D(CharacterController3DSettings settingsIn) noexcept : settings(settingsIn) {}
+
+    void Simulate(GameWorld& world, const FrameTiming& timing);
+
+    [[nodiscard]] CharacterController3DSettings& GetSettings() noexcept { return settings; }
+    [[nodiscard]] const CharacterController3DSettings& GetSettings() const noexcept { return settings; }
+    void SetSettings(CharacterController3DSettings settingsIn) noexcept { settings = settingsIn; }
+
+private:
+    CharacterController3DSettings settings{};
+};
+
+/** Backward-compatible free-function wrapper around <c>CharacterControllerWorld3D::Simulate</c>. */
 void SimulateCharacterControllers3D(
         GameWorld& world,
         const FrameTiming& timing,

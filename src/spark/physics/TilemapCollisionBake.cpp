@@ -1,6 +1,8 @@
 #include "spark/physics/TilemapCollisionBake.hpp"
 
 #include "spark/math/Vector4.hpp"
+#include "spark/physics/colliders/ColliderBake2D.hpp"
+#include "spark/physics/shapes/ShapeFactory2D.hpp"
 #include "spark/scene/tilemap/TileCellSpace.hpp"
 
 #include <algorithm>
@@ -57,48 +59,53 @@ void AppendBoxCollider(
         GameObject& owner,
         const TilemapCollider2DComponent& collider,
         const CollisionAabb2& aabb,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid) {
-    StaticCollider2D entry{};
-    entry.shape = StaticCollider2DShape::Box;
-    entry.categoryBits = collider.GetCategoryBits();
-    entry.maskBits = collider.GetMaskBits();
-    entry.owner = &owner;
-    entry.isTrigger = collider.GetIsTrigger();
-    entry.aabb = aabb;
-    const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
-    outStatics.PushBack(entry);
-    outGrid.InsertIndexedAabb(idx, entry.aabb);
+    ColliderFilter filter{};
+    filter.categoryBits = collider.GetCategoryBits();
+    filter.maskBits = collider.GetMaskBits();
+    filter.isTrigger = collider.GetIsTrigger();
+    UniquePtr<IShape2D> shape = ShapeFactory2D::CreateBox(aabb);
+    PushCollider2D(
+            outColliders,
+            outGrid,
+            Collider2D::Create(MoveTemp(shape), filter, ColliderMaterial{}, &owner));
 }
 
 void AppendConvexCollider(
         GameObject& owner,
         const TilemapCollider2DComponent& collider,
         const Array<Vector2>& worldVerts,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid) {
     if (worldVerts.GetSize() < 3 || worldVerts.GetSize() > kMaxStaticPolygonVertices) {
         return;
     }
-    StaticCollider2D entry{};
-    entry.shape = StaticCollider2DShape::ConvexPolygon;
-    entry.categoryBits = collider.GetCategoryBits();
-    entry.maskBits = collider.GetMaskBits();
-    entry.owner = &owner;
-    entry.isTrigger = collider.GetIsTrigger();
-    entry.polygonVertexCount = static_cast<std::uint8_t>(worldVerts.GetSize());
-    entry.aabb = {1.0e30F, 1.0e30F, -1.0e30F, -1.0e30F};
+    StaticCollider2D baked{};
+    baked.shape = StaticCollider2DShape::ConvexPolygon;
+    baked.categoryBits = collider.GetCategoryBits();
+    baked.maskBits = collider.GetMaskBits();
+    baked.owner = &owner;
+    baked.isTrigger = collider.GetIsTrigger();
+    baked.polygonVertexCount = static_cast<std::uint8_t>(worldVerts.GetSize());
+    baked.aabb = {1.0e30F, 1.0e30F, -1.0e30F, -1.0e30F};
     for (std::size_t i = 0; i < worldVerts.GetSize(); ++i) {
-        entry.polygonVertsX[i] = worldVerts[i].x;
-        entry.polygonVertsY[i] = worldVerts[i].y;
-        entry.aabb.minX = std::min(entry.aabb.minX, worldVerts[i].x);
-        entry.aabb.maxX = std::max(entry.aabb.maxX, worldVerts[i].x);
-        entry.aabb.minY = std::min(entry.aabb.minY, worldVerts[i].y);
-        entry.aabb.maxY = std::max(entry.aabb.maxY, worldVerts[i].y);
+        baked.polygonVertsX[i] = worldVerts[i].x;
+        baked.polygonVertsY[i] = worldVerts[i].y;
+        baked.aabb.minX = std::min(baked.aabb.minX, worldVerts[i].x);
+        baked.aabb.maxX = std::max(baked.aabb.maxX, worldVerts[i].x);
+        baked.aabb.minY = std::min(baked.aabb.minY, worldVerts[i].y);
+        baked.aabb.maxY = std::max(baked.aabb.maxY, worldVerts[i].y);
     }
-    const std::uint32_t idx = static_cast<std::uint32_t>(outStatics.GetSize());
-    outStatics.PushBack(entry);
-    outGrid.InsertIndexedAabb(idx, entry.aabb);
+    ColliderFilter filter{};
+    filter.categoryBits = collider.GetCategoryBits();
+    filter.maskBits = collider.GetMaskBits();
+    filter.isTrigger = collider.GetIsTrigger();
+    UniquePtr<IShape2D> shape = ShapeFactory2D::CreateConvexPolygon(baked);
+    PushCollider2D(
+            outColliders,
+            outGrid,
+            Collider2D::Create(MoveTemp(shape), filter, ColliderMaterial{}, &owner));
 }
 
 }  // namespace
@@ -112,7 +119,7 @@ bool AppendTilemapCellCollider2D(
         const std::uint32_t tileY,
         const TileCell& cell,
         const TileDefinition& definition,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid) {
     if (cell.IsEmpty() || tileWorldSize <= 0.0F || !definition.ContributesCollision()) {
         return false;
@@ -135,7 +142,7 @@ bool AppendTilemapCellCollider2D(
             const Vector3 v = Hp3(wh);
             worldVerts.PushBack({v.x, v.y});
         }
-        AppendConvexCollider(owner, collider, worldVerts, outStatics, outGrid);
+        AppendConvexCollider(owner, collider, worldVerts, outColliders, outGrid);
         return true;
     }
 
@@ -162,7 +169,7 @@ bool AppendTilemapCellCollider2D(
     CollisionAabb2 aabb{};
     BuildWorldAabbFromNormalizedCorners(
             worldMatrix, tileWorldSize, tileX, tileY, xf, corners, 4, aabb);
-    AppendBoxCollider(owner, collider, aabb, outStatics, outGrid);
+    AppendBoxCollider(owner, collider, aabb, outColliders, outGrid);
     return true;
 }
 

@@ -6,6 +6,7 @@
 
 namespace Spark {
 
+class Collider2D;
 class GameObject;
 class BoxCollider2DComponent;
 class CircleCollider2DComponent;
@@ -82,9 +83,11 @@ struct StaticCollider2D {
         float& outT) noexcept;
 
 [[nodiscard]] bool StaticCollider2DOverlapsWorldAabb(const StaticCollider2D& s, const CollisionAabb2& w) noexcept;
+[[nodiscard]] bool Collider2DOverlapsWorldAabb(const Collider2D& collider, const CollisionAabb2& w) noexcept;
 
 [[nodiscard]] bool StaticCollider2DOverlapsWorldCircle(
         const StaticCollider2D& s, float cx, float cy, float r) noexcept;
+[[nodiscard]] bool Collider2DOverlapsWorldCircle(const Collider2D& collider, float cx, float cy, float r) noexcept;
 
 void ComputeBoxCollider2WorldAabb(
         GameObject& owner,

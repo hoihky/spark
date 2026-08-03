@@ -21,27 +21,40 @@ struct PhysicsWorld2DSettings {
 };
 
 /**
- * Integrates dynamic rigidbodies (Rigidbody2D Dynamic + Transform + BoxCollider2D and/or CircleCollider2D).
- * If a dynamic body has both colliders, the circle is used for simulation. Static geometry is any
- * BoxCollider2D and/or CircleCollider2D on objects without a dynamic rigidbody (or with Static/Kinematic rigidbody).
+ * 2D physics simulation world. Integrates dynamic rigidbodies against static geometry using a spatial-hash
+ * broad-phase and narrow-phase contact resolution.
  *
- * Collision filtering: each collider exposes category/mask bitmasks; contacts resolve only when both directions agree
- * (`CollisionFilter2D::ShouldCollide`).
- *
- * Triggers: colliders with `GetIsTrigger() == true` never apply separation in dynamic-vs-static resolution; overlap is
- * reported after resolution via `SignalId::Physics2DTriggerOverlap` on each participating trigger GameObject (payload:
- * other object pointer in `ptr`, id in `a`, baked static index in `b`).
- *
- * Each step, static colliders are baked into `StaticCollider2D` (conservative AABB + shape kind + filter bits) and a
- * uniform-cell `SpatialHashGrid2D`; dynamics query the hash then run narrow-phase (box vs box, box vs circle, circle
- * vs box, circle vs circle).
- *
- * After all dynamics are integrated and resolved against statics, **dynamic–dynamic** overlaps are evaluated (same
- * layer rules) using the same uniform-cell spatial hash as statics (payload = dynamic body index). Overlapping
- * triggers emit `SignalId::Physics2DTriggerOverlap` with `payload.b` =
- * `kPhysics2DTriggerOverlapNoStaticIndex`. Optional `resolveDynamicVsDynamic` applies a single shallow separation for
- * solid–solid pairs. World queries against statics live in `spark/physics/PhysicsQueries2D.hpp`.
+ * Prefer holding a <c>PhysicsWorld2D</c> instance (or using <c>PhysicsSubsystem</c>) over calling
+ * <c>SimulatePhysics2D</c> directly — settings persist across frames and the API is easier to extend.
  */
+class PhysicsWorld2D {
+public:
+    static constexpr float DefaultBroadPhaseCellSize = 4.0F;
+
+    PhysicsWorld2D() = default;
+    explicit PhysicsWorld2D(PhysicsWorld2DSettings settingsIn) noexcept : settings(settingsIn) {}
+
+    void Simulate(GameWorld& world, const FrameTiming& timing);
+
+    [[nodiscard]] PhysicsWorld2DSettings& GetSettings() noexcept { return settings; }
+    [[nodiscard]] const PhysicsWorld2DSettings& GetSettings() const noexcept { return settings; }
+    void SetSettings(PhysicsWorld2DSettings settingsIn) noexcept { settings = settingsIn; }
+
+    void SetBroadPhaseCellSize(float cellWorldSize) noexcept { broadPhaseCellSize = cellWorldSize; }
+    [[nodiscard]] float GetBroadPhaseCellSize() const noexcept { return broadPhaseCellSize; }
+
+private:
+    PhysicsWorld2DSettings settings{};
+    float broadPhaseCellSize = DefaultBroadPhaseCellSize;
+};
+
+/**
+ * Integrates dynamic rigidbodies (Rigidbody2D Dynamic + Transform + BoxCollider2D and/or CircleCollider2D).
+ *
+ * @deprecated Prefer <c>PhysicsSubsystem::Simulate2D</c> or <c>PhysicsWorld2D::Simulate</c> so settings
+ * persist across frames.
+ */
+[[deprecated("Use PhysicsSubsystem::Simulate2D or PhysicsWorld2D::Simulate")]]
 void SimulatePhysics2D(GameWorld& world, const FrameTiming& timing, const PhysicsWorld2DSettings& settings = {});
 
 }  // namespace Spark

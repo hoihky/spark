@@ -9,7 +9,7 @@ Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vul
 | Window / input | GLFW | `Window`, `IInput` |
 | Rendering | Vulkan (internal) | `SceneRenderParams`, `IFramePresenter` |
 | Simulation | ECS | `GameWorld`, `GameObject`, `GameComponent` |
-| Physics | Custom solvers | `SimulatePhysics2D`, `SimulatePhysics3D` |
+| Physics | Custom solvers | `PhysicsSubsystem`, `PhysicsWorld2D`, `PhysicsWorld3D` |
 | AI | FSM, GOAP, steering | `SimulateGameAi`, `AiAgentComponent` |
 | Audio | Software mixer | `SoundEngine`, `SoundCueComponent` |
 | UI (retained) | Widget tree → screen draws | `GuiCanvasComponent`, `spark/gui/` |

@@ -7,7 +7,7 @@ Complete reference for all **70** built-in `GameComponent` types in Spark (`incl
 **Subsystem tick order (typical frame):**
 
 1. `UpdateGameObjects` — component `OnUpdate` (billboards, springs, …)
-2. `SimulatePhysics2D` / `SimulatePhysics3D` (+ character controllers, triggers)
+2. `PhysicsSubsystem::Simulate2D` / `SimulateAll3D` (+ character controllers, triggers)
 3. `SimulateGameAi` — `ProcessNavMeshAgents`, `ProcessPerceptionSensors`, then `AiAgentComponent`
 4. `ProcessSoundCues` — `ProcessAudioListeners`, `ProcessAmbientZones`, cue flush
 5. `FillStandardLitSceneFromWorld` — `ProcessTimeOfDayDrivers`, regional fog/post volumes, lighting resolve
@@ -58,8 +58,8 @@ Complete reference for all **70** built-in `GameComponent` types in Spark (`incl
 | `TransformChanged` | — | `TransformComponent` on TRS change |
 | `MeshDirty` | — | mesh/material paths |
 | `CollisionBoundsDirty` | — | `CollisionComponent` |
-| `Physics2DTriggerOverlap` | `ptr` = other `GameObject*`, `a` = id, `b` = static index | `SimulatePhysics2D` |
-| `Physics3DTriggerEnter` / `Exit` | `ptr` = other `GameObject*`, `a` = id | `SimulateTriggerVolumes3D` |
+| `Physics2DTriggerOverlap` | `ptr` = other `GameObject*`, `a` = id, `b` = static index | `PhysicsWorld2D` |
+| `Physics3DTriggerEnter` / `Exit` | `ptr` = other `GameObject*`, `a` = id | `TriggerVolumeWorld3D` |
 | `AnimationEvent` | `ptr` = event name C-string, `a` = clip index | `AnimationEventReceiverComponent` |
 | `DamageApplied` | `ptr` = `DamageSignalPayload*` (sync only) | `HealthComponent` |
 | `Died` | `ptr` = instigator `GameObject*` or null | `HealthComponent` |
@@ -195,7 +195,7 @@ tm->BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 
 ### `TilemapCollider2DComponent`
 
-**Kind:** `TilemapCollider2D` · **Sibling:** `TilemapComponent` · **Consumed by:** `SimulatePhysics2D`
+**Kind:** `TilemapCollider2D` · **Sibling:** `TilemapComponent` · **Consumed by:** `PhysicsWorld2D`
 
 Bakes static colliders from `TileDefinition` on layers with `contributeCollision`.
 
@@ -446,7 +446,10 @@ follow->SetLookAtTarget(true);
 Call each frame from `OnUpdate` (after gameplay input, before render):
 
 ```cpp
-SimulatePhysics2D(world, timing);
+#include "spark/physics/PhysicsSubsystem.hpp"
+
+PhysicsSubsystem physics;  // member on your Game class
+physics.Simulate2D(world, timing);
 ```
 
 ### `Rigidbody2DComponent`
@@ -493,7 +496,7 @@ ice->AddComponent<PhysicsMaterial2DComponent>(0.15F, 0.35F);  // friction, resti
 
 ### `DistanceJoint2DComponent` / `HingeJoint2DComponent`
 
-**Consumed by:** `SimulatePhysics2D` when `PhysicsWorld2DSettings::jointIterations > 0` (default **4**)
+**Consumed by:** `PhysicsWorld2D` when `PhysicsWorld2DSettings::jointIterations > 0` (default **4**)
 
 ```cpp
 PhysicsWorld2DSettings settings{};
@@ -521,9 +524,11 @@ collide = (maskA & categoryB) && (maskB & categoryA)
 ## Physics 3D
 
 ```cpp
-SimulatePhysics3D(world, timing, settings);
-SimulateCharacterControllers3D(world, timing);
-SimulateTriggerVolumes3D(world, timing);
+physics.SimulateAll3D(world, timing);
+// or step individually:
+physics.Simulate3D(world, timing);
+physics.SimulateCharacterControllers3D(world, timing);
+physics.SimulateTriggerVolumes3D(world, timing);
 ```
 
 ### `Rigidbody3DComponent` + `SphereCollider3DComponent`

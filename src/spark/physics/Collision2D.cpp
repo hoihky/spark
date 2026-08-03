@@ -4,8 +4,10 @@
 #include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PolygonCollider2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
+#include "spark/physics/colliders/Collider2D.hpp"
 #include "spark/physics/TilemapCollider2D.hpp"
 #include "spark/physics/PolygonCollider2D.hpp"
+#include "spark/physics/shapes/ShapeFactory2D.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
@@ -139,24 +141,20 @@ bool RaycastSegmentCircle2(
 }
 
 bool StaticCollider2DOverlapsWorldAabb(const StaticCollider2D& s, const CollisionAabb2& w) noexcept {
-    if (s.shape == StaticCollider2DShape::Box) {
-        return CollisionAabb2Overlaps(s.aabb, w);
-    }
-    if (s.shape == StaticCollider2DShape::Circle) {
-        return CollisionAabb2OverlapsCircle(w, s.circleCx, s.circleCy, s.circleR);
-    }
-    return CollisionConvexPolygonOverlapsWorldAabb(s, w);
+    return Collider2D::FromLegacySnapshot(s).OverlapsAabb(w);
+}
+
+bool Collider2DOverlapsWorldAabb(const Collider2D& collider, const CollisionAabb2& w) noexcept {
+    return collider.OverlapsAabb(w);
 }
 
 bool StaticCollider2DOverlapsWorldCircle(
         const StaticCollider2D& s, const float cx, const float cy, const float r) noexcept {
-    if (s.shape == StaticCollider2DShape::Box) {
-        return CollisionAabb2OverlapsCircle(s.aabb, cx, cy, r);
-    }
-    if (s.shape == StaticCollider2DShape::Circle) {
-        return CollisionCirclesOverlap(s.circleCx, s.circleCy, s.circleR, cx, cy, r);
-    }
-    return CollisionConvexPolygonOverlapsWorldCircle(s, cx, cy, r);
+    return Collider2D::FromLegacySnapshot(s).OverlapsCircle(cx, cy, r);
+}
+
+bool Collider2DOverlapsWorldCircle(const Collider2D& collider, const float cx, const float cy, const float r) noexcept {
+    return collider.OverlapsCircle(cx, cy, r);
 }
 
 void ComputeBoxCollider2WorldAabb(

@@ -15,7 +15,7 @@ enum class RigidbodyBodyType3D : std::uint8_t {
 
 /**
  * 3D velocity-based body. Dynamic colliders (<c>SphereCollider3DComponent</c> or <c>CapsuleCollider3DComponent</c>)
- * are integrated by <c>SimulatePhysics3D</c> (static boxes/capsules, dynamic pairs, optional joints; combines with
+ * are integrated by <c>PhysicsWorld3D</c> / <c>PhysicsSubsystem</c> (static boxes/capsules, dynamic pairs, optional joints; combines with
  * <c>PhysicsMaterial3DComponent</c> on surfaces). Spherical inertia uses <c>I = 2/5 m r²</c> from collider
  * scale; capsules use a bounding-sphere approximation unless <c>inverseInertiaTensorScale</c> overrides the scalar inverse.
  */
@@ -40,7 +40,7 @@ public:
 
     /**
      * Optional override for isotropic inverse inertia (1 / I) used by the sphere solver.
-     * When zero, <c>SimulatePhysics3D</c> uses solid-sphere <c>I = 2/5 m r²</c> from mass and collider radius.
+     * When zero, <c>PhysicsWorld3D</c> uses solid-sphere <c>I = 2/5 m r²</c> from mass and collider radius.
      */
     [[nodiscard]] float GetInverseInertiaTensorScale() const noexcept { return inverseInertiaTensorScale; }
     void SetInverseInertiaTensorScale(const float invI) noexcept { inverseInertiaTensorScale = invI >= 0.0F ? invI : 0.0F; }

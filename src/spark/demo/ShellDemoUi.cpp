@@ -116,12 +116,12 @@ void LauncherMenuLayout::Arrange(const Spark::Gui::Rect& r) {
         const float themeH = m.Scaled(LauncherThemeRow::DesignHeight());
         children[0]->Arrange({x, y, innerW, themeH});
         y += themeH;
-        const float listH = std::max(0.0F, r.height - y - bottomPad);
+        const float listH = std::max(m.Scaled(minListH), r.height - y - bottomPad);
         children[1]->Arrange({x, y, innerW, listH});
         return;
     }
     if (children.GetSize() == 1U && children[0]) {
-        const float innerH = std::max(0.0F, r.height - topPad - bottomPad);
+        const float innerH = std::max(m.Scaled(minListH), r.height - topPad - bottomPad);
         children[0]->Arrange({x, r.y + topPad, innerW, innerH});
     }
 }

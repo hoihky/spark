@@ -500,6 +500,10 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         rig.characterFacingYawOffset = humanModelYawOffset;
         rig.characterRootBindOrientation = humanModelBindFix;
 
+        PhysicsWorld3DSettings& phys = physics.GetWorld3D().GetSettings();
+        phys.gravityY = 0.0F;
+        phys.maxFallSpeed = 500.0F;
+
         context.GetInput().SetCursorCaptured(true);
 
         if (audioEngine != nullptr) {
@@ -624,10 +628,7 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
                         useHumanAvatar ? (qYaw * humanModelBindFix).Normalized() : qYaw.Normalized());
             }
 
-            Spark::PhysicsWorld3DSettings phys{};
-            phys.gravityY = 0.0F;
-            phys.maxFallSpeed = 500.0F;
-            Spark::SimulatePhysics3D(world, timing, phys);
+            physics.Simulate3D(world, timing);
             Spark::SimulateGameAi(world, timing, context);
 
             const Spark::Vector3 p = playerTr->GetLocalTransform().translation;

@@ -37,9 +37,25 @@ void BuildTriggerVolume3DWorld(
         const DynamicCollider3DSim& probe) noexcept;
 
 /**
- * Detects probe overlaps against all active <c>TriggerVolume3DComponent</c> instances and dispatches
- * enter/exit callbacks plus <c>Physics3DTriggerEnter</c> / <c>Physics3DTriggerExit</c> signals.
+ * 3D trigger-volume overlap detection. Dispatches enter/exit callbacks and
+ * <c>Physics3DTriggerEnter</c> / <c>Physics3DTriggerExit</c> signals.
  */
+class TriggerVolumeWorld3D {
+public:
+    TriggerVolumeWorld3D() = default;
+    explicit TriggerVolumeWorld3D(TriggerVolume3DSettings settingsIn) noexcept : settings(settingsIn) {}
+
+    void Simulate(GameWorld& world, const FrameTiming& timing);
+
+    [[nodiscard]] TriggerVolume3DSettings& GetSettings() noexcept { return settings; }
+    [[nodiscard]] const TriggerVolume3DSettings& GetSettings() const noexcept { return settings; }
+    void SetSettings(TriggerVolume3DSettings settingsIn) noexcept { settings = settingsIn; }
+
+private:
+    TriggerVolume3DSettings settings{};
+};
+
+/** Backward-compatible free-function wrapper around <c>TriggerVolumeWorld3D::Simulate</c>. */
 void SimulateTriggerVolumes3D(
         GameWorld& world,
         const FrameTiming& timing,

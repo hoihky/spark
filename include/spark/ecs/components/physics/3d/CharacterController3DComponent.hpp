@@ -10,6 +10,7 @@ namespace Spark {
 class GameWorld;
 struct FrameTiming;
 struct CharacterController3DSettings;
+class CharacterControllerWorld3D;
 
 /**
  * Kinematic character motor (sphere vs static box/capsule colliders). Does not use <c>Rigidbody3DComponent</c>.
@@ -73,6 +74,7 @@ private:
             GameWorld& world,
             const FrameTiming& timing,
             const CharacterController3DSettings& settings);
+    friend class CharacterControllerWorld3D;
 
     float radius = 0.4F;
     Vector3 centerOffset{0.0F, 0.4F, 0.0F};

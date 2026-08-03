@@ -7,8 +7,7 @@
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/gui/GuiScene.hpp"
 #include "spark/render/platform/Window.hpp"
-#include "spark/physics/PhysicsWorld2D.hpp"
-#include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Scene.hpp"
 #include "spark/scene/SceneSubmit.hpp"
@@ -60,14 +59,17 @@ void spark_world_physics_simulate_2d(
         cpp.maxFallSpeed = settings->maxFallSpeed;
         cpp.resolveDynamicVsDynamic = settings->resolveDynamicVsDynamic != 0;
     }
-    Spark::SimulatePhysics2D(*reinterpret_cast<Spark::GameWorld*>(world), ToCppTiming(*timing), cpp);
+    Spark::PhysicsSubsystem physics{};
+    physics.GetWorld2D().SetSettings(cpp);
+    physics.Simulate2D(*reinterpret_cast<Spark::GameWorld*>(world), ToCppTiming(*timing));
 }
 
 void spark_world_physics_simulate_3d(SparkGameWorld* world, const SparkFrameTiming* timing) {
     if (world == nullptr || timing == nullptr) {
         return;
     }
-    Spark::SimulatePhysics3D(*reinterpret_cast<Spark::GameWorld*>(world), ToCppTiming(*timing));
+    Spark::PhysicsSubsystem physics{};
+    physics.Simulate3D(*reinterpret_cast<Spark::GameWorld*>(world), ToCppTiming(*timing));
 }
 
 int spark_world_load_gltf(SparkGameWorld* world, const char* path) {

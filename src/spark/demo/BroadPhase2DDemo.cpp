@@ -379,7 +379,13 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
 
         const float broadCell = std::max(16.0F, kCellWorld * 4.0F);
-        RebuildBroadPhaseFromStaticColliders2D(w, broadCell, staticColliders, broadGrid);
+        Spark::ColliderBakePipeline2D::GetDefault().Rebuild(w, broadCell, staticColliders, broadGrid);
+
+        PhysicsWorld2DSettings& phys = physics.GetWorld2D().GetSettings();
+        phys.gravityY = 0.0F;
+        phys.maxFallSpeed = 500.0F;
+        phys.resolveDynamicVsDynamic = true;
+        phys.jointIterations = 6;
 
         camera.position = {px, py, 0.0F};
         camera.halfExtentY = kCameraHalfExtentInCells * kCellWorld;
@@ -457,12 +463,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
             const float moveSpeed = kMoveSpeedPerCell * kCellWorld;
             playerRb->SetVelocity({mx * moveSpeed, my * moveSpeed});
 
-            Spark::PhysicsWorld2DSettings phys{};
-            phys.gravityY = 0.0F;
-            phys.maxFallSpeed = 500.0F;
-            phys.resolveDynamicVsDynamic = true;
-            phys.jointIterations = 6;
-            Spark::SimulatePhysics2D(world, timing, phys);
+            physics.Simulate2D(world, timing);
 
             const Spark::BoxCollider2DComponent* pCol = playerGo->GetComponent<Spark::BoxCollider2DComponent>();
             if (pCol != nullptr) {
@@ -474,7 +475,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                 for (std::size_t i = 0; i < queryScratch.GetSize(); ++i) {
                     const std::uint32_t idx = queryScratch[i];
                     if (idx < staticColliders.GetSize() &&
-                        StaticCollider2DOverlapsWorldAabb(staticColliders[idx], playerBox)) {
+                        staticColliders[idx].OverlapsAabb(playerBox)) {
                         ++narrowHits;
                     }
                 }

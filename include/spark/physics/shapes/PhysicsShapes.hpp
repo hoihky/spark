@@ -1,0 +1,16 @@
+#pragma once
+
+#include "spark/physics/shapes/BoxShape2D.hpp"
+#include "spark/physics/shapes/BoxShape3D.hpp"
+#include "spark/physics/shapes/CapsuleShape3D.hpp"
+#include "spark/physics/shapes/CircleShape2D.hpp"
+#include "spark/physics/shapes/ConvexPolygonShape2D.hpp"
+#include "spark/physics/shapes/IShape2D.hpp"
+#include "spark/physics/shapes/IShape3D.hpp"
+#include "spark/physics/shapes/NarrowPhase2D.hpp"
+#include "spark/physics/shapes/NarrowPhase3D.hpp"
+#include "spark/physics/shapes/ShapeFactory2D.hpp"
+#include "spark/physics/shapes/ShapeFactory3D.hpp"
+#include "spark/physics/shapes/ShapeType2D.hpp"
+#include "spark/physics/shapes/ShapeType3D.hpp"
+#include "spark/physics/shapes/SphereShape3D.hpp"

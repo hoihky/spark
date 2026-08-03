@@ -6,6 +6,9 @@
 #include "spark/ecs/components/physics/3d/MeshCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
+#include "spark/physics/colliders/Collider3D.hpp"
+#include "spark/physics/shapes/NarrowPhase3D.hpp"
+#include "spark/physics/shapes/ShapeFactory3D.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
@@ -120,7 +123,7 @@ void ClosestPointsSegmentAabb(
             0.5F * (box.minX + box.maxX), 0.5F * (box.minY + box.maxY), 0.5F * (box.minZ + box.maxZ)};
     Vector3 segClosest{};
     float segT = 0.0F;
-    ClosestPointOnSegment(boxCenter, segA, segB, segClosest, segT);
+    (void)ClosestPointOnSegment(boxCenter, segA, segB, segClosest, segT);
     consider(segT);
 
     constexpr int kSamples = 16;
@@ -425,7 +428,7 @@ bool ComputeSphereCapsuleContact(
         const float separationSlopForInclusion) noexcept {
     Vector3 closest{};
     float t = 0.0F;
-    ClosestPointOnSegment(center, capsule.pointA, capsule.pointB, closest, t);
+    (void)ClosestPointOnSegment(center, capsule.pointA, capsule.pointB, closest, t);
     (void)t;
 
     const float dx = center.x - closest.x;
@@ -599,17 +602,11 @@ bool StaticCollider3DOverlapsSphere(
         const StaticCollider3DSim& collider,
         const Vector3& center,
         const float radius) noexcept {
-    if (!CollisionAabb3OverlapsSphere(collider.aabb, center, radius)) {
-        return false;
-    }
-    if (collider.shape == StaticCollider3DShape::Capsule) {
-        float nx = 0.0F;
-        float ny = 0.0F;
-        float nz = 0.0F;
-        float pen = 0.0F;
-        return ComputeSphereCapsuleContact(center, radius, collider.capsule, nx, ny, nz, pen);
-    }
-    return CollisionAabb3OverlapsSphere(collider.aabb, center, radius);
+    return Collider3D::FromLegacySnapshot(collider).OverlapsSphere(center, radius);
+}
+
+bool Collider3DOverlapsSphere(const Collider3D& collider, const Vector3& center, const float radius) noexcept {
+    return collider.OverlapsSphere(center, radius);
 }
 
 bool SeparateSphereFromAabb(Vector3& pos, const float r, const CollisionAabb3& b) noexcept {
@@ -626,6 +623,26 @@ bool SeparateSphereFromAabb(Vector3& pos, const float r, const CollisionAabb3& b
         pos.z += nz * pen;
     }
     return true;
+}
+
+bool ComputeSphereStaticCollider3Contact(
+        const Vector3& center,
+        const float radius,
+        const Collider3D& collider,
+        float& outNx,
+        float& outNy,
+        float& outNz,
+        float& outPen,
+        const float separationSlopForInclusion) noexcept {
+    return ComputeSphereStaticCollider3Contact(
+            center, radius, collider.ToLegacySnapshot(), outNx, outNy, outNz, outPen, separationSlopForInclusion);
+}
+
+bool SeparateSphereFromStaticCollider3(
+        Vector3& center,
+        const float radius,
+        const Collider3D& collider) noexcept {
+    return SeparateSphereFromStaticCollider3(center, radius, collider.ToLegacySnapshot());
 }
 
 bool SeparateSphereFromStaticCollider3(

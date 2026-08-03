@@ -220,7 +220,7 @@ void ProcessSparkRetainedCanvasesInput(GameWorld& world, IInput& input, int fram
     static bool editorLayoutLoaded = false;
     if (!editorLayoutLoaded) {
         Gui::SceneEditorLayoutSettings layout{};
-        Gui::TryLoadSceneEditorLayout(layout);
+        (void)Gui::TryLoadSceneEditorLayout(layout);
         editorLayoutLoaded = true;
     }
 

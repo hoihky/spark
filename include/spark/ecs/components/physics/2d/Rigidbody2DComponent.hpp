@@ -17,7 +17,7 @@ enum class RigidbodyBodyType2D : std::uint8_t {
 };
 
 /**
- * 2D velocity-based body (XY). Grounding is updated by SimulatePhysics2D when using a 2D collider + Transform.
+ * 2D velocity-based body (XY). Grounding is updated by <c>PhysicsWorld2D</c> / <c>PhysicsSubsystem</c> when using a 2D collider + Transform.
  */
 class Rigidbody2DComponent final : public GameComponent {
 public:

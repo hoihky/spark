@@ -1,4 +1,4 @@
-#include "spark/physics/DynamicCollider3D.hpp"
+#include "spark/physics/colliders/DynamicCollider3D.hpp"
 
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
@@ -8,7 +8,12 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/physics/colliders/Collider3D.hpp"
 #include "spark/physics/TriggerVolume3D.hpp"
+#include "spark/physics/shapes/CapsuleShape3D.hpp"
+#include "spark/physics/shapes/NarrowPhase3D.hpp"
+#include "spark/physics/shapes/ShapeFactory3D.hpp"
+#include "spark/physics/shapes/SphereShape3D.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -82,6 +87,15 @@ void BuildCharacterControllerProbeSphere(
     RebuildDynamicCollider3DBounds(out);
 }
 
+void BuildCharacterControllerProbeSphere(
+        GameObject& owner,
+        const CharacterController3DComponent& controller,
+        DynamicCollider3D& out) noexcept {
+    DynamicCollider3DSim snapshot{};
+    BuildCharacterControllerProbeSphere(owner, controller, snapshot);
+    out = DynamicCollider3D::FromLegacySnapshot(snapshot);
+}
+
 void BuildCollisionComponentProbeSphere(
         GameObject& owner,
         CollisionComponent& collision,
@@ -93,24 +107,252 @@ void BuildCollisionComponentProbeSphere(
     RebuildDynamicCollider3DBounds(out);
 }
 
+void BuildCollisionComponentProbeSphere(
+        GameObject& owner,
+        CollisionComponent& collision,
+        DynamicCollider3D& out) noexcept {
+    DynamicCollider3DSim snapshot{};
+    BuildCollisionComponentProbeSphere(owner, collision, snapshot);
+    out = DynamicCollider3D::FromLegacySnapshot(snapshot);
+}
+
 }  // namespace
+
+DynamicCollider3D DynamicCollider3D::FromLegacySnapshot(const DynamicCollider3DSim& snapshot) {
+    DynamicCollider3D collider{};
+    if (snapshot.shape == DynamicCollider3DShape::Sphere) {
+        collider.shape = ShapeFactory3D::CreateSphere(snapshot.sphereCenter, snapshot.sphereRadius);
+    } else {
+        collider.shape = ShapeFactory3D::CreateCapsule(snapshot.capsule);
+    }
+    return collider;
+}
+
+DynamicCollider3DSim DynamicCollider3D::ToLegacySnapshot() const {
+    DynamicCollider3DSim snapshot{};
+    if (!shape) {
+        return snapshot;
+    }
+
+    snapshot.bounds = shape->GetBounds();
+    const ShapeType3D type = shape->GetType();
+    if (type == ShapeType3D::Sphere) {
+        const SphereShape3D& sphere = static_cast<const SphereShape3D&>(*shape);
+        snapshot.shape = DynamicCollider3DShape::Sphere;
+        snapshot.sphereCenter = sphere.GetCenter();
+        snapshot.sphereRadius = sphere.GetRadius();
+        return snapshot;
+    }
+    snapshot.shape = DynamicCollider3DShape::Capsule;
+    snapshot.capsule = static_cast<const CapsuleShape3D&>(*shape).GetCapsule();
+    snapshot.bounds = static_cast<const CapsuleShape3D&>(*shape).GetBounds();
+    return snapshot;
+}
+
+void DynamicCollider3D::RefreshFromSphere(
+        GameObject& owner,
+        const SphereCollider3DComponent& collider) noexcept {
+    shape = ShapeFactory3D::CreateFromSphereCollider(owner, collider);
+}
+
+void DynamicCollider3D::RefreshFromCapsule(
+        GameObject& owner,
+        const CapsuleCollider3DComponent& collider) noexcept {
+    shape = ShapeFactory3D::CreateFromCapsuleCollider(owner, collider);
+}
+
+ShapeType3D DynamicCollider3D::GetShapeType() const noexcept {
+    return shape ? shape->GetType() : ShapeType3D::Sphere;
+}
+
+DynamicCollider3DShape DynamicCollider3D::GetLegacyShapeTag() const noexcept {
+    if (!shape) {
+        return DynamicCollider3DShape::Sphere;
+    }
+    return shape->GetType() == ShapeType3D::Capsule ? DynamicCollider3DShape::Capsule
+                                                    : DynamicCollider3DShape::Sphere;
+}
+
+CollisionAabb3 DynamicCollider3D::GetBounds() const noexcept {
+    return shape ? shape->GetBounds() : CollisionAabb3{};
+}
+
+Vector3 DynamicCollider3D::GetTrackingPoint() const noexcept {
+    if (!shape) {
+        return Vector3::Zero;
+    }
+    if (shape->GetType() == ShapeType3D::Sphere) {
+        return static_cast<const SphereShape3D&>(*shape).GetCenter();
+    }
+    return CapsuleMidpoint(static_cast<const CapsuleShape3D&>(*shape).GetCapsule());
+}
+
+float DynamicCollider3D::GetRepresentativeRadius() const noexcept {
+    if (!shape) {
+        return 0.0F;
+    }
+    if (shape->GetType() == ShapeType3D::Sphere) {
+        return static_cast<const SphereShape3D&>(*shape).GetRadius();
+    }
+    return CapsuleBoundingSphereRadius(static_cast<const CapsuleShape3D&>(*shape).GetCapsule());
+}
+
+float DynamicCollider3D::GetImpulseContactRadius() const noexcept {
+    if (!shape) {
+        return 0.0F;
+    }
+    if (shape->GetType() == ShapeType3D::Sphere) {
+        return static_cast<const SphereShape3D&>(*shape).GetRadius();
+    }
+    return static_cast<const CapsuleShape3D&>(*shape).GetCapsule().radius;
+}
+
+void DynamicCollider3D::Translate(const Vector3& delta) noexcept {
+    if (!shape) {
+        return;
+    }
+    if (shape->GetType() == ShapeType3D::Sphere) {
+        static_cast<SphereShape3D&>(*shape).Translate(delta);
+        return;
+    }
+    static_cast<CapsuleShape3D&>(*shape).Translate(delta);
+}
+
+bool DynamicCollider3D::OverlapsStatic(const Collider3D& staticCollider) const noexcept {
+    if (!shape || !staticCollider.IsValid()) {
+        return false;
+    }
+    return NarrowPhase3D::Overlap(*shape, staticCollider.GetShape());
+}
+
+bool DynamicCollider3D::ComputeStaticContact(
+        const Collider3D& staticCollider,
+        float& outNormalX,
+        float& outNormalY,
+        float& outNormalZ,
+        float& outPenetration,
+        const float separationSlop) const noexcept {
+    if (!shape || !staticCollider.IsValid()) {
+        return false;
+    }
+    if (separationSlop > 0.0F) {
+        return ComputeDynamicStaticCollider3Contact(
+                ToLegacySnapshot(),
+                staticCollider,
+                outNormalX,
+                outNormalY,
+                outNormalZ,
+                outPenetration,
+                separationSlop);
+    }
+    ContactManifold3D manifold{};
+    if (!NarrowPhase3D::ComputeContact(*shape, staticCollider.GetShape(), manifold)) {
+        return false;
+    }
+    outNormalX = manifold.normal.x;
+    outNormalY = manifold.normal.y;
+    outNormalZ = manifold.normal.z;
+    outPenetration = manifold.penetration;
+    return true;
+}
+
+bool DynamicCollider3D::SeparateFromStatic(const Collider3D& staticCollider) noexcept {
+    float nx = 0.0F;
+    float ny = 0.0F;
+    float nz = 0.0F;
+    float pen = 0.0F;
+    if (!ComputeStaticContact(staticCollider, nx, ny, nz, pen)) {
+        return false;
+    }
+    if (pen > 1.0e-8F) {
+        Translate({nx * pen, ny * pen, nz * pen});
+    }
+    return true;
+}
+
+bool DynamicCollider3D::Overlaps(const DynamicCollider3D& other) const noexcept {
+    if (!shape || !other.shape) {
+        return false;
+    }
+    return NarrowPhase3D::Overlap(*shape, *other.shape);
+}
+
+bool DynamicCollider3D::ComputeDynamicContact(
+        const DynamicCollider3D& other,
+        float& outNormalX,
+        float& outNormalY,
+        float& outNormalZ,
+        float& outPenetration) const noexcept {
+    if (!shape || !other.shape) {
+        return false;
+    }
+    ContactManifold3D manifold{};
+    if (!NarrowPhase3D::ComputeContact(*shape, *other.shape, manifold)) {
+        return false;
+    }
+    outNormalX = manifold.normal.x;
+    outNormalY = manifold.normal.y;
+    outNormalZ = manifold.normal.z;
+    outPenetration = manifold.penetration;
+    return true;
+}
+
+bool DynamicCollider3D::SeparateFromDynamic(
+        DynamicCollider3D& other,
+        const float inverseMassA,
+        const float inverseMassB) noexcept {
+    float nx = 0.0F;
+    float ny = 0.0F;
+    float nz = 0.0F;
+    float pen = 0.0F;
+    if (!ComputeDynamicContact(other, nx, ny, nz, pen) || pen <= 0.0F) {
+        return false;
+    }
+
+    const float den = inverseMassA + inverseMassB;
+    if (den < 1.0e-10F) {
+        return false;
+    }
+    const float corr = pen / den;
+    Translate({-nx * corr * inverseMassB, -ny * corr * inverseMassB, -nz * corr * inverseMassB});
+    other.Translate({nx * corr * inverseMassA, ny * corr * inverseMassA, nz * corr * inverseMassA});
+    return true;
+}
+
+float DynamicCollider3D::EffectiveInverseInertia(const Rigidbody3DComponent& rb) const noexcept {
+    const float overrideInv = rb.GetInverseInertiaTensorScale();
+    if (overrideInv > 0.0F) {
+        return overrideInv;
+    }
+    return SolidSphereInverseInertiaScalar(rb.GetInverseMass(), GetRepresentativeRadius());
+}
+
+void DynamicCollider3D::ComputeDynamicContactPointOnA(
+        const DynamicCollider3D& other,
+        const float normalX,
+        const float normalY,
+        const float normalZ,
+        Vector3& outPointOnA) const noexcept {
+    ComputeDynamicDynamicContactPointOnA(
+            ToLegacySnapshot(), other.ToLegacySnapshot(), normalX, normalY, normalZ, outPointOnA);
+}
 
 void BuildDynamicCollider3DSimFromSphere(
         GameObject& owner,
         const SphereCollider3DComponent& collider,
         DynamicCollider3DSim& out) noexcept {
-    out.shape = DynamicCollider3DShape::Sphere;
-    ComputeSphereCollider3World(owner, collider, out.sphereCenter, out.sphereRadius);
-    BuildSphereBounds(out.sphereCenter, out.sphereRadius, out.bounds);
+    DynamicCollider3D dynamic{};
+    dynamic.RefreshFromSphere(owner, collider);
+    out = dynamic.ToLegacySnapshot();
 }
 
 void BuildDynamicCollider3DSimFromCapsule(
         GameObject& owner,
         const CapsuleCollider3DComponent& collider,
         DynamicCollider3DSim& out) noexcept {
-    out.shape = DynamicCollider3DShape::Capsule;
-    ComputeCapsuleCollider3World(owner, collider, out.capsule);
-    BuildCapsuleBounds(out.capsule, out.bounds);
+    DynamicCollider3D dynamic{};
+    dynamic.RefreshFromCapsule(owner, collider);
+    out = dynamic.ToLegacySnapshot();
 }
 
 Vector3 GetDynamicCollider3DTrackingPoint(const DynamicCollider3DSim& sim) noexcept {
@@ -118,6 +360,10 @@ Vector3 GetDynamicCollider3DTrackingPoint(const DynamicCollider3DSim& sim) noexc
         return sim.sphereCenter;
     }
     return CapsuleMidpoint(sim.capsule);
+}
+
+Vector3 GetDynamicCollider3DTrackingPoint(const DynamicCollider3D& collider) noexcept {
+    return collider.GetTrackingPoint();
 }
 
 void TranslateDynamicCollider3DSim(DynamicCollider3DSim& sim, const Vector3& delta) noexcept {
@@ -168,6 +414,18 @@ bool DynamicCollider3DOverlapsStatic(
     return ComputeCapsuleAabbContact(dynamic.capsule, staticCollider.aabb, nx, ny, nz, pen);
 }
 
+bool DynamicCollider3DOverlapsStatic(
+        const DynamicCollider3DSim& dynamic,
+        const Collider3D& staticCollider) noexcept {
+    return DynamicCollider3DOverlapsStatic(dynamic, staticCollider.ToLegacySnapshot());
+}
+
+bool DynamicCollider3DOverlapsStatic(
+        const DynamicCollider3D& dynamic,
+        const Collider3D& staticCollider) noexcept {
+    return dynamic.OverlapsStatic(staticCollider);
+}
+
 bool ComputeDynamicStaticCollider3Contact(
         const DynamicCollider3DSim& dynamic,
         const StaticCollider3DSim& staticCollider,
@@ -207,6 +465,36 @@ bool ComputeDynamicStaticCollider3Contact(
             separationSlop);
 }
 
+bool ComputeDynamicStaticCollider3Contact(
+        const DynamicCollider3DSim& dynamic,
+        const Collider3D& staticCollider,
+        float& outNormalX,
+        float& outNormalY,
+        float& outNormalZ,
+        float& outPenetration,
+        const float separationSlop) noexcept {
+    return ComputeDynamicStaticCollider3Contact(
+            dynamic,
+            staticCollider.ToLegacySnapshot(),
+            outNormalX,
+            outNormalY,
+            outNormalZ,
+            outPenetration,
+            separationSlop);
+}
+
+bool ComputeDynamicStaticCollider3Contact(
+        const DynamicCollider3D& dynamic,
+        const Collider3D& staticCollider,
+        float& outNormalX,
+        float& outNormalY,
+        float& outNormalZ,
+        float& outPenetration,
+        const float separationSlop) noexcept {
+    return dynamic.ComputeStaticContact(
+            staticCollider, outNormalX, outNormalY, outNormalZ, outPenetration, separationSlop);
+}
+
 bool SeparateDynamicCollider3DFromStatic(
         DynamicCollider3DSim& dynamic,
         const StaticCollider3DSim& staticCollider) noexcept {
@@ -221,6 +509,18 @@ bool SeparateDynamicCollider3DFromStatic(
         TranslateDynamicCollider3DSim(dynamic, {nx * pen, ny * pen, nz * pen});
     }
     return true;
+}
+
+bool SeparateDynamicCollider3DFromStatic(
+        DynamicCollider3DSim& dynamic,
+        const Collider3D& staticCollider) noexcept {
+    return SeparateDynamicCollider3DFromStatic(dynamic, staticCollider.ToLegacySnapshot());
+}
+
+bool SeparateDynamicCollider3DFromStatic(
+        DynamicCollider3D& dynamic,
+        const Collider3D& staticCollider) noexcept {
+    return dynamic.SeparateFromStatic(staticCollider);
 }
 
 bool ComputeDynamicDynamicCollider3Contact(
@@ -284,6 +584,16 @@ bool ComputeDynamicDynamicCollider3Contact(
     return ComputeCapsuleCapsuleContact(a.capsule, b.capsule, outNormalX, outNormalY, outNormalZ, outPenetration);
 }
 
+bool ComputeDynamicDynamicCollider3Contact(
+        const DynamicCollider3D& a,
+        const DynamicCollider3D& b,
+        float& outNormalX,
+        float& outNormalY,
+        float& outNormalZ,
+        float& outPenetration) noexcept {
+    return a.ComputeDynamicContact(b, outNormalX, outNormalY, outNormalZ, outPenetration);
+}
+
 bool SeparateDynamicDynamicCollider3Position(
         DynamicCollider3DSim& a,
         DynamicCollider3DSim& b,
@@ -302,9 +612,19 @@ bool SeparateDynamicDynamicCollider3Position(
         return false;
     }
     const float corr = pen / den;
-    TranslateDynamicCollider3DSim(a, {-nx * corr * inverseMassB, -ny * corr * inverseMassB, -nz * corr * inverseMassB});
-    TranslateDynamicCollider3DSim(b, {nx * corr * inverseMassA, ny * corr * inverseMassA, nz * corr * inverseMassA});
+    TranslateDynamicCollider3DSim(
+            a, {-nx * corr * inverseMassB, -ny * corr * inverseMassB, -nz * corr * inverseMassB});
+    TranslateDynamicCollider3DSim(
+            b, {nx * corr * inverseMassA, ny * corr * inverseMassA, nz * corr * inverseMassA});
     return true;
+}
+
+bool SeparateDynamicDynamicCollider3Position(
+        DynamicCollider3D& a,
+        DynamicCollider3D& b,
+        const float inverseMassA,
+        const float inverseMassB) noexcept {
+    return a.SeparateFromDynamic(b, inverseMassA, inverseMassB);
 }
 
 float EffectiveDynamicCollider3DInverseInertia(
@@ -320,6 +640,12 @@ float EffectiveDynamicCollider3DInverseInertia(
         return SolidSphereInverseInertiaScalar(invMass, sim.sphereRadius);
     }
     return SolidSphereInverseInertiaScalar(invMass, CapsuleBoundingSphereRadius(sim.capsule));
+}
+
+float EffectiveDynamicCollider3DInverseInertia(
+        const Rigidbody3DComponent& rb,
+        const DynamicCollider3D& collider) noexcept {
+    return collider.EffectiveInverseInertia(rb);
 }
 
 void ComputeDynamicDynamicContactPointOnA(
@@ -413,6 +739,17 @@ void ComputeDynamicDynamicContactPointOnA(
             c1.z - normalZ * a.capsule.radius};
 }
 
+void ComputeDynamicDynamicContactPointOnA(
+        const DynamicCollider3D& a,
+        const DynamicCollider3D& b,
+        const float normalX,
+        const float normalY,
+        const float normalZ,
+        Vector3& outPointOnA) noexcept {
+    ComputeDynamicDynamicContactPointOnA(
+            a.ToLegacySnapshot(), b.ToLegacySnapshot(), normalX, normalY, normalZ, outPointOnA);
+}
+
 bool TryBuildTriggerProbe3DFromObject(
         GameObject& object,
         const TriggerVolume3DSettings& settings,
@@ -445,6 +782,52 @@ bool TryBuildTriggerProbe3DFromObject(
         }
         if (auto* capsule = object.GetComponent<CapsuleCollider3DComponent>()) {
             BuildDynamicCollider3DSimFromCapsule(object, *capsule, outProbe);
+            return true;
+        }
+    }
+
+    if (settings.includeCollisionComponent) {
+        if (auto* collision = object.GetComponent<CollisionComponent>()) {
+            BuildCollisionComponentProbeSphere(object, *collision, outProbe);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TryBuildTriggerProbe3DFromObject(
+        GameObject& object,
+        const TriggerVolume3DSettings& settings,
+        DynamicCollider3D& outProbe) noexcept {
+    if (settings.includeCharacterControllers) {
+        if (auto* controller = object.GetComponent<CharacterController3DComponent>()) {
+            BuildCharacterControllerProbeSphere(object, *controller, outProbe);
+            return true;
+        }
+    }
+
+    auto* rb = object.GetComponent<Rigidbody3DComponent>();
+    const bool isDynamicRb = rb != nullptr && rb->GetBodyType() == RigidbodyBodyType3D::Dynamic;
+
+    if (settings.includeDynamicRigidbodies && isDynamicRb) {
+        if (auto* sphere = object.GetComponent<SphereCollider3DComponent>()) {
+            outProbe.RefreshFromSphere(object, *sphere);
+            return true;
+        }
+        if (auto* capsule = object.GetComponent<CapsuleCollider3DComponent>()) {
+            outProbe.RefreshFromCapsule(object, *capsule);
+            return true;
+        }
+    }
+
+    if (settings.includeColliderWithoutRigidbody && !isDynamicRb) {
+        if (auto* sphere = object.GetComponent<SphereCollider3DComponent>()) {
+            outProbe.RefreshFromSphere(object, *sphere);
+            return true;
+        }
+        if (auto* capsule = object.GetComponent<CapsuleCollider3DComponent>()) {
+            outProbe.RefreshFromCapsule(object, *capsule);
             return true;
         }
     }

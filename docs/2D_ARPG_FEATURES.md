@@ -1,14 +1,14 @@
 # 2D ARPG engine gaps — prioritized backlog
 
-Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`SimulatePhysics2D`), rendering (`SpriteComponent`, `TilemapComponent`, `Camera2D`), AI (`AiAgentComponent`), and GUI.
+Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`PhysicsSubsystem`), rendering (`SpriteComponent`, `TilemapComponent`, `Camera2D`), AI (`AiAgentComponent`), and GUI.
 
 ## P0 — Must-have for a credible ARPG prototype
 
 | Priority | Feature | Status | Notes |
 |----------|---------|--------|--------|
 | **P0.1** | **Collision layers / filtering** | Implemented | Category + mask bits on `BoxCollider2D` / `CircleCollider2D` / `TilemapCollider2D`; baked into `StaticCollider2D`; honored in dynamic-vs-static resolution. |
-| **P0.2** | **Trigger volumes** (overlap without blocking) | Implemented | `GetIsTrigger` / `SetIsTrigger` on 2D colliders; baked into `StaticCollider2D` with `owner`; `SimulatePhysics2D` skips separation for trigger pairs; `SignalId::Physics2DTriggerOverlap` after resolution (`ptr` = other `GameObject*`, `a` = id, `b` = static index). |
-| **P0.3** | **World queries** (`OverlapCircle`, `OverlapAabb`, `Raycast` in XY) | Implemented | `PhysicsQueries2D.hpp`: `StaticBroadPhase2D` + `QueryOverlapCircleStatics2D` / `QueryOverlapAabbStatics2D` / `RaycastStatics2D` (same static bake + hash as `SimulatePhysics2D`); convenience `QueryOverlapCircleWorld2D` / `RaycastWorld2D`. Uses `CollisionFilter2D::ShouldCollide`; `hitTriggers` / `hitSolids` flags. **Does not** emit `Physics2DTriggerOverlap` (signals are simulation-only). |
+| **P0.2** | **Trigger volumes** (overlap without blocking) | Implemented | `GetIsTrigger` / `SetIsTrigger` on 2D colliders; baked into `Collider2D` with `owner`; `PhysicsWorld2D` skips separation for trigger pairs; `SignalId::Physics2DTriggerOverlap` after resolution (`ptr` = other `GameObject*`, `a` = id, `b` = static index). |
+| **P0.3** | **World queries** (`OverlapCircle`, `OverlapAabb`, `Raycast` in XY) | Implemented | `PhysicsQueryWorld2D` / `PhysicsQueries2D.hpp`: `BroadPhase2D` + `QueryOverlapCircleStatics2D` / `QueryOverlapAabbStatics2D` / `RaycastStatics2D` (same static bake + hash as simulation); convenience `QueryOverlapCircleWorld2D` / `RaycastWorld2D`. Uses `CollisionFilter2D::ShouldCollide`; `hitTriggers` / `hitSolids` flags. **Does not** emit `Physics2DTriggerOverlap` (signals are simulation-only). |
 | **P0.4** | **Dynamic-vs-dynamic** resolution | Implemented | After static resolution, dynamic pairs are broad-phased with `SpatialHashGrid2D` (same 4-unit cell as statics), then narrow-tested (same layer rules). Overlapping **triggers** emit `Physics2DTriggerOverlap` (`payload.b` = `kPhysics2DTriggerOverlapNoStaticIndex`). Optional `PhysicsWorld2DSettings::resolveDynamicVsDynamic`: one shallow separation for solid–solid (circle–circle, box–box, box–circle); no second static pass. C: `spark_world_physics_simulate_2d_with_settings`. |
 
 ## P1 — Strongly recommended

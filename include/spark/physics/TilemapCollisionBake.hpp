@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/physics/colliders/Collider2D.hpp"
 #include "spark/physics/Collision2D.hpp"
 #include "spark/physics/SpatialHashGrid2D.hpp"
 #include "spark/scene/tilemap/TileCell.hpp"
@@ -13,7 +14,7 @@ namespace Spark {
 class GameObject;
 
 /**
- * Bakes one map cell into <c>outStatics</c> using tile definition + per-cell transform.
+ * Bakes one map cell into <c>outColliders</c> using tile definition + per-cell transform.
  * @return false when the cell has no collision contribution.
  */
 bool AppendTilemapCellCollider2D(
@@ -25,7 +26,7 @@ bool AppendTilemapCellCollider2D(
         std::uint32_t tileY,
         const TileCell& cell,
         const TileDefinition& definition,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid);
 
 }  // namespace Spark

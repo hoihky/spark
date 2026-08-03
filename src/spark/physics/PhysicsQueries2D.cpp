@@ -6,6 +6,9 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/physics/CollisionFilter2D.hpp"
+#include "spark/physics/colliders/DynamicBody2D.hpp"
+#include "spark/physics/colliders/DynamicCollider2D.hpp"
+#include "spark/physics/shapes/ShapeType2D.hpp"
 #include "spark/scene/GameWorld.hpp"
 
 #include <algorithm>
@@ -14,49 +17,37 @@
 
 namespace Spark {
 
-void StaticBroadPhase2D::Rebuild(GameWorld& world, const float cellWorldSize) {
-    RebuildBroadPhaseFromStaticColliders2D(world, cellWorldSize, statics, grid);
-}
-
 namespace {
 
 [[nodiscard]] bool PassesQueryFilter(
         const PhysicsQueryFilter2D& filter,
-        const StaticCollider2D& st) noexcept {
-    if (!CollisionFilter2D::ShouldCollide(
-                filter.queryCategoryBits,
-                filter.queryMaskBits,
-                st.categoryBits,
-                st.maskBits)) {
-        return false;
-    }
-    if (st.isTrigger && !filter.hitTriggers) {
-        return false;
-    }
-    if (!st.isTrigger && !filter.hitSolids) {
-        return false;
-    }
-    return true;
+        const Collider2D& col) noexcept {
+    return col.GetFilter().PassesQueryFilter(
+            filter.queryCategoryBits, filter.queryMaskBits, filter.hitSolids, filter.hitTriggers);
 }
 
 [[nodiscard]] bool RaycastStaticCollider2D(
-        const StaticCollider2D& st,
+        const Collider2D& col,
         const float ox,
         const float oy,
         const float dx,
         const float dy,
         const float maxT,
         float& outT) noexcept {
-    if (st.shape == StaticCollider2DShape::Box) {
-        return RaycastSegmentAabb2(ox, oy, dx, dy, maxT, st.aabb, outT);
+    const StaticCollider2D snap = col.ToLegacySnapshot();
+    if (snap.shape == StaticCollider2DShape::Box) {
+        return RaycastSegmentAabb2(ox, oy, dx, dy, maxT, snap.aabb, outT);
     }
-    return RaycastSegmentCircle2(ox, oy, dx, dy, maxT, st.circleCx, st.circleCy, st.circleR, outT);
+    if (snap.shape == StaticCollider2DShape::Circle) {
+        return RaycastSegmentCircle2(ox, oy, dx, dy, maxT, snap.circleCx, snap.circleCy, snap.circleR, outT);
+    }
+    return RaycastSegmentAabb2(ox, oy, dx, dy, maxT, snap.aabb, outT);
 }
 
 }  // namespace
 
 void QueryOverlapCircleStatics2D(
-        const StaticBroadPhase2D& broadPhase,
+        const BroadPhase2D& broadPhase,
         const float centerX,
         const float centerY,
         const float radius,
@@ -74,58 +65,58 @@ void QueryOverlapCircleStatics2D(
     query.maxY = centerY + radius;
 
     Array<std::uint32_t> candidates;
-    broadPhase.grid.QueryUniquePayloadIndices(query, candidates);
+    broadPhase.GetGrid().QueryUniquePayloadIndices(query, candidates);
 
     for (std::size_t i = 0; i < candidates.GetSize(); ++i) {
         const std::uint32_t si = candidates[i];
-        if (si >= broadPhase.statics.GetSize()) {
+        if (si >= broadPhase.GetColliders().GetSize()) {
             continue;
         }
-        const StaticCollider2D& st = broadPhase.statics[si];
-        if (!PassesQueryFilter(filter, st)) {
+        const Collider2D& col = broadPhase.GetColliders()[si];
+        if (!PassesQueryFilter(filter, col)) {
             continue;
         }
-        if (!StaticCollider2DOverlapsWorldCircle(st, centerX, centerY, radius)) {
+        if (!col.OverlapsCircle(centerX, centerY, radius)) {
             continue;
         }
         PhysicsQueryHit2D h{};
         h.staticColliderIndex = si;
-        h.owner = st.owner;
+        h.owner = col.GetOwner();
         outHits.PushBack(h);
     }
 }
 
 void QueryOverlapAabbStatics2D(
-        const StaticBroadPhase2D& broadPhase,
+        const BroadPhase2D& broadPhase,
         const CollisionAabb2& worldAabb,
         const PhysicsQueryFilter2D& filter,
         Array<PhysicsQueryHit2D>& outHits) {
     outHits.Clear();
 
     Array<std::uint32_t> candidates;
-    broadPhase.grid.QueryUniquePayloadIndices(worldAabb, candidates);
+    broadPhase.GetGrid().QueryUniquePayloadIndices(worldAabb, candidates);
 
     for (std::size_t i = 0; i < candidates.GetSize(); ++i) {
         const std::uint32_t si = candidates[i];
-        if (si >= broadPhase.statics.GetSize()) {
+        if (si >= broadPhase.GetColliders().GetSize()) {
             continue;
         }
-        const StaticCollider2D& st = broadPhase.statics[si];
-        if (!PassesQueryFilter(filter, st)) {
+        const Collider2D& col = broadPhase.GetColliders()[si];
+        if (!PassesQueryFilter(filter, col)) {
             continue;
         }
-        if (!StaticCollider2DOverlapsWorldAabb(st, worldAabb)) {
+        if (!col.OverlapsAabb(worldAabb)) {
             continue;
         }
         PhysicsQueryHit2D h{};
         h.staticColliderIndex = si;
-        h.owner = st.owner;
+        h.owner = col.GetOwner();
         outHits.PushBack(h);
     }
 }
 
 bool RaycastStatics2D(
-        const StaticBroadPhase2D& broadPhase,
+        const BroadPhase2D& broadPhase,
         const float originX,
         const float originY,
         const float dirX,
@@ -151,7 +142,7 @@ bool RaycastStatics2D(
     sweep.maxY += kPad;
 
     Array<std::uint32_t> candidates;
-    broadPhase.grid.QueryUniquePayloadIndices(sweep, candidates);
+    broadPhase.GetGrid().QueryUniquePayloadIndices(sweep, candidates);
 
     float bestT = std::numeric_limits<float>::infinity();
     bool any = false;
@@ -159,15 +150,15 @@ bool RaycastStatics2D(
 
     for (std::size_t i = 0; i < candidates.GetSize(); ++i) {
         const std::uint32_t si = candidates[i];
-        if (si >= broadPhase.statics.GetSize()) {
+        if (si >= broadPhase.GetColliders().GetSize()) {
             continue;
         }
-        const StaticCollider2D& st = broadPhase.statics[si];
-        if (!PassesQueryFilter(filter, st)) {
+        const Collider2D& col = broadPhase.GetColliders()[si];
+        if (!PassesQueryFilter(filter, col)) {
             continue;
         }
         float t = 0.0F;
-        if (!RaycastStaticCollider2D(st, originX, originY, dirX, dirY, maxDistance, t)) {
+        if (!RaycastStaticCollider2D(col, originX, originY, dirX, dirY, maxDistance, t)) {
             continue;
         }
         if (t < bestT) {
@@ -176,7 +167,7 @@ bool RaycastStatics2D(
             best.hitX = originX + dirX * t;
             best.hitY = originY + dirY * t;
             best.staticColliderIndex = si;
-            best.owner = st.owner;
+            best.owner = col.GetOwner();
             any = true;
         }
     }
@@ -196,7 +187,7 @@ void QueryOverlapCircleWorld2D(
         const PhysicsQueryFilter2D& filter,
         Array<PhysicsQueryHit2D>& outHits,
         const float cellWorldSize) {
-    StaticBroadPhase2D bp;
+    BroadPhase2D bp;
     bp.Rebuild(world, cellWorldSize);
     QueryOverlapCircleStatics2D(bp, centerX, centerY, radius, filter, outHits);
 }
@@ -207,7 +198,7 @@ void QueryOverlapAabbWorld2D(
         const PhysicsQueryFilter2D& filter,
         Array<PhysicsQueryHit2D>& outHits,
         const float cellWorldSize) {
-    StaticBroadPhase2D bp;
+    BroadPhase2D bp;
     bp.Rebuild(world, cellWorldSize);
     QueryOverlapAabbStatics2D(bp, worldAabb, filter, outHits);
 }
@@ -222,63 +213,30 @@ bool RaycastWorld2D(
         const PhysicsQueryFilter2D& filter,
         PhysicsRaycastHit2D& outHit,
         const float cellWorldSize) {
-    StaticBroadPhase2D bp;
+    BroadPhase2D bp;
     bp.Rebuild(world, cellWorldSize);
     return RaycastStatics2D(bp, originX, originY, dirX, dirY, maxDistance, filter, outHit);
 }
 
 namespace {
 
-struct DynamicQueryBody2D {
-    GameObject* object = nullptr;
-    BoxCollider2DComponent* box = nullptr;
-    CircleCollider2DComponent* circle = nullptr;
-};
-
-void GatherDynamicQueryBodies2D(GameWorld& world, Array<DynamicQueryBody2D>& out) {
-    out.Clear();
-    world.ForEachActiveGameObject([&](GameObject* o) {
-        if (o == nullptr) {
-            return;
-        }
-        Rigidbody2DComponent* rb = o->GetComponent<Rigidbody2DComponent>();
-        TransformComponent* tr = o->GetComponent<TransformComponent>();
-        if (rb == nullptr || tr == nullptr) {
-            return;
-        }
-        if (rb->GetBodyType() != RigidbodyBodyType2D::Dynamic) {
-            return;
-        }
-        BoxCollider2DComponent* boxCol = o->GetComponent<BoxCollider2DComponent>();
-        CircleCollider2DComponent* circleCol = o->GetComponent<CircleCollider2DComponent>();
-        if (circleCol == nullptr && boxCol == nullptr) {
-            return;
-        }
-        DynamicQueryBody2D b{};
-        b.object = o;
-        b.box = boxCol;
-        b.circle = circleCol;
-        out.PushBack(b);
-    });
+[[nodiscard]] bool OverlapWorldCircleWithDynamicBody(
+        const float qx,
+        const float qy,
+        const float qr,
+        DynamicBody2D& body) noexcept {
+    RefreshDynamicBody2D(body);
+    return body.collider.OverlapsCircle(qx, qy, qr);
 }
 
-void ComputeDynamicQueryBodyAabb(const DynamicQueryBody2D& body, CollisionAabb2& out) noexcept {
-    if (body.circle != nullptr) {
-        float cx = 0.0F;
-        float cy = 0.0F;
-        float cr = 0.0F;
-        ComputeCircleCollider2World(*body.object, *body.circle, cx, cy, cr);
-        out.minX = cx - cr;
-        out.maxX = cx + cr;
-        out.minY = cy - cr;
-        out.maxY = cy + cr;
-        return;
-    }
-    if (body.box != nullptr) {
-        ComputeBoxCollider2WorldAabb(*body.object, *body.box, out);
-        return;
-    }
-    out = CollisionAabb2{};
+void DynamicBodyCenterAndSlack(DynamicBody2D& body, float& cx, float& cy, float& slack) noexcept {
+    RefreshDynamicBody2D(body);
+    const CollisionAabb2 bounds = body.collider.GetBounds();
+    cx = 0.5F * (bounds.minX + bounds.maxX);
+    cy = 0.5F * (bounds.minY + bounds.maxY);
+    const float dx = bounds.maxX - bounds.minX;
+    const float dy = bounds.maxY - bounds.minY;
+    slack = 0.5F * std::sqrt(dx * dx + dy * dy);
 }
 
 [[nodiscard]] bool PassesDynamicQueryFilter(
@@ -300,63 +258,6 @@ void ComputeDynamicQueryBodyAabb(const DynamicQueryBody2D& body, CollisionAabb2&
         return false;
     }
     return true;
-}
-
-[[nodiscard]] bool GetPrimaryColliderFiltersFromDynamic(
-        const CircleCollider2DComponent* circ,
-        const BoxCollider2DComponent* box,
-        bool& outTrigger,
-        std::uint16_t& outCat,
-        std::uint16_t& outMask) noexcept {
-    if (circ != nullptr) {
-        outTrigger = circ->GetIsTrigger();
-        outCat = circ->GetCategoryBits();
-        outMask = circ->GetMaskBits();
-        return true;
-    }
-    if (box != nullptr) {
-        outTrigger = box->GetIsTrigger();
-        outCat = box->GetCategoryBits();
-        outMask = box->GetMaskBits();
-        return true;
-    }
-    return false;
-}
-
-[[nodiscard]] bool OverlapWorldCircleWithDynamicQueryBody(
-        const float qx,
-        const float qy,
-        const float qr,
-        const DynamicQueryBody2D& b) noexcept {
-    if (b.circle != nullptr) {
-        float ox = 0.0F;
-        float oy = 0.0F;
-        float orr = 0.0F;
-        ComputeCircleCollider2World(*b.object, *b.circle, ox, oy, orr);
-        return CollisionCirclesOverlap(qx, qy, qr, ox, oy, orr);
-    }
-    if (b.box != nullptr) {
-        CollisionAabb2 ba{};
-        ComputeBoxCollider2WorldAabb(*b.object, *b.box, ba);
-        return CollisionAabb2OverlapsCircle(ba, qx, qy, qr);
-    }
-    return false;
-}
-
-void DynamicQueryBodyCenterAndSlack(const DynamicQueryBody2D& b, float& cx, float& cy, float& slack) noexcept {
-    if (b.circle != nullptr) {
-        float r = 0.0F;
-        ComputeCircleCollider2World(*b.object, *b.circle, cx, cy, r);
-        slack = r;
-        return;
-    }
-    CollisionAabb2 ba{};
-    ComputeBoxCollider2WorldAabb(*b.object, *b.box, ba);
-    cx = 0.5F * (ba.minX + ba.maxX);
-    cy = 0.5F * (ba.minY + ba.maxY);
-    const float dx = ba.maxX - ba.minX;
-    const float dy = ba.maxY - ba.minY;
-    slack = 0.5F * std::sqrt(dx * dx + dy * dy);
 }
 
 [[nodiscard]] bool RoughCenterInFiniteSector(
@@ -398,25 +299,26 @@ void DynamicQueryBodyCenterAndSlack(const DynamicQueryBody2D& b, float& cx, floa
 }
 
 [[nodiscard]] bool StaticRoughInArcSector(
-        const StaticCollider2D& st,
+        const Collider2D& col,
         const float ox,
         const float oy,
         const float rdx,
         const float rdy,
         const float cosHalfAngle,
         const float maxReach) noexcept {
+    const StaticCollider2D snap = col.ToLegacySnapshot();
     float cx = 0.0F;
     float cy = 0.0F;
     float slack = 0.0F;
-    if (st.shape == StaticCollider2DShape::Circle) {
-        cx = st.circleCx;
-        cy = st.circleCy;
-        slack = st.circleR;
+    if (snap.shape == StaticCollider2DShape::Circle) {
+        cx = snap.circleCx;
+        cy = snap.circleCy;
+        slack = snap.circleR;
     } else {
-        cx = 0.5F * (st.aabb.minX + st.aabb.maxX);
-        cy = 0.5F * (st.aabb.minY + st.aabb.maxY);
-        const float dx = st.aabb.maxX - st.aabb.minX;
-        const float dy = st.aabb.maxY - st.aabb.minY;
+        cx = 0.5F * (snap.aabb.minX + snap.aabb.maxX);
+        cy = 0.5F * (snap.aabb.minY + snap.aabb.maxY);
+        const float dx = snap.aabb.maxX - snap.aabb.minX;
+        const float dy = snap.aabb.maxY - snap.aabb.minY;
         slack = 0.5F * std::sqrt(dx * dx + dy * dy);
     }
     return RoughCenterInFiniteSector(cx, cy, slack, ox, oy, rdx, rdy, cosHalfAngle, maxReach);
@@ -446,8 +348,8 @@ void QueryDynamicsWithCircleAndOptionalSector(
         return;
     }
 
-    Array<DynamicQueryBody2D> bodies;
-    GatherDynamicQueryBodies2D(world, bodies);
+    Array<DynamicBody2D> bodies;
+    CollectDynamicBodies2D(world, bodies);
     const std::size_t n = bodies.GetSize();
     if (n == 0) {
         return;
@@ -459,9 +361,8 @@ void QueryDynamicsWithCircleAndOptionalSector(
     dynBroad.SetCellSize(cell);
 
     for (std::size_t i = 0; i < n; ++i) {
-        CollisionAabb2 aabb{};
-        ComputeDynamicQueryBodyAabb(bodies[i], aabb);
-        dynBroad.InsertIndexedAabb(static_cast<std::uint32_t>(i), aabb);
+        RefreshDynamicBody2D(bodies[i]);
+        dynBroad.InsertIndexedAabb(static_cast<std::uint32_t>(i), bodies[i].collider.GetBounds());
     }
 
     CollisionAabb2 query{};
@@ -478,33 +379,29 @@ void QueryDynamicsWithCircleAndOptionalSector(
         if (bi >= n) {
             continue;
         }
-        const DynamicQueryBody2D& b = bodies[bi];
-        if (ignore != nullptr && b.object == ignore) {
+        DynamicBody2D& body = bodies[bi];
+        if (ignore != nullptr && body.object == ignore) {
             continue;
         }
-        bool trig = false;
-        std::uint16_t cat = 1u;
-        std::uint16_t mask = 0xFFFFu;
-        if (!GetPrimaryColliderFiltersFromDynamic(b.circle, b.box, trig, cat, mask)) {
+        const ColliderFilter& bodyFilter = body.collider.GetFilter();
+        if (!PassesDynamicQueryFilter(
+                    filter, bodyFilter.isTrigger, bodyFilter.categoryBits, bodyFilter.maskBits)) {
             continue;
         }
-        if (!PassesDynamicQueryFilter(filter, trig, cat, mask)) {
-            continue;
-        }
-        if (!OverlapWorldCircleWithDynamicQueryBody(originX, originY, radius, b)) {
+        if (!OverlapWorldCircleWithDynamicBody(originX, originY, radius, body)) {
             continue;
         }
         if (useSector) {
             float rcx = 0.0F;
             float rcy = 0.0F;
             float slack = 0.0F;
-            DynamicQueryBodyCenterAndSlack(b, rcx, rcy, slack);
+            DynamicBodyCenterAndSlack(body, rcx, rcy, slack);
             if (!RoughCenterInFiniteSector(rcx, rcy, slack, originX, originY, rdx, rdy, cosHalfAngle, radius)) {
                 continue;
             }
         }
         PhysicsQueryHitDynamic2D h{};
-        h.owner = b.object;
+        h.owner = body.object;
         outHits.PushBack(h);
     }
 }
@@ -553,7 +450,7 @@ void QueryOverlapArcDynamics2D(
 }
 
 void QueryOverlapArcStatics2D(
-        const StaticBroadPhase2D& broadPhase,
+        const BroadPhase2D& broadPhase,
         const float originX,
         const float originY,
         const float radius,
@@ -580,26 +477,26 @@ void QueryOverlapArcStatics2D(
     query.maxY = originY + radius;
 
     Array<std::uint32_t> candidates;
-    broadPhase.grid.QueryUniquePayloadIndices(query, candidates);
+    broadPhase.GetGrid().QueryUniquePayloadIndices(query, candidates);
 
     for (std::size_t i = 0; i < candidates.GetSize(); ++i) {
         const std::uint32_t si = candidates[i];
-        if (si >= broadPhase.statics.GetSize()) {
+        if (si >= broadPhase.GetColliders().GetSize()) {
             continue;
         }
-        const StaticCollider2D& st = broadPhase.statics[si];
-        if (!PassesQueryFilter(filter, st)) {
+        const Collider2D& col = broadPhase.GetColliders()[si];
+        if (!PassesQueryFilter(filter, col)) {
             continue;
         }
-        if (!StaticCollider2DOverlapsWorldCircle(st, originX, originY, radius)) {
+        if (!col.OverlapsCircle(originX, originY, radius)) {
             continue;
         }
-        if (!StaticRoughInArcSector(st, originX, originY, rdx, rdy, cosHalf, radius)) {
+        if (!StaticRoughInArcSector(col, originX, originY, rdx, rdy, cosHalf, radius)) {
             continue;
         }
         PhysicsQueryHit2D h{};
         h.staticColliderIndex = si;
-        h.owner = st.owner;
+        h.owner = col.GetOwner();
         outHits.PushBack(h);
     }
 }
@@ -615,7 +512,7 @@ void QueryOverlapArcWorldStatics2D(
         const PhysicsQueryFilter2D& filter,
         Array<PhysicsQueryHit2D>& outHits,
         const float cellWorldSize) {
-    StaticBroadPhase2D bp;
+    BroadPhase2D bp;
     bp.Rebuild(world, cellWorldSize);
     QueryOverlapArcStatics2D(bp, originX, originY, radius, dirX, dirY, halfAngleRadians, filter, outHits);
 }
@@ -632,6 +529,76 @@ void QueryOverlapArcWorldDynamics2D(
         GameObject* ignore,
         Array<PhysicsQueryHitDynamic2D>& outHits,
         const float cellWorldSize) {
+    QueryOverlapArcDynamics2D(
+            world, originX, originY, radius, dirX, dirY, halfAngleRadians, filter, ignore, outHits, cellWorldSize);
+}
+
+void PhysicsQueryWorld2D::RebuildStatics(GameWorld& world) {
+    broadPhase.Rebuild(world, cellWorldSize);
+}
+
+void PhysicsQueryWorld2D::OverlapCircleStatics(
+        const float centerX,
+        const float centerY,
+        const float radius,
+        const PhysicsQueryFilter2D& filter,
+        Array<PhysicsQueryHit2D>& outHits) const {
+    QueryOverlapCircleStatics2D(broadPhase, centerX, centerY, radius, filter, outHits);
+}
+
+void PhysicsQueryWorld2D::OverlapAabbStatics(
+        const CollisionAabb2& worldAabb,
+        const PhysicsQueryFilter2D& filter,
+        Array<PhysicsQueryHit2D>& outHits) const {
+    QueryOverlapAabbStatics2D(broadPhase, worldAabb, filter, outHits);
+}
+
+bool PhysicsQueryWorld2D::RaycastStatics(
+        const float originX,
+        const float originY,
+        const float dirX,
+        const float dirY,
+        const float maxDistance,
+        const PhysicsQueryFilter2D& filter,
+        PhysicsRaycastHit2D& outHit) const {
+    return RaycastStatics2D(broadPhase, originX, originY, dirX, dirY, maxDistance, filter, outHit);
+}
+
+void PhysicsQueryWorld2D::OverlapArcStatics(
+        const float originX,
+        const float originY,
+        const float radius,
+        const float dirX,
+        const float dirY,
+        const float halfAngleRadians,
+        const PhysicsQueryFilter2D& filter,
+        Array<PhysicsQueryHit2D>& outHits) const {
+    QueryOverlapArcStatics2D(
+            broadPhase, originX, originY, radius, dirX, dirY, halfAngleRadians, filter, outHits);
+}
+
+void PhysicsQueryWorld2D::OverlapCircleDynamics(
+        GameWorld& world,
+        const float centerX,
+        const float centerY,
+        const float radius,
+        const PhysicsQueryFilter2D& filter,
+        GameObject* ignore,
+        Array<PhysicsQueryHitDynamic2D>& outHits) const {
+    QueryOverlapCircleDynamics2D(world, centerX, centerY, radius, filter, ignore, outHits, cellWorldSize);
+}
+
+void PhysicsQueryWorld2D::OverlapArcDynamics(
+        GameWorld& world,
+        const float originX,
+        const float originY,
+        const float radius,
+        const float dirX,
+        const float dirY,
+        const float halfAngleRadians,
+        const PhysicsQueryFilter2D& filter,
+        GameObject* ignore,
+        Array<PhysicsQueryHitDynamic2D>& outHits) const {
     QueryOverlapArcDynamics2D(
             world, originX, originY, radius, dirX, dirY, halfAngleRadians, filter, ignore, outHits, cellWorldSize);
 }

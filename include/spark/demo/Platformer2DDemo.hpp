@@ -16,6 +16,7 @@
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/audio/SoundClip.hpp"
 #include "spark/audio/SoundEngine.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 
 #include <cmath>
 
@@ -133,6 +134,8 @@ private:
     Platformer2D::HealthHud healthHud{};
     Platformer2D::EnemySquad enemySquad{};
     Platformer2D::PlayerCombat playerCombat{};
+
+    PhysicsSubsystem physics{};
 
     int gemsCollected = 0;
     int gemsTotal = 0;

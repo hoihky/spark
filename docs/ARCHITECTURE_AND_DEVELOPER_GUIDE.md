@@ -12,7 +12,7 @@ Spark is a **C++23** codebase that provides:
 - A **Vulkan** renderer (`VulkanRenderer` implements `IFramePresenter`).
 - An **entity–component** style scene (`GameWorld`, `GameObject`, `GameComponent`).
 - **Forward-lit 3D** with directional + optional **shadow map**, **point** and **spot** lights, **PBR** and **toon** shading, optional **normal** and **ORM** texture maps on draws.
-- **Optional** 2D and **3D** toy physics (`SimulatePhysics2D`, `SimulatePhysics3D`).
+- **Optional** 2D and **3D** toy physics (`PhysicsSubsystem`, `PhysicsWorld2D`, `PhysicsWorld3D`).
 - A **retained-mode GUI** (`GuiCanvasComponent`, widgets under `spark/gui/`).
 - Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
@@ -239,14 +239,14 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Sprite animation** | Flipbook / state machine hooks | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` |
 | **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
 | **2D camera** | Ortho view-projection helper | `Camera2D` (`spark/scene/Camera2D.hpp`) |
-| **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `SimulatePhysics2D`, `PhysicsQueries2D` (see §11) |
+| **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `PhysicsSubsystem`, `PhysicsQueryWorld2D` (see §11) |
 
 ### 5.6 3D physics and joints
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
 | **Character controller 3D** | Kinematic sphere motor vs static boxes | `CharacterController3DComponent`, `SimulateCharacterControllers3D` (`spark/physics/CharacterController3D.hpp`) |
-| **Sphere/capsule vs static boxes/capsules** | Minimal 3D dynamics | `SimulatePhysics3D`, `DynamicCollider3D`, sphere/capsule colliders, `Rigidbody3DComponent` |
+| **Sphere/capsule vs static boxes/capsules** | Minimal 3D dynamics | `PhysicsSubsystem::Simulate3D`, `DynamicCollider3D`, sphere/capsule colliders, `Rigidbody3DComponent` |
 | **Physics material** | Per-body friction/restitution-style data where used | `PhysicsMaterial3DComponent` |
 | **Distance joint** | Constraint between bodies | `DistanceJoint3DComponent` |
 | **Static broad-phase inclusion** | Which box colliders feed the grid | `ContributesStaticCollider3D` (`spark/physics/Collision3D.hpp`) |
@@ -500,7 +500,7 @@ Representative **3D / rendering** components:
 |-----------|---------|
 | `BoxCollider3DComponent` | Local AABB collider; contributes to **static** broad-phase when body is not dynamic. |
 | `CapsuleCollider3DComponent` | Local capsule collider; **static** when body is not dynamic; **dynamic** with `Rigidbody3DComponent`. |
-| `SphereCollider3DComponent` | Dynamic **sphere** collider for `SimulatePhysics3D` (preferred if both sphere and capsule are present). |
+| `SphereCollider3DComponent` | Dynamic **sphere** collider for `PhysicsWorld3D` (preferred if both sphere and capsule are present). |
 | `TriggerVolume3DComponent` | Non-blocking box/sphere/capsule volume; `SimulateTriggerVolumes3D` fires enter/exit callbacks and signals. |
 | `CharacterController3DComponent` | Kinematic FPS/third-person motor; call `SimulateCharacterControllers3D` (excluded from dynamic sphere solver). |
 | `Rigidbody3DComponent` | `Dynamic` / `Static` / `Kinematic`, velocity, gravity scale, **restitution** for the sphere solver. |
@@ -654,13 +654,31 @@ Demos typically toggle **mouse capture** (e.g. **F1**) for first-person cameras.
 
 ## 11. Physics APIs (Summary)
 
+Primary entry point: **`PhysicsSubsystem`** (`spark/physics/PhysicsSubsystem.hpp`). Include everything with `spark/physics/Physics.hpp`.
+
+```cpp
+PhysicsSubsystem physics;
+physics.GetWorld2D().GetSettings().gravityY = -30.0F;
+physics.SetBroadPhaseCellSize2D(4.0F);  // keeps queries in sync
+physics.Simulate2D(world, timing);
+physics.SimulateAll3D(world, timing);
+physics.GetQueries2D().RebuildStatics(world);
+```
+
 | API | Header | Notes |
 |-----|--------|------|
-| `SimulatePhysics2D` | `spark/physics/PhysicsWorld2D.hpp` | Dynamics vs statics (grid broad-phase); dynamic–dynamic pairs use the same grid pattern, then triggers + optional `resolveDynamicVsDynamic`. |
-| `PhysicsQueries2D` | `spark/physics/PhysicsQueries2D.hpp` | Overlap circle/AABB and raycast vs static broad-phase (same bake as simulation); no trigger signals. **Also:** `QueryOverlapCircleDynamics2D`, `QueryOverlapArcStatics2D` / `QueryOverlapArcDynamics2D` (attack arc / cone), and `QueryOverlapArcWorld*` helpers. |
-| `SimulatePhysics3D` | `spark/physics/PhysicsWorld3D.hpp` | **Dynamic spheres** vs **static box** AABBs (skips objects with `CharacterController3DComponent`). |
-| `SimulateCharacterControllers3D` | `spark/physics/CharacterController3D.hpp` | Kinematic character motor: slide + step offset vs static boxes/capsules. |
-| `SimulateTriggerVolumes3D` | `spark/physics/TriggerVolume3D.hpp` | Enter/exit overlap tests for probe bodies vs `TriggerVolume3DComponent`. |
+| `PhysicsSubsystem` | `PhysicsSubsystem.hpp` | Facade: 2D/3D worlds, queries, character controllers, triggers |
+| `PhysicsWorld2D::Simulate` | `PhysicsWorld2D.hpp` | Broad-phase bake → integrate → static contacts → dynamic pairs → joints |
+| `PhysicsQueryWorld2D` | `PhysicsQueries2D.hpp` | Overlap circle/AABB, raycast, arc vs static broad-phase; dynamic overlap queries |
+| `PhysicsWorld3D::Simulate` | `PhysicsWorld3D.hpp` | Sphere/capsule dynamics vs static boxes/capsules (skips `CharacterController3DComponent`) |
+| `CharacterControllerWorld3D::Simulate` | `CharacterController3D.hpp` | Kinematic character motor: slide + step offset |
+| `TriggerVolumeWorld3D::Simulate` | `TriggerVolume3D.hpp` | Enter/exit overlap tests |
+
+Deprecated wrappers (`SimulatePhysics2D`, `SimulatePhysics3D`, …) delegate to the classes above.
+
+Simulation subsystems live under `spark/physics/simulation/` (`RigidbodyIntegrator2D/3D`, `ContactResolver2D/3D`, `TriggerDispatcher2D`, `JointSolver2D/3D`, `SweptCcd3D`).
+
+Colliders are object-oriented: `Collider2D/3D`, `DynamicCollider2D/3D`, baked via `ColliderBakePipeline2D/3D`.
 
 Call these from your **`OnUpdate`** (or from a `GameComponent::OnUpdate`) **after** integrating player intent and **before** relying on transforms for render.
 

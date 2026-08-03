@@ -1,11 +1,25 @@
 # Physics 3D
 
-Call each frame from `OnUpdate` (order matters):
+Use `PhysicsSubsystem` and call each frame from `OnUpdate` (order matters):
 
 ```cpp
-SimulatePhysics3D(world, timing, settings);
-SimulateCharacterControllers3D(world, timing);
-SimulateTriggerVolumes3D(world, timing);
+#include "spark/physics/PhysicsSubsystem.hpp"
+
+PhysicsSubsystem physics;
+
+void OnUpdate(const FrameTiming& timing) {
+    physics.SimulateAll3D(world, timing);
+}
+```
+
+`SimulateAll3D` runs, in order: rigidbody simulation, character controllers, trigger volumes.
+
+Or step individually:
+
+```cpp
+physics.Simulate3D(world, timing);
+physics.SimulateCharacterControllers3D(world, timing);
+physics.SimulateTriggerVolumes3D(world, timing);
 ```
 
 ## Class Design: `Rigidbody3DComponent`
@@ -28,7 +42,7 @@ ball->AddComponent<SphereCollider3DComponent>(0.25F);
 auto* rb = ball->AddComponent<Rigidbody3DComponent>();
 rb->SetVelocity(camera.Forward() * 18.0F);
 
-SimulatePhysics3D(world, timing, settings);
+physics.Simulate3D(world, timing);
 ```
 
 See `PhysicsBallThrow3DDemo`.
@@ -40,45 +54,24 @@ For FPS / third-person walkers, use `CharacterController3DComponent` instead of 
 ```cpp
 auto* cc = player->AddComponent<CharacterController3DComponent>(0.4F, Vector3{0,0.9F,0});
 cc->SetMoveInput({inputX, 0.0F, inputZ});
-SimulateCharacterControllers3D(world, timing);
+physics.SimulateCharacterControllers3D(world, timing);
 ```
 
-Objects with `CharacterController3DComponent` are **excluded** from `SimulatePhysics3D` dynamic sphere resolution.
+Objects with `CharacterController3DComponent` are **excluded** from dynamic rigidbody simulation.
 
 ## Trigger Volumes
 
 ```cpp
-auto* zone = world.CreateGameObject();
-zone->AddComponent<TriggerVolume3DComponent>(TriggerVolume3DShape::Box, Vector3{4,2,4});
-zone->GetComponent<TriggerVolume3DComponent>()->SetOnEnter(
-    [](GameObject& other) { (void)other; });
+zone->AddComponent<TriggerVolume3DComponent>(TriggerVolume3DShape::Box, Vector3{3,2,3});
+physics.SimulateTriggerVolumes3D(world, timing);
 ```
 
-Also emits `SignalId::Physics3DTriggerEnter` / `Exit` to sibling components.
+## 3D Simulation Pipeline
 
-## Joints and springs
+Per substep, `PhysicsWorld3D` runs:
 
-```cpp
-PhysicsWorld3DSettings settings{};
-settings.jointIterations = 8;
-SimulatePhysics3D(world, timing, settings);
+1. `RigidbodyIntegrator3D` — gravity, damping, swept CCD, orientation
+2. `ContactResolver3D` — static impulses, penetration separation, dynamic pair velocities
+3. `JointSolver3D` — distance, hinge, spring constraints
 
-// Distance + hinge (position constraints):
-ballA->AddComponent<DistanceJoint3DComponent>(ballB, 2.0F);
-crateA->AddComponent<HingeJoint3DComponent>(crateB);
-
-// Spring (velocity-based, needs sphere colliders on both ends):
-bob->AddComponent<SpringJoint3DComponent>(anchor, 4.0F);
-```
-
-## Spatial Hash
-
-`SpatialHashGrid3D` accelerates static queries — rebuilt during simulation internally.
-
-## ECS vs demo cameras
-
-The FPS sample may use **FlyCamera** without rigidbody. For shipped games prefer `CameraComponent` + `SpringArm3DComponent` + `CameraFollow3DComponent` (see [Cameras in 3D](../3-3d-graphics/02-cameras-3d.md)).
-
-See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#physics-3d).
-
-Next: [Tips and Patterns](06-tips.md).
+Next: [Tips](06-tips.md).

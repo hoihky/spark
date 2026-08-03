@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/colliders/Collider2D.hpp"
 
 namespace Spark {
 
@@ -15,7 +15,7 @@ class SpatialHashGrid2D;
 void AppendPolygonCollider2DStatic(
         GameObject& owner,
         const PolygonCollider2DComponent& collider,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid);
 
 }  // namespace Spark

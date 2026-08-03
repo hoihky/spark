@@ -18,7 +18,7 @@
 #include "spark/ecs/components/ai/PatrolPathComponent.hpp"
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
-#include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/scene/Scene.hpp"
 
@@ -31,7 +31,7 @@ namespace Spark {
 /**
  * Procedural maze on XZ (Y up): static box walls (brick texture), wide corridors (~one cell ≈
  * <c>kCellWorld</c> meters per corridor cell), HDR sky, skinned human (CesiumMan / Fox),
- * <c>SimulatePhysics3D</c> torso sphere vs static boxes, gems, first-person camera.
+ * <c>PhysicsSubsystem::Simulate3D</c> torso sphere vs static boxes, gems, first-person camera.
  */
 class Maze3DDemo {
 public:
@@ -93,6 +93,7 @@ private:
     int gemsCollected = 0;
     int gemsTotal = 0;
     Spark::CharacterCameraRig rig{};
+    PhysicsSubsystem physics{};
 
     Spark::SoundEngine* audioEngine = nullptr;
 

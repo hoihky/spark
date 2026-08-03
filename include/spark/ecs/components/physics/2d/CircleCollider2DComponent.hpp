@@ -10,7 +10,7 @@ namespace Spark {
 /**
  * Circle in local XY (Z ignored), centered at offset with given radius in local units before transform scale.
  * Pairs with Rigidbody2D (dynamic) or used alone for static obstacles; do not mix with BoxCollider2D on the same
- * body for SimulatePhysics2D — if both exist, the circle takes precedence for simulation.
+ * body for <c>PhysicsWorld2D</c> simulation — if both exist, the circle takes precedence for simulation.
  */
 class CircleCollider2DComponent final : public GameComponent {
 public:

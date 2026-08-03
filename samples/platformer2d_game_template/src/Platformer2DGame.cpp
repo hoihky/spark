@@ -17,7 +17,7 @@
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
-#include "spark/physics/PhysicsWorld2D.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Texture2D.hpp"
@@ -187,6 +187,10 @@ void Platformer2DGame::OnAttach(IEngineContext& context) {
     hudText->SetText(Utf8String("2D platformer — A/D move · Space jump · reach right -> goal"));
     roots.PushBack(hud);
 
+    PhysicsWorld2DSettings& phys = physics.GetWorld2D().GetSettings();
+    phys.gravityY = -30.0F;
+    phys.maxFallSpeed = 42.0F;
+
     camera.position = {kPlayerSpawnX, spawnY + 1.0F, 0.0F};
     camera.halfExtentY = 6.5F;
     camera.rotationRad = 0.0F;
@@ -241,10 +245,7 @@ void Platformer2DGame::OnUpdate(const FrameTiming& timing, IEngineContext& conte
         }
         playerRb->SetVelocity(v);
 
-        PhysicsWorld2DSettings phys{};
-        phys.gravityY = -30.0F;
-        phys.maxFallSpeed = 42.0F;
-        SimulatePhysics2D(GetWorld(), timing, phys);
+        physics.Simulate2D(GetWorld(), timing);
 
         const Vector3 p = playerTr->GetLocalTransform().translation;
         if (p.y < kFallRespawnY) {

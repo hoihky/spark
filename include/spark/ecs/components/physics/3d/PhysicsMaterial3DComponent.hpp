@@ -6,7 +6,7 @@ namespace Spark {
 
 /**
  * Surface properties for 3D physics contacts (static boxes and dynamic spheres). Paired with another body via
- * geometric-mean combine in <c>SimulatePhysics3D</c>. When absent on a static collider, legacy restitution-only
+ * geometric-mean combine in <c>PhysicsWorld3D</c>. When absent on a static collider, legacy restitution-only
  * behavior is used for that surface (no extra friction model).
  */
 class PhysicsMaterial3DComponent final : public GameComponent {

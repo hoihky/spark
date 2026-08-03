@@ -27,7 +27,7 @@ void AppendTilemapCollider2DStatics(
         GameObject& owner,
         const TilemapCollider2DComponent& collider,
         const TilemapComponent& tilemap,
-        Array<StaticCollider2D>& outStatics,
+        Array<Collider2D>& outColliders,
         SpatialHashGrid2D& outGrid) {
     const std::uint32_t mapWidth = tilemap.GetMapWidth();
     const std::uint32_t mapHeight = tilemap.GetMapHeight();
@@ -59,7 +59,7 @@ void AppendTilemapCollider2DStatics(
                         y,
                         cell,
                         definition,
-                        outStatics,
+                        outColliders,
                         outGrid);
             }
         }

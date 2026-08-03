@@ -1,13 +1,35 @@
 # Physics Queries
 
-## Class Design: `PhysicsQueries2D`
+## Service: `PhysicsQueryWorld2D`
+
+Owned by `PhysicsSubsystem::GetQueries2D()`. Rebuilds a static broad-phase once, then runs overlap and raycast queries without re-walking ECS statics on every call.
+
+```cpp
+#include "spark/physics/PhysicsSubsystem.hpp"
+
+PhysicsSubsystem physics;
+
+PhysicsQueryFilter2D filter{};
+filter.queryCategoryBits = 1u << 0;
+filter.hitSolids = true;
+filter.hitTriggers = false;
+
+Array<PhysicsQueryHit2D> hits;
+physics.GetQueries2D().RebuildStatics(world);
+physics.GetQueries2D().OverlapCircleStatics(footX, footY, 0.5F, filter, hits);
+```
+
+When using `PhysicsSubsystem`, `Simulate2D` keeps query cell size aligned with simulation. For standalone `PhysicsQueryWorld2D`, set `SetCellWorldSize` to match your `PhysicsWorld2D::GetBroadPhaseCellSize()`.
+
+## Hit Types
 
 ```cpp
 struct PhysicsRaycastHit2D {
-    GameObject* gameObject = nullptr;
-    float hitX = 0, hitY = 0;
-    float normalX = 0, normalY = 1;
-    float distance = 0;
+    float distanceAlongRay = 0.0F;
+    float hitX = 0.0F;
+    float hitY = 0.0F;
+    std::uint32_t staticColliderIndex = 0;
+    GameObject* owner = nullptr;
 };
 
 struct PhysicsQueryFilter2D {
@@ -18,36 +40,45 @@ struct PhysicsQueryFilter2D {
 };
 ```
 
-## Raycast World Convenience
+## Raycast
+
+```cpp
+PhysicsRaycastHit2D hit{};
+physics.GetQueries2D().RebuildStatics(world);
+if (physics.GetQueries2D().RaycastStatics(ox, oy, dx, dy, maxDist, filter, hit)) {
+    GameObject* struck = hit.owner;
+    (void)struck;
+}
+```
+
+## One-Shot World Raycast (Legacy)
+
+Free functions rebuild broad-phase internally each call — fine for tools, prefer `PhysicsQueryWorld2D` in hot paths:
 
 ```cpp
 #include "spark/physics/PhysicsQueries2D.hpp"
 
 PhysicsRaycastHit2D hit{};
-if (PhysicsQueries2D::RaycastWorld2D(
-        world, originX, originY, dirX, dirY, maxDist, filter, hit)) {
-    GameObject* struck = hit.gameObject;
-    (void)struck;
-}
+RaycastWorld2D(world, ox, oy, dx, dy, maxDist, filter, hit);
 ```
 
-## Static Broadphase (Manual)
+## Static Broad-Phase (Manual)
 
 ```cpp
-StaticBroadPhase2D broad;
-broad.Rebuild(world, 4.0F);  // cellWorldSize
+BroadPhase2D broad;
+broad.Rebuild(world, 4.0F);
 
 PhysicsRaycastHit2D hit{};
-PhysicsQueries2D::RaycastStatics2D(broad, ox, oy, dx, dy, maxDist, filter, hit);
+RaycastStatics2D(broad, ox, oy, dx, dy, maxDist, filter, hit);
 ```
 
-## Overlap Queries
+## Dynamic Overlaps
 
 ```cpp
-Array<GameObject*> hits;
-PhysicsQueries2D::QueryOverlapCircleDynamics2D(world, cx, cy, radius, filter, hits);
-PhysicsQueries2D::QueryOverlapArcStatics2D(broad, cx, cy, radius,
-    startAngleRad, sweepRad, filter, hits);
+Array<PhysicsQueryHitDynamic2D> dynamics;
+physics.GetQueries2D().OverlapCircleDynamics(world, cx, cy, radius, filter, nullptr, dynamics);
+physics.GetQueries2D().OverlapArcDynamics(
+        world, cx, cy, radius, dirX, dirY, halfAngleRad, filter, nullptr, dynamics);
 ```
 
 Arc queries support cone attacks and vision checks.
@@ -55,8 +86,7 @@ Arc queries support cone attacks and vision checks.
 ## Ground Check Pattern
 
 ```cpp
-bool grounded = PhysicsQueries2D::RaycastWorld2D(
-    world, footX, footY, 0.0F, -1.0F, 0.08F, filter, hit);
+bool grounded = RaycastWorld2D(world, footX, footY, 0.0F, -1.0F, 0.08F, filter, hit);
 ```
 
 Or use `Rigidbody2DComponent::IsGrounded()` after simulation.

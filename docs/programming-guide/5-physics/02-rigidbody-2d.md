@@ -21,23 +21,34 @@ float GetGravityScale() const noexcept;
 
 ## Player Controller (Platformer)
 
+Configure physics once, then step each frame:
+
 ```cpp
-Vector2 v = playerRb->GetVelocity();
-float run = 0.0F;
-if (in.IsKeyDown(GLFW_KEY_A)) run -= 1.0F;
-if (in.IsKeyDown(GLFW_KEY_D)) run += 1.0F;
-v.x = run * kRunSpeed;  // kRunSpeed = 9.0F in sample
+#include "spark/physics/PhysicsSubsystem.hpp"
 
-if (playerRb->IsGrounded() && in.IsKeyPressedThisFrame(GLFW_KEY_SPACE))
-    v.y = kJumpSpeed;   // kJumpSpeed = 11.5F
+PhysicsSubsystem physics;
 
-playerRb->SetVelocity(v);
+void OnLoad() {
+    physics.GetWorld2D().GetSettings().gravityY = -30.0F;
+    physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
+}
 
-PhysicsWorld2DSettings phys{};
-phys.gravityY = -30.0F;
-phys.maxFallSpeed = 42.0F;
-SimulatePhysics2D(GetWorld(), timing, phys);
+void OnUpdate(const FrameTiming& timing) {
+    Vector2 v = playerRb->GetVelocity();
+    float run = 0.0F;
+    if (in.IsKeyDown(GLFW_KEY_A)) run -= 1.0F;
+    if (in.IsKeyDown(GLFW_KEY_D)) run += 1.0F;
+    v.x = run * kRunSpeed;
+
+    if (playerRb->IsGrounded() && in.IsKeyPressedThisFrame(GLFW_KEY_SPACE))
+        v.y = kJumpSpeed;
+
+    playerRb->SetVelocity(v);
+    physics.Simulate2D(GetWorld(), timing);
+}
 ```
+
+See `Platformer2DDemo` for a full sample using `PhysicsSubsystem`.
 
 ## Static Platform
 

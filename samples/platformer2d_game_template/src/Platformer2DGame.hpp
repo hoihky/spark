@@ -4,6 +4,7 @@
 #include "spark/engine/Game.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/scene/Camera2D.hpp"
 #include "spark/scene/Texture2D.hpp"
 
@@ -47,6 +48,7 @@ private:
     bool goalReached = false;
     float playerBaseScaleX = 0.88F;
     float playerBaseScaleY = 1.05F;
+    PhysicsSubsystem physics{};
 };
 
 }  // namespace Spark
