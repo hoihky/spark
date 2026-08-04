@@ -1,6 +1,6 @@
 # Spark Editor — Gap Analysis & Implementation Plan
 
-Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retained GUI (`spark/gui/`), delivered as a **separate executable** linking **`SparkEngine` as a shared library**.
+Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retained UI (`spark/ui/`), delivered as a **separate executable** linking **`SparkEngine` as a shared library**.
 
 **Related:** [`GUI_EDITOR_ROADMAP.md`](GUI_EDITOR_ROADMAP.md) (GUI milestones E0–E6), [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md), demo **#12** `SceneEditor3DDemo` (prototype).
 
@@ -12,7 +12,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 |-------|--------|---------------|
 | Engine loop / ECS / `GameWorld` | **Ready** | Core simulation model |
 | Vulkan forward renderer | **Ready** | Viewport scissor for center pane; offscreen RT later |
-| GUI toolkit | **Usable** | Docking (`DockManager`), `MenuBar`, context menu, text overflow |
+| UI toolkit | **Usable** | Docking (`SparkDockWorkspace` / `IDockWorkspace`), panels, context menu, text overflow |
 | Scene serialization v4 | **Partial** | **23** component handlers; text format (reads v3) |
 | `SceneEditor3DDemo` | **Prototype** | Pick, translate gizmo, save/load — reference for viewport service |
 | **`SparkEditor` (M0)** | **Started** | `EditorApplication`, dock shell, hierarchy/inspector stubs, fly camera |
@@ -32,11 +32,11 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 - `Scene` + `SubmitStandardLitSceneFromWorld` — no Vulkan in editor code.
 - `FlyCamera`, `MeshRaycast`, lighting profiles, 2D/3D cameras.
 
-### GUI
-- Full control set: `TreeView`, `MenuBar`, `TabControl`, `Splitter`, `EditorSidebarLayout`, `GuiTheme::SceneEditorDark()`.
-- **Docking:** `DockManager`, `DockFrameLayout`, `DockSidePane`, `DockPanel` — used by `EditorDockShell`.
-- `GuiCanvasComponent` + `GuiConsumesGamePointer()` for viewport input gating.
-- `GuiContextMenu`, text overflow (`DrawTextInRect`, `EllipsizeUtf8`).
+### UI
+- Full control set via `SparkUiControlsFactory`: `TreeView`, panels, scroll regions, sliders, lists.
+- **Docking:** `SparkDockWorkspace` / `IDockWorkspace` — used by `EditorDockShell`.
+- `UiCanvasComponent` + `UiConsumesGamePointer()` for viewport input gating.
+- `UiContextMenu`, text overflow via `UiPaintContext`.
 - `EditorLayoutStore` — persists `editor_layout.ini`.
 
 ### Scene authoring prototype (`SceneEditor3DDemo`)
@@ -45,7 +45,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 
 ### Serialization
 - `SceneSerializer` / `ComponentSnapshotRegistry` — **23** handlers: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig. Runtime: `SceneManager`, `GameWorldAssetLoader`.
-- Extensible handler pattern for remaining kinds (`GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, …).
+- Extensible handler pattern for remaining kinds (`UiCanvas`, `Tilemap`, 2D physics, `AiAgent`, …).
 
 ### Build
 - `SPARK_BUILD_ENGINE_SHARED` — proven in `game_template/`, `samples/*`.
@@ -71,10 +71,10 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 | **Hierarchy panel** | `HierarchyPanel` + `TreeView` stub; CRUD / reparent pending | **M2** (started) |
 | **Inspector / property grid** | `InspectorPanel` text dump of selection | **M2–M3** (started) |
 | **`EditorSelection` service** | Primary selection wired to inspector | **M2** ✓ |
-| **Dock workspace** | `EditorDockShell` + `DockManager` (menu, left/center/right) | **M0** ✓ |
+| **Dock workspace** | `EditorDockShell` + `SparkDockWorkspace` (menu, left/center/right) | **M0** ✓ |
 | **Embedded viewport service** | `worldViewportScissor` + passthrough center pane | **M2** (partial) |
 | **Undo/redo command stack** | None | **M3** |
-| **Serialization coverage** | 23 / 37 components; no `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | **M3** |
+| **Serialization coverage** | 23 / 37 components; no `UiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | **M3** |
 | **Play-in-editor (PIE)** | No world snapshot / script run from editor | **M5** |
 | **Prefab / `.sparkscene` asset** | Loose `scene.txt` only | **M3** |
 
@@ -111,7 +111,7 @@ Material graph, visual scripting, plugins, tilemap/terrain brushes, LSP, CI scen
 │  spark/editor services EditorApplication, Selection,     │
 │                          Project, CommandStack (future)  │
 ├─────────────────────────────────────────────────────────┤
-│  spark/gui             retained widgets + themes         │
+│  spark/ui              retained IUiElement tree + themes │
 ├─────────────────────────────────────────────────────────┤
 │  SparkEngine.dylib     ECS, scene, render, audio, …      │
 └─────────────────────────────────────────────────────────┘
@@ -163,7 +163,7 @@ Material graph, visual scripting, plugins, tilemap/terrain brushes, LSP, CI scen
 
 - [ ] `HierarchyPanel` ↔ `GameWorld` CRUD
 - [ ] `EditorSelection` multi-select
-- [ ] Viewport sub-rect + `GuiConsumesGamePointer` for chrome only
+- [ ] Viewport sub-rect + `UiConsumesGamePointer` for chrome only
 - [ ] Port pick/gizmo from `SceneEditor3DDemo`
 
 ### M3 — Authoring

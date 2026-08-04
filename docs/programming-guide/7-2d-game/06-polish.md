@@ -7,29 +7,42 @@ auto* cue = playerObject->AddComponent<SoundCueComponent>();
 if (justJumped) cue->Queue(SoundClip::CreateToneBlip(520, 0.07F, 0.5F));
 ```
 
-## Pause Menu (GUI)
+## Pause Menu (UI)
 
 ```cpp
-#include "spark/gui/GuiControls.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
-#include "spark/gui/GuiScene.hpp"
+#include "spark/ui/Ui.hpp"
 
 auto* uiGo = world.CreateGameObject();
-auto* canvas = uiGo->AddComponent<GuiCanvasComponent>();
-auto root = MakeUnique<Gui::StackPanel>();
-auto btn = MakeUnique<Gui::Button>();
-btn->SetLabel(Utf8String("Resume"));
-btn->SetOnClick([] { paused = false; });
-root->AddChild(MoveTemp(btn));
-canvas->SetRoot(MoveTemp(root));
+auto* canvas = uiGo->AddComponent<UiCanvasComponent>();
+
+Ui::IUiControlsFactory& factory =
+    Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String("pause");
+panelDesc.title = Utf8String("Paused");
+panelDesc.centerInParent = true;
+panelDesc.width = 280.0F;
+auto panel = factory.CreatePanel(panelDesc);
+
+Ui::ButtonDesc btnDesc{};
+btnDesc.id = Utf8String("resume");
+btnDesc.label = Utf8String("Resume");
+auto btn = factory.CreateButton(btnDesc);
+Ui::UiVoidCallback resumeCb{};
+resumeCb.fn = [](void*) { paused = false; };
+btn->SetOnClick(resumeCb);
+Ui::AdoptUiChild(*panel, MoveTemp(btn));
+
+canvas->SetRoot(MoveTemp(panel));
 ```
 
 Frame flow:
 
 ```cpp
-ProcessGuiCanvasesInput(GetScene(), input, fbW, fbH);
+ProcessUiCanvasesInput(GetScene(), input, fbW, fbH);
 // ... fill params ...
-PaintGuiCanvases(GetWorld(), params, fbW, fbH);
+PaintUiCanvases(GetWorld(), params, fbW, fbH);
 ```
 
 ## Replace Procedural Art

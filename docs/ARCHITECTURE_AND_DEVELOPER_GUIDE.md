@@ -13,7 +13,7 @@ Spark is a **C++23** codebase that provides:
 - An **entity–component** style scene (`GameWorld`, `GameObject`, `GameComponent`).
 - **Forward-lit 3D** with directional + optional **shadow map**, **point** and **spot** lights, **PBR** and **toon** shading, optional **normal** and **ORM** texture maps on draws.
 - **Optional** 2D and **3D** toy physics (`PhysicsSubsystem`, `PhysicsWorld2D`, `PhysicsWorld3D`).
-- A **retained-mode GUI** (`GuiCanvasComponent`, widgets under `spark/gui/`).
+- A **retained-mode UI** (`UiCanvasComponent`, controls under `spark/ui/`).
 - Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
 
@@ -191,7 +191,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Entity storage** | Create/destroy objects, hierarchy, tick components | `GameWorld` (`spark/scene/GameWorld.hpp`) |
 | **Entity** | Named node + component bag + world matrix | `GameObject` (`spark/ecs/GameObject.hpp`) |
 | **Local transform** | TRS; parent chain → `GetWorldMatrix` | `TransformComponent` |
-| **Render-side queries** | Iterate drawables, lights, UI roots without owning entities | `Scene` (`spark/scene/Scene.hpp`) — `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachGuiCanvas` |
+| **Render-side queries** | Iterate drawables, lights, UI roots without owning entities | `Scene` (`spark/scene/Scene.hpp`) — `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachUiCanvas` |
 | **Optional culling** | Frustum-limited variants + partition policy | `SetSpatialPartitionKind`, `ForEachDrawableInViewFrustum`, `SceneSpatialPolicyComponent`, `ScenePartitionKind` |
 | **Sibling messaging** | Decouple components on the same object | `EmitSignal` / `OnSignal` (`spark/ecs/Signal.hpp`) |
 
@@ -268,18 +268,20 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **3D animation roadmap** | Milestones M1–M6 (API, FSM, blend, events, scale, tooling) | [`docs/ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) — **M1 complete** |
 | **Character camera** | Third-person style rig (demos) | `CharacterCameraRig` (`spark/scene/CharacterCameraRig.hpp`) |
 
-### 5.9 GUI (retained mode)
+### 5.9 UI (retained mode, `spark/ui/`)
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
-| **Widget tree** | Layout + controls | `spark/gui/` — `Widget`, `GuiControls.hpp`, themes (`GuiTheme.hpp`, `GuiThemeCatalog.hpp`) |
-| **Label tone** | Theme-aware text color at paint time | `LabelTone` (`Primary` / `Muted` / `Custom`) on `Label` / `WrappingLabel` (`GuiTypes.hpp`) |
-| **Screen canvas** | Root + sort order | `GuiCanvasComponent` |
-| **Input → focus** | Hit testing, focus; skips when `GuiToolkitSettings` prefers ImGui | `ProcessGuiCanvasesInput` (`spark/gui/GuiScene.hpp`) |
-| **Paint → params** | Emit rects/text into `SceneRenderParams` | `PaintGuiCanvases` |
-| **Toolkit routing** | Choose retained vs ImGui input policy | `GuiToolkitSettings`, `GuiToolkitKind` (`spark/gui/toolkit/`) |
-| **Editor module** | `SparkEditor` shell: dock UI, hierarchy/inspector stubs, viewport camera | `spark/editor/`, `spark_editor/SparkEditor` — see [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md) |
-| **Editor roadmap** | Scene / material / animation / script tools on retained GUI | [`docs/GUI_EDITOR_ROADMAP.md`](GUI_EDITOR_ROADMAP.md) |
+| **Element tree** | Measure, arrange, paint, hit-test | `IUiElement`, `UiElementBase`, `IUiControlsFactory` (`spark/ui/`) |
+| **Controls** | Factory-created widgets | `SparkUiControlsFactory`, `DearImguiControlsFactory` — `Panel`, `Button`, `Slider`, `List`, `TreeView`, `ScrollPanel`, `DockWorkspace`, … |
+| **Themes** | Semantic colors for controls | `UiTheme`, `UiThemeCatalog` (`spark/ui/core/`) |
+| **Screen canvas** | ECS root + sort order | `UiCanvasComponent` |
+| **Input routing** | Hit testing, focus, scroll, capture | `UiInputRouter` via `ProcessUiCanvasesInput` (`spark/ui/runtime/UiScene.hpp`) |
+| **Paint → params** | Screen rects/text into `SceneRenderParams` | `PaintUiCanvases`, `SparkUiRenderer`, `UiPaintContext` |
+| **Toolkit routing** | Spark native vs Dear ImGui backend | `UiSystem`, `UiToolkitSettings`, `UiBackendKind` |
+| **Context menu** | Global overlay RMB menu | `UiContextMenu` |
+| **Editor module** | `SparkEditor` dock shell, hierarchy/inspector | `spark/editor/` — see [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md) |
+| **Architecture** | Migration complete (Phase 6) | [`GUI_TOOLKIT_ARCHITECTURE.md`](GUI_TOOLKIT_ARCHITECTURE.md) |
 
 ### 5.10 Dear ImGui (optional tool UI)
 
@@ -375,7 +377,7 @@ engine.Run();
 
 `Scene` (`spark/scene/Scene.hpp`) wraps a `GameWorld` and adds **render queries**:
 
-- `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachGuiCanvas`, etc.
+- `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachUiCanvas`, etc.
 - Optional **view-frustum** variants (`SetSpatialPartitionKind`, `ForEachDrawableInViewFrustum`, …) driven by `SceneSpatialPolicyComponent` / `ScenePartitionKind`.
 
 Use these iterators to build **`SceneRenderParams`** manually (demos often do this for full control).
@@ -458,7 +460,7 @@ Representative **3D / rendering** components:
 | `TextOverlayComponent` | Screen-space HUD text (separate from GUI canvas). |
 | `ParticleEmitterComponent` | CPU particles; standard submit fills `SceneRenderParams::particles`. |
 | `TerrainComponent` | Heightfield terrain mesh. |
-| `GuiCanvasComponent` | Root widget tree for retained GUI (`spark/gui/`). |
+| `UiCanvasComponent` | Root `IUiElement` tree for retained UI (`spark/ui/`). |
 
 **Gameplay / world policy:**
 
@@ -536,7 +538,7 @@ flowchart TB
     GC --> T[TransformComponent]
     GC --> M[MeshComponent / SkinnedMeshComponent]
     GC --> L[PointLight / SpotLight]
-    GC --> U[GuiCanvasComponent]
+    GC --> U[UiCanvasComponent]
 ```
 
 ---
@@ -550,7 +552,7 @@ flowchart TB
 3. Clear / reserve fields on `SceneRenderParams` (`draws`, `pointLights`, `spotLights`, `screenTexts`, `sceneTextures`, …).
 4. Use `scene.ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachDrawable`, … to push `SceneDrawItem`, lights, etc.
 5. Set `params.uiFont` / `params.uiBoldFont` from `world.GetUiFont()` when using text or GUI.
-6. Optional: `PaintGuiCanvases(world, params, fbW, fbH)` after building the 3D lists if you use `GuiCanvasComponent`.
+6. Optional: `PaintUiCanvases(world, params, fbW, fbH)` after building the 3D lists if you use `UiCanvasComponent`.
 7. **`context.SetSceneRenderParams(params)`** — the presenter uploads and draws.
 
 See `include/spark/demo/ThreeDDemo.hpp` and related demos for full examples (sorting helpers live in `spark/demo/ShellDemoSceneUtil.hpp`).
@@ -686,18 +688,32 @@ Call these from your **`OnUpdate`** (or from a `GameComponent::OnUpdate`) **afte
 
 ---
 
-## 12. GUI (`spark/gui/`)
+## 12. UI (`spark/ui/`)
 
-- Compose widgets (`Panel`, `StackPanel`, `GridPanel`, `GroupBox`, `Label`, `WrappingLabel`, `Button`, `MenuBar`, `Slider`, `RadioGroup`/`RadioButton`, `NumericStepper`, `Separator`, …) — see `spark/gui/GuiControls.hpp`.
-- **Themes** — six built-in presets in `GuiThemeCatalog` (`ClassicMint`, `SceneEditorDark`, `HighContrastLight`, `HighContrastDark`, `HighContrastYellowOnBlack`, `TwilightSlate`); `Label` / `WrappingLabel` resolve colors via `LabelTone`.
-- **Docking** — `DockManager`, `DockPanel`, `DockSidePane`, `DockFrameLayout` (`spark/gui/docking/`) for editor-style left/center/right workspaces with persisted layout state.
-- **Text layout** — `DrawTextInRect`, `EllipsizeUtf8`, `TextOverflow` / `TextWrap` on labels and buttons.
-- **Context menu** — `GuiContextMenu` (right-click menus; wired from `GuiScene.cpp`).
-- Attach a **`GuiCanvasComponent`** to a `GameObject` and **`SetRoot(UniquePtr<Widget>)`**.
-- Each frame: **`ProcessGuiCanvasesInput(world, input, fbW, fbH)`** (shell already does this for shared worlds).
-- When building `SceneRenderParams`: **`PaintGuiCanvases(world, params, fbW, fbH)`** so widgets render in framebuffer space.
+Spark’s retained UI uses an **Abstract Factory** pattern: gameplay builds a tree of `IUiElement` controls from `IUiControlsFactory`, attaches it to **`UiCanvasComponent`**, then drives input and paint each frame.
 
-Sort order: `GuiCanvasComponent::SetSortOrder` — lower draws first. Overlay/late layers via `GuiPaintContext::PushOverlayLayer` / `PushLateLayer`.
+- **Controls** — create via factory (`SparkUiControlsFactory` or `DearImguiControlsFactory`): `Panel`, `Button`, `Label`, `Slider`, `CheckBox`, `ScrollPanel`, `List`, `MultiSelectList`, `TreeView`, `DockWorkspace`, …
+- **Themes** — six built-in presets in `UiThemeCatalog` (`ClassicMint`, `SceneEditorDark`, `HighContrastLight`, `HighContrastDark`, `HighContrastYellowOnBlack`, `TwilightSlate`).
+- **Docking** — `IDockWorkspace` / `SparkDockWorkspace` for editor-style left/center/right panes; layout persisted via `EditorLayoutStore`.
+- **Paint** — `SparkUiRenderer` adapts `IUiRenderer` → `UiPaintContext` → `SceneRenderParams` for `VulkanScreenUiPass`.
+- **Context menu** — `UiContextMenu` global overlay (right-click menus; input via `UiInputRouter`).
+
+```cpp
+#include "spark/ui/Ui.hpp"
+
+auto* canvas = uiRoot->AddComponent<UiCanvasComponent>();
+canvas->SetRoot(MoveTemp(panel));  // UniquePtr<IUiElement> from factory
+
+ProcessUiCanvasesInput(world, input, fbW, fbH, contentScaleX, contentScaleY);
+if (!UiScrollWheelConsumed()) { /* camera zoom */ }
+PaintUiCanvases(world, params, fbW, fbH);
+```
+
+Sort order: `UiCanvasComponent::SetSortOrder` — lower draws first. Overlay/late layers via `UiPaintContext::PushOverlayLayer` / `PushLateLayer`.
+
+Input gating: `UiConsumesGamePointer()`, `UiPointerOverUi()`, `UiScrollWheelConsumed()`.
+
+See [`GUI_TOOLKIT_ARCHITECTURE.md`](GUI_TOOLKIT_ARCHITECTURE.md) for the full layer diagram and migration phases.
 
 **UI GPU note:** `VulkanScreenUiPass` draws all solid rects then all text per layer (main, overlay, late) for stable Vulkan batching. Dear ImGui draws **after** screen UI in the present subpass when enabled.
 
@@ -708,9 +724,9 @@ Sort order: `GuiCanvasComponent::SetSortOrder` — lower draws first. Overlay/la
 Optional when `SPARK_ENABLE_IMGUI=ON` (default):
 
 - **`IImGuiLayer`** — `SetEnabled`, `BeginFrame`, `EndFrame`, `WantsCaptureMouse` / `WantsCaptureKeyboard`, `InstallPlatformCallbacks`.
-- **`GuiToolkitSettings`** — `SetPreferred(DearImGui | SparkNative)`; when Dear ImGui is preferred, `ProcessGuiCanvasesInput` skips retained canvas hit tests.
+- **`Ui::UiToolkitSettings`** — `SetPreferred(UiBackendKind::DearImGui | SparkNative)`; switches `UiSystem` active backend. `ShouldProcessSparkUiInput()` returns `false` when Dear ImGui is preferred.
 - **Frame contract:** engine calls `BeginFrame` after `OnUpdate`, game builds UI in `OnRender`, engine calls `EndFrame` before `PresentFrame`.
-- **Factory:** `CreateImGuiLayer()` → `ImGuiVulkanLayer` (GLFW + Vulkan backends); null object when ImGui is compiled out.
+- **Retained ImGui controls** — `DearImguiControlsFactory` paints `ImguiButton`, `ImguiPanel`, `ImguiDockWorkspace`, etc. during `UiSystem::Paint`.
 
 Demo: **`ImGuiShowcaseDemo`** (launcher **#19**, key **G**). See programming guide chapter [UI and Toolkits](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
 
@@ -734,7 +750,7 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#19**, key **G**). See programming gui
 5. `include/spark/render/core/VulkanRenderer.hpp` + `src/spark/render/core/VulkanRenderer.cpp` (implementation detail; large)
 6. `include/spark/demo/ThreeDDemo.hpp` — camera + glTF + lights + manual submit pattern
 7. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
-8. `spark/gui/GuiScene.hpp` + `spark/demo/ShellDemoUi.hpp` — retained GUI layout helpers
+8. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
 9. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
 10. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
 ---

@@ -42,7 +42,7 @@ public:
 
     /**
      * Dear ImGui layer when <c>SPARK_ENABLE_IMGUI</c> is on (always non-null; may be a no-op null object).
-     * Enable per game via <c>IImGuiLayer::SetEnabled</c> and <c>GuiToolkitSettings</c>.
+     * Enable per game via <c>IImGuiLayer::SetEnabled</c> and <c>Ui::UiToolkitSettings</c>.
      */
     [[nodiscard]] virtual IImGuiLayer* TryGetImGuiLayer() noexcept = 0;
 };

@@ -382,24 +382,37 @@
 <pre><code class="language-cpp">auto* cue = playerObject-&gt;AddComponent&lt;SoundCueComponent&gt;();
 if (justJumped) cue-&gt;Queue(SoundClip::CreateToneBlip(520, 0.07F, 0.5F));
 </code></pre>
-<h2 id="pause-menu-gui">Pause Menu (GUI)</h2>
-<pre><code class="language-cpp">#include "spark/gui/GuiControls.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
-#include "spark/gui/GuiScene.hpp"
+<h2 id="pause-menu-ui">Pause Menu (UI)</h2>
+<pre><code class="language-cpp">#include "spark/ui/Ui.hpp"
 
 auto* uiGo = world.CreateGameObject();
-auto* canvas = uiGo-&gt;AddComponent&lt;GuiCanvasComponent&gt;();
-auto root = MakeUnique&lt;Gui::StackPanel&gt;();
-auto btn = MakeUnique&lt;Gui::Button&gt;();
-btn-&gt;SetLabel(Utf8String("Resume"));
-btn-&gt;SetOnClick([] { paused = false; });
-root-&gt;AddChild(MoveTemp(btn));
-canvas-&gt;SetRoot(MoveTemp(root));
+auto* canvas = uiGo-&gt;AddComponent&lt;UiCanvasComponent&gt;();
+
+Ui::IUiControlsFactory&amp; factory =
+    Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
+
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String("pause");
+panelDesc.title = Utf8String("Paused");
+panelDesc.centerInParent = true;
+panelDesc.width = 280.0F;
+auto panel = factory.CreatePanel(panelDesc);
+
+Ui::ButtonDesc btnDesc{};
+btnDesc.id = Utf8String("resume");
+btnDesc.label = Utf8String("Resume");
+auto btn = factory.CreateButton(btnDesc);
+Ui::UiVoidCallback resumeCb{};
+resumeCb.fn = [](void*) { paused = false; };
+btn-&gt;SetOnClick(resumeCb);
+Ui::AdoptUiChild(*panel, MoveTemp(btn));
+
+canvas-&gt;SetRoot(MoveTemp(panel));
 </code></pre>
 <p>Frame flow:</p>
-<pre><code class="language-cpp">ProcessGuiCanvasesInput(GetScene(), input, fbW, fbH);
+<pre><code class="language-cpp">ProcessUiCanvasesInput(GetScene(), input, fbW, fbH);
 // ... fill params ...
-PaintGuiCanvases(GetWorld(), params, fbW, fbH);
+PaintUiCanvases(GetWorld(), params, fbW, fbH);
 </code></pre>
 <h2 id="replace-procedural-art">Replace Procedural Art</h2>
 <p>Swap <code>CreateCheckerboard</code> for <code>Texture2D::TryLoadFromFile("assets/tiles.png", ...)</code>.</p>
@@ -431,7 +444,7 @@ PaintGuiCanvases(GetWorld(), params, fbW, fbH);
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#pause-menu-gui">Pause Menu (GUI)</a>
+                          <a href="#pause-menu-ui">Pause Menu (UI)</a>
                         </li>
                         
                         <li class="toc-h2">

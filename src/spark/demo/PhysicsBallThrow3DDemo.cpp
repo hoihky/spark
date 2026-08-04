@@ -1,9 +1,9 @@
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
 
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/demo/DemoGuiFrame.hpp"
-#include "spark/gui/api/GuiApi.hpp"
-#include "spark/gui/GuiLayoutMetrics.hpp"
+#include "spark/ui/factory/ControlDesc.hpp"
+#include "spark/ui/factory/IUiControlsFactory.hpp"
+#include "spark/ui/runtime/IUiBackend.hpp"
 
 namespace Spark {
 
@@ -152,6 +152,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
                 "Physics — panel right · LMB throw · R reset · SpringJoint3D pendulum left · WASD+mouse · F1 · ESC"));
         roots.PushBack(hud);
 
+        BuildRetainedUi(w);
         ApplyTuningFromGui();
 
         camera.position = {0.0F, 2.1F, 10.0F};
@@ -177,6 +178,8 @@ void PhysicsBallThrow3DDemo::Unload(Spark::GameWorld& w)
         ballTr = nullptr;
         pendulumBobRb = nullptr;
         fpsText = nullptr;
+        uiCanvas = nullptr;
+        uiRoot = nullptr;
     }
 
 void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
@@ -364,38 +367,93 @@ void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
-        BuildPortableUi(context, params, world);
+        PaintUiCanvases(world, params, fbW, fbH);
         context.SetSceneRenderParams(params);
     }
 
-void PhysicsBallThrow3DDemo::BuildPortableUi(
-        Spark::IEngineContext& context,
-        SceneRenderParams& params,
-        const Spark::GameWorld& world) {
-    const Gui::GuiFrameContext frame = DemoGui::MakeFrameContext(context, params, world, 0.0F);
-    Gui::GuiSystem::Get().BeginImmediateFrame(frame);
-    Gui::IGuiFrame& ui = Gui::Ui();
+namespace {
 
-    const Gui::GuiLayoutMetrics& layout = Gui::GetActiveGuiLayoutMetrics();
-    const float panelW = DemoGui::kDemoSidePanelWidth * layout.uiScale;
-    const float panelX = static_cast<float>((std::max)(1, frame.framebufferWidth)) - panelW - layout.Padding();
-    const float panelY = layout.Padding();
-    const float panelH =
-            static_cast<float>((std::max)(1, frame.framebufferHeight)) - panelY * 2.0F;
-    ui.SetNextPanelSize(panelW, panelH);
-    ui.SetCursorPos(panelX, panelY);
-    if (ui.BeginPanel("phys_tune", "Physics tuning")) {
-        ui.Text("F1 toggles mouse capture. Sliders use SI units.");
-        ui.Separator();
-        ui.SliderFloat("grav", "Gravity Y (m/s²)", guiGravityY, -18.0F, -4.0F);
-        ui.SliderFloat("mass", "Ball mass (kg)", guiBallMass, 0.2F, 8.0F);
-        ui.SliderFloat("throw", "Throw speed (m/s)", guiThrow, 3.0F, 28.0F);
-        ui.SliderFloat("bounce", "Cube bounciness", guiCubeBounce, 0.0F, 1.0F);
-        ui.SliderFloat("cmass", "Cube mass (kg)", guiCubeMass, 40.0F, 220.0F);
-        ui.EndPanel();
+void BindFloatField(void* userData, const float value) {
+    if (userData != nullptr) {
+        *static_cast<float*>(userData) = value;
     }
-    Gui::GuiSystem::Get().EndImmediateFrame();
-    ApplyTuningFromGui();
+}
+
+Ui::UiFloatCallback MakeFloatBinding(float* field) {
+    Ui::UiFloatCallback callback{};
+    callback.fn = &BindFloatField;
+    callback.userData = field;
+    return callback;
+}
+
+void AddSlider(
+        Ui::IUiElement& parent,
+        Ui::IUiControlsFactory& factory,
+        const char* id,
+        const char* label,
+        float* valueField,
+        const float minValue,
+        const float maxValue) {
+    Ui::SliderDesc desc{};
+    desc.id = Utf8String(id);
+    desc.label = Utf8String(label);
+    desc.value = *valueField;
+    desc.minValue = minValue;
+    desc.maxValue = maxValue;
+    auto slider = factory.CreateSlider(desc);
+    slider->SetOnChanged(MakeFloatBinding(valueField));
+    AdoptUiChild(parent, MoveTemp(slider));
+}
+
+}  // namespace
+
+void PhysicsBallThrow3DDemo::BuildRetainedUi(Spark::GameWorld& world) {
+    if (uiRoot != nullptr) {
+        world.DestroyGameObject(uiRoot);
+        uiRoot = nullptr;
+        uiCanvas = nullptr;
+    }
+    uiRoot = world.CreateGameObject();
+    uiRoot->GetName() = Spark::Utf8String("PhysBallUi");
+    uiCanvas = uiRoot->AddComponent<UiCanvasComponent>();
+    uiCanvas->SetSortOrder(100);
+    uiCanvas->SetTheme(Ui::UiTheme::ClassicMint());
+    roots.PushBack(uiRoot);
+
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+
+    Ui::PanelDesc panelDesc{};
+    panelDesc.id = Utf8String("phys_tune");
+    panelDesc.title = Utf8String("Physics tuning");
+    panelDesc.width = DemoGui::kDemoSidePanelWidth;
+    panelDesc.height = 420.0F;
+    panelDesc.anchorRight = true;
+    panelDesc.edgeMargin = 12.0F;
+    auto panel = factory.CreatePanel(panelDesc);
+
+    Ui::LabelDesc helpDesc{};
+    helpDesc.id = Utf8String("help");
+    helpDesc.text = Utf8String("F1 toggles mouse capture. Sliders use SI units.");
+    helpDesc.muted = true;
+    AdoptUiChild(*panel, factory.CreateLabel(helpDesc));
+
+    Ui::SeparatorDesc sepDesc{};
+    sepDesc.id = Utf8String("sep");
+    AdoptUiChild(*panel, factory.CreateSeparator(sepDesc));
+
+    Ui::ScrollPanelDesc scrollDesc{};
+    scrollDesc.id = Utf8String("phys_scroll");
+    scrollDesc.height = 220.0F;
+    auto scrollPanel = factory.CreateScrollPanel(scrollDesc);
+
+    AddSlider(*scrollPanel, factory, "grav", "Gravity Y (m/s²)", &guiGravityY, -18.0F, -4.0F);
+    AddSlider(*scrollPanel, factory, "mass", "Ball mass (kg)", &guiBallMass, 0.2F, 8.0F);
+    AddSlider(*scrollPanel, factory, "throw", "Throw speed (m/s)", &guiThrow, 3.0F, 28.0F);
+    AddSlider(*scrollPanel, factory, "bounce", "Cube bounciness", &guiCubeBounce, 0.0F, 1.0F);
+    AddSlider(*scrollPanel, factory, "cmass", "Cube mass (kg)", &guiCubeMass, 40.0F, 220.0F);
+    AdoptUiChild(*panel, MoveTemp(scrollPanel));
+
+    uiCanvas->SetRoot(MoveTemp(panel));
 }
 
 void PhysicsBallThrow3DDemo::ApplyTuningFromGui() noexcept

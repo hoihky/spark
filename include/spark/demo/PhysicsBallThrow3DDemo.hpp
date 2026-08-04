@@ -3,6 +3,8 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/demo/DemoProceduralSound.hpp"
+#include "spark/demo/DemoGuiFrame.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsMaterial3DComponent.hpp"
@@ -18,6 +20,10 @@
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/Scene.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
+#include "spark/ui/runtime/UiSystem.hpp"
+#include "spark/ui/spark/SparkUiControlsFactory.hpp"
+#include "spark/ui/spark/UiChild.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -40,7 +46,7 @@ public:
     void Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context);
 
 private:
-    void BuildPortableUi(Spark::IEngineContext& context, SceneRenderParams& params, const Spark::GameWorld& world);
+    void BuildRetainedUi(Spark::GameWorld& world);
     void ApplyTuningFromGui() noexcept;
     void ApplyCubeBounciness(const float tIn) noexcept;
     void ApplyCubeMassScale(const float massKg) noexcept;
@@ -57,6 +63,8 @@ private:
     Spark::TransformComponent* ballTr = nullptr;
     Spark::Rigidbody3DComponent* pendulumBobRb = nullptr;
     Spark::TextOverlayComponent* fpsText = nullptr;
+    Spark::GameObject* uiRoot = nullptr;
+    Spark::UiCanvasComponent* uiCanvas = nullptr;
     float guiGravityY = -9.81F;
     float guiBallMass = 0.62F;
     float guiThrow = 12.0F;

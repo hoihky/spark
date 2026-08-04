@@ -1,10 +1,97 @@
 #include "spark/demo/ParticleDemo.hpp"
 
-#include "spark/demo/DemoGuiFrame.hpp"
-#include "spark/gui/api/GuiApi.hpp"
-#include "spark/gui/GuiLayoutMetrics.hpp"
-
 namespace Spark {
+
+namespace {
+
+struct ParticleDemoBinding {
+    ParticleDemo* demo = nullptr;
+};
+
+void BindFloatField(void* userData, const float value) {
+    if (userData != nullptr) {
+        *static_cast<float*>(userData) = value;
+    }
+}
+
+void BindBoolField(void* userData, const bool value) {
+    if (userData != nullptr) {
+        *static_cast<bool*>(userData) = value;
+    }
+}
+
+Ui::UiFloatCallback MakeFloatBinding(float* field) {
+    Ui::UiFloatCallback callback{};
+    callback.fn = &BindFloatField;
+    callback.userData = field;
+    return callback;
+}
+
+Ui::UiBoolCallback MakeBoolBinding(bool* field) {
+    Ui::UiBoolCallback callback{};
+    callback.fn = &BindBoolField;
+    callback.userData = field;
+    return callback;
+}
+
+void EmitterListSelected(void* userData, const int index) {
+    if (userData == nullptr) {
+        return;
+    }
+    auto* demo = static_cast<ParticleDemoBinding*>(userData)->demo;
+    if (demo == nullptr) {
+        return;
+    }
+    demo->OnEmitterListSelected(index);
+}
+
+void ResetPresetClicked(void* userData) {
+    if (userData == nullptr) {
+        return;
+    }
+    auto* demo = static_cast<ParticleDemoBinding*>(userData)->demo;
+    if (demo == nullptr) {
+        return;
+    }
+    demo->OnResetPresetClicked();
+}
+
+void AddSlider(
+        Ui::IUiElement& parent,
+        Ui::IUiControlsFactory& factory,
+        const char* id,
+        const char* label,
+        float* valueField,
+        Ui::ISlider** outSlider,
+        const float minValue,
+        const float maxValue) {
+    Ui::SliderDesc desc{};
+    desc.id = Utf8String(id);
+    desc.label = Utf8String(label);
+    desc.value = *valueField;
+    desc.minValue = minValue;
+    desc.maxValue = maxValue;
+    auto slider = factory.CreateSlider(desc);
+    slider->SetOnChanged(MakeFloatBinding(valueField));
+    if (outSlider != nullptr) {
+        *outSlider = slider.Get();
+    }
+    AdoptUiChild(parent, MoveTemp(slider));
+}
+
+}  // namespace
+
+void ParticleDemo::OnEmitterListSelected(const int index) {
+    guiSelectedEffect = index;
+    SyncTuningFromEmitter();
+}
+
+void ParticleDemo::OnResetPresetClicked() {
+    if (ParticleEmitterComponent* pe = SelectedEmitter(); pe != nullptr) {
+        Detail::ApplyParticlePreset(guiSelectedEffect, *pe);
+        SyncTuningFromEmitter();
+    }
+}
 
 void ParticleDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
@@ -63,10 +150,12 @@ void ParticleDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
         fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
         DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String("Particles — Fire · Snow · Smoke · Magic — GUI panel"));
+        fpsText->SetText(Spark::Utf8String("Particles — Fire · Snow · Smoke · Magic — UI panel"));
         roots.PushBack(fpsHudObject);
 
         guiSelectedEffect = 0;
+        BuildRetainedUi(w);
+        SyncTuningFromEmitter();
 
         context.GetInput().SetCursorCaptured(false);
         camera.position = {0.0F, 3.2F, 10.0F};
@@ -89,10 +178,24 @@ void ParticleDemo::Unload(Spark::GameWorld& w)
         }
         fpsHudObject = nullptr;
         fpsText = nullptr;
+        uiCanvas = nullptr;
+        uiRoot = nullptr;
+        uiEmitterList = nullptr;
+        uiSliderEmission = nullptr;
+        uiSliderLifeMin = nullptr;
+        uiSliderLifeMax = nullptr;
+        uiSliderSizeStart = nullptr;
+        uiSliderSizeEnd = nullptr;
+        uiSliderSpread = nullptr;
+        uiSliderSpeedMin = nullptr;
+        uiSliderSpeedMax = nullptr;
+        uiSliderGravY = nullptr;
+        uiCheckboxEnabled = nullptr;
     }
 
 void ParticleDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context)
 {
+        ApplyTuningToEmitter();
         Spark::IInput& in = context.GetInput();
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
             in.SetCursorCaptured(!in.IsCursorCaptured());
@@ -192,8 +295,6 @@ void ParticleDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::I
             params.draws.PushBack(item);
         });
 
-        BuildPortableUi(context, params, world);
-
         scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
             Spark::ScreenTextDraw d{};
             d.text = tc.GetText();
@@ -205,6 +306,8 @@ void ParticleDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::I
             d.paintOrder = params.NextUiPaintOrder();
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
+
+        PaintUiCanvases(world, params, fbW, fbH);
         context.SetSceneRenderParams(params);
     }
 
@@ -216,100 +319,185 @@ Spark::ParticleEmitterComponent* ParticleDemo::SelectedEmitter() noexcept
         return effectEmitters[static_cast<std::size_t>(guiSelectedEffect)];
     }
 
-void ParticleDemo::BuildPortableUi(
-        Spark::IEngineContext& context,
-        SceneRenderParams& params,
-        const Spark::GameWorld& world) {
-    Spark::ParticleEmitterComponent* pe = SelectedEmitter();
-    if (pe == nullptr) {
-        return;
+void ParticleDemo::SyncTuningFromEmitter() noexcept
+{
+        ParticleEmitterComponent* pe = SelectedEmitter();
+        if (pe == nullptr) {
+            return;
+        }
+        guiEmission = pe->GetEmissionRate();
+        guiLifeMin = pe->GetLifetimeMin();
+        guiLifeMax = pe->GetLifetimeMax();
+        guiSizeStart = pe->GetStartSize();
+        guiSizeEnd = pe->GetEndSize();
+        guiSpread = pe->GetSpreadAngleRadians();
+        guiSpeedMin = pe->GetSpeedMin();
+        guiSpeedMax = pe->GetSpeedMax();
+        guiGravY = pe->GetGravity().y;
+        guiEnabled = pe->IsEmitterEnabled();
+
+        if (uiEmitterList != nullptr) {
+            uiEmitterList->SetSelectedIndex(guiSelectedEffect);
+        }
+        if (uiSliderEmission != nullptr) {
+            uiSliderEmission->SetValue(guiEmission);
+        }
+        if (uiSliderLifeMin != nullptr) {
+            uiSliderLifeMin->SetValue(guiLifeMin);
+        }
+        if (uiSliderLifeMax != nullptr) {
+            uiSliderLifeMax->SetValue(guiLifeMax);
+        }
+        if (uiSliderSizeStart != nullptr) {
+            uiSliderSizeStart->SetValue(guiSizeStart);
+        }
+        if (uiSliderSizeEnd != nullptr) {
+            uiSliderSizeEnd->SetValue(guiSizeEnd);
+        }
+        if (uiSliderSpread != nullptr) {
+            uiSliderSpread->SetValue(guiSpread);
+        }
+        if (uiSliderSpeedMin != nullptr) {
+            uiSliderSpeedMin->SetValue(guiSpeedMin);
+        }
+        if (uiSliderSpeedMax != nullptr) {
+            uiSliderSpeedMax->SetValue(guiSpeedMax);
+        }
+        if (uiSliderGravY != nullptr) {
+            uiSliderGravY->SetValue(guiGravY);
+        }
+        if (uiCheckboxEnabled != nullptr) {
+            uiCheckboxEnabled->SetValue(guiEnabled);
+        }
     }
 
-    float emission = pe->GetEmissionRate();
-    float lifeMin = pe->GetLifetimeMin();
-    float lifeMax = pe->GetLifetimeMax();
-    float sizeStart = pe->GetStartSize();
-    float sizeEnd = pe->GetEndSize();
-    float spread = pe->GetSpreadAngleRadians();
-    float speedMin = pe->GetSpeedMin();
-    float speedMax = pe->GetSpeedMax();
-    float gravY = pe->GetGravity().y;
-    bool enabled = pe->IsEmitterEnabled();
-
-    const Gui::GuiFrameContext frame = DemoGui::MakeFrameContext(context, params, world, 0.0F);
-    Gui::GuiSystem::Get().BeginImmediateFrame(frame);
-    Gui::IGuiFrame& ui = Gui::Ui();
-
-    const Gui::GuiLayoutMetrics& layout = Gui::GetActiveGuiLayoutMetrics();
-    const float panelW = DemoGui::kDemoSidePanelWidth * layout.uiScale;
-    const float panelX = static_cast<float>((std::max)(1, frame.framebufferWidth)) - panelW - layout.Padding();
-    const float panelY = layout.Padding();
-    const float panelH =
-            static_cast<float>((std::max)(1, frame.framebufferHeight)) - panelY * 2.0F;
-    ui.SetNextPanelSize(panelW, panelH);
-    ui.SetCursorPos(panelX, panelY);
-    if (ui.BeginPanel("particles", "Particle effects")) {
-        ui.Text("Emitter");
-        static constexpr const char* kEmitterNames[Detail::kParticleDemoEffectCount] = {
-                "Fire (campfire)", "Snow", "Smoke", "Magic sparkles"};
-        for (int ei = 0; ei < Detail::kParticleDemoEffectCount; ++ei) {
-            char idBuf[32];
-            snprintf(idBuf, sizeof(idBuf), "fx_%d", ei);
-            if (ui.Selectable(idBuf, kEmitterNames[ei], guiSelectedEffect == ei)) {
-                guiSelectedEffect = ei;
-                pe = SelectedEmitter();
-                if (pe != nullptr) {
-                    emission = pe->GetEmissionRate();
-                    lifeMin = pe->GetLifetimeMin();
-                    lifeMax = pe->GetLifetimeMax();
-                    sizeStart = pe->GetStartSize();
-                    sizeEnd = pe->GetEndSize();
-                    spread = pe->GetSpreadAngleRadians();
-                    speedMin = pe->GetSpeedMin();
-                    speedMax = pe->GetSpeedMax();
-                    gravY = pe->GetGravity().y;
-                    enabled = pe->IsEmitterEnabled();
-                }
-            }
+void ParticleDemo::ApplyTuningToEmitter() noexcept
+{
+        ParticleEmitterComponent* pe = SelectedEmitter();
+        if (pe == nullptr) {
+            return;
         }
-        ui.Separator();
-        ui.TextDisabled("Tune the selected emitter; F1 toggles fly camera.");
-        if (ui.SliderFloat("emission", "Emission / sec", emission, 0.0F, 320.0F)) {
-            pe->SetEmissionRate(emission);
-        }
-        if (ui.SliderFloat("lmin", "Lifetime min (s)", lifeMin, 0.05F, 4.0F)) {
-            pe->SetLifetime(lifeMin, std::max(lifeMin, pe->GetLifetimeMax()));
-        }
-        if (ui.SliderFloat("lmax", "Lifetime max (s)", lifeMax, 0.1F, 5.0F)) {
-            pe->SetLifetime(std::min(pe->GetLifetimeMin(), lifeMax), lifeMax);
-        }
-        if (ui.SliderFloat("sz0", "Size start", sizeStart, 0.02F, 0.55F)) {
-            pe->SetStartEndSize(sizeStart, pe->GetEndSize());
-        }
-        if (ui.SliderFloat("sz1", "Size end", sizeEnd, 0.01F, 0.55F)) {
-            pe->SetStartEndSize(pe->GetStartSize(), sizeEnd);
-        }
-        if (ui.SliderFloat("spread", "Spread (rad)", spread, 0.0F, 3.14159F)) {
-            pe->SetSpreadAngleRadians(spread);
-        }
-        if (ui.SliderFloat("spmin", "Speed min", speedMin, 0.0F, 8.0F)) {
-            pe->SetSpeedRange(speedMin, std::max(speedMin, pe->GetSpeedMax()));
-        }
-        if (ui.SliderFloat("spmax", "Speed max", speedMax, 0.0F, 12.0F)) {
-            pe->SetSpeedRange(std::min(pe->GetSpeedMin(), speedMax), speedMax);
-        }
-        if (ui.SliderFloat("grav", "Gravity Y", gravY, -12.0F, 8.0F)) {
-            const Vector3 g = pe->GetGravity();
-            pe->SetGravity({g.x, gravY, g.z});
-        }
-        if (ui.Checkbox("enabled", "Emitter enabled", enabled)) {
-            pe->SetEmitterEnabled(enabled);
-        }
-        if (ui.Button("reset", "Reset selected preset")) {
-            Detail::ApplyParticlePreset(guiSelectedEffect, *pe);
-        }
-        ui.EndPanel();
+        pe->SetEmissionRate(guiEmission);
+        pe->SetLifetime(guiLifeMin, std::max(guiLifeMin, guiLifeMax));
+        pe->SetStartEndSize(guiSizeStart, guiSizeEnd);
+        pe->SetSpreadAngleRadians(guiSpread);
+        pe->SetSpeedRange(guiSpeedMin, std::max(guiSpeedMin, guiSpeedMax));
+        const Vector3 g = pe->GetGravity();
+        pe->SetGravity({g.x, guiGravY, g.z});
+        pe->SetEmitterEnabled(guiEnabled);
     }
-    Gui::GuiSystem::Get().EndImmediateFrame();
+
+void ParticleDemo::BuildRetainedUi(Spark::GameWorld& world) {
+    if (uiRoot != nullptr) {
+        world.DestroyGameObject(uiRoot);
+        uiRoot = nullptr;
+        uiCanvas = nullptr;
+        uiEmitterList = nullptr;
+        uiSliderEmission = nullptr;
+        uiSliderLifeMin = nullptr;
+        uiSliderLifeMax = nullptr;
+        uiSliderSizeStart = nullptr;
+        uiSliderSizeEnd = nullptr;
+        uiSliderSpread = nullptr;
+        uiSliderSpeedMin = nullptr;
+        uiSliderSpeedMax = nullptr;
+        uiSliderGravY = nullptr;
+        uiCheckboxEnabled = nullptr;
+    }
+    uiRoot = world.CreateGameObject();
+    uiRoot->GetName() = Spark::Utf8String("ParticleUi");
+    uiCanvas = uiRoot->AddComponent<UiCanvasComponent>();
+    uiCanvas->SetSortOrder(100);
+    uiCanvas->SetTheme(Ui::UiTheme::ClassicMint());
+    roots.PushBack(uiRoot);
+
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+
+    Ui::PanelDesc panelDesc{};
+    panelDesc.id = Utf8String("particles");
+    panelDesc.title = Utf8String("Particle effects");
+    panelDesc.width = DemoGui::kDemoSidePanelWidth;
+    panelDesc.height = 640.0F;
+    panelDesc.anchorRight = true;
+    panelDesc.edgeMargin = 12.0F;
+    auto panel = factory.CreatePanel(panelDesc);
+
+    Ui::LabelDesc emitterHdr{};
+    emitterHdr.id = Utf8String("emitter_hdr");
+    emitterHdr.text = Utf8String("Emitter");
+    AdoptUiChild(*panel, factory.CreateLabel(emitterHdr));
+
+    Ui::ListDesc listDesc{};
+    listDesc.id = Utf8String("fx_list");
+    listDesc.rowHeight = 28.0F;
+    listDesc.verticalScrollingEnabled = true;
+    auto list = factory.CreateList(listDesc);
+    uiEmitterList = list.Get();
+    static constexpr const char* kEmitterNames[Detail::kParticleDemoEffectCount] = {
+            "Fire (campfire)", "Snow", "Smoke", "Magic sparkles"};
+    Array<Utf8String> items;
+    items.Reserve(static_cast<std::size_t>(Detail::kParticleDemoEffectCount));
+    for (int ei = 0; ei < Detail::kParticleDemoEffectCount; ++ei) {
+        items.PushBack(Utf8String(kEmitterNames[static_cast<std::size_t>(ei)]));
+    }
+    list->SetItems(MoveTemp(items));
+    list->SetSelectedIndex(guiSelectedEffect);
+    static ParticleDemoBinding listBinding{};
+    listBinding.demo = this;
+    Ui::UiIntCallback selectCb{};
+    selectCb.fn = &EmitterListSelected;
+    selectCb.userData = &listBinding;
+    list->SetOnSelectionChanged(selectCb);
+    AdoptUiChild(*panel, MoveTemp(list));
+
+    Ui::SeparatorDesc sepDesc{};
+    sepDesc.id = Utf8String("sep");
+    AdoptUiChild(*panel, factory.CreateSeparator(sepDesc));
+
+    Ui::LabelDesc helpDesc{};
+    helpDesc.id = Utf8String("help");
+    helpDesc.text = Utf8String("Tune the selected emitter; F1 toggles fly camera.");
+    helpDesc.muted = true;
+    AdoptUiChild(*panel, factory.CreateLabel(helpDesc));
+
+    Ui::ScrollPanelDesc scrollDesc{};
+    scrollDesc.id = Utf8String("particle_scroll");
+    scrollDesc.height = 320.0F;
+    auto scrollPanel = factory.CreateScrollPanel(scrollDesc);
+
+    AddSlider(*scrollPanel, factory, "emission", "Emission / sec", &guiEmission, &uiSliderEmission, 0.0F, 320.0F);
+    AddSlider(*scrollPanel, factory, "lmin", "Lifetime min (s)", &guiLifeMin, &uiSliderLifeMin, 0.05F, 4.0F);
+    AddSlider(*scrollPanel, factory, "lmax", "Lifetime max (s)", &guiLifeMax, &uiSliderLifeMax, 0.1F, 5.0F);
+    AddSlider(*scrollPanel, factory, "sz0", "Size start", &guiSizeStart, &uiSliderSizeStart, 0.02F, 0.55F);
+    AddSlider(*scrollPanel, factory, "sz1", "Size end", &guiSizeEnd, &uiSliderSizeEnd, 0.01F, 0.55F);
+    AddSlider(*scrollPanel, factory, "spread", "Spread (rad)", &guiSpread, &uiSliderSpread, 0.0F, 3.14159F);
+    AddSlider(*scrollPanel, factory, "spmin", "Speed min", &guiSpeedMin, &uiSliderSpeedMin, 0.0F, 8.0F);
+    AddSlider(*scrollPanel, factory, "spmax", "Speed max", &guiSpeedMax, &uiSliderSpeedMax, 0.0F, 12.0F);
+    AddSlider(*scrollPanel, factory, "grav", "Gravity Y", &guiGravY, &uiSliderGravY, -12.0F, 8.0F);
+    AdoptUiChild(*panel, MoveTemp(scrollPanel));
+
+    Ui::CheckBoxDesc enabledDesc{};
+    enabledDesc.id = Utf8String("enabled");
+    enabledDesc.label = Utf8String("Emitter enabled");
+    enabledDesc.value = guiEnabled;
+    auto enabledBox = factory.CreateCheckBox(enabledDesc);
+    uiCheckboxEnabled = enabledBox.Get();
+    enabledBox->SetOnChanged(MakeBoolBinding(&guiEnabled));
+    AdoptUiChild(*panel, MoveTemp(enabledBox));
+
+    Ui::ButtonDesc resetDesc{};
+    resetDesc.id = Utf8String("reset");
+    resetDesc.label = Utf8String("Reset selected preset");
+    auto resetBtn = factory.CreateButton(resetDesc);
+    static ParticleDemoBinding resetBinding{};
+    resetBinding.demo = this;
+    Ui::UiVoidCallback resetCb{};
+    resetCb.fn = &ResetPresetClicked;
+    resetCb.userData = &resetBinding;
+    resetBtn->SetOnClick(resetCb);
+    AdoptUiChild(*panel, MoveTemp(resetBtn));
+
+    uiCanvas->SetRoot(MoveTemp(panel));
 }
+
 }  // namespace Spark

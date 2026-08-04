@@ -2,16 +2,17 @@
 
 #include "spark/config.hpp"
 #include "spark/demo/DemoGuiFrame.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/gui/GuiThemeCatalog.hpp"
-#include "spark/gui/toolkit/GuiToolkitSettings.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/math/Constants.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/Scene.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ui/runtime/UiSystem.hpp"
+#include "spark/ui/spark/UiChild.hpp"
 
 #include <cstdio>
 
@@ -21,119 +22,149 @@
 
 namespace Spark {
 
-void ImGuiShowcaseDemo::Enter(IEngineContext& context) {
-    Gui::GuiToolkitSettings::SetPreferred(Gui::GuiToolkitKind::DearImGui);
-    if (IImGuiLayer* layer = context.TryGetImGuiLayer()) {
-        layer->SetEnabled(layer->IsAvailable());
+namespace {
+
+void BindExposure(void* userData, const float value) {
+    if (userData != nullptr) {
+        *static_cast<float*>(userData) = value;
     }
-#if SPARK_ENABLE_IMGUI
-    if (!styleScaled) {
-        ImGuiStyle& style = ImGui::GetStyle();
-        style.FontScaleMain = DemoGui::kImGuiShowcaseUiScale;
-        style.ScaleAllSizes(DemoGui::kImGuiShowcaseUiScale);
-        styleScaled = true;
-    }
-#endif
-    context.GetInput().SetCursorCaptured(false);
-    (void)context;
 }
 
-void ImGuiShowcaseDemo::Leave(IEngineContext& context) noexcept {
-    if (IImGuiLayer* layer = context.TryGetImGuiLayer()) {
-        layer->SetEnabled(false);
+}  // namespace
+
+void ImGuiShowcaseDemo::Enter(IEngineContext& context) {
+    DemoGui::ActivateDearImGuiDemoUi(context);
+    context.GetInput().SetCursorCaptured(false);
+}
+
+void ImGuiShowcaseDemo::Leave(IEngineContext& /*context*/, GameWorld& world) noexcept {
+    if (uiRoot != nullptr) {
+        world.DestroyGameObject(uiRoot);
+        uiRoot = nullptr;
+        uiCanvas = nullptr;
+        exposureSlider = nullptr;
+        frameLabel = nullptr;
+        uiBuilt = false;
     }
-#if SPARK_ENABLE_IMGUI
-    if (styleScaled) {
-        const float inv = 1.0F / DemoGui::kImGuiShowcaseUiScale;
-        ImGuiStyle& style = ImGui::GetStyle();
-        style.FontScaleMain = 1.0F;
-        style.ScaleAllSizes(inv);
-        styleScaled = false;
-    }
-#endif
-    Gui::GuiToolkitSettings::SetPreferred(Gui::GuiToolkitKind::SparkNative);
-    (void)context;
 }
 
 void ImGuiShowcaseDemo::Simulate(const FrameTiming& timing, IEngineContext& context) {
     lastFrameTiming = timing;
+    if (frameLabel != nullptr) {
+        char frameMs[64];
+        std::snprintf(frameMs, sizeof(frameMs), "Frame %.3f ms", timing.deltaTimeSeconds * 1000.0F);
+        frameLabel->SetText(Utf8String(frameMs));
+    }
     (void)context;
 }
 
-void ImGuiShowcaseDemo::BuildToolUi(const FrameTiming& timing, IEngineContext& context) {
-#if SPARK_ENABLE_IMGUI
-    if (IImGuiLayer* layer = context.TryGetImGuiLayer(); layer == nullptr || !layer->IsEnabled()) {
+void ImGuiShowcaseDemo::BuildRetainedUi(GameWorld& world) {
+    if (uiBuilt) {
         return;
     }
+    uiRoot = world.CreateGameObject();
+    uiRoot->GetName() = Utf8String("ImGuiShowcaseUi");
+    uiCanvas = uiRoot->AddComponent<UiCanvasComponent>();
+    uiCanvas->SetSortOrder(180);
+    uiCanvas->SetTheme(Ui::UiTheme::ClassicMint());
 
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(viewport->WorkSize);
-    ImGuiWindowFlags rootFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-    rootFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                 ImGuiWindowFlags_NoMove;
-    rootFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
-    ImGui::Begin("SparkImGuiRoot", nullptr, rootFlags);
-    ImGui::PopStyleVar(3);
+    Ui::DockWorkspaceDesc dockDesc{};
+    dockDesc.id = Utf8String("imgui_showcase_dock");
+    dockDesc.leftWidth = 260.0F;
+    dockDesc.rightWidth = 300.0F;
+    auto dock = factory.CreateDockWorkspace(dockDesc);
 
-    if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            ImGui::MenuItem("Use ESC to return to launcher", nullptr, false, false);
-            ImGui::EndMenu();
+    if (Ui::IUiElement* leftPane = dock->GetLeftPane()) {
+        Ui::PanelDesc panelDesc{};
+        panelDesc.id = Utf8String("hierarchy");
+        panelDesc.title = Utf8String("Hierarchy");
+        auto panel = factory.CreatePanel(panelDesc);
+        Ui::LabelDesc sceneDesc{};
+        sceneDesc.id = Utf8String("scene");
+        sceneDesc.text = Utf8String("Scene");
+        AdoptUiChild(*panel, factory.CreateLabel(sceneDesc));
+        Ui::SeparatorDesc sepDesc{};
+        sepDesc.id = Utf8String("sep");
+        AdoptUiChild(*panel, factory.CreateSeparator(sepDesc));
+        const char* nodes[] = {"Main Camera", "Directional Light", "Player", "Terrain"};
+        for (int i = 0; i < 4; ++i) {
+            Ui::LabelDesc nodeDesc{};
+            nodeDesc.id = Utf8String(nodes[i]);
+            nodeDesc.text = Utf8String(nodes[i]);
+            nodeDesc.muted = true;
+            AdoptUiChild(*panel, factory.CreateLabel(nodeDesc));
         }
-        if (ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("ImGui demo", nullptr, &showDemoWindow);
-            ImGui::MenuItem("Metrics", nullptr, &showMetrics);
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenuBar();
+        AdoptUiChild(*leftPane, MoveTemp(panel));
     }
 
-    const ImGuiID dockspaceId = ImGui::GetID("SparkToolDockSpace");
-    ImGui::DockSpace(dockspaceId, ImVec2(0.0F, 0.0F), ImGuiDockNodeFlags_PassthruCentralNode);
-    ImGui::End();
-
-    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
-    if (ImGui::Begin("Hierarchy###SparkHierarchy")) {
-        ImGui::TextUnformatted("Scene");
-        ImGui::Separator();
-        ImGui::TextUnformatted("Main Camera");
-        ImGui::TextUnformatted("Directional Light");
-        ImGui::TextUnformatted("Player");
-        ImGui::TextUnformatted("Terrain");
+    if (Ui::IUiElement* rightPane = dock->GetRightPane()) {
+        Ui::PanelDesc panelDesc{};
+        panelDesc.id = Utf8String("inspector");
+        panelDesc.title = Utf8String("Inspector");
+        auto panel = factory.CreatePanel(panelDesc);
+        Ui::LabelDesc transformDesc{};
+        transformDesc.id = Utf8String("transform_hdr");
+        transformDesc.text = Utf8String("Transform");
+        AdoptUiChild(*panel, factory.CreateLabel(transformDesc));
+        Ui::LabelDesc posDesc{};
+        posDesc.id = Utf8String("position");
+        posDesc.text = Utf8String("Position: 0.0, 1.2, 4.0");
+        posDesc.muted = true;
+        AdoptUiChild(*panel, factory.CreateLabel(posDesc));
+        Ui::SeparatorDesc sepDesc{};
+        sepDesc.id = Utf8String("sep2");
+        AdoptUiChild(*panel, factory.CreateSeparator(sepDesc));
+        Ui::SliderDesc exposureDesc{};
+        exposureDesc.id = Utf8String("exposure");
+        exposureDesc.label = Utf8String("Exposure");
+        exposureDesc.value = sceneExposure;
+        exposureDesc.minValue = 0.1F;
+        exposureDesc.maxValue = 3.0F;
+        auto exposureUp = factory.CreateSlider(exposureDesc);
+        exposureSlider = exposureUp.Get();
+        Ui::UiFloatCallback exposureCb{};
+        exposureCb.fn = &BindExposure;
+        exposureCb.userData = &sceneExposure;
+        exposureSlider->SetOnChanged(exposureCb);
+        AdoptUiChild(*panel, MoveTemp(exposureUp));
+        Ui::SeparatorDesc consoleSep{};
+        consoleSep.id = Utf8String("console_sep");
+        AdoptUiChild(*panel, factory.CreateSeparator(consoleSep));
+        Ui::LabelDesc introDesc{};
+        introDesc.id = Utf8String("intro");
+        introDesc.text = Utf8String("Retained ImguiDockWorkspace + UiCanvasComponent.");
+        introDesc.muted = true;
+        AdoptUiChild(*panel, factory.CreateLabel(introDesc));
+        Ui::LabelDesc frameDesc{};
+        frameDesc.id = Utf8String("frame");
+        frameDesc.text = Utf8String("Frame — ms");
+        auto frameUp = factory.CreateLabel(frameDesc);
+        frameLabel = frameUp.Get();
+        AdoptUiChild(*panel, MoveTemp(frameUp));
+        AdoptUiChild(*rightPane, MoveTemp(panel));
     }
-    ImGui::End();
 
-    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
-    if (ImGui::Begin("Inspector###SparkInspector")) {
-        ImGui::TextUnformatted("Transform");
-        static float position[3] = {0.0F, 1.2F, 4.0F};
-        ImGui::DragFloat3("Position", position, 0.05F);
-        static float rotation[3] = {0.0F, 45.0F, 0.0F};
-        ImGui::DragFloat3("Rotation", rotation, 0.5F);
-        ImGui::Separator();
-        ImGui::SliderFloat("Exposure", &sceneExposure, 0.1F, 3.0F);
-        const char* tabs[] = {"Gameplay", "Rendering", "Audio"};
-        ImGui::Combo("Tool tab", &selectedToolTab, tabs, 3);
+    if (Ui::IUiElement* centerPane = dock->GetCenterPane()) {
+        Ui::PanelDesc panelDesc{};
+        panelDesc.id = Utf8String("viewport");
+        panelDesc.title = Utf8String("Viewport");
+        auto panel = factory.CreatePanel(panelDesc);
+        Ui::LabelDesc hintDesc{};
+        hintDesc.id = Utf8String("hint");
+        hintDesc.text = Utf8String("Center dock pane (passthrough). Drag dock splits with Dear ImGui.");
+        hintDesc.muted = true;
+        AdoptUiChild(*panel, factory.CreateLabel(hintDesc));
+        AdoptUiChild(*centerPane, MoveTemp(panel));
     }
-    ImGui::End();
 
-    ImGui::SetNextWindowDockID(dockspaceId, ImGuiCond_FirstUseEver);
-    if (ImGui::Begin("Console###SparkConsole")) {
-        ImGui::TextUnformatted(
-                "Dear ImGui docking showcase. Set GuiToolkitSettings::SetPreferred(SparkNative) for Spark widgets.");
-        ImGui::Separator();
-        char frameMs[64];
-        std::snprintf(frameMs, sizeof(frameMs), "Frame %.3f ms", timing.deltaTimeSeconds * 1000.0F);
-        ImGui::TextUnformatted(frameMs);
-        ImGui::TextUnformatted("UI backend: Dear ImGui");
-    }
-    ImGui::End();
+    uiCanvas->SetRoot(MoveTemp(dock));
+    uiBuilt = true;
+}
 
+void ImGuiShowcaseDemo::PaintOverlayWindows() {
+#if SPARK_ENABLE_IMGUI
     if (showDemoWindow) {
         ImGui::ShowDemoWindow(&showDemoWindow);
     }
@@ -141,13 +172,13 @@ void ImGuiShowcaseDemo::BuildToolUi(const FrameTiming& timing, IEngineContext& c
         ImGui::ShowMetricsWindow(&showMetrics);
     }
 #else
-    (void)timing;
-    (void)context;
+    (void)showDemoWindow;
+    (void)showMetrics;
 #endif
 }
 
 void ImGuiShowcaseDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineContext& context) {
-    BuildToolUi(lastFrameTiming, context);
+    BuildRetainedUi(world);
 
     int fbW = 0;
     int fbH = 0;
@@ -166,7 +197,7 @@ void ImGuiShowcaseDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineContex
     params.lightDirectionWorld = Vector3{0.3F, 0.85F, 0.4F}.Normalized();
     params.lightColor = {1.0F, 1.0F, 1.0F};
     params.lightIntensity = 0.0F;
-    const Gui::GuiTheme menuSkin = Gui::ResolveGuiTheme(Gui::GetActiveGuiThemePreset());
+    const Ui::UiTheme menuSkin = Ui::ResolveUiTheme(Ui::GetActiveUiThemePreset());
     params.ambientColor = {
             menuSkin.shellBackdropBottom.x * 0.14F,
             menuSkin.shellBackdropBottom.y * 0.14F,
@@ -174,8 +205,11 @@ void ImGuiShowcaseDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineContex
     params.exposure = sceneExposure;
     params.uiFont = world.GetUiFont();
     params.uiBoldFont = world.GetUiBoldFont();
+    params.uiPaintOrderNext = 0U;
+
+    Ui::UiSystem::Get().Paint(world, params, fbW, fbH);
+    PaintOverlayWindows();
     context.SetSceneRenderParams(params);
-    (void)world;
 }
 
 }  // namespace Spark

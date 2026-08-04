@@ -1,8 +1,10 @@
-# GUI System & Game Editor — Roadmap & Tracked Tasks
+# UI System & Game Editor — Roadmap & Tracked Tasks
 
-Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engine authoring tools** (scene, material, animation, scripting) and an **integrated editor** comparable in *workflow* to Unity, Unreal Editor, or Godot 4.5+ — built on Spark’s Vulkan forward renderer and ECS.
+Plan for evolving Spark’s **retained-mode UI** (`spark/ui/`) into **in-engine authoring tools** (scene, material, animation, scripting) and an **integrated editor** comparable in *workflow* to Unity, Unreal Editor, or Godot 4.5+ — built on Spark’s Vulkan forward renderer and ECS.
 
-**Dear ImGui** (`SPARK_ENABLE_IMGUI`) is available as an **optional immediate-mode layer** for internal tools and the docking demo (**#20**); retained GUI remains the primary stack for shipped menus and `SparkEditor`.
+> **Migration complete (Phase 6):** Legacy `spark/gui/` (`Widget`, `GuiCanvasComponent`, `GuiControls.hpp`) was removed. All demos and `SparkEditor` use **`UiCanvasComponent`**, **`IUiElement`**, and **`IUiControlsFactory`** under `spark/ui/`. See [`GUI_TOOLKIT_ARCHITECTURE.md`](GUI_TOOLKIT_ARCHITECTURE.md).
+
+**Dear ImGui** (`SPARK_ENABLE_IMGUI`) remains available as an **optional layer** (`DearImguiControlsFactory` + raw `ImGui::` windows) for internal tools and the docking demo (**#19**); Spark native (`SparkUiControlsFactory`) is the default for shipped menus and `SparkEditor`.
 
 **Related:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.9–§5.10 / §12, [`programming-guide/1-overview-architecture/08-ui-and-toolkits.md`](programming-guide/1-overview-architecture/08-ui-and-toolkits.md), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md), [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md), demo **#10** `SceneEditor3DDemo`.
 
@@ -20,49 +22,49 @@ Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engin
 
 ---
 
-## 1. Current GUI system (inventory)
+## 1. Current UI system (inventory)
 
 ### 1.1 Architecture
 
 | Piece | Role |
 |-------|------|
-| `Widget` | Base tree: `Arrange`, `Paint`, pointer + optional `ProcessKeyInput` |
-| `GuiCanvasComponent` | ECS root; sort order; hot / active / focus widgets |
-| `ProcessGuiCanvasesInput` | Full-viewport layout, topmost canvas under cursor, scroll routing |
-| `PaintGuiCanvases` | Emits `ScreenRectDraw` / `ScreenTextDraw` into `SceneRenderParams` |
-| `GuiPaintContext` | Solid/gradient/rounded rects, strokes, drop shadow, text; **overlay** + **late** layers for popups |
-| `GuiTheme` / `GuiThemeCatalog` | Semantic colors per canvas; **6** presets (`ClassicMint` default, `TwilightSlate`, high-contrast variants, `SceneEditorDark`) |
+| `IUiElement` | Base tree: measure, arrange, paint, pointer + optional keyboard input |
+| `UiCanvasComponent` | ECS root; sort order; hot / active / focus elements |
+| `ProcessUiCanvasesInput` | Full-viewport layout, topmost canvas under cursor, scroll routing |
+| `PaintUiCanvases` | Emits `ScreenRectDraw` / `ScreenTextDraw` into `SceneRenderParams` |
+| `UiPaintContext` | Solid/gradient/rounded rects, strokes, drop shadow, text; overlay + late layers |
+| `UiTheme` / `UiThemeCatalog` | Semantic colors per canvas; presets (`ClassicMint` default, `TwilightSlate`, high-contrast variants, `SceneEditorDark`) |
+| `UiSystem` | Facade: active backend (`SparkNative` \| `DearImGui`), `ProcessInput` / `Paint` |
 
 **Rendering:** CPU-drawn 2D (no GPU widget atlas). Text via `Font` / stb. **Not** retained mesh UI.
 
-### 1.2 Built-in controls (`GuiControls.hpp`)
+### 1.2 Built-in controls (`IUiControlsFactory`)
 
 | Category | Controls |
 |----------|----------|
-| **Layout** | `StackPanel`, `GridPanel`, `WrapPanel`, `DockLayout`, `Splitter`, `ScrollPanel`, `EditorSidebarLayout`, `EditorTopChromeLayout`, `Separator` |
-| **Docking** | `DockManager`, `DockPanel`, `DockSidePane`, `DockFrameLayout` (`spark/gui/docking/`) |
-| **Chrome** | `Panel`, `GroupBox`, `Dialog`, `TabControl`, `MenuBar` |
-| **Input** | `Button`, `CheckBox`, `Switch`, `RadioButton` + `RadioGroup`, `Slider`, `NumericBox`, `NumericStepper`, `TextBox`, `Dropdown` |
-| **Lists** | `List`, `MultiSelectList`, `TreeView`, `Carousel` |
-| **Display** | `Label`, `WrappingLabel`, `ProgressBar`, `ScrollBar`, `AlbumCard`, `TileSwatch` |
+| **Layout** | Panels, scroll panels, separators, dock workspaces |
+| **Docking** | `IDockWorkspace`, `SparkDockWorkspace`, `ImguiDockWorkspace` |
+| **Chrome** | Collapsible panels, group-style layouts |
+| **Input** | Buttons, checkboxes, sliders, numeric fields |
+| **Lists** | `IList`, `IMultiSelectList`, `ITreeView` (Spark + ImGui backends) |
+| **Display** | Labels, progress indicators |
 
-**Also:** `GuiContextMenu` for right-click menus; `GuiTheme::SceneEditorDark()` for editor chrome.
+**Also:** `UiContextMenu` for right-click menus; `UiTheme::SceneEditorDark()` for editor chrome.
 
 ### 1.3 Demo / product usage today
 
 | Consumer | What it proves |
 |----------|----------------|
-| **Shell menu** | `LauncherMenuLayout`, `List`, themes |
+| **Shell menu** | `SparkShellDemo` — launcher list + theme picker on `UiCanvasComponent` |
 | **Scene editor (#10)** | `SceneEditor3DDemo` — left strip UI + 3D pick/place (prototype) |
-| **Dear ImGui (#20)** | `ImGuiShowcaseDemo` — docking tool panels, hotkey **G** |
+| **Dear ImGui (#19)** | `ImGuiShowcaseDemo` — docking tool panels, hotkey **G** |
 | **SparkEditor** | `spark_editor/SparkEditor` — dock shell, hierarchy/inspector stubs, fly viewport (`EditorApplication`) |
-| **Shell UI** | C++ `ShellDemoUi` / `GuiCanvasComponent` — launcher menu |
 
 ### 1.4 Scene editor prototype (not a general editor)
 
-`SceneEditor3DDemo` already combines GUI + 3D:
+`SceneEditor3DDemo` already combines UI + 3D:
 
-- Configurable left strip (`GetSceneEditorSidebarWidthPx`, `editor_layout.ini`); 3D input gated by `GuiConsumesGamePointer()`.
+- Configurable left strip (`GetSceneEditorSidebarWidthPx`, `editor_layout.ini`); 3D input gated by `UiConsumesGamePointer()`.
 - Place meshes (3 presets) / user point lights; drag on ground plane; text **save/load** (`scene_editor/scene.txt`, **`spark_scene_v3`**).
 - Light inspector sliders; tool mode list; translate gizmo.
 - **SparkEditor** (separate exe) supersedes this for product work — see [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md).
@@ -71,24 +73,24 @@ Plan for evolving Spark’s **retained-mode GUI** (`spark/gui/`) into **in-engin
 
 ## 2. Gaps, limitations, and known pain points
 
-### 2.1 GUI framework (vs. modern editor UI)
+### 2.1 UI framework (vs. modern editor UI)
 
 | Gap | Status / notes |
 |-----|----------------|
 | **No flex/grid measure pass** | Layout is mostly explicit heights or simple stacks; no `*` star sizing |
-| **Docking** | **Partial:** `DockManager` + `DockFrameLayout` (left/center/right, collapse, gutters); no float windows or tab drag between dock areas |
-| **Menu bar / toolbar** | **Partial:** `MenuBar` + `EditorTopChromeLayout` in SparkEditor; not a reusable editor chrome package |
-| **No icon font / SVG** | `Button` supports glyph string + optional texture; no standard icon set |
-| **Context menu** | **Implemented:** `GuiContextMenu` |
-| **Tooltip** | **Partial:** hover tooltip in `GuiScene.cpp`; not wired to all controls |
+| **Docking** | **Partial:** `SparkDockWorkspace` / `IDockWorkspace` (left/center/right, collapse, gutters); no float windows or tab drag between dock areas |
+| **Menu bar / toolbar** | **Partial:** top chrome in SparkEditor; not a reusable editor chrome package |
+| **No icon font / SVG** | Buttons support glyph string + optional texture; no standard icon set |
+| **Context menu** | **Implemented:** `UiContextMenu` |
+| **Tooltip** | **Partial:** hover tooltip in input router; not wired to all controls |
 | **No clipboard** | Copy/paste for text fields and property values |
-| **TextBox** | Single-line; no caret navigation, selection, IME, or multiline |
-| **Text overflow** | **Implemented:** `EllipsizeUtf8`, `DrawTextInRect`, `WrappingLabel` |
-| **No virtualized lists** | `List` / `TreeView` hold all rows in memory |
-| **GUI surface** | `GuiCanvasComponent`; UIs built in C++ (`ShellDemoUi`, editor widgets) |
-| **Input model** | LMB primary; scroll routed to List/Tree/ScrollPanel; editor viewport uses `GuiConsumesGamePointer()` |
+| **Text input** | Limited single-line fields; no caret navigation, selection, IME, or multiline |
+| **Text overflow** | **Implemented:** ellipsize + wrapping labels via `UiPaintContext` |
+| **No virtualized lists** | Lists / tree views hold all rows in memory |
+| **UI surface** | `UiCanvasComponent`; UIs built in C++ via `IUiControlsFactory` |
+| **Input model** | LMB primary; scroll routed to list/tree/scroll panel; editor viewport uses `UiConsumesGamePointer()` |
 | **Multi-canvas** | Sort order works; focus per-canvas |
-| **DPI / UI scale** | `GuiLayoutMetrics::Scaled()` partial; no global editor scale slider |
+| **DPI / UI scale** | `UiLayoutMetrics` partial; no global editor scale slider |
 | **Accessibility** | No screen reader bridge or full keyboard nav |
 
 ### 2.2 Rendering / performance risks
@@ -125,7 +127,7 @@ These are **documented risks** to fix in milestone **E0** (not an exhaustive bug
 |----|------|--------|
 | **GUI-BUG-01** | Scene editor | ~~Ground-plane XZ only~~ — **fixed**: `TryPickEditorRay` + `MeshRaycast` (mesh triangles + light spheres) |
 | **GUI-BUG-02** | Scene editor | ~~Hard-coded strip~~ — **fixed**: shared `GetSceneEditorSidebarWidthPx` + layout ini |
-| **GUI-BUG-03** | Input | ~~Manual `mx >= strip`~~ — **fixed**: `GuiPointerState` / `GuiConsumesGamePointer()` |
+| **GUI-BUG-03** | Input | ~~Manual `mx >= strip`~~ — **fixed**: `UiPointerState` / `UiConsumesGamePointer()` |
 | **GUI-BUG-04** | Focus | Click outside focusables clears focus; **no** click-to-focus on all control types consistently |
 | **GUI-BUG-05** | Dropdown | Popup list must close on outside click; verify interaction with overlapping widgets |
 | **GUI-BUG-06** | Layout | ~~Shrink-to-fit overflow~~ — **fixed**: fixed row heights + `ScrollPanel` inspector host |
@@ -151,7 +153,7 @@ A single executable (or shell mode) with:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Principle:** Reuse `GuiCanvasComponent` for **panels**; add **editor services** (selection, undo, serialization, asset DB) as engine modules the GUI binds to — avoid coupling game logic into widgets.
+**Principle:** Reuse `UiCanvasComponent` for **panels**; add **editor services** (selection, undo, serialization, asset DB) as engine modules the UI binds to — avoid coupling game logic into controls.
 
 ---
 
@@ -177,16 +179,16 @@ A single executable (or shell mode) with:
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| GUI-E0-01 | **`GuiLayoutMetrics`**: padding, row height, font scale, DPI factor (default 1.0) | P0 | [ ] |
+| GUI-E0-01 | **`UiLayoutMetrics`**: padding, row height, font scale, DPI factor (default 1.0) | P0 | [ ] |
 | GUI-E0-02 | **`ScrollPanel` as default inspector host** — replace shrink-to-fit-only forms for long panels | P0 | [x] |
-| GUI-E0-03 | **`IUiInputSink` / `GuiInputCapture`**: engine reports `bool IsPointerOverUi()` + `WantsGameInput()` for demos | P0 | [x] |
+| GUI-E0-03 | **`UiPointerState` / input gating**: engine reports `UiPointerOverUi()` + `UiConsumesGamePointer()` for demos | P0 | [x] |
 | GUI-E0-04 | **Sync scene editor strip width** — single constant shared by layout + picking | P0 | [x] |
 | GUI-E0-05 | **List**: keyboard Up/Down + Enter selection | P1 | [ ] |
 | GUI-E0-06 | **TextBox**: caret, left/right, Home/End, Ctrl+A; optional OS paste | P1 | [x] |
 | GUI-E0-07 | **Multiline `TextArea`** (for scripts / long strings) | P1 | [x] |
 | GUI-E0-08 | **Context menu** widget (popup on RMB, overlay layer) | P1 | [x] |
 | GUI-E0-09 | **Tooltip** (hover delay, late layer) | P2 | [x] |
-| GUI-E0-10 | **Theming**: `GuiThemeCatalog` presets + `LabelTone` on labels | P1 | [x] |
+| GUI-E0-10 | **Theming**: `UiThemeCatalog` presets + label tone variants | P1 | [x] |
 | GUI-E0-11 | **GUI perf harness**: N rects/texts frame cost in `SceneRenderParams` | P2 | [ ] |
 
 ---
@@ -305,7 +307,7 @@ Depends on [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) **M1–M3** mini
 
 | Feature | Unity | Unreal | Godot 4.5 | Spark (target) |
 |---------|-------|--------|-----------|----------------|
-| Retained UI toolkit | UIElements | Slate | Control nodes | **Custom `spark/gui`** |
+| Retained UI toolkit | UIElements | Slate | Control nodes | **Custom `spark/ui`** |
 | Visual scene tree | Yes | Yes | Yes | **E2** |
 | Viewport + gizmos | Yes | Yes | Yes | **E2** |
 | Material graph | Shader Graph | Material Editor | VisualShader | **E3 numeric + textures first** (no node graph in v1) |
@@ -365,16 +367,16 @@ Adjust if team size > 3 or if editor is **tools-only** (no ship-as-product).
 
 | Path | Role |
 |------|------|
-| `include/spark/gui/Widget.hpp` | Widget contract |
-| `src/spark/gui/GuiScene.cpp` | Input + paint |
-| `include/spark/gui/GuiPaintContext.hpp` | Draw API |
+| `include/spark/ui/core/IUiElement.hpp` | Element contract |
+| `include/spark/ui/runtime/UiScene.hpp` | Input + paint entry points |
+| `include/spark/ui/core/UiPaintContext.hpp` | Draw API |
+| `include/spark/ui/runtime/UiSystem.hpp` | Backend facade |
 | `src/spark/demo/SceneEditor3DDemo.cpp` | Editor prototype |
-| `include/spark/demo/SceneEditor3DDemo_detail.hpp` | Sidebar layout |
 | `src/spark/demo/SparkShellDemo.cpp` | Demo launcher shell |
-| `src/spark/demo/ImGuiShowcaseDemo.cpp` | Dear ImGui docking demo (#20) |
-| *(removed)* | Legacy `ShellUiNative.cpp` (C# UI builders) |
-| `include/spark/ecs/components/ui/GuiCanvasComponent.hpp` | Canvas ECS |
+| `src/spark/demo/ImGuiShowcaseDemo.cpp` | Dear ImGui docking demo (#19) |
+| `include/spark/ecs/components/ui/UiCanvasComponent.hpp` | Canvas ECS |
+| `docs/GUI_TOOLKIT_ARCHITECTURE.md` | Phase 6 migration notes |
 
 ---
 
-*Last updated: GUI + game editor roadmap E0–E6. Check boxes or link GitHub issues as work lands.*
+*Last updated: UI (`spark/ui/`) + game editor roadmap E0–E6. Legacy `spark/gui/` migration complete. Check boxes or link GitHub issues as work lands.*

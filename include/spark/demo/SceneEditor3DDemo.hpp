@@ -148,8 +148,6 @@ private:
     Spark::FlyCamera camera{};
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset;
     Spark::SharedPtr<Spark::Mesh> groundAsset;
-    Spark::GameObject* guiCanvasObject = nullptr;
-    Spark::GuiCanvasComponent* guiCanvas = nullptr;
     Spark::GameObject* fpsHudObject = nullptr;
     Spark::TextOverlayComponent* fpsText = nullptr;
     Spark::GameObject* lightEditTarget = nullptr;

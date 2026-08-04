@@ -192,6 +192,23 @@ private:
     }
 };
 
+/** Non-owning reference to a null-terminated UTF-8 byte sequence. */
+class Utf8StringView {
+public:
+    Utf8StringView() = default;
+
+    constexpr Utf8StringView(const char* utf8) noexcept : ptr(utf8 != nullptr ? utf8 : "") {}
+
+    Utf8StringView(const Utf8String& s) noexcept : ptr(s.CStr()) {}
+
+    [[nodiscard]] const char* CStr() const noexcept { return ptr; }
+
+    [[nodiscard]] bool IsEmpty() const noexcept { return ptr == nullptr || *ptr == '\0'; }
+
+private:
+    const char* ptr = "";
+};
+
 struct Utf8StringHash {
     [[nodiscard]] std::size_t operator()(const Utf8String& s) const noexcept {
         std::size_t h = 5381;

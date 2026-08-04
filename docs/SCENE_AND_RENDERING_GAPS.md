@@ -38,7 +38,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 | `SubmitStandardLitSceneFromWorld` | Fill + `IEngineContext::SetSceneRenderParams` |
 | `SceneSubmitLighting.cpp` / `SceneSubmitMaterial.cpp` / `SceneSubmitDrawPartition.cpp` | Lighting overrides, material texture resolve, opaque/transparent partition |
 | `ApplyMaterialComponentToSceneDrawItem` | Map `MaterialComponent` textures/scalars onto `SceneDrawItem` |
-| `PaintGuiCanvases` / `ProcessGuiCanvasesInput` | Retained GUI → params + input |
+| `PaintUiCanvases` / `ProcessUiCanvasesInput` | Retained UI → params + input |
 
 ### Persistence
 
@@ -114,7 +114,7 @@ C <kind> <payload>
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Handler coverage** | 28+ / 51 kinds | Handlers for remaining 2D physics, `GuiCanvas`, `Tilemap`, `AiAgent`, audio, animation sockets, … |
+| **Handler coverage** | 28+ / 51 kinds | Handlers for remaining 2D physics, `UiCanvas`, `Tilemap`, `AiAgent`, audio, animation sockets, … |
 | **Asset references** | Paths embedded in snapshots | Stable asset IDs, optional binary format, version migration hooks |
 | **Partial apply** | `Apply` creates full document | Merge into existing world, diff/patch documents |
 | **Runtime registration** | `ComponentSnapshotRegistry::Default()` fixed set | Public `RegisterHandler` for game-specific `GameComponent` subclasses |
@@ -240,7 +240,7 @@ Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_L
 |-----|-------------|------------------------|
 | **Sprite batching** | Per-sprite `SceneSpriteDraw` | `SubmitSpritesBatched` from `SpriteComponent` tiles |
 | **GUI paint order** | `paintOrder` on draws; GPU pass batches rects then text per layer | Documented limitation; no `ForceInterleavedUiPaint` flag |
-| **World-space UI** | Screen-space `GuiCanvasComponent` only | World-space canvas or `BillboardWidget` component |
+| **World-space UI** | Screen-space `UiCanvasComponent` only | World-space canvas or billboard UI component |
 
 ---
 
@@ -263,7 +263,7 @@ Prioritized for **C++ game authors** (no editor dependency):
 
 | Phase | Public API work | Unlocks |
 |-------|-----------------|---------|
-| **1** | ~~Serialization handlers for lights, sprites, 3D physics, terrain~~; extend for `GuiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | Save/load real gameplay scenes |
+| **1** | ~~Serialization handlers for lights, sprites, 3D physics, terrain~~; extend for `UiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | Save/load real gameplay scenes |
 | **2** | ~~`DirectionalLightComponent`; `Scene::RaycastPick`~~ | Less boilerplate in `OnRender` |
 | **3** | ~~Transparent draw list + sort on `SceneRenderParams`~~ | Glass, foliage, alpha meshes |
 | **4** | `AssetHandle` + async `RequestLoad*` | Large levels without hitches |

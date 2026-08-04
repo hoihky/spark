@@ -1,9 +1,6 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/DemoGuiFrame.hpp"
-#include "spark/gui/api/GuiApi.hpp"
-#include "spark/gui/GuiLayoutMetrics.hpp"
-#include "spark/gui/EditorLayoutStore.hpp"
 #include "spark/demo/ThreeDDemo.hpp"
 #include "spark/demo/ToonShadingDemo.hpp"
 #include "spark/demo/MaterialShowcase3DDemo.hpp"
@@ -24,27 +21,67 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 #include "spark/demo/SceneEditor3DDemo.hpp"
 #include "spark/demo/TimeOfDayDemo.hpp"
-#include "spark/gui/EditorLayoutStore.hpp"
-#include "spark/gui/GuiThemeCatalog.hpp"
-#include "spark/gui/toolkit/GuiToolkitSettings.hpp"
 #include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 
 #include <cstdio>
 
 namespace Spark {
+
+class ShellGame;
+
+namespace {
+
+static constexpr const char* kLauncherDemoLabels[] = {
+        "1  - Basic 3D scene",
+        "2  - Sky: box, dome, plane",
+        "3  - Particles",
+        "4  - Terrain",
+        "5  - Character (1st / 3rd person)",
+        "6  - 2D platformer",
+        "7  - 2D Maze",
+        "8  - 3D maze",
+        "9  - 3D physics",
+        "10 - 3D scene editor",
+        "11 - Tetris",
+        "12 - Match-3",
+        "13 - Space Invaders",
+        "14 - 3D steering",
+        "15 - Toon/cel shading",
+        "16 - Material ball",
+        "17 - Time of day",
+        "18 - Farming RPG render layers",
+        "19 - Tilemap layers, animation & pathfinding",
+        "20 - Dear ImGui tools (docking)",
+};
+constexpr int kLauncherDemoCount = static_cast<int>(sizeof(kLauncherDemoLabels) / sizeof(kLauncherDemoLabels[0]));
+
+struct LauncherThemeBinding {
+    ShellGame* game = nullptr;
+};
+
+void LauncherThemePrev(void* userData);
+void LauncherThemeNext(void* userData);
+void LauncherDemoSelected(void* userData, int index);
+
+}  // namespace
 
 
 class ShellGame final : public Game {
 public:
     void OnAttach(IEngineContext& context) override {
         engineCtx = &context;
-        Spark::Gui::SceneEditorLayoutSettings layout{};
-        (void)Spark::Gui::TryLoadSceneEditorLayout(layout);
-        Spark::Gui::SetActiveGuiThemePreset(layout.guiTheme);
+        Spark::Ui::SceneEditorLayoutSettings layout{};
+        (void)Spark::Ui::TryLoadSceneEditorLayout(layout);
+        Spark::Ui::SetActiveUiThemePreset(layout.guiTheme);
+        DemoGui::ActivateDearImGuiDemoUi(context);
         MountUiFont(GetWorld());
         fpsOverlay.EnsureMounted(GetWorld());
         context.GetInput().SetCursorCaptured(false);
+        BuildLauncherRetainedUi(GetWorld());
     }
 
     void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
@@ -57,7 +94,7 @@ public:
         if (mode == DemoMode::Menu || mode == DemoMode::ImGuiShowcase) {
             context.GetInput().SetCursorCaptured(false);
         }
-        Spark::ProcessGuiCanvasesInput(GetScene(), context.GetInput(), fbW, fbH, contentScaleX, contentScaleY);
+        Spark::ProcessUiCanvasesInput(GetScene(), context.GetInput(), fbW, fbH, contentScaleX, contentScaleY);
 
         fpsOverlay.SyncVisibilityFromGlobal();
         fpsOverlay.Update(timing, fbW);
@@ -583,6 +620,7 @@ public:
     }
 
     void EnterParticleDemo(IEngineContext& context) {
+        DemoGui::ActivateDearImGuiDemoUi(context);
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
         if (threeDLoaded) {
@@ -1354,6 +1392,7 @@ public:
     }
 
     void EnterPhysicsBall3DDemo(IEngineContext& context) {
+        DemoGui::ActivateDearImGuiDemoUi(context);
         if (threeDLoaded) {
             threeD.Unload(GetWorld());
             threeDLoaded = false;
@@ -1550,7 +1589,7 @@ public:
 
     void ReturnToMenu(IEngineContext& context) {
         if (mode == DemoMode::ImGuiShowcase) {
-            imguiShowcaseDemo.Leave(context);
+            imguiShowcaseDemo.Leave(context, GetWorld());
         }
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
@@ -1615,6 +1654,20 @@ public:
         launcherSelectedIndex = -1;
         pendingDemoLaunch = -1;
         context.GetInput().SetCursorCaptured(false);
+        BuildLauncherRetainedUi(GetWorld());
+        SetLauncherCanvasEnabled(true);
+    }
+
+    void OnLauncherListSelected(const int index) {
+        launcherSelectedIndex = index;
+        pendingDemoLaunch = index;
+    }
+
+    void CycleShellTheme(const int delta) {
+        const int n = Ui::UiThemePresetCount();
+        int cur = static_cast<int>(Ui::GetActiveUiThemePreset());
+        cur = ((cur + delta) % n + n) % n;
+        OnShellThemeSelected(cur);
     }
 
 private:
@@ -1664,13 +1717,6 @@ private:
         if (engineCtx == nullptr) {
             return;
         }
-        constexpr int kImGuiShowcaseIndex = 19;
-        if (idx != kImGuiShowcaseIndex) {
-            Spark::Gui::GuiToolkitSettings::SetPreferred(Spark::Gui::GuiToolkitKind::SparkNative);
-            if (IImGuiLayer* layer = engineCtx->TryGetImGuiLayer()) {
-                layer->SetEnabled(false);
-            }
-        }
         using EnterFn = void (ShellGame::*)(IEngineContext&);
         static constexpr EnterFn kDemoEnter[] = {
                 &ShellGame::EnterThreeD,
@@ -1700,92 +1746,107 @@ private:
         if (idx < 0 || idx >= static_cast<int>(sizeof(kDemoEnter) / sizeof(kDemoEnter[0]))) {
             return;
         }
+        SetLauncherCanvasEnabled(false);
+        DestroyLauncherRetainedUi(GetWorld());
         (this->*kDemoEnter[idx])(*engineCtx);
     }
 
-    void BuildLauncherPortableUi(IEngineContext& context, SceneRenderParams& params) {
-        static constexpr const char* kDemoLabels[] = {
-                "1  — Basic 3D scene",
-                "2  — Sky: box, dome, plane",
-                "3  — Particles",
-                "4  — Terrain",
-                "5  — Character (1st / 3rd person)",
-                "6  — 2D platformer",
-                "7  — 2D Maze",
-                "8  — 3D maze",
-                "9  — 3D physics",
-                "10 — 3D scene editor",
-                "11 — Tetris",
-                "12 — Match-3",
-                "13 — Space Invaders",
-                "14 — 3D steering",
-                "15 — Toon/cel shading",
-                "16 — Material ball",
-                "17 — Time of day",
-                "18 — Farming RPG render layers",
-                "19 — Tilemap layers, animation & pathfinding",
-                "20 — Dear ImGui tools (docking)",
-        };
-        constexpr int kDemoCount = static_cast<int>(sizeof(kDemoLabels) / sizeof(kDemoLabels[0]));
-
-        const Gui::GuiFrameContext frame = DemoGui::MakeFrameContext(context, params, GetWorld(), 0.0F);
-        Gui::GuiSystem::Get().BeginImmediateFrame(frame);
-        Gui::IGuiFrame& ui = Gui::Ui();
-
-        const Gui::GuiLayoutMetrics& layout = Gui::GetActiveGuiLayoutMetrics();
-        const float fbW = static_cast<float>((std::max)(1, frame.framebufferWidth));
-        const float fbH = static_cast<float>((std::max)(1, frame.framebufferHeight));
-        const float panelW = DemoGui::kDemoLauncherPanelWidth * layout.uiScale;
-        const float rowStep = layout.ListRowHeight() + layout.ControlGap();
-        const float panelH = layout.Padding() * 4.0F + layout.FontLabel() + layout.FormRowHeight() * 4.5F +
-                             static_cast<float>(kDemoCount) * rowStep;
-        const float panelX = (fbW - panelW) * 0.5F;
-        const float panelY = std::max(layout.Padding(), (fbH - panelH) * 0.5F);
-        ui.SetNextPanelSize(panelW, panelH);
-        ui.SetCursorPos(panelX, panelY);
-
-        if (ui.BeginPanel("launcher", "Spark Demo Launcher")) {
-            const Gui::GuiThemePreset preset = Gui::GetActiveGuiThemePreset();
-            ui.Text(Gui::GetGuiThemePresetDisplayName(preset));
-            ui.SameLine();
-            if (ui.Button("theme_prev", "<")) {
-                const int n = Gui::GuiThemePresetCount();
-                int cur = static_cast<int>(Gui::GetActiveGuiThemePreset());
-                cur = ((cur - 1) % n + n) % n;
-                OnShellThemeSelected(cur);
-            }
-            ui.SameLine();
-            if (ui.Button("theme_next", ">")) {
-                const int n = Gui::GuiThemePresetCount();
-                int cur = static_cast<int>(Gui::GetActiveGuiThemePreset());
-                cur = ((cur + 1) % n) % n;
-                OnShellThemeSelected(cur);
-            }
-            ui.Separator();
-            ui.TextDisabled("Click a demo to launch (keyboard shortcuts still work).");
-            for (int i = 0; i < kDemoCount; ++i) {
-                char idBuf[24];
-                snprintf(idBuf, sizeof(idBuf), "demo_%d", i);
-                if (ui.Selectable(idBuf, kDemoLabels[i], launcherSelectedIndex == i)) {
-                    launcherSelectedIndex = i;
-                    pendingDemoLaunch = i;
-                }
-            }
-            ui.EndPanel();
+    void DestroyLauncherRetainedUi(GameWorld& world) {
+        if (launcherUiRoot != nullptr) {
+            world.DestroyGameObject(launcherUiRoot);
+            launcherUiRoot = nullptr;
+            launcherCanvas = nullptr;
+            launcherThemeLabel = nullptr;
+            launcherList = nullptr;
         }
-        Gui::GuiSystem::Get().EndImmediateFrame();
+    }
+
+    void BuildLauncherRetainedUi(GameWorld& world) {
+        if (launcherCanvas != nullptr) {
+            return;
+        }
+        launcherUiRoot = world.CreateGameObject();
+        launcherUiRoot->GetName() = Utf8String("ShellLauncherUi");
+        launcherCanvas = launcherUiRoot->AddComponent<UiCanvasComponent>();
+        launcherCanvas->SetSortOrder(200);
+        launcherCanvas->SetTheme(Ui::UiTheme::ClassicMint());
+
+        Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+
+        Ui::PanelDesc panelDesc{};
+        panelDesc.id = Utf8String("launcher");
+        panelDesc.title = Utf8String("Spark Demo Launcher");
+        panelDesc.width = DemoGui::kDemoLauncherPanelWidth;
+        panelDesc.height = 520.0F;
+        panelDesc.centerInParent = true;
+        auto panel = factory.CreatePanel(panelDesc);
+
+
+
+        Ui::LabelDesc helpDesc{};
+        helpDesc.id = Utf8String("help");
+        helpDesc.text = Utf8String("Click a demo to launch (keyboard shortcuts still work).");
+        helpDesc.muted = true;
+        auto help = factory.CreateLabel(helpDesc);
+
+        Ui::ListDesc listDesc{};
+        listDesc.id = Utf8String("demo_list");
+        listDesc.rowHeight = 28.0F;
+        listDesc.itemFontSize = 16.0F;
+        listDesc.verticalScrollingEnabled = true;
+        listDesc.fillRemainingHeight = true;
+
+        auto list = factory.CreateList(listDesc);
+        launcherList = list.Get();
+        Array<Utf8String> items;
+        items.Reserve(static_cast<std::size_t>(kLauncherDemoCount));
+        for (int i = 0; i < kLauncherDemoCount; ++i) {
+            items.PushBack(Utf8String(kLauncherDemoLabels[i]));
+        }
+        list->SetItems(MoveTemp(items));
+        if (launcherSelectedIndex >= 0) {
+            list->SetSelectedIndex(launcherSelectedIndex);
+        }
+        Ui::UiIntCallback selectCb{};
+        selectCb.fn = &LauncherDemoSelected;
+        selectCb.userData = this;
+        list->SetOnSelectionChanged(selectCb);
+
+
+        AdoptUiChild(*panel, MoveTemp(help));
+        AdoptUiChild(*panel, MoveTemp(list));
+
+        launcherCanvas->SetRoot(MoveTemp(panel));
+    }
+
+    void SyncLauncherThemeLabel() {
+        if (launcherThemeLabel != nullptr) {
+            launcherThemeLabel->SetText(
+                    Utf8String(Ui::GetUiThemePresetDisplayName(Ui::GetActiveUiThemePreset())));
+        }
+    }
+
+    void SetLauncherCanvasEnabled(const bool enabled) noexcept {
+        if (launcherCanvas != nullptr) {
+            launcherCanvas->SetCanvasEnabled(enabled);
+        }
+    }
+
+    void BuildLauncherPortableUi(SceneRenderParams& params, const int fbW, const int fbH) {
+        PaintUiCanvases(GetWorld(), params, fbW, fbH);
     }
 
     void SaveShellGuiPreferences() {
-        Spark::Gui::SceneEditorLayoutSettings layout{};
-        (void)Spark::Gui::TryLoadSceneEditorLayout(layout);
-        layout.guiTheme = Spark::Gui::GetActiveGuiThemePreset();
-        (void)Spark::Gui::SaveSceneEditorLayout(layout);
+        Spark::Ui::SceneEditorLayoutSettings layout{};
+        (void)Spark::Ui::TryLoadSceneEditorLayout(layout);
+        layout.guiTheme = Spark::Ui::GetActiveUiThemePreset();
+        (void)Spark::Ui::SaveSceneEditorLayout(layout);
     }
 
     void OnShellThemeSelected(const int idx) {
-        Spark::Gui::SetActiveGuiThemePreset(Spark::Gui::GuiThemePresetFromId(idx));
+        Spark::Ui::SetActiveUiThemePreset(Spark::Ui::UiThemePresetFromId(idx));
         SaveShellGuiPreferences();
+        SyncLauncherThemeLabel();
     }
 
     void RenderUiOnly(IEngineContext& context, int fbW, int fbH) {
@@ -1805,8 +1866,8 @@ private:
         params.lightDirectionWorld = Spark::Vector3{0.3F, 0.85F, 0.4F}.Normalized();
         params.lightColor = {1.0F, 1.0F, 1.0F};
         params.lightIntensity = 0.0F;
-        const Spark::Gui::GuiTheme menuSkin =
-                Spark::Gui::ResolveGuiTheme(Spark::Gui::GetActiveGuiThemePreset());
+        const Spark::Ui::UiTheme menuSkin =
+                Spark::Ui::ResolveUiTheme(Spark::Ui::GetActiveUiThemePreset());
         params.ambientColor = {
                 menuSkin.shellBackdropBottom.x * 0.14F,
                 menuSkin.shellBackdropBottom.y * 0.14F,
@@ -1814,12 +1875,19 @@ private:
         params.uiFont = GetWorld().GetUiFont();
         params.uiBoldFont = GetWorld().GetUiBoldFont();
         if (mode == DemoMode::Menu) {
-            BuildLauncherPortableUi(context, params);
+            BuildLauncherPortableUi(params, fbW, fbH);
         }
         context.SetSceneRenderParams(params);
     }
 
     IEngineContext* engineCtx = nullptr;
+
+    GameObject* launcherUiRoot = nullptr;
+    UiCanvasComponent* launcherCanvas = nullptr;
+    Ui::ILabel* launcherThemeLabel = nullptr;
+    Ui::IList* launcherList = nullptr;
+    LauncherThemeBinding themePrevBinding{};
+    LauncherThemeBinding themeNextBinding{};
 
     DemoMode mode = DemoMode::Menu;
     int launcherSelectedIndex = -1;
@@ -1865,6 +1933,37 @@ private:
     ImGuiShowcaseDemo imguiShowcaseDemo{};
     DemoFpsToggleOverlay fpsOverlay{};
 };
+
+namespace {
+
+void LauncherThemePrev(void* userData) {
+    if (userData == nullptr) {
+        return;
+    }
+    auto* binding = static_cast<LauncherThemeBinding*>(userData);
+    if (binding->game != nullptr) {
+        binding->game->CycleShellTheme(-1);
+    }
+}
+
+void LauncherThemeNext(void* userData) {
+    if (userData == nullptr) {
+        return;
+    }
+    auto* binding = static_cast<LauncherThemeBinding*>(userData);
+    if (binding->game != nullptr) {
+        binding->game->CycleShellTheme(1);
+    }
+}
+
+void LauncherDemoSelected(void* userData, const int index) {
+    if (userData == nullptr) {
+        return;
+    }
+    static_cast<ShellGame*>(userData)->OnLauncherListSelected(index);
+}
+
+}  // namespace
 
 UniquePtr<IGame> NewShellDemoGame() {
     return Engine::NewGame<ShellGame>();

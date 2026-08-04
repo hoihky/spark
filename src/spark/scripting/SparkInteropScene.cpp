@@ -5,7 +5,7 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/gui/GuiScene.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/scene/GameWorld.hpp"
@@ -192,7 +192,7 @@ void spark_scene_submit_standard_lit_from_world(
             ToCppSortMode(spriteSortMode));
 }
 
-void spark_gui_process_canvases_input(
+void spark_ui_process_canvases_input(
         SparkGameWorld* world,
         SparkInput* input,
         const int framebufferWidth,
@@ -200,14 +200,14 @@ void spark_gui_process_canvases_input(
     if (world == nullptr || input == nullptr) {
         return;
     }
-    Spark::ProcessGuiCanvasesInput(
+    Spark::ProcessUiCanvasesInput(
             *reinterpret_cast<Spark::GameWorld*>(world),
             *reinterpret_cast<Spark::IInput*>(input),
             framebufferWidth,
             framebufferHeight);
 }
 
-void spark_gui_paint_canvases(
+void spark_ui_paint_canvases(
         SparkGameWorld* world,
         void* params,
         const std::uint32_t paramsByteSize,
@@ -216,18 +216,18 @@ void spark_gui_paint_canvases(
     if (world == nullptr || params == nullptr || paramsByteSize != sizeof(Spark::SceneRenderParams)) {
         return;
     }
-    Spark::PaintGuiCanvases(
+    Spark::PaintUiCanvases(
             *reinterpret_cast<Spark::GameWorld*>(world),
             *static_cast<Spark::SceneRenderParams*>(params),
             framebufferWidth,
             framebufferHeight);
 }
 
-int spark_gui_consumes_game_pointer(void) {
-    return Spark::GuiConsumesGamePointer() ? 1 : 0;
+int spark_ui_consumes_game_pointer(void) {
+    return Spark::UiConsumesGamePointer() ? 1 : 0;
 }
 
-void spark_context_process_gui_input(SparkEngineContext* context) {
+void spark_context_process_ui_input(SparkEngineContext* context) {
     if (context == nullptr) {
         return;
     }
@@ -242,7 +242,7 @@ void spark_context_process_gui_input(SparkEngineContext* context) {
     float sx = 1.0F;
     float sy = 1.0F;
     ctx->GetWindow().GetContentScale(sx, sy);
-    Spark::ProcessGuiCanvasesInput(*scene, ctx->GetInput(), w, h, sx, sy);
+    Spark::ProcessUiCanvasesInput(*scene, ctx->GetInput(), w, h, sx, sy);
 }
 
 }  // extern "C"

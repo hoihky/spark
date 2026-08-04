@@ -27,19 +27,8 @@
 #include "spark/scene/Texture2D.hpp"
 #include "spark/text/Font.hpp"
 #include "spark/scene/SceneSubmit.hpp"
-#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
-#include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
-#include "spark/ecs/components/rendering/SpriteComponent.hpp"
-#include "spark/ecs/components/rendering/TerrainComponent.hpp"
-#include "spark/ecs/components/rendering/TilemapComponent.hpp"
-#include "spark/ecs/components/physics/2d/BoxCollider2DComponent.hpp"
-#include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
-#include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
-#include "spark/physics/PhysicsWorld2D.hpp"
-#include "spark/scene/Camera2D.hpp"
-#include "spark/gui/GuiControls.hpp"
-#include "spark/gui/GuiScene.hpp"
-#include "spark/gui/Widget.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 
 #include <GLFW/glfw3.h>
 

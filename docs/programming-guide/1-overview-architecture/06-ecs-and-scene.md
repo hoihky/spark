@@ -83,7 +83,7 @@ void ForEachSkinnedDrawable(const SkinnedFn& fn);
 void ForEachSprite(const SpriteFn& fn);
 void ForEachTilemap(const TilemapFn& fn);
 void ForEachPointLight(const PointLightFn& fn);
-void ForEachGuiCanvas(const GuiCanvasFn& fn);
+void ForEachUiCanvas(Fn&& fn);
 void SetSpatialPartitionKind(ScenePartitionKind kind);  // UniformGrid or BVH
 ```
 
@@ -124,7 +124,7 @@ ProcessTimeOfDayDrivers(world, timing.deltaTimeSeconds);  // optional if not usi
 Spark::FillStandardLitSceneFromWorld(world, context, viewProj, camPos,
     lightDir, lightColor, lightIntensity, ambient, enableParticles,
     camRight, camUp, sceneTime, params);  // applies TimeOfDayDriver + fog/post volumes internally
-Spark::PaintGuiCanvases(world, params, fbW, fbH);
+Spark::PaintUiCanvases(world, params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
 

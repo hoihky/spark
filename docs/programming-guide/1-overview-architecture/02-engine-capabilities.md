@@ -6,7 +6,7 @@
 flowchart LR
     ECS[GameWorld ECS] --> Fill[FillStandardLitSceneFromWorld]
     Fill --> SRP[SceneRenderParams]
-    GUI[PaintGuiCanvases] --> SRP
+    GUI[PaintUiCanvases] --> SRP
     SRP --> VK[VulkanRenderer]
     IMGUI[Dear ImGui overlay] --> VK
     VK --> Present[Swapchain Present]
@@ -16,8 +16,8 @@ flowchart LR
 
 | Stack | When to use | Key APIs |
 |-------|-------------|----------|
-| **Spark GUI** (retained) | Menus, editor chrome, themed HUD | `GuiCanvasComponent`, `ProcessGuiCanvasesInput`, `PaintGuiCanvases` |
-| **Dear ImGui** (optional, `SPARK_ENABLE_IMGUI`) | Docking tools, debug panels | `IImGuiLayer`, `GuiToolkitSettings`, build UI in `OnRender` |
+| **Spark UI** (retained, `spark/ui/`) | Menus, editor chrome, themed HUD | `UiCanvasComponent`, `ProcessUiCanvasesInput`, `PaintUiCanvases` |
+| **Dear ImGui** (optional, `SPARK_ENABLE_IMGUI`) | Docking tools, debug panels | `IImGuiLayer`, `Ui::UiToolkitSettings`, `DearImguiControlsFactory` or raw ImGui in `OnRender` |
 
 Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 
@@ -59,7 +59,7 @@ physics.Simulate2D(world, timing);
 physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers
 Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flush
-Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
+Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 ```
 
 Legacy free functions (`SimulatePhysics2D`, `SimulatePhysics3D`, …) remain but are **deprecated** — prefer `PhysicsSubsystem`.

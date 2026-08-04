@@ -1,45 +1,43 @@
 #pragma once
 
 #include "spark/editor/IEditorPanel.hpp"
-#include "spark/gui/Widget.hpp"
-#include "spark/gui/GuiTypes.hpp"
-#include "spark/gui/docking/DockManager.hpp"
 #include "spark/memory/UniquePtr.hpp"
+#include "spark/ui/controls/IUiControls.hpp"
+#include "spark/ui/core/UiTypes.hpp"
 
 namespace Spark::Editor {
 
 /**
- * Top-level editor chrome: menu bar + toolbar + OOP dock frame (collapsible left/right panels).
+ * Top-level editor chrome: toolbar + <c>SparkDockWorkspace</c> (collapsible left/right panels).
  */
 class EditorDockShell {
 public:
     void SetSidebarWidth(float widthPx) noexcept;
     [[nodiscard]] float GetSidebarWidth() const noexcept { return sidebarWidthPx; }
-    [[nodiscard]] float GetRightPanelWidth() const noexcept { return dockManager.GetLayoutState().rightWidthPx; }
+    [[nodiscard]] float GetRightPanelWidth() const noexcept;
 
     void ToggleLeftPanel() noexcept;
     void ToggleRightPanel() noexcept;
 
     void SetPanels(
-            UniquePtr<Gui::Widget> hierarchyRoot,
-            UniquePtr<Gui::Widget> projectRoot,
-            UniquePtr<Gui::Widget> inspectorRoot);
+            UniquePtr<Ui::IUiElement> hierarchyRoot,
+            UniquePtr<Ui::IUiElement> projectRoot,
+            UniquePtr<Ui::IUiElement> inspectorRoot);
 
-    [[nodiscard]] Gui::Widget* GetRootWidget() noexcept { return root.Get(); }
-    [[nodiscard]] UniquePtr<Gui::Widget> ReleaseRootWidget() { return MoveTemp(root); }
+    [[nodiscard]] Ui::IUiElement* GetRootElement() noexcept { return root.Get(); }
+    [[nodiscard]] UniquePtr<Ui::IUiElement> ReleaseRootElement() { return MoveTemp(root); }
     /** 3D viewport region in framebuffer pixels (center pane after layout). */
-    [[nodiscard]] Gui::Rect GetWorldViewportRect() const noexcept;
+    [[nodiscard]] Ui::Rect GetWorldViewportRect() const noexcept;
 
 private:
     void Rebuild(
-            UniquePtr<Gui::Widget> hierarchyRoot,
-            UniquePtr<Gui::Widget> projectRoot,
-            UniquePtr<Gui::Widget> inspectorRoot);
+            UniquePtr<Ui::IUiElement> hierarchyRoot,
+            UniquePtr<Ui::IUiElement> projectRoot,
+            UniquePtr<Ui::IUiElement> inspectorRoot);
 
-    Gui::DockManager dockManager{};
-    Gui::DockFrameLayout* dockFrame = nullptr;
+    Ui::IDockWorkspace* dockWorkspace = nullptr;
     float sidebarWidthPx = 300.0F;
-    UniquePtr<Gui::Widget> root;
+    UniquePtr<Ui::IUiElement> root;
 };
 
 }  // namespace Spark::Editor

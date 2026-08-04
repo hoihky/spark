@@ -28,7 +28,7 @@ Complete reference for all **70** built-in `GameComponent` types in Spark (`incl
 | [Animation](#animation) | `Animator`, `SpriteAnimator`, `AnimationEventReceiver`, `AttachmentSocket`, `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
 | [AI](#ai) | `AiAgent`, `NavMeshAgent`, `PatrolPath`, `PerceptionSensor` |
 | [Audio](#audio) | `SoundCue`, `AudioListener`, `AmbientZone` |
-| [UI](#ui) | `GuiCanvas` |
+| [UI](#ui) | `UiCanvas` |
 | [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver` |
 | [Gameplay](#gameplay) | `Health`, `Damageable` |
 
@@ -782,15 +782,26 @@ zone->SetPriority(3);
 
 ## UI
 
-### `GuiCanvasComponent`
+### `UiCanvasComponent`
 
 ```cpp
-auto canvas = uiRoot->AddComponent<GuiCanvasComponent>();
+#include "spark/ui/Ui.hpp"
+
+auto canvas = uiRoot->AddComponent<UiCanvasComponent>();
 canvas->SetSortOrder(0);
-canvas->SetRoot<Gui::Panel>(MakeUnique<Gui::Panel>());
-// Each frame (after scene submit params built):
-ProcessGuiCanvasesInput(world, input, fbW, fbH);
-PaintGuiCanvases(world, params, fbW, fbH);
+canvas->SetTheme(Ui::UiTheme::ClassicMint());
+
+Ui::IUiControlsFactory& factory =
+    Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String("hud");
+auto panel = factory.CreatePanel(panelDesc);
+canvas->SetRoot(MoveTemp(panel));
+
+// Each frame:
+ProcessUiCanvasesInput(world, input, fbW, fbH);
+// After FillStandardLitSceneFromWorld (or equivalent):
+PaintUiCanvases(world, params, fbW, fbH);
 ```
 
 ---

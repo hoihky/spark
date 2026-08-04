@@ -509,7 +509,7 @@ void ForEachSkinnedDrawable(const SkinnedFn&amp; fn);
 void ForEachSprite(const SpriteFn&amp; fn);
 void ForEachTilemap(const TilemapFn&amp; fn);
 void ForEachPointLight(const PointLightFn&amp; fn);
-void ForEachGuiCanvas(const GuiCanvasFn&amp; fn);
+void ForEachUiCanvas(Fn&amp;&amp; fn);
 void SetSpatialPartitionKind(ScenePartitionKind kind);  // UniformGrid or BVH
 </code></pre>
 <h2 id="signals-example">Signals Example</h2>
@@ -543,7 +543,7 @@ ProcessTimeOfDayDrivers(world, timing.deltaTimeSeconds);  // optional if not usi
 Spark::FillStandardLitSceneFromWorld(world, context, viewProj, camPos,
     lightDir, lightColor, lightIntensity, ambient, enableParticles,
     camRight, camUp, sceneTime, params);  // applies TimeOfDayDriver + fog/post volumes internally
-Spark::PaintGuiCanvases(world, params, fbW, fbH);
+Spark::PaintUiCanvases(world, params, fbW, fbH);
 context.SetSceneRenderParams(params);
 </code></pre>
 <p>Part 1 complete → <a href="07-game-component-reference.html">Game Component Reference</a> · <strong>Part 2</strong>: <a href="../2-2d-graphics/01-sprites.html">Sprites</a>.</p>

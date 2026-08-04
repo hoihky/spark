@@ -2,11 +2,9 @@
 #include "spark/demo/SceneEditor3DDemo_detail.hpp"
 
 #include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
-#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
-#include "spark/gui/GuiContextMenu.hpp"
-#include "spark/gui/GuiScene.hpp"
-#include "spark/gui/Widget.hpp"
+#include "spark/ui/runtime/UiContextMenu.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
 #include "spark/scene/MeshRaycast.hpp"
 #include "spark/scene/SceneRaycast.hpp"
 #include "spark/scene/SceneSubmit.hpp"
@@ -28,15 +26,13 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         placed.Clear();
         placedRel.Clear();
         userLights.Clear();
-        guiCanvasObject = nullptr;
-        guiCanvas = nullptr;
         unitCubeAsset.Reset();
         groundAsset.Reset();
         loadedSceneId = Spark::kInvalidSceneInstanceId;
         pendingLoadDocument = SceneDocument{};
         sceneLoadInProgress = false;
         sceneManager.Reset();
-        Spark::Gui::GetGuiContextMenu().Close();
+        Spark::Ui::GetUiContextMenu().Close();
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SceneEditorUnitCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
@@ -63,7 +59,6 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         roots.PushBack(sun);
 
         SetupContextMenuCanvas(w);
-        roots.PushBack(guiCanvasObject);
 
         fpsHudObject = w.CreateGameObject();
         fpsHudObject->GetName() = Spark::Utf8String("SceneEditorFpsHud");
@@ -90,7 +85,7 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
 
 void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
 {
-        Spark::Gui::GetGuiContextMenu().Close();
+        Spark::Ui::GetUiContextMenu().Close();
         if (sceneManager && loadedSceneId != Spark::kInvalidSceneInstanceId) {
             sceneManager->UnloadScene(loadedSceneId);
             loadedSceneId = Spark::kInvalidSceneInstanceId;
@@ -108,8 +103,6 @@ void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
         placed.Clear();
         placedRel.Clear();
         userLights.Clear();
-        guiCanvasObject = nullptr;
-        guiCanvas = nullptr;
         lightEditTarget = nullptr;
         statusMessage.Clear();
         orbitDragActive = false;
@@ -160,7 +153,7 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
             if (std::fabs(scroll) > 1.0e-4F) {
                 camera.position += camera.Forward() * (scroll * 0.65F);
             }
-        } else if (!GuiConsumesGamePointer()) {
+        } else if (!UiConsumesGamePointer()) {
             const bool rmbDown = in.IsMouseButtonDown(1);
             const bool mmbDown = in.IsMouseButtonDown(2);
             const bool cameraNavActive = inViewport || rmbDown || mmbDown || orbitDragActive;
@@ -193,7 +186,7 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
             }
         }
 
-        if (!in.IsCursorCaptured() && !GuiConsumesGamePointer()) {
+        if (!in.IsCursorCaptured() && !UiConsumesGamePointer()) {
             const Spark::Matrix4 view = camera.ViewMatrix();
             const float aspect = (fbH > 0) ? static_cast<float>(fbW) / static_cast<float>(fbH) : 1.0F;
             const Spark::Matrix4 proj =
@@ -478,7 +471,7 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
         }
 
         params.uiPaintOrderNext = 0U;
-        Spark::PaintGuiCanvases(world, params, fbW, fbH);
+        Spark::PaintUiCanvases(world, params, fbW, fbH);
 
         scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
             Spark::ScreenTextDraw d{};
@@ -1269,16 +1262,9 @@ bool SceneEditor3DDemo::IsPointerInEditorViewport(const float cursorX, const int
         return cursorX >= 0.0F && cursorX < static_cast<float>(framebufferWidth);
     }
 
-void SceneEditor3DDemo::SetupContextMenuCanvas(Spark::GameWorld& w)
+void SceneEditor3DDemo::SetupContextMenuCanvas(Spark::GameWorld& /*w*/)
 {
-        guiCanvasObject = w.CreateGameObject();
-        guiCanvasObject->GetName() = Spark::Utf8String("SceneEditorGui");
-        guiCanvas = guiCanvasObject->AddComponent<Spark::GuiCanvasComponent>();
-        guiCanvas->SetSortOrder(220);
-        guiCanvas->SetTheme(Spark::Gui::GuiTheme::SceneEditorDark());
-        auto root = Spark::MakeUnique<Spark::Gui::Widget>();
-        root->SetHitTest(false);
-        guiCanvas->SetRoot(Spark::MoveTemp(root));
+        Spark::Ui::GetUiContextMenu().Close();
     }
 
 void SceneEditor3DDemo::OpenSceneContextMenu(
@@ -1309,7 +1295,7 @@ void SceneEditor3DDemo::OpenSceneContextMenu(
         SceneEditor3DDemo* self = this;
         const Spark::Vector3 spawnPos = groundHit;
         Spark::GameObject* pickTarget = selection;
-        Spark::Gui::GetGuiContextMenu().Open(
+        Spark::Ui::GetUiContextMenu().Open(
                 menuX,
                 menuY,
                 Spark::MoveTemp(labels),

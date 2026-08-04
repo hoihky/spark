@@ -6,6 +6,7 @@
 #include "spark/editor/EditorSelection.hpp"
 #include "spark/editor/EditorTypes.hpp"
 #include "spark/editor/panels/EditorDockShell.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/FlyCamera.hpp"
@@ -60,7 +61,7 @@ private:
 
     FlyCamera viewportCamera{};
     GameObject* guiCanvasObject = nullptr;
-    class GuiCanvasComponent* guiCanvas = nullptr;
+    UiCanvasComponent* guiCanvas = nullptr;
     GameObject* fpsHudObject = nullptr;
     class TextOverlayComponent* fpsText = nullptr;
     GameObject* highlightedObject = nullptr;

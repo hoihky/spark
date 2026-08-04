@@ -8,7 +8,7 @@
 | [**SCENE_AND_RENDERING_GAPS.md**](SCENE_AND_RENDERING_GAPS.md) | Gameplay devs | C++ public API gaps — scene, ECS, rendering (`include/spark/`) |
 | [**CLION.md**](CLION.md) | IDE users | CMake presets, editor-debug profile |
 | [**SPARK_EDITOR_PLAN.md**](SPARK_EDITOR_PLAN.md) | Editor contributors | Godot-style editor milestones M0–M6 |
-| [**GUI_EDITOR_ROADMAP.md**](GUI_EDITOR_ROADMAP.md) | GUI / tools devs | Widget inventory, editor UX tasks |
+| [**GUI_EDITOR_ROADMAP.md**](GUI_EDITOR_ROADMAP.md) | UI / tools devs | `spark/ui` control inventory, editor UX tasks |
 | [**LIGHTING_AND_SHADOWS.md**](LIGHTING_AND_SHADOWS.md) | Rendering | CSM, punctual lights, SSAO, frame order |
 | [**MATERIALS_AND_LIGHTING.md**](MATERIALS_AND_LIGHTING.md) | Artists / rendering | PBR channels, IBL, material limits |
 | [**ANIMATION_3D_ROADMAP.md**](ANIMATION_3D_ROADMAP.md) | Animation | Skeletal animation milestones |

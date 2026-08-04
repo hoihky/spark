@@ -30,7 +30,7 @@ void PartitionSortedDrawItemsIntoSceneParams(
 
 /**
  * Walks ECS in world, fills `outParams` (sky + lit rigid + skinned + point lights + optional particles + text).
- * Does not call `SetSceneRenderParams`; use `PaintGuiCanvases` (etc.) then submit.
+ * Does not call `SetSceneRenderParams`; use `PaintUiCanvases` (etc.) then submit.
  */
 void FillStandardLitSceneFromWorld(
         GameWorld& world,

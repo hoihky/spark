@@ -11,7 +11,7 @@
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
-#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
@@ -269,14 +269,14 @@ public:
         });
     }
 
-    /** GUI roots (GuiCanvasComponent); use for custom tooling or with spark/gui/GuiScene helpers. */
+    /** UI roots (<c>UiCanvasComponent</c>); use with <c>ProcessUiCanvasesInput</c> / <c>PaintUiCanvases</c>. */
     template<typename Fn>
-    void ForEachGuiCanvas(Fn&& fn) const {
+    void ForEachUiCanvas(Fn&& fn) const {
         world.ForEachActiveGameObject([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
-            const GuiCanvasComponent* gc = o->GetComponent<GuiCanvasComponent>();
+            const UiCanvasComponent* gc = o->GetComponent<UiCanvasComponent>();
             if (gc == nullptr || !gc->IsCanvasEnabled()) {
                 return;
             }

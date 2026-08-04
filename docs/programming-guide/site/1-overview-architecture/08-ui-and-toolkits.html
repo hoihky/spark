@@ -378,52 +378,171 @@
             <h1>08 ui and toolkits</h1>
           </header>
           <div class="doc-body"><h1 id="ui-and-toolkits">UI and Toolkits</h1>
-<p>Spark supports <strong>two complementary UI stacks</strong> for tools, menus, and HUD:</p>
+<p>Spark’s UI lives in <strong><code>spark/ui/</code></strong> (umbrella header <strong><code>spark/ui/Ui.hpp</code></strong>). The stack is <strong>retained-mode</strong>: you build an <strong><code>IUiElement</code></strong> tree on a <strong><code>UiCanvasComponent</code></strong>, route input each frame, and paint into <strong><code>SceneRenderParams</code></strong> for the Vulkan screen-UI pass.</p>
+<p>Two <strong>backends</strong> share the same factory interfaces:</p>
 <table class="table">
 <thead>
 <tr>
-<th>Stack</th>
-<th>Style</th>
+<th>Backend</th>
+<th><code>UiBackendKind</code></th>
+<th>Factory</th>
 <th>Best for</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Spark retained GUI</strong> (<code>spark/gui/</code>)</td>
-<td>Widget tree, CPU paint → <code>SceneRenderParams</code></td>
-<td>In-game menus, editor chrome, themed controls</td>
+<td><strong>Spark native</strong></td>
+<td><code>SparkNative</code></td>
+<td><code>SparkUiControlsFactory</code></td>
+<td>Shipped menus, themed HUD, editor chrome</td>
 </tr>
 <tr>
-<td><strong>Dear ImGui</strong> (<code>spark/imgui/</code>, optional)</td>
-<td>Immediate-mode, docking branch</td>
-<td>Rapid tool panels, debug windows, internal editors</td>
+<td><strong>Dear ImGui retained</strong></td>
+<td><code>DearImGui</code></td>
+<td><code>DearImguiControlsFactory</code></td>
+<td>Docking tool panels, rapid internal editors</td>
 </tr>
 </tbody>
 </table>
-<p>Both can coexist in one build when <code>SPARK_ENABLE_IMGUI=ON</code> (default). Use <strong><code>GuiToolkitSettings</code></strong> to choose which stack receives pointer/keyboard routing for a mode.</p>
-<h2 id="spark-retained-gui-default">Spark Retained GUI (default)</h2>
-<p>Attach a <strong><code>GuiCanvasComponent</code></strong> to a <code>GameObject</code>, set a root <strong><code>Widget</code></strong> tree, then each frame:</p>
-<pre><code class="language-cpp">#include "spark/gui/GuiScene.hpp"
+<p>Both compile when <strong><code>SPARK_ENABLE_IMGUI=ON</code></strong> (default). Use <strong><code>Ui::UiToolkitSettings</code></strong> to choose which backend owns pointer/keyboard routing for a mode.</p>
+<h2 id="architecture">Architecture</h2>
+<pre class="mermaid">flowchart TB
+    ECS[UiCanvasComponent on GameObject] --&gt; Tree[IUiElement tree]
+    Factory[IUiControlsFactory] --&gt; Tree
+    Router[UiInputRouter] --&gt; ECS
+    System[UiSystem facade] --&gt; Router
+    System --&gt; Paint[SparkUiRenderer or ImguiUiRenderer]
+    Paint --&gt; SRP[SceneRenderParams screenRects / screenTexts]
+</pre>
+<table class="table">
+<thead>
+<tr>
+<th>Piece</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>UiCanvasComponent</code></strong></td>
+<td>ECS root; sort order; hot / active / focus elements</td>
+</tr>
+<tr>
+<td><strong><code>IUiControlsFactory</code></strong></td>
+<td>Creates panels, buttons, lists, dock workspaces, …</td>
+</tr>
+<tr>
+<td><strong><code>UiSystem</code></strong></td>
+<td>Facade: active backend, <code>ProcessInput</code> / <code>Paint</code>, factory via <code>GetContext</code></td>
+</tr>
+<tr>
+<td><strong><code>ProcessUiCanvasesInput</code> / <code>PaintUiCanvases</code></strong></td>
+<td>World-level input + paint entry points (<code>spark/ui/runtime/UiScene.hpp</code>)</td>
+</tr>
+<tr>
+<td><strong><code>UiTheme</code> / <code>UiThemeCatalog</code></strong></td>
+<td>Semantic colors per canvas (<code>spark/ui/core/</code>)</td>
+</tr>
+<tr>
+<td><strong><code>IDockWorkspace</code> / <code>SparkDockWorkspace</code></strong></td>
+<td>Editor-style left / center / right panes with collapse</td>
+</tr>
+<tr>
+<td><strong><code>UiContextMenu</code></strong></td>
+<td>Global right-click menus (<code>GetUiContextMenu()</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>See also <a href="../../../GUI_TOOLKIT_ARCHITECTURE.md"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a>, <a href="../../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>, and <a href="../../../GUI_EDITOR_ROADMAP.md"><code>GUI_EDITOR_ROADMAP.md</code></a>.</p>
+<h2 id="building-a-retained-canvas">Building a retained canvas</h2>
+<p>Attach <strong><code>UiCanvasComponent</code></strong> to a <code>GameObject</code>, build a tree with the active factory, then call the scene helpers each frame:</p>
+<pre><code class="language-cpp">#include "spark/ui/Ui.hpp"
 
-Spark::ProcessGuiCanvasesInput(world, input, fbW, fbH, contentScaleX, contentScaleY);
-// … after building SceneRenderParams …
-Spark::PaintGuiCanvases(world, params, fbW, fbH);
+Ui::IUiControlsFactory&amp; factory =
+    Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
+
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String("menu");
+panelDesc.title = Utf8String("Pause");
+panelDesc.centerInParent = true;
+panelDesc.width = 280.0F;
+auto panel = factory.CreatePanel(panelDesc);
+
+Ui::ButtonDesc btnDesc{};
+btnDesc.id = Utf8String("resume");
+btnDesc.label = Utf8String("Resume");
+auto btn = factory.CreateButton(btnDesc);
+Ui::UiVoidCallback resumeCb{};
+resumeCb.fn = [](void*) { paused = false; };
+btn-&gt;SetOnClick(resumeCb);
+Ui::AdoptUiChild(*panel, MoveTemp(btn));
+
+auto* canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
+canvas-&gt;SetRoot(MoveTemp(panel));
 </code></pre>
-<ul>
-<li><strong>Input:</strong> hit testing, focus, scroll, popups — <code>ProcessGuiCanvasesInput</code></li>
-<li><strong>Paint:</strong> emits <code>screenRects</code> / <code>screenTexts</code> into <code>SceneRenderParams</code> — <code>PaintGuiCanvases</code></li>
-<li><strong>Themes:</strong> <code>GuiThemeCatalog</code> presets (<code>ClassicMint</code>, <code>SceneEditorDark</code>, …)</li>
-<li><strong>Editor docking:</strong> <code>DockManager</code>, <code>DockFrameLayout</code> under <code>spark/gui/docking/</code></li>
-</ul>
-<p>See also <a href="../../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §12 and <a href="../../../GUI_EDITOR_ROADMAP.md"><code>GUI_EDITOR_ROADMAP.md</code></a>.</p>
-<h2 id="dear-imgui-optional">Dear ImGui (optional)</h2>
+<p><strong>Input</strong> (typically from <code>OnUpdate</code> or after polling input):</p>
+<pre><code class="language-cpp">Spark::ProcessUiCanvasesInput(world, input, fbW, fbH, contentScaleX, contentScaleY);
+
+if (!Spark::UiScrollWheelConsumed()) {
+    // apply camera zoom from scroll wheel
+}
+if (!Spark::UiConsumesGamePointer()) {
+    // viewport pick / orbit / gameplay pointer
+}
+</code></pre>
+<p><strong>Paint</strong> (when building <code>SceneRenderParams</code>):</p>
+<pre><code class="language-cpp">Spark::PaintUiCanvases(world, params, fbW, fbH);
+</code></pre>
+<h3 id="input-gating-helpers">Input gating helpers</h3>
+<table class="table">
+<thead>
+<tr>
+<th>Function</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>UiConsumesGamePointer()</code></strong></td>
+<td>UI owns gameplay pointer this frame (replaces legacy <code>GuiConsumesGamePointer</code>)</td>
+</tr>
+<tr>
+<td><strong><code>UiPointerOverUi()</code></strong></td>
+<td>Cursor is over UI chrome — gate viewport picking / orbit</td>
+</tr>
+<tr>
+<td><strong><code>UiScrollWheelConsumed()</code></strong></td>
+<td>UI ate the scroll wheel — gate 3D camera zoom</td>
+</tr>
+</tbody>
+</table>
+<h3 id="themes">Themes</h3>
+<pre><code class="language-cpp">canvas-&gt;SetTheme(Ui::UiTheme::SceneEditorDark());
+// or Ui::UiTheme::ClassicMint(), Ui::ResolveUiTheme(Ui::UiThemePreset::TwilightSlate), …
+</code></pre>
+<h3 id="editor-docking">Editor docking</h3>
+<p>Use <strong><code>factory.CreateDockWorkspace(DockWorkspaceDesc{})</code></strong> (<code>SparkDockWorkspace</code> or <code>ImguiDockWorkspace</code> depending on backend). <strong><code>EditorDockShell</code></strong> in <code>spark/editor/</code> hosts hierarchy / inspector / viewport panes on a <strong><code>UiCanvasComponent</code></strong>.</p>
+<h3 id="context-menus">Context menus</h3>
+<pre><code class="language-cpp">Ui::GetUiContextMenu().Open(
+screenX, screenY,
+{Utf8String("Delete"), Utf8String("Duplicate")},
+[](int index) { /* handle pick */ });
+</code></pre>
+<h2 id="switching-backends">Switching backends</h2>
+<pre><code class="language-cpp">#include "spark/ui/runtime/UiToolkitSettings.hpp"
+
+Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
+// … tool mode …
+Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::SparkNative);
+</code></pre>
+<p>When Dear ImGui is preferred, <strong><code>UiToolkitSettings::ShouldProcessSparkUiInput()</code></strong> returns <code>false</code> so Spark-native canvases skip router hit-testing while ImGui owns input.</p>
+<h2 id="dear-imgui-optional-immediate-mode-layer">Dear ImGui (optional immediate-mode layer)</h2>
 <p>CMake option <strong><code>SPARK_ENABLE_IMGUI</code></strong> (default <strong>ON</strong>) links the <strong>docking</strong> branch of Dear ImGui with GLFW + Vulkan backends (<code>cmake/SparkImGui.cmake</code>).</p>
 <h3 id="access-from-gameplay">Access from gameplay</h3>
 <pre><code class="language-cpp">#include "spark/imgui/IImGuiLayer.hpp"
-#include "spark/gui/toolkit/GuiToolkitSettings.hpp"
+#include "spark/ui/runtime/UiToolkitSettings.hpp"
 
 void MyToolMode::Enter(Spark::IEngineContext&amp; context) {
-    Spark::Gui::GuiToolkitSettings::SetPreferred(Spark::Gui::GuiToolkitKind::DearImGui);
+    Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
     if (Spark::IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
         imgui-&gt;SetEnabled(imgui-&gt;IsAvailable());
     }
@@ -433,40 +552,31 @@ void MyToolMode::Leave(Spark::IEngineContext&amp; context) noexcept {
     if (Spark::IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
         imgui-&gt;SetEnabled(false);
     }
-    Spark::Gui::GuiToolkitSettings::SetPreferred(Spark::Gui::GuiToolkitKind::SparkNative);
+    Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::SparkNative);
 }
 </code></pre>
-<p>Build ImGui UI in <strong><code>OnRender</code></strong> (after the engine calls <code>IImGuiLayer::BeginFrame</code> / <code>ImGui::NewFrame</code>):</p>
-<pre><code class="language-cpp">#if SPARK_ENABLE_IMGUI
-#include &lt;imgui.h&gt;
-
-void MyToolMode::OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; context) {
-    if (ImGui::Begin("Inspector")) {
-        ImGui::SliderFloat("Exposure", &amp;exposure, 0.1F, 3.0F);
-    }
-    ImGui::End();
-    // … set SceneRenderParams for 3D backdrop …
-}
-#endif
-</code></pre>
+<p>You can mix <strong>retained</strong> ImGui-backend controls (<code>DearImguiControlsFactory</code>) with <strong>raw</strong> <code>ImGui::Begin</code> windows in <strong><code>OnRender</code></strong> for debug overlays.</p>
 <h3 id="engine-frame-order-imgui-enabled">Engine frame order (ImGui enabled)</h3>
 <pre class="mermaid">sequenceDiagram
     participant E as Engine
     participant G as IGame
+    participant U as UiSystem
     participant I as IImGuiLayer
     participant V as VulkanRenderer
     E-&gt;&gt;E: PollEvents + input BeginFrame
-    E-&gt;&gt;G: OnUpdate (simulation; may enable ImGui)
+    E-&gt;&gt;G: OnUpdate (simulation)
+    E-&gt;&gt;U: ProcessInput (retained canvases)
     E-&gt;&gt;I: BeginFrame (NewFrame)
-    E-&gt;&gt;G: OnRender (build ImGui windows)
+    E-&gt;&gt;G: OnRender (build UI + scene params)
+    E-&gt;&gt;U: Paint (retained → params or ImGui draw lists)
     E-&gt;&gt;I: EndFrame (Render)
-    E-&gt;&gt;V: PresentFrame (record ImGui after screen UI)
+    E-&gt;&gt;V: PresentFrame
 </pre>
 <p><strong>Rules:</strong></p>
 <ol>
 <li>Do <strong>not</strong> call <code>ImGui::Begin</code> from <code>OnUpdate</code> — <code>NewFrame</code> runs after update.</li>
-<li>Call <strong><code>InstallPlatformCallbacks</code></strong> once after <code>GlfwInput::WireToWindow</code> (the engine does this automatically) so ImGui chains GLFW mouse/key/scroll handlers.</li>
-<li>Use <strong><code>WantsCaptureMouse()</code> / <code>WantsCaptureKeyboard()</code></strong> (previous frame) to gate game pointer when both stacks are compiled in.</li>
+<li>Call <strong><code>InstallPlatformCallbacks</code></strong> once after <code>GlfwInput::WireToWindow</code> (the engine does this automatically).</li>
+<li>Gate game pointer with <strong><code>UiConsumesGamePointer()</code></strong> / <strong><code>UiPointerOverUi()</code></strong> when both stacks are compiled in.</li>
 </ol>
 <h3 id="demo">Demo</h3>
 <p><strong>SparkDemo</strong> launcher item <strong>19 — Dear ImGui tools (docking)</strong> (hotkey <strong>G</strong>): docked Hierarchy / Inspector / Console, optional <code>ShowDemoWindow</code>, 3D backdrop. Source: <code>ImGuiShowcaseDemo</code> (<code>include/spark/demo/ImGuiShowcaseDemo.hpp</code>).</p>
@@ -478,8 +588,8 @@ void MyToolMode::OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; c
 <table class="table">
 <thead>
 <tr>
-<th>Use Spark GUI</th>
-<th>Use Dear ImGui</th>
+<th>Use Spark native (<code>SparkNative</code>)</th>
+<th>Use Dear ImGui backend or raw ImGui</th>
 </tr>
 </thead>
 <tbody>
@@ -488,17 +598,16 @@ void MyToolMode::OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; c
 <td>Internal tools, profilers, temp editors</td>
 </tr>
 <tr>
-<td><code>GuiCanvasComponent</code> in saved scenes</td>
+<td><code>UiCanvasComponent</code> in saved scenes</td>
 <td>Docking-heavy IDE-style layouts</td>
 </tr>
 <tr>
-<td>Full widget catalog (<code>TreeView</code>, <code>Dialog</code>, …)</td>
+<td>Full widget catalog (<code>TreeView</code>, lists, scroll panels, …)</td>
 <td>ImGui ecosystem widgets / <code>imgui_demo.cpp</code></td>
 </tr>
 </tbody>
 </table>
-<p><strong><code>GuiToolkitSettings::ShouldProcessSparkGuiInput()</code></strong> returns <code>false</code> when the preferred toolkit is <code>DearImGui</code>, so retained canvases skip hit testing while ImGui is active.</p>
-<p>Next: <a href="../2-2d-graphics/01-sprites.html">Sprites</a> (Part 2) or continue with <a href="07-game-component-reference.html">Game Component Reference</a> for <code>GuiCanvasComponent</code>.</p>
+<p>Next: <a href="../2-2d-graphics/01-sprites.html">Sprites</a> (Part 2) or continue with <a href="07-game-component-reference.html">Game Component Reference</a> for <code>UiCanvasComponent</code>.</p>
 </div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
@@ -515,11 +624,35 @@ void MyToolMode::OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; c
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#spark-retained-gui-default">Spark Retained GUI (default)</a>
+                          <a href="#architecture">Architecture</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#dear-imgui-optional">Dear ImGui (optional)</a>
+                          <a href="#building-a-retained-canvas">Building a retained canvas</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#input-gating-helpers">Input gating helpers</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#themes">Themes</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#editor-docking">Editor docking</a>
+                        </li>
+                        
+                        <li class="toc-h3">
+                          <a href="#context-menus">Context menus</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#switching-backends">Switching backends</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#dear-imgui-optional-immediate-mode-layer">Dear ImGui (optional immediate-mode layer)</a>
                         </li>
                         
                         <li class="toc-h3">

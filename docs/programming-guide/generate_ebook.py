@@ -99,7 +99,7 @@ Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vul
 | Physics | Custom solvers | `SimulatePhysics2D`, `SimulatePhysics3D` |
 | AI | FSM, GOAP, steering | `SimulateGameAi`, `AiAgentComponent` |
 | Audio | Software mixer | `SoundEngine`, `SoundCueComponent` |
-| UI | Retained widgets | `GuiCanvasComponent` |
+| UI | Retained `IUiElement` tree | `UiCanvasComponent`, `spark/ui/Ui.hpp` |
 
 ## Design Philosophy
 
@@ -146,7 +146,7 @@ chapter(P1, "02-engine-capabilities.md", "Engine Capabilities", 2, """
 flowchart LR
     ECS[GameWorld ECS] --> Fill[FillStandardLitSceneFromWorld]
     Fill --> SRP[SceneRenderParams]
-    GUI[PaintGuiCanvases] --> SRP
+    GUI[PaintUiCanvases] --> SRP
     SRP --> VK[VulkanRenderer]
     VK --> Present[Swapchain Present]
 ```
@@ -182,7 +182,7 @@ Spark::SimulatePhysics2D(world, timing, settings);
 Spark::SimulatePhysics3D(world, timing, settings);
 Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context.TryGetSoundEngine());
-Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
+Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 ```
 
 ## Asset Loading on GameWorld
@@ -523,7 +523,7 @@ void ForEachSkinnedDrawable(const SkinnedFn& fn);
 void ForEachSprite(const SpriteFn& fn);
 void ForEachTilemap(const TilemapFn& fn);
 void ForEachPointLight(const PointLightFn& fn);
-void ForEachGuiCanvas(const GuiCanvasFn& fn);
+void ForEachUiCanvas(Fn&& fn);
 void SetSpatialPartitionKind(ScenePartitionKind kind);  // UniformGrid or BVH
 ```
 
@@ -549,7 +549,7 @@ Spark::SceneRenderParams params{};
 Spark::FillStandardLitSceneFromWorld(world, context, viewProj, camPos,
     lightDir, lightColor, lightIntensity, ambient, enableParticles,
     camRight, camUp, sceneTime, params);
-Spark::PaintGuiCanvases(world, params, fbW, fbH);
+Spark::PaintUiCanvases(world, params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
 
@@ -894,7 +894,7 @@ void Platformer2DGame::OnRender(IRenderFrame&, IEngineContext& context) {
 ```cpp
 SceneRenderParams params{};
 FillStandardLitSceneFromWorld(..., params);
-PaintGuiCanvases(GetWorld(), params, fbW, fbH);
+PaintUiCanvases(GetWorld(), params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
 
@@ -2300,29 +2300,42 @@ auto* cue = playerObject->AddComponent<SoundCueComponent>();
 if (justJumped) cue->Queue(SoundClip::CreateToneBlip(520, 0.07F, 0.5F));
 ```
 
-## Pause Menu (GUI)
+## Pause Menu (UI)
 
 ```cpp
-#include "spark/gui/GuiControls.hpp"
-#include "spark/ecs/components/GuiCanvasComponent.hpp"
-#include "spark/gui/GuiScene.hpp"
+#include "spark/ui/Ui.hpp"
 
 auto* uiGo = world.CreateGameObject();
-auto* canvas = uiGo->AddComponent<GuiCanvasComponent>();
-auto root = MakeUnique<Gui::StackPanel>();
-auto btn = MakeUnique<Gui::Button>();
-btn->SetLabel(Utf8String("Resume"));
-btn->SetOnClick([] { paused = false; });
-root->AddChild(MoveTemp(btn));
-canvas->SetRoot(MoveTemp(root));
+auto* canvas = uiGo->AddComponent<UiCanvasComponent>();
+
+Ui::IUiControlsFactory& factory =
+    Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String("pause");
+panelDesc.title = Utf8String("Paused");
+panelDesc.centerInParent = true;
+panelDesc.width = 280.0F;
+auto panel = factory.CreatePanel(panelDesc);
+
+Ui::ButtonDesc btnDesc{};
+btnDesc.id = Utf8String("resume");
+btnDesc.label = Utf8String("Resume");
+auto btn = factory.CreateButton(btnDesc);
+Ui::UiVoidCallback resumeCb{};
+resumeCb.fn = [](void*) { paused = false; };
+btn->SetOnClick(resumeCb);
+Ui::AdoptUiChild(*panel, MoveTemp(btn));
+
+canvas->SetRoot(MoveTemp(panel));
 ```
 
 Frame flow:
 
 ```cpp
-ProcessGuiCanvasesInput(GetScene(), input, fbW, fbH);
+ProcessUiCanvasesInput(GetScene(), input, fbW, fbH);
 // ... fill params ...
-PaintGuiCanvases(GetWorld(), params, fbW, fbH);
+PaintUiCanvases(GetWorld(), params, fbW, fbH);
 ```
 
 ## Replace Procedural Art

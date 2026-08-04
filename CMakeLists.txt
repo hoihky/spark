@@ -416,9 +416,9 @@ configure_file(
 set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/DemoAssetLoad.cpp
         src/spark/demo/DemoFoundation.cpp
+        src/spark/demo/DemoGuiFrame.cpp
         src/spark/demo/SparkShellDemo.cpp
         src/spark/demo/ShellDemoSceneUtil.cpp
-        src/spark/demo/ShellDemoUi.cpp
         src/spark/demo/ThreeDDemo.cpp
         src/spark/demo/ToonShadingDemo.cpp
         src/spark/demo/MaterialShowcase3DDemo.cpp
@@ -537,72 +537,38 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/stb_image_impl.cpp
         src/spark/text/Font.cpp
         src/spark/ecs/components/rendering/TextOverlayComponent.cpp
-        src/spark/ecs/components/ui/GuiCanvasComponent.cpp
+        src/spark/ecs/components/ui/UiCanvasComponent.cpp
         src/spark/ecs/components/rendering/SkyComponent.cpp
         src/spark/ecs/components/rendering/BillboardComponent.cpp
         src/spark/ecs/components/rendering/ParticleEmitterComponent.cpp
         src/spark/ecs/components/rendering/TerrainComponent.cpp
-        src/spark/gui/GuiInputState.cpp
-        src/spark/gui/GuiLayoutMetrics.cpp
-        src/spark/gui/GuiWidgetPopups.cpp
-        src/spark/gui/GuiContextMenu.cpp
-        src/spark/gui/TextEditShared.cpp
-        src/spark/gui/EditorLayoutStore.cpp
-        src/spark/gui/GuiPaintContext.cpp
-        src/spark/gui/GuiSpriteSlice.cpp
-        src/spark/gui/GuiTheme.cpp
-        src/spark/gui/GuiThemeCatalog.cpp
-        src/spark/gui/Widget.cpp
-        src/spark/gui/RadioGroup.cpp
-        src/spark/gui/controls/AlbumCard.cpp
-        src/spark/gui/controls/Button.cpp
-        src/spark/gui/controls/Carousel.cpp
-        src/spark/gui/controls/CheckBox.cpp
-        src/spark/gui/controls/Dialog.cpp
-        src/spark/gui/controls/DockLayout.cpp
-        src/spark/gui/controls/DockWorkspace.cpp
-        src/spark/gui/DockLayoutModel.cpp
-        src/spark/gui/DockLayoutStore.cpp
-        src/spark/gui/docking/DockPanel.cpp
-        src/spark/gui/docking/DockSidePane.cpp
-        src/spark/gui/docking/DockFrameLayout.cpp
-        src/spark/gui/docking/DockManager.cpp
-        src/spark/gui/docking/DockLayoutState.cpp
-        src/spark/gui/controls/Dropdown.cpp
-        src/spark/gui/controls/EditorSidebarLayout.cpp
-        src/spark/gui/controls/GridPanel.cpp
-        src/spark/gui/controls/GroupBox.cpp
-        src/spark/gui/controls/Image.cpp
-        src/spark/gui/controls/Label.cpp
-        src/spark/gui/controls/List.cpp
-        src/spark/gui/controls/MenuBar.cpp
-        src/spark/gui/controls/MultiSelectList.cpp
-        src/spark/gui/controls/NumericBox.cpp
-        src/spark/gui/controls/NumericStepper.cpp
-        src/spark/gui/controls/Panel.cpp
-        src/spark/gui/controls/ProgressBar.cpp
-        src/spark/gui/controls/RadioButton.cpp
-        src/spark/gui/controls/ScrollBar.cpp
-        src/spark/gui/controls/ScrollPanel.cpp
-        src/spark/gui/controls/VStackForm.cpp
-        src/spark/gui/controls/Separator.cpp
-        src/spark/gui/controls/Slider.cpp
-        src/spark/gui/controls/Splitter.cpp
-        src/spark/gui/controls/StackPanel.cpp
-        src/spark/gui/controls/Switch.cpp
-        src/spark/gui/controls/TabControl.cpp
-        src/spark/gui/controls/TextBox.cpp
-        src/spark/gui/controls/TextArea.cpp
-        src/spark/gui/controls/TileSwatch.cpp
-        src/spark/gui/controls/TreeView.cpp
-        src/spark/gui/controls/WrapPanel.cpp
-        src/spark/gui/controls/WrappingLabel.cpp
-        src/spark/gui/GuiScene.cpp
-        src/spark/gui/toolkit/GuiToolkitSettings.cpp
-        src/spark/gui/api/GuiSystem.cpp
-        src/spark/gui/api/SparkNativeGuiBackend.cpp
-        src/spark/gui/api/SparkNativeImmediateGuiFrame.cpp
-        src/spark/gui/api/DearImGuiGuiBackend.cpp
+        src/spark/ui/core/UiElementBase.cpp
+        src/spark/ui/core/UiTheme.cpp
+        src/spark/ui/core/UiThemeCatalog.cpp
+        src/spark/ui/core/UiLayoutMetrics.cpp
+        src/spark/ui/core/UiPaintContext.cpp
+        src/spark/ui/core/UiSpriteSlice.cpp
+        src/spark/ui/core/SparkUiRenderer.cpp
+        src/spark/ui/core/ImguiUiRenderer.cpp
+        src/spark/ui/core/UiStateStore.cpp
+        src/spark/ui/core/UiPointerState.cpp
+        src/spark/ui/core/UiInputRouter.cpp
+        src/spark/ui/spark/controls/SparkControls.cpp
+        src/spark/ui/spark/controls/SparkList.cpp
+        src/spark/ui/spark/controls/SparkMultiSelectList.cpp
+        src/spark/ui/spark/controls/SparkScrollPanel.cpp
+        src/spark/ui/spark/controls/SparkTreeView.cpp
+        src/spark/ui/spark/SparkUiControlsFactory.cpp
+        src/spark/ui/imgui/controls/ImguiControls.cpp
+        src/spark/ui/imgui/controls/ImguiListControls.cpp
+        src/spark/ui/imgui/DearImguiControlsFactory.cpp
+        src/spark/ui/runtime/SparkUiBackend.cpp
+        src/spark/ui/runtime/DearImguiUiBackend.cpp
+        src/spark/ui/runtime/EditorLayoutStore.cpp
+        src/spark/ui/runtime/UiContextMenu.cpp
+        src/spark/ui/runtime/UiScene.cpp
+        src/spark/ui/runtime/UiSystem.cpp
+        src/spark/ui/runtime/UiToolkitSettings.cpp
         src/spark/imgui/ImGuiLayerRegistry.cpp
         src/spark/imgui/ImGuiLayerFactory.cpp
         src/spark/render/platform/window.cpp

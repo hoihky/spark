@@ -440,7 +440,7 @@
 </tr>
 <tr>
 <td><a href="#ui">UI</a></td>
-<td><code>GuiCanvas</code></td>
+<td><code>UiCanvas</code></td>
 </tr>
 <tr>
 <td><a href="#world">World</a></td>
@@ -1045,13 +1045,24 @@ zone-&gt;SetPriority(3);
 </code></pre>
 <hr>
 <h2 id="ui">UI</h2>
-<h3 id="guicanvascomponent"><code>GuiCanvasComponent</code></h3>
-<pre><code class="language-cpp">auto canvas = uiRoot-&gt;AddComponent&lt;GuiCanvasComponent&gt;();
+<h3 id="uicanvascomponent"><code>UiCanvasComponent</code></h3>
+<pre><code class="language-cpp">#include "spark/ui/Ui.hpp"
+
+auto canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
 canvas-&gt;SetSortOrder(0);
-canvas-&gt;SetRoot&lt;Gui::Panel&gt;(MakeUnique&lt;Gui::Panel&gt;());
-// Each frame (after scene submit params built):
-ProcessGuiCanvasesInput(world, input, fbW, fbH);
-PaintGuiCanvases(world, params, fbW, fbH);
+canvas-&gt;SetTheme(Ui::UiTheme::ClassicMint());
+
+Ui::IUiControlsFactory&amp; factory =
+    Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String("hud");
+auto panel = factory.CreatePanel(panelDesc);
+canvas-&gt;SetRoot(MoveTemp(panel));
+
+// Each frame:
+ProcessUiCanvasesInput(world, input, fbW, fbH);
+// After FillStandardLitSceneFromWorld (or equivalent):
+PaintUiCanvases(world, params, fbW, fbH);
 </code></pre>
 <hr>
 <h2 id="world">World</h2>

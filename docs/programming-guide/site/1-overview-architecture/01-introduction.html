@@ -421,13 +421,13 @@
 </tr>
 <tr>
 <td>UI (retained)</td>
-<td>Widget tree → screen draws</td>
-<td><code>GuiCanvasComponent</code>, <code>spark/gui/</code></td>
+<td><code>IUiElement</code> tree → screen draws</td>
+<td><code>UiCanvasComponent</code>, <code>spark/ui/Ui.hpp</code></td>
 </tr>
 <tr>
 <td>UI (tools, optional)</td>
-<td>Dear ImGui docking</td>
-<td><code>IImGuiLayer</code>, <code>GuiToolkitSettings</code></td>
+<td>Dear ImGui docking + ImGui backend</td>
+<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code></td>
 </tr>
 </tbody>
 </table>

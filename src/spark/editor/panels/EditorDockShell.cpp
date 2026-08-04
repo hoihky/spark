@@ -1,214 +1,206 @@
 #include "spark/editor/panels/EditorDockShell.hpp"
 
-#include "spark/gui/EditorLayoutStore.hpp"
-#include "spark/gui/GuiLayoutMetrics.hpp"
-#include "spark/gui/GuiTheme.hpp"
-#include "spark/gui/controls/Label.hpp"
-#include "spark/gui/controls/MenuBar.hpp"
-#include "spark/gui/controls/Panel.hpp"
-#include "spark/gui/docking/DockFrameLayout.hpp"
-#include "spark/gui/docking/DockManager.hpp"
-#include "spark/gui/docking/DockPanel.hpp"
-#include "spark/gui/docking/DockSidePane.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ui/core/UiElementBase.hpp"
+#include "spark/ui/core/UiLayoutMetrics.hpp"
+#include "spark/ui/spark/UiChild.hpp"
+
+#include <algorithm>
 
 namespace Spark::Editor {
 
 namespace {
 
-class EditorTopChromeLayout final : public Gui::Widget {
+class EditorSideStack final : public Ui::UiElementBase {
 public:
-    void SetMenuHeight(float h) noexcept { menuHeight = h; }
-    void SetToolbarHeight(float h) noexcept { toolbarHeight = h; }
+    EditorSideStack() : Ui::UiElementBase(Utf8String("editor_side_stack")) {}
 
-    void Arrange(const Gui::Rect& r) override {
-        bounds = r;
-        const auto& ch = GetChildren();
-        if (ch.IsEmpty()) {
+    void SetTopFraction(const float fraction) noexcept { topFraction = std::clamp(fraction, 0.2F, 0.8F); }
+
+protected:
+    void DoMeasure(const Ui::UiMeasureConstraints& constraints, Ui::UiSize& outDesired) override {
+        outDesired.width = constraints.maxWidth;
+        outDesired.height = constraints.maxHeight;
+    }
+
+    void DoArrangeChildren() override {
+        const Ui::Rect b = GetBounds();
+        if (children.GetSize() < 2U) {
+            if (children.GetSize() == 1U && children[0] != nullptr) {
+                children[0]->Arrange(b);
+            }
             return;
         }
-        const Gui::GuiLayoutMetrics& m = Gui::GetActiveGuiLayoutMetrics();
-        const float menuH = m.Scaled(menuHeight);
-        const float toolbarH = m.Scaled(toolbarHeight);
-        float y = r.y;
-        if (ch.GetSize() >= 1U && ch[0]) {
-            ch[0]->Arrange({r.x, y, r.width, menuH});
-            y += menuH;
+        const float splitY = b.y + b.height * topFraction;
+        const float topH = std::max(0.0F, splitY - b.y);
+        const float botH = std::max(0.0F, b.y + b.height - splitY);
+        if (children[0] != nullptr) {
+            children[0]->Arrange(Ui::Rect{b.x, b.y, b.width, topH});
         }
-        if (ch.GetSize() >= 2U && ch[1]) {
-            ch[1]->Arrange({r.x, y, r.width, toolbarH});
-            y += toolbarH;
-        }
-        if (ch.GetSize() >= 3U && ch[2]) {
-            ch[2]->Arrange({r.x, y, r.width, std::max(0.0F, r.y + r.height - y)});
+        if (children[1] != nullptr) {
+            children[1]->Arrange(Ui::Rect{b.x, splitY, b.width, botH});
         }
     }
 
-    void Paint(Gui::GuiPaintContext& ctx) const override { PaintChildren(ctx); }
-
-    [[nodiscard]] Gui::Widget* FindDeepestHover(const float x, const float y) override {
-        const auto& ch = GetChildren();
-        for (std::size_t i = ch.GetSize(); i > 0U; --i) {
-            if (ch[i - 1U]) {
-                if (Gui::Widget* hit = ch[i - 1U]->FindDeepestHover(x, y)) {
-                    return hit;
-                }
-            }
-        }
-        return nullptr;
-    }
+    void DoPaint(Ui::IUiRenderer& /*renderer*/) override {}
 
 private:
-    float menuHeight = 34.0F;
-    float toolbarHeight = 36.0F;
+    float topFraction = 0.58F;
 };
 
-void StyleChromePanel(Gui::Panel& panel) {
-    const Gui::GuiTheme& th = Gui::GuiTheme::SceneEditorDark();
-    panel.SetBackgroundGradient(th.panelElevatedTop, th.panelElevatedBottom, th.panelElevatedAlpha);
-    panel.SetChromeEnabled(true);
-    panel.SetDropShadowEnabled(false);
+class EditorTopChrome final : public Ui::UiElementBase {
+public:
+    EditorTopChrome() : Ui::UiElementBase(Utf8String("editor_top_chrome")) {}
+
+    void SetToolbarHeight(const float height) noexcept { toolbarHeight = height; }
+
+protected:
+    void DoMeasure(const Ui::UiMeasureConstraints& constraints, Ui::UiSize& outDesired) override {
+        outDesired.width = constraints.maxWidth;
+        outDesired.height = constraints.maxHeight;
+    }
+
+    void DoArrangeChildren() override {
+        const Ui::Rect b = GetBounds();
+        const Ui::UiLayoutMetrics& metrics = Ui::GetActiveUiLayoutMetrics();
+        const float toolbarH = metrics.Scaled(toolbarHeight);
+        if (children.GetSize() >= 1U && children[0] != nullptr) {
+            children[0]->Arrange(Ui::Rect{b.x, b.y, b.width, toolbarH});
+        }
+        if (children.GetSize() >= 2U && children[1] != nullptr) {
+            children[1]->Arrange(Ui::Rect{b.x, b.y + toolbarH, b.width, std::max(0.0F, b.height - toolbarH)});
+        }
+    }
+
+    void DoPaint(Ui::IUiRenderer& /*renderer*/) override {}
+
+private:
+    float toolbarHeight = 40.0F;
+};
+
+struct DockShellBinding {
+    EditorDockShell* shell = nullptr;
+};
+
+void ToggleLeftPanelCallback(void* userData) {
+    if (userData == nullptr) {
+        return;
+    }
+    static_cast<DockShellBinding*>(userData)->shell->ToggleLeftPanel();
 }
 
-UniquePtr<Gui::Widget> WrapPanelChrome(UniquePtr<Gui::Widget> inner) {
-    auto shell = MakeUnique<Gui::Panel>();
-    StyleChromePanel(*shell);
-    shell->SetPadding(4.0F);
-    if (inner) {
-        shell->AddChild(MoveTemp(inner));
+void ToggleRightPanelCallback(void* userData) {
+    if (userData == nullptr) {
+        return;
     }
-    return UniquePtr<Gui::Widget>(shell.Release());
+    static_cast<DockShellBinding*>(userData)->shell->ToggleRightPanel();
 }
 
 }  // namespace
 
 void EditorDockShell::SetSidebarWidth(const float widthPx) noexcept {
     sidebarWidthPx = widthPx;
+    if (dockWorkspace != nullptr) {
+        dockWorkspace->SetLeftWidth(widthPx);
+    }
+}
+
+float EditorDockShell::GetRightPanelWidth() const noexcept {
+    return dockWorkspace != nullptr ? dockWorkspace->GetRightWidth() : 320.0F;
 }
 
 void EditorDockShell::ToggleLeftPanel() noexcept {
-    if (dockFrame != nullptr && dockFrame->GetLeftPane() != nullptr) {
-        dockFrame->GetLeftPane()->ToggleCollapsed();
-    } else {
-        dockManager.ToggleLeftCollapsed();
+    if (dockWorkspace != nullptr) {
+        dockWorkspace->ToggleLeftCollapsed();
     }
 }
 
 void EditorDockShell::ToggleRightPanel() noexcept {
-    if (dockFrame != nullptr && dockFrame->GetRightPane() != nullptr) {
-        dockFrame->GetRightPane()->ToggleCollapsed();
-    } else {
-        dockManager.ToggleRightCollapsed();
+    if (dockWorkspace != nullptr) {
+        dockWorkspace->ToggleRightCollapsed();
     }
 }
 
 void EditorDockShell::SetPanels(
-        UniquePtr<Gui::Widget> hierarchyRoot,
-        UniquePtr<Gui::Widget> projectRoot,
-        UniquePtr<Gui::Widget> inspectorRoot) {
+        UniquePtr<Ui::IUiElement> hierarchyRoot,
+        UniquePtr<Ui::IUiElement> projectRoot,
+        UniquePtr<Ui::IUiElement> inspectorRoot) {
     Rebuild(MoveTemp(hierarchyRoot), MoveTemp(projectRoot), MoveTemp(inspectorRoot));
 }
 
 void EditorDockShell::Rebuild(
-        UniquePtr<Gui::Widget> hierarchyRoot,
-        UniquePtr<Gui::Widget> projectRoot,
-        UniquePtr<Gui::Widget> inspectorRoot) {
-    dockManager = Gui::DockManager::CreateEditorDefault();
-    Gui::DockLayoutState state = dockManager.GetLayoutState();
-    state.leftWidthPx = sidebarWidthPx;
-    dockManager.SetLayoutState(state);
+        UniquePtr<Ui::IUiElement> hierarchyRoot,
+        UniquePtr<Ui::IUiElement> projectRoot,
+        UniquePtr<Ui::IUiElement> inspectorRoot) {
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
 
-    if (hierarchyRoot) {
-        dockManager.RegisterPanel(MakeUnique<Gui::DockPanel>(
-                Utf8String("hierarchy"),
-                Utf8String("Scene"),
-                WrapPanelChrome(MoveTemp(hierarchyRoot)),
-                Gui::DockSide::Left));
+    Ui::DockWorkspaceDesc dockDesc{};
+    dockDesc.id = Utf8String("editor_dock");
+    dockDesc.leftWidth = sidebarWidthPx;
+    dockDesc.rightWidth = 320.0F;
+    auto dockUp = factory.CreateDockWorkspace(dockDesc);
+    dockWorkspace = dockUp.Get();
+    dockWorkspace->SetLeftWidth(sidebarWidthPx);
+
+    if (Ui::IUiElement* leftPane = dockWorkspace->GetLeftPane()) {
+        auto sideStack = MakeUnique<EditorSideStack>();
+        if (hierarchyRoot) {
+            sideStack->AddChild(UniquePtr<Ui::IUiElement>(hierarchyRoot.Release()));
+        }
+        if (projectRoot) {
+            sideStack->AddChild(UniquePtr<Ui::IUiElement>(projectRoot.Release()));
+        }
+        AdoptUiChild(*leftPane, MoveTemp(sideStack));
     }
-    if (projectRoot) {
-        dockManager.RegisterPanel(MakeUnique<Gui::DockPanel>(
-                Utf8String("project"),
-                Utf8String("Project"),
-                WrapPanelChrome(MoveTemp(projectRoot)),
-                Gui::DockSide::Left));
-    }
-    if (inspectorRoot) {
-        dockManager.RegisterPanel(MakeUnique<Gui::DockPanel>(
-                Utf8String("inspector"),
-                Utf8String("Inspector"),
-                WrapPanelChrome(MoveTemp(inspectorRoot)),
-                Gui::DockSide::Right));
+    if (Ui::IUiElement* rightPane = dockWorkspace->GetRightPane(); rightPane != nullptr && inspectorRoot) {
+        AdoptUiChild(*rightPane, MoveTemp(inspectorRoot));
     }
 
-    dockManager.SetOnLayoutStateChanged([](const Gui::DockLayoutState& layoutState) {
-        Gui::SceneEditorLayoutSettings editorLayout{};
-        editorLayout.sidebarWidthPx = layoutState.leftWidthPx;
-        (void)Gui::SaveSceneEditorLayout(editorLayout);
-    });
+    auto chrome = MakeUnique<EditorTopChrome>();
 
-    auto dockFrameUp = dockManager.BuildFrame();
-    dockFrame = dockFrameUp.Get();
+    Ui::PanelDesc toolbarDesc{};
+    toolbarDesc.id = Utf8String("editor_toolbar");
+    toolbarDesc.title = Utf8String("");
+    auto toolbar = factory.CreatePanel(toolbarDesc);
 
-    auto outer = MakeUnique<EditorTopChromeLayout>();
+    Ui::LabelDesc titleDesc{};
+    titleDesc.id = Utf8String("editor_title");
+    titleDesc.text = Utf8String("Spark Editor");
+    AdoptUiChild(*toolbar, factory.CreateLabel(titleDesc));
 
-    Array<Gui::MenuBarItem> menus;
-    {
-        Gui::MenuBarItem file{};
-        file.label = Utf8String("File");
-        file.dropdownEntries.PushBack(Utf8String("New Project"));
-        file.dropdownEntries.PushBack(Utf8String("Open Project"));
-        file.dropdownEntries.PushBack(Utf8String("Save Project"));
-        menus.PushBack(MoveTemp(file));
-    }
-    {
-        Gui::MenuBarItem scene{};
-        scene.label = Utf8String("Scene");
-        scene.dropdownEntries.PushBack(Utf8String("New Scene"));
-        scene.dropdownEntries.PushBack(Utf8String("Save Scene"));
-        scene.dropdownEntries.PushBack(Utf8String("Load Scene"));
-        menus.PushBack(MoveTemp(scene));
-    }
-    {
-        Gui::MenuBarItem view{};
-        view.label = Utf8String("View");
-        view.dropdownEntries.PushBack(Utf8String("Toggle Left Panel"));
-        view.dropdownEntries.PushBack(Utf8String("Toggle Right Panel"));
-        view.dropdownEntries.PushBack(Utf8String("Focus Selection"));
-        view.dropdownEntries.PushBack(Utf8String("Reset Camera"));
-        view.onDropdownSelect = [this](const int row) {
-            if (row == 0) {
-                ToggleLeftPanel();
-            } else if (row == 1) {
-                ToggleRightPanel();
-            }
-        };
-        menus.PushBack(MoveTemp(view));
-    }
-    auto menuBar = MakeUnique<Gui::MenuBar>();
-    menuBar->SetItems(MoveTemp(menus));
-    menuBar->SetBarHeight(34.0F);
-    outer->AddChild(MoveTemp(menuBar));
+    static DockShellBinding toggleBinding{};
+    toggleBinding.shell = this;
 
-    auto toolbar = MakeUnique<Gui::Panel>();
-    StyleChromePanel(*toolbar);
-    toolbar->SetPadding(6.0F);
-    toolbar->SetChromeEnabled(false);
-    toolbar->SetHitTest(false);
-    auto toolbarTitle = MakeUnique<Gui::Label>();
-    toolbarTitle->SetText(Utf8String("Spark Editor"));
-    toolbarTitle->SetFontSize(20.0F);
-    toolbarTitle->SetTextColor(Gui::GuiTheme::SceneEditorDark().labelPrimary);
-    toolbar->AddChild(MoveTemp(toolbarTitle));
-    outer->AddChild(MoveTemp(toolbar));
+    Ui::ButtonDesc leftToggleDesc{};
+    leftToggleDesc.id = Utf8String("toggle_left");
+    leftToggleDesc.label = Utf8String("◀ Left");
+    auto leftToggle = factory.CreateButton(leftToggleDesc);
+    Ui::UiVoidCallback leftCb{};
+    leftCb.fn = &ToggleLeftPanelCallback;
+    leftCb.userData = &toggleBinding;
+    leftToggle->SetOnClick(leftCb);
+    AdoptUiChild(*toolbar, MoveTemp(leftToggle));
 
-    outer->AddChild(MoveTemp(dockFrameUp));
-    root.Reset(outer.Release());
+    Ui::ButtonDesc rightToggleDesc{};
+    rightToggleDesc.id = Utf8String("toggle_right");
+    rightToggleDesc.label = Utf8String("Right ▶");
+    auto rightToggle = factory.CreateButton(rightToggleDesc);
+    Ui::UiVoidCallback rightCb{};
+    rightCb.fn = &ToggleRightPanelCallback;
+    rightCb.userData = &toggleBinding;
+    rightToggle->SetOnClick(rightCb);
+    AdoptUiChild(*toolbar, MoveTemp(rightToggle));
+
+    chrome->AddChild(UniquePtr<Ui::IUiElement>(static_cast<Ui::IUiElement*>(toolbar.Release())));
+    chrome->AddChild(UniquePtr<Ui::IUiElement>(static_cast<Ui::IUiElement*>(dockUp.Release())));
+    root.Reset(chrome.Release());
 }
 
-Gui::Rect EditorDockShell::GetWorldViewportRect() const noexcept {
-    if (dockFrame == nullptr) {
+Ui::Rect EditorDockShell::GetWorldViewportRect() const noexcept {
+    if (dockWorkspace == nullptr) {
         return {};
     }
-    return dockFrame->GetCenterBounds();
+    return dockWorkspace->GetCenterBounds();
 }
 
 }  // namespace Spark::Editor

@@ -10,7 +10,8 @@
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
 #include "spark/ecs/components/physics/CollisionComponent.hpp"
-#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
+#include "spark/ui/core/UiElementBase.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
@@ -236,11 +237,11 @@ SparkGameComponent* spark_object_add_text_overlay(SparkGameObject* object) {
     return reinterpret_cast<SparkGameComponent*>(ToObject(object)->AddComponent<Spark::TextOverlayComponent>());
 }
 
-SparkGameComponent* spark_object_add_gui_canvas(SparkGameObject* object, const int sortOrder) {
+SparkGameComponent* spark_object_add_ui_canvas(SparkGameObject* object, const int sortOrder) {
     if (object == nullptr) {
         return nullptr;
     }
-    auto* canvas = ToObject(object)->AddComponent<Spark::GuiCanvasComponent>();
+    auto* canvas = ToObject(object)->AddComponent<Spark::UiCanvasComponent>();
     canvas->SetSortOrder(sortOrder);
     return reinterpret_cast<SparkGameComponent*>(canvas);
 }
@@ -833,24 +834,25 @@ void spark_text_overlay_set_visible(SparkGameComponent* text, const int visible)
     }
 }
 
-void spark_gui_canvas_set_enabled(SparkGameComponent* canvas, const int enabled) {
-    auto* gui = AsComponent<Spark::GuiCanvasComponent>(canvas, Spark::ComponentKind::GuiCanvas);
-    if (gui != nullptr) {
-        gui->SetCanvasEnabled(enabled != 0);
+void spark_ui_canvas_set_enabled(SparkGameComponent* canvas, const int enabled) {
+    auto* ui = AsComponent<Spark::UiCanvasComponent>(canvas, Spark::ComponentKind::UiCanvas);
+    if (ui != nullptr) {
+        ui->SetCanvasEnabled(enabled != 0);
     }
 }
 
-void spark_gui_canvas_set_sort_order(SparkGameComponent* canvas, const int sortOrder) {
-    auto* gui = AsComponent<Spark::GuiCanvasComponent>(canvas, Spark::ComponentKind::GuiCanvas);
-    if (gui != nullptr) {
-        gui->SetSortOrder(sortOrder);
+void spark_ui_canvas_set_sort_order(SparkGameComponent* canvas, const int sortOrder) {
+    auto* ui = AsComponent<Spark::UiCanvasComponent>(canvas, Spark::ComponentKind::UiCanvas);
+    if (ui != nullptr) {
+        ui->SetSortOrder(sortOrder);
     }
 }
 
-void spark_gui_canvas_clear_root(SparkGameComponent* canvas) {
-    auto* gui = AsComponent<Spark::GuiCanvasComponent>(canvas, Spark::ComponentKind::GuiCanvas);
-    if (gui != nullptr) {
-        gui->SetRoot(Spark::UniquePtr<Spark::Gui::Panel>());
+void spark_ui_canvas_clear_root(SparkGameComponent* canvas) {
+    auto* ui = AsComponent<Spark::UiCanvasComponent>(canvas, Spark::ComponentKind::UiCanvas);
+    if (ui != nullptr) {
+        Spark::UniquePtr<Spark::Ui::UiElementBase> empty{};
+        ui->SetRoot(Spark::MoveTemp(empty));
     }
 }
 

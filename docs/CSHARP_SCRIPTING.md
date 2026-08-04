@@ -121,7 +121,7 @@ internal static void Init() => GameBootstrap.Factory = static () => new MyGame()
 | **Components** | `spark_transform_*`, `spark_mesh_*`, `spark_material_*`, `spark_sprite_*`, lights, colliders, rigidbodies |
 | **Add component** | `spark_object_add_mesh`, `spark_object_add_skinned_character_from_gltf`, … |
 | **Scene** | `spark_scene_submit_standard_lit_from_world`, `spark_scene_fill_standard_lit_from_world` |
-| **GUI** | `spark_gui_process_canvases_input`, `spark_gui_paint_canvases`, `spark_context_process_gui_input` |
+| **UI** | `spark_ui_process_canvases_input`, `spark_ui_paint_canvases`, `spark_context_process_ui_input` |
 | **Animation** | `spark_animator_*` — clip index/time/speed, `loop_mode`, `is_clip_finished`, `set_clip_index_with_crossfade`, `find_clip_index_by_name`, `get_clip_name`; C# `AnimatorComponent` mirror |
 | **Physics / AI** | `spark_world_physics_simulate_2d`, `spark_world_simulate_game_ai` |
 | **Math** | `spark_mat4_perspective_vulkan`, `spark_mat4_mul`, … |

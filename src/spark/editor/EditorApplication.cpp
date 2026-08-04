@@ -1,7 +1,7 @@
 #include "spark/editor/EditorApplication.hpp"
 
 #include "spark/config.hpp"
-#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
@@ -15,9 +15,9 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/gui/EditorLayoutStore.hpp"
-#include "spark/gui/GuiScene.hpp"
-#include "spark/gui/GuiTheme.hpp"
+#include "spark/ui/runtime/EditorLayoutStore.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
+#include "spark/ui/core/UiTheme.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/math/Constants.hpp"
 #include "spark/math/Matrix4.hpp"
@@ -88,21 +88,21 @@ void EditorApplication::BuildEditorUi(GameWorld& world) {
         panel->OnAttach(context);
     }
 
-    Gui::SceneEditorLayoutSettings layout{};
-    (void)Gui::TryLoadSceneEditorLayout(layout);
-    dock.SetSidebarWidth(Gui::GetSceneEditorSidebarWidthPx());
+    Ui::SceneEditorLayoutSettings layout{};
+    (void)Ui::TryLoadSceneEditorLayout(layout);
+    dock.SetSidebarWidth(Ui::GetSceneEditorSidebarWidthPx());
 
     dock.SetPanels(
-            hierarchyPanel->ReleaseRootWidget(),
-            projectPanel->ReleaseRootWidget(),
-            inspectorPanel->ReleaseRootWidget());
+            hierarchyPanel->ReleaseRootElement(),
+            projectPanel->ReleaseRootElement(),
+            inspectorPanel->ReleaseRootElement());
 
     guiCanvasObject = world.CreateGameObject();
     guiCanvasObject->GetName() = Utf8String("EditorGui");
-    guiCanvas = guiCanvasObject->AddComponent<GuiCanvasComponent>();
+    guiCanvas = guiCanvasObject->AddComponent<UiCanvasComponent>();
     guiCanvas->SetSortOrder(240);
-    guiCanvas->SetTheme(Gui::GuiTheme::SceneEditorDark());
-    guiCanvas->SetRoot(dock.ReleaseRootWidget());
+    guiCanvas->SetTheme(Ui::UiTheme::SceneEditorDark());
+    guiCanvas->SetRoot(dock.ReleaseRootElement());
 
     fpsHudObject = world.CreateGameObject();
     fpsHudObject->GetName() = Utf8String("EditorStatusHud");
@@ -137,11 +137,11 @@ void EditorApplication::UpdateViewportCamera(const FrameTiming& timing, IEngineC
     }
 
     const float scroll = input.GetScrollDeltaY();
-    if (std::fabs(scroll) > 1.0e-4F && !GuiScrollWheelConsumed()) {
+    if (std::fabs(scroll) > 1.0e-4F && !UiScrollWheelConsumed()) {
         viewportCamera.position += viewportCamera.Forward() * (scroll * 0.65F);
     }
 
-    if (GuiConsumesGamePointer()) {
+    if (UiConsumesGamePointer()) {
         return;
     }
 
@@ -231,7 +231,7 @@ void EditorApplication::OnUpdate(const FrameTiming& timing, Scene& scene, IEngin
     float contentScaleX = 1.0F;
     float contentScaleY = 1.0F;
     context.GetWindow().GetContentScale(contentScaleX, contentScaleY);
-    ProcessGuiCanvasesInput(scene, context.GetInput(), fbW, fbH, contentScaleX, contentScaleY);
+    ProcessUiCanvasesInput(scene, context.GetInput(), fbW, fbH, contentScaleX, contentScaleY);
 
     UpdateViewportCamera(timing, context);
     TickPanels(timing, scene, context);
@@ -271,7 +271,7 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& context) {
             SceneSpriteSortMode::SortOrderOnly,
             &scene);
 
-    const Gui::Rect worldViewport = dock.GetWorldViewportRect();
+    const Ui::Rect worldViewport = dock.GetWorldViewportRect();
     if (worldViewport.width > 1.0F && worldViewport.height > 1.0F) {
         params.worldViewportScissorEnabled = true;
         params.worldViewportScissorX = worldViewport.x;
@@ -284,7 +284,7 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& context) {
     params.uiBoldFont = scene.GetWorld().GetUiBoldFont();
     params.screenTexts.Clear();
     params.uiPaintOrderNext = 0U;
-    PaintGuiCanvases(scene, params, fbW, fbH);
+    PaintUiCanvases(scene, params, fbW, fbH);
 
     scene.ForEachTextOverlay([&params](const TextOverlayComponent& tc) {
         ScreenTextDraw draw{};

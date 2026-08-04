@@ -85,6 +85,6 @@
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
-#include "spark/ecs/components/ui/GuiCanvasComponent.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"

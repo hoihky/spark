@@ -382,7 +382,7 @@
 <pre class="mermaid">flowchart LR
     ECS[GameWorld ECS] --&gt; Fill[FillStandardLitSceneFromWorld]
     Fill --&gt; SRP[SceneRenderParams]
-    GUI[PaintGuiCanvases] --&gt; SRP
+    GUI[PaintUiCanvases] --&gt; SRP
     SRP --&gt; VK[VulkanRenderer]
     IMGUI[Dear ImGui overlay] --&gt; VK
     VK --&gt; Present[Swapchain Present]
@@ -398,14 +398,14 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>Spark GUI</strong> (retained)</td>
+<td><strong>Spark UI</strong> (retained, <code>spark/ui/</code>)</td>
 <td>Menus, editor chrome, themed HUD</td>
-<td><code>GuiCanvasComponent</code>, <code>ProcessGuiCanvasesInput</code>, <code>PaintGuiCanvases</code></td>
+<td><code>UiCanvasComponent</code>, <code>ProcessUiCanvasesInput</code>, <code>PaintUiCanvases</code></td>
 </tr>
 <tr>
 <td><strong>Dear ImGui</strong> (optional, <code>SPARK_ENABLE_IMGUI</code>)</td>
 <td>Docking tools, debug panels</td>
-<td><code>IImGuiLayer</code>, <code>GuiToolkitSettings</code>, build UI in <code>OnRender</code></td>
+<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code>, <code>DearImguiControlsFactory</code> or raw ImGui in <code>OnRender</code></td>
 </tr>
 </tbody>
 </table>
@@ -512,7 +512,7 @@ physics.Simulate2D(world, timing);
 physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers
 Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flush
-Spark::ProcessGuiCanvasesInput(scene, input, fbW, fbH);
+Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 </code></pre>
 <p>Legacy free functions (<code>SimulatePhysics2D</code>, <code>SimulatePhysics3D</code>, …) remain but are <strong>deprecated</strong> — prefer <code>PhysicsSubsystem</code>.</p>
 <p><strong>70 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>

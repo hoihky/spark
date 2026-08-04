@@ -49,7 +49,7 @@ typedef enum SparkComponentKind {
     SparkComponentKind_SkinnedMesh,
     SparkComponentKind_Animator,
     SparkComponentKind_TextOverlay,
-    SparkComponentKind_GuiCanvas,
+    SparkComponentKind_UiCanvas,
     SparkComponentKind_Sky,
     SparkComponentKind_ParticleEmitter,
     SparkComponentKind_Terrain,
@@ -113,7 +113,7 @@ SPARK_SCRIPT_API void spark_context_set_scene_render_params(
         SparkEngineContext* context,
         const void* params,
         uint32_t paramsByteSize);
-SPARK_SCRIPT_API void spark_context_process_gui_input(SparkEngineContext* context);
+SPARK_SCRIPT_API void spark_context_process_ui_input(SparkEngineContext* context);
 
 SPARK_SCRIPT_API int spark_input_is_key_down(const SparkInput* input, int keyCode);
 SPARK_SCRIPT_API int spark_input_is_key_pressed_this_frame(const SparkInput* input, int keyCode);
@@ -203,19 +203,19 @@ SPARK_SCRIPT_API void spark_scene_submit_standard_lit_from_world(
         float sceneTimeSeconds,
         SparkSpriteSortMode spriteSortMode);
 
-/* --- GUI (mirrors GuiScene.hpp) --- */
-SPARK_SCRIPT_API void spark_gui_process_canvases_input(
+/* --- UI (mirrors UiScene.hpp) --- */
+SPARK_SCRIPT_API void spark_ui_process_canvases_input(
         SparkGameWorld* world,
         SparkInput* input,
         int framebufferWidth,
         int framebufferHeight);
-SPARK_SCRIPT_API void spark_gui_paint_canvases(
+SPARK_SCRIPT_API void spark_ui_paint_canvases(
         SparkGameWorld* world,
         void* params,
         uint32_t paramsByteSize,
         int framebufferWidth,
         int framebufferHeight);
-SPARK_SCRIPT_API int spark_gui_consumes_game_pointer(void);
+SPARK_SCRIPT_API int spark_ui_consumes_game_pointer(void);
 
 /* --- Math (mirrors Matrix4 helpers) --- */
 SPARK_SCRIPT_API void spark_mat4_perspective_vulkan(
@@ -303,7 +303,7 @@ SPARK_SCRIPT_API SparkGameComponent* spark_object_add_spot_light(
         float outerConeDegrees);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_sky(SparkGameObject* object, SparkSceneSkyMode mode);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_text_overlay(SparkGameObject* object);
-SPARK_SCRIPT_API SparkGameComponent* spark_object_add_gui_canvas(SparkGameObject* object, int sortOrder);
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_ui_canvas(SparkGameObject* object, int sortOrder);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_particle_emitter(SparkGameObject* object);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_box_collider_2d(
         SparkGameObject* object,
@@ -448,10 +448,10 @@ SPARK_SCRIPT_API void spark_text_overlay_set_color(SparkGameComponent* text, con
 SPARK_SCRIPT_API void spark_text_overlay_set_alpha(SparkGameComponent* text, float alpha);
 SPARK_SCRIPT_API void spark_text_overlay_set_visible(SparkGameComponent* text, int visible);
 
-/* --- GUI canvas --- */
-SPARK_SCRIPT_API void spark_gui_canvas_set_enabled(SparkGameComponent* canvas, int enabled);
-SPARK_SCRIPT_API void spark_gui_canvas_set_sort_order(SparkGameComponent* canvas, int sortOrder);
-SPARK_SCRIPT_API void spark_gui_canvas_clear_root(SparkGameComponent* canvas);
+/* --- UI canvas --- */
+SPARK_SCRIPT_API void spark_ui_canvas_set_enabled(SparkGameComponent* canvas, int enabled);
+SPARK_SCRIPT_API void spark_ui_canvas_set_sort_order(SparkGameComponent* canvas, int sortOrder);
+SPARK_SCRIPT_API void spark_ui_canvas_clear_root(SparkGameComponent* canvas);
 
 /* --- Rigidbody 2D / 3D --- */
 SPARK_SCRIPT_API void spark_rigidbody_2d_get_velocity(const SparkGameComponent* body, SparkVector2* out);

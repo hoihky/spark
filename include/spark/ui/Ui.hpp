@@ -1,0 +1,25 @@
+#pragma once
+
+/** Umbrella include for the new retained UI stack (<c>spark/ui/</c>). */
+
+#include "spark/ui/controls/IUiControls.hpp"
+#include "spark/ui/factory/ControlDesc.hpp"
+#include "spark/ui/core/IUiElement.hpp"
+#include "spark/ui/core/IUiRenderer.hpp"
+#include "spark/ui/core/IUiStateStore.hpp"
+#include "spark/ui/core/UiTheme.hpp"
+#include "spark/ui/core/UiThemeCatalog.hpp"
+#include "spark/ui/core/UiTypes.hpp"
+#include "spark/ui/core/UiLayoutMetrics.hpp"
+#include "spark/ui/spark/UiChild.hpp"
+#include "spark/ui/factory/IUiControlsFactory.hpp"
+#include "spark/ui/runtime/EditorLayoutStore.hpp"
+#include "spark/ui/runtime/IUiBackend.hpp"
+#include "spark/ui/runtime/UiBackendKind.hpp"
+#include "spark/ui/runtime/UiContext.hpp"
+#include "spark/ui/runtime/UiContextMenu.hpp"
+#include "spark/ui/runtime/UiFrameContext.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
+#include "spark/ui/runtime/UiSystem.hpp"
+#include "spark/ui/runtime/UiToolkitSettings.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"

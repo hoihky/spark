@@ -211,7 +211,7 @@ namespace Spark.Bindings
         SparkComponentKind_SkinnedMesh,
         SparkComponentKind_Animator,
         SparkComponentKind_TextOverlay,
-        SparkComponentKind_GuiCanvas,
+        SparkComponentKind_UiCanvas,
         SparkComponentKind_Sky,
         SparkComponentKind_ParticleEmitter,
         SparkComponentKind_Terrain,
@@ -233,6 +233,13 @@ namespace Spark.Bindings
         SparkComponentKind_Sprite2DCharacterAnimFsm,
         SparkComponentKind_Character3DAnimFsm,
         SparkComponentKind_SpotLight,
+        SparkComponentKind_DirectionalLight,
+        SparkComponentKind_Camera,
+        SparkComponentKind_Camera2D,
+        SparkComponentKind_Camera2DRig,
+        SparkComponentKind_BlendMode,
+        SparkComponentKind_RenderLayer,
+        SparkComponentKind_SortingGroup,
     }
 
     public static unsafe partial class Native
@@ -250,7 +257,7 @@ namespace Spark.Bindings
         public static extern void spark_context_set_scene_render_params(SparkEngineContext* context, [NativeTypeName("const void *")] void* @params, [NativeTypeName("uint32_t")] uint paramsByteSize);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void spark_context_process_gui_input(SparkEngineContext* context);
+        public static extern void spark_context_process_ui_input(SparkEngineContext* context);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int spark_input_is_key_down([NativeTypeName("const SparkInput *")] SparkInput* input, int keyCode);
@@ -337,13 +344,13 @@ namespace Spark.Bindings
         public static extern void spark_scene_submit_standard_lit_from_world(SparkGameWorld* world, SparkEngineContext* context, [NativeTypeName("const SparkMatrix4 *")] SparkMatrix4* viewProjection, [NativeTypeName("const SparkVector3 *")] SparkVector3* cameraPositionWorld, [NativeTypeName("const SparkVector3 *")] SparkVector3* lightDirectionWorld, [NativeTypeName("const SparkVector3 *")] SparkVector3* lightColor, float lightIntensity, [NativeTypeName("const SparkVector3 *")] SparkVector3* ambientColor, int enableParticles, [NativeTypeName("const SparkVector3 *")] SparkVector3* particleCameraRight, [NativeTypeName("const SparkVector3 *")] SparkVector3* particleCameraUp, float sceneTimeSeconds, SparkSpriteSortMode spriteSortMode);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void spark_gui_process_canvases_input(SparkGameWorld* world, SparkInput* input, int framebufferWidth, int framebufferHeight);
+        public static extern void spark_ui_process_canvases_input(SparkGameWorld* world, SparkInput* input, int framebufferWidth, int framebufferHeight);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void spark_gui_paint_canvases(SparkGameWorld* world, void* @params, [NativeTypeName("uint32_t")] uint paramsByteSize, int framebufferWidth, int framebufferHeight);
+        public static extern void spark_ui_paint_canvases(SparkGameWorld* world, void* @params, [NativeTypeName("uint32_t")] uint paramsByteSize, int framebufferWidth, int framebufferHeight);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern int spark_gui_consumes_game_pointer();
+        public static extern int spark_ui_consumes_game_pointer();
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_mat4_perspective_vulkan(SparkMatrix4* @out, float verticalFovYRad, float aspect, float nearZ, float farZ);
@@ -419,7 +426,7 @@ namespace Spark.Bindings
         public static extern SparkGameComponent* spark_object_add_text_overlay(SparkGameObject* @object);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern SparkGameComponent* spark_object_add_gui_canvas(SparkGameObject* @object, int sortOrder);
+        public static extern SparkGameComponent* spark_object_add_ui_canvas(SparkGameObject* @object, int sortOrder);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern SparkGameComponent* spark_object_add_particle_emitter(SparkGameObject* @object);
@@ -497,6 +504,69 @@ namespace Spark.Bindings
         public static extern void spark_sprite_set_sort_order(SparkGameComponent* sprite, int sortOrder);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_render_layer_register([NativeTypeName("const char *")] sbyte* name, int sortingOrder);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_render_layer_find([NativeTypeName("const char *")] sbyte* name);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_render_layer(SparkGameObject* @object, [NativeTypeName("const char *")] sbyte* layerName, int orderInLayer);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_render_layer_set_order_in_layer(SparkGameComponent* layer, int orderInLayer);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_sorting_group(SparkGameObject* @object, int sortingOrder);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_sorting_group_set_enabled(SparkGameComponent* group, int enabled);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_sorting_group_set_sorting_order(SparkGameComponent* group, int sortingOrder);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_sorting_group_set_sort_at_root_world_y(SparkGameComponent* group, int enabled);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_camera_2d(SparkGameObject* @object, float halfExtentY, int priority);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_set_half_extent_y(SparkGameComponent* camera, float halfExtentY);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_set_clip_planes(SparkGameComponent* camera, float nearZ, float farZ);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_set_priority(SparkGameComponent* camera, int priority);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_set_enabled(SparkGameComponent* camera, int enabled);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_camera_2d_rig(SparkGameObject* @object);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_set_mode(SparkGameComponent* rig, int mode);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_set_target(SparkGameComponent* rig, SparkGameObject* target);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_set_target_offset(SparkGameComponent* rig, [NativeTypeName("const SparkVector3 *")] SparkVector3* offset);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_set_follow_smooth_rate(SparkGameComponent* rig, float rate);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_set_look_ahead_scale(SparkGameComponent* rig, float scale);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_set_bounds(SparkGameComponent* rig, int useBounds, [NativeTypeName("const SparkVector2 *")] SparkVector2* boundsMin, [NativeTypeName("const SparkVector2 *")] SparkVector2* boundsMax);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_camera_2d_rig_tick(SparkGameComponent* rig, SparkGameObject* owner, float deltaSeconds, float framebufferAspect);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_tilemap_set_tile(SparkGameComponent* tilemap, [NativeTypeName("uint32_t")] uint x, [NativeTypeName("uint32_t")] uint y, [NativeTypeName("uint16_t")] ushort tileId);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -554,13 +624,13 @@ namespace Spark.Bindings
         public static extern void spark_text_overlay_set_visible(SparkGameComponent* text, int visible);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void spark_gui_canvas_set_enabled(SparkGameComponent* canvas, int enabled);
+        public static extern void spark_ui_canvas_set_enabled(SparkGameComponent* canvas, int enabled);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void spark_gui_canvas_set_sort_order(SparkGameComponent* canvas, int sortOrder);
+        public static extern void spark_ui_canvas_set_sort_order(SparkGameComponent* canvas, int sortOrder);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void spark_gui_canvas_clear_root(SparkGameComponent* canvas);
+        public static extern void spark_ui_canvas_clear_root(SparkGameComponent* canvas);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_rigidbody_2d_get_velocity([NativeTypeName("const SparkGameComponent *")] SparkGameComponent* body, SparkVector2* @out);

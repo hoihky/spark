@@ -18,7 +18,7 @@ enum class ComponentKind : std::uint32_t {
     SkinnedMesh,
     Animator,
     TextOverlay,
-    GuiCanvas,
+    UiCanvas,
     Sky,
     ParticleEmitter,
     Terrain,

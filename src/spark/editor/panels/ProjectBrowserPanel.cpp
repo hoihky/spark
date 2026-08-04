@@ -1,37 +1,40 @@
 #include "spark/editor/panels/ProjectBrowserPanel.hpp"
 
 #include "spark/editor/EditorProject.hpp"
-#include "spark/gui/GuiTheme.hpp"
-#include "spark/gui/controls/Label.hpp"
-#include "spark/gui/controls/Panel.hpp"
-#include "spark/gui/controls/StackPanel.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ui/spark/UiChild.hpp"
 
 #include <cstdio>
 
 namespace Spark::Editor {
 
-ProjectBrowserPanel::ProjectBrowserPanel() {
-    const Gui::GuiTheme& th = Gui::GuiTheme::SceneEditorDark();
+ProjectBrowserPanel::ProjectBrowserPanel() = default;
 
-    auto shell = MakeUnique<Gui::Panel>();
-    shell->SetPadding(4.0F);
-    shell->SetBackgroundEnabled(false);
-    shell->SetChromeEnabled(false);
-    shell->SetDropShadowEnabled(false);
+void ProjectBrowserPanel::EnsureBuilt() {
+    if (built) {
+        return;
+    }
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
 
-    auto stack = MakeUnique<Gui::StackPanel>();
-    auto bodyUp = MakeUnique<Gui::Label>();
-    bodyUp->SetText(Utf8String("No project open."));
-    bodyUp->SetFontSize(16.0F);
-    bodyUp->SetTextColor(th.labelMuted);
+    Ui::PanelDesc shellDesc{};
+    shellDesc.id = Utf8String("project_shell");
+    shellDesc.title = Utf8String("Project");
+    auto shell = factory.CreatePanel(shellDesc);
+
+    Ui::LabelDesc bodyDesc{};
+    bodyDesc.id = Utf8String("project_body");
+    bodyDesc.text = Utf8String("No project open.");
+    bodyDesc.muted = true;
+    auto bodyUp = factory.CreateLabel(bodyDesc);
     body = bodyUp.Get();
-    stack->AddChild(MoveTemp(bodyUp));
+    AdoptUiChild(*shell, MoveTemp(bodyUp));
 
-    shell->AddChild(MoveTemp(stack));
-    root.Reset(shell.Release());
+    root.Reset(static_cast<Ui::IUiElement*>(shell.Release()));
+    built = true;
 }
 
 void ProjectBrowserPanel::OnAttach(EditorContext& ctx) {
+    EnsureBuilt();
     project = ctx.project;
 }
 

@@ -2,32 +2,45 @@
 
 #include "spark/editor/EditorSelection.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/gui/controls/Label.hpp"
-#include "spark/gui/controls/Panel.hpp"
-#include "spark/gui/controls/StackPanel.hpp"
 #include "spark/scene/GameWorld.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ui/spark/UiChild.hpp"
 
 namespace Spark::Editor {
 
-HierarchyPanel::HierarchyPanel() {
-    auto shell = MakeUnique<Gui::Panel>();
-    shell->SetPadding(6.0F);
+HierarchyPanel::HierarchyPanel() = default;
 
-    auto stack = MakeUnique<Gui::StackPanel>();
-    stack->SetSpacing(4.0F);
+void HierarchyPanel::EnsureBuilt() {
+    if (built) {
+        return;
+    }
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
 
-    auto treeUp = MakeUnique<Gui::TreeView>();
-    treeUp->SetRowHeight(26.0F);
-    treeUp->SetItemFontSize(18.0F);
-    treeUp->SetOnSelectionChanged([this](const int nodeId) { OnTreeSelection(nodeId); });
+    Ui::PanelDesc shellDesc{};
+    shellDesc.id = Utf8String("hierarchy_shell");
+    shellDesc.title = Utf8String("Hierarchy");
+    auto shell = factory.CreatePanel(shellDesc);
+
+    Ui::TreeViewDesc treeDesc{};
+    treeDesc.id = Utf8String("hierarchy_tree");
+    treeDesc.rowHeight = 26.0F;
+    treeDesc.itemFontSize = 18.0F;
+    auto treeUp = factory.CreateTreeView(treeDesc);
     tree = treeUp.Get();
-    stack->AddChild(MoveTemp(treeUp));
+    Ui::UiIntCallback selectCb{};
+    selectCb.fn = [](void* userData, const int nodeId) {
+        static_cast<HierarchyPanel*>(userData)->OnTreeSelection(nodeId);
+    };
+    selectCb.userData = this;
+    tree->SetOnSelectionChanged(selectCb);
+    AdoptUiChild(*shell, MoveTemp(treeUp));
 
-    shell->AddChild(MoveTemp(stack));
-    root.Reset(shell.Release());
+    root.Reset(static_cast<Ui::IUiElement*>(shell.Release()));
+    built = true;
 }
 
 void HierarchyPanel::OnAttach(EditorContext& ctx) {
+    EnsureBuilt();
     world = ctx.world;
     selection = ctx.selection;
     statusLine = &ctx.statusLine;

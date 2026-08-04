@@ -5,47 +5,49 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/gui/GuiTheme.hpp"
-#include "spark/gui/controls/Panel.hpp"
-#include "spark/gui/controls/StackPanel.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/ui/Ui.hpp"
+#include "spark/ui/spark/UiChild.hpp"
 
 #include <cstdio>
 #include <cstring>
 
 namespace Spark::Editor {
 
-InspectorPanel::InspectorPanel() {
-    const Gui::GuiTheme& th = Gui::GuiTheme::SceneEditorDark();
+InspectorPanel::InspectorPanel() = default;
 
-    auto shell = MakeUnique<Gui::Panel>();
-    shell->SetPadding(4.0F);
-    shell->SetBackgroundEnabled(false);
-    shell->SetChromeEnabled(false);
-    shell->SetDropShadowEnabled(false);
+void InspectorPanel::EnsureBuilt() {
+    if (built) {
+        return;
+    }
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
 
-    auto stack = MakeUnique<Gui::StackPanel>();
-    stack->SetSpacing(6.0F);
+    Ui::PanelDesc shellDesc{};
+    shellDesc.id = Utf8String("inspector_shell");
+    shellDesc.title = Utf8String("Inspector");
+    auto shell = factory.CreatePanel(shellDesc);
 
-    auto titleUp = MakeUnique<Gui::Label>();
-    titleUp->SetText(Utf8String("Inspector"));
-    titleUp->SetFontSize(20.0F);
-    titleUp->SetTextColor(th.labelPrimary);
+    Ui::LabelDesc titleDesc{};
+    titleDesc.id = Utf8String("inspector_title");
+    titleDesc.text = Utf8String("Inspector");
+    auto titleUp = factory.CreateLabel(titleDesc);
     title = titleUp.Get();
-    stack->AddChild(MoveTemp(titleUp));
+    AdoptUiChild(*shell, MoveTemp(titleUp));
 
-    auto bodyUp = MakeUnique<Gui::Label>();
-    bodyUp->SetText(Utf8String("Select an entity in the Hierarchy."));
-    bodyUp->SetFontSize(16.0F);
-    bodyUp->SetTextColor(th.labelMuted);
+    Ui::LabelDesc bodyDesc{};
+    bodyDesc.id = Utf8String("inspector_body");
+    bodyDesc.text = Utf8String("Select an entity in the Hierarchy.");
+    bodyDesc.muted = true;
+    auto bodyUp = factory.CreateLabel(bodyDesc);
     body = bodyUp.Get();
-    stack->AddChild(MoveTemp(bodyUp));
+    AdoptUiChild(*shell, MoveTemp(bodyUp));
 
-    shell->AddChild(MoveTemp(stack));
-    root.Reset(shell.Release());
+    root.Reset(static_cast<Ui::IUiElement*>(shell.Release()));
+    built = true;
 }
 
 void InspectorPanel::OnAttach(EditorContext& ctx) {
+    EnsureBuilt();
     selection = ctx.selection;
 }
 
@@ -60,7 +62,7 @@ void InspectorPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*
     }
 
     char buf[512]{};
-  std::snprintf(buf, sizeof(buf), "Name: %s\n", obj->GetName().CStr());
+    std::snprintf(buf, sizeof(buf), "Name: %s\n", obj->GetName().CStr());
 
     if (TransformComponent* tr = obj->GetComponent<TransformComponent>()) {
         const Vector3 p = tr->GetLocalTransform().translation;

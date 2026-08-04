@@ -47,7 +47,7 @@ void Platformer2DGame::OnRender(IRenderFrame&, IEngineContext& context) {
 ```cpp
 SceneRenderParams params{};
 FillStandardLitSceneFromWorld(..., params);
-PaintGuiCanvases(GetWorld(), params, fbW, fbH);
+PaintUiCanvases(GetWorld(), params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
 

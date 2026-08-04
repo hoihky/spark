@@ -86,11 +86,11 @@ public sealed class IEngineContext
         }
     }
 
-    public void ProcessGuiInput()
+    public void ProcessUiInput()
     {
         unsafe
         {
-            Native.spark_context_process_gui_input(InteropPtr.Context(Handle));
+            Native.spark_context_process_ui_input(InteropPtr.Context(Handle));
         }
     }
 }
@@ -350,11 +350,11 @@ public sealed class GameWorld
         }
     }
 
-    public void ProcessGuiInput(IInput input, int framebufferWidth, int framebufferHeight)
+    public void ProcessUiInput(IInput input, int framebufferWidth, int framebufferHeight)
     {
         unsafe
         {
-            Native.spark_gui_process_canvases_input(
+            Native.spark_ui_process_canvases_input(
                 InteropPtr.World(Handle),
                 InteropPtr.Input(input.Handle),
                 framebufferWidth,
@@ -362,11 +362,11 @@ public sealed class GameWorld
         }
     }
 
-    public void PaintGuiCanvases(IntPtr sceneParams, uint paramsByteSize, int framebufferWidth, int framebufferHeight)
+    public void PaintUiCanvases(IntPtr sceneParams, uint paramsByteSize, int framebufferWidth, int framebufferHeight)
     {
         unsafe
         {
-            Native.spark_gui_paint_canvases(
+            Native.spark_ui_paint_canvases(
                 InteropPtr.World(Handle),
                 sceneParams.ToPointer(),
                 paramsByteSize,
