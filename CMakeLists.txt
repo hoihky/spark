@@ -714,22 +714,12 @@ option(SPARK_BUILD_ENGINE_SHARED "Build SparkEngine as a shared library (OFF = s
 option(SPARK_BUILD_ENGINE_DEMOS "Compile shell/demo sources into SparkEngine (OFF for slim editor/game DLL)" ON)
 option(SPARK_BUILD_EDITOR "Compile spark/editor authoring module into SparkEngine" OFF)
 option(SPARK_BUILD_DEMO "Build SparkDemo sample executable (shell + demos)" ON)
-option(SPARK_BUILD_SCRIPT_HOST "Build SparkScriptHost + SparkInterop (CoreCLR + C# bindings)" ON)
 
 if (SPARK_BUILD_ENGINE_DEMOS)
     list(APPEND SPARK_ENGINE_SOURCES ${SPARK_ENGINE_DEMO_SOURCES})
 endif ()
 if (SPARK_BUILD_EDITOR)
     list(APPEND SPARK_ENGINE_SOURCES ${SPARK_ENGINE_EDITOR_SOURCES})
-endif ()
-
-# Warn only on the full demo profile; editor-debug intentionally disables script host.
-if (EXISTS "${CMAKE_SOURCE_DIR}/.run/SparkScriptHost.run.xml")
-    if (NOT SPARK_BUILD_SCRIPT_HOST AND SPARK_BUILD_DEMO)
-        message(WARNING
-                "SPARK_BUILD_SCRIPT_HOST is OFF but .run/SparkScriptHost.run.xml exists. "
-                "Set -DSPARK_BUILD_SCRIPT_HOST=ON in CMake options and Reload CMake Project.")
-    endif ()
 endif ()
 
 if (SPARK_BUILD_ENGINE_SHARED)
@@ -787,13 +777,6 @@ endif ()
 if (SPARK_BUILD_DEMO)
     add_executable(SparkDemo src/main.cpp)
     target_link_libraries(SparkDemo PRIVATE SparkEngine)
-endif ()
-
-if (SPARK_BUILD_SCRIPT_HOST)
-    add_subdirectory(scripting)
-elseif (SPARK_BUILD_DEMO)
-    message(STATUS "SparkScriptHost disabled (SPARK_BUILD_SCRIPT_HOST=OFF). "
-            "Set -DSPARK_BUILD_SCRIPT_HOST=ON and Reload CMake for .run/SparkScriptHost.run.xml")
 endif ()
 
 if (SPARK_BUILD_TESTS)

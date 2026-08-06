@@ -4,7 +4,7 @@
 
 | Profile | Build directory | Use for |
 |---------|-----------------|---------|
-| **debug** | `cmake-build-debug/` | SparkDemo + SparkEditor + SparkScriptHost (default dev) |
+| **debug** | `cmake-build-debug/` | SparkDemo + SparkEditor (default dev) |
 | **editor-debug** | `cmake-build-editor/` | SparkEditor only — shared `libSparkEngine.dylib`, no demos |
 
 ## Enable `editor-debug` in CLion
@@ -30,7 +30,6 @@ If not using presets, create a profile with build directory `cmake-build-editor`
 -DSPARK_BUILD_EDITOR=ON
 -DSPARK_BUILD_SPARK_EDITOR=ON
 -DSPARK_BUILD_DEMO=OFF
--DSPARK_BUILD_SCRIPT_HOST=OFF
 ```
 
 See also [`.run/README.md`](../.run/README.md).

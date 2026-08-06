@@ -269,6 +269,18 @@ void Skeleton::BuildPaletteFromPose(
     }
 }
 
+void Skeleton::AdoptAnimationClipsFrom(const Skeleton& source) {
+    if (source.jointCount != jointCount || jointCount == 0) {
+        return;
+    }
+    clips.Clear();
+    clipNames.Clear();
+    for (std::size_t i = 0; i < source.clips.GetSize(); ++i) {
+        clips.PushBack(source.clips[i]);
+        clipNames.PushBack(source.clipNames[i]);
+    }
+}
+
 void Skeleton::ComputeBlendedPalette(
         std::uint32_t clipA,
         float timeA,

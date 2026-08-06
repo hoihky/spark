@@ -8,12 +8,11 @@
   "configurePresets": [
     {
       "name": "debug",
-      "displayName": "Debug (SparkDemo + C#)",
-      "description": "Default CLion profile: SparkDemo, SparkScriptHost",
+      "displayName": "Debug (SparkDemo)",
+      "description": "Default CLion profile: SparkDemo",
       "binaryDir": "${sourceDir}/cmake-build-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "SPARK_BUILD_SCRIPT_HOST": "ON",
         "SPARK_BUILD_DEMO": "ON"
       }
     }

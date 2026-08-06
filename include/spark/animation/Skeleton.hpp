@@ -50,6 +50,12 @@ public:
     void BuildPaletteFromPose(const Array<Transform>& pose, Matrix4* outPalette, std::uint32_t paletteMax) const;
 
     /**
+     * Copies animation clips from another skeleton (same joint count / hierarchy, e.g. Quaternius mesh + anim pack).
+     * Replaces any clips already on this skeleton.
+     */
+    void AdoptAnimationClipsFrom(const Skeleton& source);
+
+    /**
      * Blends two clip poses (blendB: 0 = clipA, 1 = clipB) then builds the skin palette.
      * Times are clamped per clip duration.
      */

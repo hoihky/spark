@@ -6,7 +6,7 @@
 
 # Spark
 
-Spark is a **C++23** game engine with a Vulkan forward renderer, entity–component scene model, retained-mode GUI, optional **Dear ImGui** tool UI, optional C# scripting, and an in-progress editor.
+Spark is a **C++23** game engine with a Vulkan forward renderer, entity–component scene model, retained-mode GUI, optional **Dear ImGui** tool UI, and an in-progress editor.
 
 ## Showcase
 
@@ -35,7 +35,6 @@ cmake --build cmake-build-debug -j
 |--------|---------------------|---------|
 | **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **19** built-in modes |
 | **SparkEditor** | `cmake-build-debug/spark_editor/SparkEditor` | 3D editor shell (edit mode, dock UI) |
-| **SparkScriptHost** | `cmake-build-debug/SparkScriptHost` | CoreCLR host for C# games |
 
 **Editor-only slim build:** `cmake --preset editor-debug && cmake --build cmake-build-editor --target SparkEditor`
 
@@ -52,7 +51,6 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 | [**Materials & Lighting**](docs/MATERIALS_AND_LIGHTING.md) | PBR channels, IBL, material limits |
 | [**Spark Editor Plan**](docs/SPARK_EDITOR_PLAN.md) | Editor milestones, project/asset workflow |
 | [**GUI & Editor Roadmap**](docs/GUI_EDITOR_ROADMAP.md) | GUI toolkit and authoring UI tasks |
-| [**C# Scripting**](docs/CSHARP_SCRIPTING.md) | CoreCLR host, bindings, HelloCsGame |
 | [**3D Animation Roadmap**](docs/ANIMATION_3D_ROADMAP.md) | Skeletal animation milestones |
 | [**Open World Roadmap**](docs/OPEN_WORLD_ACTION_ROADMAP.md) | Long-horizon streaming/combat/AI plan |
 | [**2D ARPG Features**](docs/2D_ARPG_FEATURES.md) | 2D gameplay backlog |
@@ -67,9 +65,6 @@ assets/            Runtime fonts, models, textures
 shaders/           GLSL → SPIR-V (SparkShaders target)
 docs/              Design docs and roadmaps
 spark_editor/      SparkEditor executable
-scripting/         SparkInterop + SparkScriptHost + C# SDK
-game_template/     Minimal external game CMake project
-samples/           FPS and 2D platformer templates
 ```
 
 **Render headers** live under `include/spark/render/` in stage subfolders (not flat `render/*.hpp`):
@@ -95,14 +90,6 @@ samples/           FPS and 2D platformer templates
 3. **Presentation** — `VulkanRenderer` orchestrates passes under `render/*/` (shadow → HDR scene → SSAO → tonemap → screen UI). Instance/device/swapchain live in `VulkanDeviceContext`; frame sync in `VulkanFrameSync`.
 
 Games implement `IGame` (`spark/engine/IGame.hpp`). Optional `Game` base owns a `Scene` and forwards component updates.
-
-## External game projects
-
-- [`game_template/`](game_template/README.md) — empty shared-library game
-- [`samples/fps_game_template/`](samples/fps_game_template/README.md) — FPS starter
-- [`samples/platformer2d_game_template/`](samples/platformer2d_game_template/README.md) — 2D platformer starter
-
-Set `SPARK_ROOT` to this repository when building templates.
 
 ## License
 
