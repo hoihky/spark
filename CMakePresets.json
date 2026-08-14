@@ -13,7 +13,8 @@
       "binaryDir": "${sourceDir}/cmake-build-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "SPARK_BUILD_DEMO": "ON"
+        "SPARK_BUILD_DEMO": "ON",
+        "SPARK_BUILD_INTEROP": "ON"
       }
     }
   ],

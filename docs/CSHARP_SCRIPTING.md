@@ -1,6 +1,8 @@
-# C# scripting (CoreCLR + ClangSharp)
+# C# interop (ClangSharp + SparkInterop)
 
-Spark hosts **CoreCLR** from native code using **nethost** + **hostfxr**. Managed game code uses C# types that **mirror** the C++ public API (`IGame`, `Game`, `FrameTiming`, `IEngineContext`, …). Bindings are **generated** from `include/spark/scripting/SparkInterop.h` with **ClangSharp** whenever the native surface changes.
+Spark exposes a stable **C ABI** (`SparkInterop`) for managed editors and tools. C# P/Invoke types are **generated** from `include/spark/scripting/SparkInterop.h` with **ClangSharp**.
+
+> **Note:** The CoreCLR game host (`SparkScriptHost`, `Spark.Scripting` SDK, HelloCsGame) is not built in the current tree. Enable `-DSPARK_BUILD_INTEROP=ON` for `SparkInterop` + `Spark.Bindings` only.
 
 ## Architecture
 

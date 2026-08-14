@@ -10,7 +10,10 @@
 
 #include <stdint.h>
 
-#if defined(_WIN32)
+/* ClangSharp does not model GCC visibility attributes — strip export macros when generating C#. */
+#if defined(SPARK_BINDINGS_GENERATION)
+#define SPARK_SCRIPT_API
+#elif defined(_WIN32)
 #if defined(SPARK_INTEROP_EXPORTS)
 #define SPARK_SCRIPT_API __declspec(dllexport)
 #else

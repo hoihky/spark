@@ -35,6 +35,7 @@ cmake --build cmake-build-debug -j
 |--------|---------------------|---------|
 | **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **19** built-in modes |
 | **SparkEditor** | `cmake-build-debug/spark_editor/SparkEditor` | 3D editor shell (edit mode, dock UI) |
+| **SparkInterop** | `cmake-build-debug/scripting/libSparkInterop.dylib` | C ABI for managed tools (`-DSPARK_BUILD_INTEROP=ON`) |
 
 **Editor-only slim build:** `cmake --preset editor-debug && cmake --build cmake-build-editor --target SparkEditor`
 
@@ -64,8 +65,11 @@ src/Engine.cpp     Engine loop (not under src/spark/engine/)
 assets/            Runtime fonts, models, textures
 shaders/           GLSL → SPIR-V (SparkShaders target)
 docs/              Design docs and roadmaps
+scripting/         SparkInterop C ABI + ClangSharp C# bindings (`Spark.Bindings`)
 spark_editor/      SparkEditor executable
 ```
+
+**C# bindings:** After changing `include/spark/scripting/SparkInterop.h`, run `./tools/generate-csharp-bindings.sh` and build with `-DSPARK_BUILD_INTEROP=ON` (enabled in the `debug` CMake preset).
 
 **Render headers** live under `include/spark/render/` in stage subfolders (not flat `render/*.hpp`):
 
