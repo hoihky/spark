@@ -1,5 +1,7 @@
 #include "spark/demo/DemoAssetLoad.hpp"
 
+#include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -110,14 +112,20 @@ Vector4 KenneySimplifiedPlatformerTileUv(std::uint32_t tileOneBased) noexcept {
     return SpriteAnimatorComponent::ComputeUniformGridUv(
             kKenneyTilesheetCols,
             kKenneyTilesheetRows,
-            KenneyPackTileNumberToSparkLinear(tileOneBased));
+            KenneyPackTileNumberToSparkLinear(tileOneBased),
+            kKenneyTilesheetPixelWidth,
+            kKenneyTilesheetPixelHeight);
 }
 
 bool TryLoadKenneySimplifiedPlatformerTilesheet(Texture2D& out) noexcept {
-    return TryLoadRelativeAsset(
-            out,
-            "/sprites/kenney_simplified-platformer-pack/Tilesheet/platformPack_tilesheet.png",
-            "KenneySimplifiedPlatformerTilesheet");
+    if (!TryLoadRelativeAsset(
+                out,
+                "/sprites/kenney_simplified-platformer-pack/Tilesheet/platformPack_tilesheet.png",
+                "KenneySimplifiedPlatformerTilesheet")) {
+        return false;
+    }
+    out.SetSceneUploadNearest(true);
+    return true;
 }
 
 bool TryBuildKenneyPlayerAtlas(Texture2D& out, std::uint32_t& outAtlasColumns) {
@@ -183,6 +191,7 @@ bool TryBuildKenneyPlayerAtlas(Texture2D& out, std::uint32_t& outAtlasColumns) {
         }
         out = Texture2D(Utf8String("KenneyPlatformerPlayer"));
         out.SetPixels(totalW, maxH, MoveTemp(buf));
+        out.SetSceneUploadNearest(true);
         outAtlasColumns = nCells;
         return true;
     }
@@ -190,17 +199,34 @@ bool TryBuildKenneyPlayerAtlas(Texture2D& out, std::uint32_t& outAtlasColumns) {
 }
 
 bool TryLoadKenneyGemCollectible(Texture2D& out) noexcept {
-    return TryLoadRelativeAsset(
-            out,
-            "/sprites/kenney_simplified-platformer-pack/PNG/Items/platformPack_item003.png",
-            "KenneySimplifiedGem");
+    if (!TryLoadRelativeAsset(
+                out,
+                "/sprites/kenney_simplified-platformer-pack/PNG/Items/platformPack_item003.png",
+                "KenneySimplifiedGem")) {
+        return false;
+    }
+    out.SetSceneUploadNearest(true);
+    return true;
 }
 
 bool TryLoadKenneyTinyDungeonAtlas(Texture2D& out) noexcept {
-    return TryLoadRelativeAsset(
-            out,
-            "/sprites/kenney_tiny-dungeon/Tilemap/tilemap_packed.png",
-            "KenneyTinyDungeonPacked");
+    if (!TryLoadRelativeAsset(
+                out,
+                "/sprites/kenney_tiny-dungeon/Tilemap/tilemap_packed.png",
+                "KenneyTinyDungeonPacked")) {
+        return false;
+    }
+    out.SetSceneUploadNearest(true);
+    return true;
+}
+
+Vector4 KenneyTinyDungeonTileUv(const std::uint32_t linearTileIndex) noexcept {
+    return SpriteAnimatorComponent::ComputeUniformGridUv(
+            kKenneyTinyDungeonAtlasCols,
+            kKenneyTinyDungeonAtlasRows,
+            linearTileIndex % (kKenneyTinyDungeonAtlasCols * kKenneyTinyDungeonAtlasRows),
+            kKenneyTinyDungeonAtlasPixelWidth,
+            kKenneyTinyDungeonAtlasPixelHeight);
 }
 
 bool TryLoadSpaceShooterShips(Texture2D& out) noexcept {
@@ -371,6 +397,7 @@ PlatformerEnemyAtlasResult BuildPlatformerEnemyAtlas() {
         BlitTextureBottomAligned(attack, buf, totalW, maxH, cellW);
         result.texture = Texture2D(Utf8String("KenneyPlatformerEnemySlime"));
         result.texture.SetPixels(totalW, maxH, MoveTemp(buf));
+        result.texture.SetSceneUploadNearest(true);
         result.columns = 2U;
         result.fromKenneySlime = true;
         return result;
@@ -382,6 +409,7 @@ PlatformerEnemyAtlasResult BuildPlatformerEnemyAtlas() {
                 "/sprites/kenney_tiny-dungeon/Tiles/tile_0121.png",
                 "TinyDungeonEnemyGhost")) {
         result.texture = MoveTemp(ghost);
+        result.texture.SetSceneUploadNearest(true);
         result.columns = 1U;
         result.fromTinyDungeon = true;
         return result;

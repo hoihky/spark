@@ -1,4 +1,6 @@
 #include "spark/scene/GameWorldAssetCache.hpp"
+#include "spark/scene/GltfMaterial.hpp"
+#include "spark/scene/GltfRigidLoader.hpp"
 
 #include "spark/animation/Skeleton.hpp"
 #include "spark/core/Utility.hpp"
@@ -12,6 +14,50 @@
 namespace Spark {
 
 namespace {
+
+void RegisterMaterialTextures(GameWorldAssetCache& cache, const GltfMaterialDesc& material) {
+    auto registerOne = [&](const SharedPtr<Texture2D>& tex) {
+        if (tex) {
+            cache.RegisterTexture(tex, tex->GetName().CStr());
+        }
+    };
+    registerOne(material.baseColor);
+    registerOne(material.normalMap);
+    registerOne(material.metallicRoughness);
+    registerOne(material.emissiveMap);
+}
+
+void RegisterAllMaterialTextures(GameWorldAssetCache& cache, const GltfAsset& asset) {
+    for (std::size_t i = 0; i < asset.materials.GetSize(); ++i) {
+        RegisterMaterialTextures(cache, asset.materials[i]);
+    }
+    if (asset.materials.IsEmpty()) {
+        RegisterMaterialTextures(cache, asset.material);
+    }
+}
+
+void RegisterAllMaterialTextures(GameWorldAssetCache& cache, const SkinnedGltfAsset& asset) {
+    for (std::size_t i = 0; i < asset.materials.GetSize(); ++i) {
+        RegisterMaterialTextures(cache, asset.materials[i]);
+    }
+    if (asset.materials.IsEmpty()) {
+        RegisterMaterialTextures(cache, asset.material);
+    }
+}
+
+void SyncLegacyFields(GltfAsset& asset) {
+    if (!asset.materials.IsEmpty()) {
+        asset.material = asset.materials[0];
+    }
+    asset.baseColorTexture = asset.material.baseColor;
+}
+
+void SyncLegacyFields(SkinnedGltfAsset& asset) {
+    if (!asset.materials.IsEmpty()) {
+        asset.material = asset.materials[0];
+    }
+    asset.baseColorTexture = asset.material.baseColor;
+}
 
 [[nodiscard]] bool PathEndsWithInsensitive(const char* path, const char* suffix) {
     if (path == nullptr || suffix == nullptr) {
@@ -72,14 +118,15 @@ GltfAsset GameWorldAssetCache::LoadGltf(const char* path) {
     if (const GltfAsset* cached = gltfCache.Find(key)) {
         return *cached;
     }
-    auto mesh = MakeShared<Mesh>(Utf8String(path));
-    SharedPtr<Texture2D> tex;
-    if (!Mesh::TryLoadFromGltf(path, *mesh, &tex)) {
+    GltfRigidLoadResult loaded{};
+    if (!GltfRigidLoader{}.LoadFromFile(path, loaded) || !loaded.mesh) {
         return empty;
     }
     GltfAsset asset{};
-    asset.mesh = mesh;
-    asset.baseColorTexture = tex;
+    asset.mesh = loaded.mesh;
+    asset.materials = loaded.materials;
+    SyncLegacyFields(asset);
+    RegisterAllMaterialTextures(*this, asset);
     gltfCache.Add(key, asset);
     return asset;
 }
@@ -88,10 +135,10 @@ void GameWorldAssetCache::RegisterGltf(const GltfAsset& asset, const char* cache
     if (!asset.mesh || cacheKey == nullptr || cacheKey[0] == '\0') {
         return;
     }
-    gltfCache.Add(Utf8String(cacheKey), asset);
-    if (asset.baseColorTexture) {
-        textureCache.Add(Utf8String(cacheKey), asset.baseColorTexture);
-    }
+    GltfAsset stored = asset;
+    SyncLegacyFields(stored);
+    gltfCache.Add(Utf8String(cacheKey), stored);
+    RegisterAllMaterialTextures(*this, stored);
 }
 
 SkinnedGltfAsset GameWorldAssetCache::LoadSkinnedGltf(const char* path) {
@@ -105,20 +152,25 @@ SkinnedGltfAsset GameWorldAssetCache::LoadSkinnedGltf(const char* path) {
     }
     SkinnedMesh mesh;
     Skeleton skeleton;
-    SharedPtr<Texture2D> tex;
+    GltfMaterialDesc material{};
+    Array<GltfMaterialDesc> materials;
     std::uint32_t walkClip = 0;
     Quaternion bindUp{};
     float facingYaw = 0.0F;
-    if (!TryLoadSkinnedCharacterFromGltf(path, mesh, skeleton, &tex, &walkClip, &bindUp, &facingYaw)) {
+    if (!TryLoadSkinnedCharacterFromGltf(
+                path, mesh, skeleton, nullptr, &material, &walkClip, &bindUp, &facingYaw, &materials)) {
         return empty;
     }
     SkinnedGltfAsset asset{};
     asset.mesh = SharedPtr<SkinnedMesh>(new SkinnedMesh(MoveTemp(mesh)));
     asset.skeleton = SharedPtr<Skeleton>(new Skeleton(MoveTemp(skeleton)));
-    asset.baseColorTexture = tex;
+    asset.materials = materials;
+    asset.material = material;
     asset.walkClipIndex = walkClip;
     asset.bindUpAlignment = bindUp;
     asset.bindFacingYawOffset = facingYaw;
+    SyncLegacyFields(asset);
+    RegisterAllMaterialTextures(*this, asset);
     skinnedGltfCache.Add(key, asset);
     return asset;
 }
@@ -127,10 +179,10 @@ void GameWorldAssetCache::RegisterSkinnedGltf(const SkinnedGltfAsset& asset, con
     if (!asset.mesh || !asset.skeleton || cacheKey == nullptr || cacheKey[0] == '\0') {
         return;
     }
-    skinnedGltfCache.Add(Utf8String(cacheKey), asset);
-    if (asset.baseColorTexture) {
-        textureCache.Add(Utf8String(cacheKey), asset.baseColorTexture);
-    }
+    SkinnedGltfAsset stored = asset;
+    SyncLegacyFields(stored);
+    skinnedGltfCache.Add(Utf8String(cacheKey), stored);
+    RegisterAllMaterialTextures(*this, stored);
 }
 
 SharedPtr<Texture2D> GameWorldAssetCache::LoadTexture(const char* path) {
@@ -208,6 +260,17 @@ SharedPtr<Texture2D> GameWorldAssetCache::TryGetTextureByKeyOrPath(const char* k
         return gl->baseColorTexture;
     }
     return SharedPtr<Texture2D>();
+}
+
+bool GameWorldAssetCache::TryGetCachedGltf(const char* path, GltfAsset& out) const {
+    if (path == nullptr || path[0] == '\0') {
+        return false;
+    }
+    if (const GltfAsset* g = gltfCache.Find(Utf8String(path))) {
+        out = *g;
+        return static_cast<bool>(out.mesh);
+    }
+    return false;
 }
 
 bool GameWorldAssetCache::TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const {

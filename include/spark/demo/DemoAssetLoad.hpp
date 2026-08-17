@@ -15,6 +15,8 @@ namespace Spark::DemoAssets {
 
 constexpr std::uint32_t kKenneyTilesheetCols = 14U;
 constexpr std::uint32_t kKenneyTilesheetRows = 7U;
+constexpr std::uint32_t kKenneyTilesheetPixelWidth = 896U;
+constexpr std::uint32_t kKenneyTilesheetPixelHeight = 448U;
 constexpr std::uint32_t kPlayerAtlasFallbackCols = 5U;
 
 /** Kenney floor PNGs are 64×64; repeat every ~2 world units on large XZ surfaces. */
@@ -36,6 +38,13 @@ constexpr float kKenneyTileWorldUnitsPerRepeat = 2.0F;
 [[nodiscard]] bool TryLoadKenneyGemCollectible(Texture2D& out) noexcept;
 
 [[nodiscard]] bool TryLoadKenneyTinyDungeonAtlas(Texture2D& out) noexcept;
+
+constexpr std::uint32_t kKenneyTinyDungeonAtlasCols = 12U;
+constexpr std::uint32_t kKenneyTinyDungeonAtlasRows = 11U;
+constexpr std::uint32_t kKenneyTinyDungeonAtlasPixelWidth = 192U;
+constexpr std::uint32_t kKenneyTinyDungeonAtlasPixelHeight = 176U;
+
+[[nodiscard]] Vector4 KenneyTinyDungeonTileUv(std::uint32_t linearTileIndex) noexcept;
 
 [[nodiscard]] bool TryLoadBrickTexture(Texture2D& out) noexcept;
 

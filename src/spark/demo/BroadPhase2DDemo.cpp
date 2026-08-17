@@ -4,9 +4,8 @@
 namespace Spark {
 namespace {
 
-constexpr std::uint32_t kTinyDungeonAtlasCols = 12U;
-constexpr std::uint32_t kTinyDungeonAtlasRows = 11U;
-constexpr std::uint32_t kTinyDungeonTileCount = kTinyDungeonAtlasCols * kTinyDungeonAtlasRows;
+constexpr std::uint32_t kTinyDungeonTileCount =
+        DemoAssets::kKenneyTinyDungeonAtlasCols * DemoAssets::kKenneyTinyDungeonAtlasRows;
 
 constexpr std::uint32_t kTinyDungeonPlayerTile = 24U;
 constexpr std::uint32_t kTinyDungeonGemTile = 29U;
@@ -37,9 +36,8 @@ constexpr std::uint32_t kTinyDungeonGemTile = 29U;
     return kByOpenMask[m];
 }
 
-[[nodiscard]] Spark::Vector4 TinyDungeonTileUv(std::uint32_t linearTileIndex) noexcept {
-    return Spark::SpriteAnimatorComponent::ComputeUniformGridUv(
-            kTinyDungeonAtlasCols, kTinyDungeonAtlasRows, linearTileIndex % kTinyDungeonTileCount);
+[[nodiscard]] Spark::Vector4 TinyDungeonTileUv(const std::uint32_t linearTileIndex) noexcept {
+    return DemoAssets::KenneyTinyDungeonTileUv(linearTileIndex);
 }
 
 struct MazeIJ {
@@ -225,6 +223,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                     Spark::Vector3{0.96F, 0.97F, 1.0F},
                     Spark::Vector3{0.22F, 0.38F, 0.78F});
             dungeonAtlasCpu.GetName() = Spark::Utf8String("Maze2DAtlasFallback");
+            dungeonAtlasCpu.SetSceneUploadNearest(true);
         }
         dungeonAtlasTex = Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(dungeonAtlasCpu));
         w.RegisterTexture(dungeonAtlasTex, "spark/maze2d/kenney_tiny_dungeon");

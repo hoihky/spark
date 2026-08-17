@@ -4,10 +4,24 @@ namespace Spark {
 
 namespace {
 
+void ApplyAtlasHalfTexelInset(Vector4& uv, const std::uint32_t textureWidth, const std::uint32_t textureHeight) noexcept {
+    if (textureWidth == 0U || textureHeight == 0U) {
+        return;
+    }
+    const float halfU = 0.5F / static_cast<float>(textureWidth);
+    const float halfV = 0.5F / static_cast<float>(textureHeight);
+    uv.x += halfU;
+    uv.y += halfV;
+    uv.z -= halfU;
+    uv.w -= halfV;
+}
+
 void FillUniformGridUv(
         const std::uint16_t tileId,
         const std::uint32_t atlasTilesU,
         const std::uint32_t atlasTilesV,
+        const std::uint32_t textureWidth,
+        const std::uint32_t textureHeight,
         Vector4& outUv) noexcept {
     outUv = {0.0F, 0.0F, 0.0F, 0.0F};
     if (atlasTilesU == 0 || atlasTilesV == 0 || tileId == TilemapComponent::kEmptyTile) {
@@ -25,6 +39,7 @@ void FillUniformGridUv(
     outUv.y = static_cast<float>(ty) * dv;
     outUv.z = static_cast<float>(tx + 1U) * du;
     outUv.w = static_cast<float>(ty + 1U) * dv;
+    ApplyAtlasHalfTexelInset(outUv, textureWidth, textureHeight);
 }
 
 }  // namespace
@@ -34,7 +49,7 @@ void TileIdToAtlasUvRect(
         const std::uint32_t atlasTilesU,
         const std::uint32_t atlasTilesV,
         Vector4& outUv) noexcept {
-    FillUniformGridUv(tileId, atlasTilesU, atlasTilesV, outUv);
+    FillUniformGridUv(tileId, atlasTilesU, atlasTilesV, 0U, 0U, outUv);
 }
 
 void TileIdToAtlasUvRect(
@@ -49,7 +64,7 @@ void TileIdToAtlasUvRect(
         const std::uint32_t tilePixelHeight,
         Vector4& outUv) noexcept {
     if (marginPixels <= 0.0F && spacingPixels <= 0.0F) {
-        FillUniformGridUv(tileId, atlasTilesU, atlasTilesV, outUv);
+        FillUniformGridUv(tileId, atlasTilesU, atlasTilesV, textureWidth, textureHeight, outUv);
         return;
     }
     outUv = {0.0F, 0.0F, 0.0F, 0.0F};
@@ -75,7 +90,7 @@ void TileIdToAtlasUvRect(
         tileH = (texH - 2.0F * margin + spacing) / static_cast<float>(atlasTilesV) - spacing;
     }
     if (tileW <= 0.0F || tileH <= 0.0F) {
-        FillUniformGridUv(tileId, atlasTilesU, atlasTilesV, outUv);
+        FillUniformGridUv(tileId, atlasTilesU, atlasTilesV, textureWidth, textureHeight, outUv);
         return;
     }
     const std::uint32_t tx = tileId % atlasTilesU;
@@ -86,6 +101,7 @@ void TileIdToAtlasUvRect(
     outUv.y = py / texH;
     outUv.z = (px + tileW) / texW;
     outUv.w = (py + tileH) / texH;
+    ApplyAtlasHalfTexelInset(outUv, textureWidth, textureHeight);
 }
 
 void TileIdToAtlasUvRect(

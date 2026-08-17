@@ -12,6 +12,7 @@
 #include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
@@ -43,6 +44,94 @@
 
 namespace Spark {
 
+namespace SceneSubmitDetail {
+
+void ApplyAlbedoTexture(
+        SceneDrawItem& item,
+        const SharedPtr<Texture2D>& baseColor,
+        const Vector3& tint,
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture) {
+    if (!baseColor) {
+        return;
+    }
+    item.albedo = {item.albedo.x * tint.x, item.albedo.y * tint.y, item.albedo.z * tint.z};
+    item.textureLayer = findOrAddTexture(baseColor);
+}
+
+void PushRigidMeshDraws(
+        Array<SceneDrawItem>& drawList,
+        SceneDrawItem baseItem,
+        const Mesh& mesh,
+        const MaterialComponent* mat,
+        const MultiMaterialComponent* multiMat,
+        SceneRenderParams& params,
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture) {
+    const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
+    if (submeshes.IsEmpty() || multiMat == nullptr) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = kSceneDrawFullSubmesh;
+        if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+        return;
+    }
+
+    for (std::size_t si = 0; si < submeshes.GetSize(); ++si) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = static_cast<std::uint32_t>(si);
+        const MeshSubmesh& sm = submeshes[si];
+        if (sm.materialIndex < multiMat->GetSlotCount()) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(sm.materialIndex);
+            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
+            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
+        } else if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+    }
+}
+
+void PushSkinnedMeshDraws(
+        Array<SceneDrawItem>& drawList,
+        SceneDrawItem baseItem,
+        const SkinnedMesh& mesh,
+        const MaterialComponent* mat,
+        const MultiMaterialComponent* multiMat,
+        SceneRenderParams& params,
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture) {
+    const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
+    if (submeshes.IsEmpty() || multiMat == nullptr) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = kSceneDrawFullSubmesh;
+        if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+        return;
+    }
+
+    for (std::size_t si = 0; si < submeshes.GetSize(); ++si) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = static_cast<std::uint32_t>(si);
+        const MeshSubmesh& sm = submeshes[si];
+        if (sm.materialIndex < multiMat->GetSlotCount()) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(sm.materialIndex);
+            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
+            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
+        } else if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+    }
+}
+
+}  // namespace SceneSubmitDetail
+
 namespace {
 
 struct RigidDrawableSubmitSink final : DrawableFrustumSink {
@@ -69,6 +158,7 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
         if (o == nullptr || !mc.GetMesh()) {
             return;
         }
+        const MultiMaterialComponent* multiMat = o->GetComponent<MultiMaterialComponent>();
         const SkyComponent* sky = o->GetComponent<SkyComponent>();
         if (sky != nullptr && sky->IsSkyEnabled()) {
             SceneDrawItem item{};
@@ -89,27 +179,31 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
             drawList.PushBack(item);
             return;
         }
-        SceneDrawItem item{};
-        item.model = worldM;
-        item.mesh = mc.GetSlot();
+        SceneDrawItem baseItem{};
+        baseItem.model = worldM;
+        baseItem.mesh = mc.GetSlot();
+        baseItem.albedo = mc.GetAlbedo();
+        baseItem.textureLayer = -1;
         if (mc.GetSlot() == SceneMeshSlot::Custom) {
-            item.customMesh = mc.GetMesh();
+            baseItem.customMesh = mc.GetMesh();
         }
-        Vector3 alb = mc.GetAlbedo();
-        item.textureLayer = -1;
+        if (mc.GetSlot() == SceneMeshSlot::GroundPlane) {
+            baseItem.doubleSided = true;
+        }
+        baseItem.shadowFlags = defaultShadowFlags;
+
+        if (mc.GetSlot() == SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+            !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+            SceneSubmitDetail::PushRigidMeshDraws(
+                    drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+            return;
+        }
+
+        SceneDrawItem item = baseItem;
         if (mat != nullptr) {
             ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-            if (mat->GetBaseColorTexture()) {
-                const Vector3& t = mat->GetTint();
-                alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-            }
+            SceneSubmitDetail::ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
         }
-        item.albedo = alb;
-        if (mc.GetSlot() == SceneMeshSlot::GroundPlane) {
-            item.doubleSided = true;
-        }
-        item.shadowFlags = defaultShadowFlags;
         drawList.PushBack(item);
     }
 };
@@ -285,7 +379,7 @@ void FillStandardLitSceneFromWorld(
               findTex(inFindTex),
               defaultShadowFlags(inDefaultShadowFlags) {}
 
-        void OnSkinnedDrawable(GameObject* /*object*/,
+        void OnSkinnedDrawable(GameObject* object,
                 const SkinnedMeshComponent& smc,
                 const MaterialComponent* mat,
                 const AnimatorComponent* anim,
@@ -297,25 +391,32 @@ void FillStandardLitSceneFromWorld(
             if (jc == 0) {
                 return;
             }
-            SceneDrawItem item{};
-            item.model = world;
-            item.mesh = SceneMeshSlot::Custom;
-            item.skinnedMesh = smc.GetMesh();
-            item.albedo = {0.9F, 0.88F, 0.82F};
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 0.5F;
+            const MultiMaterialComponent* multiMat =
+                    object != nullptr ? object->GetComponent<MultiMaterialComponent>() : nullptr;
+
+            SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = SceneMeshSlot::Custom;
+            baseItem.skinnedMesh = smc.GetMesh();
+            baseItem.albedo = {0.9F, 0.88F, 0.82F};
+            baseItem.textureLayer = -1;
+            baseItem.metallic = 0.0F;
+            baseItem.roughness = 0.5F;
+            baseItem.jointPalette.Resize(jc);
+            anim->ComputeJointPalette(baseItem.jointPalette.GetData(), Skeleton::MaxJoints);
+            baseItem.shadowFlags = defaultShadowFlags;
+
+            if (multiMat != nullptr && !smc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                SceneSubmitDetail::PushSkinnedMeshDraws(
+                        draws, baseItem, *smc.GetMesh(), mat, multiMat, params, findTex);
+                return;
+            }
+
+            SceneDrawItem item = baseItem;
             if (mat != nullptr) {
                 ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Vector3& t = mat->GetTint();
-                    item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                    item.textureLayer = findTex(mat->GetBaseColorTexture());
-                }
+                SceneSubmitDetail::ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findTex);
             }
-            item.jointPalette.Resize(jc);
-            anim->ComputeJointPalette(item.jointPalette.GetData(), Skeleton::MaxJoints);
-            item.shadowFlags = defaultShadowFlags;
             draws.PushBack(item);
         }
     };
@@ -341,6 +442,9 @@ void FillStandardLitSceneFromWorld(
             return;
         }
         const Matrix4 spriteModel = o->GetWorldMatrix();
+        if (const SharedPtr<Texture2D>& spriteTex = sc->GetTexture()) {
+            findOrAddTexture(spriteTex);
+        }
         if (!spriteTileCull.IsSpriteVisible(spriteModel)) {
             return;
         }
@@ -348,6 +452,9 @@ void FillStandardLitSceneFromWorld(
         sd.model = spriteModel;
         sd.tint = sc->GetTint();
         sd.uvRect = sc->GetUvRect();
+        if (const SharedPtr<Texture2D>& spriteTex = sc->GetTexture()) {
+            sd.uvRect = spriteTex->ScaleUvRectForSceneLayer(sd.uvRect);
+        }
         const ResolvedDrawableSort resolved = DrawableSortResolver::Resolve(*o, sc->GetSortOrder());
         sd.sortOrder = resolved.key.sortingOrder;
         sd.sortingLayerOrder = resolved.key.sortingLayerOrder;

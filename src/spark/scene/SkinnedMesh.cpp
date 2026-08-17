@@ -12,6 +12,7 @@ SkinnedMesh::SkinnedMesh(Utf8String meshName) : name(MoveTemp(meshName)) {}
 void SkinnedMesh::Clear() noexcept {
     vertices.Clear();
     indices.Clear();
+    submeshes.Clear();
 }
 
 void SkinnedMesh::AddTriangle(std::uint32_t i0, std::uint32_t i1, std::uint32_t i2) {

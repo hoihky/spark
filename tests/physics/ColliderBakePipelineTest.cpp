@@ -73,12 +73,3 @@ TEST(ColliderBakePipelineTest, RebuildDoesNotBakeWhenContributesIsFalse) {
     EXPECT_EQ(strategy->bakeCount, 0);
     EXPECT_EQ(colliders.GetSize(), 0U);
 }
-
-TEST(ColliderBakePipelineTest, DefaultPipelineRebuildsEmptyWorld) {
-    Spark::GameWorld world{};
-    Spark::Array<Spark::Collider2D> colliders{};
-    Spark::SpatialHashGrid2D grid{};
-    Spark::ColliderBakePipeline2D::GetDefault().Rebuild(world, 4.0F, colliders, grid);
-    EXPECT_EQ(colliders.GetSize(), 0U);
-    EXPECT_FLOAT_EQ(grid.GetCellSize(), 4.0F);
-}

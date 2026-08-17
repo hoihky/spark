@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/MeshSubmesh.hpp"
 
 #include <cstdint>
 
@@ -42,6 +43,9 @@ public:
     [[nodiscard]] Array<std::uint32_t>& GetIndices() noexcept { return indices; }
     [[nodiscard]] const Array<std::uint32_t>& GetIndices() const noexcept { return indices; }
 
+    [[nodiscard]] Array<MeshSubmesh>& GetSubmeshes() noexcept { return submeshes; }
+    [[nodiscard]] const Array<MeshSubmesh>& GetSubmeshes() const noexcept { return submeshes; }
+
     void Clear() noexcept;
     void AddTriangle(std::uint32_t i0, std::uint32_t i1, std::uint32_t i2);
 
@@ -57,6 +61,7 @@ private:
     Utf8String name;
     Array<Vertex> vertices;
     Array<std::uint32_t> indices;
+    Array<MeshSubmesh> submeshes;
 };
 
 }  // namespace Spark

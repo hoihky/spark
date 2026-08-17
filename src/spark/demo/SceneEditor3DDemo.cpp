@@ -1,5 +1,6 @@
 #include "spark/demo/SceneEditor3DDemo.hpp"
 #include "spark/demo/SceneEditor3DDemo_detail.hpp"
+#include "spark/scene/GltfAssetBindings.hpp"
 
 #include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
@@ -814,8 +815,8 @@ void SceneEditor3DDemo::LightPresetParams(
             Spark::Utf8String full(SPARK_ASSETS_DIR);
             full.AppendUtf8("/");
             full.AppendUtf8(rel);
-            const Spark::GltfAsset g = w.LoadGltf(full.CStr());
-            if (!g.mesh) {
+            Spark::GltfAsset g{};
+            if (!w.AwaitGltf(full.CStr(), g) || !g.mesh) {
                 w.DestroyGameObject(go);
                 return false;
             }
@@ -839,17 +840,8 @@ void SceneEditor3DDemo::LightPresetParams(
             tr->SetUniformScale(uniformScale);
             tr->SetTranslation({hitXZ.x, yOnGround, hitXZ.z});
             tr->SetRotation(rot);
-            go->AddComponent<Spark::MeshComponent>(
-                    g.mesh, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
-            if (g.baseColorTexture) {
-                if (Spark::MaterialComponent* m = go->AddComponent<Spark::MaterialComponent>(
-                            g.baseColorTexture, Spark::Vector3::One)) {
-                    m->SetMetallic(0.65F);
-                    m->SetRoughness(0.42F);
-                }
-            } else {
-                go->AddComponent<Spark::MaterialComponent>();
-            }
+            Spark::GltfAssetBinder::BindRigidMesh(
+                    *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
         }
 
         roots.PushBack(go);
@@ -1167,22 +1159,13 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
                 Spark::Utf8String full(SPARK_ASSETS_DIR);
                 full.AppendUtf8("/");
                 full.AppendUtf8(key);
-                const Spark::GltfAsset g = w.LoadGltf(full.CStr());
-                if (!g.mesh) {
+                Spark::GltfAsset g{};
+                if (!w.AwaitGltf(full.CStr(), g) || !g.mesh) {
                     w.DestroyGameObject(go);
                     continue;
                 }
-                go->AddComponent<Spark::MeshComponent>(
-                        g.mesh, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
-                if (g.baseColorTexture) {
-                    if (Spark::MaterialComponent* m = go->AddComponent<Spark::MaterialComponent>(
-                                g.baseColorTexture, Spark::Vector3::One)) {
-                        m->SetMetallic(0.65F);
-                        m->SetRoughness(0.42F);
-                    }
-                } else {
-                    go->AddComponent<Spark::MaterialComponent>();
-                }
+                Spark::GltfAssetBinder::BindRigidMesh(
+                        *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
             }
             roots.PushBack(go);
             placed.PushBack(go);

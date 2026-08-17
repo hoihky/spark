@@ -15,6 +15,7 @@ class UiPaintContext;
 /** Global modal context menu (overlay layer). */
 class UiContextMenu {
 public:
+    /** Opens at framebuffer pixel coordinates (top-left origin, same as <c>GetCursorFramebufferPixels</c>). */
     void Open(float x, float y, Array<Utf8String> itemLabels, std::function<void(int index)> onPick);
     void Close() noexcept;
 

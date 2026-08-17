@@ -52,7 +52,11 @@ public:
     [[nodiscard]] bool IsCurrentClipFinished() const noexcept;
 
     [[nodiscard]] static Vector4 ComputeUniformGridUv(
-            std::uint32_t columns, std::uint32_t rows, std::uint32_t linearFrame) noexcept;
+            std::uint32_t columns,
+            std::uint32_t rows,
+            std::uint32_t linearFrame,
+            std::uint32_t atlasPixelWidth = 0,
+            std::uint32_t atlasPixelHeight = 0) noexcept;
 
 private:
     std::uint32_t columns = 1;

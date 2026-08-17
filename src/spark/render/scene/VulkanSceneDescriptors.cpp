@@ -16,7 +16,7 @@
 namespace Spark {
 
 void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
-    VkDescriptorSetLayoutBinding bindings[10]{};
+    VkDescriptorSetLayoutBinding bindings[11]{};
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[0].descriptorCount = 1;
@@ -67,9 +67,14 @@ void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
     bindings[9].descriptorCount = 1;
     bindings[9].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    bindings[10].binding = 10;
+    bindings[10].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[10].descriptorCount = 1;
+    bindings[10].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 10;
+    layoutInfo.bindingCount = 11;
     layoutInfo.pBindings = bindings;
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout failed");
@@ -131,7 +136,7 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = framesInFlight;
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = framesInFlight * 4;
+    poolSizes[1].descriptorCount = framesInFlight * 5;
     poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     poolSizes[2].descriptorCount = framesInFlight * 5;
 
@@ -190,6 +195,20 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
         texWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         texWrite.descriptorCount = 1;
         texWrite.pImageInfo = &imageInfo;
+
+        VkDescriptorImageInfo spriteImageInfo{};
+        spriteImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        spriteImageInfo.imageView = sources.sceneTextureUploader.ArrayView();
+        spriteImageInfo.sampler = sources.sceneTextureUploader.SpriteSampler();
+
+        VkWriteDescriptorSet spriteTexWrite{};
+        spriteTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        spriteTexWrite.dstSet = descriptorSets[i];
+        spriteTexWrite.dstBinding = 10;
+        spriteTexWrite.dstArrayElement = 0;
+        spriteTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        spriteTexWrite.descriptorCount = 1;
+        spriteTexWrite.pImageInfo = &spriteImageInfo;
 
         VkDescriptorBufferInfo skinInfo{};
         skinInfo.buffer = skinSsboBuffers[i];
@@ -323,8 +342,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     punctualSsboWrite,
                     spotShadowWrite,
                     pointShadowWrite,
-                    spriteInstanceWrite};
-            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
+                    spriteInstanceWrite,
+                    spriteTexWrite};
+            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
         } else if (hasSunShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -333,8 +353,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     lightsWrite,
                     clusterWrite,
                     punctualSsboWrite,
-                    spriteInstanceWrite};
-            vkUpdateDescriptorSets(device, 8, writes, 0, nullptr);
+                    spriteInstanceWrite,
+                    spriteTexWrite};
+            vkUpdateDescriptorSets(device, 9, writes, 0, nullptr);
         } else if (hasPunctualShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -344,12 +365,19 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     punctualSsboWrite,
                     spotShadowWrite,
                     pointShadowWrite,
-                    spriteInstanceWrite};
-            vkUpdateDescriptorSets(device, 9, writes, 0, nullptr);
+                    spriteInstanceWrite,
+                    spriteTexWrite};
+            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
         } else {
-            const VkWriteDescriptorSet writes[] =
-                    {descriptorWrite, texWrite, skinWrite, lightsWrite, clusterWrite, punctualSsboWrite, spriteInstanceWrite};
-            vkUpdateDescriptorSets(device, 7, writes, 0, nullptr);
+            const VkWriteDescriptorSet writes[] = {descriptorWrite,
+                    texWrite,
+                    skinWrite,
+                    lightsWrite,
+                    clusterWrite,
+                    punctualSsboWrite,
+                    spriteInstanceWrite,
+                    spriteTexWrite};
+            vkUpdateDescriptorSets(device, 8, writes, 0, nullptr);
         }
     }
 }

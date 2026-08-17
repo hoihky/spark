@@ -10,7 +10,7 @@ layout(location = 5) flat in int vLightingMode;
 layout(location = 6) flat in vec4 vLightingA;
 layout(location = 7) flat in vec4 vLightingB;
 
-layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
+layout(set = 0, binding = 10) uniform sampler2DArray spriteSceneTextures;
 
 #include "scene_ubo.glsl"
 #include "clustered_lights.glsl"
@@ -22,7 +22,7 @@ vec4 sampleBase() {
     if (vLayer < 0) {
         return vTint;
     }
-    vec4 tex = texture(sceneTextures, vec3(vTex, float(vLayer)));
+    vec4 tex = textureLod(spriteSceneTextures, vec3(vTex, float(vLayer)), 0.0);
     tex.rgb = sparkSrgbToLinear(tex.rgb);
     return tex * vTint;
 }

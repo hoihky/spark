@@ -17,8 +17,11 @@
 #include "spark/core/Utility.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/GameWorldAssetLoader.hpp"
+#include "spark/scene/GltfAssetBindings.hpp"
+#include "spark/scene/GltfMaterial.hpp"
 #include "spark/scene/Mesh.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
+#include "spark/scene/Texture2D.hpp"
 
 #include <cstdio>
 #include <cstring>
@@ -251,7 +254,12 @@ public:
             const Utf8String full = JoinAssetsRootPath(ctx.assetsRoot, asset);
             if (ctx.assetLoader != nullptr) {
                 ctx.assetLoader->RequestGltf(full.CStr());
-                mesh = world.TryGetMeshByKeyOrPath(full.CStr());
+                GltfAsset gltfAsset{};
+                if (world.TryGetCachedGltf(full.CStr(), gltfAsset)) {
+                    mesh = gltfAsset.mesh;
+                } else {
+                    mesh = world.TryGetMeshByKeyOrPath(full.CStr());
+                }
                 if (!mesh) {
                     if (ctx.onDeferredComponent != nullptr) {
                         ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
@@ -259,9 +267,22 @@ public:
                     }
                     return false;
                 }
+                if (owner.GetComponent<MeshComponent>() == nullptr) {
+                    owner.AddComponent<MeshComponent>(mesh, slot, albedo);
+                }
+                if (world.TryGetCachedGltf(full.CStr(), gltfAsset) && gltfAsset.mesh) {
+                    GltfAssetBinder::ApplyMaterials(owner, gltfAsset);
+                }
+                return true;
             } else {
                 const GltfAsset g = world.LoadGltf(full.CStr());
                 mesh = g.mesh;
+                if (mesh) {
+                    if (owner.GetComponent<MeshComponent>() == nullptr) {
+                        owner.AddComponent<MeshComponent>(mesh, slot, albedo);
+                    }
+                    GltfAssetBinder::ApplyMaterials(owner, g);
+                }
             }
         }
         if (!mesh) {
@@ -291,22 +312,41 @@ public:
         if (mat == nullptr) {
             return false;
         }
-        Utf8String texPath;
-        if (ctx.resolveTexturePath != nullptr) {
-            texPath = ctx.resolveTexturePath(owner, ctx.textureUserData);
-        }
+        auto texPath = [&](const SharedPtr<Texture2D>& tex) -> Utf8String {
+            if (tex) {
+                return tex->GetName();
+            }
+            if (ctx.resolveTexturePath != nullptr) {
+                return ctx.resolveTexturePath(owner, ctx.textureUserData);
+            }
+            return {};
+        };
         const Vector3& tint = mat->GetTint();
-        char buf[512]{};
+        const Vector3& emissive = mat->GetEmissiveColor();
+        char buf[2048]{};
         std::snprintf(
                 buf,
                 sizeof(buf),
-                "\"%s\" %.6f %.6f %.6f %.6f %.6f",
-                texPath.CStr(),
+                "v2 \"%s\" \"%s\" \"%s\" \"%s\" %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f "
+                "%.6f %.6f %.6f %d %.6f",
+                texPath(mat->GetBaseColorTexture()).CStr(),
+                texPath(mat->GetNormalTexture()).CStr(),
+                texPath(mat->GetMetallicRoughnessTexture()).CStr(),
+                texPath(mat->GetEmissiveTexture()).CStr(),
                 tint.x,
                 tint.y,
                 tint.z,
                 mat->GetMetallic(),
-                mat->GetRoughness());
+                mat->GetRoughness(),
+                mat->GetMetallicFactor(),
+                mat->GetRoughnessFactor(),
+                mat->GetOcclusionStrength(),
+                emissive.x,
+                emissive.y,
+                emissive.z,
+                mat->GetEmissiveIntensity(),
+                mat->IsDoubleSided() ? 1 : 0,
+                mat->GetOpacity());
         out.kind = Utf8String(GetKindTag());
         out.payload = Utf8String(buf);
         return true;
@@ -320,6 +360,18 @@ public:
         if (!KindTagEquals(record.kind, GetKindTag())) {
             return false;
         }
+        if (std::strncmp(record.payload.CStr(), "v2 ", 3) == 0) {
+            return TryRestoreV2(owner, record, world, ctx);
+        }
+        return TryRestoreLegacy(owner, record, world, ctx);
+    }
+
+private:
+    [[nodiscard]] static bool TryRestoreLegacy(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) {
         char texPath[384]{};
         Vector3 tint{1.0F, 1.0F, 1.0F};
         float metallic = 0.0F;
@@ -338,42 +390,116 @@ public:
         mat->SetTint(tint);
         mat->SetMetallic(metallic);
         mat->SetRoughness(roughness);
-        auto tryBindTexture = [&](const char* key) -> bool {
+        BindMaterialTexture(owner, world, ctx, mat, texPath, &MaterialComponent::SetBaseColorTexture);
+        return true;
+    }
+
+    [[nodiscard]] static bool TryRestoreV2(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) {
+        const char* cursor = record.payload.CStr() + 3;
+        char basePath[384]{};
+        char normalPath[384]{};
+        char mrPath[384]{};
+        char emissivePath[384]{};
+        if (!ParseLeadingQuotedString(cursor, basePath, sizeof(basePath)) ||
+            !ParseLeadingQuotedString(cursor, normalPath, sizeof(normalPath)) ||
+            !ParseLeadingQuotedString(cursor, mrPath, sizeof(mrPath)) ||
+            !ParseLeadingQuotedString(cursor, emissivePath, sizeof(emissivePath))) {
+            return false;
+        }
+        Vector3 tint{1.0F, 1.0F, 1.0F};
+        float metallic = 0.0F;
+        float roughness = 0.45F;
+        float metallicFactor = 1.0F;
+        float roughnessFactor = 1.0F;
+        float occlusionStrength = 1.0F;
+        Vector3 emissive{};
+        float emissiveIntensity = 0.0F;
+        int doubleSided = 0;
+        float opacity = 1.0F;
+        if (std::sscanf(
+                    cursor,
+                    "%f %f %f %f %f %f %f %f %f %f %f %f %f %d %f",
+                    &tint.x,
+                    &tint.y,
+                    &tint.z,
+                    &metallic,
+                    &roughness,
+                    &metallicFactor,
+                    &roughnessFactor,
+                    &occlusionStrength,
+                    &emissive.x,
+                    &emissive.y,
+                    &emissive.z,
+                    &emissiveIntensity,
+                    &doubleSided,
+                    &opacity) < 14) {
+            return false;
+        }
+        MaterialComponent* mat = owner.GetComponent<MaterialComponent>();
+        if (mat == nullptr) {
+            mat = owner.AddComponent<MaterialComponent>();
+        }
+        mat->SetTint(tint);
+        mat->SetMetallic(metallic);
+        mat->SetRoughness(roughness);
+        mat->SetMetallicFactor(metallicFactor);
+        mat->SetRoughnessFactor(roughnessFactor);
+        mat->SetOcclusionStrength(occlusionStrength);
+        mat->SetEmissive(emissive, emissiveIntensity);
+        mat->SetDoubleSided(doubleSided != 0);
+        mat->SetOpacity(opacity);
+        BindMaterialTexture(owner, world, ctx, mat, basePath, &MaterialComponent::SetBaseColorTexture);
+        BindMaterialTexture(owner, world, ctx, mat, normalPath, &MaterialComponent::SetNormalTexture);
+        BindMaterialTexture(owner, world, ctx, mat, mrPath, &MaterialComponent::SetMetallicRoughnessTexture);
+        BindMaterialTexture(owner, world, ctx, mat, emissivePath, &MaterialComponent::SetEmissiveTexture);
+        return true;
+    }
+
+    using TextureSetter = void (MaterialComponent::*)(SharedPtr<Texture2D>);
+
+    static void BindMaterialTexture(
+            GameObject& owner,
+            GameWorld& world,
+            const SceneApplyContext& ctx,
+            MaterialComponent* mat,
+            const char* texPath,
+            TextureSetter setter) {
+        if (mat == nullptr || texPath == nullptr || texPath[0] == '\0') {
+            return;
+        }
+        auto tryBind = [&](const char* key) -> bool {
             if (key == nullptr || key[0] == '\0') {
                 return false;
             }
             if (SharedPtr<Texture2D> tex = world.TryGetTextureByKeyOrPath(key)) {
-                mat->SetBaseColorTexture(MoveTemp(tex));
+                (mat->*setter)(MoveTemp(tex));
                 return true;
             }
             if (SharedPtr<Texture2D> loaded = world.LoadTexture(key)) {
-                mat->SetBaseColorTexture(MoveTemp(loaded));
+                (mat->*setter)(MoveTemp(loaded));
                 return true;
             }
             return false;
         };
-        if (texPath[0] != '\0' && ctx.assetsRoot != nullptr) {
+        if (ctx.assetsRoot != nullptr) {
             const Utf8String full = JoinAssetsRootPath(ctx.assetsRoot, texPath);
             if (ctx.assetLoader != nullptr) {
                 ctx.assetLoader->RequestTexture(full.CStr());
-                if (!tryBindTexture(full.CStr())) {
+                if (!tryBind(full.CStr())) {
                     if (ctx.onDeferredComponent != nullptr) {
-                        ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
-                        return true;
+                        ctx.onDeferredComponent(&owner, ComponentRecord{}, ctx.deferredUserData);
                     }
-                    return false;
                 }
-            } else if (!tryBindTexture(full.CStr())) {
-                (void)world.LoadTexture(full.CStr());
-                tryBindTexture(full.CStr());
+            } else {
+                (void)tryBind(full.CStr());
             }
-        } else if (const MeshComponent* mc = owner.GetComponent<MeshComponent>()) {
-            /** glTF base-color maps are keyed by the mesh asset path after mesh restore. */
-            if (const SharedPtr<Mesh>& mesh = mc->GetMesh()) {
-                tryBindTexture(mesh->GetName().CStr());
-            }
+        } else {
+            (void)tryBind(texPath);
         }
-        return true;
     }
 };
 
@@ -564,12 +690,10 @@ public:
         if (!skinned.mesh || !skinned.skeleton) {
             return false;
         }
-        if (skinned.baseColorTexture) {
-            world.RegisterTexture(skinned.baseColorTexture, full.CStr());
-        }
         if (owner.GetComponent<SkinnedMeshComponent>() == nullptr) {
             owner.AddComponent<SkinnedMeshComponent>(skinned.mesh);
         }
+        GltfAssetBinder::ApplyMaterials(owner, skinned);
         AnimatorComponent* anim = owner.GetComponent<AnimatorComponent>();
         if (anim == nullptr) {
             anim = owner.AddComponent<AnimatorComponent>(skinned.skeleton, clipIndex, speed);

@@ -5,12 +5,15 @@
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/MeshSubmesh.hpp"
 
 #include <cstdint>
 
 namespace Spark {
 
 class Texture2D;
+class GltfMaterial;
+using GltfMaterialDesc = GltfMaterial;
 
 /**
  * CPU-side mesh (vertices + indices). Shared across GameObjects / MeshComponents via SharedPtr.
@@ -35,6 +38,9 @@ public:
 
     [[nodiscard]] Array<std::uint32_t>& GetIndices() noexcept { return indices; }
     [[nodiscard]] const Array<std::uint32_t>& GetIndices() const noexcept { return indices; }
+
+    [[nodiscard]] Array<MeshSubmesh>& GetSubmeshes() noexcept { return submeshes; }
+    [[nodiscard]] const Array<MeshSubmesh>& GetSubmeshes() const noexcept { return submeshes; }
 
     void Clear() noexcept;
 
@@ -73,12 +79,15 @@ public:
 
     /**
      * Loads the default scene from a .glb/.gltf file into one indexed mesh (triangles only).
-     * Bakes node transforms into vertices. If outBaseColor is non-null, sets the first usable
-     * albedo-like texture: metallic-roughness baseColor, else KHR_materials_sheen sheenColorTexture,
-     * else specular-glossiness diffuse (PNG/JPEG from buffer or file URI).
+     * Bakes node transforms into vertices. When <c>outMaterials</c> is set, loads all glTF materials.
+     * When only <c>outMaterial</c> is set, fills the primary (first) material for backward compatibility.
      */
     [[nodiscard]] static bool TryLoadFromGltf(
-            const char* path, Mesh& outMesh, SharedPtr<Texture2D>* outBaseColor = nullptr);
+            const char* path,
+            Mesh& outMesh,
+            SharedPtr<Texture2D>* outBaseColor = nullptr,
+            GltfMaterialDesc* outMaterial = nullptr,
+            Array<GltfMaterialDesc>* outMaterials = nullptr);
 
     /** Axis-aligned bounds from vertex positions; false if there are no vertices. */
     [[nodiscard]] bool TryComputeAxisAlignedBounds(Vector3& outMin, Vector3& outMax) const noexcept;
@@ -87,6 +96,7 @@ private:
     Utf8String name;
     Array<Vertex> vertices;
     Array<std::uint32_t> indices;
+    Array<MeshSubmesh> submeshes;
 };
 
 }  // namespace Spark

@@ -2,7 +2,8 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/core/HashMap.hpp"
+#include "spark/scene/GameWorldAssetCache.hpp"
 #include "spark/scene/Texture2D.hpp"
 #include "spark/scene/Mesh.hpp"
 #include "spark/scene/SkinnedMesh.hpp"
@@ -15,6 +16,8 @@
 #include <thread>
 
 namespace Spark {
+
+class GameWorld;
 
 enum class AssetLoadJobKind : std::uint8_t {
     Gltf,

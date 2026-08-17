@@ -1,6 +1,6 @@
 # 3D Animation — Engine Roadmap & Tracked Tasks
 
-Living plan for **skeletal mesh playback**, **gameplay-driven clip control**, **blending**, **events**, and **scale**. It complements the high-level traversal/combat items in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) (Phase F) with concrete engine work items.
+Living plan for **skeletal mesh playback**, **gameplay-driven clip control**, **blending**, **events**, and **scale**. It complements the high-level traversal/combat items in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) (Phase F) with concrete engine work items, and the cross-system gap summary in [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md).
 
 **Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/animation/AnimatorComponent.hpp`, `include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit*.cpp`, `shaders/scene.vert`.
 

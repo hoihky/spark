@@ -1,6 +1,6 @@
 # Materials & lighting — capabilities and gaps
 
-This note complements [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (shadows + punctual caps) and the feature catalog in [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md). It answers: **what composition Spark can express today**, **what lights exist**, and **what is still missing** if you want parity with larger engines or glTF feature sets.
+This note complements [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (shadows + punctual caps) and the feature catalog in [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md). For action-game material gaps (glTF import, texture budget, serialization), see [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md) §2. It answers: **what composition Spark can express today**, **what lights exist**, and **what is still missing** if you want parity with larger engines or glTF feature sets.
 
 ---
 

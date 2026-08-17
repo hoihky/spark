@@ -1,13 +1,19 @@
 #include "spark/scene/GameWorld.hpp"
 
 #include "spark/ecs/GameObject.hpp"
+#include "spark/scene/GameWorldAssetLoader.hpp"
 #include "spark/text/Font.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/core/Utility.hpp"
 
 namespace Spark {
 
+GameWorld::GameWorld() {
+    assetLoader.Start();
+}
+
 GameWorld::~GameWorld() {
+    assetLoader.Shutdown();
     Array<GameObject*> roots;
     roots.Reserve(objects.GetSize());
     for (std::size_t i = 0; i < objects.GetSize(); ++i) {
@@ -91,12 +97,55 @@ bool GameWorld::SetParent(GameObject* child, GameObject* newParent) {
 }
 
 void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& context) {
+    assetLoader.Pump(*this);
     for (std::size_t i = 0; i < objects.GetSize(); ++i) {
         GameObject* o = objects[i].Get();
         if (o != nullptr) {
             o->UpdateComponents(timing, context);
         }
     }
+}
+
+bool GameWorld::AwaitGltf(const char* path, GltfAsset& out) {
+    out = GltfAsset{};
+    if (path == nullptr || path[0] == '\0') {
+        return false;
+    }
+    if (TryGetCachedGltf(path, out)) {
+        return static_cast<bool>(out.mesh);
+    }
+    RequestGltf(path);
+    for (int attempt = 0; attempt < 200000; ++attempt) {
+        PumpAssets();
+        if (TryGetCachedGltf(path, out) && out.mesh) {
+            return true;
+        }
+        if (GetAssetLoadState(path, AssetLoadJobKind::Gltf) == AssetLoadState::Failed) {
+            return false;
+        }
+    }
+    return false;
+}
+
+bool GameWorld::AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out) {
+    out = SkinnedGltfAsset{};
+    if (path == nullptr || path[0] == '\0') {
+        return false;
+    }
+    if (TryGetCachedSkinnedGltf(path, out)) {
+        return static_cast<bool>(out.mesh && out.skeleton);
+    }
+    RequestSkinnedGltf(path);
+    for (int attempt = 0; attempt < 200000; ++attempt) {
+        PumpAssets();
+        if (TryGetCachedSkinnedGltf(path, out) && out.mesh && out.skeleton) {
+            return true;
+        }
+        if (GetAssetLoadState(path, AssetLoadJobKind::SkinnedGltf) == AssetLoadState::Failed) {
+            return false;
+        }
+    }
+    return false;
 }
 
 void GameWorld::SetUiFont(SharedPtr<Font> font) {

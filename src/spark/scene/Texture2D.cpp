@@ -3,7 +3,7 @@
 #include "spark/core/ContentFingerprint.hpp"
 #include "spark/core/Utility.hpp"
 
-#include "stb_image.h"
+#include "spark/scene/TextureLoader.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -17,18 +17,79 @@ void Texture2D::RefreshContentFingerprint() noexcept {
     std::uint64_t h = Fnv64Begin();
     Fnv64Mix(h, static_cast<std::uint64_t>(width));
     Fnv64Mix(h, static_cast<std::uint64_t>(height));
+    Fnv64Mix(h, static_cast<std::uint64_t>(static_cast<std::uint8_t>(pixelFormat)));
     Fnv64Mix(h, static_cast<std::uint64_t>(rgba.GetSize()));
     if (!rgba.IsEmpty()) {
         h = Fnv64HashBytes(h, rgba.GetData(), rgba.GetSize());
     }
+    Fnv64Mix(h, static_cast<std::uint64_t>(mipChain.GetSize()));
+    for (std::size_t i = 0; i < mipChain.GetSize(); ++i) {
+        const TextureMipLevel& mip = mipChain[i];
+        Fnv64Mix(h, static_cast<std::uint64_t>(mip.GetWidth()));
+        Fnv64Mix(h, static_cast<std::uint64_t>(mip.GetHeight()));
+        Fnv64Mix(h, static_cast<std::uint64_t>(mip.GetBytes().GetSize()));
+        if (!mip.GetBytes().IsEmpty()) {
+            h = Fnv64HashBytes(h, mip.GetBytes().GetData(), mip.GetBytes().GetSize());
+        }
+    }
     contentFingerprint = h;
+}
+
+void Texture2D::RefreshSceneLayerUvScale() noexcept {
+    constexpr std::uint32_t kSceneLayerSize = 1024U;
+    if (width == 0U || height == 0U) {
+        sceneLayerUvScale = {1.0F, 1.0F};
+        return;
+    }
+    if (!sceneUploadNearest) {
+        sceneLayerUvScale = {1.0F, 1.0F};
+        return;
+    }
+    if (width <= kSceneLayerSize && height <= kSceneLayerSize) {
+        sceneLayerUvScale.x = static_cast<float>(width) / static_cast<float>(kSceneLayerSize);
+        sceneLayerUvScale.y = static_cast<float>(height) / static_cast<float>(kSceneLayerSize);
+        return;
+    }
+    const float scale = (std::min)(static_cast<float>(kSceneLayerSize) / static_cast<float>(width),
+                                   static_cast<float>(kSceneLayerSize) / static_cast<float>(height));
+    const std::uint32_t contentW =
+            std::min(kSceneLayerSize, static_cast<std::uint32_t>(std::lround(static_cast<float>(width) * scale)));
+    const std::uint32_t contentH =
+            std::min(kSceneLayerSize, static_cast<std::uint32_t>(std::lround(static_cast<float>(height) * scale)));
+    sceneLayerUvScale.x = static_cast<float>(contentW) / static_cast<float>(kSceneLayerSize);
+    sceneLayerUvScale.y = static_cast<float>(contentH) / static_cast<float>(kSceneLayerSize);
+}
+
+void Texture2D::EnsureGpuSceneLayer(std::int32_t& nextFreeLayer) noexcept {
+    if (gpuSceneLayer >= 0) {
+        return;
+    }
+    gpuSceneLayer = nextFreeLayer;
+    ++nextFreeLayer;
 }
 
 void Texture2D::SetPixels(std::uint32_t w, std::uint32_t h, Array<std::uint8_t> bytes) {
     width = w;
     height = h;
     rgba = MoveTemp(bytes);
+    pixelFormat = TexturePixelFormat::Rgba8Unorm;
+    mipChain.Clear();
     RefreshContentFingerprint();
+    RefreshSceneLayerUvScale();
+}
+
+void Texture2D::SetCompressedMipChain(
+        const TexturePixelFormat format,
+        const std::uint32_t w,
+        const std::uint32_t h,
+        Array<TextureMipLevel> mips) {
+    width = w;
+    height = h;
+    pixelFormat = format;
+    rgba.Clear();
+    mipChain = MoveTemp(mips);
+    RefreshContentFingerprint();
+    RefreshSceneLayerUvScale();
 }
 
 void Texture2D::ResampleNearest(std::uint32_t targetW, std::uint32_t targetH, Array<std::uint8_t>& outRgba) const {
@@ -105,6 +166,81 @@ void Texture2D::ResampleBilinear(std::uint32_t targetW, std::uint32_t targetH, A
     }
 }
 
+Vector4 Texture2D::ScaleUvRectForSceneLayer(const Vector4& uv) const noexcept {
+    return {uv.x * sceneLayerUvScale.x, uv.y * sceneLayerUvScale.y, uv.z * sceneLayerUvScale.x, uv.w * sceneLayerUvScale.y};
+}
+
+void Texture2D::PrepareSceneLayerUpload(const std::uint32_t layerSize, Array<std::uint8_t>& outRgba) {
+    if (width == 0 || height == 0 || layerSize == 0) {
+        outRgba.Clear();
+        sceneLayerUvScale = {1.0F, 1.0F};
+        return;
+    }
+
+    if (!sceneUploadNearest) {
+        sceneLayerUvScale = {1.0F, 1.0F};
+        if (width == layerSize && height == layerSize) {
+            outRgba = rgba;
+            return;
+        }
+        ResampleBilinear(layerSize, layerSize, outRgba);
+        return;
+    }
+
+    RefreshSceneLayerUvScale();
+
+    if (width <= layerSize && height <= layerSize) {
+        outRgba.Clear();
+        outRgba.Resize(static_cast<std::size_t>(layerSize) * static_cast<std::size_t>(layerSize) * 4U);
+        for (std::size_t i = 3; i < outRgba.GetSize(); i += 4U) {
+            outRgba[i] = 255;
+        }
+        for (std::uint32_t y = 0; y < height; ++y) {
+            const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 4U;
+            const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(layerSize) * 4U;
+            std::memcpy(
+                    outRgba.GetData() + dstRow,
+                    rgba.GetData() + srcRow,
+                    static_cast<std::size_t>(width) * 4U);
+        }
+        return;
+    }
+
+    const float scale =
+            (std::min)(static_cast<float>(layerSize) / static_cast<float>(width),
+                       static_cast<float>(layerSize) / static_cast<float>(height));
+    const std::uint32_t contentW =
+            std::min(layerSize, static_cast<std::uint32_t>(std::lround(static_cast<float>(width) * scale)));
+    const std::uint32_t contentH =
+            std::min(layerSize, static_cast<std::uint32_t>(std::lround(static_cast<float>(height) * scale)));
+
+    if (contentW == layerSize && contentH == layerSize && width == layerSize && height == layerSize) {
+        outRgba = rgba;
+        return;
+    }
+
+    Array<std::uint8_t> fitted;
+    if (sceneUploadNearest) {
+        ResampleNearest(contentW, contentH, fitted);
+    } else {
+        ResampleBilinear(contentW, contentH, fitted);
+    }
+
+    outRgba.Clear();
+    outRgba.Resize(static_cast<std::size_t>(layerSize) * static_cast<std::size_t>(layerSize) * 4U);
+    for (std::size_t i = 3; i < outRgba.GetSize(); i += 4U) {
+        outRgba[i] = 255;
+    }
+    for (std::uint32_t y = 0; y < contentH; ++y) {
+        const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(contentW) * 4U;
+        const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(layerSize) * 4U;
+        std::memcpy(
+                outRgba.GetData() + dstRow,
+                fitted.GetData() + srcRow,
+                static_cast<std::size_t>(contentW) * 4U);
+    }
+}
+
 Texture2D Texture2D::CreateCheckerboard(
         std::uint32_t size,
         std::uint32_t tilePixels,
@@ -148,51 +284,16 @@ Texture2D Texture2D::CreateSolid(std::uint32_t w, std::uint32_t h, Vector3 rgb, 
 }
 
 bool Texture2D::TryLoadFromMemory(
-        const std::uint8_t* bytes, std::size_t byteCount, Texture2D& out, const char* debugName) {
-    if (bytes == nullptr || byteCount == 0) {
-        return false;
-    }
-    int w = 0;
-    int h = 0;
-    // glTF (and Vulkan image uploads) expect row 0 = top of the texture; stbi flip=1 makes row 0 = bottom-left.
-    stbi_set_flip_vertically_on_load(0);
-    unsigned char* data = stbi_load_from_memory(
-            reinterpret_cast<const unsigned char*>(bytes), static_cast<int>(byteCount), &w, &h, nullptr, 4);
-    if (data == nullptr || w <= 0 || h <= 0) {
-        stbi_image_free(data);
-        return false;
-    }
-    Array<std::uint8_t> rgbaBytes;
-    const std::size_t n = static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U;
-    rgbaBytes.Resize(n);
-    std::memcpy(rgbaBytes.GetData(), data, n);
-    stbi_image_free(data);
-    const char* nm = (debugName != nullptr && debugName[0] != '\0') ? debugName : "Memory";
-    out = Texture2D(Utf8String(nm));
-    out.SetPixels(static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h), MoveTemp(rgbaBytes));
-    return true;
+        const std::uint8_t* bytes, const std::size_t byteCount, Texture2D& out, const char* debugName) {
+    return TextureLoader::LoadFromMemory(bytes, byteCount, out, debugName);
 }
 
 bool Texture2D::TryLoadFromFile(const char* path, Texture2D& out, const bool flipVerticalOnLoad) {
-    if (path == nullptr || path[0] == '\0') {
-        return false;
-    }
-    int w = 0;
-    int h = 0;
-    stbi_set_flip_vertically_on_load(flipVerticalOnLoad ? 1 : 0);
-    unsigned char* data = stbi_load(path, &w, &h, nullptr, 4);
-    if (data == nullptr || w <= 0 || h <= 0) {
-        stbi_image_free(data);
-        return false;
-    }
-    Array<std::uint8_t> bytes;
-    const std::size_t n = static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U;
-    bytes.Resize(n);
-    std::memcpy(bytes.GetData(), data, n);
-    stbi_image_free(data);
-    out = Texture2D(Utf8String(path));
-    out.SetPixels(static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h), MoveTemp(bytes));
-    return true;
+    return TextureLoader::LoadFromFile(path, out, flipVerticalOnLoad);
+}
+
+bool Texture2D::TryLoadFromKtx2File(const char* path, Texture2D& out) {
+    return TextureLoader::LoadFromKtx2File(path, out);
 }
 
 Texture2D Texture2D::CreateBrickPattern(std::uint32_t width, std::uint32_t height) {

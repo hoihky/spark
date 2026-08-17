@@ -21,6 +21,7 @@ function(spark_add_physics_tests)
             tests/physics/ColliderSnapshotTest.cpp
             tests/physics/ColliderBakePipelineTest.cpp
             tests/physics/DynamicColliderTest.cpp
+            tests/physics/PhysicsWorld2DIntegrationTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

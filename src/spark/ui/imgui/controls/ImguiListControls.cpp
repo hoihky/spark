@@ -68,7 +68,7 @@ void ImguiList::Paint(IUiRenderer& renderer) {
         }
     }
     ImGui::PushID(GetId().CStr());
-    if (ImGui::BeginListBox("list", ImVec2(-1.0F, height))) {
+    if (ImGui::BeginListBox("##list", ImVec2(-1.0F, height))) {
         if (scrollY > 0.0F) {
             ImGui::SetScrollY(scrollY);
         }
@@ -162,7 +162,7 @@ void ImguiMultiSelectList::Paint(IUiRenderer& renderer) {
     const UiLayoutMetrics& metrics = renderer.GetLayoutMetrics();
     const float height = metrics.Scaled(listHeight);
     ImGui::PushID(GetId().CStr());
-    if (ImGui::BeginListBox("mlist", ImVec2(-1.0F, height))) {
+    if (ImGui::BeginListBox("##mlist", ImVec2(-1.0F, height))) {
         if (scrollY > 0.0F) {
             ImGui::SetScrollY(scrollY);
         }

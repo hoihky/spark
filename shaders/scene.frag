@@ -398,7 +398,7 @@ void main() {
         // stbi_set_flip_vertically_on_load(1), so GPU v=0 is the image file bottom; equirect zenith is
         // usually at the file top → map zenith (mu=0) to v=1 via vEq = 1 - mu.
         if (vTextureLayer >= 0) {
-            int layer = clamp(vTextureLayer, 0, 15);
+            int layer = clamp(vTextureLayer, 0, 31);
             float phi = atan(dir.z, dir.x) / (2.0 * PI) + 0.5;
             phi = fract(phi);
             float mu = acos(clamp(dir.y, -1.0, 1.0)) / PI;
@@ -427,7 +427,7 @@ void main() {
     vec3 base = vAlbedo;
     float alpha = push.albedoTint.a;
     if (vTextureLayer >= 0) {
-        int layer = clamp(vTextureLayer, 0, 15);
+        int layer = clamp(vTextureLayer, 0, 31);
         vec4 tex = texture(sceneTextures, vec3(vTexCoord, float(layer)));
         base *= sparkSrgbToLinear(tex.rgb);
         alpha *= tex.a;
@@ -437,7 +437,7 @@ void main() {
     float rough = clamp(vRoughness * push.roughnessFactor, 0.04, 1.0);
     float occlusion = push.occlusionStrength;
     if (push.metallicRoughnessMapLayer >= 0) {
-        int mrl = clamp(push.metallicRoughnessMapLayer, 0, 15);
+        int mrl = clamp(push.metallicRoughnessMapLayer, 0, 31);
         vec3 orm = texture(sceneTextures, vec3(vTexCoord, float(mrl))).rgb;
         rough = clamp(orm.g * push.roughnessFactor, 0.04, 1.0);
         met = clamp(orm.b * push.metallicFactor, 0.0, 1.0);
@@ -449,7 +449,7 @@ void main() {
     vec3 nGeom = normalize(vNormal);
     vec3 N = nGeom;
     if (push.normalMapLayer >= 0) {
-        int nl = clamp(push.normalMapLayer, 0, 15);
+        int nl = clamp(push.normalMapLayer, 0, 31);
         vec3 tN = texture(sceneTextures, vec3(vTexCoord, float(nl))).xyz * 2.0 - 1.0;
         tN.y = -tN.y;
         mat3 TBN;
@@ -542,7 +542,7 @@ void main() {
 
         vec3 emissiveT = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
         if (push.emissiveMapLayer >= 0) {
-            int el = clamp(push.emissiveMapLayer, 0, 15);
+            int el = clamp(push.emissiveMapLayer, 0, 31);
             emissiveT *= texture(sceneTextures, vec3(vTexCoord, float(el))).rgb;
         }
         outColor = vec4(ambientT + Lo + emissiveT, alpha);
@@ -575,7 +575,7 @@ void main() {
 
     vec3 emissive = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
     if (push.emissiveMapLayer >= 0) {
-        int el = clamp(push.emissiveMapLayer, 0, 15);
+        int el = clamp(push.emissiveMapLayer, 0, 31);
         emissive *= texture(sceneTextures, vec3(vTexCoord, float(el))).rgb;
     }
 

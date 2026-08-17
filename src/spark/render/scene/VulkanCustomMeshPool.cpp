@@ -4,6 +4,7 @@
 #include "spark/render/core/VulkanRendererGpu.hpp"
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
 #include "spark/scene/Mesh.hpp"
+#include "spark/scene/MeshSubmesh.hpp"
 #include "spark/scene/SkinnedMesh.hpp"
 
 #include <algorithm>
@@ -472,15 +473,11 @@ void VulkanCustomMeshPool::FillCustomDrawPacked(
             continue;
         }
         if (d.skinnedMesh) {
-            if (const CustomMeshGpuSlice* s = skinnedSlices.Find(d.skinnedMesh.Get())) {
-                outOpaquePacked[i] = *s;
-            }
+            outOpaquePacked[i] = ResolveSkinnedDrawSlice(d);
             continue;
         }
         if (d.customMesh) {
-            if (const CustomMeshGpuSlice* s = rigidSlices.Find(d.customMesh.Get())) {
-                outOpaquePacked[i] = *s;
-            }
+            outOpaquePacked[i] = ResolveRigidDrawSlice(d);
         }
     }
     for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
@@ -490,17 +487,57 @@ void VulkanCustomMeshPool::FillCustomDrawPacked(
             continue;
         }
         if (d.skinnedMesh) {
-            if (const CustomMeshGpuSlice* s = skinnedSlices.Find(d.skinnedMesh.Get())) {
-                outTransparentPacked[i] = *s;
-            }
+            outTransparentPacked[i] = ResolveSkinnedDrawSlice(d);
             continue;
         }
         if (d.customMesh) {
-            if (const CustomMeshGpuSlice* s = rigidSlices.Find(d.customMesh.Get())) {
-                outTransparentPacked[i] = *s;
-            }
+            outTransparentPacked[i] = ResolveRigidDrawSlice(d);
         }
     }
+}
+
+CustomMeshGpuSlice VulkanCustomMeshPool::ResolveRigidDrawSlice(const SceneDrawItem& draw) const {
+    if (!draw.customMesh) {
+        return CustomMeshGpuSlice{};
+    }
+    const CustomMeshGpuSlice* base = rigidSlices.Find(draw.customMesh.Get());
+    if (base == nullptr) {
+        return CustomMeshGpuSlice{};
+    }
+    if (draw.submeshIndex == kSceneDrawFullSubmesh) {
+        return *base;
+    }
+    const Array<MeshSubmesh>& submeshes = draw.customMesh->GetSubmeshes();
+    if (draw.submeshIndex >= submeshes.GetSize()) {
+        return *base;
+    }
+    const MeshSubmesh& sm = submeshes[draw.submeshIndex];
+    CustomMeshGpuSlice slice = *base;
+    slice.firstIndex += sm.indexOffset;
+    slice.indexCount = sm.indexCount;
+    return slice;
+}
+
+CustomMeshGpuSlice VulkanCustomMeshPool::ResolveSkinnedDrawSlice(const SceneDrawItem& draw) const {
+    if (!draw.skinnedMesh) {
+        return CustomMeshGpuSlice{};
+    }
+    const CustomMeshGpuSlice* base = skinnedSlices.Find(draw.skinnedMesh.Get());
+    if (base == nullptr) {
+        return CustomMeshGpuSlice{};
+    }
+    if (draw.submeshIndex == kSceneDrawFullSubmesh) {
+        return *base;
+    }
+    const Array<MeshSubmesh>& submeshes = draw.skinnedMesh->GetSubmeshes();
+    if (draw.submeshIndex >= submeshes.GetSize()) {
+        return *base;
+    }
+    const MeshSubmesh& sm = submeshes[draw.submeshIndex];
+    CustomMeshGpuSlice slice = *base;
+    slice.firstIndex += sm.indexOffset;
+    slice.indexCount = sm.indexCount;
+    return slice;
 }
 
 }  // namespace Spark

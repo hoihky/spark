@@ -76,16 +76,18 @@ int spark_world_load_gltf(SparkGameWorld* world, const char* path) {
     if (world == nullptr || path == nullptr) {
         return 0;
     }
-    const Spark::GltfAsset asset = reinterpret_cast<Spark::GameWorld*>(world)->LoadGltf(path);
-    return asset.mesh ? 1 : 0;
+    auto* cppWorld = reinterpret_cast<Spark::GameWorld*>(world);
+    Spark::GltfAsset asset{};
+    return cppWorld->AwaitGltf(path, asset) ? 1 : 0;
 }
 
 int spark_world_load_skinned_gltf(SparkGameWorld* world, const char* path) {
     if (world == nullptr || path == nullptr) {
         return 0;
     }
-    const Spark::SkinnedGltfAsset asset = reinterpret_cast<Spark::GameWorld*>(world)->LoadSkinnedGltf(path);
-    return asset.mesh ? 1 : 0;
+    auto* cppWorld = reinterpret_cast<Spark::GameWorld*>(world);
+    Spark::SkinnedGltfAsset asset{};
+    return cppWorld->AwaitSkinnedGltf(path, asset) ? 1 : 0;
 }
 
 int spark_world_load_texture(SparkGameWorld* world, const char* path) {

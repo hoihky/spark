@@ -10,10 +10,18 @@
 #include "spark/physics/SpatialHashGrid2D.hpp"
 #include "spark/scene/GameWorld.hpp"
 
+#include <algorithm>
+
 namespace Spark {
 
+namespace {
+
+constexpr float kMaxPhysicsStepSeconds2D = 1.0F / 30.0F;
+
+}  // namespace
+
 void PhysicsWorld2D::Simulate(GameWorld& world, const FrameTiming& timing) {
-    const float dt = timing.deltaTimeSeconds;
+    const float dt = std::min(timing.deltaTimeSeconds, kMaxPhysicsStepSeconds2D);
     if (dt <= 0.0F) {
         return;
     }

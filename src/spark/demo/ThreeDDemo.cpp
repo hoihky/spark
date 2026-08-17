@@ -1,16 +1,34 @@
 #include "spark/demo/ThreeDDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
+#include "spark/scene/GltfAssetBindings.hpp"
 
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/rendering/BillboardComponent.hpp"
 #include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/scene/Mesh.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/scene/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
 
+void ThreeDDemo::RequestGltfAssets(Spark::GameWorld& world) noexcept {
+    Spark::Utf8String helmetPath(SPARK_ASSETS_DIR);
+    helmetPath.AppendUtf8("/models/DamagedHelmet.glb");
+    world.RequestGltf(helmetPath.CStr());
+
+    Spark::Utf8String sheenChairPath(SPARK_ASSETS_DIR);
+    sheenChairPath.AppendUtf8("/models/SheenChair.glb");
+    world.RequestGltf(sheenChairPath.CStr());
+
+    Spark::Utf8String foxPath(SPARK_ASSETS_DIR);
+    foxPath.AppendUtf8("/models/Fox.glb");
+    world.RequestSkinnedGltf(foxPath.CStr());
+}
+
 void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
+        loadedWorld = &w;
         roots.Clear();
         roots.Reserve(48);
 
@@ -130,165 +148,21 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
         roots.PushBack(brickCube);
 
+        RequestGltfAssets(w);
+
         Spark::Utf8String helmetPath(SPARK_ASSETS_DIR);
         helmetPath.AppendUtf8("/models/DamagedHelmet.glb");
-        const Spark::GltfAsset damagedHelmet = w.LoadGltf(helmetPath.CStr());
-        bool usedHelmetGltf = false;
-        if (damagedHelmet.mesh) {
-            heroMeshAsset = damagedHelmet.mesh;
-            usedHelmetGltf = true;
-        } else {
-            heroMeshAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SimpleCar"));
-            *heroMeshAsset = Spark::Mesh::CreateSimpleCar();
-            w.RegisterMesh(heroMeshAsset, "spark/demo/simple_car");
-            std::println(
-                    std::cerr,
-                    "Spark: DamagedHelmet.glb not loaded from {} — using procedural SimpleCar fallback",
-                    helmetPath.CStr());
-        }
-
-        Spark::GameObject* heroObject = w.CreateGameObject();
-        heroObject->GetName() =
-                Spark::Utf8String(usedHelmetGltf ? "DamagedHelmet" : "SimpleCar");
-        Spark::Vector3 heroMin{};
-        Spark::Vector3 heroMax{};
-        float heroUniformScale = usedHelmetGltf ? 2.8F : 1.35F;
-        if (heroMeshAsset->TryComputeAxisAlignedBounds(heroMin, heroMax)) {
-            const float dx = heroMax.x - heroMin.x;
-            const float dy = heroMax.y - heroMin.y;
-            const float dz = heroMax.z - heroMin.z;
-            const float maxExt = std::max({dx, dy, dz});
-            if (maxExt > 1.0e-4F) {
-                heroUniformScale = 2.4F / maxExt;
-            }
-        }
-        {
-            Spark::TransformComponent* tr = heroObject->AddComponent<Spark::TransformComponent>();
-            tr->SetUniformScale(heroUniformScale);
-            constexpr float kGroundClearance = 0.12F;
-            const float yOnGround = -heroMin.y * heroUniformScale + kGroundClearance;
-            tr->SetTranslation({6.0F, yOnGround, 0.0F});
-            if (usedHelmetGltf) {
-                tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi));
-            }
-        }
-        heroObject->AddComponent<Spark::MeshComponent>(
-                heroMeshAsset,
-                Spark::SceneMeshSlot::Custom,
-                Spark::Vector3{usedHelmetGltf ? 1.0F : 0.92F, usedHelmetGltf ? 1.0F : 0.18F,
-                               usedHelmetGltf ? 1.0F : 0.12F});
-        if (usedHelmetGltf && damagedHelmet.baseColorTexture) {
-            w.RegisterTexture(damagedHelmet.baseColorTexture, "spark/demo/damaged_helmet_basecolor");
-            if (Spark::MaterialComponent* hm = heroObject->AddComponent<Spark::MaterialComponent>(
-                        damagedHelmet.baseColorTexture, Spark::Vector3::One)) {
-                hm->SetMetallic(0.92F);
-                hm->SetRoughness(0.26F);
-            }
-        }
-        std::println(
-                std::cerr,
-                "Spark: {} — {} vertices, {} indices (Custom mesh slot)",
-                usedHelmetGltf ? "Khronos DamagedHelmet" : "procedural SimpleCar",
-                heroMeshAsset->GetVertices().GetSize(),
-                heroMeshAsset->GetIndices().GetSize());
-        roots.PushBack(heroObject);
+        pendingGltfLoads.PushBack(PendingGltfLoad{helmetPath, PendingGltfKind::Hero, false});
 
         Spark::Utf8String sheenChairPath(SPARK_ASSETS_DIR);
         sheenChairPath.AppendUtf8("/models/SheenChair.glb");
-        const Spark::GltfAsset sheenChair = w.LoadGltf(sheenChairPath.CStr());
-        if (sheenChair.mesh) {
-            chairMeshAsset = sheenChair.mesh;
-            Spark::GameObject* chairObject = w.CreateGameObject();
-            chairObject->GetName() = Spark::Utf8String("SheenChair");
-            Spark::Vector3 chairMin{};
-            Spark::Vector3 chairMax{};
-            float chairUniformScale = 1.9F;
-            if (chairMeshAsset->TryComputeAxisAlignedBounds(chairMin, chairMax)) {
-                const float dx = chairMax.x - chairMin.x;
-                const float dy = chairMax.y - chairMin.y;
-                const float dz = chairMax.z - chairMin.z;
-                const float maxExt = std::max({dx, dy, dz});
-                if (maxExt > 1.0e-4F) {
-                    chairUniformScale = 2.15F / maxExt;
-                }
-            }
-            {
-                Spark::TransformComponent* tr = chairObject->AddComponent<Spark::TransformComponent>();
-                tr->SetUniformScale(chairUniformScale);
-                constexpr float kGroundClearance = 0.12F;
-                const float yOnGround = -chairMin.y * chairUniformScale + kGroundClearance;
-                tr->SetTranslation({-4.25F, yOnGround, 4.0F});
-                tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi * 0.35F));
-            }
-            chairObject->AddComponent<Spark::MeshComponent>(
-                    chairMeshAsset,
-                    Spark::SceneMeshSlot::Custom,
-                    Spark::Vector3{1.0F, 1.0F, 1.0F});
-            if (sheenChair.baseColorTexture) {
-                w.RegisterTexture(sheenChair.baseColorTexture, "spark/demo/sheen_chair_basecolor");
-                if (Spark::MaterialComponent* cm = chairObject->AddComponent<Spark::MaterialComponent>(
-                            sheenChair.baseColorTexture, Spark::Vector3::One)) {
-                    cm->SetMetallic(0.0F);
-                    cm->SetRoughness(0.55F);
-                }
-            }
-            std::println(
-                    std::cerr,
-                    "Spark: Khronos SheenChair — {} vertices, {} indices (Custom mesh slot)",
-                    chairMeshAsset->GetVertices().GetSize(),
-                    chairMeshAsset->GetIndices().GetSize());
-            roots.PushBack(chairObject);
-        } else {
-            std::println(
-                    std::cerr,
-                    "Spark: SheenChair.glb not loaded from {} (check assets path and CMake download)",
-                    sheenChairPath.CStr());
-        }
+        pendingGltfLoads.PushBack(PendingGltfLoad{sheenChairPath, PendingGltfKind::Chair, false});
 
         Spark::Utf8String foxPath(SPARK_ASSETS_DIR);
         foxPath.AppendUtf8("/models/Fox.glb");
-        const Spark::SkinnedGltfAsset foxAsset = w.LoadSkinnedGltf(foxPath.CStr());
-        if (foxAsset.mesh && foxAsset.skeleton) {
-            if (foxAsset.baseColorTexture) {
-                w.RegisterTexture(foxAsset.baseColorTexture, "spark/demo/fox_basecolor");
-            }
-            Spark::GameObject* foxObject = w.CreateGameObject();
-            foxObject->GetName() = Spark::Utf8String("FoxWalk");
-            {
-                Spark::TransformComponent* tr = foxObject->AddComponent<Spark::TransformComponent>();
-                tr->SetUniformScale(0.032F);
-                tr->SetTranslation({1.8F, 0.0F, 7.25F});
-                tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, -Spark::Pi * 0.5F));
-            }
-            foxObject->AddComponent<Spark::SkinnedMeshComponent>(foxAsset.mesh);
-            Spark::Character3DAnimFsmComponent* foxFsm =
-                    foxObject->AddComponent<Spark::Character3DAnimFsmComponent>();
-            foxObject->AddComponent<Spark::AnimatorComponent>(
-                    foxAsset.skeleton, foxAsset.walkClipIndex, 1.2F);
-            foxFsm->ConfigureLocomotionFromSkeleton(*foxAsset.skeleton, foxAsset.walkClipIndex);
-            foxFsm->SetWalkSpeedThreshold(0.25F);
-            if (foxAsset.baseColorTexture) {
-                if (Spark::MaterialComponent* fm = foxObject->AddComponent<Spark::MaterialComponent>(
-                            foxAsset.baseColorTexture, Spark::Vector3::One)) {
-                    fm->SetMetallic(0.0F);
-                    fm->SetRoughness(0.5F);
-                }
-            } else {
-                foxObject->AddComponent<Spark::MaterialComponent>();
-            }
-            std::println(
-                    std::cerr,
-                    "Spark: Khronos Fox — walk clip {}, {} joints, {} skinned verts",
-                    foxAsset.walkClipIndex,
-                    foxAsset.skeleton->GetJointCount(),
-                    foxAsset.mesh->GetVertices().GetSize());
-            roots.PushBack(foxObject);
-        } else {
-            std::println(
-                    std::cerr,
-                    "Spark: Fox.glb not loaded from {} (skeletal demo disabled)",
-                    foxPath.CStr());
-        }
+        pendingGltfLoads.PushBack(PendingGltfLoad{foxPath, PendingGltfKind::Fox, false});
+
+        PollPendingGltfLoads(w);
 
         auto addPointLight = [this, &w](Spark::Vector3 pos, Spark::Vector3 color, float intensity, float range) {
             Spark::GameObject* light = w.CreateGameObject();
@@ -327,10 +201,188 @@ void ThreeDDemo::Unload(Spark::GameWorld& w)
         cubeObject = nullptr;
         fpsHudObject = nullptr;
         fpsText = nullptr;
+        pendingGltfLoads.Clear();
+        loadedWorld = nullptr;
     }
+
+void ThreeDDemo::SpawnHero(
+        Spark::GameWorld& w,
+        const Spark::GltfAsset& asset,
+        const Spark::Utf8String& path) {
+    bool usedHelmetGltf = static_cast<bool>(asset.mesh);
+    if (usedHelmetGltf) {
+        heroMeshAsset = asset.mesh;
+    } else {
+        heroMeshAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SimpleCar"));
+        *heroMeshAsset = Spark::Mesh::CreateSimpleCar();
+        w.RegisterMesh(heroMeshAsset, "spark/demo/simple_car");
+        std::println(
+                std::cerr,
+                "Spark: DamagedHelmet.glb not loaded from {} — using procedural SimpleCar fallback",
+                path.CStr());
+    }
+
+    Spark::GameObject* heroObject = w.CreateGameObject();
+    heroObject->GetName() = Spark::Utf8String(usedHelmetGltf ? "DamagedHelmet" : "SimpleCar");
+    Spark::Vector3 heroMin{};
+    Spark::Vector3 heroMax{};
+    float heroUniformScale = usedHelmetGltf ? 2.8F : 1.35F;
+    if (heroMeshAsset->TryComputeAxisAlignedBounds(heroMin, heroMax)) {
+        const float dx = heroMax.x - heroMin.x;
+        const float dy = heroMax.y - heroMin.y;
+        const float dz = heroMax.z - heroMin.z;
+        const float maxExt = std::max({dx, dy, dz});
+        if (maxExt > 1.0e-4F) {
+            heroUniformScale = 2.4F / maxExt;
+        }
+    }
+    {
+        Spark::TransformComponent* tr = heroObject->AddComponent<Spark::TransformComponent>();
+        tr->SetUniformScale(heroUniformScale);
+        constexpr float kGroundClearance = 0.12F;
+        const float yOnGround = -heroMin.y * heroUniformScale + kGroundClearance;
+        tr->SetTranslation({6.0F, yOnGround, 0.0F});
+        if (usedHelmetGltf) {
+            tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi));
+        }
+    }
+    Spark::GltfAssetBinder::BindRigidMesh(
+            *heroObject,
+            usedHelmetGltf ? asset : Spark::GltfAsset{.mesh = heroMeshAsset},
+            Spark::SceneMeshSlot::Custom,
+            Spark::Vector3{usedHelmetGltf ? 1.0F : 0.92F, usedHelmetGltf ? 1.0F : 0.18F,
+                           usedHelmetGltf ? 1.0F : 0.12F});
+    std::println(
+            std::cerr,
+            "Spark: {} — {} vertices, {} indices, {} submeshes",
+            usedHelmetGltf ? "Khronos DamagedHelmet" : "procedural SimpleCar",
+            heroMeshAsset->GetVertices().GetSize(),
+            heroMeshAsset->GetIndices().GetSize(),
+            heroMeshAsset->GetSubmeshes().GetSize());
+    roots.PushBack(heroObject);
+}
+
+void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset) {
+    if (!asset.mesh) {
+        return;
+    }
+    chairMeshAsset = asset.mesh;
+    Spark::GameObject* chairObject = w.CreateGameObject();
+    chairObject->GetName() = Spark::Utf8String("SheenChair");
+    Spark::Vector3 chairMin{};
+    Spark::Vector3 chairMax{};
+    float chairUniformScale = 1.9F;
+    if (chairMeshAsset->TryComputeAxisAlignedBounds(chairMin, chairMax)) {
+        const float dx = chairMax.x - chairMin.x;
+        const float dy = chairMax.y - chairMin.y;
+        const float dz = chairMax.z - chairMin.z;
+        const float maxExt = std::max({dx, dy, dz});
+        if (maxExt > 1.0e-4F) {
+            chairUniformScale = 2.15F / maxExt;
+        }
+    }
+    {
+        Spark::TransformComponent* tr = chairObject->AddComponent<Spark::TransformComponent>();
+        tr->SetUniformScale(chairUniformScale);
+        constexpr float kGroundClearance = 0.12F;
+        const float yOnGround = -chairMin.y * chairUniformScale + kGroundClearance;
+        tr->SetTranslation({-4.25F, yOnGround, 4.0F});
+        tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi * 0.35F));
+    }
+    Spark::GltfAssetBinder::BindRigidMesh(
+            *chairObject, asset, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
+    std::println(
+            std::cerr,
+            "Spark: Khronos SheenChair — {} vertices, {} indices, {} submeshes",
+            chairMeshAsset->GetVertices().GetSize(),
+            chairMeshAsset->GetIndices().GetSize(),
+            chairMeshAsset->GetSubmeshes().GetSize());
+    roots.PushBack(chairObject);
+}
+
+void ThreeDDemo::SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& asset) {
+    if (!asset.mesh || !asset.skeleton) {
+        return;
+    }
+    Spark::GameObject* foxObject = w.CreateGameObject();
+    foxObject->GetName() = Spark::Utf8String("FoxWalk");
+    {
+        Spark::TransformComponent* tr = foxObject->AddComponent<Spark::TransformComponent>();
+        tr->SetUniformScale(0.032F);
+        tr->SetTranslation({1.8F, 0.0F, 7.25F});
+        tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, -Spark::Pi * 0.5F));
+    }
+    foxObject->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
+    Spark::Character3DAnimFsmComponent* foxFsm = foxObject->AddComponent<Spark::Character3DAnimFsmComponent>();
+    foxObject->AddComponent<Spark::AnimatorComponent>(asset.skeleton, asset.walkClipIndex, 1.2F);
+    foxFsm->ConfigureLocomotionFromSkeleton(*asset.skeleton, asset.walkClipIndex);
+    foxFsm->SetWalkSpeedThreshold(0.25F);
+    Spark::GltfAssetBinder::BindSkinnedMesh(*foxObject, asset);
+    std::println(
+            std::cerr,
+            "Spark: Khronos Fox — walk clip {}, {} joints, {} skinned verts, {} submeshes",
+            asset.walkClipIndex,
+            asset.skeleton->GetJointCount(),
+            asset.mesh->GetVertices().GetSize(),
+            asset.mesh->GetSubmeshes().GetSize());
+    roots.PushBack(foxObject);
+}
+
+void ThreeDDemo::PollPendingGltfLoads(Spark::GameWorld& w) {
+    for (std::size_t i = 0; i < pendingGltfLoads.GetSize(); ++i) {
+        PendingGltfLoad& pending = pendingGltfLoads[i];
+        if (pending.spawned) {
+            continue;
+        }
+        if (pending.kind == PendingGltfKind::Fox) {
+            Spark::SkinnedGltfAsset skinned{};
+            if (!w.TryGetCachedSkinnedGltf(pending.path.CStr(), skinned)) {
+                if (w.GetAssetLoadState(pending.path.CStr(), Spark::AssetLoadJobKind::SkinnedGltf) ==
+                    Spark::AssetLoadState::Failed) {
+                    std::println(
+                            std::cerr,
+                            "Spark: Fox.glb failed to load from {}",
+                            pending.path.CStr());
+                    pending.spawned = true;
+                }
+                continue;
+            }
+            SpawnFox(w, skinned);
+            pending.spawned = true;
+            continue;
+        }
+
+        Spark::GltfAsset asset{};
+        if (!w.TryGetCachedGltf(pending.path.CStr(), asset)) {
+            if (w.GetAssetLoadState(pending.path.CStr(), Spark::AssetLoadJobKind::Gltf) ==
+                Spark::AssetLoadState::Failed) {
+                if (pending.kind == PendingGltfKind::Hero) {
+                    SpawnHero(w, {}, pending.path);
+                } else {
+                    std::println(
+                            std::cerr,
+                            "Spark: glTF failed to load from {}",
+                            pending.path.CStr());
+                }
+                pending.spawned = true;
+            }
+            continue;
+        }
+        if (pending.kind == PendingGltfKind::Hero) {
+            SpawnHero(w, asset, pending.path);
+        } else {
+            SpawnChair(w, asset);
+        }
+        pending.spawned = true;
+    }
+}
 
 void ThreeDDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context)
 {
+        if (loadedWorld != nullptr) {
+            PollPendingGltfLoads(*loadedWorld);
+        }
+
         Spark::IInput& in = context.GetInput();
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
             in.SetCursorCaptured(!in.IsCursorCaptured());
@@ -415,48 +467,44 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             params.pointLights.PushBack(gpu);
         });
 
-        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            if (!tex) {
-                return -1;
-            }
-            for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-                if (params.sceneTextures[i].Get() == tex.Get()) {
-                    return static_cast<std::int32_t>(i);
-                }
-            }
-            if (params.sceneTextures.GetSize() >= Spark::SceneRenderParams::MaxSceneTextures) {
-                return -1;
-            }
-            params.sceneTextures.PushBack(tex);
-            return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+        const auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex);
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
         drawList.Reserve(32);
-        scene.ForEachDrawableInViewFrustum(viewProj, [&](Spark::GameObject* /*obj*/, const Spark::MeshComponent& mc,
+        scene.ForEachDrawableInViewFrustum(viewProj, [&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
                                                               const Spark::MaterialComponent* mat,
                                                               const Spark::Matrix4& world) {
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
+            Spark::SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = mc.GetSlot();
+            baseItem.albedo = mc.GetAlbedo();
+            baseItem.textureLayer = -1;
             if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
+                baseItem.customMesh = mc.GetMesh();
             }
-            Spark::Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
+            const Spark::MultiMaterialComponent* multiMat =
+                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+                !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                Spark::SceneSubmitDetail::PushRigidMeshDraws(
+                        drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+                return;
+            }
+            Spark::SceneDrawItem item = baseItem;
             if (mat != nullptr) {
                 ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
                 if (mat->GetBaseColorTexture()) {
                     const Spark::Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
+                    item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
                     item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
                 }
             }
-            item.albedo = alb;
             drawList.PushBack(item);
         });
 
-        scene.ForEachSkinnedDrawableInViewFrustum(viewProj, [&](Spark::GameObject* /*obj*/,
+        scene.ForEachSkinnedDrawableInViewFrustum(viewProj, [&](Spark::GameObject* obj,
                                                                      const Spark::SkinnedMeshComponent& smc,
                                                                      const Spark::MaterialComponent* mat,
                                                                      const Spark::AnimatorComponent* anim,
@@ -468,14 +516,24 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             if (jc == 0) {
                 return;
             }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skinnedMesh = smc.GetMesh();
-            item.albedo = {0.9F, 0.88F, 0.82F};
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 0.5F;
+            const Spark::MultiMaterialComponent* multiMat =
+                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+            Spark::SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = Spark::SceneMeshSlot::Custom;
+            baseItem.skinnedMesh = smc.GetMesh();
+            baseItem.albedo = {0.9F, 0.88F, 0.82F};
+            baseItem.textureLayer = -1;
+            baseItem.metallic = 0.0F;
+            baseItem.roughness = 0.5F;
+            baseItem.jointPalette.Resize(jc);
+            anim->ComputeJointPalette(baseItem.jointPalette.GetData(), Spark::Skeleton::MaxJoints);
+            if (multiMat != nullptr && !smc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                Spark::SceneSubmitDetail::PushSkinnedMeshDraws(
+                        drawList, baseItem, *smc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+                return;
+            }
+            Spark::SceneDrawItem item = baseItem;
             if (mat != nullptr) {
                 ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
                 if (mat->GetBaseColorTexture()) {
@@ -484,8 +542,6 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
                     item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
                 }
             }
-            item.jointPalette.Resize(jc);
-            anim->ComputeJointPalette(item.jointPalette.GetData(), Spark::Skeleton::MaxJoints);
             drawList.PushBack(item);
         });
 

@@ -9,9 +9,7 @@
 
 namespace Spark {
 
-SceneManager::SceneManager(GameWorld& world) : world(world) {
-    assetLoader.Start();
-}
+SceneManager::SceneManager(GameWorld& inWorld) : world(inWorld) {}
 
 void SceneManager::OnDeferredComponentStatic(
         GameObject* object, const ComponentRecord& record, void* userData) {
@@ -61,7 +59,7 @@ void SceneManager::RetryPendingComponents(LoadedSceneInstance& instance) {
     SceneApplyContext ctx{};
     ctx.assetsRoot = instance.options.assetsRoot;
     ctx.sceneInstanceId = instance.id;
-    ctx.assetLoader = &assetLoader;
+    ctx.assetLoader = &world.GetAssetLoader();
     ctx.onDeferredComponent = nullptr;
 
     Array<PendingComponentRestore> stillPending;
@@ -105,7 +103,7 @@ void SceneManager::ApplyDocumentInstance(
     ctx.assetsRoot = options.assetsRoot != nullptr && options.assetsRoot[0] != '\0' ? options.assetsRoot
                     : (!document.header.assetsRoot.IsEmpty() ? document.header.assetsRoot.CStr() : nullptr);
     ctx.sceneInstanceId = instance.id;
-    ctx.assetLoader = &assetLoader;
+    ctx.assetLoader = &world.GetAssetLoader();
     ctx.onDeferredComponent = OnDeferredComponentStatic;
     ctx.deferredUserData = &instance;
 
@@ -203,7 +201,7 @@ SceneInstanceId SceneManager::BeginLoadSceneAsync(
 }
 
 void SceneManager::Pump() {
-    assetLoader.Pump(world);
+    world.GetAssetLoader().Pump(world);
     for (std::size_t i = 0; i < instances.GetSize(); ++i) {
         LoadedSceneInstance& instance = instances[i];
         if (instance.ready || instance.failed) {

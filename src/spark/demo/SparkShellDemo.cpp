@@ -82,6 +82,7 @@ public:
         fpsOverlay.EnsureMounted(GetWorld());
         context.GetInput().SetCursorCaptured(false);
         BuildLauncherRetainedUi(GetWorld());
+        ThreeDDemo::RequestGltfAssets(GetWorld());
     }
 
     void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {

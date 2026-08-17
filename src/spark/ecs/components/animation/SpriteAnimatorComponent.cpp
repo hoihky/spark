@@ -2,6 +2,7 @@
 
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
+#include "spark/scene/Texture2D.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -9,20 +10,32 @@
 namespace Spark {
 
 Vector4 SpriteAnimatorComponent::ComputeUniformGridUv(
-        std::uint32_t columns, std::uint32_t rows, std::uint32_t linearFrame) noexcept {
+        const std::uint32_t columns,
+        const std::uint32_t rows,
+        const std::uint32_t linearFrame,
+        const std::uint32_t atlasPixelWidth,
+        const std::uint32_t atlasPixelHeight) noexcept {
     if (columns == 0 || rows == 0) {
         return {0.0F, 0.0F, 1.0F, 1.0F};
     }
     const std::uint32_t cells = columns * rows;
-    linearFrame %= cells;
-    const std::uint32_t col = linearFrame % columns;
-    const std::uint32_t rowFromBottom = linearFrame / columns;
+    const std::uint32_t frame = linearFrame % cells;
+    const std::uint32_t col = frame % columns;
+    const std::uint32_t rowFromBottom = frame / columns;
     const float colsF = static_cast<float>(columns);
     const float rowsF = static_cast<float>(rows);
-    const float u0 = static_cast<float>(col) / colsF;
-    const float u1 = static_cast<float>(col + 1U) / colsF;
-    const float v0 = static_cast<float>(rowFromBottom) / rowsF;
-    const float v1 = static_cast<float>(rowFromBottom + 1U) / rowsF;
+    float u0 = static_cast<float>(col) / colsF;
+    float u1 = static_cast<float>(col + 1U) / colsF;
+    float v0 = static_cast<float>(rowFromBottom) / rowsF;
+    float v1 = static_cast<float>(rowFromBottom + 1U) / rowsF;
+    if (atlasPixelWidth > 0U && atlasPixelHeight > 0U) {
+        const float halfU = 0.5F / static_cast<float>(atlasPixelWidth);
+        const float halfV = 0.5F / static_cast<float>(atlasPixelHeight);
+        u0 += halfU;
+        u1 -= halfU;
+        v0 += halfV;
+        v1 -= halfV;
+    }
     return {u0, v0, u1, v1};
 }
 
@@ -108,7 +121,10 @@ void SpriteAnimatorComponent::OnUpdate(const FrameTiming& timing, GameObject& ow
     std::uint32_t linear = clip.firstFrame + localFrame;
     linear %= cells;
 
-    sprite->SetUvRect(ComputeUniformGridUv(columns, rows, linear));
+    const SharedPtr<Texture2D>& atlas = sprite->GetTexture();
+    const std::uint32_t atlasW = atlas ? atlas->GetWidth() : 0U;
+    const std::uint32_t atlasH = atlas ? atlas->GetHeight() : 0U;
+    sprite->SetUvRect(ComputeUniformGridUv(columns, rows, linear, atlasW, atlasH));
 }
 
 }  // namespace Spark

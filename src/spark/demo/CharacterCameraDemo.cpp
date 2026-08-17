@@ -11,6 +11,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
+#include "spark/scene/GltfMaterial.hpp"
 #include "spark/physics/CharacterController3D.hpp"
 
 #include <algorithm>
@@ -98,13 +99,13 @@ struct CharTreeLayoutSpec {
             placement.z});
     tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, placement.yawRadians));
     const Spark::Vector3 meshAlbedo =
-            asset.baseColorTexture ? Spark::Vector3::One : Spark::Vector3{0.42F, 0.68F, 0.34F};
+            (asset.material.HasAnyTexture() || asset.baseColorTexture)
+                    ? Spark::Vector3::One
+                    : Spark::Vector3{0.42F, 0.68F, 0.34F};
     tree->AddComponent<Spark::MeshComponent>(asset.mesh, Spark::SceneMeshSlot::Custom, meshAlbedo);
-    if (asset.baseColorTexture) {
-        if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>(
-                    asset.baseColorTexture, Spark::Vector3::One)) {
-            mat->SetMetallic(0.0F);
-            mat->SetRoughness(0.6F);
+    if (asset.material.HasAnyTexture() || asset.baseColorTexture) {
+        if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>()) {
+            Spark::ApplyGltfMaterialDesc(*mat, asset.material);
         }
     } else if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>()) {
         mat->SetTint(meshAlbedo);
@@ -772,8 +773,10 @@ void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
     Spark::Utf8String treeSmallPath(SPARK_ASSETS_DIR);
     treeSmallPath.AppendUtf8("/models/Tree_3_A_Color1.gltf");
 
-    const Spark::GltfAsset treeLarge = w.LoadGltf(treeLargePath.CStr());
-    const Spark::GltfAsset treeSmall = w.LoadGltf(treeSmallPath.CStr());
+    Spark::GltfAsset treeLarge{};
+    Spark::GltfAsset treeSmall{};
+    (void)w.AwaitGltf(treeLargePath.CStr(), treeLarge);
+    (void)w.AwaitGltf(treeSmallPath.CStr(), treeSmall);
     if (!treeLarge.mesh && !treeSmall.mesh) {
         std::println(
                 std::cerr,
@@ -949,11 +952,9 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         charAnimFsm = characterVisual->AddComponent<Spark::Character3DAnimFsmComponent>();
         playerAnimator = characterVisual->AddComponent<Spark::AnimatorComponent>(
                 asset.skeleton, asset.walkClipIndex, 1.0F);
-        if (asset.baseColorTexture) {
-            characterMaterial = characterVisual->AddComponent<Spark::MaterialComponent>(
-                    asset.baseColorTexture, Spark::Vector3::One);
-            characterMaterial->SetMetallic(0.0F);
-            characterMaterial->SetRoughness(0.55F);
+        if (asset.material.HasAnyTexture() || asset.baseColorTexture) {
+            characterMaterial = characterVisual->AddComponent<Spark::MaterialComponent>();
+            Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.material);
         } else {
             characterMaterial = characterVisual->AddComponent<Spark::MaterialComponent>();
         }
@@ -963,7 +964,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
             playerAnimator->RetargetSkeleton(asset.skeleton, asset.walkClipIndex, 1.0F);
         }
         if (characterMaterial != nullptr) {
-            characterMaterial->SetBaseColorTexture(asset.baseColorTexture);
+            Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.material);
         }
     }
 

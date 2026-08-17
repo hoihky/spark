@@ -17,6 +17,17 @@ namespace {
 
 UiContextMenu gMenu{};
 
+#if SPARK_ENABLE_IMGUI
+/** <c>Open()</c> stores framebuffer pixels; ImGui windows use display (logical) coordinates. */
+void FramebufferPixelsToImGuiDisplay(const float fbX, const float fbY, float& outX, float& outY) noexcept {
+    const ImGuiIO& io = ImGui::GetIO();
+    const float scaleX = io.DisplayFramebufferScale.x > 1.0e-4F ? io.DisplayFramebufferScale.x : 1.0F;
+    const float scaleY = io.DisplayFramebufferScale.y > 1.0e-4F ? io.DisplayFramebufferScale.y : 1.0F;
+    outX = fbX / scaleX;
+    outY = fbY / scaleY;
+}
+#endif
+
 }  // namespace
 
 UiContextMenu& GetUiContextMenu() noexcept {
@@ -162,7 +173,10 @@ void UiContextMenu::PaintImGui() {
         ImGui::OpenPopup("SparkUiContextMenu");
         imguiPopupRequested = false;
     }
-    ImGui::SetNextWindowPos(ImVec2(anchorX, anchorY), ImGuiCond_Appearing);
+    float displayX = anchorX;
+    float displayY = anchorY;
+    FramebufferPixelsToImGuiDisplay(anchorX, anchorY, displayX, displayY);
+    ImGui::SetNextWindowPos(ImVec2(displayX, displayY), ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(panelRect.width, panelRect.height), ImGuiCond_Appearing);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                              ImGuiWindowFlags_NoSavedSettings;

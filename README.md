@@ -48,6 +48,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 | [**Programming guide**](docs/programming-guide/index.md) | Tutorials + [UI toolkits](docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md) + [component reference](docs/programming-guide/1-overview-architecture/07-game-component-reference.md) |
 | [**Architecture & Developer Guide**](docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine loop, ECS, rendering data path, feature catalog |
 | [**Scene & Rendering API Gaps**](docs/SCENE_AND_RENDERING_GAPS.md) | C++ public API gap analysis (`include/spark/`, scene + 3D render) |
+| [**3D Action Game Gaps**](docs/3D_ACTION_GAME_GAPS.md) | Animation, materials, and scene management gaps for action games |
 | [**Lighting & Shadows**](docs/LIGHTING_AND_SHADOWS.md) | CSM, punctual lights, SSAO, HDR/tonemap |
 | [**Materials & Lighting**](docs/MATERIALS_AND_LIGHTING.md) | PBR channels, IBL, material limits |
 | [**Spark Editor Plan**](docs/SPARK_EDITOR_PLAN.md) | Editor milestones, project/asset workflow |

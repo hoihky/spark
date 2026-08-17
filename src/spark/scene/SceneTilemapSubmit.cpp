@@ -24,6 +24,8 @@ void FillAtlasFields(const TilemapComponent& tilemap, SceneTilemapDraw& draw) no
         draw.atlasTilePixelWidth = tileset->GetTilePixelWidth();
         draw.atlasTilePixelHeight = tileset->GetTilePixelHeight();
         if (const SharedPtr<Texture2D>& atlas = tileset->GetAtlas(); atlas) {
+            draw.atlasLayerUvScaleU = atlas->GetSceneLayerUvScale().x;
+            draw.atlasLayerUvScaleV = atlas->GetSceneLayerUvScale().y;
             if (tileset->GetImagePixelWidth() > 0U && tileset->GetImagePixelHeight() > 0U) {
                 draw.atlasTextureWidth = tileset->GetImagePixelWidth();
                 draw.atlasTextureHeight = tileset->GetImagePixelHeight();

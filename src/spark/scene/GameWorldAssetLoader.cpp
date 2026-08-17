@@ -2,6 +2,9 @@
 
 #include "spark/core/HashMap.hpp"
 #include "spark/core/Utility.hpp"
+#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/GltfMaterial.hpp"
+#include "spark/scene/GltfRigidLoader.hpp"
 #include "spark/scene/Mesh.hpp"
 #include "spark/animation/Skeleton.hpp"
 
@@ -271,12 +274,15 @@ void GameWorldAssetLoader::WorkerLoop() {
             case AssetLoadJobKind::Gltf: {
                 CompletedGltf result{};
                 result.path = job.key.path;
-                auto mesh = MakeShared<Mesh>(job.key.path);
-                SharedPtr<Texture2D> tex;
-                result.ok = Mesh::TryLoadFromGltf(job.key.path.CStr(), *mesh, &tex);
-                if (result.ok) {
-                    result.asset.mesh = mesh;
-                    result.asset.baseColorTexture = tex;
+                GltfRigidLoadResult loaded{};
+                result.ok = GltfRigidLoader{}.LoadFromFile(job.key.path.CStr(), loaded);
+                if (result.ok && loaded.mesh) {
+                    result.asset.mesh = loaded.mesh;
+                    result.asset.materials = loaded.materials;
+                    if (!loaded.materials.IsEmpty()) {
+                        result.asset.material = loaded.materials[0];
+                        result.asset.baseColorTexture = loaded.materials[0].baseColor;
+                    }
                 }
                 std::lock_guard<std::mutex> lock(mutex);
                 completedGltf.PushBack(MoveTemp(result));
@@ -287,16 +293,27 @@ void GameWorldAssetLoader::WorkerLoop() {
                 result.path = job.key.path;
                 SkinnedMesh mesh;
                 Skeleton skeleton;
-                SharedPtr<Texture2D> tex;
+                GltfMaterialDesc material{};
+                Array<GltfMaterialDesc> materials;
                 std::uint32_t walkClip = 0;
                 Quaternion bindUp{};
                 float facingYaw = 0.0F;
                 result.ok = TryLoadSkinnedCharacterFromGltf(
-                        job.key.path.CStr(), mesh, skeleton, &tex, &walkClip, &bindUp, &facingYaw);
+                        job.key.path.CStr(),
+                        mesh,
+                        skeleton,
+                        nullptr,
+                        &material,
+                        &walkClip,
+                        &bindUp,
+                        &facingYaw,
+                        &materials);
                 if (result.ok) {
                     result.asset.mesh = MakeShared<SkinnedMesh>(MoveTemp(mesh));
                     result.asset.skeleton = MakeShared<Skeleton>(MoveTemp(skeleton));
-                    result.asset.baseColorTexture = tex;
+                    result.asset.materials = materials;
+                    result.asset.material = material;
+                    result.asset.baseColorTexture = material.baseColor;
                     result.asset.walkClipIndex = walkClip;
                     result.asset.bindUpAlignment = bindUp;
                     result.asset.bindFacingYawOffset = facingYaw;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/core/Array.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
@@ -20,6 +20,12 @@ struct SceneDrawItem;
 void ApplyMaterialComponentToSceneDrawItem(
         SceneDrawItem& item,
         const MaterialComponent* mat,
+        SceneRenderParams* resolveTextures = nullptr) noexcept;
+
+/** Copies one <c>MultiMaterialComponent</c> slot into a draw item (textures resolved when <c>resolveTextures</c> is set). */
+void ApplyMultiMaterialSlotToSceneDrawItem(
+        SceneDrawItem& item,
+        const MultiMaterialComponent::Slot& slot,
         SceneRenderParams* resolveTextures = nullptr) noexcept;
 
 /** Splits a stable-sorted draw list into <c>params.draws</c> and <c>params.transparentDraws</c> (back-to-front). */

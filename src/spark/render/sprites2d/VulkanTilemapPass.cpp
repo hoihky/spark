@@ -61,10 +61,10 @@ void FillTileInstanceGpu(
     out.tint[1] = static_cast<float>(tile.tintG) * inv255;
     out.tint[2] = static_cast<float>(tile.tintB) * inv255;
     out.tint[3] = static_cast<float>(tile.tintA) * inv255;
-    out.uvRect[0] = uv.x;
-    out.uvRect[1] = uv.y;
-    out.uvRect[2] = uv.z;
-    out.uvRect[3] = uv.w;
+    out.uvRect[0] = uv.x * layer.atlasLayerUvScaleU;
+    out.uvRect[1] = uv.y * layer.atlasLayerUvScaleV;
+    out.uvRect[2] = uv.z * layer.atlasLayerUvScaleU;
+    out.uvRect[3] = uv.w * layer.atlasLayerUvScaleV;
     out.textureLayer = layer.textureLayer;
     out.lightingMode = 0;
     out.lightingPad0 = 0.0F;

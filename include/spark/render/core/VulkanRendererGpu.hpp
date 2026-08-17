@@ -143,7 +143,8 @@ inline void CreateImage2DArray(
         VkImageUsageFlags usage,
         VkMemoryPropertyFlags properties,
         VkImage& image,
-        VkDeviceMemory& imageMemory) {
+        VkDeviceMemory& imageMemory,
+        std::uint32_t mipLevels = 1) {
     VulkanGpuBufferImage::CreateImage2DArray(
             physicalDevice,
             vkDevice,
@@ -155,7 +156,8 @@ inline void CreateImage2DArray(
             usage,
             properties,
             image,
-            imageMemory);
+            imageMemory,
+            mipLevels);
 }
 
 [[nodiscard]] inline VkImageAspectFlags ImageAspectForFormat(const VkFormat format) noexcept {
@@ -167,12 +169,18 @@ inline void CreateImage2DArray(
         VkImage image,
         VkFormat format,
         const std::uint32_t layerCount,
-        const VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT) {
-    return VulkanGpuBufferImage::CreateImageView2DArray(vkDevice, image, format, layerCount, aspectMask);
+        const VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        const std::uint32_t mipLevelCount = 1) {
+    return VulkanGpuBufferImage::CreateImageView2DArray(
+            vkDevice, image, format, layerCount, aspectMask, mipLevelCount);
 }
 
-[[nodiscard]] inline VkSampler CreateTextureSampler(VkDevice vkDevice) {
-    return VulkanGpuBufferImage::CreateTextureSampler(vkDevice);
+[[nodiscard]] inline VkSampler CreateTextureSampler(VkDevice vkDevice, const float maxLod = 0.0F) {
+    return VulkanGpuBufferImage::CreateTextureSampler(vkDevice, maxLod);
+}
+
+[[nodiscard]] inline VkSampler CreateSpriteSceneTextureSampler(VkDevice vkDevice) {
+    return VulkanGpuBufferImage::CreateSpriteSceneTextureSampler(vkDevice);
 }
 
 [[nodiscard]] inline VkSampler CreateFontAtlasSampler(VkDevice vkDevice) {
@@ -184,8 +192,33 @@ inline void SceneTexBarrier(
         VkImage image,
         std::uint32_t layerCount,
         VkImageLayout oldLayout,
-        VkImageLayout newLayout) {
-    VulkanGpuBufferImage::SceneTexBarrier(cmd, image, layerCount, oldLayout, newLayout);
+        VkImageLayout newLayout,
+        const std::uint32_t mipLevelCount = 1) {
+    VulkanGpuBufferImage::SceneTexBarrier(cmd, image, layerCount, oldLayout, newLayout, mipLevelCount);
+}
+
+inline void GenerateMipmapsBlit(
+        VkCommandBuffer cmd,
+        VkImage image,
+        std::uint32_t width,
+        std::uint32_t height,
+        std::uint32_t baseArrayLayer,
+        std::uint32_t layerCount,
+        std::uint32_t mipLevelCount) {
+    VulkanGpuBufferImage::GenerateMipmapsBlit(
+            cmd, image, width, height, baseArrayLayer, layerCount, mipLevelCount);
+}
+
+inline void GenerateMipmapsNearestFromBase(
+        VkCommandBuffer cmd,
+        VkImage image,
+        std::uint32_t width,
+        std::uint32_t height,
+        std::uint32_t baseArrayLayer,
+        std::uint32_t layerCount,
+        std::uint32_t mipLevelCount) {
+    VulkanGpuBufferImage::GenerateMipmapsNearestFromBase(
+            cmd, image, width, height, baseArrayLayer, layerCount, mipLevelCount);
 }
 
 inline void AppendRigidMeshVertexToInterleaved(const Mesh::Vertex& v, Array<float>& interleaved) {

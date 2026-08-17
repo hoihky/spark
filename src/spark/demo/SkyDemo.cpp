@@ -1,5 +1,8 @@
 #include "spark/demo/SkyDemo.hpp"
 
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/scene/detail/SceneSubmitDetail.hpp"
+
 namespace Spark {
 
 void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
@@ -179,20 +182,8 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
         params.uiBoldFont = world.GetUiBoldFont();
         params.draws.Reserve(24);
 
-        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            if (!tex) {
-                return -1;
-            }
-            for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-                if (params.sceneTextures[i].Get() == tex.Get()) {
-                    return static_cast<std::int32_t>(i);
-                }
-            }
-            if (params.sceneTextures.GetSize() >= Spark::SceneRenderParams::MaxSceneTextures) {
-                return -1;
-            }
-            params.sceneTextures.PushBack(tex);
-            return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+        const auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex);
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
@@ -222,23 +213,31 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
             if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
                 return;
             }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
+            Spark::SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = mc.GetSlot();
+            baseItem.albedo = mc.GetAlbedo();
+            baseItem.textureLayer = -1;
             if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
+                baseItem.customMesh = mc.GetMesh();
             }
-            Spark::Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
+            const Spark::MultiMaterialComponent* multiMat =
+                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+                !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                Spark::SceneSubmitDetail::PushRigidMeshDraws(
+                        drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+                return;
+            }
+            Spark::SceneDrawItem item = baseItem;
             if (mat != nullptr) {
                 ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
                 if (mat->GetBaseColorTexture()) {
                     const Spark::Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
+                    item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
                     item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
                 }
             }
-            item.albedo = alb;
             drawList.PushBack(item);
         });
 

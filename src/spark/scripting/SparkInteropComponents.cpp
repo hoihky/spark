@@ -1,5 +1,6 @@
 #include "spark/scripting/SparkInterop.h"
 #include "spark/scripting/SparkInteropInternal.hpp"
+#include "spark/scene/GltfMaterial.hpp"
 
 #include "spark/animation/Skeleton.hpp"
 #include "spark/ecs/GameObject.hpp"
@@ -350,7 +351,8 @@ int spark_object_add_skinned_character_from_gltf(
     auto* smc = o->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
     auto* anim = o->AddComponent<Spark::AnimatorComponent>(asset.skeleton, asset.walkClipIndex, 1.0F);
     fsm->ConfigureLocomotionFromSkeleton(*asset.skeleton, asset.walkClipIndex);
-    auto* mat = o->AddComponent<Spark::MaterialComponent>(asset.baseColorTexture, Spark::Vector3::One);
+    auto* mat = o->AddComponent<Spark::MaterialComponent>();
+    Spark::ApplyGltfMaterialDesc(*mat, asset.material);
     if (Spark::TransformComponent* tr = o->GetComponent<Spark::TransformComponent>()) {
         tr->SetRotation(asset.bindUpAlignment);
     }

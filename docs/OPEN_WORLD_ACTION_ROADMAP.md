@@ -1,6 +1,6 @@
 # Open-World Action — Engine & Game Feature Roadmap
 
-This document is a **detailed plan** for evolving Spark toward **open-world action** games: large spaces, traversal, combat readability, streaming, and production discipline. It assumes Spark’s current architecture (ECS, `Scene` queries, `SceneRenderParams` → Vulkan forward path, lit meshes, skinning, terrain, sky, particles, UI) as described in `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md`.
+This document is a **detailed plan** for evolving Spark toward **open-world action** games: large spaces, traversal, combat readability, streaming, and production discipline. It assumes Spark’s current architecture (ECS, `Scene` queries, `SceneRenderParams` → Vulkan forward path, lit meshes, skinning, terrain, sky, particles, UI) as described in `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md`. For a focused gap analysis of animation, materials, and scene management for 3D action games, see [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md).
 
 Use this as a **living spec**: adjust phases when you lock decisions in §0.
 

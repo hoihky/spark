@@ -74,6 +74,8 @@ private:
             std::uint32_t maxFramesInFlight);
     [[nodiscard]] std::uint64_t ComputeFingerprint(const SceneRenderParams& scene) const;
     void PackSceneGeometry(const SceneRenderParams& scene, Array<float>& interleaved, Array<std::uint32_t>& indices);
+    [[nodiscard]] CustomMeshGpuSlice ResolveRigidDrawSlice(const SceneDrawItem& draw) const;
+    [[nodiscard]] CustomMeshGpuSlice ResolveSkinnedDrawSlice(const SceneDrawItem& draw) const;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;

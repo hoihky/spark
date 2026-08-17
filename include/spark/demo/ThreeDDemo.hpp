@@ -4,10 +4,17 @@
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 
+#include <cstdint>
+
 namespace Spark {
+
+class GameWorld;
 
 class ThreeDDemo {
 public:
+    /** Queue glTF assets for background load (safe to call from the launcher before entering the demo). */
+    static void RequestGltfAssets(Spark::GameWorld& world) noexcept;
+
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
 
 
@@ -21,6 +28,21 @@ public:
 
 
 private:
+    enum class PendingGltfKind : std::uint8_t { Hero, Chair, Fox };
+
+    struct PendingGltfLoad {
+        Spark::Utf8String path;
+        PendingGltfKind kind = PendingGltfKind::Hero;
+        bool spawned = false;
+    };
+
+    void PollPendingGltfLoads(Spark::GameWorld& w);
+    void SpawnHero(Spark::GameWorld& w, const Spark::GltfAsset& asset, const Spark::Utf8String& path);
+    void SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset);
+    void SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& asset);
+
+    Spark::Array<PendingGltfLoad> pendingGltfLoads{};
+    Spark::GameWorld* loadedWorld = nullptr;
     Spark::Array<Spark::GameObject*> roots{};
 
     Spark::FlyCamera camera;

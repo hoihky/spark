@@ -1,3 +1,4 @@
+#include "spark/scene/GltfMaterial.hpp"
 #include "spark/scene/SkinnedMesh.hpp"
 
 #include "spark/animation/Skeleton.hpp"
@@ -21,110 +22,6 @@
 namespace Spark {
 
 namespace {
-
-Utf8String ParentDirectory(const char* filePath) {
-    if (filePath == nullptr) {
-        return {};
-    }
-    const char* last = nullptr;
-    for (const char* p = filePath; *p != '\0'; ++p) {
-        if (*p == '/' || *p == '\\') {
-            last = p;
-        }
-    }
-    if (last == nullptr) {
-        return {};
-    }
-    Utf8String out;
-    for (const char* q = filePath; q < last; ++q) {
-        const char unit[2] = {*q, '\0'};
-        out.AppendUtf8(unit);
-    }
-    return out;
-}
-
-bool TryDecodeGltfImage(const cgltf_image* img, const Utf8String& dir, Texture2D& outDecoded) {
-    if (img == nullptr) {
-        return false;
-    }
-    if (img->buffer_view != nullptr) {
-        const cgltf_buffer_view* bv = img->buffer_view;
-        if (bv->buffer == nullptr || bv->buffer->data == nullptr) {
-            return false;
-        }
-        const auto* bytes =
-                static_cast<const std::uint8_t*>(bv->buffer->data) + static_cast<std::size_t>(bv->offset);
-        const std::size_t sz = static_cast<std::size_t>(bv->size);
-        return Texture2D::TryLoadFromMemory(bytes, sz, outDecoded, "glTF");
-    }
-    if (img->uri != nullptr) {
-        if (std::strncmp(img->uri, "data:", 5) == 0) {
-            return false;
-        }
-        Utf8String full;
-        if (dir.IsEmpty()) {
-            full = Utf8String(img->uri);
-        } else {
-            full.AppendUtf8(dir.CStr());
-            full.AppendUtf8("/");
-            full.AppendUtf8(img->uri);
-        }
-        return Texture2D::TryLoadFromFile(full.CStr(), outDecoded, false);
-    }
-    return false;
-}
-
-bool TryDecodeTextureView(const cgltf_texture_view& tv, const Utf8String& dir, Texture2D& outDecoded) {
-    if (tv.texture == nullptr || tv.texture->image == nullptr) {
-        return false;
-    }
-    return TryDecodeGltfImage(tv.texture->image, dir, outDecoded);
-}
-
-bool TryLoadFirstBaseColorTexture(
-        cgltf_data* data, const char* gltfPath, SharedPtr<Texture2D>* outBaseColor) {
-    if (outBaseColor == nullptr || data == nullptr) {
-        return false;
-    }
-    outBaseColor->Reset();
-    const Utf8String dir = ParentDirectory(gltfPath);
-
-    for (cgltf_size mi = 0; mi < data->materials_count; ++mi) {
-        const cgltf_material& mat = data->materials[mi];
-        if (!mat.has_pbr_metallic_roughness) {
-            continue;
-        }
-        Texture2D decoded;
-        if (TryDecodeTextureView(mat.pbr_metallic_roughness.base_color_texture, dir, decoded)) {
-            *outBaseColor = SharedPtr<Texture2D>(new Texture2D(MoveTemp(decoded)));
-            return true;
-        }
-    }
-    return false;
-}
-
-/** Prefer materials used by this mesh so multi-material glTFs don't bind the wrong albedo. */
-bool TryLoadBaseColorFromSkinnedMesh(
-        cgltf_data* data, const cgltf_mesh* mesh, const char* gltfPath, SharedPtr<Texture2D>* outBaseColor) {
-    if (outBaseColor == nullptr || data == nullptr || mesh == nullptr) {
-        return false;
-    }
-    outBaseColor->Reset();
-    const Utf8String dir = ParentDirectory(gltfPath);
-    for (cgltf_size pi = 0; pi < mesh->primitives_count; ++pi) {
-        const cgltf_primitive& prim = mesh->primitives[pi];
-        const cgltf_material* mat = prim.material;
-        if (mat == nullptr || !mat->has_pbr_metallic_roughness) {
-            continue;
-        }
-        Texture2D decoded;
-        if (TryDecodeTextureView(mat->pbr_metallic_roughness.base_color_texture, dir, decoded)) {
-            *outBaseColor = SharedPtr<Texture2D>(new Texture2D(MoveTemp(decoded)));
-            return true;
-        }
-    }
-    return TryLoadFirstBaseColorTexture(data, gltfPath, outBaseColor);
-}
 
 std::uint32_t BaseColorTexCoordSet(const cgltf_primitive* prim) {
     if (prim == nullptr || prim->material == nullptr || !prim->material->has_pbr_metallic_roughness) {
@@ -169,6 +66,7 @@ bool ShouldFlipGltfTriangleWinding(const Matrix4& bakeWorld) noexcept {
 }
 
 void AppendSkinnedPrimitive(
+        const cgltf_data* data,
         const cgltf_primitive* prim,
         const Matrix4& bakeWorld,
         std::uint32_t texCoordSet,
@@ -213,6 +111,8 @@ void AppendSkinnedPrimitive(
     if (pos == nullptr || joints == nullptr || weights == nullptr) {
         return;
     }
+
+    const std::uint32_t indexOffset = static_cast<std::uint32_t>(outMesh.GetIndices().GetSize());
     if (outHadNormals != nullptr) {
         *outHadNormals = *outHadNormals || (nrm != nullptr && nrm->type == cgltf_type_vec3);
     }
@@ -310,6 +210,22 @@ void AppendSkinnedPrimitive(
             }
         }
     }
+
+    const std::uint32_t indexCount =
+            static_cast<std::uint32_t>(outMesh.GetIndices().GetSize()) - indexOffset;
+    if (indexCount == 0) {
+        return;
+    }
+    MeshSubmesh submesh{};
+    submesh.indexOffset = indexOffset;
+    submesh.indexCount = indexCount;
+    if (data != nullptr && prim->material != nullptr && data->materials_count > 0) {
+        const std::ptrdiff_t offset = prim->material - data->materials;
+        if (offset >= 0 && static_cast<cgltf_size>(offset) < data->materials_count) {
+            submesh.materialIndex = static_cast<std::uint32_t>(offset);
+        }
+    }
+    outMesh.GetSubmeshes().PushBack(submesh);
 }
 
 void ScanForSkinnedMeshNode(cgltf_node* node, cgltf_node** outSkinNode) {
@@ -474,9 +390,11 @@ bool TryLoadSkinnedCharacterFromGltf(
         SkinnedMesh& outMesh,
         Skeleton& outSkeleton,
         SharedPtr<Texture2D>* outBaseColor,
+        GltfMaterialDesc* outMaterial,
         std::uint32_t* outWalkClipIndex,
         Quaternion* outBindUpAlignment,
-        float* outBindFacingYawOffset) {
+        float* outBindFacingYawOffset,
+        Array<GltfMaterialDesc>* outMaterials) {
     if (path == nullptr || path[0] == '\0') {
         return false;
     }
@@ -613,7 +531,7 @@ bool TryLoadSkinnedCharacterFromGltf(
         const std::uint32_t tc = BaseColorTexCoordSet(&prim);
         bool primHadNormals = false;
         bool primHadTangents = false;
-        AppendSkinnedPrimitive(&prim, bakeWorld, tc, &primHadNormals, &primHadTangents, outMesh);
+        AppendSkinnedPrimitive(data, &prim, bakeWorld, tc, &primHadNormals, &primHadTangents, outMesh);
         meshHadNormals = meshHadNormals || primHadNormals;
         meshHadTangents = meshHadTangents || primHadTangents;
     }
@@ -755,8 +673,24 @@ bool TryLoadSkinnedCharacterFromGltf(
         outSkeleton.clipNames.PushBack(Utf8String(nm));
     }
 
-    if (outBaseColor != nullptr) {
-        TryLoadBaseColorFromSkinnedMesh(data, cmesh, path, outBaseColor);
+    if (outMaterial != nullptr || outBaseColor != nullptr || outMaterials != nullptr) {
+        Array<GltfMaterialDesc> loadedMaterials;
+        GltfMaterialLoader::LoadAll(data, path, loadedMaterials);
+        if (outMaterials != nullptr) {
+            *outMaterials = loadedMaterials;
+        }
+        GltfMaterialDesc material{};
+        if (!loadedMaterials.IsEmpty()) {
+            material = loadedMaterials[0];
+        } else {
+            (void)TryLoadPrimaryGltfMaterial(data, cmesh, path, material);
+        }
+        if (outMaterial != nullptr) {
+            *outMaterial = material;
+        }
+        if (outBaseColor != nullptr) {
+            *outBaseColor = material.baseColor;
+        }
     }
 
     if (outWalkClipIndex != nullptr && !outSkeleton.clipNames.IsEmpty()) {

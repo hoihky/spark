@@ -154,6 +154,8 @@ struct SceneTilemapDraw {
     float atlasSpacingPixels = 0.0F;
     std::uint32_t atlasTextureWidth = 1;
     std::uint32_t atlasTextureHeight = 1;
+    float atlasLayerUvScaleU = 1.0F;
+    float atlasLayerUvScaleV = 1.0F;
     std::uint32_t atlasTilePixelWidth = 0;
     std::uint32_t atlasTilePixelHeight = 0;
     std::int32_t textureLayer = -1;
@@ -187,6 +189,8 @@ struct SceneDrawItem {
     SharedPtr<Mesh> customMesh{};
     /** When set, custom mesh path uses skinned vertices + jointPalette (mutually exclusive with customMesh). */
     SharedPtr<SkinnedMesh> skinnedMesh{};
+    /** Index into <c>Mesh::GetSubmeshes()</c> / <c>SkinnedMesh::GetSubmeshes()</c>; <c>kSceneDrawFullSubmesh</c> = entire buffer. */
+    std::uint32_t submeshIndex = kSceneDrawFullSubmesh;
     /** Joint matrices for skinning: skinMatrix[j] = worldJoint[j] * invBind[j]; size == skeleton joint count. */
     Array<Matrix4> jointPalette{};
     /** Physically based material parameters (GGX + Fresnel in shader). */
@@ -297,7 +301,7 @@ struct ScreenTextDraw {
  * (world +Y up; framebuffer Y still increases downward for screenRects / screenTexts).
  */
 struct SceneRenderParams {
-    static constexpr std::uint32_t MaxSceneTextures = 16;
+    static constexpr std::uint32_t MaxSceneTextures = 32;
     /** Must match GPU clustered lights SSBO capacity. */
     static constexpr std::uint32_t MaxPointLights = 256;
 

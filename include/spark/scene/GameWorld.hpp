@@ -8,6 +8,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/GameWorldAssetCache.hpp"
+#include "spark/scene/GameWorldAssetLoader.hpp"
 
 namespace Spark {
 
@@ -21,7 +22,7 @@ class IEngineContext;
  */
 class GameWorld {
 public:
-    GameWorld() = default;
+    GameWorld();
     GameWorld(const GameWorld&) = delete;
     GameWorld& operator=(const GameWorld&) = delete;
     GameWorld(GameWorld&&) = delete;
@@ -42,6 +43,14 @@ public:
 
     [[nodiscard]] SharedPtr<Mesh> LoadMesh(const char* path) { return assetCache.LoadMesh(path); }
     [[nodiscard]] GltfAsset LoadGltf(const char* path) { return assetCache.LoadGltf(path); }
+    void RequestGltf(const char* path) { assetLoader.RequestGltf(path); }
+    void RequestSkinnedGltf(const char* path) { assetLoader.RequestSkinnedGltf(path); }
+    void PumpAssets() { assetLoader.Pump(*this); }
+    [[nodiscard]] bool IsGltfReady(const char* path) const { return assetLoader.IsGltfReady(path); }
+    [[nodiscard]] bool IsSkinnedGltfReady(const char* path) const { return assetLoader.IsSkinnedGltfReady(path); }
+    [[nodiscard]] AssetLoadState GetAssetLoadState(const char* path, AssetLoadJobKind kind) const {
+        return assetLoader.GetState(path, kind);
+    }
     void RegisterGltf(const GltfAsset& asset, const char* cacheKey) { assetCache.RegisterGltf(asset, cacheKey); }
     [[nodiscard]] SkinnedGltfAsset LoadSkinnedGltf(const char* path) { return assetCache.LoadSkinnedGltf(path); }
     void RegisterSkinnedGltf(const SkinnedGltfAsset& asset, const char* cacheKey) {
@@ -63,6 +72,12 @@ public:
     [[nodiscard]] bool TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const {
         return assetCache.TryGetCachedSkinnedGltf(path, out);
     }
+    [[nodiscard]] bool TryGetCachedGltf(const char* path, GltfAsset& out) const {
+        return assetCache.TryGetCachedGltf(path, out);
+    }
+    /** Requests async load and pumps until ready (for editor / scripting sync call sites). */
+    [[nodiscard]] bool AwaitGltf(const char* path, GltfAsset& out);
+    [[nodiscard]] bool AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out);
     [[nodiscard]] bool TryGetAxisAlignedBoundsForKeyOrPath(const char* keyOrPath, Vector3& outMin, Vector3& outMax)
             const {
         return assetCache.TryGetAxisAlignedBoundsForKeyOrPath(keyOrPath, outMin, outMax);
@@ -193,6 +208,8 @@ public:
 
     [[nodiscard]] GameWorldAssetCache& GetAssetCache() noexcept { return assetCache; }
     [[nodiscard]] const GameWorldAssetCache& GetAssetCache() const noexcept { return assetCache; }
+    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return assetLoader; }
+    [[nodiscard]] const GameWorldAssetLoader& GetAssetLoader() const noexcept { return assetLoader; }
 
 private:
     friend class GameObject;
@@ -202,6 +219,7 @@ private:
 
     Array<UniquePtr<GameObject>> objects;
     GameWorldAssetCache assetCache;
+    GameWorldAssetLoader assetLoader;
     SharedPtr<Font> uiFont{};
     SharedPtr<Font> uiBoldFont{};
     std::uint64_t nextObjectId = 1;

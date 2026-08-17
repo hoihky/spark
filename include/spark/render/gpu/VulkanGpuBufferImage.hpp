@@ -58,7 +58,8 @@ public:
             VkImageUsageFlags usage,
             VkMemoryPropertyFlags properties,
             VkImage& image,
-            VkDeviceMemory& imageMemory);
+            VkDeviceMemory& imageMemory,
+            std::uint32_t mipLevels = 1);
 
     [[nodiscard]] static VkImageAspectFlags ImageAspectForFormat(VkFormat format) noexcept;
 
@@ -67,9 +68,11 @@ public:
             VkImage image,
             VkFormat format,
             std::uint32_t layerCount,
-            VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT);
+            VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            std::uint32_t mipLevelCount = 1);
 
-    [[nodiscard]] static VkSampler CreateTextureSampler(VkDevice vkDevice);
+    [[nodiscard]] static VkSampler CreateTextureSampler(VkDevice vkDevice, float maxLod = 0.0F);
+    [[nodiscard]] static VkSampler CreateSpriteSceneTextureSampler(VkDevice vkDevice);
 
     [[nodiscard]] static VkSampler CreateFontAtlasSampler(VkDevice vkDevice);
 
@@ -78,7 +81,28 @@ public:
             VkImage image,
             std::uint32_t layerCount,
             VkImageLayout oldLayout,
-            VkImageLayout newLayout);
+            VkImageLayout newLayout,
+            std::uint32_t mipLevelCount = 1);
+
+    /** Generate mip chain for array layers [baseArrayLayer, baseArrayLayer + layerCount). */
+    static void GenerateMipmapsBlit(
+            VkCommandBuffer cmd,
+            VkImage image,
+            std::uint32_t width,
+            std::uint32_t height,
+            std::uint32_t baseArrayLayer,
+            std::uint32_t layerCount,
+            std::uint32_t mipLevelCount);
+
+    /** Copy mip0 into all lower mips with nearest filtering (avoids atlas bleed for pixel art). */
+    static void GenerateMipmapsNearestFromBase(
+            VkCommandBuffer cmd,
+            VkImage image,
+            std::uint32_t width,
+            std::uint32_t height,
+            std::uint32_t baseArrayLayer,
+            std::uint32_t layerCount,
+            std::uint32_t mipLevelCount);
 };
 
 }  // namespace VulkanRendererGpu

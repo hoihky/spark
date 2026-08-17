@@ -6,23 +6,33 @@
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/GltfMaterial.hpp"
 #include "spark/scene/Mesh.hpp"
 #include "spark/scene/SkinnedMesh.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 namespace Spark {
 
-/** Result of loading a glTF asset (mesh + optional baseColor texture). */
+/** Result of loading a glTF asset (mesh + full PBR material table). */
 struct GltfAsset {
     SharedPtr<Mesh> mesh;
+    /** @deprecated Use <c>materials[0]</c> or <c>material.baseColor</c>. */
     SharedPtr<Texture2D> baseColorTexture;
+    /** @deprecated Use <c>materials</c>; kept for existing call sites. */
+    GltfMaterialDesc material;
+    /** All materials in the glTF file, indexed by primitive material index. */
+    Array<GltfMaterialDesc> materials;
 };
 
-/** Skinned glTF: mesh + skeleton + animations + optional texture; walkClipIndex names a walk cycle when found. */
+/** Skinned glTF: mesh + skeleton + animations + full PBR material table. */
 struct SkinnedGltfAsset {
     SharedPtr<SkinnedMesh> mesh;
     SharedPtr<Skeleton> skeleton;
+    /** @deprecated Use <c>materials[0]</c> or <c>material.baseColor</c>. */
     SharedPtr<Texture2D> baseColorTexture;
+    /** @deprecated Use <c>materials</c>. */
+    GltfMaterialDesc material;
+    Array<GltfMaterialDesc> materials;
     std::uint32_t walkClipIndex = 0;
     Quaternion bindUpAlignment{Quaternion::Identity};
     float bindFacingYawOffset = 0.0F;
@@ -59,6 +69,7 @@ public:
     SharedPtr<Texture2D> RegisterTexture(const SharedPtr<Texture2D>& texture, const char* cacheKey = nullptr);
     [[nodiscard]] SharedPtr<Mesh> TryGetMeshByKeyOrPath(const char* keyOrPath) const;
     [[nodiscard]] SharedPtr<Texture2D> TryGetTextureByKeyOrPath(const char* keyOrPath) const;
+    [[nodiscard]] bool TryGetCachedGltf(const char* path, GltfAsset& out) const;
     [[nodiscard]] bool TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const;
     [[nodiscard]] bool TryGetAxisAlignedBoundsForKeyOrPath(const char* keyOrPath, Vector3& outMin, Vector3& outMax)
             const;

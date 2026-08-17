@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/HashMap.hpp"
 #include "spark/core/Utf8String.hpp"
+#include "spark/scene/GameWorld.hpp"
 #include "spark/scene/GameWorldAssetLoader.hpp"
 #include "spark/scene/SceneInstanceId.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
@@ -33,7 +34,7 @@ public:
     SceneManager& operator=(const SceneManager&) = delete;
 
     [[nodiscard]] GameWorld& GetWorld() noexcept { return world; }
-    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return assetLoader; }
+    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return world.GetAssetLoader(); }
 
     /**
      * Reads the scene file and instantiates entities. Asset decode runs on a worker thread;
@@ -98,7 +99,6 @@ private:
     static void OnDeferredComponentStatic(GameObject* object, const ComponentRecord& record, void* userData);
 
     GameWorld& world;
-    GameWorldAssetLoader assetLoader;
     SceneInstanceId nextInstanceId = 1;
     Array<LoadedSceneInstance> instances;
 };

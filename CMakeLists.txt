@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(Spark LANGUAGES CXX)
+project(Spark LANGUAGES CXX C)
 
 # AppleClang (Xcode) and many CMake versions do not enable C++26 yet; use 23 until they catch up.
 set(CMAKE_CXX_STANDARD 23)
@@ -492,6 +492,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/tilemap/TileAnimationResolve.cpp
         src/spark/scene/tilemap/TileAutotileBake.cpp
         src/spark/ecs/components/rendering/MaterialComponent.cpp
+        src/spark/ecs/components/rendering/MultiMaterialComponent.cpp
         src/spark/ecs/components/lighting/PointLightComponent.cpp
         src/spark/ecs/components/lighting/DirectionalLightComponent.cpp
         src/spark/ecs/components/lighting/SpotLightComponent.cpp
@@ -530,10 +531,20 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/SceneRaycast.cpp
         src/spark/scene/TerrainMeshGenerator.cpp
         src/spark/scene/mesh_gltf.cpp
+        src/spark/scene/GltfRigidLoader.cpp
+        src/spark/scene/GltfAssetBindings.cpp
+        src/spark/scene/GltfMaterial.cpp
         src/spark/scene/SkinnedMesh.cpp
         src/spark/scene/skinned_mesh_gltf.cpp
         src/spark/scene/cgltf_impl.cpp
         src/spark/scene/Texture2D.cpp
+        src/spark/scene/TextureMipLevel.cpp
+        src/spark/scene/TextureFormat.cpp
+        src/spark/scene/TextureMipChain.cpp
+        src/spark/scene/TextureBlockCompressor.cpp
+        src/spark/scene/TextureLoader.cpp
+        src/spark/scene/StbImageTextureLoader.cpp
+        src/spark/scene/Ktx2TextureLoader.cpp
         src/spark/scene/stb_image_impl.cpp
         src/spark/text/Font.cpp
         src/spark/ecs/components/rendering/TextOverlayComponent.cpp
@@ -607,6 +618,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/gpu/VulkanGpuPhysicalDevice.cpp
         src/spark/render/gpu/VulkanGpuSwapchain.cpp
         src/spark/render/gpu/VulkanGpuBufferImage.cpp
+        src/spark/render/gpu/SceneTextureArrayFormat.cpp
         src/spark/render/gpu/VulkanGpuMeshInterleaved.cpp
         src/spark/render/present/VulkanPresentRenderPass.cpp
         src/spark/render/lighting/SceneLightingProfile.cpp
@@ -754,6 +766,9 @@ target_link_libraries(SparkEngine PUBLIC
         glfw
         Vulkan::Vulkan
 )
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkTextureCompression.cmake)
+spark_setup_texture_compression(SparkEngine)
 
 if (SPARK_ENABLE_IMGUI)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkImGui.cmake)

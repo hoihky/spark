@@ -19,6 +19,9 @@ class Texture2D;
  * Joint hierarchy + inverse bind matrices + sampled glTF animations.
  * Palettes are computed in bind/character space for the vertex shader (world = model * skinnedPos).
  */
+class GltfMaterial;
+using GltfMaterialDesc = GltfMaterial;
+
 class Skeleton {
 public:
     static constexpr std::uint32_t MaxJoints = 64;
@@ -89,9 +92,11 @@ private:
             SkinnedMesh& outMesh,
             Skeleton& outSkeleton,
             SharedPtr<Texture2D>* outBaseColor,
+            GltfMaterialDesc* outMaterial,
             std::uint32_t* outWalkClipIndex,
             Quaternion* outBindUpAlignment,
-            float* outBindFacingYawOffset);
+            float* outBindFacingYawOffset,
+            Array<GltfMaterialDesc>* outMaterials);
 
     struct Vec3Channel {
         std::uint32_t jointIndex = 0;
@@ -127,8 +132,10 @@ bool TryLoadSkinnedCharacterFromGltf(
         SkinnedMesh& outMesh,
         Skeleton& outSkeleton,
         SharedPtr<Texture2D>* outBaseColor = nullptr,
+        GltfMaterialDesc* outMaterial = nullptr,
         std::uint32_t* outWalkClipIndex = nullptr,
         Quaternion* outBindUpAlignment = nullptr,
-        float* outBindFacingYawOffset = nullptr);
+        float* outBindFacingYawOffset = nullptr,
+        Array<GltfMaterialDesc>* outMaterials = nullptr);
 
 }  // namespace Spark

@@ -1,6 +1,7 @@
 #include "spark/scene/SceneSubmit.hpp"
 
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/Texture2D.hpp"
@@ -44,6 +45,15 @@ std::int32_t FindOrAddSceneTexture(SceneRenderParams& params, const SharedPtr<Te
             return static_cast<std::int32_t>(i);
         }
     }
+    const std::uint64_t fingerprint = tex->GetContentFingerprint();
+    if (fingerprint != 0U) {
+        for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
+            const SharedPtr<Texture2D>& existing = params.sceneTextures[i];
+            if (existing && existing->GetContentFingerprint() == fingerprint) {
+                return static_cast<std::int32_t>(i);
+            }
+        }
+    }
     if (params.sceneTextures.GetSize() >= SceneRenderParams::MaxSceneTextures) {
         std::fprintf(
                 stderr,
@@ -52,8 +62,9 @@ std::int32_t FindOrAddSceneTexture(SceneRenderParams& params, const SharedPtr<Te
                 tex->GetName().CStr());
         return -1;
     }
+    const std::int32_t layer = static_cast<std::int32_t>(params.sceneTextures.GetSize());
     params.sceneTextures.PushBack(tex);
-    return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+    return layer;
 }
 
 void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept {
@@ -91,6 +102,39 @@ void ApplyMaterialComponentToSceneDrawItem(
     }
     if (mat->GetEmissiveTexture()) {
         item.emissiveMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetEmissiveTexture());
+    }
+}
+
+void ApplyMultiMaterialSlotToSceneDrawItem(
+        SceneDrawItem& item,
+        const MultiMaterialComponent::Slot& slot,
+        SceneRenderParams* resolveTextures) noexcept {
+    item.metallic = slot.metallic;
+    item.roughness = slot.roughness;
+    item.metallicFactor = slot.metallicFactor;
+    item.roughnessFactor = slot.roughnessFactor;
+    item.occlusionStrength = slot.occlusionStrength;
+    item.emissiveColor = slot.emissiveColor;
+    item.emissiveIntensity = slot.emissiveIntensity;
+    item.emissiveFactor = slot.emissiveFactor;
+    item.shadingModel = slot.shadingModel;
+    item.doubleSided = slot.doubleSided;
+    item.opacity = slot.opacity;
+    item.normalMapLayer = -1;
+    item.metallicRoughnessMapLayer = -1;
+    item.emissiveMapLayer = -1;
+    if (resolveTextures == nullptr) {
+        return;
+    }
+    if (slot.normalMap) {
+        item.normalMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.normalMap);
+    }
+    if (slot.metallicRoughness) {
+        item.metallicRoughnessMapLayer =
+                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.metallicRoughness);
+    }
+    if (slot.emissiveMap) {
+        item.emissiveMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.emissiveMap);
     }
 }
 

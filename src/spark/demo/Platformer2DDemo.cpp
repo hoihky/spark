@@ -128,9 +128,11 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         const Spark::DemoAssets::PlatformerEnemyAtlasResult enemyAtlas = BuildPlatformerEnemyAtlas();
         enemyAtlasTex = Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(enemyAtlas.texture));
         enemyAtlasColumns = enemyAtlas.columns;
-        enemyIdleUv = SpriteAnimatorComponent::ComputeUniformGridUv(enemyAtlasColumns, 1U, 0U);
+        enemyIdleUv = SpriteAnimatorComponent::ComputeUniformGridUv(
+                enemyAtlasColumns, 1U, 0U, enemyAtlasTex->GetWidth(), enemyAtlasTex->GetHeight());
         enemyAttackUv = enemyAtlasColumns >= 2U
-                ? SpriteAnimatorComponent::ComputeUniformGridUv(enemyAtlasColumns, 1U, 1U)
+                ? SpriteAnimatorComponent::ComputeUniformGridUv(
+                          enemyAtlasColumns, 1U, 1U, enemyAtlasTex->GetWidth(), enemyAtlasTex->GetHeight())
                 : enemyIdleUv;
         w.RegisterTexture(enemyAtlasTex, "spark/plat/enemy_atlas");
     }
@@ -201,7 +203,12 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerObject->AddComponent<Spark::SpriteComponent>(
             playerAtlasTex,
             Spark::Vector4{0.98F, 0.95F, 0.92F, 1.0F},
-            SpriteAnimatorComponent::ComputeUniformGridUv(playerAtlasColumns, kPlayerAtlasRows, 0),
+            SpriteAnimatorComponent::ComputeUniformGridUv(
+                    playerAtlasColumns,
+                    kPlayerAtlasRows,
+                    0,
+                    playerAtlasTex->GetWidth(),
+                    playerAtlasTex->GetHeight()),
             500);
     playerAnim = playerObject->AddComponent<Spark::SpriteAnimatorComponent>();
     playerAnim->SetUniformGrid(playerAtlasColumns, kPlayerAtlasRows);
@@ -379,9 +386,12 @@ void Platformer2DDemo::Simulate(
             }
         }
         playerRb->SetVelocity(v);
+    }
 
-        physics.Simulate2D(world, timing);
+    physics.Simulate2D(world, timing);
 
+    if (playerRb != nullptr && playerTr != nullptr) {
+        const bool attackPressed = in.IsKeyPressedThisFrame(GLFW_KEY_J);
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
         playerCombat.TryFireOnAttackPressed(
                 attackPressed,
@@ -463,16 +473,11 @@ void Platformer2DDemo::Simulate(
         }
     }
 
-    if (cameraRig != nullptr && mainCameraGo != nullptr) {
-        int fbW = 0;
-        int fbH = 0;
-        context.GetFramebufferSize(fbW, fbH);
-        float aspect = 1.0F;
-        if (fbH > 0) {
-            aspect = static_cast<float>(fbW) / static_cast<float>(fbH);
-        }
-        Spark::Camera2DRigComponent::Tick(*cameraRig, *mainCameraGo, dt, aspect);
+    if (mainCameraGo != nullptr) {
         if (Spark::Camera2DComponent* cam = mainCameraGo->GetComponent<Spark::Camera2DComponent>()) {
+            int fbW = 0;
+            int fbH = 0;
+            context.GetFramebufferSize(fbW, fbH);
             healthHud.SyncToCamera(*cam, *mainCameraGo, static_cast<float>(fbW), static_cast<float>(fbH));
         }
     }

@@ -2,7 +2,7 @@
 
 Gap analysis for Spark’s **public C++ API** under `include/spark/`. This document is for **gameplay and engine contributors** building with `IGame`, `GameWorld`, `Scene`, and `SceneRenderParams` — **not** editor tooling (`spark/editor/` is out of scope).
 
-Complements [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) (feature catalog) and material/lighting notes in [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md).
+Complements [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) (feature catalog), material/lighting notes in [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md), and the cross-system action-game view in [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md).
 
 ---
 
@@ -293,6 +293,7 @@ Prioritized for **C++ game authors** (no editor dependency):
 | [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWING.md) | Shadow/light implementation status |
 | [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) | Animation API roadmap |
 | [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) | Long-horizon streaming/combat (many items need new public API) |
+| [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md) | Animation + materials + scenes for 3D action games |
 | [`CSHARP_SCRIPTING.md`](CSHARP_SCRIPTING.md) | Managed interop surface |
 
 ---

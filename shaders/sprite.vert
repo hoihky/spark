@@ -21,12 +21,7 @@ void main() {
     SpriteInstanceGpu inst = instances[spriteBatch.instanceBase + uint(gl_InstanceIndex)];
     vec4 wp = inst.model * vec4(inPosition, 1.0);
     gl_Position = ubo.viewProj * wp;
-    vec2 uv01 = inTexCoord;
-    const float kLayerSize = 512.0;
-    vec2 halfTexel = vec2(0.5) / vec2(kLayerSize);
-    vec2 uvMin = inst.uvRect.xy + halfTexel;
-    vec2 uvMax = inst.uvRect.zw - halfTexel;
-    vTex = mix(uvMin, uvMax, uv01);
+    vTex = mix(inst.uvRect.xy, inst.uvRect.zw, inTexCoord);
     vLayer = inst.textureLayer;
     vLocalXY = inPosition.xy;
     vWorldPos = wp.xyz;

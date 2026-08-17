@@ -35,6 +35,7 @@ bool Mesh::TryComputeAxisAlignedBounds(Vector3& outMin, Vector3& outMax) const n
 void Mesh::Clear() noexcept {
     vertices.Clear();
     indices.Clear();
+    submeshes.Clear();
 }
 
 void Mesh::AddVertex(const Vertex& v) {
