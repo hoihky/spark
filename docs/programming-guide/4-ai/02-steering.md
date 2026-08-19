@@ -47,6 +47,33 @@ bb.SetFloat(1, targetPos.z);  // slot 1 = target Z
 
 Behaviors read slots in `ComputeAcceleration`.
 
+## ECS Patrol Agent (from `SteeringShowcase3DDemo`)
+
+For nav-mesh patrol without manual steering math, combine `PatrolPathComponent` + `NavMeshAgentComponent` + `AiAgentComponent`:
+
+```cpp
+GameObject* pathGo = world.CreateGameObject();
+pathGo->AddComponent<TransformComponent>()->SetTranslation({-14.0F, 0.0F, -12.0F});
+PatrolPathComponent* patrol = pathGo->AddComponent<PatrolPathComponent>();
+patrol->SetLooping(true);
+const float leg = 5.0F;
+patrol->GetWaypoints().PushBack(Vector3::Zero);
+patrol->GetWaypoints().PushBack({leg, 0.0F, 0.0F});
+patrol->GetWaypoints().PushBack({leg, 0.0F, leg});
+patrol->GetWaypoints().PushBack({0.0F, 0.0F, leg});
+
+GameObject* agentGo = world.CreateGameObject();
+agentGo->GetComponent<TransformComponent>()->SetTranslation({-14.0F, 0.55F, -12.0F});
+NavMeshAgentComponent* nav = agentGo->AddComponent<NavMeshAgentComponent>();
+nav->SetPatrolPathObject(pathGo);
+AiAgentComponent* agent = agentGo->AddComponent<AiAgentComponent>();
+agent->SetMaxSpeed(2.8F);
+agent->SetSteeringPlane(AiSteeringPlane::XzWorld);
+
+// Each frame:
+SimulateGameAi(world, timing, context);
+```
+
 ## Apply to Rigidbody
 
 ```cpp

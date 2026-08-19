@@ -46,6 +46,6 @@ int main() {
 
 ## Default Demo Binary
 
-`src/main.cpp` constructs `Engine` with `NewShellDemoGame()` — an interactive launcher with **19** built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, **Dear ImGui docking demo**, and more).
+`src/main.cpp` constructs `Engine` with `NewShellDemoGame()` — an interactive launcher with **20** built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, tilemap showcase, **Dear ImGui docking demo**, and more).
 
 Next: [Engine Capabilities](02-engine-capabilities.md).

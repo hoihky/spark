@@ -91,4 +91,32 @@ bool grounded = RaycastWorld2D(world, footX, footY, 0.0F, -1.0F, 0.08F, filter, 
 
 Or use `Rigidbody2DComponent::IsGrounded()` after simulation.
 
+## 3D Raycasts (Scene / Mesh)
+
+3D physics queries for triggers and overlaps are handled via `TriggerVolume3DComponent` signals and `PhysicsSubsystem::SimulateAll3D`. For **picking** and **hitscan weapons**, use scene raycast helpers:
+
+```cpp
+#include "spark/scene/MeshRaycast.hpp"
+#include "spark/scene/Scene.hpp"
+
+// Sphere hit test (FPS targets, simple pickups)
+float hitT = 0.0F;
+float bestT = maxDistance;
+if (TryRaycastSphereWorld(rayOrigin, rayDir, centerWorld, radius, 1.0e-4F, bestT, hitT)) {
+    // hit at rayOrigin + rayDir * hitT
+}
+
+// Mesh-accurate pick (scene editor, mesh targets)
+SceneRaycastHit hit{};
+SceneRaycastOptions opts{};
+if (scene.RaycastPick(ray, hit, opts) && hit.object) {
+    GameObject* picked = hit.object;
+}
+
+// Ray vs single mesh in world space
+if (TryRaycastMeshWorld(rayOrigin, rayDir, *mesh, worldMatrix, tMin, tMax, outT)) { ... }
+```
+
+See `SceneEditor3DDemo` for editor picking and `8-3d-game/04-shooting.md` for FPS hitscan.
+
 Next: [Physics 3D](05-physics-3d.md).

@@ -431,9 +431,9 @@ public:
 <pre><code class="language-cpp">#include "spark/engine/Game.hpp"
 #include "spark/scene/SceneSubmit.hpp"
 #include "spark/scene/FlyCamera.hpp"
-#include "spark/ecs/components/MeshComponent.hpp"
-#include "spark/ecs/components/MaterialComponent.hpp"
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 
 class LitCubeGame final : public Spark::Game {
     Spark::FlyCamera camera{};
@@ -482,6 +482,74 @@ public:
     roots.Clear();
 }
 </code></pre>
+<h2 id="d-platformer-pattern-from-platformer2ddemo">2D Platformer Pattern (from <code>Platformer2DDemo</code>)</h2>
+<p>Most SparkDemo games split setup across <strong>Load / Simulate / Render</strong> helpers. A minimal 2D game using the same ideas:</p>
+<pre><code class="language-cpp">class PlatformerGame final : public Spark::Game {
+    Spark::PhysicsSubsystem physics;
+    Spark::Array&lt;Spark::GameObject*&gt; roots;
+
+public:
+    void OnAttach(Spark::IEngineContext&amp; ctx) override {
+        Spark::MountUiFont(GetWorld());  // required for TextOverlayComponent
+        auto&amp; w = GetWorld();
+
+        physics.GetWorld2D().GetSettings().gravityY = -32.0F;
+
+        // Player
+        auto* player = w.CreateGameObject();
+        roots.PushBack(player);
+        player-&gt;AddComponent&lt;Spark::TransformComponent&gt;()-&gt;SetTranslation({0, 0, 0});
+        player-&gt;AddComponent&lt;Spark::Rigidbody2DComponent&gt;();
+        player-&gt;AddComponent&lt;Spark::BoxCollider2DComponent&gt;();
+
+        // Ground platform
+        auto* ground = w.CreateGameObject();
+        roots.PushBack(ground);
+        auto* gtr = ground-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
+        gtr-&gt;SetTranslation({0, -1.5F, 0});
+        gtr-&gt;SetScale({20.0F, 1.0F, 1.0F});
+        ground-&gt;AddComponent&lt;Spark::BoxCollider2DComponent&gt;();
+    }
+
+    void OnUpdate(const Spark::FrameTiming&amp; t, Spark::IEngineContext&amp; ctx) override {
+        Spark::Game::OnUpdate(t, ctx);  // ticks components + sound cues
+        physics.Simulate2D(GetWorld(), t);
+    }
+
+    void OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; ctx) override {
+        Spark::SubmitStandardLitSceneFromWorldWithCamera(
+            GetWorld(), ctx,
+            Spark::Vector3{0.3F, -0.9F, 0.2F}.Normalized(),
+            Spark::Vector3{1.0F, 0.98F, 0.95F}, 1.0F,
+            Spark::Vector3{0.15F, 0.17F, 0.22F},
+            false, 0.0F);
+    }
+
+    void OnDetach() override {
+        for (Spark::GameObject* go : roots)
+            if (go) GetWorld().DestroyGameObject(go);
+        roots.Clear();
+    }
+};
+</code></pre>
+<p><code>SubmitStandardLitSceneFromWorldWithCamera</code> resolves the main <code>Camera2DComponent</code> or <code>CameraComponent</code> in the world — add one to the scene if you use this shortcut.</p>
+<h2 id="asset-loading">Asset Loading</h2>
+<p>Register meshes and textures with cache keys before attaching components:</p>
+<pre><code class="language-cpp">auto mesh = Spark::MakeShared&lt;Spark::Mesh&gt;(Spark::Mesh::CreateUnitCube());
+world.RegisterMesh(mesh, "my_game/cube");
+
+auto tex = Spark::MakeShared&lt;Spark::Texture2D&gt;(/* ... */);
+world.RegisterTexture(tex, "my_game/tiles");
+
+// Async glTF (preferred for large models):
+world.RequestGltf("assets/models/Fox.glb");
+// Each frame until ready:
+world.PumpAssets();
+if (world.IsGltfReady("assets/models/Fox.glb")) {
+    Spark::GltfAsset asset = world.LoadGltf("assets/models/Fox.glb");
+    // spawn SkinnedMeshComponent + AnimatorComponent ...
+}
+</code></pre>
 <p>Next: <a href="06-ecs-and-scene.html">ECS and Scene</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -512,6 +580,14 @@ public:
                         
                         <li class="toc-h2">
                           <a href="#lifecycle-best-practice">Lifecycle Best Practice</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#2d-platformer-pattern-from">2D Platformer Pattern (from )</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#asset-loading">Asset Loading</a>
                         </li>
                         
                   </ul>

@@ -42,4 +42,25 @@ if (audio) {
 }
 ```
 
+## Loading and Playing (from `Platformer2DDemo`)
+
+```cpp
+#include "spark/audio/SoundFileLoader.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
+
+SharedPtr<SoundClip> jumpSfx = TryLoadSoundClipFromBundledAsset("assets/audio/jump.wav");
+if (!jumpSfx) {
+    jumpSfx = SoundClip::CreateToneBlip(520.0F, 0.07F, 0.45F);  // procedural fallback
+}
+
+// One-shot from gameplay:
+player->GetComponent<SoundCueComponent>()->Queue(jumpSfx, 0.9F);
+// ProcessSoundCues runs automatically in Game::OnUpdate
+
+// Background music in OnAttach:
+if (SoundEngine* se = context.TryGetSoundEngine()) {
+    se->SetBackgroundMusic(LoadPlatformerBgm(), 0.32F, true);
+}
+```
+
 Next: [Sound Clips](02-clips.md).

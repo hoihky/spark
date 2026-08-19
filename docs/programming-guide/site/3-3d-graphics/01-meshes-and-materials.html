@@ -432,6 +432,16 @@ public:
 };
 </code></pre>
 <p><code>ApplyMaterialComponentToSceneDrawItem()</code> copies PBR fields into <code>SceneDrawItem</code>.</p>
+<h2 id="multi-material-gltf">Multi-Material glTF</h2>
+<p>For assets with multiple material slots per mesh:</p>
+<pre><code class="language-cpp">GltfAsset building = world.LoadGltf("assets/models/Building.glb");
+auto* go = world.CreateGameObject();
+go-&gt;AddComponent&lt;TransformComponent&gt;();
+go-&gt;AddComponent&lt;MeshComponent&gt;(building.mesh, SceneMeshSlot::Custom, Vector3::One);
+auto* multi = go-&gt;AddComponent&lt;MultiMaterialComponent&gt;();
+multi-&gt;PopulateFromGltfAsset(building);
+</code></pre>
+<p><code>ThreeDDemo</code> and <code>SkyDemo</code> use <code>MultiMaterialComponent</code> for glTF props with per-submesh textures.</p>
 <h2 id="spawn-a-lit-gltf-prop">Spawn a Lit glTF Prop</h2>
 <pre><code class="language-cpp">GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
 auto* go = world.CreateGameObject();
@@ -478,6 +488,10 @@ target-&gt;AddComponent&lt;MaterialComponent&gt;(nullptr)-&gt;SetRoughness(0.35F
                         
                         <li class="toc-h2">
                           <a href="#class-design">Class Design: </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#multi-material-gltf">Multi-Material glTF</a>
                         </li>
                         
                         <li class="toc-h2">

@@ -389,21 +389,91 @@ bool TryRaycastWorld(const GameObject&amp; owner, Vector3 rayOriginWorld,
 void ApplyHeightBrushWorld(GameObject&amp; owner, Vector3 centerWorld,
                            float radiusWorld, float deltaY);
 </code></pre>
-<pre><code class="language-cpp">TerrainGeneratorSettings settings{};
-settings.gridCellsX = 128;
-settings.gridCellsZ = 128;
-settings.cellWorldSize = 1.0F;
+<h2 id="procedural-terrain-from-terraindemo">Procedural Terrain (from <code>TerrainDemo</code>)</h2>
+<pre><code class="language-cpp">#include "spark/ecs/components/rendering/TerrainComponent.hpp"
+#include "spark/scene/TerrainGeneratorSettings.hpp"
+
+TerrainGeneratorSettings ts{};
+ts.subdivX = 288;
+ts.subdivZ = 288;
+ts.halfExtentX = 220.0F;
+ts.halfExtentZ = 220.0F;
+ts.heightScale = 26.0F;
+ts.noiseScale = 0.0135F;
+ts.octaves = 6;
+ts.persistence = 0.5F;
+ts.lacunarity = 2.05F;
+ts.seed = 0xC047ACEEu;
+ts.worldUnitsPerTextureRepeat = ts.halfExtentX * 2.0F;  // one texture span
 
 auto* terrainGo = world.CreateGameObject();
 terrainGo-&gt;AddComponent&lt;TransformComponent&gt;();
-terrainGo-&gt;AddComponent&lt;TerrainComponent&gt;(settings);
+terrainGo-&gt;AddComponent&lt;TerrainComponent&gt;(ts);
+if (MaterialComponent* m = terrainGo-&gt;AddComponent&lt;MaterialComponent&gt;(groundTex)) {
+    m-&gt;SetMetallic(0.02F);
+    m-&gt;SetRoughness(0.94F);
+}
+</code></pre>
+<p><code>TerrainGeneratorSettings</code> fields:</p>
+<table class="table">
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>subdivX</code>, <code>subdivZ</code></td>
+<td>96</td>
+<td>Height grid resolution</td>
+</tr>
+<tr>
+<td><code>halfExtentX</code>, <code>halfExtentZ</code></td>
+<td>56</td>
+<td>Half-size in world units</td>
+</tr>
+<tr>
+<td><code>heightScale</code></td>
+<td>14</td>
+<td>Max vertical displacement</td>
+</tr>
+<tr>
+<td><code>noiseScale</code></td>
+<td>0.055</td>
+<td>Base noise frequency</td>
+</tr>
+<tr>
+<td><code>octaves</code>, <code>persistence</code>, <code>lacunarity</code></td>
+<td>6, 0.48, 2.05</td>
+<td>fBM detail</td>
+</tr>
+<tr>
+<td><code>worldUnitsPerTextureRepeat</code></td>
+<td>112</td>
+<td>UV tiling scale</td>
+</tr>
+</tbody>
+</table>
+<h2 id="height-brush-editing">Height Brush Editing</h2>
+<pre><code class="language-cpp">TerrainComponent* terrain = terrainGo-&gt;GetComponent&lt;TerrainComponent&gt;();
+Vector3 hitWorld{};
+if (terrain-&gt;TryRaycastWorld(*terrainGo, rayOrigin, rayDir, 750.0F, hitWorld)) {
+    terrain-&gt;ApplyHeightBrushWorld(*terrainGo, hitWorld, 4.0F, 0.35F);
+}
 </code></pre>
 <h2 id="class-design-skycomponent">Class Design: <code>SkyComponent</code></h2>
 <pre><code class="language-cpp">explicit SkyComponent(SceneSkyMode mode) noexcept;  // Box, Dome, Plane
 void SetSkyTexture(SharedPtr&lt;Texture2D&gt; t);
 void SetTint(const Vector3&amp; c) noexcept;
 </code></pre>
-<p>Pair with <code>MeshComponent</code> using matching sky mesh (<code>CreateSkyDome</code>) and <code>SceneSkyMode</code> on the draw item.</p>
+<p>Pair with <code>MeshComponent</code> using matching sky mesh (<code>Mesh::CreateSkyDome</code>) and <code>SceneSkyMode</code> on the draw item. See <code>SkyDemo</code> for box/dome/plane modes and HDR equirect textures.</p>
+<pre><code class="language-cpp">auto skyMesh = MakeShared&lt;Mesh&gt;(Mesh::CreateSkyDome(500.0F, 32, 64));
+auto* skyGo = world.CreateGameObject();
+skyGo-&gt;AddComponent&lt;MeshComponent&gt;(skyMesh, SceneMeshSlot::Custom, Vector3::One);
+skyGo-&gt;AddComponent&lt;SkyComponent&gt;(SceneSkyMode::Dome);
+</code></pre>
 <h2 id="fog">Fog</h2>
 <pre><code class="language-cpp">params.fogEnabled = true;
 params.fogColor = {0.65F, 0.75F, 0.85F};
@@ -432,6 +502,14 @@ params.fogDensity = 0.015F;
                         
                         <li class="toc-h2">
                           <a href="#class-design">Class Design: </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#procedural-terrain-from">Procedural Terrain (from )</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#height-brush-editing">Height Brush Editing</a>
                         </li>
                         
                         <li class="toc-h2">

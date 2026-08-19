@@ -9,7 +9,7 @@ Spark physics is **not** auto-ticked in `Game::OnUpdate`. Your game owns a `Phys
 
 PhysicsSubsystem physics;
 
-void OnLoad() {
+void OnAttach(IEngineContext& context) override {
     physics.GetWorld2D().GetSettings().gravityY = -30.0F;
     physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
     physics.GetWorld3D().GetSettings().substeps = 2;

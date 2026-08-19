@@ -397,8 +397,7 @@ target-&gt;AddComponent&lt;MeshComponent&gt;(unitCube, SceneMeshSlot::Custom, Ve
 auto* mat = target-&gt;AddComponent&lt;MaterialComponent&gt;(nullptr);
 mat-&gt;SetMetallic(0.1F);
 mat-&gt;SetRoughness(0.4F);
-mat-&gt;SetEmissive({1.0F, 0.3F, 0.1F});
-mat-&gt;SetEmissiveStrength(1.5F);
+mat-&gt;SetEmissive({1.0F, 0.3F, 0.1F}, 1.5F);
 
 targets.PushBack(target);
 </code></pre>

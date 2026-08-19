@@ -392,17 +392,52 @@
     Nav --&gt; Path
 </pre>
 <h2 id="entry-point">Entry Point</h2>
-<pre><code class="language-cpp">#include "spark/ai/SimulateGameAi.hpp"
+<pre><code class="language-cpp">#include "spark/ai/GameAiSubsystem.hpp"
 
 void OnUpdate(const FrameTiming&amp; timing, IEngineContext&amp; context) override {
-    // Gameplay input first
-    Game::OnUpdate(timing, context);
+    Game::OnUpdate(timing, context);  // player input, physics, etc.
     SimulateGameAi(GetWorld(), timing, context);
 }
 </code></pre>
 <p><code>SimulateGameAi</code> runs <code>ProcessNavMeshAgents</code> and <code>ProcessPerceptionSensors</code>, then each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
+<h2 id="end-to-end-patrol-guard-from-maze3ddemo">End-to-End: Patrol Guard (from <code>Maze3DDemo</code>)</h2>
+<p>This pattern wires patrol path → nav mesh agent → AI agent → perception sensor:</p>
+<pre><code class="language-cpp">#include "spark/ecs/components/ai/AiAgentComponent.hpp"
+#include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
+#include "spark/ecs/components/ai/PatrolPathComponent.hpp"
+#include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
+
+// Patrol waypoints on a separate object
+GameObject* patrolPathGo = world.CreateGameObject();
+PatrolPathComponent* patrol = patrolPathGo-&gt;AddComponent&lt;PatrolPathComponent&gt;();
+patrol-&gt;SetLooping(true);
+patrol-&gt;GetWaypoints().PushBack(Vector3::Zero);
+patrol-&gt;GetWaypoints().PushBack({leg, 0.0F, 0.0F});
+patrol-&gt;GetWaypoints().PushBack({leg, 0.0F, leg});
+
+// Guard entity
+GameObject* guardGo = world.CreateGameObject();
+guardGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({pathX, 0.85F, pathZ});
+guardGo-&gt;AddComponent&lt;MeshComponent&gt;(unitCube, SceneMeshSlot::UnitCube, Vector3{0.92F, 0.22F, 0.18F});
+
+NavMeshAgentComponent* nav = guardGo-&gt;AddComponent&lt;NavMeshAgentComponent&gt;();
+nav-&gt;SetPatrolPathObject(patrolPathGo);
+
+AiAgentComponent* agent = guardGo-&gt;AddComponent&lt;AiAgentComponent&gt;();
+agent-&gt;SetMaxSpeed(3.2F);
+agent-&gt;SetSteeringPlane(AiSteeringPlane::XzWorld);
+
+PerceptionSensorComponent* perception = guardGo-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
+perception-&gt;SetSightRadius(9.5F);
+perception-&gt;SetSightFovDegrees(130.0F);
+perception-&gt;SetHearingRadius(6.0F);
+</code></pre>
+<p>Each frame in <code>Simulate</code>:</p>
+<pre><code class="language-cpp">physics.SimulateAll3D(world, timing);
+SimulateGameAi(world, timing, context);
+</code></pre>
 <h2 id="class-design-aiagentcomponent">Class Design: <code>AiAgentComponent</code></h2>
-<p>Central ECS hook (<code>spark/ecs/components/AiAgentComponent.hpp</code>):</p>
+<p>Central ECS hook (<code>spark/ecs/components/ai/AiAgentComponent.hpp</code>):</p>
 <table class="table">
 <thead>
 <tr>
@@ -469,6 +504,7 @@ agent-&gt;SetFsm(MakeUnique&lt;FsmStateMachine&gt;(/* ... */));
 </tr>
 </tbody>
 </table>
+<p>See <code>SteeringShowcase3DDemo</code> (SparkDemo) for seek, flee, flock, and ECS patrol examples.</p>
 <p>Next: <a href="02-steering.html">Steering Behaviors</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -491,6 +527,10 @@ agent-&gt;SetFsm(MakeUnique&lt;FsmStateMachine&gt;(/* ... */));
                         
                         <li class="toc-h2">
                           <a href="#entry-point">Entry Point</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#end-to-end-patrol-guard-from">End-to-End: Patrol Guard (from )</a>
                         </li>
                         
                         <li class="toc-h2">

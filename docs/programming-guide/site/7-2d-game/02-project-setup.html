@@ -378,13 +378,23 @@
             <h1>02 project setup</h1>
           </header>
           <div class="doc-body"><h1 id="project-setup">Project Setup</h1>
-<h2 id="copy-template">Copy Template</h2>
-<pre><code class="language-bash">cp -r samples/platformer2d_game_template my_platformer
-</code></pre>
-<h2 id="cmakelists.txt-pattern">CMakeLists.txt Pattern</h2>
+<h2 id="start-from-sparkdemo-patterns">Start from SparkDemo Patterns</h2>
+<p>Create a new executable in the Spark repo (or link against a built <code>SparkEngine</code>):</p>
 <pre><code class="language-cmake">add_executable(Platformer2D src/main.cpp src/Platformer2DGame.cpp)
 target_link_libraries(Platformer2D PRIVATE SparkEngine)
 target_compile_features(Platformer2D PRIVATE cxx_std_23)
+</code></pre>
+<p>Copy structure from <code>Platformer2DDemo</code> — split logic into <code>Load</code>, <code>Simulate</code>, and <code>Render</code> methods, or inline them in <code>OnAttach</code> / <code>OnUpdate</code> / <code>OnRender</code>.</p>
+<h2 id="onattach-checklist"><code>OnAttach</code> Checklist</h2>
+<pre><code class="language-cpp">void Platformer2DGame::OnAttach(IEngineContext&amp; context) override {
+    MountUiFont(GetWorld());  // or MountUiFontIfNeeded helper below
+
+    physics.GetWorld2D().GetSettings().gravityY = -32.0F;
+    physics.GetWorld2D().GetSettings().maxFallSpeed = 46.0F;
+
+    LoadLevel(GetWorld());
+    SpawnPlayer(GetWorld());
+}
 </code></pre>
 <h2 id="font-mounting">Font Mounting</h2>
 <p>UI text requires <code>GameWorld::SetUiFont</code>:</p>
@@ -395,12 +405,34 @@ target_compile_features(Platformer2D PRIVATE cxx_std_23)
         world.SetUiFont(uiFont);
 }
 </code></pre>
-<p>Called from <code>OnAttach</code> before creating <code>TextOverlayComponent</code>.</p>
+<p>Called from <code>OnAttach</code> before creating <code>TextOverlayComponent</code>. <code>Platformer2DDemo</code> calls <code>MountUiFont</code> from <code>spark/demo/DemoFoundation.hpp</code>.</p>
+<h2 id="texture-registration">Texture Registration</h2>
+<pre><code class="language-cpp">auto tex = MakeShared&lt;Texture2D&gt;(Utf8String("Tiles"));
+*tex = Texture2D::CreateCheckerboard(256, 32, colorA, colorB);
+world.RegisterTexture(tex, "my_game/tiles");
+
+go-&gt;AddComponent&lt;SpriteComponent&gt;(tex, Vector4::One, uvRect, sortOrder);
+</code></pre>
 <h2 id="track-roots-for-cleanup">Track Roots for Cleanup</h2>
 <pre><code class="language-cpp">void OnDetach() override {
     for (GameObject* go : roots)
         if (go) GetWorld().DestroyGameObject(go);
     roots.Clear();
+}
+</code></pre>
+<p>Or use <code>DemoRootCollection</code> from <code>spark/demo/DemoFoundation.hpp</code>.</p>
+<h2 id="frame-order">Frame Order</h2>
+<pre><code class="language-cpp">void OnUpdate(const FrameTiming&amp; t, IEngineContext&amp; ctx) override {
+    HandlePlayerInput(t, ctx);
+    Game::OnUpdate(t, ctx);       // component ticks + sound cues
+    physics.Simulate2D(GetWorld(), t);
+    UpdateEnemies(t);
+}
+
+void OnRender(IRenderFrame&amp;, IEngineContext&amp; ctx) override {
+    SubmitStandardLitSceneFromWorldWithCamera(
+        GetWorld(), ctx, sunDir, sunColor, sunIntensity, ambient,
+        false, sceneTime);
 }
 </code></pre>
 <p>Next: <a href="03-level-design.html">Building the Level</a>.</p>
@@ -420,11 +452,11 @@ target_compile_features(Platformer2D PRIVATE cxx_std_23)
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#copy-template">Copy Template</a>
+                          <a href="#start-from-sparkdemo-patterns">Start from SparkDemo Patterns</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#cmakeliststxt-pattern">CMakeLists.txt Pattern</a>
+                          <a href="#checklist"> Checklist</a>
                         </li>
                         
                         <li class="toc-h2">
@@ -432,7 +464,15 @@ target_compile_features(Platformer2D PRIVATE cxx_std_23)
                         </li>
                         
                         <li class="toc-h2">
+                          <a href="#texture-registration">Texture Registration</a>
+                        </li>
+                        
+                        <li class="toc-h2">
                           <a href="#track-roots-for-cleanup">Track Roots for Cleanup</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#frame-order">Frame Order</a>
                         </li>
                         
                   </ul>

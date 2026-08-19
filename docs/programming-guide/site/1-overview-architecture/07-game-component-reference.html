@@ -380,7 +380,7 @@
           <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
 <p>Complete reference for all <strong>70</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
 <p><strong>Includes:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
-<p>**Subsystem tick order (typical frame)😗*</p>
+<p><strong>Subsystem tick order (typical frame):</strong></p>
 <ol>
 <li><code>UpdateGameObjects</code> — component <code>OnUpdate</code> (billboards, springs, …)</li>
 <li><code>PhysicsSubsystem::Simulate2D</code> / <code>SimulateAll3D</code> (+ character controllers, triggers)</li>
@@ -612,6 +612,15 @@ mat-&gt;SetNormalTexture(normalMap);
 mat-&gt;SetMetallicRoughnessTexture(ormMap);
 mat-&gt;SetOpacity(0.85F);  // → transparent pass
 </code></pre>
+<h3 id="multimaterialcomponent"><code>MultiMaterialComponent</code></h3>
+<p><strong>Kind:</strong> <code>Unknown</code> (serialization pending) · <strong>Sibling:</strong> <code>MeshComponent</code> on multi-material glTF meshes</p>
+<p>Per-submesh material slots indexed by <code>MeshSubmesh::materialIndex</code>. Populated from a loaded glTF asset:</p>
+<pre><code class="language-cpp">GltfAsset asset = world.LoadGltf("assets/models/Building.glb");
+go-&gt;AddComponent&lt;MeshComponent&gt;(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
+auto* multi = go-&gt;AddComponent&lt;MultiMaterialComponent&gt;();
+multi-&gt;PopulateFromGltfAsset(asset);
+// Scene submit reads slots when partitioning draws per submesh.
+</code></pre>
 <h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
 <pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/Fox.glb");
@@ -691,8 +700,12 @@ go-&gt;AddComponent&lt;SkyComponent&gt;(SceneSkyMode::Box);
 <h3 id="terraincomponent"><code>TerrainComponent</code></h3>
 <p><strong>Kind:</strong> <code>Terrain</code> · <strong>Consumed by:</strong> Mesh rebuild + raycast</p>
 <pre><code class="language-cpp">TerrainGeneratorSettings settings{};
-settings.gridWidth = 128;
-settings.gridDepth = 128;
+settings.subdivX = 128;
+settings.subdivZ = 128;
+settings.halfExtentX = 56.0F;
+settings.halfExtentZ = 56.0F;
+settings.heightScale = 14.0F;
+settings.noiseScale = 0.055F;
 go-&gt;AddComponent&lt;TerrainComponent&gt;(settings, Vector3{0.4F, 0.55F, 0.35F});
 go-&gt;AddComponent&lt;MaterialComponent&gt;(grassTex);
 </code></pre>
@@ -702,7 +715,7 @@ go-&gt;AddComponent&lt;MaterialComponent&gt;(grassTex);
 pe-&gt;SetEmitterEnabled(true);
 pe-&gt;SetMaxParticles(256);
 pe-&gt;SetEmissionRate(40.0F);
-pe-&gt;SetStartColor({1.0F, 0.6F, 0.1F, 1.0F});
+pe-&gt;SetStartEndColor({1.0F, 0.6F, 0.1F, 1.0F}, {0.85F, 0.05F, 0.0F, 0.0F});
 pe-&gt;SetGravity({0.0F, -4.0F, 0.0F});
 </code></pre>
 <h3 id="billboardcomponent"><code>BillboardComponent</code></h3>
@@ -1067,7 +1080,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <hr>
 <h2 id="world">World</h2>
 <h3 id="scenespatialpolicycomponent"><code>SceneSpatialPolicyComponent</code></h3>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::Bvh);
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::BoundingVolumeHierarchy);
 </code></pre>
 <p>Affects <code>Scene::ForEachDrawableInViewFrustum</code> partition strategy.</p>
 <h3 id="timeofdaydrivercomponent"><code>TimeOfDayDriverComponent</code></h3>

@@ -63,7 +63,7 @@ cmake --build cmake-build-debug -j
 
 See [`README.md`](../README.md), [`docs/CLION.md`](CLION.md), and [`.run/README.md`](../.run/README.md) for CLion profiles and run configs.
 
-External games: [`game_template/`](../game_template/README.md), [`samples/`](../samples/) — set `SPARK_ROOT` to this repo.
+External games: link against `SparkEngine` from your own CMake target (see programming guide [Building and Running](programming-guide/1-overview-architecture/03-building-and-running.md)). Copy patterns from `src/spark/demo/` — `Platformer2DDemo` for 2D, `CharacterCameraDemo` for 3D.
 
 ---
 

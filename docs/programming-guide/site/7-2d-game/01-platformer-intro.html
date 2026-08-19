@@ -378,26 +378,35 @@
             <h1>01 platformer intro</h1>
           </header>
           <div class="doc-body"><h1 id="platformer-introduction">Platformer Introduction</h1>
-<p>We walk through <code>samples/platformer2d_game_template/</code> — a complete side-scroller with:</p>
+<p>We walk through the <strong>2D platformer</strong> built into SparkDemo (<code>Platformer2DDemo</code>, launcher item <strong>#6</strong>) — source in <code>src/spark/demo/Platformer2DDemo.cpp</code> and <code>src/spark/demo/platformer2d/</code>. It is a complete side-scroller with:</p>
 <ul>
-<li>Procedural checker tile art (no external sprites required)</li>
-<li><code>Camera2D</code> with smooth follow</li>
+<li>Kenney tile atlas (checkerboard fallback when assets are missing)</li>
+<li><code>Camera2DRigComponent</code> smooth follow</li>
 <li><code>Rigidbody2DComponent</code> player + static platforms</li>
+<li>Enemy squad with <code>AiAgentComponent</code> and bullets</li>
 <li>HUD via <code>TextOverlayComponent</code></li>
-<li>Goal reach detection</li>
+<li>Goal reach detection and gem collection</li>
+<li>Sound cues and BGM via <code>TryLoadSoundClipFromBundledAsset</code></li>
 </ul>
-<h2 id="class-design-platformer2dgame">Class Design: <code>Platformer2DGame</code></h2>
-<pre><code class="language-cpp">class Platformer2DGame final : public Game {
-    Camera2D camera{};
-    SharedPtr&lt;Texture2D&gt; tileTex{};
-    Array&lt;GameObject*&gt; roots{};
-    GameObject* playerObject = nullptr;
-    TransformComponent* playerTr = nullptr;
-    Rigidbody2DComponent* playerRb = nullptr;
-    TextOverlayComponent* hudText = nullptr;
+<h2 id="class-design-platformer2ddemo">Class Design: <code>Platformer2DDemo</code></h2>
+<p>The demo uses <strong>Load / Simulate / Render</strong> helpers (same pattern you can copy into your own <code>IGame</code>):</p>
+<pre><code class="language-cpp">class Platformer2DDemo {
+    Spark::PhysicsSubsystem physics;
+    Spark::DemoRootCollection roots;
+    Spark::GameObject* playerObject = nullptr;
+    Spark::TransformComponent* playerTr = nullptr;
+    Spark::Rigidbody2DComponent* playerRb = nullptr;
+    Spark::TextOverlayComponent* hudText = nullptr;
+    // ...
+
+public:
+    void Load(Spark::GameWorld&amp; w, Spark::IEngineContext&amp; context);
+    void Simulate(const Spark::FrameTiming&amp; timing, Spark::IEngineContext&amp; context, Spark::GameWorld&amp; world);
+    void Render(Spark::Scene&amp; scene, Spark::GameWorld&amp; world, Spark::IEngineContext&amp; context);
 };
 </code></pre>
-<h2 id="entry-point">Entry Point</h2>
+<p>Wrap it in a <code>Game</code> subclass or call the helpers from <code>OnAttach</code> / <code>OnUpdate</code> / <code>OnRender</code>.</p>
+<h2 id="minimal-external-game-entry-point">Minimal External Game Entry Point</h2>
 <pre><code class="language-cpp">#include "spark/engine/Engine.hpp"
 #include "Platformer2DGame.hpp"
 
@@ -407,12 +416,13 @@ int main() {
     return 0;
 }
 </code></pre>
-<h2 id="constants-sample">Constants (Sample)</h2>
+<h2 id="constants-from-platformer2dconfig.hpp">Constants (from <code>platformer2d/Config.hpp</code>)</h2>
 <pre><code class="language-cpp">constexpr float kRunSpeed = 9.0F;
 constexpr float kJumpSpeed = 11.5F;
 constexpr float kGroundTopY = -1.0F;
 constexpr float kGoalMinX = 15.5F;
 </code></pre>
+<p>Study <code>Platformer2DDemo::Load</code> for texture registration, player spawn, and level geometry. Study <code>Simulate</code> for input, shooting, enemy AI, and physics stepping order.</p>
 <p>Next: <a href="02-project-setup.html">Project Setup</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -434,11 +444,11 @@ constexpr float kGoalMinX = 15.5F;
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#entry-point">Entry Point</a>
+                          <a href="#minimal-external-game-entry-point">Minimal External Game Entry Point</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#constants-sample">Constants (Sample)</a>
+                          <a href="#constants-from">Constants (from )</a>
                         </li>
                         
                   </ul>

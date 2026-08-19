@@ -412,6 +412,29 @@ bb.SetFloat(0, targetPos.x);  // slot 0 = target X
 bb.SetFloat(1, targetPos.z);  // slot 1 = target Z
 </code></pre>
 <p>Behaviors read slots in <code>ComputeAcceleration</code>.</p>
+<h2 id="ecs-patrol-agent-from-steeringshowcase3ddemo">ECS Patrol Agent (from <code>SteeringShowcase3DDemo</code>)</h2>
+<p>For nav-mesh patrol without manual steering math, combine <code>PatrolPathComponent</code> + <code>NavMeshAgentComponent</code> + <code>AiAgentComponent</code>:</p>
+<pre><code class="language-cpp">GameObject* pathGo = world.CreateGameObject();
+pathGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({-14.0F, 0.0F, -12.0F});
+PatrolPathComponent* patrol = pathGo-&gt;AddComponent&lt;PatrolPathComponent&gt;();
+patrol-&gt;SetLooping(true);
+const float leg = 5.0F;
+patrol-&gt;GetWaypoints().PushBack(Vector3::Zero);
+patrol-&gt;GetWaypoints().PushBack({leg, 0.0F, 0.0F});
+patrol-&gt;GetWaypoints().PushBack({leg, 0.0F, leg});
+patrol-&gt;GetWaypoints().PushBack({0.0F, 0.0F, leg});
+
+GameObject* agentGo = world.CreateGameObject();
+agentGo-&gt;GetComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({-14.0F, 0.55F, -12.0F});
+NavMeshAgentComponent* nav = agentGo-&gt;AddComponent&lt;NavMeshAgentComponent&gt;();
+nav-&gt;SetPatrolPathObject(pathGo);
+AiAgentComponent* agent = agentGo-&gt;AddComponent&lt;AiAgentComponent&gt;();
+agent-&gt;SetMaxSpeed(2.8F);
+agent-&gt;SetSteeringPlane(AiSteeringPlane::XzWorld);
+
+// Each frame:
+SimulateGameAi(world, timing, context);
+</code></pre>
 <h2 id="apply-to-rigidbody">Apply to Rigidbody</h2>
 <pre><code class="language-cpp">Vector2 vel = rb-&gt;GetVelocity();
 vel += accel * timing.deltaTimeSeconds;
@@ -444,6 +467,10 @@ rb-&gt;SetVelocity(vel);
                         
                         <li class="toc-h2">
                           <a href="#blackboard-targets">Blackboard Targets</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#ecs-patrol-agent-from">ECS Patrol Agent (from )</a>
                         </li>
                         
                         <li class="toc-h2">

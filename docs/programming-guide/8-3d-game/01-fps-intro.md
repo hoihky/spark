@@ -1,11 +1,19 @@
 # FPS Introduction
 
-`samples/fps_game_template/` demonstrates a minimal **first-person arena**:
+SparkDemo includes several 3D first-person references — there is no separate `samples/` tree in the repository. Use these as templates:
+
+| Demo | Launcher # | Highlights |
+|------|------------|------------|
+| `CharacterCameraDemo` | 5 | 3rd/1st person, `CharacterController3DComponent`, spring arm |
+| `PhysicsBallThrow3DDemo` | 11 | 3D physics, throwing, cursor capture |
+| `Maze3DDemo` | 9 | Nav mesh guard, perception, gems, fly camera |
+
+This walkthrough describes a **minimal first-person arena** you can build by combining patterns from those demos:
 
 - `FlyCamera` with cursor capture
 - Lit PBR cubes and ground plane
 - LMB spawns emissive tracer bullets
-- Custom ray-sphere hitscan (no physics middleware for shooting)
+- `TryRaycastSphereWorld` hitscan (no physics middleware for shooting)
 
 ## Class Design: `FpsGame`
 
@@ -25,5 +33,7 @@ struct TracerBullet {
     float timeLeft = 0.0F;
 };
 ```
+
+Reference implementations: `CharacterCameraDemo.cpp` (camera + character), `SceneEditor3DDemo.cpp` (ray picking with `TryRaycastSphereWorld`).
 
 Next: [Project Setup](02-project-setup.md).

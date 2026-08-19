@@ -49,6 +49,21 @@ public:
 
 `ApplyMaterialComponentToSceneDrawItem()` copies PBR fields into `SceneDrawItem`.
 
+## Multi-Material glTF
+
+For assets with multiple material slots per mesh:
+
+```cpp
+GltfAsset building = world.LoadGltf("assets/models/Building.glb");
+auto* go = world.CreateGameObject();
+go->AddComponent<TransformComponent>();
+go->AddComponent<MeshComponent>(building.mesh, SceneMeshSlot::Custom, Vector3::One);
+auto* multi = go->AddComponent<MultiMaterialComponent>();
+multi->PopulateFromGltfAsset(building);
+```
+
+`ThreeDDemo` and `SkyDemo` use `MultiMaterialComponent` for glTF props with per-submesh textures.
+
 ## Spawn a Lit glTF Prop
 
 ```cpp

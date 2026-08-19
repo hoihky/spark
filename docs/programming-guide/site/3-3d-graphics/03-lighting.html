@@ -396,29 +396,78 @@
 <td><code>SceneSpotLight</code> (cone angles, direction)</td>
 </tr>
 <tr>
+<td><code>DirectionalLightComponent</code></td>
+<td>Overrides sun direction/color on submit</td>
+</tr>
+<tr>
 <td>Sun (global)</td>
-<td>Passed to <code>FillStandardLitSceneFromWorld</code></td>
+<td>Passed to <code>FillStandardLitSceneFromWorld</code> or <code>SubmitStandardLitSceneFromWorldWithCamera</code></td>
 </tr>
 </tbody>
 </table>
-<pre><code class="language-cpp">auto* lamp = world.CreateGameObject();
+<pre><code class="language-cpp">#include "spark/ecs/components/lighting/PointLightComponent.hpp"
+#include "spark/ecs/components/lighting/SpotLightComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
+
+auto* lamp = world.CreateGameObject();
 lamp-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({3, 2, 0});
 auto* pl = lamp-&gt;AddComponent&lt;PointLightComponent&gt;();
 pl-&gt;SetColor({1.0F, 0.85F, 0.6F});
 pl-&gt;SetIntensity(4.0F);
 pl-&gt;SetRange(12.0F);
 pl-&gt;SetCastsShadow(true);
+
+// Spot light — local −Z is the beam axis
+auto* spotGo = world.CreateGameObject();
+auto* str = spotGo-&gt;AddComponent&lt;TransformComponent&gt;();
+str-&gt;SetTranslation({0, 4, 0});
+str-&gt;SetRotationEuler({DegreesToRadians(-45.0F), 0, 0});
+auto* sl = spotGo-&gt;AddComponent&lt;SpotLightComponent&gt;();
+sl-&gt;SetColor({0.9F, 0.95F, 1.0F});
+sl-&gt;SetIntensity(6.0F);
+sl-&gt;SetRange(18.0F);
+sl-&gt;SetInnerConeDegrees(12.0F);
+sl-&gt;SetOuterConeDegrees(28.0F);
+sl-&gt;SetCastsShadow(true);
 </code></pre>
-<h2 id="submit-with-lighting-arguments">Submit with Lighting Arguments</h2>
-<pre><code class="language-cpp">SubmitStandardLitSceneFromWorld(
-GetWorld(), context, viewProj, camera.position,
-Vector3{0.25F, -1.0F, 0.15F}.Normalized(),  // directional "sun"
-Vector3{1.0F, 0.97F, 0.92F},                 // sun color
-3.5F,                                        // sun intensity
-Vector3{0.12F, 0.14F, 0.20F},               // ambient hemisphere
-true,                                        // particles
-camRight, camUp, sceneTime);
+<h2 id="complete-lit-scene-from-threeddemo-materialshowcase3ddemo">Complete Lit Scene (from <code>ThreeDDemo</code> / <code>MaterialShowcase3DDemo</code>)</h2>
+<p>Spawn meshes and lights in <code>OnAttach</code>, then submit each frame:</p>
+<pre><code class="language-cpp">void OnRender(IRenderFrame&amp;, IEngineContext&amp; ctx) override {
+    SubmitStandardLitSceneFromWorldWithCamera(
+        GetWorld(), ctx,
+        Vector3{0.25F, -1.0F, 0.15F}.Normalized(),  // sun direction
+        Vector3{1.0F, 0.97F, 0.92F},                 // sun color
+        3.5F,                                        // sun intensity
+        Vector3{0.12F, 0.14F, 0.20F},               // ambient hemisphere
+        true,                                        // collect particles
+        sceneTime);
+}
 </code></pre>
+<p>For manual camera control (fly camera, custom projection):</p>
+<pre><code class="language-cpp">int w = 1, h = 1;
+ctx.GetFramebufferSize(w, h);
+const float aspect = static_cast&lt;float&gt;(w) / static_cast&lt;float&gt;(h);
+const Matrix4 proj = Matrix4::PerspectiveVulkan(DegreesToRadians(70.0F), aspect, 0.1F, 500.0F);
+const Matrix4 vp = proj * camera.ViewMatrix();
+Vector3 camRight{}, camUp{};
+camera.BillboardBasis(camRight, camUp);
+
+SubmitStandardLitSceneFromWorld(
+    GetWorld(), ctx, vp, camera.position,
+    Vector3{0.25F, -1.0F, 0.15F}.Normalized(),
+    Vector3{1.0F, 0.97F, 0.92F}, 3.5F,
+    Vector3{0.12F, 0.14F, 0.20F},
+    true, camRight, camUp, sceneTime);
+</code></pre>
+<p><code>FillStandardLitSceneFromWorld</code> walks the world and fills <code>SceneRenderParams</code> — point/spot lights from components, sky, sprites, skinned meshes, particles, fog/post volumes, and time-of-day drivers.</p>
+<h2 id="emissive-materials-as-local-lights">Emissive Materials as Local Lights</h2>
+<p>Use <code>MaterialComponent::SetEmissive</code> for glowing props (no extra light component needed):</p>
+<pre><code class="language-cpp">if (MaterialComponent* mat = target-&gt;AddComponent&lt;MaterialComponent&gt;()) {
+    mat-&gt;SetEmissive({0.95F, 0.28F, 0.12F}, 2.4F);
+    mat-&gt;SetRoughness(0.4F);
+}
+</code></pre>
+<p>See <code>Maze3DDemo</code> gem pickups and guard mesh for this pattern.</p>
 <h2 id="clustered-forward">Clustered Forward</h2>
 <p><code>VulkanRenderer</code> packs up to <strong>256 point</strong> and <strong>128 spot</strong> lights per frame via clustered shading (<code>VulkanClusteredForwardLights</code>).</p>
 <h2 id="scene-lighting-profile">Scene Lighting Profile</h2>
@@ -445,7 +494,11 @@ camRight, camUp, sceneTime);
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#submit-with-lighting-arguments">Submit with Lighting Arguments</a>
+                          <a href="#complete-lit-scene-from">Complete Lit Scene (from  / )</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#emissive-materials-as-local-lights">Emissive Materials as Local Lights</a>
                         </li>
                         
                         <li class="toc-h2">

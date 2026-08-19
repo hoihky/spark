@@ -45,9 +45,9 @@ public:
 #include "spark/engine/Game.hpp"
 #include "spark/scene/SceneSubmit.hpp"
 #include "spark/scene/FlyCamera.hpp"
-#include "spark/ecs/components/MeshComponent.hpp"
-#include "spark/ecs/components/MaterialComponent.hpp"
-#include "spark/ecs/components/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
 
 class LitCubeGame final : public Spark::Game {
     Spark::FlyCamera camera{};
@@ -98,6 +98,83 @@ void OnDetach() override {
     for (GameObject* go : roots)
         if (go) GetWorld().DestroyGameObject(go);
     roots.Clear();
+}
+```
+
+## 2D Platformer Pattern (from `Platformer2DDemo`)
+
+Most SparkDemo games split setup across **Load / Simulate / Render** helpers. A minimal 2D game using the same ideas:
+
+```cpp
+class PlatformerGame final : public Spark::Game {
+    Spark::PhysicsSubsystem physics;
+    Spark::Array<Spark::GameObject*> roots;
+
+public:
+    void OnAttach(Spark::IEngineContext& ctx) override {
+        Spark::MountUiFont(GetWorld());  // required for TextOverlayComponent
+        auto& w = GetWorld();
+
+        physics.GetWorld2D().GetSettings().gravityY = -32.0F;
+
+        // Player
+        auto* player = w.CreateGameObject();
+        roots.PushBack(player);
+        player->AddComponent<Spark::TransformComponent>()->SetTranslation({0, 0, 0});
+        player->AddComponent<Spark::Rigidbody2DComponent>();
+        player->AddComponent<Spark::BoxCollider2DComponent>();
+
+        // Ground platform
+        auto* ground = w.CreateGameObject();
+        roots.PushBack(ground);
+        auto* gtr = ground->AddComponent<Spark::TransformComponent>();
+        gtr->SetTranslation({0, -1.5F, 0});
+        gtr->SetScale({20.0F, 1.0F, 1.0F});
+        ground->AddComponent<Spark::BoxCollider2DComponent>();
+    }
+
+    void OnUpdate(const Spark::FrameTiming& t, Spark::IEngineContext& ctx) override {
+        Spark::Game::OnUpdate(t, ctx);  // ticks components + sound cues
+        physics.Simulate2D(GetWorld(), t);
+    }
+
+    void OnRender(Spark::IRenderFrame&, Spark::IEngineContext& ctx) override {
+        Spark::SubmitStandardLitSceneFromWorldWithCamera(
+            GetWorld(), ctx,
+            Spark::Vector3{0.3F, -0.9F, 0.2F}.Normalized(),
+            Spark::Vector3{1.0F, 0.98F, 0.95F}, 1.0F,
+            Spark::Vector3{0.15F, 0.17F, 0.22F},
+            false, 0.0F);
+    }
+
+    void OnDetach() override {
+        for (Spark::GameObject* go : roots)
+            if (go) GetWorld().DestroyGameObject(go);
+        roots.Clear();
+    }
+};
+```
+
+`SubmitStandardLitSceneFromWorldWithCamera` resolves the main `Camera2DComponent` or `CameraComponent` in the world — add one to the scene if you use this shortcut.
+
+## Asset Loading
+
+Register meshes and textures with cache keys before attaching components:
+
+```cpp
+auto mesh = Spark::MakeShared<Spark::Mesh>(Spark::Mesh::CreateUnitCube());
+world.RegisterMesh(mesh, "my_game/cube");
+
+auto tex = Spark::MakeShared<Spark::Texture2D>(/* ... */);
+world.RegisterTexture(tex, "my_game/tiles");
+
+// Async glTF (preferred for large models):
+world.RequestGltf("assets/models/Fox.glb");
+// Each frame until ready:
+world.PumpAssets();
+if (world.IsGltfReady("assets/models/Fox.glb")) {
+    Spark::GltfAsset asset = world.LoadGltf("assets/models/Fox.glb");
+    // spawn SkinnedMeshComponent + AnimatorComponent ...
 }
 ```
 

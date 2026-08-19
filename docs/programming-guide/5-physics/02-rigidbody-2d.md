@@ -28,7 +28,7 @@ Configure physics once, then step each frame:
 
 PhysicsSubsystem physics;
 
-void OnLoad() {
+void OnAttach(IEngineContext& context) override {
     physics.GetWorld2D().GetSettings().gravityY = -30.0F;
     physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
 }

@@ -510,7 +510,31 @@ void ForEachSprite(const SpriteFn&amp; fn);
 void ForEachTilemap(const TilemapFn&amp; fn);
 void ForEachPointLight(const PointLightFn&amp; fn);
 void ForEachUiCanvas(Fn&amp;&amp; fn);
-void SetSpatialPartitionKind(ScenePartitionKind kind);  // UniformGrid or BVH
+void SetSpatialPartitionKind(ScenePartitionKind kind);  // BruteForce, BVH, Octree, QuadTree, ...
+</code></pre>
+<h2 id="world-queries">World Queries</h2>
+<p>Find entities by tag or component set:</p>
+<pre><code class="language-cpp">GameObject* player = world.FindGameObjectWithTag("player");
+
+world.ForEachGameObjectWithComponents&lt;MeshComponent, MaterialComponent&gt;(
+    [](GameObject* go) {
+        // visit every lit mesh
+    });
+
+Camera2DComponent* cam2d = world.FindFirstGameObjectWithComponents&lt;Camera2DComponent&gt;()
+    ?-&gt;GetComponent&lt;Camera2DComponent&gt;();
+</code></pre>
+<p>Tags are set with <code>go-&gt;SetTag("enemy")</code> and queried at runtime without maintaining your own maps.</p>
+<h2 id="hierarchy">Hierarchy</h2>
+<p>Parent transforms compose into world matrices automatically:</p>
+<pre><code class="language-cpp">GameObject* root = world.CreateGameObject();
+GameObject* child = world.CreateGameObject();
+world.SetParent(child, root);
+
+auto* rootTr = root-&gt;AddComponent&lt;TransformComponent&gt;();
+rootTr-&gt;SetTranslation({10, 0, 0});
+auto* childTr = child-&gt;AddComponent&lt;TransformComponent&gt;();
+childTr-&gt;SetTranslation({0, 2, 0});  // world position ≈ (10, 2, 0)
 </code></pre>
 <h2 id="signals-example">Signals Example</h2>
 <pre><code class="language-cpp">// TransformComponent emits SignalId::TransformChanged
@@ -576,6 +600,14 @@ context.SetSceneRenderParams(params);
                         
                         <li class="toc-h2">
                           <a href="#class-design">Class Design: </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#world-queries">World Queries</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#hierarchy">Hierarchy</a>
                         </li>
                         
                         <li class="toc-h2">

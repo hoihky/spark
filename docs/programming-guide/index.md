@@ -33,10 +33,10 @@ A comprehensive developer guide for building **2D and 3D games** with Spark — 
 |------|------|
 | `include/spark/` | Public API |
 | `src/spark/` | Implementations |
-| `samples/platformer2d_game_template/` | 2D game sample |
-| `samples/fps_game_template/` | 3D FPS sample |
+| `src/spark/demo/Platformer2DDemo.cpp` | Full 2D platformer reference (`Platformer2DDemo` in SparkDemo **#6**) |
+| `src/spark/demo/CharacterCameraDemo.cpp` | 3D character + camera rig reference |
 | `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md` | Contributor deep-dive |
-| `docs/programming-guide/1-overview-architecture/07-game-component-reference.md` | All 64 `GameComponent` types + examples |
+| `docs/programming-guide/1-overview-architecture/07-game-component-reference.md` | All built-in `GameComponent` types + examples |
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j

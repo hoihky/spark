@@ -378,13 +378,11 @@
             <h1>02 project setup</h1>
           </header>
           <div class="doc-body"><h1 id="project-setup">Project Setup</h1>
-<pre><code class="language-bash">cp -r samples/fps_game_template my_fps
-</code></pre>
+<p>Create a new <code>Game</code> subclass and link against <code>SparkEngine</code>. Reference <code>CharacterCameraDemo</code> and <code>PhysicsBallThrow3DDemo</code> in <code>src/spark/demo/</code> for working 3D setups.</p>
 <h2 id="onattach-essentials">OnAttach Essentials</h2>
 <pre><code class="language-cpp">void FpsGame::OnAttach(IEngineContext&amp; context) {
-    MountUiFontIfNeeded(GetWorld());
+    MountUiFont(GetWorld());
     context.GetInput().SetCursorCaptured(true);
-    glfwSetWindowTitle(context.GetWindow().Handle(), "My FPS");
 
     unitCube = MakeShared&lt;Mesh&gt;(Mesh::CreateUnitCube());
     groundMesh = MakeShared&lt;Mesh&gt;(Mesh::CreateGroundPlane(24.0F));
@@ -392,13 +390,32 @@
     GetWorld().RegisterMesh(groundMesh, "fps/ground");
 
     SpawnArena(GetWorld());
+    camera.position = {0.0F, 1.7F, 8.0F};
+    camera.moveSpeed = 8.0F;
+    camera.mouseSensitivity = 0.12F;
 }
+</code></pre>
+<h2 id="cmake-target">CMake Target</h2>
+<pre><code class="language-cmake">add_executable(MyFps src/main.cpp src/FpsGame.cpp)
+target_link_libraries(MyFps PRIVATE SparkEngine)
+target_compile_features(MyFps PRIVATE cxx_std_23)
 </code></pre>
 <h2 id="mesh-registration-pattern">Mesh Registration Pattern</h2>
 <p>Always register custom meshes before <code>MeshComponent</code> references them:</p>
 <pre><code class="language-cpp">world.RegisterMesh(mesh, "unique/key");
 go-&gt;AddComponent&lt;MeshComponent&gt;(mesh, SceneMeshSlot::Custom, albedo);
 </code></pre>
+<h2 id="physics-optional">Physics (Optional)</h2>
+<p>If using thrown objects or character controllers:</p>
+<pre><code class="language-cpp">PhysicsSubsystem physics;
+
+void OnUpdate(const FrameTiming&amp; t, IEngineContext&amp; ctx) override {
+    // movement + shooting ...
+    Game::OnUpdate(t, ctx);
+    physics.SimulateAll3D(GetWorld(), t);
+}
+</code></pre>
+<p>See <code>PhysicsBallThrow3DDemo</code> for rigidbody spheres and <code>CharacterCameraDemo</code> for <code>CharacterController3DComponent</code>.</p>
 <p>Next: <a href="03-arena.html">Arena and Targets</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -420,7 +437,15 @@ go-&gt;AddComponent&lt;MeshComponent&gt;(mesh, SceneMeshSlot::Custom, albedo);
                         </li>
                         
                         <li class="toc-h2">
+                          <a href="#cmake-target">CMake Target</a>
+                        </li>
+                        
+                        <li class="toc-h2">
                           <a href="#mesh-registration-pattern">Mesh Registration Pattern</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#physics-optional">Physics (Optional)</a>
                         </li>
                         
                   </ul>

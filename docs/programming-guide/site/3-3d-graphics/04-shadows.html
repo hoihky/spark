@@ -378,26 +378,49 @@
             <h1>04 shadows</h1>
           </header>
           <div class="doc-body"><h1 id="shadows">Shadows</h1>
-<h2 id="directional-csm">Directional CSM</h2>
-<p>Cascaded shadow maps for the sun direction — configured on <code>SceneRenderParams</code>:</p>
-<pre><code class="language-cpp">params.enableDirectionalShadows = true;
+<h2 id="quick-start-shadow-enabled-scene">Quick Start: Shadow-Enabled Scene</h2>
+<p>The simplest path is <code>SubmitStandardLitSceneFromWorldWithCamera</code> with a directional sun and shadow-casting punctual lights on entities:</p>
+<pre><code class="language-cpp">// 1. Sun direction + intensity passed to submit (enables directional CSM when renderer settings allow)
+SubmitStandardLitSceneFromWorldWithCamera(
+    GetWorld(), ctx,
+    Vector3{0.3F, -1.0F, 0.2F}.Normalized(),
+    Vector3{1.0F, 0.98F, 0.95F}, 1.4F,
+    Vector3{0.14F, 0.16F, 0.22F},
+    true, sceneTime);
+
+// 2. Punctual shadows on individual lights
+auto* pl = lamp-&gt;AddComponent&lt;PointLightComponent&gt;();
+pl-&gt;SetCastsShadow(true);
+
+auto* sl = spotGo-&gt;AddComponent&lt;SpotLightComponent&gt;();
+sl-&gt;SetCastsShadow(true);
+</code></pre>
+<p>Opaque <code>MeshComponent</code> draws cast shadows by default. Budget shadow-casting punctual lights — each adds GPU cost.</p>
+<h2 id="directional-csm-manual-scenerenderparams">Directional CSM (Manual <code>SceneRenderParams</code>)</h2>
+<p>When building params yourself (e.g. <code>ThreeDDemo</code>), configure shadow fields:</p>
+<pre><code class="language-cpp">SceneRenderParams params{};
+params.enableDirectionalShadows = true;
 params.shadowCascadeCount = 4;
 params.shadowMapResolution = 2048;
 params.shadowBias = 0.002F;
 params.shadowNormalBias = 0.02F;
+params.directionalShadowsEnabled = true;
+// ... fill draws, lights, viewProjection ...
+context.SetSceneRenderParams(params);
 </code></pre>
-<p>When using <code>SubmitStandardLitSceneFromWorld</code>, enable shadows via the directional light setup and ensure meshes cast shadows (default for opaque draws).</p>
+<p>When using <code>SubmitStandardLitSceneFromWorld</code>, directional shadows follow the sun vector you pass and renderer defaults.</p>
 <h2 id="punctual-light-shadows">Punctual Light Shadows</h2>
 <pre><code class="language-cpp">pl-&gt;SetCastsShadow(true);   // PointLightComponent
 sl-&gt;SetCastsShadow(true);   // SpotLightComponent
 </code></pre>
-<p>GPU cost scales with shadow-casting light count — budget carefully.</p>
+<p>GPU cost scales with shadow-casting light count — budget carefully. See <code>TimeOfDayDemo</code> and <code>MaterialShowcase3DDemo</code> in SparkDemo.</p>
 <h2 id="toon-shading-shadows">Toon Shading + Shadows</h2>
 <pre><code class="language-cpp">mat-&gt;SetShadingModel(SceneShadingModel::ToonCel);
-mat-&gt;SetToonSteps(3);
-mat-&gt;SetToonSmoothness(0.1F);
+mat-&gt;SetToonDiffuseBands(3);
+mat-&gt;SetToonRimIntensity(0.35F);
+mat-&gt;SetToonRimPower(2.5F);
 </code></pre>
-<p>Toon materials still receive shadow terms — see <code>ToonShadingDemo</code>.</p>
+<p>Toon materials still receive shadow terms — see <code>ToonShadingDemo</code> (SparkDemo).</p>
 <h2 id="debugging-shadow-artifacts">Debugging Shadow Artifacts</h2>
 <table class="table">
 <thead>
@@ -438,7 +461,11 @@ mat-&gt;SetToonSmoothness(0.1F);
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#directional-csm">Directional CSM</a>
+                          <a href="#quick-start-shadow-enabled-scene">Quick Start: Shadow-Enabled Scene</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#directional-csm-manual">Directional CSM (Manual )</a>
                         </li>
                         
                         <li class="toc-h2">

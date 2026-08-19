@@ -391,37 +391,65 @@
     Game::OnUpdate(timing, context);
 }
 </code></pre>
+<p>Press <strong>F1</strong> or right-click to toggle cursor capture (pattern from <code>CharacterCameraDemo</code>).</p>
 <h2 id="hitscan-ray-vs-sphere">Hitscan Ray vs Sphere</h2>
-<pre><code class="language-cpp">void TryShootTarget(IEngineContext&amp; context) {
+<p>Use <code>TryRaycastSphereWorld</code> from <code>spark/scene/MeshRaycast.hpp</code>. World position comes from the transform's world matrix:</p>
+<pre><code class="language-cpp">#include "spark/scene/MeshRaycast.hpp"
+
+void TryShootTarget(IEngineContext&amp; context) {
     const Vector3 origin = camera.position;
-    const Vector3 dir = camera.Forward();
+    const Vector3 dir = camera.Forward().Normalized();
     ++shotsFired;
 
     float bestT = 1e9F;
     GameObject* best = nullptr;
     for (GameObject* t : targets) {
-        Vector3 center = t-&gt;GetComponent&lt;TransformComponent&gt;()-&gt;GetWorldPosition();
-        float hitT = RaySphereNearestT(origin, dir, center, 0.6F);
-        if (hitT &gt; 0.0F &amp;&amp; hitT &lt; bestT) { bestT = hitT; best = t; }
+        TransformComponent* tr = t-&gt;GetComponent&lt;TransformComponent&gt;();
+        if (!tr) continue;
+        const Vector3 center = tr-&gt;GetWorldMatrix().GetTranslation();
+        float hitT = 0.0F;
+        if (TryRaycastSphereWorld(origin, dir, center, 0.6F, 1.0e-4F, bestT, hitT)) {
+            if (hitT &gt; 0.0F &amp;&amp; hitT &lt; bestT) {
+                bestT = hitT;
+                best = t;
+            }
+        }
     }
     if (best) ++hits;
     SpawnTracerBullet(origin, dir);
 }
 </code></pre>
+<p>For mesh-accurate picking, use <code>Scene::RaycastPick</code> or <code>TryRaycastMeshWorld</code> — see <code>SceneEditor3DDemo</code>.</p>
 <h2 id="tracer-entity">Tracer Entity</h2>
 <pre><code class="language-cpp">void SpawnTracerBullet(const Vector3&amp; origin, const Vector3&amp; dirUnit) {
     GameObject* go = GetWorld().CreateGameObject();
     go-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation(origin);
     go-&gt;AddComponent&lt;MeshComponent&gt;(unitCube, SceneMeshSlot::Custom, Vector3::One);
-    auto* mat = go-&gt;AddComponent&lt;MaterialComponent&gt;(nullptr);
-    mat-&gt;SetEmissive({1.0F, 0.9F, 0.4F});
-    mat-&gt;SetEmissiveStrength(4.0F);
+    if (MaterialComponent* mat = go-&gt;AddComponent&lt;MaterialComponent&gt;()) {
+        mat-&gt;SetEmissive({1.0F, 0.9F, 0.4F}, 4.0F);
+    }
 
     TracerBullet tb{};
     tb.go = go;
     tb.velocity = dirUnit * 48.0F;
     tb.timeLeft = 0.35F;
     tracers.PushBack(tb);
+}
+</code></pre>
+<h2 id="update-tracers">Update Tracers</h2>
+<pre><code class="language-cpp">void UpdateTracerBullets(float dt) {
+    for (std::size_t i = 0; i &lt; tracers.GetSize();) {
+        TracerBullet&amp; tb = tracers[i];
+        tb.timeLeft -= dt;
+        if (tb.timeLeft &lt;= 0.0F || tb.go == nullptr) {
+            if (tb.go) GetWorld().DestroyGameObject(tb.go);
+            tracers.EraseAt(i);
+            continue;
+        }
+        TransformComponent* tr = tb.go-&gt;GetComponent&lt;TransformComponent&gt;();
+        tr-&gt;SetTranslation(tr-&gt;GetLocalTransform().translation + tb.velocity * dt);
+        ++i;
+    }
 }
 </code></pre>
 <p>Next: <a href="05-rendering.html">Rendering the 3D Scene</a>.</p>
@@ -450,6 +478,10 @@
                         
                         <li class="toc-h2">
                           <a href="#tracer-entity">Tracer Entity</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#update-tracers">Update Tracers</a>
                         </li>
                         
                   </ul>

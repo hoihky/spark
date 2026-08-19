@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lighting & Shadows · Spark Game Engine</title>
+  <meta name="description" content="Lighting & shadows — feature plan and implementation status">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="lighting-shadows-feature-plan-and-implementation-status">Lighting &amp; shadows — feature plan and implementation status</h1>
+<p>This document lists <strong>recommended features</strong> for open-world action lighting, and what is <strong>implemented in Spark</strong> today.</p>
+<h2 id="forward-punctual-lights-no-extra-shadow-maps">Forward punctual lights (no extra shadow maps)</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Point lights</strong></td>
+<td>Up to <strong><code>MaxPointLights</code> (256)</strong> omnidirectional lights; range attenuation; <strong>clustered forward</strong> SSBO + 16³ grid (<code>VulkanClusteredForwardLights</code>).</td>
+</tr>
+<tr>
+<td><strong>Spot lights</strong></td>
+<td>Up to <strong><code>MaxSpotLights</code> (128)</strong> cone lights; inner/outer cones; distance falloff; axis = object <strong>local −Z</strong> in world space. Optional shadow maps when <code>castsShadow</code> is set (capped).</td>
+</tr>
+<tr>
+<td><strong>Material-driven micro-detail</strong></td>
+<td>Optional <strong>normal map</strong> and <strong>ORM</strong> (occlusion, roughness, metallic) textures affect how directional, point, and spot lights read the surface (<code>MaterialComponent</code>, <code>SceneDrawItem</code>). See §5.4 in <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="implemented-phase-1">Implemented (Phase 1)</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cascaded directional shadows (CSM)</strong></td>
+<td>Four cascades in a <strong>2048²</strong> atlas (2×2 tiles of <strong>1024²</strong> each); logarithmic-uniform split distances; per-cascade light matrices with <strong>texel snapping</strong>; PCF in <code>scene.frag</code>; <strong>soft cascade blend</strong> at split boundaries (<code>timeGlobal.w</code> / <code>SceneShadowSettings::cascadeBlendFraction</code>).</td>
+</tr>
+<tr>
+<td><strong>PCF filtering</strong></td>
+<td>3×3 percentage-closer filtering in <code>scene.frag</code> for soft penumbra (cheap).</td>
+</tr>
+<tr>
+<td><strong>Slope-scaled bias</strong></td>
+<td>Reduces shadow acne on shallow surfaces (<code>shadowBias</code> + <code>shadowNormalBias</code> on <code>SceneRenderParams</code>).</td>
+</tr>
+<tr>
+<td><strong>Skinned meshes in shadow pass</strong></td>
+<td>Same skin SSBO path as the main scene pass.</td>
+</tr>
+<tr>
+<td><strong>Toggle &amp; tuning</strong></td>
+<td><code>SceneRenderParams::directionalShadowsEnabled</code>, <code>shadowBias</code>, <code>shadowNormalBias</code>.</td>
+</tr>
+<tr>
+<td><strong>HDR + tonemap</strong></td>
+<td>Scene renders to <strong>R16G16B16A16</strong>, optional <strong>SSAO</strong> composite, then <strong>ACES tonemap</strong> to swapchain; UI drawn after tonemap (LDR).</td>
+</tr>
+<tr>
+<td><strong>Screen-space ambient occlusion (SSAO)</strong></td>
+<td>Optional post pass (<code>VulkanScreenSpaceEffectsPass</code>) after the HDR scene pass: copies scene depth to a sampled image, applies 16-tap hemisphere AO in <code>post_process.frag</code>, writes to a scratch HDR target consumed by tonemap. Toggles: <code>ssaoEnabled</code>, <code>ssaoRadius</code>, <code>ssaoBias</code>, <code>ssaoStrength</code>.</td>
+</tr>
+<tr>
+<td><strong><code>SceneLightingProfile</code></strong></td>
+<td><code>Outdoor</code> / <code>Interior</code> / <code>NightInterior</code> / <code>Default</code> — shared preset struct: cascades, exposure, <strong>shadow fade</strong> (end + start ratio), <strong>cast/receive defaults</strong>, <strong>hemisphere + probe</strong> ambient, optional <strong>time-of-day</strong>.</td>
+</tr>
+<tr>
+<td><strong>Time-of-day demo</strong></td>
+<td>SparkDemo menu <strong>19</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn).</td>
+</tr>
+<tr>
+<td><strong>Per-draw shadow flags</strong></td>
+<td><code>SceneDrawItem::shadowFlags</code> (<code>kSceneShadowCast</code> / <code>kSceneShadowReceive</code>) — shadow pass skips non-casters; lit pass skips receivers.</td>
+</tr>
+<tr>
+<td><strong>Time of day</strong></td>
+<td><code>SceneRenderParams::useTimeOfDay</code> + <code>timeOfDay</code> (0–1) — analytic sun direction/color/intensity and sky/ground/probe fill.</td>
+</tr>
+<tr>
+<td><strong>Clustered forward punctual lights</strong></td>
+<td>Point + spot lights in SSBOs (bindings <strong>4</strong> / <strong>5</strong>); per-fragment direct SSBO iteration in <code>scene.frag</code> / sprite mode 4; caps <strong><code>MaxPointLights</code> (256)</strong> / <strong><code>MaxSpotLights</code> (128)</strong>.</td>
+</tr>
+<tr>
+<td><strong>Point / spot shadow maps</strong></td>
+<td>Up to <strong>4</strong> spot tiles (512² in 1024² atlas) + <strong>2</strong> point cubemap slices (512² × 6 faces); <code>castsShadow</code> on <code>PointLightComponent</code> / <code>SpotLightComponent</code>; bindings <strong>6</strong>–<strong>8</strong>; 3×3 PCF in <code>punctual_shadows.glsl</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommended-next-features-prioritized">Recommended next features (prioritized)</h2>
+<h3 id="shadows">Shadows</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td><strong>Contact shadows</strong></td>
+<td>Very short screen-space trace along the sun for small gaps (not implemented).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lighting-atmosphere">Lighting &amp; atmosphere</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>—</td>
+<td><strong>HDR + tonemap</strong></td>
+<td><strong>Implemented:</strong> R16G16B16A16 scene target, ACES tonemap pass, exposure from <code>SceneLightingProfile</code> / overrides.</td>
+</tr>
+<tr>
+<td>—</td>
+<td><strong>SSAO</strong></td>
+<td><strong>Implemented:</strong> <code>VulkanScreenSpaceEffectsPass</code> + <code>post_process.frag</code> (see § Implemented).</td>
+</tr>
+<tr>
+<td>P0</td>
+<td><strong>Image-based ambient</strong></td>
+<td>SH or irradiance volume from probes for outdoor bounce fill (basic equirect IBL exists for PBR metals).</td>
+</tr>
+<tr>
+<td>P1</td>
+<td><strong>Physical sun/sky model</strong></td>
+<td>Hosek-Wilkie or Preetham for disk + atmosphere; ties to time-of-day.</td>
+</tr>
+<tr>
+<td>P2</td>
+<td><strong>Volumetric fog / god rays</strong></td>
+<td>Height fog or light shafts; separate pass or raymarch (not implemented).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="content-workflow">Content &amp; workflow</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>—</td>
+<td><strong>Per-draw shadow cast / receive</strong></td>
+<td><strong>Implemented:</strong> <code>shadowFlags</code> on <code>SceneDrawItem</code> + push constants.</td>
+</tr>
+<tr>
+<td>—</td>
+<td><strong>Shadow distance fade</strong></td>
+<td><strong>Implemented:</strong> <code>shadowDistanceMax</code> + <code>shadowFadeStartRatio</code> via lighting profile.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="frame-flow-gpu">Frame flow (GPU)</h2>
+<p>Per frame, <code>VulkanRenderer::RecordSceneCommandBuffer</code> records (in order):</p>
+<ol>
+<li><strong>Texture / UI font uploads</strong> (<code>VulkanDeferredUploadBatch</code>)</li>
+<li><strong>Shadow maps</strong> — punctual then directional (<code>VulkanPunctualShadowPass</code>, <code>VulkanDirectionalShadowPass</code>)</li>
+<li><strong>HDR scene pass</strong> — opaque + sky (<code>VulkanSceneOpaquePass</code>), sprites, particles; color → <code>R16G16B16A16</code>, depth stored for copy</li>
+<li><strong>SSAO (optional)</strong> — when <code>ssaoEnabled</code>: <code>vkCmdCopyImage</code> scene depth → per-flight sample image; fullscreen <code>post_process.frag</code> → scratch HDR</li>
+<li><strong>Tonemap</strong> — ACES from HDR or SSAO scratch into swapchain image (<code>VulkanHdrTonemapPass</code>)</li>
+<li><strong>Screen UI</strong> — solid rects + text in the <strong>present</strong> render pass (<code>VulkanScreenUiPass</code>; rects then text per layer for stable batching)</li>
+</ol>
+<h2 id="technical-references-repo">Technical references (repo)</h2>
+<ul>
+<li><code>shaders/scene.vert</code>, <code>shaders/scene.frag</code> — lit opaque pass + shadow sampling.</li>
+<li><code>shaders/shadow_depth.vert</code> — depth-only pass from the light.</li>
+<li><code>shaders/post_process.frag</code>, <code>shaders/post_common.glsl</code> — SSAO composite (fullscreen).</li>
+<li><code>shaders/punctual_shadows.glsl</code> — spot/point shadow sampling in the lit pass.</li>
+<li><code>include/spark/engine/SceneRenderParams.hpp</code> — CPU → GPU scene parameters (<code>ssaoEnabled</code>, …).</li>
+<li><code>include/spark/render/post/VulkanScreenSpaceEffectsPass.hpp</code> — SSAO pass resources and recording.</li>
+<li><code>include/spark/render/ui/VulkanScreenUiPass.hpp</code> — screen-space UI (font atlas, solid/text batches).</li>
+<li><code>include/spark/render/core/VulkanRenderer.hpp</code> — composes passes; delegates device/swapchain to <code>VulkanDeviceContext</code>.</li>
+<li><code>include/spark/render/scene/VulkanSceneUniformGpu.hpp</code> — <code>SceneUniformGpu</code> must stay <strong>std140</strong>-compatible with the scene UBO in GLSL.</li>
+<li><code>include/spark/render/scene/VulkanSceneDescriptors.hpp</code> — scene descriptor pool, layout, per-frame sets.</li>
+<li><code>include/spark/render/lighting/SceneLightingResolver.hpp</code> — profile + time-of-day → resolved sun/ambient.</li>
+<li><code>src/spark/render/core/VulkanRenderer.cpp</code> — frame recording and swapchain presentation.</li>
+</ul>
+<h2 id="ubo-size">UBO size</h2>
+<p><code>SceneUniformGpu</code> packs matrices, directional sun, <strong>hemisphere ambient</strong>, <strong>four CSM matrices</strong> + cascade splits/atlas UVs, shadow fade in <code>viewportSize.z</code> / <code>timeGlobal.y</code>, <strong>cluster grid metadata</strong> (<code>clusterGrid</code> / <code>clusterDepth</code>), <strong>IBL params</strong> (<code>iblParams</code>), and global time. Punctual lights live in <strong><code>ClusterLightsGpu</code></strong> + <strong><code>ClusterGridGpu</code></strong> SSBOs; punctual shadow metadata + atlases use bindings <strong>6</strong>–<strong>8</strong> (<code>PunctualShadowGpu</code>, spot atlas, point depth array). Uniform allocation is <strong>656 bytes</strong>. Shared GLSL: <code>shaders/scene_ubo.glsl</code>, <code>shaders/punctual_shadows.glsl</code>.</p>
+<h2 id="ssao-tuning-scenerenderparams">SSAO tuning (<code>SceneRenderParams</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ssaoEnabled</code></td>
+<td><code>true</code></td>
+<td>When false, tonemap reads the HDR scene color directly (no post pass).</td>
+</tr>
+<tr>
+<td><code>ssaoRadius</code></td>
+<td><code>0.35</code></td>
+<td>World-space sample radius (meters).</td>
+</tr>
+<tr>
+<td><code>ssaoBias</code></td>
+<td><code>0.02</code></td>
+<td>Depth compare bias in clip space.</td>
+</tr>
+<tr>
+<td><code>ssaoStrength</code></td>
+<td><code>0.65</code></td>
+<td>Blend between no AO (1) and full AO (0).</td>
+</tr>
+</tbody>
+</table>
+<p>On Apple platforms the post pass enables depth V-flip when sampling the copied depth buffer (<code>depthFlipV</code> push constant).</p>
+<hr />
+<p><em>Update this file when you add new post effects, shadow types, or change punctual light caps / UBO layout.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

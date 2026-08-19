@@ -133,6 +133,20 @@ mat->SetMetallicRoughnessTexture(ormMap);
 mat->SetOpacity(0.85F);  // → transparent pass
 ```
 
+### `MultiMaterialComponent`
+
+**Kind:** `Unknown` (serialization pending) · **Sibling:** `MeshComponent` on multi-material glTF meshes
+
+Per-submesh material slots indexed by `MeshSubmesh::materialIndex`. Populated from a loaded glTF asset:
+
+```cpp
+GltfAsset asset = world.LoadGltf("assets/models/Building.glb");
+go->AddComponent<MeshComponent>(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
+auto* multi = go->AddComponent<MultiMaterialComponent>();
+multi->PopulateFromGltfAsset(asset);
+// Scene submit reads slots when partitioning draws per submesh.
+```
+
 ### `SkinnedMeshComponent` + `AnimatorComponent`
 
 **Kinds:** `SkinnedMesh`, `Animator` · **Consumed by:** Scene submit (joint palette)
@@ -264,8 +278,12 @@ go->AddComponent<SkyComponent>(SceneSkyMode::Box);
 
 ```cpp
 TerrainGeneratorSettings settings{};
-settings.gridWidth = 128;
-settings.gridDepth = 128;
+settings.subdivX = 128;
+settings.subdivZ = 128;
+settings.halfExtentX = 56.0F;
+settings.halfExtentZ = 56.0F;
+settings.heightScale = 14.0F;
+settings.noiseScale = 0.055F;
 go->AddComponent<TerrainComponent>(settings, Vector3{0.4F, 0.55F, 0.35F});
 go->AddComponent<MaterialComponent>(grassTex);
 ```
@@ -279,7 +297,7 @@ auto* pe = go->AddComponent<ParticleEmitterComponent>();
 pe->SetEmitterEnabled(true);
 pe->SetMaxParticles(256);
 pe->SetEmissionRate(40.0F);
-pe->SetStartColor({1.0F, 0.6F, 0.1F, 1.0F});
+pe->SetStartEndColor({1.0F, 0.6F, 0.1F, 1.0F}, {0.85F, 0.05F, 0.0F, 0.0F});
 pe->SetGravity({0.0F, -4.0F, 0.0F});
 ```
 
@@ -811,7 +829,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 ### `SceneSpatialPolicyComponent`
 
 ```cpp
-go->AddComponent<SceneSpatialPolicyComponent>(ScenePartitionKind::Bvh);
+go->AddComponent<SceneSpatialPolicyComponent>(ScenePartitionKind::BoundingVolumeHierarchy);
 ```
 
 Affects `Scene::ForEachDrawableInViewFrustum` partition strategy.

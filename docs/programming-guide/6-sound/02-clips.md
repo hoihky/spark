@@ -17,8 +17,6 @@ public:
 };
 ```
 
-Load from file via `GameWorld` or decode helpers in `spark/audio/`.
-
 ## Procedural SFX (No Assets)
 
 ```cpp
@@ -26,13 +24,40 @@ auto jumpSfx = SoundClip::CreateToneBlip(440.0F, 0.08F, 0.5F);
 auto landSfx = SoundClip::CreateToneBlip(220.0F, 0.06F, 0.4F);
 ```
 
-## Load WAV at Runtime
+Useful for prototyping — `Platformer2DDemo` falls back to procedural clips when bundled WAV/MP3 files are missing.
+
+## Load WAV/MP3 from Disk
 
 ```cpp
-// Pattern: load bytes, decode to SoundClip — check SoundClip loaders in spark/audio/
-SharedPtr<SoundClip> clip = /* load from assets/audio/jump.wav */;
+#include "spark/audio/SoundFileLoader.hpp"
+
+SharedPtr<SoundClip> clip = TryLoadSoundClipFromFile("/absolute/path/jump.wav");
 ```
 
-Supported formats depend on build configuration — WAV is always safe.
+`TryLoadSoundClipFromFile` dispatches by extension (WAV via `TryLoadSoundClipFromWavFile`).
+
+## Load from Bundled Assets
+
+When running inside SparkDemo or a target that sets `SPARK_BUILD_ASSETS_DIR`:
+
+```cpp
+SharedPtr<SoundClip> jump = TryLoadSoundClipFromBundledAsset("assets/audio/jump.wav");
+SharedPtr<SoundClip> bgm = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
+```
+
+`Platformer2DDemo` uses this pattern:
+
+```cpp
+SharedPtr<SoundClip> LoadPlatformerBgm() {
+    SharedPtr<SoundClip> clip =
+        TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
+    if (!clip) {
+        clip = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.mp3");
+    }
+    return clip;
+}
+```
+
+Queue one-shots at runtime via `SoundCueComponent` — see [Sound Cues](03-cues.md).
 
 Next: [Sound Cues](03-cues.md).

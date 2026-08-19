@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Materials & Lighting · Spark Game Engine</title>
+  <meta name="description" content="Materials & lighting — capabilities and gaps">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="materials-lighting-capabilities-and-gaps">Materials &amp; lighting — capabilities and gaps</h1>
+<p>This note complements <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> (shadows + punctual caps) and the feature catalog in <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>. For action-game material gaps (glTF import, texture budget, serialization), see <a href="3D_ACTION_GAME_GAPS.md"><code>3D_ACTION_GAME_GAPS.md</code></a> §2. It answers: <strong>what composition Spark can express today</strong>, <strong>what lights exist</strong>, and <strong>what is still missing</strong> if you want parity with larger engines or glTF feature sets.</p>
+<hr />
+<h2 id="material-composition-today">Material composition (today)</h2>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>CPU / ECS</th>
+<th>GPU / shader</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Base color</strong></td>
+<td><code>MaterialComponent</code> tint + optional <code>SetBaseColorTexture</code></td>
+<td><code>SceneDrawItem::textureLayer</code>, multiplied in <code>scene.frag</code></td>
+<td>Scalar tint always applies; texture optional.</td>
+</tr>
+<tr>
+<td><strong>Tangent-space normal</strong></td>
+<td><code>SetNormalTexture</code></td>
+<td><code>normalMapLayer</code>; derivative-built TBN in <code>scene.frag</code></td>
+<td>No per-vertex tangents required; Y flip matches common normal-map convention.</td>
+</tr>
+<tr>
+<td><strong>ORM packed map</strong></td>
+<td><code>SetMetallicRoughnessTexture</code></td>
+<td><code>metallicRoughnessMapLayer</code></td>
+<td><strong>R</strong> = AO × <code>occlusionStrength</code>, <strong>G</strong> = roughness × <code>roughnessFactor</code>, <strong>B</strong> = metallic × <code>metallicFactor</code> (texture replaces scalar when layer ≥ 0).</td>
+</tr>
+<tr>
+<td><strong>Emissive</strong></td>
+<td><code>SetEmissive</code> + optional <code>SetEmissiveTexture</code></td>
+<td><code>emissiveMapLayer</code>, <code>emissiveFactor</code></td>
+<td>Color × intensity × factor; texture RGB multiplies when bound.</td>
+</tr>
+<tr>
+<td><strong>glTF factors</strong></td>
+<td><code>SetMetallicFactor</code>, <code>SetRoughnessFactor</code>, <code>SetOcclusionStrength</code>, <code>SetEmissiveFactor</code></td>
+<td><code>ModelPushConstants</code></td>
+<td>Defaults <strong>1</strong>; applied in <code>scene.frag</code> with scalars and ORM samples.</td>
+</tr>
+<tr>
+<td><strong>Shading model</strong></td>
+<td><code>SceneShadingModel::LitPbr</code> / <code>ToonCel</code></td>
+<td><code>push.shadingModel</code></td>
+<td>Toon: banded diffuse, stylized spec, rim; still uses punctual lights + shadow on sun where applicable.</td>
+</tr>
+<tr>
+<td><strong>IBL / env reflections</strong></td>
+<td><code>SceneRenderParams::iblEnabled</code>, <code>iblEnvironmentLayer</code>, <code>iblIntensity</code></td>
+<td><code>ubo.iblParams</code> + <code>ibl.glsl</code></td>
+<td>Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer -1 = procedural hemisphere; auto-picked from sky draw with texture.</td>
+</tr>
+<tr>
+<td><strong>SSAO</strong></td>
+<td><code>SceneRenderParams::ssaoEnabled</code>, <code>ssaoRadius</code>, <code>ssaoBias</code>, <code>ssaoStrength</code></td>
+<td><code>post_process.frag</code></td>
+<td>Screen-space AO after HDR scene pass, before tonemap; see <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Texture budget:</strong> <code>SceneRenderParams::sceneTextures</code> holds up to <strong>16</strong> RGBA8 layers (shared array texture). Deduplication happens in <code>FindOrAddSceneTexture</code> when filling draws.</p>
+<p><strong>Demonstrator:</strong> shell menu item <strong>“18 — Material ball…”</strong> or <strong>B</strong> from the launcher — <a href="../include/spark/demo/MaterialShowcase3DDemo.hpp"><code>MaterialShowcase3DDemo</code></a> shows one <strong>LitPbr</strong> sphere whose maps, tint, metallic/roughness, and emissive settings are toggled and adjusted at runtime via keyboard.</p>
+<hr />
+<h2 id="lighting-today">Lighting (today)</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Source</th>
+<th>Shadow</th>
+<th>Limits / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Directional</strong></td>
+<td><code>DirectionalLightComponent</code> → submit overrides, or <code>SceneRenderParams::lightDirectionWorld</code> (+ color, intensity)</td>
+<td>Optional <strong>CSM</strong> (4 cascades)</td>
+<td>2×2 atlas in 2048² shadow map; PCF in <code>scene.frag</code>.</td>
+</tr>
+<tr>
+<td><strong>Ambient</strong></td>
+<td><code>ambientColor</code></td>
+<td>—</td>
+<td>Hemispheric tint hacks exist only inside <strong>toon</strong> path; PBR uses flat ambient × AO when ORM present.</td>
+</tr>
+<tr>
+<td><strong>Point</strong></td>
+<td><code>PointLightComponent</code> → <code>ScenePointLight</code></td>
+<td>Optional cubemap shadow (<code>castsShadow</code>, max <strong>2</strong> active/frame)</td>
+<td><strong>256</strong> max (<code>MaxPointLights</code>).</td>
+</tr>
+<tr>
+<td><strong>Spot</strong></td>
+<td><code>SpotLightComponent</code> → <code>SceneSpotLight</code>; axis = object <strong>local −Z</strong></td>
+<td>Optional atlas shadow (<code>castsShadow</code>, max <strong>4</strong> active/frame)</td>
+<td><strong>128</strong> max (<code>MaxSpotLights</code>).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="notable-gaps-materials">Notable gaps (materials)</h2>
+<p>Prioritized for a forward PBR renderer of this size:</p>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Impact</th>
+<th>Typical follow-up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No clearcoat / sheen / specular-glossiness</strong></td>
+<td>glTF extensions unsupported</td>
+<td>New BRDF lobes + parameters or second workflow enum.</td>
+</tr>
+<tr>
+<td><strong>No subsurface / transmission</strong></td>
+<td>Skin, glass, water are approximate</td>
+<td>SSS blur pass or thin-surface approximations.</td>
+</tr>
+<tr>
+<td><strong>Single UV set</strong></td>
+<td>Second UV from glTF ignored unless mesh path extended</td>
+<td>Duplicate attributes or atlas.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="notable-gaps-lights">Notable gaps (lights)</h2>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Impact</th>
+<th>Typical follow-up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Directional light ECS</strong></td>
+<td><code>DirectionalLightComponent</code> overrides submit params when present</td>
+<td>Multiple directional lights with blending / priority</td>
+</tr>
+<tr>
+<td><strong>No area / line / tube lights</strong></td>
+<td>Architectural interiors harder</td>
+<td>LTC rectangles, capsule approximations, or emissive mesh proxies.</td>
+</tr>
+<tr>
+<td><strong>IBL (basic)</strong></td>
+<td>Equirect + GGX importance sample; no dedicated cubemap mips / BRDF LUT texture yet</td>
+<td>Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count.</td>
+</tr>
+<tr>
+<td><strong>Punctual shadow quality</strong></td>
+<td>512² tiles; 2 point + 4 spot cap</td>
+<td>Higher-res atlases, EVSM, or temporal filtering.</td>
+</tr>
+<tr>
+<td><strong>Contact shadows / volumetric fog</strong></td>
+<td>Small-scale grounding and atmosphere</td>
+<td>Screen-space contact trace; height fog or god-ray pass (see roadmap).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="when-you-extend-materials-or-lights">When you extend materials or lights</h2>
+<ol>
+<li><strong><code>SceneRenderParams</code> / <code>SceneDrawItem</code></strong> — public data model.  </li>
+<li><strong><code>ModelPushConstants</code></strong> (<code>include/spark/render/scene/VulkanSceneOpaquePass.hpp</code>) + <strong><code>SceneUniformGpu</code></strong> (<code>include/spark/render/scene/VulkanSceneUniformGpu.hpp</code>) — alignment and <code>static_assert</code>s.  </li>
+<li><strong><code>src/spark/render/core/VulkanRenderer.cpp</code></strong> — push / memcpy packing.  </li>
+<li><strong><code>shaders/scene.vert</code> / <code>scene.frag</code></strong> — matching <code>layout</code> and UBO.  </li>
+<li><strong>Recompile SPIR-V</strong> (<code>glslangValidator</code> per <code>CMakeLists.txt</code>).  </li>
+<li><strong>Managed / C ABI</strong> — only if you expose new <code>ComponentKind</code> or params through bindings.</li>
+</ol>
+<hr />
+<p><em>Last updated with SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: <a href="SCENE_AND_RENDERING_GAPS.md"><code>SCENE_AND_RENDERING_GAPS.md</code></a>.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

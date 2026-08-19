@@ -385,26 +385,46 @@ public:
     void SetEmissionRate(float rate) noexcept;
     void SetLifetime(float minSec, float maxSec) noexcept;
     void SetStartEndSize(float start, float end) noexcept;
+    void SetStartEndColor(const Vector4&amp; start, const Vector4&amp; end) noexcept;
     void SetGravity(const Vector3&amp; g) noexcept;
     void SetEmissionDirection(const Vector3&amp; dir) noexcept;
     void CollectInstances(Array&lt;SceneParticleInstance&gt;&amp; out) const;
 };
 </code></pre>
 <p>Requires <code>TransformComponent</code> on the same entity (emission origin = world translation).</p>
-<h2 id="fire-emitter-example">Fire Emitter Example</h2>
+<h2 id="fire-emitter-from-particledemo">Fire Emitter (from <code>ParticleDemo</code>)</h2>
 <pre><code class="language-cpp">auto* fxGo = world.CreateGameObject();
 fxGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({0, 1, 0});
 
 auto* emitter = fxGo-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
+emitter-&gt;SetEmitterEnabled(true);
+emitter-&gt;SetMaxParticles(512);
 emitter-&gt;SetEmissionRate(80.0F);
 emitter-&gt;SetLifetime(0.3F, 0.9F);
 emitter-&gt;SetStartEndSize(0.15F, 0.02F);
+emitter-&gt;SetStartEndColor(
+    Vector4{1.0F, 0.55F, 0.12F, 1.0F},
+    Vector4{0.85F, 0.05F, 0.0F, 0.0F});
 emitter-&gt;SetGravity({0, 2.0F, 0});
 emitter-&gt;SetEmissionDirection({0, 1, 0});
 </code></pre>
-<p>Enable particle collection in submit:</p>
-<pre><code class="language-cpp">SubmitStandardLitSceneFromWorld(..., enableParticles = true, camRight, camUp, sceneTime);
+<h2 id="gem-sparkles-from-maze3ddemo">Gem Sparkles (from <code>Maze3DDemo</code>)</h2>
+<p>Attach a subtle emitter to collectible props:</p>
+<pre><code class="language-cpp">if (ParticleEmitterComponent* pe = gem-&gt;AddComponent&lt;ParticleEmitterComponent&gt;()) {
+    pe-&gt;SetMaxParticles(200);
+    pe-&gt;SetEmissionRate(32.0F);
+    pe-&gt;SetLifetime(0.4F, 1.05F);
+    pe-&gt;SetStartEndSize(0.11F, 0.018F);
+    pe-&gt;SetStartEndColor(gemColor, Vector4{gemColor.x, gemColor.y, gemColor.z, 0.0F});
+}
 </code></pre>
+<h2 id="enable-in-submit">Enable in Submit</h2>
+<pre><code class="language-cpp">SubmitStandardLitSceneFromWorldWithCamera(
+world, context, sunDir, sunColor, intensity, ambient,
+true,   // enableParticles
+sceneTime);
+</code></pre>
+<p>Or pass <code>enableParticles = true</code> to <code>SubmitStandardLitSceneFromWorld</code>.</p>
 <h2 id="sceneparticleinstance"><code>SceneParticleInstance</code></h2>
 <pre><code class="language-cpp">struct SceneParticleInstance {
     Vector3 position{};
@@ -412,7 +432,7 @@ emitter-&gt;SetEmissionDirection({0, 1, 0});
     Vector4 color{1, 1, 1, 1};
 };
 </code></pre>
-<p>See <code>ParticleDemo</code> for colored bursts and muzzle flash patterns.</p>
+<p>See <code>ParticleDemo</code> (SparkDemo <strong>#3</strong>) for fire, smoke, sparks, and magic burst presets in <code>ParticleDemoDetail.hpp</code>.</p>
 <p>Part 3 complete → <strong>Part 4</strong>: <a href="../4-ai/01-ai-overview.html">AI Overview</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -434,7 +454,15 @@ emitter-&gt;SetEmissionDirection({0, 1, 0});
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#fire-emitter-example">Fire Emitter Example</a>
+                          <a href="#fire-emitter-from">Fire Emitter (from )</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#gem-sparkles-from">Gem Sparkles (from )</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#enable-in-submit">Enable in Submit</a>
                         </li>
                         
                   </ul>

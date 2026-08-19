@@ -430,6 +430,24 @@ if (audio) {
     audio-&gt;SetBackgroundMusic(ambienceClip, 0.25F, true);
 }
 </code></pre>
+<h2 id="loading-and-playing-from-platformer2ddemo">Loading and Playing (from <code>Platformer2DDemo</code>)</h2>
+<pre><code class="language-cpp">#include "spark/audio/SoundFileLoader.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
+
+SharedPtr&lt;SoundClip&gt; jumpSfx = TryLoadSoundClipFromBundledAsset("assets/audio/jump.wav");
+if (!jumpSfx) {
+    jumpSfx = SoundClip::CreateToneBlip(520.0F, 0.07F, 0.45F);  // procedural fallback
+}
+
+// One-shot from gameplay:
+player-&gt;GetComponent&lt;SoundCueComponent&gt;()-&gt;Queue(jumpSfx, 0.9F);
+// ProcessSoundCues runs automatically in Game::OnUpdate
+
+// Background music in OnAttach:
+if (SoundEngine* se = context.TryGetSoundEngine()) {
+    se-&gt;SetBackgroundMusic(LoadPlatformerBgm(), 0.32F, true);
+}
+</code></pre>
 <p>Next: <a href="02-clips.html">Sound Clips</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -452,6 +470,10 @@ if (audio) {
                         
                         <li class="toc-h2">
                           <a href="#soundengine-api">SoundEngine API</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#loading-and-playing-from">Loading and Playing (from )</a>
                         </li>
                         
                   </ul>

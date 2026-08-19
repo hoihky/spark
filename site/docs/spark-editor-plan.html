@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spark Editor Plan · Spark Game Engine</title>
+  <meta name="description" content="Spark Editor — Gap Analysis & Implementation Plan">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="spark-editor-gap-analysis-implementation-plan">Spark Editor — Gap Analysis &amp; Implementation Plan</h1>
+<p>Godot-style game editor for Spark: <strong>2D and 3D</strong>, built on the engine’s retained UI (<code>spark/ui/</code>), delivered as a <strong>separate executable</strong> linking <strong><code>SparkEngine</code> as a shared library</strong>.</p>
+<p><strong>Related:</strong> <a href="gui-editor-roadmap.html"><code>GUI_EDITOR_ROADMAP.md</code></a> (GUI milestones E0–E6), <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>, <a href="SCENE_AND_RENDERING_GAPS.md"><code>SCENE_AND_RENDERING_GAPS.md</code></a>, demo <strong>#12</strong> <code>SceneEditor3DDemo</code> (prototype).</p>
+<hr />
+<h2 id="1-executive-summary">1. Executive summary</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Status</th>
+<th>Editor impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Engine loop / ECS / <code>GameWorld</code></td>
+<td><strong>Ready</strong></td>
+<td>Core simulation model</td>
+</tr>
+<tr>
+<td>Vulkan forward renderer</td>
+<td><strong>Ready</strong></td>
+<td>Viewport scissor for center pane; offscreen RT later</td>
+</tr>
+<tr>
+<td>UI toolkit</td>
+<td><strong>Usable</strong></td>
+<td>Docking (<code>SparkDockWorkspace</code> / <code>IDockWorkspace</code>), panels, context menu, text overflow</td>
+</tr>
+<tr>
+<td>Scene serialization v4</td>
+<td><strong>Partial</strong></td>
+<td><strong>23</strong> component handlers; text format (reads v3)</td>
+</tr>
+<tr>
+<td><code>SceneEditor3DDemo</code></td>
+<td><strong>Prototype</strong></td>
+<td>Pick, translate gizmo, save/load — reference for viewport service</td>
+</tr>
+<tr>
+<td><strong><code>SparkEditor</code> (M0)</strong></td>
+<td><strong>Started</strong></td>
+<td><code>EditorApplication</code>, dock shell, hierarchy/inspector stubs, fly camera</td>
+</tr>
+<tr>
+<td>Project / asset DB</td>
+<td><strong>Missing</strong></td>
+<td>Critical for Godot workflow</td>
+</tr>
+<tr>
+<td>Inspector property grid</td>
+<td><strong>Missing</strong></td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>Undo / PIE</td>
+<td><strong>Missing</strong></td>
+<td>Critical for v1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Strategy:</strong> <code>spark/editor/</code> services inside the engine repo; ship <strong><code>spark_editor/SparkEditor</code></strong> via root CMake (<code>SPARK_BUILD_SPARK_EDITOR=ON</code>) or slim <strong><code>editor-debug</code></strong> preset (shared <code>SparkEngine</code>).</p>
+<hr />
+<h2 id="2-what-exists-reusable">2. What exists (reusable)</h2>
+<h3 id="engine-ecs">Engine &amp; ECS</h3>
+<ul>
+<li><code>IGame</code> / <code>Game</code> / <code>Engine::Run</code> — editor is an <code>IGame</code> implementation (<code>spark_editor/EditorGame</code>).</li>
+<li><code>GameWorld</code>, <code>GameObject</code>, <strong>37</strong> <code>ComponentKind</code> values (+ <code>Unknown</code>), hierarchy via <code>SetParent</code>.</li>
+<li><code>Scene</code> + <code>SubmitStandardLitSceneFromWorld</code> — no Vulkan in editor code.</li>
+<li><code>FlyCamera</code>, <code>MeshRaycast</code>, lighting profiles, 2D/3D cameras.</li>
+</ul>
+<h3 id="ui">UI</h3>
+<ul>
+<li>Full control set via <code>SparkUiControlsFactory</code>: <code>TreeView</code>, panels, scroll regions, sliders, lists.</li>
+<li><strong>Docking:</strong> <code>SparkDockWorkspace</code> / <code>IDockWorkspace</code> — used by <code>EditorDockShell</code>.</li>
+<li><code>UiCanvasComponent</code> + <code>UiConsumesGamePointer()</code> for viewport input gating.</li>
+<li><code>UiContextMenu</code>, text overflow via <code>UiPaintContext</code>.</li>
+<li><code>EditorLayoutStore</code> — persists <code>editor_layout.ini</code>.</li>
+</ul>
+<h3 id="scene-authoring-prototype-sceneeditor3ddemo">Scene authoring prototype (<code>SceneEditor3DDemo</code>)</h3>
+<ul>
+<li>Translate gizmo, ray pick, context menu place/delete, <code>spark_scene_v4</code> save/load (reads v3).</li>
+<li><strong>Port target:</strong> <code>EditorViewport</code> service (M3), not rewrite.</li>
+</ul>
+<h3 id="serialization">Serialization</h3>
+<ul>
+<li><code>SceneSerializer</code> / <code>ComponentSnapshotRegistry</code> — <strong>23</strong> handlers: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig. Runtime: <code>SceneManager</code>, <code>GameWorldAssetLoader</code>.</li>
+<li>Extensible handler pattern for remaining kinds (<code>UiCanvas</code>, <code>Tilemap</code>, 2D physics, <code>AiAgent</code>, …).</li>
+</ul>
+<h3 id="build">Build</h3>
+<ul>
+<li><code>SPARK_BUILD_ENGINE_SHARED</code> — proven in <code>game_template/</code>, <code>samples/*</code>.</li>
+<li><code>SPARK_BUILD_ENGINE_DEMOS</code> — <strong>new</strong>; omit demos from slim DLL.</li>
+<li><code>SPARK_BUILD_EDITOR</code> — <strong>new</strong>; compiles <code>spark/editor/</code> into <code>SparkEngine</code>.</li>
+</ul>
+<h3 id="scripting-future-pie">Scripting (future PIE)</h3>
+<ul>
+<li><code>SparkScriptHost</code>, <code>SparkInterop</code>, C# <code>HelloCsGame</code>.</li>
+</ul>
+<hr />
+<h2 id="3-missing-engine-capabilities-by-priority">3. Missing engine capabilities (by priority)</h2>
+<h3 id="31-critical-blocks-godot-like-editor">3.1 Critical (blocks Godot-like editor)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Why it matters</th>
+<th>Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Editor product module</strong></td>
+<td><code>spark/editor/</code> services (M0 shell)</td>
+<td><strong>M0</strong> ✓ started</td>
+</tr>
+<tr>
+<td><strong>Demo/engine split</strong></td>
+<td><code>SPARK_BUILD_ENGINE_DEMOS</code> CMake option</td>
+<td><strong>M0</strong> ✓</td>
+</tr>
+<tr>
+<td><strong><code>EditorApplication</code> shell</strong></td>
+<td>Edit mode, dock UI, fly camera</td>
+<td><strong>M0</strong> ✓</td>
+</tr>
+<tr>
+<td><strong>Project file (<code>project.spark</code>)</strong></td>
+<td>Open folder, main scene, asset roots</td>
+<td><strong>M1</strong></td>
+</tr>
+<tr>
+<td><strong>Asset database</strong></td>
+<td>GUIDs, import, thumbnails — not just runtime cache</td>
+<td><strong>M1–M2</strong></td>
+</tr>
+<tr>
+<td><strong>Hierarchy panel</strong></td>
+<td><code>HierarchyPanel</code> + <code>TreeView</code> stub; CRUD / reparent pending</td>
+<td><strong>M2</strong> (started)</td>
+</tr>
+<tr>
+<td><strong>Inspector / property grid</strong></td>
+<td><code>InspectorPanel</code> text dump of selection</td>
+<td><strong>M2–M3</strong> (started)</td>
+</tr>
+<tr>
+<td><strong><code>EditorSelection</code> service</strong></td>
+<td>Primary selection wired to inspector</td>
+<td><strong>M2</strong> ✓</td>
+</tr>
+<tr>
+<td><strong>Dock workspace</strong></td>
+<td><code>EditorDockShell</code> + <code>SparkDockWorkspace</code> (menu, left/center/right)</td>
+<td><strong>M0</strong> ✓</td>
+</tr>
+<tr>
+<td><strong>Embedded viewport service</strong></td>
+<td><code>worldViewportScissor</code> + passthrough center pane</td>
+<td><strong>M2</strong> (partial)</td>
+</tr>
+<tr>
+<td><strong>Undo/redo command stack</strong></td>
+<td>None</td>
+<td><strong>M3</strong></td>
+</tr>
+<tr>
+<td><strong>Serialization coverage</strong></td>
+<td>23 / 37 components; no <code>UiCanvas</code>, <code>Tilemap</code>, 2D physics, <code>AiAgent</code>, …</td>
+<td><strong>M3</strong></td>
+</tr>
+<tr>
+<td><strong>Play-in-editor (PIE)</strong></td>
+<td>No world snapshot / script run from editor</td>
+<td><strong>M5</strong></td>
+</tr>
+<tr>
+<td><strong>Prefab / <code>.sparkscene</code> asset</strong></td>
+<td>Loose <code>scene.txt</code> only</td>
+<td><strong>M3</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-important-v1-quality">3.2 Important (v1 quality)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rotate/scale gizmos</td>
+<td>M3</td>
+</tr>
+<tr>
+<td>Selection outline pass (not emissive pulse)</td>
+<td>M3</td>
+</tr>
+<tr>
+<td>GPU pick buffer</td>
+<td>M4</td>
+</tr>
+<tr>
+<td>Add/remove component UI</td>
+<td>M3</td>
+</tr>
+<tr>
+<td>Material slot editor</td>
+<td>M4</td>
+</tr>
+<tr>
+<td>Animation timeline</td>
+<td>M4 (needs ANIMATION_3D)</td>
+</tr>
+<tr>
+<td>Script attach + build console</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>Physics collider debug draw</td>
+<td>M4</td>
+</tr>
+<tr>
+<td>Offscreen “Game” camera view</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>Global shortcuts (Save, Undo, Play)</td>
+<td>M2–M3</td>
+</tr>
+<tr>
+<td>Export / build pipeline</td>
+<td>M6</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-nice-to-have-godot-parity">3.3 Nice-to-have (Godot parity)</h3>
+<p>Material graph, visual scripting, plugins, tilemap/terrain brushes, LSP, CI scene round-trip — see <a href="gui-editor-roadmap.html"><code>GUI_EDITOR_ROADMAP.md</code></a> E6+.</p>
+<hr />
+<h2 id="4-architecture">4. Architecture</h2>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  spark_editor/SparkEditor.exe  (IGame: EditorGame)       │
+├─────────────────────────────────────────────────────────┤
+│  spark/editor/panels   Hierarchy, Inspector, Project, …  │
+├─────────────────────────────────────────────────────────┤
+│  spark/editor services EditorApplication, Selection,     │
+│                          Project, CommandStack (future)  │
+├─────────────────────────────────────────────────────────┤
+│  spark/ui              retained IUiElement tree + themes │
+├─────────────────────────────────────────────────────────┤
+│  SparkEngine.dylib     ECS, scene, render, audio, …      │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="oop-principles">OOP principles</h3>
+<ul>
+<li><strong><code>IEditorPanel</code></strong> — single responsibility per dock panel; register with <code>EditorApplication</code>.</li>
+<li><strong><code>EditorContext</code></strong> — façade passed to panels (world, selection, project); avoids globals.</li>
+<li><strong><code>EditorSelection</code></strong> — owns selection set; panels subscribe via callbacks.</li>
+<li><strong><code>EditorProject</code></strong> — project path, settings, dirty flags; no rendering knowledge.</li>
+<li><strong>Extensibility</strong> — new panels implement <code>IEditorPanel</code>; new components add <code>IComponentSnapshotHandler</code> + inspector widget.</li>
+</ul>
+<h3 id="2d-vs-3d">2D vs 3D</h3>
+<ul>
+<li>Same shell: <strong>2D</strong> uses <code>Camera2D</code> + sprite/tilemap components; <strong>3D</strong> uses <code>FlyCamera</code> / <code>CameraComponent</code> + meshes.</li>
+<li><code>EditorApplication::SetWorkspaceMode(Mode2D | Mode3D)</code> switches default scene template and viewport controller (M2).</li>
+</ul>
+<hr />
+<h2 id="5-roadmap-task-tracking">5. Roadmap &amp; task tracking</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Milestone</th>
+<th>Goal</th>
+<th>Exit criteria</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>M0</strong></td>
+<td>Foundation</td>
+<td>Slim DLL + editor exe</td>
+<td><code>SparkEditor</code> runs, empty 3D scene + dock shell</td>
+</tr>
+<tr>
+<td><strong>M1</strong></td>
+<td>E0 + shell</td>
+<td>Menu, project browser stub, layout</td>
+<td>Open folder, persist panel widths</td>
+</tr>
+<tr>
+<td><strong>M2</strong></td>
+<td>E1–E2 start</td>
+<td>Hierarchy + selection + viewport contract</td>
+<td>Select entity in tree ↔ viewport highlight</td>
+</tr>
+<tr>
+<td><strong>M3</strong></td>
+<td>E2 core</td>
+<td>Scene save v4, undo, gizmo port</td>
+<td>Author <code>.sparkscene</code> in project folder</td>
+</tr>
+<tr>
+<td><strong>M4</strong></td>
+<td>E3–E4</td>
+<td>Materials, animation basics</td>
+<td>Texture slots, clip scrubber</td>
+</tr>
+<tr>
+<td><strong>M5</strong></td>
+<td>E5</td>
+<td>PIE + C# scripts</td>
+<td>Play stops, restores edit world</td>
+</tr>
+<tr>
+<td><strong>M6</strong></td>
+<td>E6</td>
+<td>Product</td>
+<td>New project wizard, user guide, CI round-trip</td>
+</tr>
+</tbody>
+</table>
+<h3 id="m0-foundation-complete">M0 — Foundation (<strong>complete</strong>)</h3>
+<ul>
+<li>[x] <code>SPARK_BUILD_ENGINE_DEMOS</code>, <code>SPARK_BUILD_EDITOR</code> CMake options</li>
+<li>[x] <code>spark/editor/</code> module: <code>EditorApplication</code>, <code>EditorSelection</code>, <code>EditorProject</code></li>
+<li>[x] <code>spark_editor/</code> CMake project → <code>SparkEditor</code> + shared <code>SparkEngine</code></li>
+<li>[x] Dock shell: menu bar + hierarchy + inspector + project stubs</li>
+<li>[x] Default 3D scene (ground + sun + sample cube), fly camera viewport</li>
+<li>[x] <code>docs/SPARK_EDITOR_PLAN.md</code> (this file)</li>
+<li>[x] Build verified: <code>SparkEngine</code> + <code>SparkEditor</code> compile</li>
+</ul>
+<h3 id="m1-editor-shell-next">M1 — Editor shell (next)</h3>
+<ul>
+<li>[ ] <code>project.spark</code> JSON (name, <code>assets/</code>, <code>scenes/main.sparkscene</code>)</li>
+<li>[ ] <code>ProjectBrowserPanel</code> — filesystem <code>TreeView</code></li>
+<li>[ ] <code>EditorLayoutStore</code> integration for dock widths</li>
+<li>[ ] File menu: New/Open/Save project</li>
+</ul>
+<h3 id="m2-scene-tools">M2 — Scene tools</h3>
+<ul>
+<li>[ ] <code>HierarchyPanel</code> ↔ <code>GameWorld</code> CRUD</li>
+<li>[ ] <code>EditorSelection</code> multi-select</li>
+<li>[ ] Viewport sub-rect + <code>UiConsumesGamePointer</code> for chrome only</li>
+<li>[ ] Port pick/gizmo from <code>SceneEditor3DDemo</code></li>
+</ul>
+<h3 id="m3-authoring">M3 — Authoring</h3>
+<ul>
+<li>[ ] <code>EditorCommandStack</code> (move, create, delete, property set)</li>
+<li>[ ] Scene format v4 (JSON) + more component handlers</li>
+<li>[ ] Inspector for Transform, Mesh, Material, lights</li>
+</ul>
+<hr />
+<h2 id="6-project-layout">6. Project layout</h2>
+<pre><code class="language-text">spark/                          # engine repository
+├── include/spark/editor/       # public editor API (linked via SparkEngine)
+├── src/spark/editor/
+├── spark_editor/               # NEW — editor executable project
+│   ├── CMakeLists.txt
+│   └── src/EditorGame.cpp
+├── game_template/              # game DLL pattern (reference)
+└── docs/SPARK_EDITOR_PLAN.md
+
+</code></pre>
+<h3 id="build-editor">Build editor</h3>
+<pre><code class="language-bash">cmake -S spark/spark_editor -B build-editor \
+  -DSPARK_ROOT=../
+cmake --build build-editor --target SparkEditor
+</code></pre>
+<hr />
+<h2 id="7-godot-comparison-target-v1">7. Godot comparison (target v1)</h2>
+<table>
+<thead>
+<tr>
+<th>Godot</th>
+<th>Spark Editor M6 target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scene tree dock</td>
+<td>Hierarchy panel</td>
+</tr>
+<tr>
+<td>Inspector</td>
+<td>Inspector panel</td>
+</tr>
+<tr>
+<td>3D viewport + gizmo</td>
+<td>Port from SceneEditor3DDemo</td>
+</tr>
+<tr>
+<td>FileSystem</td>
+<td>Project browser + asset DB</td>
+</tr>
+<tr>
+<td><code>.tscn</code></td>
+<td><code>.sparkscene</code> (v4 JSON)</td>
+</tr>
+<tr>
+<td>Play (F5)</td>
+<td>PIE world snapshot</td>
+</tr>
+<tr>
+<td>Script editor</td>
+<td>TextArea + <code>dotnet build</code> (M5)</td>
+</tr>
+<tr>
+<td>Undo</td>
+<td>Command stack (M3)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-immediate-next-steps">8. Immediate next steps</h2>
+<ol>
+<li><strong>M1</strong> — <code>project.spark</code> JSON + open-folder dialog; wire File menu.</li>
+<li><strong>M2</strong> — Hierarchy CRUD, viewport sub-rect, port pick/gizmo from <code>SceneEditor3DDemo</code>.</li>
+<li><strong>M3</strong> — <code>EditorCommandStack</code>, scene v4 JSON, richer inspector.</li>
+<li>Add <strong>component handlers</strong> incrementally — each unlocks inspector + save.</li>
+</ol>
+<p>Update this document at each milestone; cross-link task IDs with <a href="gui-editor-roadmap.html"><code>GUI_EDITOR_ROADMAP.md</code></a>.</p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

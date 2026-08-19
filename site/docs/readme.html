@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spark — README · Spark Game Engine</title>
+  <meta name="description" content="> **Disclaimer:** This project is an experimental, work-in-progress prototype built with the help of "vibe coding". Things will break. Features are currently missing, and the build scripts might not w">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <blockquote>
+<p><strong>Disclaimer:</strong> This project is an experimental, work-in-progress prototype built with the help of "vibe coding". Things will break. Features are currently missing, and the build scripts might not work at all. It is shared purely for educational or entertainment purposes.</p>
+</blockquote>
+<p align="center">
+  <img src="docs/media/spark-engine-logo.jpg" alt="Spark game engine logo" width="360" />
+</p>
+
+<h1 id="spark">Spark</h1>
+<p>Spark is a <strong>C++23</strong> game engine with a Vulkan forward renderer, entity–component scene model, retained-mode GUI, optional <strong>Dear ImGui</strong> tool UI, and an in-progress editor.</p>
+<h2 id="showcase">Showcase</h2>
+<p>In-engine captures from <strong>SparkDemo</strong> (F12 screenshot, F9 video recording).</p>
+<h3 id="screenshots">Screenshots</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+<th style="text-align: center;"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><img src="docs/media/showcase-01.png" alt="Spark demo screenshot 1" width="400" /></td>
+<td style="text-align: center;"><img src="docs/media/showcase-02.png" alt="Spark demo screenshot 2" width="400" /></td>
+<td style="text-align: center;"><img src="docs/media/showcase-03.png" alt="Spark demo screenshot 3" width="400" /></td>
+</tr>
+<tr>
+<td style="text-align: center;"><img src="docs/media/showcase-04.png" alt="Spark demo screenshot 4" width="400" /></td>
+<td style="text-align: center;"><img src="docs/media/showcase-05.png" alt="Spark demo screenshot 5" width="400" /></td>
+<td style="text-align: center;"><img src="docs/media/showcase-06.png" alt="Spark demo screenshot 6" width="400" /></td>
+</tr>
+<tr>
+<td style="text-align: center;"><img src="docs/media/showcase-07.png" alt="Spark demo screenshot 7" width="400" /></td>
+<td style="text-align: center;"><img src="docs/media/showcase-08.png" alt="Spark demo screenshot 8" width="400" /></td>
+<td style="text-align: center;"><img src="docs/media/showcase-09.png" alt="Spark demo screenshot 9" width="400" /></td>
+</tr>
+</tbody>
+</table>
+<h2 id="quick-start">Quick start</h2>
+<p><strong>Requirements:</strong> CMake ≥ 3.28, C++23, <a href="https://vulkan.lunarg.com/">Vulkan SDK</a> (<code>glslangValidator</code> on <code>PATH</code>), network on first configure (GLFW FetchContent, fonts, sample assets).</p>
+<pre><code class="language-bash">cmake --preset debug
+cmake --build cmake-build-debug -j
+./cmake-build-debug/SparkDemo
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Path (debug preset)</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SparkDemo</strong></td>
+<td><code>cmake-build-debug/SparkDemo</code></td>
+<td>Interactive launcher + <strong>19</strong> built-in modes</td>
+</tr>
+<tr>
+<td><strong>SparkEditor</strong></td>
+<td><code>cmake-build-debug/spark_editor/SparkEditor</code></td>
+<td>3D editor shell (edit mode, dock UI)</td>
+</tr>
+<tr>
+<td><strong>SparkInterop</strong></td>
+<td><code>cmake-build-debug/scripting/libSparkInterop.dylib</code></td>
+<td>C ABI for managed tools (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Editor-only slim build:</strong> <code>cmake --preset editor-debug &amp;&amp; cmake --build cmake-build-editor --target SparkEditor</code></p>
+<p>See <a href="docs/CLION.md"><code>docs/CLION.md</code></a> and <a href="readme.html"><code>.run/README.md</code></a> for CLion presets and run configurations.</p>
+<h2 id="documentation">Documentation</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../docs/programming-guide/site/index.html"><strong>Programming guide</strong></a></td>
+<td>Tutorials + <a href="../../docs/programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI toolkits</a> + <a href="../../docs/programming-guide/site/1-overview-architecture/07-game-component-reference.html">component reference</a></td>
+</tr>
+<tr>
+<td><a href="architecture-and-developer-guide.html"><strong>Architecture &amp; Developer Guide</strong></a></td>
+<td>Engine loop, ECS, rendering data path, feature catalog</td>
+</tr>
+<tr>
+<td><a href="docs/SCENE_AND_RENDERING_GAPS.md"><strong>Scene &amp; Rendering API Gaps</strong></a></td>
+<td>C++ public API gap analysis (<code>include/spark/</code>, scene + 3D render)</td>
+</tr>
+<tr>
+<td><a href="docs/3D_ACTION_GAME_GAPS.md"><strong>3D Action Game Gaps</strong></a></td>
+<td>Animation, materials, and scene management gaps for action games</td>
+</tr>
+<tr>
+<td><a href="lighting-and-shadows.html"><strong>Lighting &amp; Shadows</strong></a></td>
+<td>CSM, punctual lights, SSAO, HDR/tonemap</td>
+</tr>
+<tr>
+<td><a href="materials-and-lighting.html"><strong>Materials &amp; Lighting</strong></a></td>
+<td>PBR channels, IBL, material limits</td>
+</tr>
+<tr>
+<td><a href="spark-editor-plan.html"><strong>Spark Editor Plan</strong></a></td>
+<td>Editor milestones, project/asset workflow</td>
+</tr>
+<tr>
+<td><a href="gui-editor-roadmap.html"><strong>GUI &amp; Editor Roadmap</strong></a></td>
+<td>GUI toolkit and authoring UI tasks</td>
+</tr>
+<tr>
+<td><a href="animation-3d-roadmap.html"><strong>3D Animation Roadmap</strong></a></td>
+<td>Skeletal animation milestones</td>
+</tr>
+<tr>
+<td><a href="docs/OPEN_WORLD_ACTION_ROADMAP.md"><strong>Open World Roadmap</strong></a></td>
+<td>Long-horizon streaming/combat/AI plan</td>
+</tr>
+<tr>
+<td><a href="docs/2D_ARPG_FEATURES.md"><strong>2D ARPG Features</strong></a></td>
+<td>2D gameplay backlog</td>
+</tr>
+</tbody>
+</table>
+<h2 id="repository-layout">Repository layout</h2>
+<pre><code>include/spark/     Public API (engine, ecs, scene, render, gui, imgui, editor, …)
+src/spark/         Implementations
+src/Engine.cpp     Engine loop (not under src/spark/engine/)
+assets/            Runtime fonts, models, textures
+shaders/           GLSL → SPIR-V (SparkShaders target)
+docs/              Design docs and roadmaps
+scripting/         SparkInterop C ABI + ClangSharp C# bindings (`Spark.Bindings`)
+spark_editor/      SparkEditor executable
+</code></pre>
+<p><strong>C# bindings:</strong> After changing <code>include/spark/scripting/SparkInterop.h</code>, run <code>./tools/generate-csharp-bindings.sh</code> and build with <code>-DSPARK_BUILD_INTEROP=ON</code> (enabled in the <code>debug</code> CMake preset).</p>
+<p><strong>Render headers</strong> live under <code>include/spark/render/</code> in stage subfolders (not flat <code>render/*.hpp</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Subfolder</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>platform/</code></td>
+<td><code>Window.hpp</code></td>
+</tr>
+<tr>
+<td><code>core/</code></td>
+<td><code>VulkanRenderer.hpp</code>, <code>VulkanDeviceContext.hpp</code>, <code>VulkanFrameSync.hpp</code>, <code>VulkanFrameCapture.hpp</code></td>
+</tr>
+<tr>
+<td><code>gpu/</code></td>
+<td><code>VulkanGpuBufferImage.hpp</code>, <code>VulkanSpvShaderLoader.hpp</code></td>
+</tr>
+<tr>
+<td><code>present/</code></td>
+<td><code>VulkanPresentRenderPass.hpp</code>, <code>VulkanPresentationFramebuffers.hpp</code>, <code>VulkanDepthResources.hpp</code></td>
+</tr>
+<tr>
+<td><code>scene/</code></td>
+<td><code>VulkanScenePipeline.hpp</code>, <code>VulkanSceneDescriptors.hpp</code>, <code>VulkanSceneOpaquePass.hpp</code></td>
+</tr>
+<tr>
+<td><code>shadow/</code></td>
+<td><code>VulkanDirectionalShadowPass.hpp</code>, <code>VulkanPunctualShadowPass.hpp</code></td>
+</tr>
+<tr>
+<td><code>post/</code></td>
+<td><code>VulkanHdrTonemapPass.hpp</code>, <code>VulkanScreenSpaceEffectsPass.hpp</code></td>
+</tr>
+<tr>
+<td><code>sprites2d/</code></td>
+<td><code>VulkanSpritePass.hpp</code>, <code>VulkanTilemapPass.hpp</code>, <code>VulkanParticlePass.hpp</code></td>
+</tr>
+<tr>
+<td><code>ui/</code></td>
+<td><code>VulkanScreenUiPass.hpp</code></td>
+</tr>
+<tr>
+<td><code>capture/</code></td>
+<td><code>VulkanScreenshotCapture.hpp</code>, <code>VulkanVideoCapture.hpp</code></td>
+</tr>
+<tr>
+<td><code>lighting/</code></td>
+<td><code>SceneLightingResolver.hpp</code>, <code>SceneLightingProfile.hpp</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="mental-model">Mental model</h2>
+<ol>
+<li><strong>Simulation</strong> — <code>GameWorld</code> + <code>GameObject</code> + <code>GameComponent</code>; tick via <code>IGame::OnUpdate</code>.</li>
+<li><strong>Render snapshot</strong> — Each frame, gameplay fills <code>SceneRenderParams</code> (draws, lights, sprites, UI).</li>
+<li><strong>Presentation</strong> — <code>VulkanRenderer</code> orchestrates passes under <code>render/*/</code> (shadow → HDR scene → SSAO → tonemap → screen UI). Instance/device/swapchain live in <code>VulkanDeviceContext</code>; frame sync in <code>VulkanFrameSync</code>.</li>
+</ol>
+<p>Games implement <code>IGame</code> (<code>spark/engine/IGame.hpp</code>). Optional <code>Game</code> base owns a <code>Scene</code> and forwards component updates.</p>
+<h2 id="license">License</h2>
+<p>Spark is licensed under the <a href="LICENSE">MIT License</a> with the <a href="https://commonsclause.com">Commons Clause</a> restriction, which prohibits selling the software itself.</p>
+<h2 id="asset-credits">Asset credits</h2>
+<p>See <a href="assets/CREDITS.md"><code>assets/CREDITS.md</code></a>.</p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

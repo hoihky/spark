@@ -443,6 +443,29 @@ physics.GetQueries2D().OverlapArcDynamics(
 <pre><code class="language-cpp">bool grounded = RaycastWorld2D(world, footX, footY, 0.0F, -1.0F, 0.08F, filter, hit);
 </code></pre>
 <p>Or use <code>Rigidbody2DComponent::IsGrounded()</code> after simulation.</p>
+<h2 id="d-raycasts-scene-mesh">3D Raycasts (Scene / Mesh)</h2>
+<p>3D physics queries for triggers and overlaps are handled via <code>TriggerVolume3DComponent</code> signals and <code>PhysicsSubsystem::SimulateAll3D</code>. For <strong>picking</strong> and <strong>hitscan weapons</strong>, use scene raycast helpers:</p>
+<pre><code class="language-cpp">#include "spark/scene/MeshRaycast.hpp"
+#include "spark/scene/Scene.hpp"
+
+// Sphere hit test (FPS targets, simple pickups)
+float hitT = 0.0F;
+float bestT = maxDistance;
+if (TryRaycastSphereWorld(rayOrigin, rayDir, centerWorld, radius, 1.0e-4F, bestT, hitT)) {
+    // hit at rayOrigin + rayDir * hitT
+}
+
+// Mesh-accurate pick (scene editor, mesh targets)
+SceneRaycastHit hit{};
+SceneRaycastOptions opts{};
+if (scene.RaycastPick(ray, hit, opts) &amp;&amp; hit.object) {
+    GameObject* picked = hit.object;
+}
+
+// Ray vs single mesh in world space
+if (TryRaycastMeshWorld(rayOrigin, rayDir, *mesh, worldMatrix, tMin, tMax, outT)) { ... }
+</code></pre>
+<p>See <code>SceneEditor3DDemo</code> for editor picking and <code>8-3d-game/04-shooting.md</code> for FPS hitscan.</p>
 <p>Next: <a href="05-physics-3d.html">Physics 3D</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -485,6 +508,10 @@ physics.GetQueries2D().OverlapArcDynamics(
                         
                         <li class="toc-h2">
                           <a href="#ground-check-pattern">Ground Check Pattern</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#3d-raycasts-scene-mesh">3D Raycasts (Scene / Mesh)</a>
                         </li>
                         
                   </ul>

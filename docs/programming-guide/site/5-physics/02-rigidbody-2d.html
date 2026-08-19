@@ -416,7 +416,7 @@ float GetGravityScale() const noexcept;
 
 PhysicsSubsystem physics;
 
-void OnLoad() {
+void OnAttach(IEngineContext&amp; context) override {
     physics.GetWorld2D().GetSettings().gravityY = -30.0F;
     physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
 }

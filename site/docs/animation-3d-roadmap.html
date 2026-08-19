@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Animation Roadmap · Spark Game Engine</title>
+  <meta name="description" content="3D Animation — Engine Roadmap & Tracked Tasks">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="3d-animation-engine-roadmap-tracked-tasks">3D Animation — Engine Roadmap &amp; Tracked Tasks</h1>
+<p>Living plan for <strong>skeletal mesh playback</strong>, <strong>gameplay-driven clip control</strong>, <strong>blending</strong>, <strong>events</strong>, and <strong>scale</strong>. It complements the high-level traversal/combat items in <a href="OPEN_WORLD_ACTION_ROADMAP.md"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase F) with concrete engine work items, and the cross-system gap summary in <a href="3D_ACTION_GAME_GAPS.md"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.8, <code>include/spark/animation/Skeleton.hpp</code>, <code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code>, <code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>shaders/scene.vert</code>.</p>
+<p><strong>2D reference (target parity for gameplay drivers):</strong> <code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code> — see <a href="2D_ARPG_FEATURES.md"><code>2D_ARPG_FEATURES.md</code></a>.</p>
+<hr />
+<h2 id="how-to-track-work">How to track work</h2>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Task ID</strong></td>
+<td><code>AN3D-M{milestone}-{nn}</code> — stable across PRs and issues</td>
+</tr>
+<tr>
+<td><strong>Priority</strong></td>
+<td><strong>P0</strong> must for milestone exit · <strong>P1</strong> should · <strong>P2</strong> nice</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Use GitHub issue state, or check boxes in this file when merging</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Suggested GitHub labels:</strong> <code>animation</code>, <code>3d</code>, <code>milestone-M1</code> … <code>milestone-M6</code></p>
+<p><strong>Issue title format:</strong> <code>[AN3D-M1-03] Animator: loop modes (Loop / Once / Hold)</code></p>
+<p>Copy the <strong>Issue body</strong> block under each task when filing issues (or use the bulk script in <a href="#8-bulk-github-issue-creation-optional">§8</a>).</p>
+<hr />
+<h2 id="current-baseline-as-of-this-doc">Current baseline (as of this doc)</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>glTF skinned load (first skinned node)</td>
+<td>Done — <code>TryLoadSkinnedCharacterFromGltf</code>, <code>GameWorld::LoadSkinnedGltf</code></td>
+</tr>
+<tr>
+<td>Joint palette GPU skinning (≤64 joints)</td>
+<td>Done — SSBO + <code>scene.vert</code> / shadow pass</td>
+</tr>
+<tr>
+<td>Single-clip playback</td>
+<td>Done — <code>AnimatorComponent</code> (loop modes, crossfade, <code>ComputeJointPalette</code>)</td>
+</tr>
+<tr>
+<td>Lit + shadow skinned draws</td>
+<td>Done — <code>SceneSubmit</code>, <code>VulkanRenderer</code></td>
+</tr>
+<tr>
+<td>Walk clip heuristic</td>
+<td>Done — name contains <code>"walk"</code></td>
+</tr>
+<tr>
+<td>Bind-up / facing yaw helpers</td>
+<td>Done — <code>SkinnedGltfAsset</code></td>
+</tr>
+<tr>
+<td>Loop modes / crossfade / clip API (M1)</td>
+<td>Done — <code>AnimLoopMode</code>, <code>SetClipIndexWithCrossfade</code>, C/C# bindings</td>
+</tr>
+<tr>
+<td>3D animation state machine (M2)</td>
+<td>Partial — <code>Character3DAnimFsmComponent</code> (locomotion + attack)</td>
+</tr>
+<tr>
+<td>Clip blending / crossfade</td>
+<td>Done (M1 two-clip crossfade); blend tree (M3) not started</td>
+</tr>
+<tr>
+<td>Animation events / root motion / IK</td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td>C# / C API clip control</td>
+<td>Done (M1) — loop mode, finished, crossfade, clip names</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="milestone-overview">Milestone overview</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Goal</th>
+<th>Depends on</th>
+<th>Maps to open-world</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>M1</strong></td>
+<td>Animator v1 — API, loop modes, crossfade, cull</td>
+<td>—</td>
+<td>F3 prerequisite</td>
+</tr>
+<tr>
+<td><strong>M2</strong></td>
+<td>3D character FSM — locomotion + combat overlays</td>
+<td>M1</td>
+<td>F3, F4</td>
+</tr>
+<tr>
+<td><strong>M3</strong></td>
+<td>Blend tree lite — 2-clip + 1D speed tree</td>
+<td>M1</td>
+<td>F3</td>
+</tr>
+<tr>
+<td><strong>M4</strong></td>
+<td>Gameplay hooks — events, root motion, attachments</td>
+<td>M1, M2</td>
+<td>F4, G1</td>
+</tr>
+<tr>
+<td><strong>M5</strong></td>
+<td>Scale &amp; content — joints, materials, morph, IK</td>
+<td>M1–M3</td>
+<td>F5, A2 budgets</td>
+</tr>
+<tr>
+<td><strong>M6</strong></td>
+<td>Tooling &amp; pipeline — export rules, debug viz</td>
+<td>M1</td>
+<td>§0 content pipeline</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended order:</strong> M1 → M2 → M3 → M4 (M5/M6 in parallel where possible).</p>
+<hr />
+<h2 id="m1-animator-v1-api-playback-semantics">M1 — Animator v1 (API + playback semantics)</h2>
+<p><strong>Exit criteria:</strong> A C# or gameplay module can switch clips, play one-shots, and query clip finished <strong>without</strong> custom engine C++. <code>SceneSubmit</code> skips off-screen skinned draws when spatial policy is enabled.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M1-01</td>
+<td><strong>C++ API:</strong> <code>AnimatorComponent</code> — <code>GetClipCount</code>, <code>GetClipName</code>, <code>FindClipIndexByName</code>, document thread/ownership</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-02</td>
+<td><strong>Loop mode:</strong> <code>enum class AnimLoopMode { Loop, Once, Hold }</code> on animator; <code>Skeleton::ComputePalette</code> respects mode (no <code>fmod</code> for Once/Hold)</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-03</td>
+<td><strong><code>IsClipFinished()</code></strong> for <code>Once</code> (mirror <code>SpriteAnimatorComponent</code>)</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-04</td>
+<td><strong>Clip change:</strong> <code>SetClipIndex</code> resets time (configurable); optional <code>SetClipIndexWithCrossfade(index, durationSec)</code></td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-05</td>
+<td><strong>Crossfade v1:</strong> two-clip palette lerp (fixed duration, e.g. 0.15–0.25 s) — lerp TRS per joint then solve hierarchy</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-06</td>
+<td><strong>C API:</strong> <code>spark_animator_set_clip</code>, <code>get/set_time</code>, <code>get/set_speed</code>, <code>get_loop_mode</code>, <code>is_finished</code>, clip count/name</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-07</td>
+<td><strong>C# bindings:</strong> expose M1 API on <code>AnimatorComponent</code> (not only <code>Create</code>)</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-08</td>
+<td><strong><code>SceneSubmit</code>:</strong> skinned collection via <code>ForEachSkinnedDrawableInViewFrustum</code> when <code>Scene</code> has spatial partition (match rigid cull path)</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-09</td>
+<td><strong>Tests / demo:</strong> Character or ThreeDDemo — switch idle/walk/run by key; one-shot clip with finished callback</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>AN3D-M1-10</td>
+<td><strong>Docs:</strong> update ARCHITECTURE §5.8 + bindings README with animator usage</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Issue template — AN3D-M1-02 (example)</summary>
+
+**Title:** `[AN3D-M1-02] Animator: loop modes (Loop / Once / Hold)`
+
+**Body:**
+
+<pre><code>Milestone: M1 — Animator v1
+Priority: P0
+
+## Summary
+Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skeleton::ComputePalette for Once/Hold.
+
+## Acceptance
+- [ ] Once: clip stops at duration; IsClipFinished true
+- [ ] Hold: clip stops at last frame
+- [ ] Loop: current behavior preserved
+- [ ] C# + C API exposed
+
+## Files (expected)
+- include/spark/ecs/components/animation/AnimatorComponent.hpp
+- src/spark/animation/Skeleton.cpp
+- bindings (C API + C#)
+</code></pre>
+
+</details>
+
+<hr />
+<h2 id="m2-3d-character-animation-fsm">M2 — 3D character animation FSM</h2>
+<p><strong>Exit criteria:</strong> Maze3D / CharacterCamera demo use a reusable component; no hard-coded <code>walkClipIndex</code> in game code. Locomotion + optional combat overlay behave like 2D FSM.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M2-01</td>
+<td><strong>New component:</strong> <code>CharacterAnim3DComponent</code> (or <code>SkeletalAnimFsmComponent</code>) — drives <code>AnimatorComponent</code> on same or child object</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-02</td>
+<td><strong>Locomotion input:</strong> speed from <code>Rigidbody3DComponent</code> velocity and/or character motor; thresholds for idle / move / sprint</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-03</td>
+<td><strong>Clip resolution:</strong> by explicit indices or name patterns (<code>idle</code>, <code>walk</code>, <code>run</code>, <code>sprint</code>)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-04</td>
+<td><strong>Combat overlay:</strong> optional attack/hurt clips (non-loop); priority over locomotion; clear when finished</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-05</td>
+<td><strong>Blackboard hook:</strong> optional <code>AiAgentComponent</code> int slot for combat command (parity with <code>kAiBlackboardIntSprite2DCombatCommand</code>)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-06</td>
+<td><strong><code>RequestAttack</code> / <code>RequestHurt</code></strong> public API on FSM component</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-07</td>
+<td><strong>Component order:</strong> document “FSM before Animator” update order; enforce or sort in <code>GameWorld::UpdateGameObjects</code> if needed</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-08</td>
+<td><strong>Refactor demos:</strong> <code>Maze3DDemo</code>, <code>CharacterCameraDemo</code> use FSM; remove ad-hoc walk-only setup</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-09</td>
+<td><strong>C# + C API:</strong> add component from gameplay; configure clip indices or name table</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M2-10</td>
+<td><strong>Docs:</strong> <code>docs/ANIMATION_3D_ROADMAP.md</code> + short “Character animation” section in developer guide</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="m3-blend-tree-lite">M3 — Blend tree lite</h2>
+<p><strong>Exit criteria:</strong> Walk→run transition is smooth via blend parameter (e.g. normalized speed). No visible pop when crossing threshold.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M3-01</td>
+<td><strong><code>Skeleton::ComputeBlendedPalette(clipA, clipB, t)</code></strong> — blend local TRS per joint, then hierarchy + bind</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-02</td>
+<td><strong>Animator blend state:</strong> <code>SetBlend(clips, weight)</code> or dual-clip + <code>blend01</code> updated each frame</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-03</td>
+<td><strong>1D blend tree data:</strong> ordered <code>{threshold, clipIndex}</code> pairs; evaluator returns clip pair + local t</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-04</td>
+<td><strong>FSM integration:</strong> <code>CharacterAnim3DComponent</code> feeds speed01 into blend tree instead of discrete switches</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-05</td>
+<td><strong>Crossfade interaction:</strong> blend tree output composes with M1 crossfade (define precedence)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-06</td>
+<td><strong>Debug:</strong> log/display active clips + blend weight (dev overlay or HUD line)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-07</td>
+<td><strong>Demo:</strong> CharacterCamera — analog walk/run from stick magnitude</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M3-08</td>
+<td><strong>Unit tests:</strong> blend at t=0, 1, 0.5 matches single-clip palettes</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="m4-gameplay-hooks-events-root-motion-attachments">M4 — Gameplay hooks (events, root motion, attachments)</h2>
+<p><strong>Exit criteria:</strong> One melee attack can spawn hitbox from an animation event; optional root motion moves character with “in place” toggle.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M4-01</td>
+<td><strong>Event schema:</strong> clip name + time + event name (+ optional float/int payload) — JSON sidecar or glTF extras</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-02</td>
+<td><strong>Runtime:</strong> fire <code>SignalId::AnimationEvent</code> (or dedicated callback) when playback crosses event time (once per crossing)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-03</td>
+<td><strong>Editor/export note:</strong> document Blender → glTF event naming convention</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-04</td>
+<td><strong>Root motion extraction:</strong> per-frame delta from chosen root/hips joint in clip space</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-05</td>
+<td><strong><code>RootMotionComponent</code>:</strong> apply delta to owner transform or motor; <code>inPlace</code> flag disables translation</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-06</td>
+<td><strong>Attachment component:</strong> bind child <code>GameObject</code> to joint index/name; update local/world each frame</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-07</td>
+<td><strong>Hit windows:</strong> sample doc + demo sphere/capsule enabled between event <code>active_start</code> / <code>active_end</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-08</td>
+<td><strong>Combat demo slice:</strong> minimal attack clip + event-driven hit trace (ties to OPEN_WORLD G1)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M4-09</td>
+<td><strong>C# events:</strong> subscribe from gameplay module</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="m5-scale-content-breadth">M5 — Scale &amp; content breadth</h2>
+<p><strong>Exit criteria:</strong> Documented path for 100+ skinned NPCs within frame budget OR art rules for ≤64 joints + shared clips; glTF validation catches common failures at load.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M5-01</td>
+<td><strong>Joint limit strategy:</strong> raise <code>MaxJoints</code> to 128 <em>or</em> split palette across two SSBO binds (design doc + pick one)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-02</td>
+<td><strong>Palette cache:</strong> keyed by <code>(skeleton*, clip, quantizedTime)</code> for identical instances</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-03</td>
+<td><strong>Budget enforcement:</strong> max skinned draws / palette updates per frame (OPEN_WORLD A2)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-04</td>
+<td><strong>glTF interpolation:</strong> STEP path type for stepped keys</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-05</td>
+<td><strong>glTF interpolation:</strong> CUBICSPLINE (or document unsupported + exporter preset)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-06</td>
+<td><strong>Multi-primitive skinned mesh:</strong> all primitives of skin node merged (material slots later)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-07</td>
+<td><strong>Skinned glTF PBR:</strong> normal + ORM textures from materials (align with <code>MaterialComponent</code>)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-08</td>
+<td><strong>Morph targets:</strong> load + CPU blend 1–4 shapes (or GPU attribute stream)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-09</td>
+<td><strong>Foot IK (v1):</strong> raycast down; adjust ankle/knee with simple two-bone IK</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-10</td>
+<td><strong>Aim / look-at IK (v1):</strong> spine chain partial blend toward target</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M5-11</td>
+<td><strong>Retargeting:</strong> <em>spike only</em> — document defer; optional later milestone</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="m6-tooling-content-pipeline">M6 — Tooling &amp; content pipeline</h2>
+<p><strong>Exit criteria:</strong> Artists have a one-page export checklist; engineers get skeleton debug draw and load-time warnings.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M6-01</td>
+<td><strong><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></strong> — joints ≤64, naming, clip names, no unsupported interpolators</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M6-02</td>
+<td><strong>Load validation:</strong> warnings for joint count, zero duration, missing inverse bind, no animations</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M6-03</td>
+<td><strong>Debug draw:</strong> skeleton lines in world (dev key / demo flag)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M6-04</td>
+<td><strong>Debug HUD:</strong> clip name, time, loop mode, blend weight</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M6-05</td>
+<td><strong>Sample assets:</strong> document CesiumMan / Fox expected clips; add minimal humanoid with idle/walk/run/attack</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M6-06</td>
+<td><strong>CI smoke:</strong> load skinned glTF headless; assert joint count &amp; one palette sample</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="dependency-graph">Dependency graph</h2>
+<div class="mermaid-wrap"><div class="mermaid">flowchart TB
+  M1[M1 Animator v1]
+  M2[M2 Character FSM]
+  M3[M3 Blend tree]
+  M4[M4 Events / root motion]
+  M5[M5 Scale / IK / content]
+  M6[M6 Tooling]
+  M1 --> M2
+  M1 --> M3
+  M2 --> M3
+  M1 --> M4
+  M2 --> M4
+  M1 --> M5
+  M3 --> M5
+  M1 --> M6
+</div></div>
+<hr />
+<h2 id="mapping-to-open_world_action_roadmap-phase-f">Mapping to OPEN_WORLD_ACTION_ROADMAP (Phase F)</h2>
+<table>
+<thead>
+<tr>
+<th>Open-world ID</th>
+<th>3D animation milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F3 Locomotion blend tree</td>
+<td>M3 (+ M2 thresholds)</td>
+</tr>
+<tr>
+<td>F4 Hit reactions, staggers</td>
+<td>M2 combat overlay + M4 events</td>
+</tr>
+<tr>
+<td>F5 IK foot / aim</td>
+<td>M5-09, M5-10</td>
+</tr>
+<tr>
+<td>G1 Hit model (animation windows)</td>
+<td>M4-07, M4-08</td>
+</tr>
+<tr>
+<td>A2 Frame budgets (skinned cap)</td>
+<td>M5-03</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-bulk-github-issue-creation-optional">8. Bulk GitHub issue creation (optional)</h2>
+<p>From repo root, with <a href="https://cli.github.com/"><code>gh</code></a> authenticated:</p>
+<pre><code class="language-bash"># Example — one issue; repeat with title/body from tables above
+gh issue create \
+  --title &quot;[AN3D-M1-01] Animator: clip count, names, FindClipIndexByName&quot; \
+  --label &quot;animation,3d,milestone-M1&quot; \
+  --body &quot;$(cat &lt;&lt;'EOF'
+Milestone: M1 — Animator v1
+Priority: P0
+
+## Summary
+Expose clip enumeration and lookup on AnimatorComponent / Skeleton.
+
+## Acceptance
+- [ ] GetClipCount / GetClipName on AnimatorComponent
+- [ ] FindClipIndexByName (case-insensitive optional)
+- [ ] C API + C# bindings
+EOF
+)&quot;
+</code></pre>
+<p>Create labels once:</p>
+<pre><code class="language-bash">gh label create &quot;animation&quot; --description &quot;Skeletal / clip animation&quot; --color &quot;1d76db&quot; 2&gt;/dev/null || true
+gh label create &quot;3d&quot; --description &quot;3D engine features&quot; --color &quot;5319e7&quot; 2&gt;/dev/null || true
+for m in 1 2 3 4 5 6; do
+  gh label create &quot;milestone-M${m}&quot; --description &quot;ANIMATION_3D_ROADMAP M${m}&quot; --color &quot;0e8a16&quot; 2&gt;/dev/null || true
+done
+</code></pre>
+<p><strong>Task checklist file:</strong> track completion by checking boxes in this document in the same PR that closes each issue.</p>
+<hr />
+<h2 id="9-references-in-this-repo">9. References in this repo</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>include/spark/animation/Skeleton.hpp</code></td>
+<td>Clips, palette, joint limit</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/skinned_mesh_gltf.cpp</code></td>
+<td>glTF import</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code></td>
+<td>Runtime playback</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp</code></td>
+<td>2D FSM pattern to mirror</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/SceneSubmit.cpp</code></td>
+<td>Skinned draw submission (core walk)</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/SceneSubmitLighting.cpp</code></td>
+<td>Directional light / profile overrides during submit</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/SceneSubmitMaterial.cpp</code></td>
+<td>Material texture resolve into <code>sceneTextures</code></td>
+</tr>
+<tr>
+<td><code>src/spark/scene/SceneSubmitDrawPartition.cpp</code></td>
+<td>Opaque vs transparent draw partition</td>
+</tr>
+<tr>
+<td><code>shaders/scene.vert</code></td>
+<td>GPU skinning</td>
+</tr>
+<tr>
+<td><code>src/spark/demo/Maze3DDemo.cpp</code></td>
+<td>Skinned character integration</td>
+</tr>
+<tr>
+<td><code>scripting/bindings/generated/Spark.Bindings/</code></td>
+<td>C# animator API (<code>AnimatorComponent</code>, loop modes, crossfade)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: 3D animation roadmap — all milestones M1–M6. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

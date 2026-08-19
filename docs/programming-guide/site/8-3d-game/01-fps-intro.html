@@ -378,12 +378,39 @@
             <h1>01 fps intro</h1>
           </header>
           <div class="doc-body"><h1 id="fps-introduction">FPS Introduction</h1>
-<p><code>samples/fps_game_template/</code> demonstrates a minimal <strong>first-person arena</strong>:</p>
+<p>SparkDemo includes several 3D first-person references — there is no separate <code>samples/</code> tree in the repository. Use these as templates:</p>
+<table class="table">
+<thead>
+<tr>
+<th>Demo</th>
+<th>Launcher #</th>
+<th>Highlights</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CharacterCameraDemo</code></td>
+<td>5</td>
+<td>3rd/1st person, <code>CharacterController3DComponent</code>, spring arm</td>
+</tr>
+<tr>
+<td><code>PhysicsBallThrow3DDemo</code></td>
+<td>11</td>
+<td>3D physics, throwing, cursor capture</td>
+</tr>
+<tr>
+<td><code>Maze3DDemo</code></td>
+<td>9</td>
+<td>Nav mesh guard, perception, gems, fly camera</td>
+</tr>
+</tbody>
+</table>
+<p>This walkthrough describes a <strong>minimal first-person arena</strong> you can build by combining patterns from those demos:</p>
 <ul>
 <li><code>FlyCamera</code> with cursor capture</li>
 <li>Lit PBR cubes and ground plane</li>
 <li>LMB spawns emissive tracer bullets</li>
-<li>Custom ray-sphere hitscan (no physics middleware for shooting)</li>
+<li><code>TryRaycastSphereWorld</code> hitscan (no physics middleware for shooting)</li>
 </ul>
 <h2 id="class-design-fpsgame">Class Design: <code>FpsGame</code></h2>
 <pre><code class="language-cpp">class FpsGame final : public Game {
@@ -401,6 +428,7 @@ struct TracerBullet {
     float timeLeft = 0.0F;
 };
 </code></pre>
+<p>Reference implementations: <code>CharacterCameraDemo.cpp</code> (camera + character), <code>SceneEditor3DDemo.cpp</code> (ray picking with <code>TryRaycastSphereWorld</code>).</p>
 <p>Next: <a href="02-project-setup.html">Project Setup</a>.</p>
 </div>
           <footer class="doc-footer">

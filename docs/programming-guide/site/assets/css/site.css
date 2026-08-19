@@ -210,6 +210,8 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   padding: 0.15em 0.4em;
   border-radius: 5px;
   color: #be185d;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
 }
 
 .doc-body pre {
@@ -226,6 +228,8 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   padding: 0;
   color: inherit;
   font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
 }
 
 .doc-body pre code.hljs {

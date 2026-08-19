@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spark Game Engine — C++23 Vulkan Game Engine</title>
+  <meta name="description" content="Spark is a C++23 desktop game engine with Vulkan forward rendering, ECS scene model, 2D and 3D physics, AI, audio, retained-mode GUI, and optional Dear ImGui tools.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site/css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="#overview">Overview</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#features">Features</a>
+        <a href="#programming-guide">Guide</a>
+        <a href="#showcase">Showcase</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="portfolio-layout">
+      <div class="portfolio-main doc-body">
+        <section class="hero" id="top">
+          <img
+            class="hero-logo"
+            src="docs/media/spark-engine-logo.jpg"
+            alt="Spark game engine logo"
+            width="120"
+            height="120"
+          >
+          <div class="hero-text">
+            <h1>Spark Game Engine</h1>
+            <p class="hero-tagline">
+              A desktop-focused <strong>C++23</strong> game engine combining GLFW, a Vulkan forward renderer,
+              entity–component simulation, custom 2D/3D physics, AI modules, audio mixing, a retained-mode GUI
+              toolkit, and optional <strong>Dear ImGui</strong> for editor and debug tooling.
+            </p>
+            <div class="hero-links">
+              <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub repository ↗</a>
+              <a href="#quick-start">Quick start</a>
+              <a href="docs/programming-guide/site/index.html">Programming guide</a>
+              <a href="site/docs/architecture-and-developer-guide.html">Architecture docs</a>
+            </div>
+          </div>
+        </section>
+
+        <section id="overview">
+          <h2 class="section-title">Overview</h2>
+          <p>
+            Spark is an experimental, education-oriented engine prototype built to explore modern C++ game
+            architecture: explicit frame contracts, dependency inversion over concrete Vulkan types, and
+            composition via components rather than deep inheritance hierarchies. The default binary
+            <code>SparkDemo</code> ships an interactive launcher with <strong>20 built-in modes</strong> —
+            from 3D fly scenes and a scene editor prototype to 2D platformers, tilemap showcases, and
+            classic arcade demos.
+          </p>
+
+          <div class="pillar-grid">
+            <article class="pillar-card">
+              <h3>Explicit frame contract</h3>
+              <p>Simulation runs in <code>OnUpdate</code>; rendering is an immutable <code>SceneRenderParams</code> snapshot handed to the GPU in <code>OnRender</code>.</p>
+            </article>
+            <article class="pillar-card">
+              <h3>Dependency inversion</h3>
+              <p>Games depend on <code>IGame</code> and <code>IEngineContext</code>, not on <code>VulkanRenderer</code> internals.</p>
+            </article>
+            <article class="pillar-card">
+              <h3>Composition</h3>
+              <p>Behavior lives in <code>GameComponent</code> types attached to lightweight <code>GameObject</code> entities.</p>
+            </article>
+            <article class="pillar-card">
+              <h3>Demos as documentation</h3>
+              <p>Every major subsystem has a runnable demo under <code>src/spark/demo/</code> and a chapter in the programming guide.</p>
+            </article>
+          </div>
+
+          <ul class="skill-list" aria-label="Technologies">
+            <li>C++23</li>
+            <li>Vulkan</li>
+            <li>GLFW</li>
+            <li>ECS</li>
+            <li>PBR &amp; Toon</li>
+            <li>2D Tilemaps</li>
+            <li>Skinned glTF</li>
+            <li>GOAP &amp; FSM AI</li>
+            <li>Dear ImGui</li>
+            <li>CMake</li>
+          </ul>
+        </section>
+
+        <section id="architecture">
+          <h2 class="section-title">Engine architecture</h2>
+          <p class="section-lead">
+            Spark separates application logic, simulation, and rendering through small interfaces and a
+            per-frame data hand-off. This section summarizes the
+            <a href="site/docs/architecture-and-developer-guide.html">Architecture &amp; Developer Guide</a>.
+          </p>
+
+          <h3 class="subsection-title">High-level flow</h3>
+          <div class="mermaid-wrap">
+            <pre class="mermaid">
+flowchart TB
+    subgraph app [Application]
+        IGame[IGame implementation]
+    end
+    subgraph engine [Engine]
+        Loop[Main loop: poll, tick, render, present]
+        Ctx[IEngineContext]
+    end
+    subgraph world [Simulation]
+        GW[GameWorld]
+        GO[GameObjects + Components]
+    end
+    subgraph draw [Frame output]
+        SRP[SceneRenderParams]
+        VK[VulkanRenderer]
+    end
+    IGame --> Loop
+    Loop --> Ctx
+    IGame --> GW
+    GW --> GO
+    IGame --> SRP
+    Ctx --> VK
+    SRP --> VK
+            </pre>
+          </div>
+
+          <h3 class="subsection-title">Frame sequence</h3>
+          <p>Each frame the engine polls input, ticks your game, pumps audio, records GPU work, and presents the swapchain:</p>
+          <div class="mermaid-wrap">
+            <pre class="mermaid">
+sequenceDiagram
+    participant E as Engine
+    participant G as IGame
+    participant S as SoundEngine
+    participant V as VulkanRenderer
+    E->>E: PollEvents + BeginInputFrame
+    E->>G: OnUpdate(timing, context)
+    E->>S: PumpFrame(delta)
+    E->>G: OnRender(frame, context)
+    E->>V: PresentFrame
+            </pre>
+          </div>
+
+          <h3 class="subsection-title">Core types</h3>
+          <table>
+            <thead>
+              <tr><th>Type</th><th>Role</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>Engine</code></td><td>Owns window, <code>VulkanRenderer</code>, input, sound; drives the main loop.</td></tr>
+              <tr><td><code>IGame</code></td><td>Your application contract: <code>OnAttach</code>, <code>OnUpdate</code>, <code>OnRender</code>, <code>OnDetach</code>.</td></tr>
+              <tr><td><code>Game</code></td><td>Optional base class owning a <code>Scene</code> and forwarding component updates.</td></tr>
+              <tr><td><code>GameWorld</code></td><td>Entity storage, hierarchy, asset caches, async loader pump.</td></tr>
+              <tr><td><code>Scene</code></td><td>Query façade: drawables, lights, sprites, tilemaps, UI canvases — no entity ownership.</td></tr>
+              <tr><td><code>SceneRenderParams</code></td><td>Immutable GPU snapshot: draws, lights, sprites, screen UI, textures.</td></tr>
+              <tr><td><code>IEngineContext</code></td><td>Stable gameplay API: input, framebuffer size, scene params, optional ImGui layer.</td></tr>
+            </tbody>
+          </table>
+
+          <h3 class="subsection-title">Rendering data path</h3>
+          <div class="mermaid-wrap">
+            <pre class="mermaid">
+flowchart LR
+    ECS[GameWorld ECS] --> Fill[FillStandardLitSceneFromWorld]
+    Fill --> SRP[SceneRenderParams]
+    GUI[PaintUiCanvases] --> SRP
+    SRP --> VK[VulkanRenderer]
+    IMGUI[Dear ImGui overlay] --> VK
+    VK --> Present[Swapchain Present]
+            </pre>
+          </div>
+          <p>
+            For typical 3D scenes, <code>SubmitStandardLitSceneFromWorld</code> walks the ECS, registers textures,
+            fills draw items (including skinned meshes and sky), sorts transparent draws, and submits sprites and
+            tilemaps. Demos that need custom cameras or gizmos can build <code>SceneRenderParams</code> manually —
+            see <code>ThreeDDemo</code> and <code>SceneEditor3DDemo</code>.
+          </p>
+
+          <h3 class="subsection-title">ECS model</h3>
+          <p>
+            A <code>GameObject</code> is a named entity with a parent/child hierarchy and a bag of components.
+            <code>GameWorld::UpdateGameObjects</code> ticks every attached <code>GameComponent</code> in priority order
+            (billboards, animation drivers, animators, camera rigs, then default gameplay). Components communicate
+            on the same entity via <code>EmitSignal</code> / <code>OnSignal</code>. The engine ships
+            <strong>70+ built-in component types</strong> — see the
+            <a href="docs/programming-guide/site/1-overview-architecture/07-game-component-reference.html">component reference</a>.
+          </p>
+
+          <h3 class="subsection-title">Repository layout</h3>
+          <table>
+            <thead>
+              <tr><th>Path</th><th>Contents</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>include/spark/</code></td><td>Public API — engine, ECS, scene, render, physics, UI, demos.</td></tr>
+              <tr><td><code>src/spark/</code></td><td>Implementations matching public headers.</td></tr>
+              <tr><td><code>src/Engine.cpp</code></td><td>Main engine loop (not under <code>spark/engine/</code>).</td></tr>
+              <tr><td><code>shaders/</code></td><td>GLSL sources compiled to SPIR-V via CMake <code>SparkShaders</code> target.</td></tr>
+              <tr><td><code>assets/</code></td><td>Runtime fonts, models, textures for demos and samples.</td></tr>
+              <tr><td><code>docs/</code></td><td>Architecture guide, programming guide, roadmaps, lighting notes.</td></tr>
+              <tr><td><code>spark_editor/</code></td><td><code>SparkEditor</code> — docked 3D editor shell.</td></tr>
+              <tr><td><code>samples/</code></td><td>Standalone game templates linking Spark as a library.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="features">
+          <h2 class="section-title">Feature catalog</h2>
+          <p class="section-lead">Subsystem overview from the architecture guide and programming guide capabilities chapter.</p>
+
+          <h3 class="subsection-title">3D rendering</h3>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Forward PBR</h3>
+              <p>GGX specular, metallic-roughness workflow, normal and ORM texture maps, emissive HDR glow.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Toon / cel shading</h3>
+              <p>Stepped diffuse bands and rim lighting via <code>SceneShadingModel::ToonCel</code>.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Lighting &amp; shadows</h3>
+              <p>Directional CSM, clustered point and spot lights with optional punctual shadows, SSAO, HDR tonemap.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Characters</h3>
+              <p>Skinned glTF meshes, skeletal animation, attachment sockets, 3D character FSM locomotion.</p>
+            </article>
+            <article class="feature-card">
+              <h3>World building</h3>
+              <p>Heightfield terrain, sky box/dome/plane with HDR equirect, particles, decals, fog volumes.</p>
+            </article>
+            <article class="feature-card">
+              <h3>glTF pipeline</h3>
+              <p>Async rigid and skinned glTF loading on a worker thread; materials bound via <code>MultiMaterialComponent</code>.</p>
+            </article>
+          </div>
+
+          <h3 class="subsection-title">2D rendering</h3>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Sprites</h3>
+              <p>Textured quads with tint, sort modes, optional 2D lighting modes, flipbook animation.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Tilemaps</h3>
+              <p>Multi-layer grids, tilesets, autotile, animated tiles, TMX import, gameplay walkability grid.</p>
+            </article>
+            <article class="feature-card">
+              <h3>2D camera</h3>
+              <p>Orthographic <code>Camera2DComponent</code> with rig helpers and Y-sort occlusion.</p>
+            </article>
+          </div>
+
+          <h3 class="subsection-title">Simulation &amp; tools</h3>
+          <table>
+            <thead>
+              <tr><th>Subsystem</th><th>Highlights</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Physics 2D</strong></td><td>Grid broad-phase, dynamic/static colliders, raycasts, overlap queries, trigger events.</td></tr>
+              <tr><td><strong>Physics 3D</strong></td><td>Sphere/capsule dynamics, character controller, distance joints, static box colliders.</td></tr>
+              <tr><td><strong>AI</strong></td><td>FSM, GOAP, fuzzy logic, steering behaviors, grid pathfinding via <code>AiAgentComponent</code>.</td></tr>
+              <tr><td><strong>Audio</strong></td><td>Software mixer, WAV decode, <code>SoundCueComponent</code>, background music.</td></tr>
+              <tr><td><strong>UI (retained)</strong></td><td><code>UiCanvasComponent</code> tree, themed controls, input router, screen paint to params.</td></tr>
+              <tr><td><strong>Dear ImGui</strong></td><td>Optional docking tools; <code>UiToolkitSettings</code> switches native vs ImGui backend.</td></tr>
+              <tr><td><strong>Scene authoring</strong></td><td><code>SceneSerializer</code> v3/v4, <code>SceneManager</code> async load, scene editor prototype.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="programming-guide">
+          <h2 class="section-title">Programming guide</h2>
+          <p class="section-lead">
+            The <a href="docs/programming-guide/site/index.html">Spark Programming Guide</a> is an eight-part,
+            47-chapter developer course for building 2D and 3D games. A static HTML site is also available at
+            <a href="docs/programming-guide/site/index.html">docs/programming-guide/site/</a>.
+          </p>
+
+          <table>
+            <thead>
+              <tr><th>Part</th><th>Folder</th><th>Topics</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1</strong></td>
+                <td><code>1-overview-architecture/</code></td>
+                <td>Introduction, capabilities, build &amp; run, engine loop, <code>IGame</code> contract, ECS, component reference, UI toolkits.</td>
+              </tr>
+              <tr>
+                <td><strong>2</strong></td>
+                <td><code>2-2d-graphics/</code></td>
+                <td>Sprites, Camera2D, tilemaps, 2D animation, sprite lighting, 2D render pipeline.</td>
+              </tr>
+              <tr>
+                <td><strong>3</strong></td>
+                <td><code>3-3d-graphics/</code></td>
+                <td>Meshes &amp; materials, 3D cameras, lighting, shadows, skinned characters, terrain, sky, particles.</td>
+              </tr>
+              <tr>
+                <td><strong>4</strong></td>
+                <td><code>4-ai/</code></td>
+                <td>Blackboard, FSM, GOAP, pathfinding, steering integration.</td>
+              </tr>
+              <tr>
+                <td><strong>5</strong></td>
+                <td><code>5-physics/</code></td>
+                <td>2D/3D solvers, colliders, queries, layers, tips.</td>
+              </tr>
+              <tr>
+                <td><strong>6</strong></td>
+                <td><code>6-sound/</code></td>
+                <td>Sound engine, clips, cues, background music.</td>
+              </tr>
+              <tr>
+                <td><strong>7</strong></td>
+                <td><code>7-2d-game/</code></td>
+                <td>Full 2D platformer walkthrough — level design, player controller, camera HUD, polish.</td>
+              </tr>
+              <tr>
+                <td><strong>8</strong></td>
+                <td><code>8-3d-game/</code></td>
+                <td>Full 3D FPS arena walkthrough — project setup, shooting, rendering, extending.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 class="subsection-title">Minimal bootstrap</h3>
+          <pre><code>#include "spark/engine/Engine.hpp"
+#include "spark/engine/Game.hpp"
+
+class HelloSpark final : public Spark::Game {
+public:
+    void OnAttach(Spark::IEngineContext&amp; ctx) override {
+        auto* go = GetWorld().CreateGameObject();
+        go-&gt;GetName() = Spark::Utf8String("Root");
+        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
+    }
+};
+
+int main() {
+    Spark::Engine engine(Spark::Engine::NewGame&lt;HelloSpark&gt;());
+    engine.Run();
+    return 0;
+}</code></pre>
+
+          <h3 class="subsection-title">Standard lit scene submit</h3>
+          <pre><code>Spark::SubmitStandardLitSceneFromWorldWithCamera(
+    world, context,
+    lightDirection, lightColor, lightIntensity,
+    ambientColor,
+    /* enableParticles */ true,
+    sceneTimeSeconds);</code></pre>
+          <p>
+            For custom cameras or editor gizmos, fill <code>SceneRenderParams</code> manually and call
+            <code>context.SetSceneRenderParams(params)</code> after painting UI canvases.
+          </p>
+        </section>
+
+        <section id="showcase">
+          <h2 class="section-title">SparkDemo showcase</h2>
+          <p class="section-lead">
+            In-engine captures from <strong>SparkDemo</strong> — the interactive launcher and built-in demo modes.
+            Press <kbd>F12</kbd> for screenshots and <kbd>F9</kbd> for video recording in-game.
+          </p>
+
+          <div class="showcase-grid">
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-01.png" alt="Spark demo screenshot 1" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-02.png" alt="Spark demo screenshot 2" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-03.png" alt="Spark demo screenshot 3" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-04.png" alt="Spark demo screenshot 4" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-05.png" alt="Spark demo screenshot 5" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-06.png" alt="Spark demo screenshot 6" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-07.png" alt="Spark demo screenshot 7" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-08.png" alt="Spark demo screenshot 8" loading="lazy">
+            </figure>
+            <figure class="showcase-item">
+              <img src="docs/media/showcase-09.png" alt="Spark demo screenshot 9" loading="lazy">
+            </figure>
+          </div>
+
+          <h3 class="subsection-title">Built-in demo modes</h3>
+          <ul class="demo-list">
+            <li>Basic 3D scene — fly camera, glTF models, decals</li>
+            <li>Sky — box, dome, plane with HDR equirect</li>
+            <li>Particles</li>
+            <li>Terrain heightfield</li>
+            <li>Character (1st / 3rd person)</li>
+            <li>2D platformer</li>
+            <li>2D maze (broad-phase showcase)</li>
+            <li>3D maze with NavMesh guard</li>
+            <li>3D physics ball throw</li>
+            <li>3D scene editor prototype</li>
+            <li>Tetris, Match-3, Space Invaders</li>
+            <li>3D steering showcase</li>
+            <li>Toon / cel shading</li>
+            <li>Material ball</li>
+            <li>Time of day</li>
+            <li>Farming RPG render layers</li>
+            <li>Tilemap layers, animation &amp; pathfinding</li>
+            <li>Dear ImGui docking tools demo</li>
+          </ul>
+        </section>
+
+        <section id="quick-start">
+          <h2 class="section-title">Quick start</h2>
+          <p><strong>Requirements:</strong> CMake ≥ 3.28, C++23, <a href="https://vulkan.lunarg.com/">Vulkan SDK</a> (<code>glslangValidator</code> on <code>PATH</code>), network on first configure.</p>
+          <pre><code>cmake --preset debug
+cmake --build cmake-build-debug -j
+./cmake-build-debug/SparkDemo</code></pre>
+
+          <table>
+            <thead>
+              <tr><th>Target</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 20 built-in demo modes</td></tr>
+              <tr><td><code>SparkEditor</code></td><td>3D editor shell with dock UI (<code>editor-debug</code> preset)</td></tr>
+              <tr><td><code>SparkScriptHost</code></td><td>C# scripting host via CoreCLR (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td></tr>
+            </tbody>
+          </table>
+
+          <blockquote>
+            External games can link Spark as a library — see <code>game_template/</code> and <code>samples/</code>
+            with <code>SPARK_ROOT</code> pointing at this repository.
+          </blockquote>
+        </section>
+
+        <section id="documentation">
+          <h2 class="section-title">Further reading</h2>
+          <table>
+            <thead>
+              <tr><th>Document</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="docs/programming-guide/site/index.html">Programming guide</a></td>
+                <td>Tutorials, UI toolkits, full component reference</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/architecture-and-developer-guide.html">Architecture &amp; Developer Guide</a></td>
+                <td>Engine loop, ECS, rendering data path, feature catalog</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/lighting-and-shadows.html">Lighting &amp; Shadows</a></td>
+                <td>CSM, punctual lights, SSAO, HDR tonemap</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/materials-and-lighting.html">Materials &amp; Lighting</a></td>
+                <td>PBR channels, IBL, texture array limits</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/spark-editor-plan.html">Spark Editor Plan</a></td>
+                <td>Editor milestones and asset workflow</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/gui-editor-roadmap.html">GUI &amp; Editor Roadmap</a></td>
+                <td>UI toolkit and authoring UI tasks</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/animation-3d-roadmap.html">3D Animation Roadmap</a></td>
+                <td>Skeletal animation milestones</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/readme.html">README</a></td>
+                <td>Repository overview and disclaimer</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <footer class="site-footer">
+          <p>
+            <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">Spark on GitHub</a>
+            · <a href="https://github.com/hoihky/spark-studio" target="_blank" rel="noopener">Spark Studio</a>
+            · <a href="https://hoihky.github.io/" target="_blank" rel="noopener">Hoi Kwan Yeung</a>
+          </p>
+          <p>Spark is an experimental prototype shared for educational purposes. See the README disclaimer.</p>
+        </footer>
+      </div>
+
+      <aside class="toc" aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li class="toc-h3"><a href="#architecture">Frame flow</a></li>
+          <li class="toc-h3"><a href="#architecture">ECS model</a></li>
+          <li><a href="#features">Features</a></li>
+          <li class="toc-h3"><a href="#features">3D rendering</a></li>
+          <li class="toc-h3"><a href="#features">2D rendering</a></li>
+          <li><a href="#programming-guide">Programming guide</a></li>
+          <li><a href="#showcase">Showcase</a></li>
+          <li><a href="#quick-start">Quick start</a></li>
+          <li><a href="#documentation">Further reading</a></li>
+        </ul>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>

@@ -378,12 +378,20 @@
             <h1>05 2d lighting</h1>
           </header>
           <div class="doc-body"><h1 id="d-lighting">2D Lighting</h1>
-<h2 id="spritelighting2dmode"><code>SpriteLighting2DMode</code></h2>
-<p>Each <code>SceneSpriteDraw</code> can carry 2D lighting parameters (<code>spark/render/SpriteLighting2D.hpp</code>):</p>
+<h2 id="spritelighting2dcomponent"><code>SpriteLighting2DComponent</code></h2>
+<p>Attach alongside <code>SpriteComponent</code> to enable per-sprite 2D lighting modes:</p>
+<pre><code class="language-cpp">#include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
+
+go-&gt;AddComponent&lt;SpriteComponent&gt;(tex, tint, uvRect, sortOrder);
+go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(
+    SpriteLighting2DMode::NormalMapped,  // or Ramp, None
+  1.0F,   // normal strength
+  0.0F);  // ramp offset
+</code></pre>
 <table class="table">
 <thead>
 <tr>
-<th>Mode</th>
+<th><code>SpriteLighting2DMode</code></th>
 <th>Effect</th>
 </tr>
 </thead>
@@ -402,28 +410,27 @@
 </tr>
 </tbody>
 </table>
-<p>Fields on <code>SceneSpriteDraw</code>:</p>
-<pre><code class="language-cpp">SpriteLighting2DMode lightingMode = SpriteLighting2DMode::None;
-Vector4 lightingParam0{1, 1, 1, 1};
-Vector4 lightingParam1{1, 0, 0, 0};
-</code></pre>
+<p>The submit path copies mode and parameters into each <code>SceneSpriteDraw</code>.</p>
 <h2 id="directional-light-on-2d-scenes">Directional Light on 2D Scenes</h2>
 <p><code>SubmitStandardLitSceneFromWorld</code> accepts a <strong>sun direction</strong> even for sprite-only scenes — tints sprites when lighting mode is enabled:</p>
-<pre><code class="language-cpp">SubmitStandardLitSceneFromWorld(
-world, context, viewProj, camera.position,
+<pre><code class="language-cpp">SubmitStandardLitSceneFromWorldWithCamera(
+world, context,
 Vector3{0.30F, 0.86F, 0.36F}.Normalized(),  // lightDirectionWorld
 Vector3{1.0F, 0.98F, 0.95F},                 // lightColor
 0.85F,                                       // lightIntensity
 Vector3{0.16F, 0.18F, 0.24F},               // ambientColor
-false, pr, pu, sceneTime,
-SceneSpriteSortMode::SortOrderThenWorldY);
+false,                                       // particles
+sceneTime);
+</code></pre>
+<p>For manual submit with Y-sort:</p>
+<pre><code class="language-cpp">params.spriteSortMode = SceneSpriteSortMode::SortOrderThenWorldY;
 </code></pre>
 <h2 id="y-sort-for-top-down-arpg">Y-Sort for Top-Down ARPG</h2>
 <pre><code class="language-cpp">params.spriteSortMode = SceneSpriteSortMode::SortOrderThenWorldY;
 </code></pre>
-<p>Within the same <code>sortOrder</code>, sprites with <strong>lower world Y</strong> draw on top (southern characters occlude northern).</p>
+<p>Within the same <code>sortOrder</code>, sprites with <strong>lower world Y</strong> draw on top (southern characters occlude northern). <code>RenderLayers2DDemo</code> and <code>FarmingRpgRenderLayersDemo</code> demonstrate layer + Y-sort combinations.</p>
 <h2 id="fake-point-lights">Fake Point Lights</h2>
-<p>Spawn additive-style sprites at lamp positions with high <code>sortOrder</code> and soft gradient textures.</p>
+<p>Spawn additive-style sprites at lamp positions with high <code>sortOrder</code> and soft gradient textures, or use <code>PointLightComponent</code> in mixed 2.5D scenes where 3D lighting affects sprites.</p>
 <p>See <code>docs/2D_ARPG_FEATURES.md</code> for ARPG-specific roadmap notes.</p>
 <p>Next: <a href="06-2d-render-pipeline.html">2D Render Pipeline</a>.</p>
 </div>

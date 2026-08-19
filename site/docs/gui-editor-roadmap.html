@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GUI & Editor Roadmap · Spark Game Engine</title>
+  <meta name="description" content="UI System & Game Editor — Roadmap & Tracked Tasks">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="ui-system-game-editor-roadmap-tracked-tasks">UI System &amp; Game Editor — Roadmap &amp; Tracked Tasks</h1>
+<p>Plan for evolving Spark’s <strong>retained-mode UI</strong> (<code>spark/ui/</code>) into <strong>in-engine authoring tools</strong> (scene, material, animation, scripting) and an <strong>integrated editor</strong> comparable in <em>workflow</em> to Unity, Unreal Editor, or Godot 4.5+ — built on Spark’s Vulkan forward renderer and ECS.</p>
+<blockquote>
+<p><strong>Migration complete (Phase 6):</strong> Legacy <code>spark/gui/</code> (<code>Widget</code>, <code>GuiCanvasComponent</code>, <code>GuiControls.hpp</code>) was removed. All demos and <code>SparkEditor</code> use <strong><code>UiCanvasComponent</code></strong>, <strong><code>IUiElement</code></strong>, and <strong><code>IUiControlsFactory</code></strong> under <code>spark/ui/</code>. See <a href="GUI_TOOLKIT_ARCHITECTURE.md"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a>.</p>
+</blockquote>
+<p><strong>Dear ImGui</strong> (<code>SPARK_ENABLE_IMGUI</code>) remains available as an <strong>optional layer</strong> (<code>DearImguiControlsFactory</code> + raw <code>ImGui::</code> windows) for internal tools and the docking demo (<strong>#19</strong>); Spark native (<code>SparkUiControlsFactory</code>) is the default for shipped menus and <code>SparkEditor</code>.</p>
+<p><strong>Related:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.9–§5.10 / §12, <a href="../../docs/programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><code>programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code></a>, <a href="SCENE_AND_RENDERING_GAPS.md"><code>SCENE_AND_RENDERING_GAPS.md</code></a>, <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a>, demo <strong>#10</strong> <code>SceneEditor3DDemo</code>.</p>
+<hr />
+<h2 id="how-to-track-work">How to track work</h2>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Task ID</strong></td>
+<td><code>GUI-E{milestone}-{nn}</code></td>
+</tr>
+<tr>
+<td><strong>Priority</strong></td>
+<td><strong>P0</strong> exit criteria · <strong>P1</strong> should · <strong>P2</strong> nice</td>
+</tr>
+<tr>
+<td><strong>Labels</strong></td>
+<td><code>gui</code>, <code>editor</code>, <code>milestone-E1</code> …</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Issue title:</strong> <code>[GUI-E2-04] Scene hierarchy TreeView bound to GameWorld</code></p>
+<hr />
+<h2 id="1-current-ui-system-inventory">1. Current UI system (inventory)</h2>
+<h3 id="11-architecture">1.1 Architecture</h3>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IUiElement</code></td>
+<td>Base tree: measure, arrange, paint, pointer + optional keyboard input</td>
+</tr>
+<tr>
+<td><code>UiCanvasComponent</code></td>
+<td>ECS root; sort order; hot / active / focus elements</td>
+</tr>
+<tr>
+<td><code>ProcessUiCanvasesInput</code></td>
+<td>Full-viewport layout, topmost canvas under cursor, scroll routing</td>
+</tr>
+<tr>
+<td><code>PaintUiCanvases</code></td>
+<td>Emits <code>ScreenRectDraw</code> / <code>ScreenTextDraw</code> into <code>SceneRenderParams</code></td>
+</tr>
+<tr>
+<td><code>UiPaintContext</code></td>
+<td>Solid/gradient/rounded rects, strokes, drop shadow, text; overlay + late layers</td>
+</tr>
+<tr>
+<td><code>UiTheme</code> / <code>UiThemeCatalog</code></td>
+<td>Semantic colors per canvas; presets (<code>ClassicMint</code> default, <code>TwilightSlate</code>, high-contrast variants, <code>SceneEditorDark</code>)</td>
+</tr>
+<tr>
+<td><code>UiSystem</code></td>
+<td>Facade: active backend (<code>SparkNative</code> | <code>DearImGui</code>), <code>ProcessInput</code> / <code>Paint</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rendering:</strong> CPU-drawn 2D (no GPU widget atlas). Text via <code>Font</code> / stb. <strong>Not</strong> retained mesh UI.</p>
+<h3 id="12-built-in-controls-iuicontrolsfactory">1.2 Built-in controls (<code>IUiControlsFactory</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Layout</strong></td>
+<td>Panels, scroll panels, separators, dock workspaces</td>
+</tr>
+<tr>
+<td><strong>Docking</strong></td>
+<td><code>IDockWorkspace</code>, <code>SparkDockWorkspace</code>, <code>ImguiDockWorkspace</code></td>
+</tr>
+<tr>
+<td><strong>Chrome</strong></td>
+<td>Collapsible panels, group-style layouts</td>
+</tr>
+<tr>
+<td><strong>Input</strong></td>
+<td>Buttons, checkboxes, sliders, numeric fields</td>
+</tr>
+<tr>
+<td><strong>Lists</strong></td>
+<td><code>IList</code>, <code>IMultiSelectList</code>, <code>ITreeView</code> (Spark + ImGui backends)</td>
+</tr>
+<tr>
+<td><strong>Display</strong></td>
+<td>Labels, progress indicators</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Also:</strong> <code>UiContextMenu</code> for right-click menus; <code>UiTheme::SceneEditorDark()</code> for editor chrome.</p>
+<h3 id="13-demo-product-usage-today">1.3 Demo / product usage today</h3>
+<table>
+<thead>
+<tr>
+<th>Consumer</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Shell menu</strong></td>
+<td><code>SparkShellDemo</code> — launcher list + theme picker on <code>UiCanvasComponent</code></td>
+</tr>
+<tr>
+<td><strong>Scene editor (#10)</strong></td>
+<td><code>SceneEditor3DDemo</code> — left strip UI + 3D pick/place (prototype)</td>
+</tr>
+<tr>
+<td><strong>Dear ImGui (#19)</strong></td>
+<td><code>ImGuiShowcaseDemo</code> — docking tool panels, hotkey <strong>G</strong></td>
+</tr>
+<tr>
+<td><strong>SparkEditor</strong></td>
+<td><code>spark_editor/SparkEditor</code> — dock shell, hierarchy/inspector stubs, fly viewport (<code>EditorApplication</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-scene-editor-prototype-not-a-general-editor">1.4 Scene editor prototype (not a general editor)</h3>
+<p><code>SceneEditor3DDemo</code> already combines UI + 3D:</p>
+<ul>
+<li>Configurable left strip (<code>GetSceneEditorSidebarWidthPx</code>, <code>editor_layout.ini</code>); 3D input gated by <code>UiConsumesGamePointer()</code>.</li>
+<li>Place meshes (3 presets) / user point lights; drag on ground plane; text <strong>save/load</strong> (<code>scene_editor/scene.txt</code>, <strong><code>spark_scene_v3</code></strong>).</li>
+<li>Light inspector sliders; tool mode list; translate gizmo.</li>
+<li><strong>SparkEditor</strong> (separate exe) supersedes this for product work — see <a href="spark-editor-plan.html"><code>SPARK_EDITOR_PLAN.md</code></a>.</li>
+</ul>
+<hr />
+<h2 id="2-gaps-limitations-and-known-pain-points">2. Gaps, limitations, and known pain points</h2>
+<h3 id="21-ui-framework-vs-modern-editor-ui">2.1 UI framework (vs. modern editor UI)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Status / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No flex/grid measure pass</strong></td>
+<td>Layout is mostly explicit heights or simple stacks; no <code>*</code> star sizing</td>
+</tr>
+<tr>
+<td><strong>Docking</strong></td>
+<td><strong>Partial:</strong> <code>SparkDockWorkspace</code> / <code>IDockWorkspace</code> (left/center/right, collapse, gutters); no float windows or tab drag between dock areas</td>
+</tr>
+<tr>
+<td><strong>Menu bar / toolbar</strong></td>
+<td><strong>Partial:</strong> top chrome in SparkEditor; not a reusable editor chrome package</td>
+</tr>
+<tr>
+<td><strong>No icon font / SVG</strong></td>
+<td>Buttons support glyph string + optional texture; no standard icon set</td>
+</tr>
+<tr>
+<td><strong>Context menu</strong></td>
+<td><strong>Implemented:</strong> <code>UiContextMenu</code></td>
+</tr>
+<tr>
+<td><strong>Tooltip</strong></td>
+<td><strong>Partial:</strong> hover tooltip in input router; not wired to all controls</td>
+</tr>
+<tr>
+<td><strong>No clipboard</strong></td>
+<td>Copy/paste for text fields and property values</td>
+</tr>
+<tr>
+<td><strong>Text input</strong></td>
+<td>Limited single-line fields; no caret navigation, selection, IME, or multiline</td>
+</tr>
+<tr>
+<td><strong>Text overflow</strong></td>
+<td><strong>Implemented:</strong> ellipsize + wrapping labels via <code>UiPaintContext</code></td>
+</tr>
+<tr>
+<td><strong>No virtualized lists</strong></td>
+<td>Lists / tree views hold all rows in memory</td>
+</tr>
+<tr>
+<td><strong>UI surface</strong></td>
+<td><code>UiCanvasComponent</code>; UIs built in C++ via <code>IUiControlsFactory</code></td>
+</tr>
+<tr>
+<td><strong>Input model</strong></td>
+<td>LMB primary; scroll routed to list/tree/scroll panel; editor viewport uses <code>UiConsumesGamePointer()</code></td>
+</tr>
+<tr>
+<td><strong>Multi-canvas</strong></td>
+<td>Sort order works; focus per-canvas</td>
+</tr>
+<tr>
+<td><strong>DPI / UI scale</strong></td>
+<td><code>UiLayoutMetrics</code> partial; no global editor scale slider</td>
+</tr>
+<tr>
+<td><strong>Accessibility</strong></td>
+<td>No screen reader bridge or full keyboard nav</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-rendering-performance-risks">2.2 Rendering / performance risks</h3>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Draw call volume</strong></td>
+<td>Each rounded rect / shadow may add multiple <code>ScreenRectDraw</code> entries; complex panels = many quads</td>
+</tr>
+<tr>
+<td><strong>No batching UI</strong></td>
+<td>Unlike retained GPU UI toolkits; worth profiling before huge inspectors</td>
+</tr>
+<tr>
+<td><strong>Overlay popups</strong></td>
+<td><code>Dropdown</code> uses overlay/late layers; z-order depends on paint order within canvas</td>
+</tr>
+<tr>
+<td><strong>Hit-test vs paint</strong></td>
+<td><code>EditorSidebarLayout</code> sets right pane <code>hitTest=false</code> so 3D receives clicks — pattern must be systematic for viewports</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-editor-specific-missing-vs-unity-unreal-godot">2.3 Editor-specific (missing vs Unity / Unreal / Godot)</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Spark today</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Project / asset database</strong></td>
+<td><code>GameWorld</code> path caches only; <code>EditorProject</code> stub</td>
+</tr>
+<tr>
+<td><strong>Scene hierarchy</strong></td>
+<td><code>HierarchyPanel</code> + <code>TreeView</code> stub bound to <code>GameWorld</code></td>
+</tr>
+<tr>
+<td><strong>Inspector / property grid</strong></td>
+<td><code>InspectorPanel</code> text dump; no typed property editors</td>
+</tr>
+<tr>
+<td><strong>Viewport (Scene)</strong></td>
+<td><code>SparkEditor</code> fly camera + <code>worldViewportScissor</code>; no gizmo service</td>
+</tr>
+<tr>
+<td><strong>Transform gizmo</strong></td>
+<td>Translate in <code>SceneEditor3DDemo</code> only</td>
+</tr>
+<tr>
+<td><strong>Play mode / edit mode</strong></td>
+<td><code>EditorMode::Edit</code> only; shell switches demos separately</td>
+</tr>
+<tr>
+<td><strong>Undo/redo</strong></td>
+<td>None</td>
+</tr>
+<tr>
+<td><strong>Serialization</strong></td>
+<td><code>spark_scene_v4</code> (reads v3); <strong>23 / 37</strong> component kinds; <code>SceneManager</code> in scene editor demo</td>
+</tr>
+<tr>
+<td><strong>Material editor</strong></td>
+<td>Runtime <code>MaterialComponent</code> only</td>
+</tr>
+<tr>
+<td><strong>Animation editor</strong></td>
+<td>See <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a></td>
+</tr>
+<tr>
+<td><strong>Script editor</strong></td>
+<td>C# host exists; no in-engine IDE</td>
+</tr>
+<tr>
+<td><strong>Plugin / extension API</strong></td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-bugs-fragile-behaviors-code-level">2.4 Bugs / fragile behaviors (code-level)</h3>
+<p>These are <strong>documented risks</strong> to fix in milestone <strong>E0</strong> (not an exhaustive bug list):</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Area</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GUI-BUG-01</strong></td>
+<td>Scene editor</td>
+<td>~~Ground-plane XZ only~~ — <strong>fixed</strong>: <code>TryPickEditorRay</code> + <code>MeshRaycast</code> (mesh triangles + light spheres)</td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-02</strong></td>
+<td>Scene editor</td>
+<td>~~Hard-coded strip~~ — <strong>fixed</strong>: shared <code>GetSceneEditorSidebarWidthPx</code> + layout ini</td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-03</strong></td>
+<td>Input</td>
+<td>~~Manual <code>mx &gt;= strip</code>~~ — <strong>fixed</strong>: <code>UiPointerState</code> / <code>UiConsumesGamePointer()</code></td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-04</strong></td>
+<td>Focus</td>
+<td>Click outside focusables clears focus; <strong>no</strong> click-to-focus on all control types consistently</td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-05</strong></td>
+<td>Dropdown</td>
+<td>Popup list must close on outside click; verify interaction with overlapping widgets</td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-06</strong></td>
+<td>Layout</td>
+<td>~~Shrink-to-fit overflow~~ — <strong>fixed</strong>: fixed row heights + <code>ScrollPanel</code> inspector host</td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-07</strong></td>
+<td>Lists</td>
+<td>Deep trees + expand arrows — keyboard nav exists on <code>TreeView</code>; <strong>List</strong> has no arrow-key selection</td>
+</tr>
+<tr>
+<td><strong>GUI-BUG-08</strong></td>
+<td>Text</td>
+<td><code>TextBox</code> — limited punctuation; paste from OS clipboard not supported</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-north-star-spark-editor">3. North star: “Spark Editor”</h2>
+<p>A single executable (or shell mode) with:</p>
+<pre><code class="language-text">┌─────────────────────────────────────────────────────────────┐
+│ Menu  File  Edit  Assets  GameObject  Window  Help          │
+├──────────┬──────────────────────────────────────┬───────────┤
+│ Hierarchy│  [Scene] [Game] [Asset] tabs         │ Inspector │
+│ Project  │  ┌────────────────────────────────┐  │ (props)   │
+│          │  │ 3D viewport + gizmos           │  │           │
+│          │  └────────────────────────────────┘  │           │
+├──────────┴──────────────────────────────────────┴───────────┤
+│ Console │ Animation (dope) │ Material │ Script              │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Principle:</strong> Reuse <code>UiCanvasComponent</code> for <strong>panels</strong>; add <strong>editor services</strong> (selection, undo, serialization, asset DB) as engine modules the UI binds to — avoid coupling game logic into controls.</p>
+<hr />
+<h2 id="4-milestone-overview">4. Milestone overview</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Goal</th>
+<th>Horizon (indicative)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>E0</strong></td>
+<td>GUI hardening + editor UX primitives</td>
+<td>4–6 weeks</td>
+</tr>
+<tr>
+<td><strong>E1</strong></td>
+<td>Editor shell (dock, menus, project, preferences)</td>
+<td>6–8 weeks</td>
+</tr>
+<tr>
+<td><strong>E2</strong></td>
+<td>Scene editor (hierarchy, viewport, inspector, save)</td>
+<td>8–12 weeks</td>
+</tr>
+<tr>
+<td><strong>E3</strong></td>
+<td>Material editor</td>
+<td>4–6 weeks</td>
+</tr>
+<tr>
+<td><strong>E4</strong></td>
+<td>Animation editor</td>
+<td>6–10 weeks (depends on ANIMATION_3D M1–M3)</td>
+</tr>
+<tr>
+<td><strong>E5</strong></td>
+<td>Script editor + debug console</td>
+<td>8–12 weeks</td>
+</tr>
+<tr>
+<td><strong>E6</strong></td>
+<td>Integrated Spark Editor + polish</td>
+<td>8–16 weeks</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Parallel:</strong> E0→E1→E2 is the critical path; E3–E5 can start after E2 inspector exists; E6 merges.</p>
+<hr />
+<h2 id="e0-gui-foundation-editor-primitives">E0 — GUI foundation &amp; editor primitives</h2>
+<p><strong>Exit criteria:</strong> Reusable layout for docked panels; pointer capture API; scrollable inspector column; documented patterns for “3D viewport + chrome.”</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E0-01</td>
+<td><strong><code>UiLayoutMetrics</code></strong>: padding, row height, font scale, DPI factor (default 1.0)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E0-02</td>
+<td><strong><code>ScrollPanel</code> as default inspector host</strong> — replace shrink-to-fit-only forms for long panels</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-03</td>
+<td><strong><code>UiPointerState</code> / input gating</strong>: engine reports <code>UiPointerOverUi()</code> + <code>UiConsumesGamePointer()</code> for demos</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-04</td>
+<td><strong>Sync scene editor strip width</strong> — single constant shared by layout + picking</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-05</td>
+<td><strong>List</strong>: keyboard Up/Down + Enter selection</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E0-06</td>
+<td><strong>TextBox</strong>: caret, left/right, Home/End, Ctrl+A; optional OS paste</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-07</td>
+<td><strong>Multiline <code>TextArea</code></strong> (for scripts / long strings)</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-08</td>
+<td><strong>Context menu</strong> widget (popup on RMB, overlay layer)</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-09</td>
+<td><strong>Tooltip</strong> (hover delay, late layer)</td>
+<td>P2</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-10</td>
+<td><strong>Theming</strong>: <code>UiThemeCatalog</code> presets + label tone variants</td>
+<td>P1</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E0-11</td>
+<td><strong>GUI perf harness</strong>: N rects/texts frame cost in <code>SceneRenderParams</code></td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e1-editor-shell">E1 — Editor shell</h2>
+<p><strong>Exit criteria:</strong> Dockable panels persist to disk; menu commands route to editor services; open project folder.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E1-01</td>
+<td><strong><code>EditorApplication</code></strong> module — mode flag (Edit / Play), project path, active scene</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E1-02</td>
+<td><strong><code>DockWorkspace</code></strong> — N-pane dock with tabs (build on <code>Splitter</code> + <code>TabControl</code>)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E1-03</td>
+<td><strong>Layout persistence</strong> — JSON: split fractions, tab selection, panel visibility</td>
+<td>P0</td>
+<td>[~]</td>
+</tr>
+<tr>
+<td>GUI-E1-04</td>
+<td><strong>Menu bar</strong> widget + command IDs (<code>EditorCommand::SaveScene</code>)</td>
+<td>P0</td>
+<td>[~]</td>
+</tr>
+<tr>
+<td>GUI-E1-05</td>
+<td><strong>Toolbar</strong> — icon buttons (texture atlas or glyph font)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E1-06</td>
+<td><strong>Status bar</strong> — selection name, coords, FPS, save dirty flag</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E1-07</td>
+<td><strong>Project browser</strong> panel — folder tree (<code>TreeView</code>) + file list</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E1-08</td>
+<td><strong>Preferences</strong> dialog — UI scale, keybindings, default paths</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E1-09</td>
+<td><strong>Replace shell demo #12</strong> with thin launcher → <code>EditorApplication</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e2-scene-editor">E2 — Scene editor</h2>
+<p><strong>Exit criteria:</strong> Author <code>.sparkscene</code> (or equivalent) with hierarchy, transforms, components; viewport select/move/rotate; play-in-scene optional stub.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E2-01</td>
+<td><strong>Scene serialization v4</strong> — extend handler coverage; hierarchy, parent links, component blobs</td>
+<td>P0</td>
+<td>[~]</td>
+</tr>
+<tr>
+<td>GUI-E2-02</td>
+<td><strong><code>EditorSelection</code></strong> service — selected <code>GameObject*</code>, multi-select policy</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-03</td>
+<td><strong>Hierarchy panel</strong> — <code>TreeView</code> ↔ <code>GameWorld</code> (create/rename/delete/parent)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-04</td>
+<td><strong><code>EditorViewport</code> region</strong> — rect + <code>hitTest=false</code>; central render target</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-05</td>
+<td><strong>Pick pass</strong> — ray vs AABB / mesh; respect viewport rect</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-06</td>
+<td><strong>Transform gizmo</strong> — translate on XZ/XYZ (later rotate/scale)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-07</td>
+<td><strong>Inspector framework</strong> — reflect <code>ComponentKind</code> → property rows</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-08</td>
+<td><strong>Built-in inspectors</strong>: Transform, Mesh, Material, PointLight, Rigidbody3D</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-09</td>
+<td><strong>Add component menu</strong> — searchable list of component types</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-10</td>
+<td><strong>Undo/redo</strong> command stack (transform, create, delete, property)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-11</td>
+<td><strong>Snap grid</strong> + optional angle snap</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-12</td>
+<td><strong>Prefab / asset drag</strong> from project browser into viewport</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-13</td>
+<td><strong>Play mode</strong> — duplicate world or snapshot; disable editor mutators</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E2-14</td>
+<td><strong>Script sample</strong>: minimal scene open/save via new C# host</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e3-material-editor">E3 — Material editor</h2>
+<p><strong>Exit criteria:</strong> Edit <code>MaterialComponent</code> and preview on mesh/sphere; assign textures from project; live refresh in viewport.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E3-01</td>
+<td><strong>Material asset</strong> — <code>.sparkmat</code> or embedded in scene; reference by path</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E3-02</td>
+<td><strong>Material inspector</strong> — tint, metallic, roughness, emissive, shading model, toon params</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E3-03</td>
+<td><strong>Texture slots</strong> — base, normal, ORM, emissive (<code>TileSwatch</code> + picker)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E3-04</td>
+<td><strong>Preview panel</strong> — lit sphere + optional custom mesh</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E3-05</td>
+<td><strong>UV preview</strong> — 2D thumbnail of active texture</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E3-06</td>
+<td><strong>Material library</strong> — list + duplicate + assign to selection</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E3-07</td>
+<td><strong>Batch assign</strong> — selected objects share material asset</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e4-animation-editor">E4 — Animation editor</h2>
+<p><strong>Exit criteria:</strong> Preview skinned glTF clips; scrub timeline; assign clips to <code>AnimatorComponent</code>; event markers (when ANIMATION M4 exists).</p>
+<p>Depends on <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> <strong>M1–M3</strong> minimum.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E4-01</td>
+<td><strong>Animation panel</strong> — clip list from <code>Skeleton::GetClipName</code></td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E4-02</td>
+<td><strong>Timeline scrubber</strong> — <code>Slider</code> + time readout; drives <code>SetTimeSeconds</code></td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E4-03</td>
+<td><strong>Viewport preview</strong> — skinned mesh + loop/once</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E4-04</td>
+<td><strong>Blend preview</strong> — when M3 exists, 1D speed blend UI</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E4-05</td>
+<td><strong>Skeleton debug draw</strong> — joint lines toggle (pairs ANIMATION M6)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E4-06</td>
+<td><strong>Event track</strong> — markers on timeline (after ANIMATION M4)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E4-07</td>
+<td><strong>Export clip rename / retarget notes</strong></td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e5-script-editor">E5 — Script editor</h2>
+<p><strong>Exit criteria:</strong> Edit C# game scripts in-project; native CoreCLR host + generated bindings; errors in console.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E5-01</td>
+<td><strong>Script asset</strong> registration in project browser (<code>.cs</code>)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-02</td>
+<td><strong><code>CodeEditor</code> widget</strong> — multiline <code>TextArea</code> + line numbers (CPU text)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-03</td>
+<td><strong>Syntax highlight v1</strong> — keywords/strings/comments (simple tokenizer)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-04</td>
+<td><strong>Open/save</strong> with dirty indicator + hotkey Ctrl+S</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-05</td>
+<td><strong>Build / run</strong> — shell <code>dotnet build</code> + load game assembly</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-06</td>
+<td><strong>Console panel</strong> — stdout/stderr from game + build</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-07</td>
+<td><strong>Breakpoint stub</strong> — line gutter; defer full debugger to VS/Rider</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E5-08</td>
+<td><strong>Component script attach</strong> — GUID / type name on <code>GameObject</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<p><em>Long-term:</em> LSP or Roslyn-powered IntelliSense is a <strong>separate program</strong> (6+ months); do not block E6 on it.</p>
+<hr />
+<h2 id="e6-integrated-spark-editor">E6 — Integrated Spark Editor</h2>
+<p><strong>Exit criteria:</strong> One “Spark Editor” binary; default layout; new project wizard; documentation for designers.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GUI-E6-01</td>
+<td><strong><code>SparkEditor</code> target</strong> — links E1–E5 panels</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E6-02</td>
+<td><strong>New project wizard</strong> — folder, template (empty / 3D / 2D)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E6-03</td>
+<td><strong>Default workspace</strong> — Hierarchy</td>
+<td>Viewport</td>
+<td>Inspector</td>
+</tr>
+<tr>
+<td>GUI-E6-04</td>
+<td><strong>Global shortcuts</strong> — Save, Undo, Focus viewport, Play/Stop</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E6-05</td>
+<td><strong>Documentation</strong> — <code>docs/EDITOR_USER_GUIDE.md</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E6-06</td>
+<td><strong>CI</strong> — headless open scene + save round-trip</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>GUI-E6-07</td>
+<td><strong>Compare matrix</strong> — document parity vs Unity/UE/Godot (honest gaps)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-comparison-matrix-honest-scope">5. Comparison matrix (honest scope)</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Unity</th>
+<th>Unreal</th>
+<th>Godot 4.5</th>
+<th>Spark (target)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retained UI toolkit</td>
+<td>UIElements</td>
+<td>Slate</td>
+<td>Control nodes</td>
+<td><strong>Custom <code>spark/ui</code></strong></td>
+</tr>
+<tr>
+<td>Visual scene tree</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td><strong>E2</strong></td>
+</tr>
+<tr>
+<td>Viewport + gizmos</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td><strong>E2</strong></td>
+</tr>
+<tr>
+<td>Material graph</td>
+<td>Shader Graph</td>
+<td>Material Editor</td>
+<td>VisualShader</td>
+<td><strong>E3 numeric + textures first</strong> (no node graph in v1)</td>
+</tr>
+<tr>
+<td>Animation</td>
+<td>Mecanim</td>
+<td>Sequencer</td>
+<td>AnimationPlayer</td>
+<td><strong>E4 + ANIMATION_3D</strong></td>
+</tr>
+<tr>
+<td>Script IDE</td>
+<td>Roslyn</td>
+<td>C++ / BP</td>
+<td>Built-in script editor</td>
+<td><strong>E5 text + build</strong> (no full IDE v1)</td>
+</tr>
+<tr>
+<td>Asset pipeline</td>
+<td>Full</td>
+<td>Full</td>
+<td>Full</td>
+<td><strong>E1 browser + caches</strong></td>
+</tr>
+<tr>
+<td>Undo</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td><strong>E2</strong></td>
+</tr>
+<tr>
+<td>Extensibility</td>
+<td>Packages</td>
+<td>Plugins</td>
+<td>GDExtension</td>
+<td><strong>Defer</strong> (post E6)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Node-based material/animation graphs</strong> are <strong>Phase 2</strong> (post E6) if needed — plan E3/E4 as <strong>inspector + timeline</strong> first to ship faster on existing widgets.</p>
+<hr />
+<h2 id="6-dependency-graph">6. Dependency graph</h2>
+<div class="mermaid-wrap"><div class="mermaid">flowchart TB
+  E0[E0 GUI hardening]
+  E1[E1 Editor shell]
+  E2[E2 Scene editor]
+  E3[E3 Material editor]
+  E4[E4 Animation editor]
+  E5[E5 Script editor]
+  A3D[ANIMATION_3D M1-M3]
+  E6[E6 Integrated editor]
+  E0 --> E1
+  E1 --> E2
+  E2 --> E3
+  E2 --> E5
+  A3D --> E4
+  E2 --> E4
+  E1 --> E6
+  E2 --> E6
+  E3 --> E6
+  E4 --> E6
+  E5 --> E6
+</div></div>
+<hr />
+<h2 id="7-suggested-24-month-critical-path-small-team">7. Suggested 24-month critical path (small team)</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Months</th>
+<th>Deliverable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Foundation</strong></td>
+<td>1–2</td>
+<td>E0 + scene editor picking fix</td>
+</tr>
+<tr>
+<td><strong>Shell + scene</strong></td>
+<td>3–6</td>
+<td>E1 + E2 (hierarchy, inspector, save, gizmo)</td>
+</tr>
+<tr>
+<td><strong>Content tools</strong></td>
+<td>7–10</td>
+<td>E3 + ANIMATION M1–M2 + E4 basic</td>
+</tr>
+<tr>
+<td><strong>Scripting</strong></td>
+<td>11–14</td>
+<td>E5 + C# game loop from editor</td>
+</tr>
+<tr>
+<td><strong>Productize</strong></td>
+<td>15–18</td>
+<td>E6 + polish + docs</td>
+</tr>
+<tr>
+<td><strong>Parity gaps</strong></td>
+<td>19–24</td>
+<td>Node graphs, visual shader, debugger, plugins (optional)</td>
+</tr>
+</tbody>
+</table>
+<p>Adjust if team size &gt; 3 or if editor is <strong>tools-only</strong> (no ship-as-product).</p>
+<hr />
+<h2 id="8-references-in-this-repo">8. References in this repo</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>include/spark/ui/core/IUiElement.hpp</code></td>
+<td>Element contract</td>
+</tr>
+<tr>
+<td><code>include/spark/ui/runtime/UiScene.hpp</code></td>
+<td>Input + paint entry points</td>
+</tr>
+<tr>
+<td><code>include/spark/ui/core/UiPaintContext.hpp</code></td>
+<td>Draw API</td>
+</tr>
+<tr>
+<td><code>include/spark/ui/runtime/UiSystem.hpp</code></td>
+<td>Backend facade</td>
+</tr>
+<tr>
+<td><code>src/spark/demo/SceneEditor3DDemo.cpp</code></td>
+<td>Editor prototype</td>
+</tr>
+<tr>
+<td><code>src/spark/demo/SparkShellDemo.cpp</code></td>
+<td>Demo launcher shell</td>
+</tr>
+<tr>
+<td><code>src/spark/demo/ImGuiShowcaseDemo.cpp</code></td>
+<td>Dear ImGui docking demo (#19)</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/ui/UiCanvasComponent.hpp</code></td>
+<td>Canvas ECS</td>
+</tr>
+<tr>
+<td><code>docs/GUI_TOOLKIT_ARCHITECTURE.md</code></td>
+<td>Phase 6 migration notes</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: UI (<code>spark/ui/</code>) + game editor roadmap E0–E6. Legacy <code>spark/gui/</code> migration complete. Check boxes or link GitHub issues as work lands.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

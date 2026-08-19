@@ -24,8 +24,7 @@ target->AddComponent<MeshComponent>(unitCube, SceneMeshSlot::Custom, Vector3{0.9
 auto* mat = target->AddComponent<MaterialComponent>(nullptr);
 mat->SetMetallic(0.1F);
 mat->SetRoughness(0.4F);
-mat->SetEmissive({1.0F, 0.3F, 0.1F});
-mat->SetEmissiveStrength(1.5F);
+mat->SetEmissive({1.0F, 0.3F, 0.1F}, 1.5F);
 
 targets.PushBack(target);
 ```

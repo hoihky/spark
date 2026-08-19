@@ -48,7 +48,7 @@ target_link_libraries(MyGame PRIVATE SparkEngine)
 target_compile_features(MyGame PRIVATE cxx_std_23)
 ```
 
-Copy `game_template/` or `samples/platformer2d_game_template/` as a starting point.
+Copy the patterns in `src/spark/demo/` as a starting point — especially `Platformer2DDemo` for 2D and `CharacterCameraDemo` / `PhysicsBallThrow3DDemo` for 3D. Link your own executable against `SparkEngine` as shown above.
 
 ## SparkDemo built-in scenes (selected)
 

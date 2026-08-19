@@ -84,7 +84,40 @@ void ForEachSprite(const SpriteFn& fn);
 void ForEachTilemap(const TilemapFn& fn);
 void ForEachPointLight(const PointLightFn& fn);
 void ForEachUiCanvas(Fn&& fn);
-void SetSpatialPartitionKind(ScenePartitionKind kind);  // UniformGrid or BVH
+void SetSpatialPartitionKind(ScenePartitionKind kind);  // BruteForce, BVH, Octree, QuadTree, ...
+```
+
+## World Queries
+
+Find entities by tag or component set:
+
+```cpp
+GameObject* player = world.FindGameObjectWithTag("player");
+
+world.ForEachGameObjectWithComponents<MeshComponent, MaterialComponent>(
+    [](GameObject* go) {
+        // visit every lit mesh
+    });
+
+Camera2DComponent* cam2d = world.FindFirstGameObjectWithComponents<Camera2DComponent>()
+    ?->GetComponent<Camera2DComponent>();
+```
+
+Tags are set with `go->SetTag("enemy")` and queried at runtime without maintaining your own maps.
+
+## Hierarchy
+
+Parent transforms compose into world matrices automatically:
+
+```cpp
+GameObject* root = world.CreateGameObject();
+GameObject* child = world.CreateGameObject();
+world.SetParent(child, root);
+
+auto* rootTr = root->AddComponent<TransformComponent>();
+rootTr->SetTranslation({10, 0, 0});
+auto* childTr = child->AddComponent<TransformComponent>();
+childTr->SetTranslation({0, 2, 0});  // world position ≈ (10, 2, 0)
 ```
 
 ## Signals Example

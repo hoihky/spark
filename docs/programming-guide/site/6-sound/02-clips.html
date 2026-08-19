@@ -391,16 +391,33 @@ public:
     static SharedPtr&lt;SoundClip&gt; CreateSimpleAmbienceLoop();
 };
 </code></pre>
-<p>Load from file via <code>GameWorld</code> or decode helpers in <code>spark/audio/</code>.</p>
 <h2 id="procedural-sfx-no-assets">Procedural SFX (No Assets)</h2>
 <pre><code class="language-cpp">auto jumpSfx = SoundClip::CreateToneBlip(440.0F, 0.08F, 0.5F);
 auto landSfx = SoundClip::CreateToneBlip(220.0F, 0.06F, 0.4F);
 </code></pre>
-<h2 id="load-wav-at-runtime">Load WAV at Runtime</h2>
-<pre><code class="language-cpp">// Pattern: load bytes, decode to SoundClip — check SoundClip loaders in spark/audio/
-SharedPtr&lt;SoundClip&gt; clip = /* load from assets/audio/jump.wav */;
+<p>Useful for prototyping — <code>Platformer2DDemo</code> falls back to procedural clips when bundled WAV/MP3 files are missing.</p>
+<h2 id="load-wavmp3-from-disk">Load WAV/MP3 from Disk</h2>
+<pre><code class="language-cpp">#include "spark/audio/SoundFileLoader.hpp"
+
+SharedPtr&lt;SoundClip&gt; clip = TryLoadSoundClipFromFile("/absolute/path/jump.wav");
 </code></pre>
-<p>Supported formats depend on build configuration — WAV is always safe.</p>
+<p><code>TryLoadSoundClipFromFile</code> dispatches by extension (WAV via <code>TryLoadSoundClipFromWavFile</code>).</p>
+<h2 id="load-from-bundled-assets">Load from Bundled Assets</h2>
+<p>When running inside SparkDemo or a target that sets <code>SPARK_BUILD_ASSETS_DIR</code>:</p>
+<pre><code class="language-cpp">SharedPtr&lt;SoundClip&gt; jump = TryLoadSoundClipFromBundledAsset("assets/audio/jump.wav");
+SharedPtr&lt;SoundClip&gt; bgm = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
+</code></pre>
+<p><code>Platformer2DDemo</code> uses this pattern:</p>
+<pre><code class="language-cpp">SharedPtr&lt;SoundClip&gt; LoadPlatformerBgm() {
+    SharedPtr&lt;SoundClip&gt; clip =
+        TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
+    if (!clip) {
+        clip = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.mp3");
+    }
+    return clip;
+}
+</code></pre>
+<p>Queue one-shots at runtime via <code>SoundCueComponent</code> — see <a href="03-cues.html">Sound Cues</a>.</p>
 <p>Next: <a href="03-cues.html">Sound Cues</a>.</p>
 </div>
           <footer class="doc-footer">
@@ -426,7 +443,11 @@ SharedPtr&lt;SoundClip&gt; clip = /* load from assets/audio/jump.wav */;
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#load-wav-at-runtime">Load WAV at Runtime</a>
+                          <a href="#load-wavmp3-from-disk">Load WAV/MP3 from Disk</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#load-from-bundled-assets">Load from Bundled Assets</a>
                         </li>
                         
                   </ul>

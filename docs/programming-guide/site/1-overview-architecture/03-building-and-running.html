@@ -458,7 +458,7 @@ path.AppendUtf8("/fonts/Roboto-Regular.ttf");
 target_link_libraries(MyGame PRIVATE SparkEngine)
 target_compile_features(MyGame PRIVATE cxx_std_23)
 </code></pre>
-<p>Copy <code>game_template/</code> or <code>samples/platformer2d_game_template/</code> as a starting point.</p>
+<p>Copy the patterns in <code>src/spark/demo/</code> as a starting point — especially <code>Platformer2DDemo</code> for 2D and <code>CharacterCameraDemo</code> / <code>PhysicsBallThrow3DDemo</code> for 3D. Link your own executable against <code>SparkEngine</code> as shown above.</p>
 <h2 id="sparkdemo-built-in-scenes-selected">SparkDemo built-in scenes (selected)</h2>
 <table class="table">
 <thead>
