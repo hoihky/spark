@@ -16,18 +16,19 @@ except ImportError:
     print("Missing dependency: pip install markdown", file=sys.stderr)
     sys.exit(1)
 
-ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "site" / "docs"
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+DOCS_ROOT = Path(__file__).resolve().parent.parent
+OUT_DIR = DOCS_ROOT / "site" / "docs"
 
-# Source markdown -> output HTML filename (under site/docs/)
+# Source markdown -> output HTML filename (under docs/site/docs/)
 PAGES: list[tuple[Path, str, str]] = [
-    (ROOT / "README.md", "readme.html", "Spark — README"),
-    (ROOT / "docs" / "ARCHITECTURE_AND_DEVELOPER_GUIDE.md", "architecture-and-developer-guide.html", "Architecture & Developer Guide"),
-    (ROOT / "docs" / "LIGHTING_AND_SHADOWS.md", "lighting-and-shadows.html", "Lighting & Shadows"),
-    (ROOT / "docs" / "MATERIALS_AND_LIGHTING.md", "materials-and-lighting.html", "Materials & Lighting"),
-    (ROOT / "docs" / "SPARK_EDITOR_PLAN.md", "spark-editor-plan.html", "Spark Editor Plan"),
-    (ROOT / "docs" / "GUI_EDITOR_ROADMAP.md", "gui-editor-roadmap.html", "GUI & Editor Roadmap"),
-    (ROOT / "docs" / "ANIMATION_3D_ROADMAP.md", "animation-3d-roadmap.html", "3D Animation Roadmap"),
+    (REPO_ROOT / "README.md", "readme.html", "Spark — README"),
+    (DOCS_ROOT / "ARCHITECTURE_AND_DEVELOPER_GUIDE.md", "architecture-and-developer-guide.html", "Architecture & Developer Guide"),
+    (DOCS_ROOT / "LIGHTING_AND_SHADOWS.md", "lighting-and-shadows.html", "Lighting & Shadows"),
+    (DOCS_ROOT / "MATERIALS_AND_LIGHTING.md", "materials-and-lighting.html", "Materials & Lighting"),
+    (DOCS_ROOT / "SPARK_EDITOR_PLAN.md", "spark-editor-plan.html", "Spark Editor Plan"),
+    (DOCS_ROOT / "GUI_EDITOR_ROADMAP.md", "gui-editor-roadmap.html", "GUI & Editor Roadmap"),
+    (DOCS_ROOT / "ANIMATION_3D_ROADMAP.md", "animation-3d-roadmap.html", "3D Animation Roadmap"),
 ]
 
 # Maps any .md basename (or docs/foo.md path) to site/docs HTML output.
@@ -44,7 +45,7 @@ MD_LINK_MAP.update(
     }
 )
 
-PROGRAMMING_GUIDE_SITE = "../../docs/programming-guide/site"
+PROGRAMMING_GUIDE_SITE = "../../programming-guide/site"
 
 TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -148,7 +149,7 @@ def build_page(src: Path, out_name: str, title: str) -> None:
     )
     out_path = OUT_DIR / out_name
     out_path.write_text(page, encoding="utf-8")
-    print(f"Wrote {out_path.relative_to(ROOT)}")
+    print(f"Wrote {out_path.relative_to(DOCS_ROOT)}")
 
 
 def main() -> None:
@@ -158,7 +159,7 @@ def main() -> None:
             print(f"Skip missing: {src}", file=sys.stderr)
             continue
         build_page(src, out_name, title)
-    print(f"Done — {len(PAGES)} pages in {OUT_DIR.relative_to(ROOT)}/")
+    print(f"Done — {len(PAGES)} pages in {OUT_DIR.relative_to(DOCS_ROOT)}/")
 
 
 if __name__ == "__main__":

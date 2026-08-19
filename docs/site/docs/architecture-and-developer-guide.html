@@ -18,7 +18,7 @@
       <a href="../../index.html" class="brand">Spark Game Engine</a>
       <nav class="topbar-nav" aria-label="Primary">
         <a href="../../index.html#documentation">Documentation</a>
-        <a href="../../docs/programming-guide/site/index.html">Programming guide</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
         <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
       </nav>
     </header>
@@ -120,7 +120,7 @@ cmake --build cmake-build-debug -j
 ./cmake-build-debug/spark_editor/SparkEditor
 </code></pre>
 <p>See <a href="readme.html"><code>README.md</code></a>, <a href="CLION.md"><code>docs/CLION.md</code></a>, and <a href="readme.html"><code>.run/README.md</code></a> for CLion profiles and run configs.</p>
-<p>External games: link against <code>SparkEngine</code> from your own CMake target (see programming guide <a href="../../docs/programming-guide/site/1-overview-architecture/03-building-and-running.html">Building and Running</a>). Copy patterns from <code>src/spark/demo/</code> — <code>Platformer2DDemo</code> for 2D, <code>CharacterCameraDemo</code> for 3D.</p>
+<p>External games: link against <code>SparkEngine</code> from your own CMake target (see programming guide <a href="../../programming-guide/site/1-overview-architecture/03-building-and-running.html">Building and Running</a>). Copy patterns from <code>src/spark/demo/</code> — <code>Platformer2DDemo</code> for 2D, <code>CharacterCameraDemo</code> for 3D.</p>
 <hr />
 <h2 id="4-high-level-architecture">4. High-Level Architecture</h2>
 <div class="mermaid-wrap"><div class="mermaid">flowchart TB
@@ -675,7 +675,7 @@ cmake --build cmake-build-debug -j
 </tbody>
 </table>
 <p>ImGui UI must be built in <strong><code>IGame::OnRender</code></strong> (after engine <code>BeginFrame</code>, before <code>EndFrame</code>). Retained GUI remains the primary stack for shipped menus and <code>SparkEditor</code>.</p>
-<p>Programming guide: <a href="../../docs/programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><code>docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code></a>.</p>
+<p>Programming guide: <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><code>docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code></a>.</p>
 <h3 id="511-audio">5.11 Audio</h3>
 <table>
 <thead>
@@ -1124,7 +1124,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </tbody>
 </table>
 <p>The authoritative list of kinds is <strong><code>enum class ComponentKind</code></strong> in <code>spark/ecs/GameComponent.hpp</code> (<strong>70</strong> concrete types + <code>Unknown</code>).</p>
-<p><strong>Full usage reference:</strong> <a href="../../docs/programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>docs/programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</p>
+<p><strong>Full usage reference:</strong> <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>docs/programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</p>
 <p>Include umbrella <strong><code>spark/ecs/Ecs.hpp</code></strong> in tooling if you want a single include for registration patterns (headers still remain modular).</p>
 <h3 id="81-component-storage-model-mental-diagram">8.1 Component storage model (mental diagram)</h3>
 <p>Each <strong><code>GameObject</code></strong> owns a <strong>closed set</strong> of <strong><code>GameComponent</code></strong> instances keyed by <code>ComponentKind</code>. Components are <strong>not</strong> stored in external archetype arrays (no EnTT-style sparse sets in the open-source tree); instead, <strong><code>GameWorld::UpdateGameObjects</code></strong> walks active objects and dispatches <strong><code>OnUpdate</code></strong> to each attached component. Rendering does <strong>not</strong> iterate components directly — it uses <strong><code>Scene</code></strong> helpers or <strong><code>SubmitStandardLitSceneFromWorld</code></strong>, which read the same components (<code>MeshComponent</code>, <code>TransformComponent</code>, …) to emit <strong><code>SceneDrawItem</code></strong> entries.</p>
@@ -1384,7 +1384,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <li><strong>Frame contract:</strong> engine calls <code>BeginFrame</code> after <code>OnUpdate</code>, game builds UI in <code>OnRender</code>, engine calls <code>EndFrame</code> before <code>PresentFrame</code>.</li>
 <li><strong>Retained ImGui controls</strong> — <code>DearImguiControlsFactory</code> paints <code>ImguiButton</code>, <code>ImguiPanel</code>, <code>ImguiDockWorkspace</code>, etc. during <code>UiSystem::Paint</code>.</li>
 </ul>
-<p>Demo: <strong><code>ImGuiShowcaseDemo</code></strong> (launcher <strong>#19</strong>, key <strong>G</strong>). See programming guide chapter <a href="../../docs/programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
+<p>Demo: <strong><code>ImGuiShowcaseDemo</code></strong> (launcher <strong>#19</strong>, key <strong>G</strong>). See programming guide chapter <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
 <hr />
 <h2 id="13-conventions-types">13. Conventions &amp; Types</h2>
 <ul>
