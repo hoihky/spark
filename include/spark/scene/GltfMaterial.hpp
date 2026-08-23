@@ -34,6 +34,8 @@ public:
     float occlusionStrength = 1.0F;
     bool doubleSided = false;
     float opacity = 1.0F;
+    /** glTF alpha_mode=MASK cutoff; 0 = disabled (no alpha test). */
+    float alphaCutoff = 0.0F;
 
     [[nodiscard]] bool HasAnyTexture() const noexcept {
         return static_cast<bool>(baseColor) || static_cast<bool>(normalMap) ||

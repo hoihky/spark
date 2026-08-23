@@ -96,7 +96,8 @@ private:
             std::uint32_t* outWalkClipIndex,
             Quaternion* outBindUpAlignment,
             float* outBindFacingYawOffset,
-            Array<GltfMaterialDesc>* outMaterials);
+            Array<GltfMaterialDesc>* outMaterials,
+            Utf8String* outError);
 
     struct Vec3Channel {
         std::uint32_t jointIndex = 0;
@@ -136,6 +137,7 @@ bool TryLoadSkinnedCharacterFromGltf(
         std::uint32_t* outWalkClipIndex = nullptr,
         Quaternion* outBindUpAlignment = nullptr,
         float* outBindFacingYawOffset = nullptr,
-        Array<GltfMaterialDesc>* outMaterials = nullptr);
+        Array<GltfMaterialDesc>* outMaterials = nullptr,
+        Utf8String* outError = nullptr);
 
 }  // namespace Spark

@@ -19,6 +19,7 @@ constexpr ComponentKind kCaptureOrder[] = {
         ComponentKind::Transform,
         ComponentKind::Mesh,
         ComponentKind::Material,
+        ComponentKind::MultiMaterial,
         ComponentKind::SkinnedMesh,
         ComponentKind::Animator,
         ComponentKind::DirectionalLight,

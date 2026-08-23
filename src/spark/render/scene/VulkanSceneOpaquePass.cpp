@@ -12,8 +12,8 @@
 
 namespace Spark {
 
-static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 176);
-static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 192);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 184);
+static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 200);
 
 void VulkanSceneOpaquePass::Record(
         const VkCommandBuffer commandBuffer,
@@ -106,6 +106,11 @@ void VulkanSceneOpaquePass::Record(
         push.roughnessFactor = d.roughnessFactor;
         push.occlusionStrength = d.occlusionStrength;
         push.shadowFlags = d.shadowFlags;
+        push.alphaCutoff = d.alphaCutoff;
+        push.textureUvScale[0] = d.textureUvScale.x;
+        push.textureUvScale[1] = d.textureUvScale.y;
+        push.textureUvOffset[0] = d.textureUvOffset.x;
+        push.textureUvOffset[1] = d.textureUvOffset.y;
         push.emissive[0] = d.emissiveColor.x;
         push.emissive[1] = d.emissiveColor.y;
         push.emissive[2] = d.emissiveColor.z;
@@ -225,6 +230,11 @@ void VulkanSceneOpaquePass::RecordTransparent(
         push.roughnessFactor = d.roughnessFactor;
         push.occlusionStrength = d.occlusionStrength;
         push.shadowFlags = d.shadowFlags;
+        push.alphaCutoff = d.alphaCutoff;
+        push.textureUvScale[0] = d.textureUvScale.x;
+        push.textureUvScale[1] = d.textureUvScale.y;
+        push.textureUvOffset[0] = d.textureUvOffset.x;
+        push.textureUvOffset[1] = d.textureUvOffset.y;
         push.emissive[0] = d.emissiveColor.x;
         push.emissive[1] = d.emissiveColor.y;
         push.emissive[2] = d.emissiveColor.z;

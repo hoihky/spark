@@ -60,11 +60,12 @@ private:
     VkDeviceSize stagingSize = 0;
     VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
     std::uint64_t lastFingerprints[kLayerCount]{};
-    std::uint32_t lastUploadedCount = 0xffffffffu;
+    std::uint32_t lastUploadedCount = 0;
     bool uploadPending = false;
     std::uint32_t pendingUploadCount = 0;
     std::uint64_t pendingFingerprints[kLayerCount]{};
     bool pendingNearestMip[kLayerCount]{};
+    bool pendingLayerDirty[kLayerCount]{};
 };
 
 }  // namespace Spark

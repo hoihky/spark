@@ -440,7 +440,6 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         params.ssaoEnabled = true;
 
         params.draws.Clear();
-        params.sceneTextures.Clear();
         params.pointLights.Clear();
         params.decals.Clear();
         params.sprites.Clear();
@@ -467,8 +466,9 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             params.pointLights.PushBack(gpu);
         });
 
-        const auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex);
+        const auto findOrAddTexture =
+                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, nullptr, nullptr);
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
@@ -498,7 +498,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
                 if (mat->GetBaseColorTexture()) {
                     const Spark::Vector3& t = mat->GetTint();
                     item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
+                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), nullptr, nullptr);
                 }
             }
             drawList.PushBack(item);
@@ -539,7 +539,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
                 if (mat->GetBaseColorTexture()) {
                     const Spark::Vector3& t = mat->GetTint();
                     item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
+                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), nullptr, nullptr);
                 }
             }
             drawList.PushBack(item);
@@ -564,7 +564,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             draw.halfExtents = {size.x * 0.5F, size.y * 0.5F, size.z * 0.5F};
             draw.opacity = decalComp->GetOpacity();
             if (decalComp->GetTexture()) {
-                draw.textureLayer = findOrAddTexture(decalComp->GetTexture());
+                draw.textureLayer = findOrAddTexture(decalComp->GetTexture(), nullptr, nullptr);
             }
             params.decals.PushBack(draw);
         });

@@ -73,6 +73,9 @@ private:
             std::uint64_t frameCounter,
             std::uint32_t maxFramesInFlight);
     [[nodiscard]] std::uint64_t ComputeFingerprint(const SceneRenderParams& scene) const;
+    void RegisterMeshesFromDraws(const SceneRenderParams& scene);
+    [[nodiscard]] std::uint64_t ComputeKnownFingerprint() const;
+    void PackKnownGeometry(Array<float>& interleaved, Array<std::uint32_t>& indices);
     void PackSceneGeometry(const SceneRenderParams& scene, Array<float>& interleaved, Array<std::uint32_t>& indices);
     [[nodiscard]] CustomMeshGpuSlice ResolveRigidDrawSlice(const SceneDrawItem& draw) const;
     [[nodiscard]] CustomMeshGpuSlice ResolveSkinnedDrawSlice(const SceneDrawItem& draw) const;
@@ -98,6 +101,8 @@ private:
     bool uploadPending = false;
 
     std::uint64_t lastFingerprint = 0;
+    Array<const Mesh*> knownRigidMeshes{};
+    Array<const SkinnedMesh*> knownSkinnedMeshes{};
     HashMap<const Mesh*, CustomMeshGpuSlice> rigidSlices{};
     HashMap<const SkinnedMesh*, CustomMeshGpuSlice> skinnedSlices{};
 };

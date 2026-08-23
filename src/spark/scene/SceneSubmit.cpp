@@ -25,6 +25,7 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/GameWorld.hpp"
@@ -50,12 +51,12 @@ void ApplyAlbedoTexture(
         SceneDrawItem& item,
         const SharedPtr<Texture2D>& baseColor,
         const Vector3& tint,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture) {
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
     if (!baseColor) {
         return;
     }
     item.albedo = {item.albedo.x * tint.x, item.albedo.y * tint.y, item.albedo.z * tint.z};
-    item.textureLayer = findOrAddTexture(baseColor);
+    item.textureLayer = findOrAddTexture(baseColor, &item.textureUvScale, &item.textureUvOffset);
 }
 
 void PushRigidMeshDraws(
@@ -65,7 +66,7 @@ void PushRigidMeshDraws(
         const MaterialComponent* mat,
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture) {
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
     const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
     if (submeshes.IsEmpty() || multiMat == nullptr) {
         SceneDrawItem item = baseItem;
@@ -101,7 +102,7 @@ void PushSkinnedMeshDraws(
         const MaterialComponent* mat,
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture) {
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
     const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
     if (submeshes.IsEmpty() || multiMat == nullptr) {
         SceneDrawItem item = baseItem;
@@ -137,13 +138,13 @@ namespace {
 struct RigidDrawableSubmitSink final : DrawableFrustumSink {
     Array<SceneDrawItem>& drawList;
     SceneRenderParams& params;
-    const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture;
+    const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture;
     std::int32_t defaultShadowFlags = 0;
 
     RigidDrawableSubmitSink(
             Array<SceneDrawItem>& inDrawList,
             SceneRenderParams& inParams,
-            const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& inFindTex,
+            const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
             const std::int32_t inDefaultShadowFlags) noexcept
         : drawList(inDrawList),
           params(inParams),
@@ -173,7 +174,7 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
             if (mat != nullptr && mat->GetBaseColorTexture()) {
                 const Vector3& t = mat->GetTint();
                 item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
+                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), &item.textureUvScale, &item.textureUvOffset);
             }
             item.shadowFlags = 0;
             drawList.PushBack(item);
@@ -329,8 +330,12 @@ void FillStandardLitSceneFromWorld(
         params.spotLights.PushBack(gpu);
     });
 
-    auto findOrAddTexture = [&params](const SharedPtr<Texture2D>& tex) -> std::int32_t {
-        return SceneSubmitDetail::FindOrAddSceneTexture(params, tex);
+    auto findOrAddTexture = [&params, &world](const SharedPtr<Texture2D>& tex, Vector2* uvScale, Vector2* uvOffset) -> std::int32_t {
+        if (tex && !tex->HasAtlasBinding() &&
+            params.sceneTextures.GetSize() + 4U >= SceneRenderParams::MaxSceneTextures) {
+            world.TryAutoPackTextureIntoAtlas("scene_auto", tex);
+        }
+        return SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
     };
 
     Array<SceneDrawItem> drawList;
@@ -366,13 +371,13 @@ void FillStandardLitSceneFromWorld(
     struct SkinnedSubmitSink final : SkinnedDrawableFrustumSink {
         Array<SceneDrawItem>& draws;
         SceneRenderParams& params;
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findTex;
+        const SceneSubmitDetail::FindSceneTextureFn& findTex;
         std::int32_t defaultShadowFlags = 0;
 
         SkinnedSubmitSink(
                 Array<SceneDrawItem>& inDraws,
                 SceneRenderParams& inParams,
-                const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& inFindTex,
+                const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
                 const std::int32_t inDefaultShadowFlags) noexcept
             : draws(inDraws),
               params(inParams),
@@ -443,7 +448,7 @@ void FillStandardLitSceneFromWorld(
         }
         const Matrix4 spriteModel = o->GetWorldMatrix();
         if (const SharedPtr<Texture2D>& spriteTex = sc->GetTexture()) {
-            findOrAddTexture(spriteTex);
+            findOrAddTexture(spriteTex, nullptr, nullptr);
         }
         if (!spriteTileCull.IsSpriteVisible(spriteModel)) {
             return;
@@ -460,7 +465,7 @@ void FillStandardLitSceneFromWorld(
         sd.sortingLayerOrder = resolved.key.sortingLayerOrder;
         sd.sortWorldY = resolved.worldYAnchor;
         if (sc->GetTexture()) {
-            sd.textureLayer = findOrAddTexture(sc->GetTexture());
+            sd.textureLayer = findOrAddTexture(sc->GetTexture(), nullptr, nullptr);
         } else {
             sd.textureLayer = -1;
         }
@@ -473,7 +478,12 @@ void FillStandardLitSceneFromWorld(
         params.sprites.PushBack(sd);
     });
 
-    tilemapSubmitter.Submit(world, params, spriteTileCull, findOrAddTexture, SceneSubmitDetail::ResolveSpriteBlendMode);
+    tilemapSubmitter.Submit(
+            world,
+            params,
+            spriteTileCull,
+            [&](const SharedPtr<Texture2D>& tex) { return findOrAddTexture(tex, nullptr, nullptr); },
+            SceneSubmitDetail::ResolveSpriteBlendMode);
 
     SceneSubmitDetail::StableSortSprites(params.sprites, params.spriteSortMode);
 
@@ -521,7 +531,7 @@ void FillStandardLitSceneFromWorld(
         draw.halfExtents = {size.x * 0.5F, size.y * 0.5F, size.z * 0.5F};
         draw.opacity = decal->GetOpacity();
         if (decal->GetTexture()) {
-            draw.textureLayer = findOrAddTexture(decal->GetTexture());
+            draw.textureLayer = findOrAddTexture(decal->GetTexture(), nullptr, nullptr);
         }
         params.decals.PushBack(draw);
     });
@@ -546,6 +556,8 @@ void FillStandardLitSceneFromWorld(
     });
 
     SceneSubmitDetail::ResolveIblEnvironmentLayer(params);
+
+    world.FinalizePendingAutoPackAtlas("scene_auto");
 
     if (params.draws.IsEmpty() && (!params.sprites.IsEmpty() || !params.tilemaps.IsEmpty())) {
         params.directionalShadowsEnabled = false;

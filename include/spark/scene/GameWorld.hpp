@@ -7,8 +7,11 @@
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
-#include "spark/scene/GameWorldAssetCache.hpp"
+#include "spark/scene/CachedAssetKind.hpp"
 #include "spark/scene/GameWorldAssetLoader.hpp"
+#include "spark/scene/AssetLoadEvents.hpp"
+#include "spark/scene/CachedAssetKind.hpp"
+#include "spark/scene/MaterialAssetLoader.hpp"
 
 namespace Spark {
 
@@ -43,20 +46,46 @@ public:
 
     [[nodiscard]] SharedPtr<Mesh> LoadMesh(const char* path) { return assetCache.LoadMesh(path); }
     [[nodiscard]] GltfAsset LoadGltf(const char* path) { return assetCache.LoadGltf(path); }
+    [[nodiscard]] AssetLoadOutcome<GltfAsset> TryLoadGltf(const char* path) { return assetCache.TryLoadGltf(path); }
     void RequestGltf(const char* path) { assetLoader.RequestGltf(path); }
     void RequestSkinnedGltf(const char* path) { assetLoader.RequestSkinnedGltf(path); }
+    void OnGltfReady(const char* path, AssetLoadCallback callback) { assetLoader.OnGltfReady(path, callback); }
+    void OnSkinnedGltfReady(const char* path, AssetLoadCallback callback) {
+        assetLoader.OnSkinnedGltfReady(path, callback);
+    }
+    void OnTextureReady(const char* path, AssetLoadCallback callback) { assetLoader.OnTextureReady(path, callback); }
+    void OnAssetReady(const char* path, AssetLoadJobKind kind, AssetLoadCallback callback) {
+        assetLoader.OnAssetReady(path, kind, callback);
+    }
+    void SetAssetLoadListener(IAssetLoadListener* listener) noexcept { assetLoader.SetAssetLoadListener(listener); }
+    [[nodiscard]] IAssetLoadListener* GetAssetLoadListener() const noexcept {
+        return assetLoader.GetAssetLoadListener();
+    }
     void PumpAssets() { assetLoader.Pump(*this); }
+    [[nodiscard]] std::size_t GetPendingAssetLoadCount() const noexcept { return assetLoader.GetPendingJobCount(); }
+    [[nodiscard]] std::size_t GetOutstandingAssetLoadCount() const noexcept {
+        return assetLoader.GetOutstandingLoadCount();
+    }
     [[nodiscard]] bool IsGltfReady(const char* path) const { return assetLoader.IsGltfReady(path); }
     [[nodiscard]] bool IsSkinnedGltfReady(const char* path) const { return assetLoader.IsSkinnedGltfReady(path); }
     [[nodiscard]] AssetLoadState GetAssetLoadState(const char* path, AssetLoadJobKind kind) const {
         return assetLoader.GetState(path, kind);
     }
+    [[nodiscard]] Utf8String GetAssetLoadError(const char* path, AssetLoadJobKind kind) const {
+        return assetLoader.GetLoadError(path, kind);
+    }
     void RegisterGltf(const GltfAsset& asset, const char* cacheKey) { assetCache.RegisterGltf(asset, cacheKey); }
     [[nodiscard]] SkinnedGltfAsset LoadSkinnedGltf(const char* path) { return assetCache.LoadSkinnedGltf(path); }
+    [[nodiscard]] AssetLoadOutcome<SkinnedGltfAsset> TryLoadSkinnedGltf(const char* path) {
+        return assetCache.TryLoadSkinnedGltf(path);
+    }
     void RegisterSkinnedGltf(const SkinnedGltfAsset& asset, const char* cacheKey) {
         assetCache.RegisterSkinnedGltf(asset, cacheKey);
     }
     [[nodiscard]] SharedPtr<Texture2D> LoadTexture(const char* path) { return assetCache.LoadTexture(path); }
+    [[nodiscard]] AssetLoadOutcome<SharedPtr<Texture2D>> TryLoadTexture(const char* path) {
+        return assetCache.TryLoadTexture(path);
+    }
     SharedPtr<Mesh> RegisterMesh(const SharedPtr<Mesh>& mesh, const char* cacheKey = nullptr) {
         return assetCache.RegisterMesh(mesh, cacheKey);
     }
@@ -75,12 +104,52 @@ public:
     [[nodiscard]] bool TryGetCachedGltf(const char* path, GltfAsset& out) const {
         return assetCache.TryGetCachedGltf(path, out);
     }
-    /** Requests async load and pumps until ready (for editor / scripting sync call sites). */
+    /** Synchronous load for editor/scripting call sites (blocks the calling thread; no spin-wait). */
     [[nodiscard]] bool AwaitGltf(const char* path, GltfAsset& out);
+    /** Synchronous load for editor/scripting call sites (blocks the calling thread; no spin-wait). */
     [[nodiscard]] bool AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out);
     [[nodiscard]] bool TryGetAxisAlignedBoundsForKeyOrPath(const char* keyOrPath, Vector3& outMin, Vector3& outMax)
             const {
         return assetCache.TryGetAxisAlignedBoundsForKeyOrPath(keyOrPath, outMin, outMax);
+    }
+    [[nodiscard]] MaterialAsset LoadMaterial(const char* path) { return assetCache.LoadMaterial(path); }
+    [[nodiscard]] AssetLoadOutcome<MaterialAsset> TryLoadMaterial(const char* path) {
+        return assetCache.TryLoadMaterial(path);
+    }
+    void RegisterMaterial(const MaterialAsset& material, const char* cacheKey) {
+        assetCache.RegisterMaterial(material, cacheKey);
+    }
+    [[nodiscard]] const MaterialAsset* TryGetMaterialByKeyOrPath(const char* keyOrPath) const {
+        return assetCache.TryGetMaterialByKeyOrPath(keyOrPath);
+    }
+    void RequestMaterial(const char* path) { assetLoader.RequestMaterial(path); }
+    void InvalidateAssetLoadState(const char* path, AssetLoadJobKind kind) {
+        assetLoader.InvalidateAssetLoadState(path, kind);
+    }
+    void OnMaterialReady(const char* path, AssetLoadCallback callback) {
+        assetLoader.OnMaterialReady(path, callback);
+    }
+    [[nodiscard]] bool IsMaterialReady(const char* path) const { return assetLoader.IsMaterialReady(path); }
+    [[nodiscard]] bool SaveMaterialAsset(
+            const char* path,
+            const MaterialAsset& material,
+            const char* relativeToDir = nullptr,
+            const GameWorldAssetCache* textureKeys = nullptr) {
+        return MaterialAssetLoader::TrySaveToFile(path, material, relativeToDir, textureKeys);
+    }
+    void RetainAsset(CachedAssetKind kind, const char* key) { assetCache.RetainAsset(kind, key); }
+    bool ReleaseAsset(CachedAssetKind kind, const char* key) { return assetCache.ReleaseAsset(kind, key); }
+    [[nodiscard]] std::uint32_t GetAssetRetainCount(CachedAssetKind kind, const char* key) const {
+        return assetCache.GetAssetRetainCount(kind, key);
+    }
+    [[nodiscard]] bool BuildTextureAtlas(const char* atlasKey, const char* const* textureKeys, std::size_t count) {
+        return assetCache.BuildTextureAtlas(atlasKey, textureKeys, count);
+    }
+    [[nodiscard]] bool TryAutoPackTextureIntoAtlas(const char* atlasGroupKey, const SharedPtr<Texture2D>& texture) {
+        return assetCache.TryAutoPackTextureIntoAtlas(atlasGroupKey, texture);
+    }
+    void FinalizePendingAutoPackAtlas(const char* atlasGroupKey) {
+        assetCache.FinalizePendingAutoPackAtlas(atlasGroupKey);
     }
 
     /** Font used for TextOverlayComponent / screen text when set on SceneRenderParams. */

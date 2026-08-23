@@ -1,6 +1,7 @@
 #include "spark/scene/GameWorld.hpp"
 
 #include "spark/ecs/GameObject.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/scene/GameWorldAssetLoader.hpp"
 #include "spark/text/Font.hpp"
 #include "spark/engine/IEngineContext.hpp"
@@ -100,9 +101,13 @@ void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& con
     assetLoader.Pump(*this);
     for (std::size_t i = 0; i < objects.GetSize(); ++i) {
         GameObject* o = objects[i].Get();
-        if (o != nullptr) {
-            o->UpdateComponents(timing, context);
+        if (o == nullptr) {
+            continue;
         }
+        if (MaterialComponent* material = o->GetComponent<MaterialComponent>()) {
+            material->TryApplyMaterialAsset(*this);
+        }
+        o->UpdateComponents(timing, context);
     }
 }
 
@@ -111,20 +116,12 @@ bool GameWorld::AwaitGltf(const char* path, GltfAsset& out) {
     if (path == nullptr || path[0] == '\0') {
         return false;
     }
-    if (TryGetCachedGltf(path, out)) {
-        return static_cast<bool>(out.mesh);
+    if (TryGetCachedGltf(path, out) && out.mesh) {
+        return true;
     }
-    RequestGltf(path);
-    for (int attempt = 0; attempt < 200000; ++attempt) {
-        PumpAssets();
-        if (TryGetCachedGltf(path, out) && out.mesh) {
-            return true;
-        }
-        if (GetAssetLoadState(path, AssetLoadJobKind::Gltf) == AssetLoadState::Failed) {
-            return false;
-        }
-    }
-    return false;
+    const AssetLoadOutcome<GltfAsset> loaded = TryLoadGltf(path);
+    out = loaded.value;
+    return loaded.ok && static_cast<bool>(out.mesh);
 }
 
 bool GameWorld::AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out) {
@@ -132,20 +129,12 @@ bool GameWorld::AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out) {
     if (path == nullptr || path[0] == '\0') {
         return false;
     }
-    if (TryGetCachedSkinnedGltf(path, out)) {
-        return static_cast<bool>(out.mesh && out.skeleton);
+    if (TryGetCachedSkinnedGltf(path, out) && out.mesh && out.skeleton) {
+        return true;
     }
-    RequestSkinnedGltf(path);
-    for (int attempt = 0; attempt < 200000; ++attempt) {
-        PumpAssets();
-        if (TryGetCachedSkinnedGltf(path, out) && out.mesh && out.skeleton) {
-            return true;
-        }
-        if (GetAssetLoadState(path, AssetLoadJobKind::SkinnedGltf) == AssetLoadState::Failed) {
-            return false;
-        }
-    }
-    return false;
+    const AssetLoadOutcome<SkinnedGltfAsset> loaded = TryLoadSkinnedGltf(path);
+    out = loaded.value;
+    return loaded.ok && static_cast<bool>(out.mesh) && static_cast<bool>(out.skeleton);
 }
 
 void GameWorld::SetUiFont(SharedPtr<Font> font) {

@@ -221,7 +221,7 @@ public:
                 ReturnToMenu(context);
             }
         } else if (mode == DemoMode::MaterialShowcase3D) {
-            materialShowcase3DDemo.Simulate(timing, context);
+            materialShowcase3DDemo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }

@@ -170,6 +170,29 @@ Vector4 Texture2D::ScaleUvRectForSceneLayer(const Vector4& uv) const noexcept {
     return {uv.x * sceneLayerUvScale.x, uv.y * sceneLayerUvScale.y, uv.z * sceneLayerUvScale.x, uv.w * sceneLayerUvScale.y};
 }
 
+void Texture2D::SetAtlasBinding(SharedPtr<Texture2D> atlas, const Vector4 uvRect) noexcept {
+    atlasSource = MoveTemp(atlas);
+    atlasUvRect = uvRect;
+}
+
+void Texture2D::ClearAtlasBinding() noexcept {
+    atlasSource = SharedPtr<Texture2D>();
+    atlasUvRect = Vector4{0.0F, 0.0F, 1.0F, 1.0F};
+}
+
+SharedPtr<Texture2D> Texture2D::ResolveAtlasUv(Vector2& outScale, Vector2& outOffset) const noexcept {
+    if (atlasSource) {
+        outScale.x = atlasUvRect.z - atlasUvRect.x;
+        outScale.y = atlasUvRect.w - atlasUvRect.y;
+        outOffset.x = atlasUvRect.x;
+        outOffset.y = atlasUvRect.y;
+        return atlasSource;
+    }
+    outScale = Vector2::One;
+    outOffset = {};
+    return SharedPtr<Texture2D>();
+}
+
 void Texture2D::PrepareSceneLayerUpload(const std::uint32_t layerSize, Array<std::uint8_t>& outRgba) {
     if (width == 0 || height == 0 || layerSize == 0) {
         outRgba.Clear();

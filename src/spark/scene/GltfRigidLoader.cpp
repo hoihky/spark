@@ -5,6 +5,8 @@
 
 #include "cgltf.h"
 
+#include <cstdio>
+
 namespace Spark {
 
 namespace {
@@ -153,16 +155,20 @@ void LoadAllMaterials(const cgltf_data* data, const char* path, Array<GltfMateri
 bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) noexcept {
     out = GltfRigidLoadResult{};
     if (path == nullptr || path[0] == '\0') {
+        out.errorMessage = Utf8String("Empty glTF path");
         return false;
     }
+    out.errorMessage = Utf8String(path);
 
     cgltf_options options{};
     cgltf_data* data = nullptr;
     if (cgltf_parse_file(&options, path, &data) != cgltf_result_success || data == nullptr) {
+        out.errorMessage.AppendUtf8(": failed to parse glTF file");
         return false;
     }
     if (cgltf_load_buffers(&options, data, path) != cgltf_result_success) {
         cgltf_free(data);
+        out.errorMessage.AppendUtf8(": failed to load glTF buffers");
         return false;
     }
 
@@ -196,6 +202,7 @@ bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) n
 
     if (mesh->GetVertices().IsEmpty()) {
         cgltf_free(data);
+        out.errorMessage.AppendUtf8(": no mesh geometry found in glTF");
         return false;
     }
 
@@ -204,6 +211,7 @@ bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) n
 
     out.mesh = mesh;
     out.success = true;
+    out.errorMessage.Clear();
     return true;
 }
 

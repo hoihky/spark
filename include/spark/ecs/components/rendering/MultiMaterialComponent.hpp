@@ -1,7 +1,6 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
@@ -18,7 +17,7 @@ struct GltfAsset;
  */
 class MultiMaterialComponent final : public GameComponent {
 public:
-    static constexpr ComponentKind TypeKind = ComponentKind::Unknown;
+    static constexpr ComponentKind TypeKind = ComponentKind::MultiMaterial;
 
     struct Slot {
         SharedPtr<Texture2D> baseColor;
@@ -37,6 +36,7 @@ public:
         SceneShadingModel shadingModel = SceneShadingModel::LitPbr;
         bool doubleSided = false;
         float opacity = 1.0F;
+        float alphaCutoff = 0.0F;
     };
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }

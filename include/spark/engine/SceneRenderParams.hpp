@@ -219,6 +219,11 @@ struct SceneDrawItem {
     bool doubleSided = false;
     /** 1 = opaque; &lt; 1 submits to <c>transparentDraws</c> (back-to-front sorted). */
     float opacity = 1.0F;
+    /** glTF alpha_mode=MASK cutoff; 0 = no alpha test. */
+    float alphaCutoff = 0.0F;
+    /** Base-color UV transform when sampling a packed atlas (<c>uv * scale + offset</c>). */
+    Vector2 textureUvScale{1.0F, 1.0F};
+    Vector2 textureUvOffset{};
 };
 
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */

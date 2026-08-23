@@ -2,6 +2,7 @@
 
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/demo/MaterialLibraryWorkflow.hpp"
 
 namespace Spark {
 
@@ -17,15 +18,18 @@ class MaterialShowcase3DDemo {
 public:
     void Load(GameWorld& w, IEngineContext& context);
     void Unload(GameWorld& w);
-    void Simulate(const FrameTiming& timing, IEngineContext& context);
+    void Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world);
     void Render(Scene& scene, GameWorld& world, IEngineContext& context);
 
 private:
     void ApplyMaterialState();
-    void HandleMaterialInput(IInput& in, float deltaSeconds);
+    void HandleMaterialInput(GameWorld& world, IInput& in, float deltaSeconds);
+    void HandleLibraryInput(GameWorld& world, IInput& in);
+    void DetachLibraryOnManualEdit(GameWorld& world);
 
     Array<GameObject*> roots{};
     FlyCamera camera{};
+    MaterialLibraryWorkflow libraryWorkflow{};
 
     SharedPtr<Mesh> sphereMesh{};
     SharedPtr<Mesh> groundMesh{};
@@ -38,6 +42,10 @@ private:
     MeshComponent* showcaseMesh = nullptr;
     TransformComponent* showcaseTransform = nullptr;
 
+    GameObject* librarySphere = nullptr;
+    MaterialComponent* libraryMaterial = nullptr;
+    TransformComponent* libraryTransform = nullptr;
+
     bool useBaseMap = true;
     bool useNormalMap = false;
     bool useEmissiveMap = false;
@@ -47,6 +55,7 @@ private:
     float roughness = 0.48F;
     float emissiveIntensity = 0.0F;
     float spinRadians = 0.0F;
+    float librarySpinRadians = 0.0F;
 
     GameObject* helpHud = nullptr;
     TextOverlayComponent* helpText = nullptr;

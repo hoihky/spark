@@ -520,6 +520,15 @@ VideoRecorder* VulkanRenderer::GetActiveVideoRecorder() {
 
 void VulkanRenderer::SetSceneRenderParams(const SceneRenderParams& params) {
     pendingScene = params;
+    for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
+        if (params.sceneTextures[i]) {
+            if (mergedSceneTextures.GetSize() <= i) {
+                mergedSceneTextures.Resize(i + 1U);
+            }
+            mergedSceneTextures[i] = params.sceneTextures[i];
+        }
+    }
+    pendingScene.sceneTextures = mergedSceneTextures;
     sceneParamsValid = true;
     resolvedLighting = SceneLightingResolver::Resolve(pendingScene);
 }
@@ -561,6 +570,7 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
 
     sceneTextureUploader.DestroyResources(device());
     customMeshPool.DestroyResources(device());
+    mergedSceneTextures.Clear();
     directionalShadow.DestroyResources(device());
     punctualShadow.DestroyResources(device());
 

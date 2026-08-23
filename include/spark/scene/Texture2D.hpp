@@ -5,6 +5,7 @@
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/TextureFormat.hpp"
 #include "spark/scene/TextureLoader.hpp"
 #include "spark/scene/TextureMipLevel.hpp"
@@ -44,6 +45,15 @@ public:
     /** When true, scene upload uses nearest filtering and mip0-only sampling (2D pixel art / atlases). */
     void SetSceneUploadNearest(bool nearest) noexcept { sceneUploadNearest = nearest; }
     [[nodiscard]] bool GetSceneUploadNearest() const noexcept { return sceneUploadNearest; }
+
+    /**
+     * When set, scene submit samples <c>atlasSource</c> using <c>atlasUvRect</c> (normalized min/max UV).
+     * Mesh UVs are transformed as <c>uv * scale + offset</c> where scale = (max-min) and offset = (minU, minV).
+     */
+    void SetAtlasBinding(SharedPtr<Texture2D> atlas, Vector4 uvRect) noexcept;
+    void ClearAtlasBinding() noexcept;
+    [[nodiscard]] bool HasAtlasBinding() const noexcept { return static_cast<bool>(atlasSource); }
+    [[nodiscard]] SharedPtr<Texture2D> ResolveAtlasUv(Vector2& outScale, Vector2& outOffset) const noexcept;
 
     /**
      * Fraction of the GPU scene layer (0–1) occupied by uploaded content after uniform aspect-preserving fit.
@@ -97,6 +107,8 @@ private:
     std::uint64_t contentFingerprint = 0;
     bool sceneUploadNearest = false;
     Vector2 sceneLayerUvScale{1.0F, 1.0F};
+    SharedPtr<Texture2D> atlasSource;
+    Vector4 atlasUvRect{0.0F, 0.0F, 1.0F, 1.0F};
     std::int32_t gpuSceneLayer = -1;
 
     void RefreshContentFingerprint() noexcept;

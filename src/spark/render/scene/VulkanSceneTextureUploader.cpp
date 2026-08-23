@@ -27,8 +27,9 @@ constexpr std::uint32_t kMaxMipLevels = 16;
 void VulkanSceneTextureUploader::ResetUploadCache() noexcept {
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
         lastFingerprints[i] = 0;
+        pendingLayerDirty[i] = false;
     }
-    lastUploadedCount = 0xffffffffu;
+    lastUploadedCount = 0;
 }
 
 VkDeviceSize VulkanSceneTextureUploader::LayerStagingPitch() const noexcept {
@@ -204,14 +205,16 @@ bool VulkanSceneTextureUploader::NeedsUpload(
             maxLayer = static_cast<std::uint32_t>(i);
         }
     }
-    if (lastUploadedCount != maxLayer + 1U) {
+    if (maxLayer + 1U > lastUploadedCount) {
         return true;
     }
     for (std::uint32_t i = 0; i <= maxLayer; ++i) {
         const SharedPtr<Texture2D>& tex =
                 (static_cast<std::size_t>(i) < texCount) ? scene.sceneTextures[i] : SharedPtr<Texture2D>{};
-        const std::uint64_t fp = tex ? tex->GetContentFingerprint() : 0;
-        if (fp != lastFingerprints[i]) {
+        if (!tex) {
+            continue;
+        }
+        if (tex->GetContentFingerprint() != lastFingerprints[i]) {
             return true;
         }
     }
@@ -231,76 +234,86 @@ void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, 
             maxLayer = static_cast<std::uint32_t>(i);
         }
     }
-    const std::uint32_t uploadLayerCount = maxLayer + 1U;
+    const std::uint32_t uploadLayerCount =
+            std::min(std::max(maxLayer + 1U, lastUploadedCount), kLayerCount);
 
     const VkDeviceSize layerPitch = LayerStagingPitch();
     auto* const base = static_cast<std::uint8_t*>(stagingMapped);
     Array<std::uint8_t> resampled;
     TextureMipChain rgbaChain;
     TextureMipChain compressedChain;
+    bool anyLayerDirty = maxLayer + 1U > lastUploadedCount;
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
-        std::uint8_t* dst = base + static_cast<std::size_t>(layerPitch) * i;
+        pendingLayerDirty[i] = false;
         pendingNearestMip[i] = false;
+        pendingFingerprints[i] = lastFingerprints[i];
+
         const SharedPtr<Texture2D> tex =
-                (i < uploadLayerCount && static_cast<std::size_t>(i) < texCount) ? scene.sceneTextures[i]
-                                                                                  : SharedPtr<Texture2D>{};
-        if (tex) {
-                if (tex->HasPrebuiltMipChain() && tex->GetPixelFormat() == pixelFormat) {
-                    const Array<TextureMipLevel>& mips = tex->GetMipChain();
-                    VkDeviceSize mipOffset = 0;
-                    for (std::size_t level = 0; level < mips.GetSize() && level < kMaxMipLevels; ++level) {
-                        const TextureMipLevel& mip = mips[level];
-                        const VkDeviceSize mipBytes = static_cast<VkDeviceSize>(mip.GetBytes().GetSize());
-                        if (mipOffset + mipBytes <= layerPitch) {
-                            std::memcpy(dst + mipOffset, mip.GetBytes().GetData(), static_cast<std::size_t>(mipBytes));
-                        }
-                        mipOffset += mipBytes;
-                    }
-                } else if (UsesBlockCompression(arrayMode)) {
-                    tex->ResampleBilinear(kLayerSize, kLayerSize, resampled);
-                    rgbaChain.BuildFromRgba(resampled, kLayerSize, kLayerSize);
-                    if (TextureBlockCompressor::Get().CompressChain(pixelFormat, rgbaChain, compressedChain)) {
-                        const Array<TextureMipLevel>& compressedMips = compressedChain.GetLevels();
-                        VkDeviceSize mipOffset = 0;
-                        for (std::size_t level = 0; level < compressedMips.GetSize(); ++level) {
-                            const TextureMipLevel& mip = compressedMips[level];
-                            const VkDeviceSize mipBytes = static_cast<VkDeviceSize>(mip.GetBytes().GetSize());
-                            if (mipOffset + mipBytes <= layerPitch) {
-                                std::memcpy(
-                                        dst + mipOffset,
-                                        mip.GetBytes().GetData(),
-                                        static_cast<std::size_t>(mipBytes));
-                            }
-                            mipOffset += mipBytes;
-                        }
-                    } else {
-                        std::memset(dst, 255, static_cast<std::size_t>(layerPitch));
-                    }
-                } else {
-                    tex->PrepareSceneLayerUpload(kLayerSize, resampled);
-                    pendingNearestMip[i] = tex->GetSceneUploadNearest();
-                    const VkDeviceSize rgbaPitch =
-                            static_cast<VkDeviceSize>(kLayerSize) * static_cast<VkDeviceSize>(kLayerSize) * 4;
-                    if (resampled.GetSize() >= static_cast<std::size_t>(rgbaPitch)) {
-                        std::memcpy(dst, resampled.GetData(), static_cast<std::size_t>(rgbaPitch));
-                    } else {
-                        std::memset(dst, 255, static_cast<std::size_t>(rgbaPitch));
-                    }
+                (static_cast<std::size_t>(i) < texCount) ? scene.sceneTextures[i] : SharedPtr<Texture2D>{};
+        if (!tex) {
+            continue;
+        }
+
+        const std::uint64_t fp = tex->GetContentFingerprint();
+        const bool layerDirty = i >= lastUploadedCount || fp != lastFingerprints[i];
+        if (!layerDirty) {
+            continue;
+        }
+
+        pendingLayerDirty[i] = true;
+        anyLayerDirty = true;
+        pendingFingerprints[i] = fp;
+
+        std::uint8_t* const dst = base + static_cast<std::size_t>(layerPitch) * i;
+        if (tex->HasPrebuiltMipChain() && tex->GetPixelFormat() == pixelFormat) {
+            const Array<TextureMipLevel>& mips = tex->GetMipChain();
+            VkDeviceSize mipOffset = 0;
+            for (std::size_t level = 0; level < mips.GetSize() && level < kMaxMipLevels; ++level) {
+                const TextureMipLevel& mip = mips[level];
+                const VkDeviceSize mipBytes = static_cast<VkDeviceSize>(mip.GetBytes().GetSize());
+                if (mipOffset + mipBytes <= layerPitch) {
+                    std::memcpy(dst + mipOffset, mip.GetBytes().GetData(), static_cast<std::size_t>(mipBytes));
                 }
+                mipOffset += mipBytes;
+            }
+        } else if (UsesBlockCompression(arrayMode)) {
+            tex->ResampleBilinear(kLayerSize, kLayerSize, resampled);
+            rgbaChain.BuildFromRgba(resampled, kLayerSize, kLayerSize);
+            if (TextureBlockCompressor::Get().CompressChain(pixelFormat, rgbaChain, compressedChain)) {
+                const Array<TextureMipLevel>& compressedMips = compressedChain.GetLevels();
+                VkDeviceSize mipOffset = 0;
+                for (std::size_t level = 0; level < compressedMips.GetSize(); ++level) {
+                    const TextureMipLevel& mip = compressedMips[level];
+                    const VkDeviceSize mipBytes = static_cast<VkDeviceSize>(mip.GetBytes().GetSize());
+                    if (mipOffset + mipBytes <= layerPitch) {
+                        std::memcpy(
+                                dst + mipOffset,
+                                mip.GetBytes().GetData(),
+                                static_cast<std::size_t>(mipBytes));
+                    }
+                    mipOffset += mipBytes;
+                }
+            } else {
+                std::memset(dst, 255, static_cast<std::size_t>(layerPitch));
+            }
         } else {
-            std::memset(dst, 255, static_cast<std::size_t>(layerPitch));
+            tex->PrepareSceneLayerUpload(kLayerSize, resampled);
+            pendingNearestMip[i] = tex->GetSceneUploadNearest();
+            const VkDeviceSize rgbaPitch =
+                    static_cast<VkDeviceSize>(kLayerSize) * static_cast<VkDeviceSize>(kLayerSize) * 4;
+            if (resampled.GetSize() >= static_cast<std::size_t>(rgbaPitch)) {
+                std::memcpy(dst, resampled.GetData(), static_cast<std::size_t>(rgbaPitch));
+            } else {
+                std::memset(dst, 255, static_cast<std::size_t>(rgbaPitch));
+            }
         }
     }
 
+    if (!anyLayerDirty) {
+        return;
+    }
+
     pendingUploadCount = uploadLayerCount;
-    for (std::uint32_t i = 0; i < uploadLayerCount; ++i) {
-        const SharedPtr<Texture2D>& uploadTex =
-                (static_cast<std::size_t>(i) < texCount) ? scene.sceneTextures[i] : SharedPtr<Texture2D>{};
-        pendingFingerprints[i] = uploadTex ? uploadTex->GetContentFingerprint() : 0;
-    }
-    for (std::uint32_t i = uploadLayerCount; i < kLayerCount; ++i) {
-        pendingFingerprints[i] = 0;
-    }
     uploadPending = true;
 }
 
@@ -316,6 +329,9 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
             commandBuffer, arrayImage, kLayerCount, layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevelCount);
 
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
+        if (!pendingLayerDirty[i]) {
+            continue;
+        }
         const VkDeviceSize layerOffset = layerPitch * static_cast<VkDeviceSize>(i);
         if (UsesBlockCompression(arrayMode)) {
             VkDeviceSize mipOffset = 0;

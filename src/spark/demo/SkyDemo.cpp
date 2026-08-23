@@ -182,8 +182,9 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
         params.uiBoldFont = world.GetUiBoldFont();
         params.draws.Reserve(24);
 
-        const auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex);
+        const auto findOrAddTexture =
+                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, nullptr, nullptr);
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
@@ -203,7 +204,7 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
             if (mat != nullptr && mat->GetBaseColorTexture()) {
                 const Spark::Vector3& t = mat->GetTint();
                 item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
+                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), nullptr, nullptr);
             }
             drawList.PushBack(item);
         });
@@ -235,7 +236,7 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
                 if (mat->GetBaseColorTexture()) {
                     const Spark::Vector3& t = mat->GetTint();
                     item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
+                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), nullptr, nullptr);
                 }
             }
             drawList.PushBack(item);

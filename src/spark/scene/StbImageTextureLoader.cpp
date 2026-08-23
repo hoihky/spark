@@ -91,7 +91,11 @@ bool StbImageTextureLoader::LoadFromMemory(
     std::memcpy(rgbaBytes.GetData(), data, n);
     stbi_image_free(data);
     const char* nm = (debugName != nullptr && debugName[0] != '\0') ? debugName : "Memory";
+    const Utf8String preservedName = out.GetName();
     out = Texture2D(Utf8String(nm));
+    if (!preservedName.IsEmpty()) {
+        out.GetName() = preservedName;
+    }
     out.SetPixels(static_cast<std::uint32_t>(w), static_cast<std::uint32_t>(h), MoveTemp(rgbaBytes));
     return true;
 }

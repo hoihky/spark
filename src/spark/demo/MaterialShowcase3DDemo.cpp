@@ -1,5 +1,6 @@
 #include "spark/demo/MaterialShowcase3DDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
+#include "spark/config.hpp"
 
 #include "spark/scene/SceneSubmit.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
@@ -185,7 +186,54 @@ void MaterialShowcase3DDemo::ApplyMaterialState() {
     ApplyEmissiveToMaterial(*showcaseMaterial, emissivePreset, useEmissiveMap, emissiveIntensity, emissiveTex);
 }
 
-void MaterialShowcase3DDemo::HandleMaterialInput(IInput& in, const float deltaSeconds) {
+void MaterialShowcase3DDemo::DetachLibraryOnManualEdit(GameWorld& world) {
+    if (showcaseMaterial != nullptr && showcaseMaterial->HasMaterialAsset()) {
+        showcaseMaterial->ClearMaterialAsset(world);
+    }
+}
+
+void MaterialShowcase3DDemo::HandleLibraryInput(GameWorld& world, IInput& in) {
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_S)) {
+        (void)libraryWorkflow.TrySaveFromComponent(world, *showcaseMaterial);
+    }
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_L)) {
+        libraryWorkflow.RequestAsyncLoad(world);
+    }
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_P)) {
+        libraryWorkflow.ApplyAssetTo(world, *showcaseMaterial);
+    }
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_U)) {
+        if (libraryMaterial != nullptr) {
+            libraryWorkflow.ReleaseBinding(world, *libraryMaterial);
+        }
+        if (showcaseMaterial != nullptr) {
+            libraryWorkflow.ReleaseBinding(world, *showcaseMaterial);
+        }
+    }
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_A)) {
+        const char* textureKeys[] = {
+                "spark/demo/matshow_base",
+                "spark/demo/matshow_normal",
+                "spark/demo/matshow_emissive",
+        };
+        if (libraryWorkflow.TryBuildAtlas(world, textureKeys, 3U)) {
+            auto refreshMaterialBindings = [](MaterialComponent* mat) {
+                if (mat == nullptr) {
+                    return;
+                }
+                mat->SetBaseColorTexture(mat->GetBaseColorTexture());
+                mat->SetNormalTexture(mat->GetNormalTexture());
+                mat->SetEmissiveTexture(mat->GetEmissiveTexture());
+            };
+            refreshMaterialBindings(showcaseMaterial);
+            refreshMaterialBindings(libraryMaterial);
+        }
+    }
+
+    libraryWorkflow.PollAsyncLoad(world, libraryMaterial);
+}
+
+void MaterialShowcase3DDemo::HandleMaterialInput(GameWorld& world, IInput& in, const float deltaSeconds) {
     constexpr float kScalarStep = 0.04F;
     constexpr float kScalarHoldRate = 0.55F;
 
@@ -224,15 +272,19 @@ void MaterialShowcase3DDemo::HandleMaterialInput(IInput& in, const float deltaSe
     };
 
     if (in.IsKeyPressedThisFrame(GLFW_KEY_1)) {
+        DetachLibraryOnManualEdit(world);
         useBaseMap = !useBaseMap;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_2)) {
+        DetachLibraryOnManualEdit(world);
         useNormalMap = !useNormalMap;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_3)) {
+        DetachLibraryOnManualEdit(world);
         useEmissiveMap = !useEmissiveMap;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_4)) {
+        DetachLibraryOnManualEdit(world);
         emissivePreset = (emissivePreset + 1) % 4;
         if (emissivePreset == 1) {
             emissiveIntensity = 4.5F;
@@ -245,9 +297,11 @@ void MaterialShowcase3DDemo::HandleMaterialInput(IInput& in, const float deltaSe
         }
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_5)) {
+        DetachLibraryOnManualEdit(world);
         tintPreset = (tintPreset + 1) % 4;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_0)) {
+        DetachLibraryOnManualEdit(world);
         useBaseMap = true;
         useNormalMap = false;
         useEmissiveMap = false;
@@ -260,9 +314,21 @@ void MaterialShowcase3DDemo::HandleMaterialInput(IInput& in, const float deltaSe
 
     adjustScalar(metallic, GLFW_KEY_Q, GLFW_KEY_E);
     adjustScalar(roughness, GLFW_KEY_R, GLFW_KEY_F);
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_Q) || in.IsKeyPressedThisFrame(GLFW_KEY_E) ||
+        in.IsKeyPressedThisFrame(GLFW_KEY_R) || in.IsKeyPressedThisFrame(GLFW_KEY_F) ||
+        EmissiveAdjustDown(in) || EmissiveAdjustUp(in) || EmissiveAdjustDownHeld(in) ||
+        EmissiveAdjustUpHeld(in)) {
+        DetachLibraryOnManualEdit(world);
+    }
     adjustEmissive();
 
-    ApplyMaterialState();
+    HandleLibraryInput(world, in);
+
+    if (showcaseMaterial != nullptr && showcaseMaterial->HasMaterialAsset()) {
+        showcaseMaterial->TryApplyMaterialAsset(world);
+    } else {
+        ApplyMaterialState();
+    }
 }
 
 void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
@@ -289,6 +355,16 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     *emissiveTex = BuildEmissiveLayerMap(128, Utf8String("MatShowEmissiveData"));
     w.RegisterTexture(emissiveTex, "spark/demo/matshow_emissive");
 
+    char matFilePath[512];
+    std::snprintf(
+            matFilePath,
+            sizeof(matFilePath),
+            "%s/materials/matshow_library.sparkmat",
+            SPARK_BUILD_ASSETS_DIR);
+    libraryWorkflow.SetPaths(
+            Utf8String(MaterialLibraryWorkflow::kDefaultAssetKey),
+            Utf8String(matFilePath));
+
     GameObject* ground = w.CreateGameObject();
     ground->GetName() = Utf8String("Ground");
     ground->AddComponent<TransformComponent>();
@@ -310,6 +386,22 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     showcaseMaterial = showcaseSphere->AddComponent<MaterialComponent>();
     ApplyMaterialState();
     roots.PushBack(showcaseSphere);
+
+    librarySphere = w.CreateGameObject();
+    librarySphere->GetName() = Utf8String("MatLibrarySphere");
+    libraryTransform = librarySphere->AddComponent<TransformComponent>();
+    if (libraryTransform != nullptr) {
+        libraryTransform->SetTranslation({2.35F, 0.72F, 0.0F});
+    }
+    librarySphere->AddComponent<MeshComponent>(sphereMesh, Vector3{0.62F, 0.72F, 0.95F});
+    libraryMaterial = librarySphere->AddComponent<MaterialComponent>();
+    if (libraryMaterial != nullptr) {
+        libraryMaterial->SetShadingModel(SceneShadingModel::LitPbr);
+        libraryMaterial->SetMetallic(0.12F);
+        libraryMaterial->SetRoughness(0.62F);
+        libraryMaterial->SetTint({0.72F, 0.78F, 0.88F});
+    }
+    roots.PushBack(librarySphere);
 
     GameObject* plGo = w.CreateGameObject();
     plGo->GetName() = Utf8String("RimPoint");
@@ -355,8 +447,12 @@ void MaterialShowcase3DDemo::Unload(GameWorld& w) {
     showcaseMaterial = nullptr;
     showcaseMesh = nullptr;
     showcaseTransform = nullptr;
+    librarySphere = nullptr;
+    libraryMaterial = nullptr;
+    libraryTransform = nullptr;
     helpHud = nullptr;
     helpText = nullptr;
+    libraryWorkflow.Reset();
     sphereMesh.Reset();
     groundMesh.Reset();
     baseColorTex.Reset();
@@ -364,7 +460,7 @@ void MaterialShowcase3DDemo::Unload(GameWorld& w) {
     emissiveTex.Reset();
 }
 
-void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext& context) {
+void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world) {
     IInput& in = context.GetInput();
     if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
         in.SetCursorCaptured(!in.IsCursorCaptured());
@@ -376,18 +472,38 @@ void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         camera.ProcessMovement(in, timing.deltaTimeSeconds);
     }
 
-    HandleMaterialInput(in, timing.deltaTimeSeconds);
+    HandleMaterialInput(world, in, timing.deltaTimeSeconds);
 
     spinRadians += timing.deltaTimeSeconds * 0.42F;
+    librarySpinRadians -= timing.deltaTimeSeconds * 0.28F;
     if (showcaseTransform != nullptr) {
         showcaseTransform->SetRotation(Quaternion::FromAxisAngle(Vector3{0.0F, 1.0F, 0.0F}, spinRadians));
     }
+    if (libraryTransform != nullptr) {
+        libraryTransform->SetRotation(Quaternion::FromAxisAngle(Vector3{0.0F, 1.0F, 0.0F}, librarySpinRadians));
+    }
 
     if (helpText != nullptr && showcaseMaterial != nullptr) {
-        const std::string msg = std::format(
-                "Material ball — edit live on one LitPBR sphere\n"
-                "  1 base map {} · 2 normal {} · 3 emissive map {} · 4 emissive preset ({}) · 5 tint ({})\n"
-                "  Q/E metallic {:.2f} · R/F roughness {:.2f} · Z/X or [ ] emissive {:.1f} · 0 reset\n"
+        const char* asyncLabel = "idle";
+        switch (libraryWorkflow.GetAsyncState()) {
+        case MaterialLibraryWorkflow::AsyncState::Pending:
+            asyncLabel = "loading";
+            break;
+        case MaterialLibraryWorkflow::AsyncState::Ready:
+            asyncLabel = "ready";
+            break;
+        case MaterialLibraryWorkflow::AsyncState::Failed:
+            asyncLabel = "failed";
+            break;
+        default:
+            break;
+        }
+        std::string msg = std::format(
+                "Material ball (left) + library preview (right)\n"
+                "  1 base {} · 2 normal {} · 3 emissive map {} · 4 emissive ({}) · 5 tint ({})\n"
+                "  Q/E metallic {:.2f} · R/F roughness {:.2f} · Z/X emissive {:.1f} · 0 reset\n"
+                "  Library: S save .sparkmat · L async load (right) · P apply to left · U release · A pack atlas\n"
+                "  Status: {} · retain={}\n"
                 "  F1 mouse lock · WASD fly · ESC menu",
                 useBaseMap ? "on" : "off",
                 useNormalMap ? "on" : "off",
@@ -396,7 +512,13 @@ void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
                 TintPresetName(tintPreset),
                 metallic,
                 roughness,
-                emissiveIntensity);
+                emissiveIntensity,
+                asyncLabel,
+                libraryWorkflow.GetMaterialRetainCount(world));
+        if (!libraryWorkflow.GetLastMessage().IsEmpty()) {
+            msg += "\n  ";
+            msg += libraryWorkflow.GetLastMessage().CStr();
+        }
         helpText->SetText(Utf8String(msg.c_str()));
     }
 }

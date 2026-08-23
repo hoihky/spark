@@ -51,8 +51,9 @@ public:
         float roughnessFactor = 1.0F;
         float occlusionStrength = 1.0F;
         std::int32_t shadowFlags = 0;
-        std::int32_t pbrPad0 = 0;
-        float std430PadEmissive[2]{};
+        float alphaCutoff = 0.0F;
+        float textureUvScale[2]{1.0F, 1.0F};
+        float textureUvOffset[2]{};
         float emissiveFactor[4]{1.0F, 1.0F, 1.0F, 0.0F};
     };
 

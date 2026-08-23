@@ -10,6 +10,10 @@
 #include "spark/scene/SceneRaycast.hpp"
 #include "spark/scene/SceneSubmit.hpp"
 #include "spark/scene/serialization/SceneSerializer.hpp"
+#include "spark/scene/MaterialAsset.hpp"
+#include "spark/scene/CachedAssetKind.hpp"
+#include "spark/scene/AssetLoadEvents.hpp"
+#include "spark/config.hpp"
 
 namespace Spark {
 
@@ -144,6 +148,12 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
 
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
             in.SetCursorCaptured(!in.IsCursorCaptured());
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_F9)) {
+            TrySaveSelectedMaterial(world);
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_F10)) {
+            TryLoadSelectedMaterial(world);
         }
         if (in.IsCursorCaptured()) {
             if (timing.frameIndex > 0) {
@@ -1205,6 +1215,70 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
                 userLights.GetSize());
         SetStatusMessage(Spark::Utf8String(loaded.c_str()));
     }
+
+void SceneEditor3DDemo::MaterialFilePath(char* out, const std::size_t outSz) noexcept
+{
+        if (out == nullptr || outSz == 0U) {
+            return;
+        }
+        std::snprintf(out, outSz, "%s/materials/editor_selection.sparkmat", SPARK_BUILD_ASSETS_DIR);
+}
+
+void SceneEditor3DDemo::TrySaveSelectedMaterial(Spark::GameWorld& w)
+{
+        if (selectedObject == nullptr) {
+            SetStatusMessage(Spark::Utf8String("Select an object with a MaterialComponent first."));
+            return;
+        }
+        Spark::MaterialComponent* mat = selectedObject->GetComponent<Spark::MaterialComponent>();
+        if (mat == nullptr) {
+            SetStatusMessage(Spark::Utf8String("Selected object has no MaterialComponent."));
+            return;
+        }
+
+        char path[512];
+        MaterialFilePath(path, sizeof(path));
+        constexpr const char* kAssetKey = "materials/editor_selection.sparkmat";
+
+        Spark::MaterialAsset asset{};
+        asset.name = Spark::Utf8String(kAssetKey);
+        asset.CaptureFromMaterial(*mat);
+        if (!w.SaveMaterialAsset(path, asset, SPARK_BUILD_ASSETS_DIR, &w.GetAssetCache())) {
+            SetStatusMessage(Spark::Utf8String("Failed to save .sparkmat file."));
+            return;
+        }
+        w.RegisterMaterial(asset, kAssetKey);
+        mat->SetMaterialAsset(w, kAssetKey);
+        SetStatusMessage(Spark::Utf8String("Saved materials/editor_selection.sparkmat (F10 to reload)."));
+}
+
+void SceneEditor3DDemo::TryLoadSelectedMaterial(Spark::GameWorld& w)
+{
+        if (selectedObject == nullptr) {
+            SetStatusMessage(Spark::Utf8String("Select an object with a MaterialComponent first."));
+            return;
+        }
+        Spark::MaterialComponent* mat = selectedObject->GetComponent<Spark::MaterialComponent>();
+        if (mat == nullptr) {
+            SetStatusMessage(Spark::Utf8String("Selected object has no MaterialComponent."));
+            return;
+        }
+
+        constexpr const char* kAssetKey = "materials/editor_selection.sparkmat";
+
+        (void)w.ReleaseAsset(Spark::CachedAssetKind::Material, kAssetKey);
+        w.InvalidateAssetLoadState(kAssetKey, Spark::AssetLoadJobKind::Material);
+
+        const Spark::AssetLoadOutcome<Spark::MaterialAsset> outcome = w.TryLoadMaterial(kAssetKey);
+        if (!outcome.ok) {
+            SetStatusMessage(Spark::Utf8String("Failed to load .sparkmat (save with F9 first)."));
+            return;
+        }
+        w.RegisterMaterial(outcome.value, kAssetKey);
+        mat->SetMaterialAsset(w, kAssetKey);
+        mat->TryApplyMaterialAsset(w);
+        SetStatusMessage(Spark::Utf8String("Loaded materials/editor_selection.sparkmat onto selection."));
+}
 
 void SceneEditor3DDemo::FocusCameraOnSelection() noexcept
 {

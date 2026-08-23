@@ -2,6 +2,9 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
+#include "spark/scene/CachedAssetKind.hpp"
+#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/MaterialAsset.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 namespace Spark {
@@ -10,6 +13,10 @@ MaterialComponent::MaterialComponent(SharedPtr<Texture2D> inBaseColor, Vector3 i
     : baseColor(MoveTemp(inBaseColor)), tint(inTint) {}
 
 void MaterialComponent::OnSignal(GameObject& /*owner*/, SignalId /*id*/, const SignalPayload& /*payload*/) {
+}
+
+void MaterialComponent::OnDetach(GameObject& owner) {
+    ClearMaterialAsset(owner.GetWorld());
 }
 
 void MaterialComponent::NotifyMaterialChanged() {
@@ -108,6 +115,44 @@ void MaterialComponent::SetDoubleSided(const bool v) {
 void MaterialComponent::SetOpacity(const float a) {
     opacity = a < 0.0F ? 0.0F : (a > 1.0F ? 1.0F : a);
     NotifyMaterialChanged();
+}
+
+void MaterialComponent::SetAlphaCutoff(const float cutoff) {
+    alphaCutoff = cutoff < 0.0F ? 0.0F : (cutoff > 1.0F ? 1.0F : cutoff);
+    NotifyMaterialChanged();
+}
+
+void MaterialComponent::SetMaterialAsset(GameWorld& world, const char* key) {
+    ClearMaterialAsset(world);
+    materialAssetKey = (key != nullptr && key[0] != '\0') ? Utf8String(key) : Utf8String{};
+    if (materialAssetKey.IsEmpty()) {
+        pendingMaterialApply = false;
+        return;
+    }
+    world.RetainAsset(CachedAssetKind::Material, materialAssetKey.CStr());
+    pendingMaterialApply = true;
+    if (world.TryGetMaterialByKeyOrPath(materialAssetKey.CStr()) == nullptr) {
+        world.RequestMaterial(materialAssetKey.CStr());
+    }
+    TryApplyMaterialAsset(world);
+}
+
+void MaterialComponent::ClearMaterialAsset(GameWorld& world) {
+    if (!materialAssetKey.IsEmpty()) {
+        world.ReleaseAsset(CachedAssetKind::Material, materialAssetKey.CStr());
+        materialAssetKey = {};
+    }
+    pendingMaterialApply = false;
+}
+
+void MaterialComponent::TryApplyMaterialAsset(GameWorld& world) {
+    if (!pendingMaterialApply || materialAssetKey.IsEmpty()) {
+        return;
+    }
+    if (const MaterialAsset* asset = world.TryGetMaterialByKeyOrPath(materialAssetKey.CStr())) {
+        asset->ApplyTo(*this);
+        pendingMaterialApply = false;
+    }
 }
 
 }  // namespace Spark

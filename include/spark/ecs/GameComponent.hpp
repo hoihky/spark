@@ -14,6 +14,7 @@ enum class ComponentKind : std::uint32_t {
     Mesh,
     Collision,
     Material,
+    MultiMaterial,
     PointLight,
     SkinnedMesh,
     Animator,

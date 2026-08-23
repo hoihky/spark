@@ -3,7 +3,8 @@
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/render/scene/SceneBlendMode.hpp"
+#include "spark/math/Vector2.hpp"
+#include "spark/math/Vector3.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -20,7 +21,19 @@ struct SceneDrawItem;
 
 namespace SceneSubmitDetail {
 
-std::int32_t FindOrAddSceneTexture(SceneRenderParams& params, const SharedPtr<Texture2D>& tex);
+std::int32_t FindOrAddSceneTexture(
+        SceneRenderParams& params,
+        const SharedPtr<Texture2D>& tex,
+        Vector2* outUvScale = nullptr,
+        Vector2* outUvOffset = nullptr);
+
+using FindSceneTextureFn = std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>;
+
+void ApplyAlbedoTexture(
+        SceneDrawItem& item,
+        const SharedPtr<Texture2D>& baseColor,
+        const Vector3& tint,
+        const FindSceneTextureFn& findOrAddTexture);
 
 void PushRigidMeshDraws(
         Array<SceneDrawItem>& drawList,
@@ -29,7 +42,7 @@ void PushRigidMeshDraws(
         const MaterialComponent* mat,
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture);
+        const FindSceneTextureFn& findOrAddTexture);
 
 void PushSkinnedMeshDraws(
         Array<SceneDrawItem>& drawList,
@@ -38,7 +51,7 @@ void PushSkinnedMeshDraws(
         const MaterialComponent* mat,
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&)>& findOrAddTexture);
+        const FindSceneTextureFn& findOrAddTexture);
 void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept;
 
 void StableSortDrawItems(Array<SceneDrawItem>& items);

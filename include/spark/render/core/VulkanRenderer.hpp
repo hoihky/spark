@@ -177,6 +177,8 @@ private:
 
     bool framebufferResized = false;
     SceneRenderParams pendingScene{};
+    /** Accumulates scene texture bindings across frames so frustum culling does not drop GPU layers. */
+    Array<SharedPtr<Texture2D>> mergedSceneTextures{};
     bool sceneParamsValid = false;
     /** Cached after <c>SetSceneRenderParams</c> from profile + overrides. */
     ResolvedSceneLighting resolvedLighting{};

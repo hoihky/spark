@@ -111,6 +111,12 @@ private:
 
     void LoadSceneFromFile(Spark::GameWorld& w);
 
+    static void MaterialFilePath(char* out, std::size_t outSz) noexcept;
+
+    void TrySaveSelectedMaterial(Spark::GameWorld& w);
+
+    void TryLoadSelectedMaterial(Spark::GameWorld& w);
+
     void FinalizeAsyncSceneLoad(Spark::GameWorld& w);
 
     static void SortObjectsById(Spark::Array<Spark::GameObject*>& objects) noexcept;

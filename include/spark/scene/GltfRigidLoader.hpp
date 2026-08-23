@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
+#include "spark/core/Utf8String.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/GltfMaterial.hpp"
 #include "spark/scene/Mesh.hpp"
@@ -10,6 +11,7 @@ namespace Spark {
 /** CPU-side result of loading a rigid glTF scene into one indexed mesh. */
 struct GltfRigidLoadResult {
     bool success = false;
+    Utf8String errorMessage;
     SharedPtr<Mesh> mesh;
     Array<GltfMaterial> materials;
 };

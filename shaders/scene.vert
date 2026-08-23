@@ -36,7 +36,9 @@ layout(push_constant) uniform Push {
     float roughnessFactor;
     float occlusionStrength;
     int shadowFlags;
-    int pbrPad0;
+    float alphaCutoff;
+    vec2 textureUvScale;
+    vec2 textureUvOffset;
     vec4 emissiveFactor;
 } push;
 
@@ -114,7 +116,7 @@ void main() {
 
     vWorldPos = worldPos;
     vAlbedo = push.albedoTint.rgb;
-    vTexCoord = inTexCoord;
+    vTexCoord = inTexCoord * push.textureUvScale + push.textureUvOffset;
     vTextureLayer = push.textureLayer;
     vMetallic = push.metallic;
     vRoughness = push.roughness;

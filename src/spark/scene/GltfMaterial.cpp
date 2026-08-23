@@ -3,11 +3,14 @@
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 
+#include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
+#include "spark/memory/SharedPtr.hpp"
 
 #include "cgltf.h"
 
 #include <cmath>
+#include <cstdio>
 #include <cstring>
 
 namespace Spark {
@@ -55,6 +58,104 @@ Utf8String MakeTextureName(const char* gltfPath, const cgltf_image* image, const
     return name;
 }
 
+[[nodiscard]] int Base64Value(char c) noexcept {
+    if (c >= 'A' && c <= 'Z') {
+        return c - 'A';
+    }
+    if (c >= 'a' && c <= 'z') {
+        return c - 'a' + 26;
+    }
+    if (c >= '0' && c <= '9') {
+        return c - '0' + 52;
+    }
+    if (c == '+') {
+        return 62;
+    }
+    if (c == '/') {
+        return 63;
+    }
+    return -1;
+}
+
+bool TryDecodeBase64(const char* encoded, Array<std::uint8_t>& outBytes) {
+    outBytes.Clear();
+    if (encoded == nullptr) {
+        return false;
+    }
+    int val = 0;
+    int valb = -8;
+    for (const char* p = encoded; *p != '\0'; ++p) {
+        if (*p == '=') {
+            break;
+        }
+        const int cv = Base64Value(*p);
+        if (cv < 0) {
+            continue;
+        }
+        val = (val << 6) + cv;
+        valb += 6;
+        if (valb >= 0) {
+            outBytes.PushBack(static_cast<std::uint8_t>((val >> valb) & 0xFF));
+            valb -= 8;
+        }
+    }
+    return !outBytes.IsEmpty();
+}
+
+bool TryDecodeDataUriImage(const char* uri, Texture2D& outDecoded) {
+    if (uri == nullptr || std::strncmp(uri, "data:", 5) != 0) {
+        return false;
+    }
+    const char* comma = std::strchr(uri, ',');
+    if (comma == nullptr) {
+        return false;
+    }
+    if (std::strstr(uri, ";base64") == nullptr) {
+        return false;
+    }
+    Array<std::uint8_t> bytes;
+    if (!TryDecodeBase64(comma + 1, bytes)) {
+        return false;
+    }
+    return Texture2D::TryLoadFromMemory(bytes.GetData(), bytes.GetSize(), outDecoded, "data-uri");
+}
+
+void MergeOcclusionIntoMetallicRoughness(SharedPtr<Texture2D>& orm, const SharedPtr<Texture2D>& occlusion) {
+    if (!occlusion || occlusion->GetWidth() == 0 || occlusion->GetHeight() == 0) {
+        return;
+    }
+    const std::uint32_t w = occlusion->GetWidth();
+    const std::uint32_t h = occlusion->GetHeight();
+    if (!orm || orm->GetWidth() != w || orm->GetHeight() != h) {
+        Array<std::uint8_t> pixels;
+        pixels.Resize(static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U);
+        const Array<std::uint8_t>& occ = occlusion->GetRgba();
+        for (std::uint32_t y = 0; y < h; ++y) {
+            for (std::uint32_t x = 0; x < w; ++x) {
+                const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(w) + static_cast<std::size_t>(x)) * 4U;
+                const std::uint8_t ao = occ[i];
+                pixels[i + 0] = ao;
+                pixels[i + 1] = 255;
+                pixels[i + 2] = 255;
+                pixels[i + 3] = 255;
+            }
+        }
+        auto tex = MakeShared<Texture2D>(occlusion->GetName());
+        tex->SetPixels(w, h, MoveTemp(pixels));
+        orm = tex;
+        return;
+    }
+    Array<std::uint8_t> pixels = orm->GetRgba();
+    if (pixels.GetSize() != static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U) {
+        return;
+    }
+    const Array<std::uint8_t>& occ = occlusion->GetRgba();
+    for (std::size_t i = 0; i < pixels.GetSize(); i += 4U) {
+        pixels[i] = occ[i];
+    }
+    orm->SetPixels(w, h, MoveTemp(pixels));
+}
+
 bool TryDecodeGltfImage(const cgltf_image* img, const Utf8String& dir, Texture2D& outDecoded) {
     if (img == nullptr) {
         return false;
@@ -67,11 +168,12 @@ bool TryDecodeGltfImage(const cgltf_image* img, const Utf8String& dir, Texture2D
         const auto* bytes =
                 static_cast<const std::uint8_t*>(bv->buffer->data) + static_cast<std::size_t>(bv->offset);
         const std::size_t sz = static_cast<std::size_t>(bv->size);
-        return Texture2D::TryLoadFromMemory(bytes, sz, outDecoded, "glTF");
+        const char* debugName = outDecoded.GetName().IsEmpty() ? "glTF" : outDecoded.GetName().CStr();
+        return Texture2D::TryLoadFromMemory(bytes, sz, outDecoded, debugName);
     }
     if (img->uri != nullptr) {
         if (std::strncmp(img->uri, "data:", 5) == 0) {
-            return false;
+            return TryDecodeDataUriImage(img->uri, outDecoded);
         }
         Utf8String full;
         if (dir.IsEmpty()) {
@@ -133,7 +235,9 @@ void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
         out.occlusionStrength = static_cast<float>(mat.occlusion_texture.scale);
     }
     if (mat.alpha_mode == cgltf_alpha_mode_mask) {
-        out.opacity = static_cast<float>(mat.alpha_cutoff);
+        out.alphaCutoff = static_cast<float>(mat.alpha_cutoff);
+    } else if (mat.alpha_mode == cgltf_alpha_mode_blend) {
+        // opacity already carries base-color factor alpha; route to transparent pass when < 1.
     }
 }
 
@@ -164,6 +268,14 @@ bool TryLoadTexturesFromMaterial(
     if (mat.emissive_texture.texture != nullptr) {
         const Utf8String name = MakeTextureName(gltfPath, mat.emissive_texture.texture->image, "emissive");
         (void)TryDecodeTextureView(mat.emissive_texture, dir, name, out.emissiveMap);
+    }
+
+    if (mat.occlusion_texture.texture != nullptr) {
+        SharedPtr<Texture2D> occlusion;
+        const Utf8String name = MakeTextureName(gltfPath, mat.occlusion_texture.texture->image, "occlusion");
+        if (TryDecodeTextureView(mat.occlusion_texture, dir, name, occlusion)) {
+            MergeOcclusionIntoMetallicRoughness(out.metallicRoughness, occlusion);
+        }
     }
 
     if (!mat.has_pbr_metallic_roughness && mat.has_pbr_specular_glossiness) {
@@ -221,6 +333,7 @@ void GltfMaterial::ApplyTo(MaterialComponent& material) const {
     material.SetEmissiveFactor(emissiveFactor);
     material.SetDoubleSided(doubleSided);
     material.SetOpacity(opacity);
+    material.SetAlphaCutoff(alphaCutoff);
 }
 
 void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
@@ -246,6 +359,7 @@ void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.emissiveFactor = emissiveFactor;
     slot.doubleSided = doubleSided;
     slot.opacity = opacity;
+    slot.alphaCutoff = alphaCutoff;
 }
 
 bool GltfMaterialLoader::LoadFromCgltf(

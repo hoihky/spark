@@ -493,6 +493,33 @@ void QuadQuery(const std::vector<QuadNode>& nodes,
     return AxisAlignedBox{b.min - pad, b.max + pad};
 }
 
+struct DrawableBvhCache {
+    std::size_t recordCount = 0;
+    std::uint64_t recordsFingerprint = 0;
+    std::vector<int> ids;
+    std::vector<BvhNode> nodes;
+};
+
+[[nodiscard]] std::uint64_t FingerprintDrawableRecords(const Array<DrawableRecord>& records) noexcept {
+    std::uint64_t h = 1469598103934665603ULL;
+    auto mix = [&h](const std::uint64_t v) noexcept {
+        h ^= v;
+        h *= 1099511628211ULL;
+    };
+    mix(static_cast<std::uint64_t>(records.GetSize()));
+    for (std::size_t i = 0; i < records.GetSize(); ++i) {
+        const DrawableRecord& r = records[i];
+        const std::uint64_t* minWords = reinterpret_cast<const std::uint64_t*>(&r.aabbMin.x);
+        const std::uint64_t* maxWords = reinterpret_cast<const std::uint64_t*>(&r.aabbMax.x);
+        mix(reinterpret_cast<std::uintptr_t>(r.object));
+        mix(minWords[0]);
+        mix(minWords[1]);
+        mix(maxWords[0]);
+        mix(maxWords[1]);
+    }
+    return h;
+}
+
 void RunDrawableCull(
         const Array<DrawableRecord>& records, const Frustum& frustum, ScenePartitionKind mode, DrawableFrustumSink& sink) {
     if (records.IsEmpty()) {
@@ -505,14 +532,20 @@ void RunDrawableCull(
             BruteForceCull(records, frustum, sink);
             break;
         case ScenePartitionKind::BoundingVolumeHierarchy: {
-            std::vector<int> ids(records.GetSize());
-            for (std::size_t i = 0; i < records.GetSize(); ++i) {
-                ids[i] = static_cast<int>(i);
+            static DrawableBvhCache cache{};
+            const std::uint64_t fingerprint = FingerprintDrawableRecords(records);
+            if (cache.recordCount != records.GetSize() || cache.recordsFingerprint != fingerprint) {
+                cache.ids.resize(records.GetSize());
+                for (std::size_t i = 0; i < records.GetSize(); ++i) {
+                    cache.ids[i] = static_cast<int>(i);
+                }
+                cache.nodes.clear();
+                cache.nodes.reserve(records.GetSize() * 2);
+                BuildBvhRecursive(records, cache.ids, 0, static_cast<int>(records.GetSize()), 0, 0, cache.nodes, 4, 24);
+                cache.recordCount = records.GetSize();
+                cache.recordsFingerprint = fingerprint;
             }
-            std::vector<BvhNode> nodes;
-            nodes.reserve(records.GetSize() * 2);
-            BuildBvhRecursive(records, ids, 0, static_cast<int>(records.GetSize()), 0, 0, nodes, 4, 24);
-            QueryBvh(records, ids, nodes, 0, frustum, sink);
+            QueryBvh(records, cache.ids, cache.nodes, 0, frustum, sink);
             break;
         }
         case ScenePartitionKind::AxisAlignedBinarySpacePartition: {

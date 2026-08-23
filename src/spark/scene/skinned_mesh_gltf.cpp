@@ -394,8 +394,15 @@ bool TryLoadSkinnedCharacterFromGltf(
         std::uint32_t* outWalkClipIndex,
         Quaternion* outBindUpAlignment,
         float* outBindFacingYawOffset,
-        Array<GltfMaterialDesc>* outMaterials) {
+        Array<GltfMaterialDesc>* outMaterials,
+        Utf8String* outError) {
+    auto setError = [&](const char* msg) {
+        if (outError != nullptr) {
+            *outError = Utf8String(msg);
+        }
+    };
     if (path == nullptr || path[0] == '\0') {
+        setError("Empty skinned glTF path");
         return false;
     }
     if (outWalkClipIndex != nullptr) {
@@ -411,10 +418,12 @@ bool TryLoadSkinnedCharacterFromGltf(
     cgltf_options options{};
     cgltf_data* data = nullptr;
     if (cgltf_parse_file(&options, path, &data) != cgltf_result_success || data == nullptr) {
+        setError("Failed to parse skinned glTF file");
         return false;
     }
     if (cgltf_load_buffers(&options, data, path) != cgltf_result_success) {
         cgltf_free(data);
+        setError("Failed to load skinned glTF buffers");
         return false;
     }
 
@@ -453,6 +462,7 @@ bool TryLoadSkinnedCharacterFromGltf(
 
     if (skinNode == nullptr || skinNode->mesh == nullptr || skinNode->skin == nullptr) {
         cgltf_free(data);
+        setError("No skinned mesh node found in glTF");
         return false;
     }
 
@@ -460,6 +470,7 @@ bool TryLoadSkinnedCharacterFromGltf(
     const std::uint32_t jointCount = static_cast<std::uint32_t>(skin->joints_count);
     if (jointCount == 0 || jointCount > Skeleton::MaxJoints) {
         cgltf_free(data);
+        setError("Skinned glTF joint count is out of range");
         return false;
     }
 

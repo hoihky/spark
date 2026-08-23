@@ -42,7 +42,7 @@ layout(push_constant) uniform Push {
     float roughnessFactor;
     float occlusionStrength;
     int shadowFlags;
-    int pbrPad0;
+    float alphaCutoff;
     vec4 emissiveFactor;
 } push;
 
@@ -431,6 +431,11 @@ void main() {
         vec4 tex = texture(sceneTextures, vec3(vTexCoord, float(layer)));
         base *= sparkSrgbToLinear(tex.rgb);
         alpha *= tex.a;
+    }
+    if (push.alphaCutoff > 0.0) {
+        if (alpha < push.alphaCutoff) {
+            discard;
+        }
     }
 
     float met = clamp(vMetallic * push.metallicFactor, 0.0, 1.0);

@@ -13,6 +13,7 @@
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/scene/GltfMaterial.hpp"
 #include "spark/physics/CharacterController3D.hpp"
+#include "spark/scene/detail/SceneSubmitDetail.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -568,7 +569,6 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
         params.punctualShadowsEnabled = false;
 
         params.draws.Clear();
-        params.sceneTextures.Clear();
         params.pointLights.Clear();
         params.sprites.Clear();
         params.screenRects.Clear();
@@ -594,20 +594,9 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             params.pointLights.PushBack(gpu);
         });
 
-        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            if (!tex) {
-                return -1;
-            }
-            for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-                if (params.sceneTextures[i].Get() == tex.Get()) {
-                    return static_cast<std::int32_t>(i);
-                }
-            }
-            if (params.sceneTextures.GetSize() >= Spark::SceneRenderParams::MaxSceneTextures) {
-                return -1;
-            }
-            params.sceneTextures.PushBack(tex);
-            return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+        auto findOrAddTexture =
+                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, nullptr, nullptr);
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;

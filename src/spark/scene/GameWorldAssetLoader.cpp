@@ -5,14 +5,28 @@
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/GltfMaterial.hpp"
 #include "spark/scene/GltfRigidLoader.hpp"
+#include "spark/scene/MaterialAssetLoader.hpp"
 #include "spark/scene/Mesh.hpp"
 #include "spark/animation/Skeleton.hpp"
 
 #include <cstring>
+#include <cstdio>
+#include <sys/stat.h>
 
 namespace Spark {
 
 namespace {
+
+bool IsRegularFile(const char* path) noexcept {
+    if (path == nullptr || path[0] == '\0') {
+        return false;
+    }
+    struct stat st {};
+    if (stat(path, &st) != 0) {
+        return false;
+    }
+    return S_ISREG(st.st_mode);
+}
 
 [[nodiscard]] bool PathEndsWithInsensitive(const char* path, const char* suffix) {
     if (path == nullptr || suffix == nullptr) {
@@ -77,83 +91,149 @@ void GameWorldAssetLoader::Shutdown() {
     completedSkinned.Clear();
     completedTextures.Clear();
     completedMeshes.Clear();
+    completedMaterials.Clear();
     states.Clear();
+    errors.Clear();
+    completionCallbacks.Clear();
+    activeWorkerJobs.store(0, std::memory_order_release);
+}
+
+void GameWorldAssetLoader::RequestAsset(const JobKey& key, AssetLoadCallback callback) {
+    if (key.path.IsEmpty()) {
+        return;
+    }
+    if (!started.load()) {
+        Start();
+    }
+
+    AssetLoadState existing = AssetLoadState::None;
+    Utf8String existingError;
+    bool dispatchReady = false;
+    bool dispatchFailed = false;
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        existing = GetStateLocked(key);
+        if (existing == AssetLoadState::Ready) {
+            dispatchReady = callback.IsBound();
+        } else if (existing == AssetLoadState::Failed) {
+            if (callback.IsBound()) {
+                dispatchFailed = true;
+                if (const Utf8String* err = errors.Find(key)) {
+                    existingError = *err;
+                }
+            } else {
+                existing = AssetLoadState::None;
+            }
+        }
+
+        if (callback.IsBound()) {
+            if (Array<AssetLoadCallback>* pending = completionCallbacks.Find(key)) {
+                pending->PushBack(callback);
+            } else {
+                Array<AssetLoadCallback> batch{};
+                batch.PushBack(callback);
+                completionCallbacks.Add(key, MoveTemp(batch));
+            }
+        }
+
+        if (existing == AssetLoadState::Ready || (existing == AssetLoadState::Failed && callback.IsBound())) {
+            // Immediate dispatch after releasing the lock.
+        } else if (existing == AssetLoadState::Queued || existing == AssetLoadState::Loading) {
+            return;
+        } else {
+            states.Add(key, AssetLoadState::Queued);
+            PendingJob job{};
+            job.key = key;
+            pendingJobs.PushBack(job);
+            cv.notify_one();
+        }
+    }
+
+    if (dispatchReady) {
+        DispatchCompletion(key, AssetLoadState::Ready, {});
+    } else if (dispatchFailed) {
+        DispatchCompletion(key, AssetLoadState::Failed, existingError);
+    }
 }
 
 void GameWorldAssetLoader::RequestGltf(const char* path) {
     if (path == nullptr || path[0] == '\0') {
         return;
     }
-    if (!started.load()) {
-        Start();
-    }
-    const JobKey key{Utf8String(path), AssetLoadJobKind::Gltf};
-    std::lock_guard<std::mutex> lock(mutex);
-    if (const AssetLoadState* st = states.Find(key); st != nullptr && *st != AssetLoadState::Failed) {
-        return;
-    }
-    states.Add(key, AssetLoadState::Queued);
-    PendingJob job{};
-    job.key = key;
-    pendingJobs.PushBack(job);
-    cv.notify_one();
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::Gltf}, {});
 }
 
 void GameWorldAssetLoader::RequestSkinnedGltf(const char* path) {
     if (path == nullptr || path[0] == '\0') {
         return;
     }
-    if (!started.load()) {
-        Start();
-    }
-    const JobKey key{Utf8String(path), AssetLoadJobKind::SkinnedGltf};
-    std::lock_guard<std::mutex> lock(mutex);
-    if (const AssetLoadState* st = states.Find(key); st != nullptr && *st != AssetLoadState::Failed) {
-        return;
-    }
-    states.Add(key, AssetLoadState::Queued);
-    PendingJob job{};
-    job.key = key;
-    pendingJobs.PushBack(job);
-    cv.notify_one();
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::SkinnedGltf}, {});
 }
 
 void GameWorldAssetLoader::RequestTexture(const char* path) {
+    if (path == nullptr || path[0] == '\0' || !IsRegularFile(path)) {
+        return;
+    }
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::Texture}, {});
+}
+
+void GameWorldAssetLoader::InvalidateAssetLoadState(const char* path, const AssetLoadJobKind kind) {
     if (path == nullptr || path[0] == '\0') {
         return;
     }
-    if (!started.load()) {
-        Start();
-    }
-    const JobKey key{Utf8String(path), AssetLoadJobKind::Texture};
+    const JobKey key{Utf8String(path), kind};
     std::lock_guard<std::mutex> lock(mutex);
-    if (const AssetLoadState* st = states.Find(key); st != nullptr && *st != AssetLoadState::Failed) {
+    states.Remove(key);
+    errors.Remove(key);
+}
+
+void GameWorldAssetLoader::RequestMaterial(const char* path) {
+    if (path == nullptr || path[0] == '\0') {
         return;
     }
-    states.Add(key, AssetLoadState::Queued);
-    PendingJob job{};
-    job.key = key;
-    pendingJobs.PushBack(job);
-    cv.notify_one();
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::Material}, {});
+}
+
+void GameWorldAssetLoader::OnMaterialReady(const char* path, AssetLoadCallback callback) {
+    if (path == nullptr || path[0] == '\0' || !callback.IsBound()) {
+        return;
+    }
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::Material}, callback);
 }
 
 void GameWorldAssetLoader::RequestMeshObj(const char* path) {
     if (path == nullptr || path[0] == '\0' || IsGltfPath(path)) {
         return;
     }
-    if (!started.load()) {
-        Start();
-    }
-    const JobKey key{Utf8String(path), AssetLoadJobKind::MeshObj};
-    std::lock_guard<std::mutex> lock(mutex);
-    if (const AssetLoadState* st = states.Find(key); st != nullptr && *st != AssetLoadState::Failed) {
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::MeshObj}, {});
+}
+
+void GameWorldAssetLoader::OnGltfReady(const char* path, AssetLoadCallback callback) {
+    if (path == nullptr || path[0] == '\0' || !callback.IsBound()) {
         return;
     }
-    states.Add(key, AssetLoadState::Queued);
-    PendingJob job{};
-    job.key = key;
-    pendingJobs.PushBack(job);
-    cv.notify_one();
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::Gltf}, callback);
+}
+
+void GameWorldAssetLoader::OnSkinnedGltfReady(const char* path, AssetLoadCallback callback) {
+    if (path == nullptr || path[0] == '\0' || !callback.IsBound()) {
+        return;
+    }
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::SkinnedGltf}, callback);
+}
+
+void GameWorldAssetLoader::OnTextureReady(const char* path, AssetLoadCallback callback) {
+    if (path == nullptr || path[0] == '\0' || !callback.IsBound()) {
+        return;
+    }
+    RequestAsset(JobKey{Utf8String(path), AssetLoadJobKind::Texture}, callback);
+}
+
+void GameWorldAssetLoader::OnAssetReady(const char* path, const AssetLoadJobKind kind, AssetLoadCallback callback) {
+    if (path == nullptr || path[0] == '\0' || !callback.IsBound()) {
+        return;
+    }
+    RequestAsset(JobKey{Utf8String(path), kind}, callback);
 }
 
 AssetLoadState GameWorldAssetLoader::GetState(const char* path, const AssetLoadJobKind kind) const {
@@ -163,6 +243,18 @@ AssetLoadState GameWorldAssetLoader::GetState(const char* path, const AssetLoadJ
     const JobKey key{Utf8String(path), kind};
     std::lock_guard<std::mutex> lock(mutex);
     return GetStateLocked(key);
+}
+
+Utf8String GameWorldAssetLoader::GetLoadError(const char* path, const AssetLoadJobKind kind) const {
+    if (path == nullptr) {
+        return {};
+    }
+    const JobKey key{Utf8String(path), kind};
+    std::lock_guard<std::mutex> lock(mutex);
+    if (const Utf8String* err = errors.Find(key)) {
+        return *err;
+    }
+    return {};
 }
 
 bool GameWorldAssetLoader::IsGltfReady(const char* path) const {
@@ -186,72 +278,188 @@ std::size_t GameWorldAssetLoader::GetPendingJobCount() const noexcept {
     return pendingJobs.GetSize();
 }
 
+std::size_t GameWorldAssetLoader::GetOutstandingLoadCount() const noexcept {
+    return GetPendingJobCount() + activeWorkerJobs.load(std::memory_order_acquire);
+}
+
+void GameWorldAssetLoader::DispatchCompletion(
+        const JobKey& key,
+        const AssetLoadState state,
+        const Utf8String& errorMessage) {
+    Array<AssetLoadCallback> callbacks;
+    IAssetLoadListener* listener = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (Array<AssetLoadCallback>* pending = completionCallbacks.Find(key)) {
+            callbacks = MoveTemp(*pending);
+            pending->Clear();
+        }
+        listener = globalListener;
+    }
+
+    AssetLoadEvent event{};
+    event.path = key.path;
+    event.kind = key.kind;
+    event.state = state;
+    event.errorMessage = errorMessage;
+
+    for (std::size_t i = 0; i < callbacks.GetSize(); ++i) {
+        callbacks[i].Invoke(event);
+    }
+    if (listener != nullptr) {
+        listener->OnAssetLoadCompleted(event);
+    }
+}
+
+bool GameWorldAssetLoader::IsMaterialReady(const char* path) const {
+    return GetState(path, AssetLoadJobKind::Material) == AssetLoadState::Ready;
+}
+
 void GameWorldAssetLoader::Pump(GameWorld& world) {
     Array<CompletedGltf> gltfBatch;
     Array<CompletedSkinned> skinnedBatch;
     Array<CompletedTexture> texBatch;
     Array<CompletedMesh> meshBatch;
+    Array<CompletedMaterial> materialBatch;
     {
         std::lock_guard<std::mutex> lock(mutex);
         gltfBatch = MoveTemp(completedGltf);
         skinnedBatch = MoveTemp(completedSkinned);
         texBatch = MoveTemp(completedTextures);
         meshBatch = MoveTemp(completedMeshes);
+        materialBatch = MoveTemp(completedMaterials);
         completedGltf.Clear();
         completedSkinned.Clear();
         completedTextures.Clear();
         completedMeshes.Clear();
+        completedMaterials.Clear();
     }
 
     for (std::size_t i = 0; i < gltfBatch.GetSize(); ++i) {
         const CompletedGltf& c = gltfBatch[i];
         const JobKey key{c.path, AssetLoadJobKind::Gltf};
+        activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.asset.mesh) {
             world.RegisterGltf(c.asset, c.path.CStr());
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Ready);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Ready);
+            }
+            DispatchCompletion(key, AssetLoadState::Ready, {});
         } else {
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Failed);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Failed);
+                if (!c.errorMessage.IsEmpty()) {
+                    errors.Add(key, c.errorMessage);
+                }
+            }
+            if (!c.errorMessage.IsEmpty()) {
+                std::fprintf(stderr, "Spark: async glTF load failed: %s\n", c.errorMessage.CStr());
+            }
+            DispatchCompletion(key, AssetLoadState::Failed, c.errorMessage);
         }
     }
 
     for (std::size_t i = 0; i < skinnedBatch.GetSize(); ++i) {
         const CompletedSkinned& c = skinnedBatch[i];
         const JobKey key{c.path, AssetLoadJobKind::SkinnedGltf};
+        activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.asset.mesh && c.asset.skeleton) {
             world.RegisterSkinnedGltf(c.asset, c.path.CStr());
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Ready);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Ready);
+            }
+            DispatchCompletion(key, AssetLoadState::Ready, {});
         } else {
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Failed);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Failed);
+                if (!c.errorMessage.IsEmpty()) {
+                    errors.Add(key, c.errorMessage);
+                }
+            }
+            if (!c.errorMessage.IsEmpty()) {
+                std::fprintf(stderr, "Spark: async skinned glTF load failed: %s\n", c.errorMessage.CStr());
+            }
+            DispatchCompletion(key, AssetLoadState::Failed, c.errorMessage);
         }
     }
 
     for (std::size_t i = 0; i < texBatch.GetSize(); ++i) {
         const CompletedTexture& c = texBatch[i];
         const JobKey key{c.path, AssetLoadJobKind::Texture};
+        activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.texture) {
             world.RegisterTexture(c.texture, c.path.CStr());
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Ready);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Ready);
+            }
+            DispatchCompletion(key, AssetLoadState::Ready, {});
         } else {
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Failed);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Failed);
+                if (!c.errorMessage.IsEmpty()) {
+                    errors.Add(key, c.errorMessage);
+                }
+            }
+            if (!c.errorMessage.IsEmpty()) {
+                std::fprintf(stderr, "Spark: async texture load failed: %s\n", c.errorMessage.CStr());
+            }
+            DispatchCompletion(key, AssetLoadState::Failed, c.errorMessage);
         }
     }
 
     for (std::size_t i = 0; i < meshBatch.GetSize(); ++i) {
         const CompletedMesh& c = meshBatch[i];
         const JobKey key{c.path, AssetLoadJobKind::MeshObj};
+        activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.mesh) {
             world.RegisterMesh(c.mesh, c.path.CStr());
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Ready);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Ready);
+            }
+            DispatchCompletion(key, AssetLoadState::Ready, {});
         } else {
-            std::lock_guard<std::mutex> lock(mutex);
-            states.Add(key, AssetLoadState::Failed);
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Failed);
+            }
+            DispatchCompletion(key, AssetLoadState::Failed, {});
+        }
+    }
+
+    for (std::size_t i = 0; i < materialBatch.GetSize(); ++i) {
+        const CompletedMaterial& c = materialBatch[i];
+        const JobKey key{c.path, AssetLoadJobKind::Material};
+        activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
+        if (c.ok) {
+            MaterialAsset asset = c.payload.asset;
+            const Utf8String resolvedPath = MaterialAssetLoader::ResolveReadablePath(c.path.CStr());
+            MaterialAssetLoader::ResolveMaterialTextures(
+                    world.GetAssetCache(), resolvedPath.CStr(), c.payload.slot, asset);
+            world.RegisterMaterial(asset, c.path.CStr());
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Ready);
+            }
+            DispatchCompletion(key, AssetLoadState::Ready, {});
+        } else {
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                states.Add(key, AssetLoadState::Failed);
+                if (!c.errorMessage.IsEmpty()) {
+                    errors.Add(key, c.errorMessage);
+                }
+            }
+            if (!c.errorMessage.IsEmpty()) {
+                std::fprintf(stderr, "Spark: async material load failed: %s\n", c.errorMessage.CStr());
+            }
+            DispatchCompletion(key, AssetLoadState::Failed, c.errorMessage);
         }
     }
 }
@@ -269,6 +477,7 @@ void GameWorldAssetLoader::WorkerLoop() {
             pendingJobs.RemoveAt(0);
             SetStateLocked(job.key, AssetLoadState::Loading);
         }
+        activeWorkerJobs.fetch_add(1, std::memory_order_acq_rel);
 
         switch (job.key.kind) {
             case AssetLoadJobKind::Gltf: {
@@ -283,6 +492,9 @@ void GameWorldAssetLoader::WorkerLoop() {
                         result.asset.material = loaded.materials[0];
                         result.asset.baseColorTexture = loaded.materials[0].baseColor;
                     }
+                } else {
+                    result.ok = false;
+                    result.errorMessage = loaded.errorMessage;
                 }
                 std::lock_guard<std::mutex> lock(mutex);
                 completedGltf.PushBack(MoveTemp(result));
@@ -298,6 +510,7 @@ void GameWorldAssetLoader::WorkerLoop() {
                 std::uint32_t walkClip = 0;
                 Quaternion bindUp{};
                 float facingYaw = 0.0F;
+                Utf8String loadError;
                 result.ok = TryLoadSkinnedCharacterFromGltf(
                         job.key.path.CStr(),
                         mesh,
@@ -307,7 +520,8 @@ void GameWorldAssetLoader::WorkerLoop() {
                         &walkClip,
                         &bindUp,
                         &facingYaw,
-                        &materials);
+                        &materials,
+                        &loadError);
                 if (result.ok) {
                     result.asset.mesh = MakeShared<SkinnedMesh>(MoveTemp(mesh));
                     result.asset.skeleton = MakeShared<Skeleton>(MoveTemp(skeleton));
@@ -317,6 +531,8 @@ void GameWorldAssetLoader::WorkerLoop() {
                     result.asset.walkClipIndex = walkClip;
                     result.asset.bindUpAlignment = bindUp;
                     result.asset.bindFacingYawOffset = facingYaw;
+                } else {
+                    result.errorMessage = loadError;
                 }
                 std::lock_guard<std::mutex> lock(mutex);
                 completedSkinned.PushBack(MoveTemp(result));
@@ -329,6 +545,9 @@ void GameWorldAssetLoader::WorkerLoop() {
                 result.ok = Texture2D::TryLoadFromFile(job.key.path.CStr(), *tex);
                 if (result.ok) {
                     result.texture = tex;
+                } else {
+                    result.errorMessage = Utf8String("Failed to decode texture: ");
+                    result.errorMessage.AppendUtf8(job.key.path.CStr());
                 }
                 std::lock_guard<std::mutex> lock(mutex);
                 completedTextures.PushBack(MoveTemp(result));
@@ -344,6 +563,18 @@ void GameWorldAssetLoader::WorkerLoop() {
                 }
                 std::lock_guard<std::mutex> lock(mutex);
                 completedMeshes.PushBack(MoveTemp(result));
+                break;
+            }
+            case AssetLoadJobKind::Material: {
+                CompletedMaterial result{};
+                result.path = job.key.path;
+                result.ok = MaterialAssetLoader::TryDecodeFromFile(job.key.path.CStr(), result.payload);
+                if (!result.ok) {
+                    result.errorMessage = Utf8String("Failed to decode material asset: ");
+                    result.errorMessage.AppendUtf8(job.key.path.CStr());
+                }
+                std::lock_guard<std::mutex> lock(mutex);
+                completedMaterials.PushBack(MoveTemp(result));
                 break;
             }
         }

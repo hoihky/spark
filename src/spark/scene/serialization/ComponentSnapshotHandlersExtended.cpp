@@ -112,6 +112,11 @@ bool TryDeferAsset(
                 return false;
             }
             break;
+        case AssetLoadJobKind::Material:
+            if (world.TryGetMaterialByKeyOrPath(fullPath) != nullptr) {
+                return false;
+            }
+            break;
     }
     const AssetLoadState st = ctx.assetLoader->GetState(fullPath, kind);
     if (st == AssetLoadState::Failed) {

@@ -7,12 +7,15 @@
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/rendering/RenderLayerComponent.hpp"
 #include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
 #include "spark/scene/GameWorld.hpp"
 #include "spark/scene/RenderLayerRegistry.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 
 #include <cstdio>
+#include <cstring>
 #include <cstring>
 
 namespace Spark {
@@ -350,6 +353,75 @@ public:
     }
 };
 
+class MultiMaterialSnapshotHandler final : public IComponentSnapshotHandler {
+public:
+    [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::MultiMaterial; }
+    [[nodiscard]] const char* GetKindTag() const noexcept override { return "multi_material"; }
+
+    [[nodiscard]] bool TryCapture(
+            const GameObject& owner,
+            const SceneCaptureContext& ctx,
+            ComponentRecord& out) const override {
+        const MultiMaterialComponent* multi = owner.GetComponent<MultiMaterialComponent>();
+        if (multi == nullptr || multi->GetSlotCount() == 0) {
+            return false;
+        }
+        Utf8String payload;
+        payload.AppendUtf8("v1 ");
+        char countBuf[32]{};
+        std::snprintf(countBuf, sizeof(countBuf), "%zu ", multi->GetSlotCount());
+        payload.AppendUtf8(countBuf);
+        for (std::size_t i = 0; i < multi->GetSlotCount(); ++i) {
+            MaterialSlotSnapshot::Data slotData{};
+            MaterialSlotSnapshot::CaptureFromSlot(multi->GetSlot(i), ctx, owner, slotData);
+            MaterialSlotSnapshot::AppendSlotV1(slotData, payload);
+        }
+        out.kind = Utf8String(GetKindTag());
+        out.payload = MoveTemp(payload);
+        return true;
+    }
+
+    [[nodiscard]] bool TryRestore(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) const override {
+        if (!KindTagEquals(record.kind, GetKindTag())) {
+            return false;
+        }
+        if (std::strncmp(record.payload.CStr(), "v1 ", 3) != 0) {
+            return false;
+        }
+        const char* cursor = record.payload.CStr() + 3;
+        std::size_t slotCount = 0;
+        if (std::sscanf(cursor, "%zu", &slotCount) != 1 || slotCount == 0) {
+            return false;
+        }
+        while (*cursor != '\0' && *cursor != ' ') {
+            ++cursor;
+        }
+        while (*cursor == ' ') {
+            ++cursor;
+        }
+
+        MultiMaterialComponent* multi = owner.GetComponent<MultiMaterialComponent>();
+        if (multi == nullptr) {
+            multi = owner.AddComponent<MultiMaterialComponent>();
+        }
+        multi->Clear();
+        multi->ResizeSlots(slotCount);
+
+        for (std::size_t i = 0; i < slotCount; ++i) {
+            MaterialSlotSnapshot::Data slotData{};
+            if (!MaterialSlotSnapshot::TryParseSlotV1(cursor, slotData)) {
+                return false;
+            }
+            MaterialSlotSnapshot::ApplyToSlot(multi->GetSlot(i), slotData, owner, world, ctx);
+        }
+        return true;
+    }
+};
+
 template<typename HandlerT>
 void RegisterHandler(ComponentSnapshotRegistry& registry) {
     UniquePtr<HandlerT> concrete = MakeUnique<HandlerT>();
@@ -364,6 +436,7 @@ void RegisterRenderingSnapshotHandlers(ComponentSnapshotRegistry& registry) {
     RegisterHandler<SortingGroupSnapshotHandler>(registry);
     RegisterHandler<Camera2DSnapshotHandler>(registry);
     RegisterHandler<Camera2DRigSnapshotHandler>(registry);
+    RegisterHandler<MultiMaterialSnapshotHandler>(registry);
 }
 
 }  // namespace Spark

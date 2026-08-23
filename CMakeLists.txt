@@ -189,7 +189,7 @@ endif ()
 # Mirror assets into the build tree so SparkDemo finds fonts when the working directory is the build folder.
 set(SPARK_BUILD_ASSETS_DIR "${CMAKE_CURRENT_BINARY_DIR}/spark_runtime_assets")
 file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/fonts")
-file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/scene_editor")
+file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/materials")
 file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/screenshots")
 file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/recordings")
 if (EXISTS "${SPARK_UI_FONT_TTF}")
@@ -422,6 +422,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/ThreeDDemo.cpp
         src/spark/demo/ToonShadingDemo.cpp
         src/spark/demo/MaterialShowcase3DDemo.cpp
+        src/spark/demo/MaterialLibraryWorkflow.cpp
         src/spark/demo/TimeOfDayDemo.cpp
         src/spark/demo/SkyDemo.cpp
         src/spark/demo/TerrainDemo.cpp
@@ -534,6 +535,9 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/GltfRigidLoader.cpp
         src/spark/scene/GltfAssetBindings.cpp
         src/spark/scene/GltfMaterial.cpp
+        src/spark/scene/MaterialAsset.cpp
+        src/spark/scene/MaterialAssetLoader.cpp
+        src/spark/scene/SceneTextureAtlas.cpp
         src/spark/scene/SkinnedMesh.cpp
         src/spark/scene/skinned_mesh_gltf.cpp
         src/spark/scene/cgltf_impl.cpp
@@ -633,6 +637,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/SceneSubmitLighting.cpp
         src/spark/scene/SceneSubmitMaterial.cpp
         src/spark/scene/serialization/ComponentSnapshotRegistry.cpp
+        src/spark/scene/serialization/MaterialSlotSnapshot.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp

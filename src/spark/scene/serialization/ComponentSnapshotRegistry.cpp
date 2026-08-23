@@ -10,6 +10,7 @@
 #include "spark/ecs/components/camera/CameraComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
@@ -21,6 +22,7 @@
 #include "spark/scene/GltfMaterial.hpp"
 #include "spark/scene/Mesh.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
+#include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
 #include "spark/scene/Texture2D.hpp"
 
 #include <cstdio>
@@ -308,9 +310,23 @@ public:
         if (owner.GetComponent<PointLightComponent>() != nullptr) {
             return false;
         }
+        if (owner.GetComponent<MultiMaterialComponent>() != nullptr) {
+            return false;
+        }
         const MaterialComponent* mat = owner.GetComponent<MaterialComponent>();
         if (mat == nullptr) {
             return false;
+        }
+        if (mat->HasMaterialAsset()) {
+            Utf8String payload = Utf8String("v4 \"");
+            payload.AppendUtf8(mat->GetMaterialAssetKey().CStr());
+            payload.AppendUtf8("\"");
+            MaterialSlotSnapshot::Data slotData{};
+            MaterialSlotSnapshot::CaptureFromMaterial(*mat, owner, ctx, slotData);
+            MaterialSlotSnapshot::AppendSlotV1(slotData, payload);
+            out.kind = Utf8String(GetKindTag());
+            out.payload = MoveTemp(payload);
+            return true;
         }
         auto texPath = [&](const SharedPtr<Texture2D>& tex) -> Utf8String {
             if (tex) {
@@ -327,8 +343,8 @@ public:
         std::snprintf(
                 buf,
                 sizeof(buf),
-                "v2 \"%s\" \"%s\" \"%s\" \"%s\" %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f "
-                "%.6f %.6f %.6f %d %.6f",
+                "v3 \"%s\" \"%s\" \"%s\" \"%s\" %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f "
+                "%.6f %.6f %d %.6f %.6f",
                 texPath(mat->GetBaseColorTexture()).CStr(),
                 texPath(mat->GetNormalTexture()).CStr(),
                 texPath(mat->GetMetallicRoughnessTexture()).CStr(),
@@ -346,7 +362,8 @@ public:
                 emissive.z,
                 mat->GetEmissiveIntensity(),
                 mat->IsDoubleSided() ? 1 : 0,
-                mat->GetOpacity());
+                mat->GetOpacity(),
+                mat->GetAlphaCutoff());
         out.kind = Utf8String(GetKindTag());
         out.payload = Utf8String(buf);
         return true;
@@ -360,6 +377,12 @@ public:
         if (!KindTagEquals(record.kind, GetKindTag())) {
             return false;
         }
+        if (std::strncmp(record.payload.CStr(), "v4 ", 3) == 0) {
+            return TryRestoreV4(owner, record, world, ctx);
+        }
+        if (std::strncmp(record.payload.CStr(), "v3 ", 3) == 0) {
+            return TryRestoreV3(owner, record, world, ctx);
+        }
         if (std::strncmp(record.payload.CStr(), "v2 ", 3) == 0) {
             return TryRestoreV2(owner, record, world, ctx);
         }
@@ -367,6 +390,39 @@ public:
     }
 
 private:
+    [[nodiscard]] static bool TryRestoreV4(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) {
+        const char* cursor = record.payload.CStr() + 3;
+        char assetKey[512]{};
+        if (!ParseLeadingQuotedString(cursor, assetKey, sizeof(assetKey))) {
+            return false;
+        }
+        MaterialComponent* mat = owner.GetComponent<MaterialComponent>();
+        if (mat == nullptr) {
+            mat = owner.AddComponent<MaterialComponent>();
+        }
+        if (assetKey[0] != '\0') {
+            mat->SetMaterialAsset(world, assetKey);
+            if (world.TryGetMaterialByKeyOrPath(assetKey) == nullptr && ctx.onDeferredComponent != nullptr) {
+                ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
+            }
+        }
+        while (*cursor == ' ' || *cursor == '\t') {
+            ++cursor;
+        }
+        if (*cursor != '\0') {
+            MaterialSlotSnapshot::Data slotData{};
+            if (!MaterialSlotSnapshot::TryParseSlotV1(cursor, slotData)) {
+                return false;
+            }
+            MaterialSlotSnapshot::ApplyToMaterial(*mat, slotData, owner, world, ctx);
+        }
+        return true;
+    }
+
     [[nodiscard]] static bool TryRestoreLegacy(
             GameObject& owner,
             const ComponentRecord& record,
@@ -391,6 +447,74 @@ private:
         mat->SetMetallic(metallic);
         mat->SetRoughness(roughness);
         BindMaterialTexture(owner, world, ctx, mat, texPath, &MaterialComponent::SetBaseColorTexture);
+        return true;
+    }
+
+    [[nodiscard]] static bool TryRestoreV3(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) {
+        const char* cursor = record.payload.CStr() + 3;
+        char basePath[384]{};
+        char normalPath[384]{};
+        char mrPath[384]{};
+        char emissivePath[384]{};
+        if (!ParseLeadingQuotedString(cursor, basePath, sizeof(basePath)) ||
+            !ParseLeadingQuotedString(cursor, normalPath, sizeof(normalPath)) ||
+            !ParseLeadingQuotedString(cursor, mrPath, sizeof(mrPath)) ||
+            !ParseLeadingQuotedString(cursor, emissivePath, sizeof(emissivePath))) {
+            return false;
+        }
+        Vector3 tint{1.0F, 1.0F, 1.0F};
+        float metallic = 0.0F;
+        float roughness = 0.45F;
+        float metallicFactor = 1.0F;
+        float roughnessFactor = 1.0F;
+        float occlusionStrength = 1.0F;
+        Vector3 emissive{};
+        float emissiveIntensity = 0.0F;
+        int doubleSided = 0;
+        float opacity = 1.0F;
+        float alphaCutoff = 0.0F;
+        if (std::sscanf(
+                    cursor,
+                    "%f %f %f %f %f %f %f %f %f %f %f %f %d %f %f",
+                    &tint.x,
+                    &tint.y,
+                    &tint.z,
+                    &metallic,
+                    &roughness,
+                    &metallicFactor,
+                    &roughnessFactor,
+                    &occlusionStrength,
+                    &emissive.x,
+                    &emissive.y,
+                    &emissive.z,
+                    &emissiveIntensity,
+                    &doubleSided,
+                    &opacity,
+                    &alphaCutoff) < 15) {
+            return false;
+        }
+        MaterialComponent* mat = owner.GetComponent<MaterialComponent>();
+        if (mat == nullptr) {
+            mat = owner.AddComponent<MaterialComponent>();
+        }
+        mat->SetTint(tint);
+        mat->SetMetallic(metallic);
+        mat->SetRoughness(roughness);
+        mat->SetMetallicFactor(metallicFactor);
+        mat->SetRoughnessFactor(roughnessFactor);
+        mat->SetOcclusionStrength(occlusionStrength);
+        mat->SetEmissive(emissive, emissiveIntensity);
+        mat->SetDoubleSided(doubleSided != 0);
+        mat->SetOpacity(opacity);
+        mat->SetAlphaCutoff(alphaCutoff);
+        BindMaterialTexture(owner, world, ctx, mat, basePath, &MaterialComponent::SetBaseColorTexture);
+        BindMaterialTexture(owner, world, ctx, mat, normalPath, &MaterialComponent::SetNormalTexture);
+        BindMaterialTexture(owner, world, ctx, mat, mrPath, &MaterialComponent::SetMetallicRoughnessTexture);
+        BindMaterialTexture(owner, world, ctx, mat, emissivePath, &MaterialComponent::SetEmissiveTexture);
         return true;
     }
 
@@ -422,7 +546,7 @@ private:
         float opacity = 1.0F;
         if (std::sscanf(
                     cursor,
-                    "%f %f %f %f %f %f %f %f %f %f %f %f %f %d %f",
+                    "%f %f %f %f %f %f %f %f %f %f %f %f %d %f",
                     &tint.x,
                     &tint.y,
                     &tint.z,

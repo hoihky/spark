@@ -99,6 +99,8 @@ void VulkanCustomMeshPool::DestroyResources(const VkDevice device) {
     lastFingerprint = 0;
     rigidSlices.Clear();
     skinnedSlices.Clear();
+    knownRigidMeshes.Clear();
+    knownSkinnedMeshes.Clear();
     physicalDevice = VK_NULL_HANDLE;
     this->device = VK_NULL_HANDLE;
 }
@@ -164,6 +166,11 @@ bool VulkanCustomMeshPool::EnsureDeviceCapacity(
         const VkDeviceSize indexBytes,
         const std::uint64_t frameCounter,
         const std::uint32_t maxFramesInFlight) {
+    if (active.vertexBuffer != VK_NULL_HANDLE && active.indexBuffer != VK_NULL_HANDLE &&
+        vertexBytes <= active.vertexCapacityBytes && indexBytes <= active.indexCapacityBytes) {
+        return true;
+    }
+
     if (active.vertexBuffer != VK_NULL_HANDLE || active.indexBuffer != VK_NULL_HANDLE) {
         QueueRetire(MoveTemp(active), frameCounter + static_cast<std::uint64_t>(maxFramesInFlight));
     }
@@ -192,37 +199,128 @@ bool VulkanCustomMeshPool::EnsureDeviceCapacity(
 }
 
 std::uint64_t VulkanCustomMeshPool::ComputeFingerprint(const SceneRenderParams& scene) const {
-    std::uint64_t h = Fnv64Begin();
-    auto mixDraw = [&](const SceneDrawItem& d) {
+    return ComputeKnownFingerprint();
+}
+
+void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scene) {
+    auto tryAddRigid = [this](const Mesh* mesh) {
+        if (mesh == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < knownRigidMeshes.GetSize(); ++i) {
+            if (knownRigidMeshes[i] == mesh) {
+                return;
+            }
+        }
+        knownRigidMeshes.PushBack(mesh);
+    };
+    auto tryAddSkinned = [this](const SkinnedMesh* mesh) {
+        if (mesh == nullptr) {
+            return;
+        }
+        for (std::size_t i = 0; i < knownSkinnedMeshes.GetSize(); ++i) {
+            if (knownSkinnedMeshes[i] == mesh) {
+                return;
+            }
+        }
+        knownSkinnedMeshes.PushBack(mesh);
+    };
+    auto ingest = [&](const SceneDrawItem& d) {
         if (d.mesh != SceneMeshSlot::Custom) {
             return;
         }
         if (d.skinnedMesh) {
-            const SkinnedMesh* p = d.skinnedMesh.Get();
-            Fnv64Mix(h, reinterpret_cast<std::uintptr_t>(p));
-            if (p != nullptr) {
-                Fnv64Mix(h, static_cast<std::uint64_t>(p->GetVertices().GetSize()));
-                Fnv64Mix(h, static_cast<std::uint64_t>(p->GetIndices().GetSize()));
-            }
+            tryAddSkinned(d.skinnedMesh.Get());
             return;
         }
-        if (!d.customMesh) {
-            return;
+        if (d.customMesh) {
+            tryAddRigid(d.customMesh.Get());
         }
-        const Mesh* p = d.customMesh.Get();
+    };
+    for (std::size_t i = 0; i < scene.draws.GetSize(); ++i) {
+        ingest(scene.draws[i]);
+    }
+    for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
+        ingest(scene.transparentDraws[i]);
+    }
+}
+
+std::uint64_t VulkanCustomMeshPool::ComputeKnownFingerprint() const {
+    std::uint64_t h = Fnv64Begin();
+    auto mixMesh = [&](const Mesh* p) {
         Fnv64Mix(h, reinterpret_cast<std::uintptr_t>(p));
         if (p != nullptr) {
             Fnv64Mix(h, static_cast<std::uint64_t>(p->GetVertices().GetSize()));
             Fnv64Mix(h, static_cast<std::uint64_t>(p->GetIndices().GetSize()));
         }
     };
-    for (std::size_t i = 0; i < scene.draws.GetSize(); ++i) {
-        mixDraw(scene.draws[i]);
+    auto mixSkinned = [&](const SkinnedMesh* p) {
+        Fnv64Mix(h, reinterpret_cast<std::uintptr_t>(p));
+        if (p != nullptr) {
+            Fnv64Mix(h, static_cast<std::uint64_t>(p->GetVertices().GetSize()));
+            Fnv64Mix(h, static_cast<std::uint64_t>(p->GetIndices().GetSize()));
+        }
+    };
+    for (std::size_t i = 0; i < knownRigidMeshes.GetSize(); ++i) {
+        mixMesh(knownRigidMeshes[i]);
     }
-    for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
-        mixDraw(scene.transparentDraws[i]);
+    for (std::size_t i = 0; i < knownSkinnedMeshes.GetSize(); ++i) {
+        mixSkinned(knownSkinnedMeshes[i]);
     }
     return h;
+}
+
+void VulkanCustomMeshPool::PackKnownGeometry(Array<float>& interleaved, Array<std::uint32_t>& meshIndices) {
+    interleaved.Clear();
+    meshIndices.Clear();
+    rigidSlices.Clear();
+    skinnedSlices.Clear();
+
+    for (std::size_t ui = 0; ui < knownRigidMeshes.GetSize(); ++ui) {
+        const Mesh* mp = knownRigidMeshes[ui];
+        if (mp == nullptr || mp->GetVertices().IsEmpty() || mp->GetIndices().IsEmpty()) {
+            continue;
+        }
+        const std::uint32_t vBase =
+                static_cast<std::uint32_t>(interleaved.GetSize() / VulkanSceneVertexLayout::kFloatsPerVertex);
+        const std::uint32_t firstIdx = static_cast<std::uint32_t>(meshIndices.GetSize());
+        const auto& verts = mp->GetVertices();
+        const auto& inds = mp->GetIndices();
+        for (std::size_t vi = 0; vi < verts.GetSize(); ++vi) {
+            VulkanRendererGpu::AppendRigidMeshVertexToInterleaved(verts[vi], interleaved);
+        }
+        for (std::size_t ii = 0; ii < inds.GetSize(); ++ii) {
+            meshIndices.PushBack(vBase + inds[ii]);
+        }
+        CustomMeshGpuSlice slice{};
+        slice.firstIndex = firstIdx;
+        slice.indexCount = static_cast<std::uint32_t>(inds.GetSize());
+        slice.vertexOffset = 0;
+        rigidSlices.Add(mp, slice);
+    }
+
+    for (std::size_t ui = 0; ui < knownSkinnedMeshes.GetSize(); ++ui) {
+        const SkinnedMesh* sp = knownSkinnedMeshes[ui];
+        if (sp == nullptr || sp->GetVertices().IsEmpty() || sp->GetIndices().IsEmpty()) {
+            continue;
+        }
+        const std::uint32_t vBase =
+                static_cast<std::uint32_t>(interleaved.GetSize() / VulkanSceneVertexLayout::kFloatsPerVertex);
+        const std::uint32_t firstIdx = static_cast<std::uint32_t>(meshIndices.GetSize());
+        const auto& verts = sp->GetVertices();
+        const auto& inds = sp->GetIndices();
+        for (std::size_t vi = 0; vi < verts.GetSize(); ++vi) {
+            VulkanRendererGpu::AppendSkinnedVertexToInterleaved(verts[vi], interleaved);
+        }
+        for (std::size_t ii = 0; ii < inds.GetSize(); ++ii) {
+            meshIndices.PushBack(vBase + inds[ii]);
+        }
+        CustomMeshGpuSlice slice{};
+        slice.firstIndex = firstIdx;
+        slice.indexCount = static_cast<std::uint32_t>(inds.GetSize());
+        slice.vertexOffset = 0;
+        skinnedSlices.Add(sp, slice);
+    }
 }
 
 void VulkanCustomMeshPool::PackSceneGeometry(
@@ -337,21 +435,8 @@ void VulkanCustomMeshPool::UpdateFromScene(
         return;
     }
 
-    bool anyCustom = false;
-    auto inspectCustom = [&](const SceneDrawItem& d) {
-        if (d.mesh != SceneMeshSlot::Custom) {
-            return;
-        }
-        if (d.skinnedMesh || d.customMesh) {
-            anyCustom = true;
-        }
-    };
-    for (std::size_t i = 0; i < scene.draws.GetSize() && !anyCustom; ++i) {
-        inspectCustom(scene.draws[i]);
-    }
-    for (std::size_t i = 0; i < scene.transparentDraws.GetSize() && !anyCustom; ++i) {
-        inspectCustom(scene.transparentDraws[i]);
-    }
+    RegisterMeshesFromDraws(scene);
+    const bool anyCustom = !knownRigidMeshes.IsEmpty() || !knownSkinnedMeshes.IsEmpty();
 
     if (!anyCustom) {
         if (active.vertexBuffer != VK_NULL_HANDLE || active.indexBuffer != VK_NULL_HANDLE) {
@@ -366,7 +451,7 @@ void VulkanCustomMeshPool::UpdateFromScene(
         return;
     }
 
-    const std::uint64_t fp = ComputeFingerprint(scene);
+    const std::uint64_t fp = ComputeKnownFingerprint();
     if (fp == lastFingerprint && active.vertexBuffer != VK_NULL_HANDLE && !uploadPending) {
         return;
     }
@@ -374,7 +459,7 @@ void VulkanCustomMeshPool::UpdateFromScene(
 
     Array<float> interleaved;
     Array<std::uint32_t> meshIndices;
-    PackSceneGeometry(scene, interleaved, meshIndices);
+    PackKnownGeometry(interleaved, meshIndices);
 
     const VkDeviceSize vbSize = sizeof(float) * static_cast<std::size_t>(interleaved.GetSize());
     const VkDeviceSize ibSize = sizeof(std::uint32_t) * static_cast<std::size_t>(meshIndices.GetSize());
