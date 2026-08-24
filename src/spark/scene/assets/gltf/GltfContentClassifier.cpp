@@ -1,5 +1,7 @@
 #include "spark/scene/assets/gltf/GltfContentClassifier.hpp"
 
+#include "spark/scene/assets/gltf/GltfDataLoader.hpp"
+
 #include "cgltf.h"
 
 namespace Spark {
@@ -42,6 +44,25 @@ void ScanForSkinnedMeshNode(const cgltf_node* node, const cgltf_node** outSkinNo
     return skinnedNode != nullptr ? GltfContentKind::Skinned : GltfContentKind::Rigid;
 }
 
+void ScanCompression(const cgltf_data* data, GltfCompressionFlags& outFlags) noexcept {
+    if (data == nullptr) {
+        return;
+    }
+    for (cgltf_size mi = 0; mi < data->meshes_count; ++mi) {
+        const cgltf_mesh& mesh = data->meshes[mi];
+        for (cgltf_size pi = 0; pi < mesh.primitives_count; ++pi) {
+            if (mesh.primitives[pi].has_draco_mesh_compression) {
+                outFlags.draco = true;
+            }
+        }
+    }
+    for (cgltf_size bi = 0; bi < data->buffer_views_count; ++bi) {
+        if (data->buffer_views[bi].has_meshopt_compression) {
+            outFlags.meshopt = true;
+        }
+    }
+}
+
 }  // namespace
 
 GltfContentClassifier::ProbeResult GltfContentClassifier::ProbeFile(const char* path) {
@@ -51,22 +72,16 @@ GltfContentClassifier::ProbeResult GltfContentClassifier::ProbeFile(const char* 
         return result;
     }
 
-    cgltf_options options{};
-    cgltf_data* data = nullptr;
-    if (cgltf_parse_file(&options, path, &data) != cgltf_result_success || data == nullptr) {
-        result.errorMessage = Utf8String("Failed to parse glTF file");
-        return result;
-    }
-
-    if (cgltf_load_buffers(&options, data, path) != cgltf_result_success) {
-        cgltf_free(data);
-        result.errorMessage = Utf8String("Failed to load glTF buffers");
+    const GltfDataLoadResult loaded = LoadParsedGltfFile(path);
+    if (!loaded.ok || loaded.data == nullptr) {
+        result.errorMessage = loaded.errorMessage.IsEmpty() ? Utf8String("Failed to parse glTF file") : loaded.errorMessage;
         return result;
     }
 
     result.parseOk = true;
-    result.kind = ClassifyParsedData(data);
-    cgltf_free(data);
+    result.kind = ClassifyParsedData(loaded.data);
+    ScanCompression(loaded.data, result.compression);
+    cgltf_free(loaded.data);
     return result;
 }
 

@@ -13,6 +13,12 @@ enum class GltfContentKind : std::uint8_t {
     Skinned,
 };
 
+/** Compression extensions detected during probe (meshopt decode is not implemented yet). */
+struct GltfCompressionFlags {
+    bool draco = false;
+    bool meshopt = false;
+};
+
 /**
  * Inspects a glTF file without building meshes (Strategy entry point for loader routing).
  * Used by <c>GltfAssetBinder::BindFromPath</c> and rigid-load guards.
@@ -21,6 +27,7 @@ class GltfContentClassifier {
 public:
     struct ProbeResult {
         GltfContentKind kind = GltfContentKind::Unknown;
+        GltfCompressionFlags compression{};
         bool parseOk = false;
         Utf8String errorMessage;
     };

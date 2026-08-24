@@ -2,6 +2,7 @@
 
 #include "spark/core/HashMap.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/assets/gltf/GltfDataLoader.hpp"
 #include "spark/scene/assets/gltf/GltfMeshBuilder.hpp"
 #include "spark/scene/assets/gltf/GltfNodeTransforms.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
@@ -28,7 +29,9 @@ public:
             return *existing;
         }
         auto built = MakeShared<Mesh>(Utf8String(sourcePath != nullptr ? sourcePath : "gltf_mesh"));
-        if (!GltfMeshBuilder::BuildFromCgltfMesh(data, mesh, *built)) {
+        const GltfMeshBuildOutcome buildOutcome = GltfMeshBuilder::BuildFromCgltfMesh(data, mesh, *built);
+        if (!buildOutcome.ok) {
+            lastError = buildOutcome.errorMessage;
             return GltfSceneNode::kInvalidMeshIndex;
         }
         const std::uint32_t index = static_cast<std::uint32_t>(outMeshes.GetSize());
@@ -36,6 +39,8 @@ public:
         meshIndices.Add(mesh, index);
         return index;
     }
+
+    [[nodiscard]] const Utf8String& GetLastError() const noexcept { return lastError; }
 
 private:
     struct PointerHasher {
@@ -45,6 +50,7 @@ private:
     };
 
     const char* sourcePath = nullptr;
+    Utf8String lastError;
     HashMap<const cgltf_mesh*, std::uint32_t, PointerHasher> meshIndices;
 };
 
@@ -101,19 +107,16 @@ AssetLoadOutcome<GltfSceneDocument> GltfSceneLoader::TryLoadFromFile(const char*
         return outcome;
     }
 
-    cgltf_options options{};
-    cgltf_data* data = nullptr;
-    if (cgltf_parse_file(&options, path, &data) != cgltf_result_success || data == nullptr) {
-        outcome.errorMessage = Utf8String("Failed to parse glTF file: ");
-        outcome.errorMessage.AppendUtf8(path);
+    const GltfDataLoadResult loaded = LoadParsedGltfFile(path);
+    if (!loaded.ok || loaded.data == nullptr) {
+        outcome.errorMessage = loaded.errorMessage.IsEmpty() ? Utf8String("Failed to load glTF file: ") :
+                                                               loaded.errorMessage;
+        if (outcome.errorMessage.IsEmpty()) {
+            outcome.errorMessage.AppendUtf8(path);
+        }
         return outcome;
     }
-    if (cgltf_load_buffers(&options, data, path) != cgltf_result_success) {
-        cgltf_free(data);
-        outcome.errorMessage = Utf8String("Failed to load glTF buffers: ");
-        outcome.errorMessage.AppendUtf8(path);
-        return outcome;
-    }
+    cgltf_data* data = loaded.data;
 
     GltfSceneDocument document{};
     document.sourcePath = Utf8String(path);
@@ -138,6 +141,11 @@ AssetLoadOutcome<GltfSceneDocument> GltfSceneLoader::TryLoadFromFile(const char*
 
     LoadAllMaterials(data, path, document.materials);
     cgltf_free(data);
+
+    if (!meshBuilder.GetLastError().IsEmpty()) {
+        outcome.errorMessage = meshBuilder.GetLastError();
+        return outcome;
+    }
 
     if (document.nodes.IsEmpty()) {
         outcome.errorMessage = Utf8String("No nodes found in glTF scene: ");

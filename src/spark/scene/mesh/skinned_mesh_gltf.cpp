@@ -10,6 +10,8 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/assets/gltf/GltfDataLoader.hpp"
+#include "spark/scene/assets/gltf/GltfSkinnedMeshBuilder.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 #include "cgltf.h"
@@ -63,169 +65,6 @@ Transform NodeLocalTransform(const cgltf_node* node) {
 
 bool ShouldFlipGltfTriangleWinding(const Matrix4& bakeWorld) noexcept {
     return bakeWorld.DeterminantUpper3x3() >= 0.0F;
-}
-
-void AppendSkinnedPrimitive(
-        const cgltf_data* data,
-        const cgltf_primitive* prim,
-        const Matrix4& bakeWorld,
-        std::uint32_t texCoordSet,
-        bool* outHadNormals,
-        bool* outHadTangents,
-        SkinnedMesh& outMesh) {
-    if (prim == nullptr || prim->type != cgltf_primitive_type_triangles) {
-        return;
-    }
-    const cgltf_accessor* pos = nullptr;
-    const cgltf_accessor* nrm = nullptr;
-    const cgltf_accessor* tan = nullptr;
-    const cgltf_accessor* uv = nullptr;
-    const cgltf_accessor* joints = nullptr;
-    const cgltf_accessor* weights = nullptr;
-    for (cgltf_size ai = 0; ai < prim->attributes_count; ++ai) {
-        const cgltf_attribute& a = prim->attributes[ai];
-        if (a.type == cgltf_attribute_type_position) {
-            pos = a.data;
-        } else if (a.type == cgltf_attribute_type_normal) {
-            nrm = a.data;
-        } else if (a.type == cgltf_attribute_type_tangent) {
-            tan = a.data;
-        } else if (a.type == cgltf_attribute_type_texcoord &&
-                   static_cast<std::uint32_t>(a.index) == texCoordSet) {
-            uv = a.data;
-        } else if (a.type == cgltf_attribute_type_joints && a.index == 0) {
-            joints = a.data;
-        } else if (a.type == cgltf_attribute_type_weights && a.index == 0) {
-            weights = a.data;
-        }
-    }
-    if (uv == nullptr && texCoordSet != 0) {
-        for (cgltf_size ai = 0; ai < prim->attributes_count; ++ai) {
-            const cgltf_attribute& a = prim->attributes[ai];
-            if (a.type == cgltf_attribute_type_texcoord && a.index == 0) {
-                uv = a.data;
-                break;
-            }
-        }
-    }
-    if (pos == nullptr || joints == nullptr || weights == nullptr) {
-        return;
-    }
-
-    const std::uint32_t indexOffset = static_cast<std::uint32_t>(outMesh.GetIndices().GetSize());
-    if (outHadNormals != nullptr) {
-        *outHadNormals = *outHadNormals || (nrm != nullptr && nrm->type == cgltf_type_vec3);
-    }
-    if (outHadTangents != nullptr) {
-        *outHadTangents = *outHadTangents || (tan != nullptr && tan->type == cgltf_type_vec4);
-    }
-
-    const cgltf_size vcount = pos->count;
-    const std::uint32_t base = static_cast<std::uint32_t>(outMesh.GetVertices().GetSize());
-    const bool flipWinding = ShouldFlipGltfTriangleWinding(bakeWorld);
-
-    for (cgltf_size vi = 0; vi < vcount; ++vi) {
-        float p[3]{};
-        cgltf_accessor_read_float(pos, vi, p, 3);
-        Vector3 pw = bakeWorld.TransformPoint({p[0], p[1], p[2]});
-        Vector3 nw{0.0F, 1.0F, 0.0F};
-        if (nrm != nullptr && nrm->type == cgltf_type_vec3) {
-            float n[3]{};
-            cgltf_accessor_read_float(nrm, vi, n, 3);
-            nw = bakeWorld.TransformVector({n[0], n[1], n[2]}).Normalized();
-        }
-        Vector2 tc{0.0F, 0.0F};
-        if (uv != nullptr && uv->type == cgltf_type_vec2) {
-            float t2[2]{};
-            cgltf_accessor_read_float(uv, vi, t2, 2);
-            tc = {t2[0], t2[1]};
-        }
-        Vector4 tangent{};
-        if (tan != nullptr && tan->type == cgltf_type_vec4) {
-            float t4[4]{};
-            cgltf_accessor_read_float(tan, vi, t4, 4);
-            const Vector3 tw = bakeWorld.TransformVector({t4[0], t4[1], t4[2]}).Normalized();
-            tangent = {tw.x, tw.y, tw.z, t4[3]};
-        }
-        cgltf_uint ji[4]{};
-        if (!cgltf_accessor_read_uint(joints, vi, ji, 4)) {
-            ji[0] = ji[1] = ji[2] = ji[3] = 0;
-        }
-        float wf[4]{1.0F, 0.0F, 0.0F, 0.0F};
-        cgltf_accessor_read_float(weights, vi, wf, 4);
-
-        float wsum = wf[0] + wf[1] + wf[2] + wf[3];
-        if (wsum > 1.0e-6F) {
-            const float inv = 1.0F / wsum;
-            wf[0] *= inv;
-            wf[1] *= inv;
-            wf[2] *= inv;
-            wf[3] *= inv;
-        } else {
-            wf[0] = 1.0F;
-            wf[1] = wf[2] = wf[3] = 0.0F;
-        }
-
-        SkinnedMesh::Vertex sv{};
-        sv.position = pw;
-        sv.normal = nw;
-        sv.texCoord = tc;
-        sv.tangent = tangent;
-        sv.joints[0] = static_cast<std::uint32_t>(ji[0]);
-        sv.joints[1] = static_cast<std::uint32_t>(ji[1]);
-        sv.joints[2] = static_cast<std::uint32_t>(ji[2]);
-        sv.joints[3] = static_cast<std::uint32_t>(ji[3]);
-        sv.weights[0] = wf[0];
-        sv.weights[1] = wf[1];
-        sv.weights[2] = wf[2];
-        sv.weights[3] = wf[3];
-        outMesh.GetVertices().PushBack(sv);
-    }
-
-    if (prim->indices != nullptr) {
-        const cgltf_accessor* idx = prim->indices;
-        const cgltf_size icount = idx->count;
-        if (icount % 3 != 0) {
-            return;
-        }
-        for (cgltf_size ti = 0; ti < icount; ti += 3) {
-            const std::uint32_t i0 = static_cast<std::uint32_t>(cgltf_accessor_read_index(idx, ti + 0));
-            const std::uint32_t i1 = static_cast<std::uint32_t>(cgltf_accessor_read_index(idx, ti + 1));
-            const std::uint32_t i2 = static_cast<std::uint32_t>(cgltf_accessor_read_index(idx, ti + 2));
-            if (flipWinding) {
-                outMesh.AddTriangle(base + i0, base + i2, base + i1);
-            } else {
-                outMesh.AddTriangle(base + i0, base + i1, base + i2);
-            }
-        }
-    } else {
-        for (cgltf_size ti = 0; ti + 2 < vcount; ti += 3) {
-            const std::uint32_t i0 = base + static_cast<std::uint32_t>(ti);
-            const std::uint32_t i1 = base + static_cast<std::uint32_t>(ti + 1);
-            const std::uint32_t i2 = base + static_cast<std::uint32_t>(ti + 2);
-            if (flipWinding) {
-                outMesh.AddTriangle(i0, i2, i1);
-            } else {
-                outMesh.AddTriangle(i0, i1, i2);
-            }
-        }
-    }
-
-    const std::uint32_t indexCount =
-            static_cast<std::uint32_t>(outMesh.GetIndices().GetSize()) - indexOffset;
-    if (indexCount == 0) {
-        return;
-    }
-    MeshSubmesh submesh{};
-    submesh.indexOffset = indexOffset;
-    submesh.indexCount = indexCount;
-    if (data != nullptr && prim->material != nullptr && data->materials_count > 0) {
-        const std::ptrdiff_t offset = prim->material - data->materials;
-        if (offset >= 0 && static_cast<cgltf_size>(offset) < data->materials_count) {
-            submesh.materialIndex = static_cast<std::uint32_t>(offset);
-        }
-    }
-    outMesh.GetSubmeshes().PushBack(submesh);
 }
 
 void ScanForSkinnedMeshNode(cgltf_node* node, cgltf_node** outSkinNode) {
@@ -415,17 +254,12 @@ bool TryLoadSkinnedCharacterFromGltf(
         *outBindFacingYawOffset = 0.0F;
     }
 
-    cgltf_options options{};
-    cgltf_data* data = nullptr;
-    if (cgltf_parse_file(&options, path, &data) != cgltf_result_success || data == nullptr) {
-        setError("Failed to parse skinned glTF file");
+    const GltfDataLoadResult loaded = LoadParsedGltfFile(path);
+    if (!loaded.ok || loaded.data == nullptr) {
+        setError(loaded.errorMessage.IsEmpty() ? "Failed to load skinned glTF file" : loaded.errorMessage.CStr());
         return false;
     }
-    if (cgltf_load_buffers(&options, data, path) != cgltf_result_success) {
-        cgltf_free(data);
-        setError("Failed to load skinned glTF buffers");
-        return false;
-    }
+    cgltf_data* data = loaded.data;
 
     outMesh.Clear();
     outMesh.GetName() = Utf8String(path);
@@ -542,7 +376,14 @@ bool TryLoadSkinnedCharacterFromGltf(
         const std::uint32_t tc = BaseColorTexCoordSet(&prim);
         bool primHadNormals = false;
         bool primHadTangents = false;
-        AppendSkinnedPrimitive(data, &prim, bakeWorld, tc, &primHadNormals, &primHadTangents, outMesh);
+        const GltfMeshBuildOutcome primitiveOutcome = GltfSkinnedMeshBuilder::AppendSkinnedPrimitive(
+                data, &prim, bakeWorld, tc, &primHadNormals, &primHadTangents, outMesh);
+        if (!primitiveOutcome.ok) {
+            cgltf_free(data);
+            setError(primitiveOutcome.errorMessage.IsEmpty() ? "Failed to build skinned primitive" :
+                                                               primitiveOutcome.errorMessage.CStr());
+            return false;
+        }
         meshHadNormals = meshHadNormals || primHadNormals;
         meshHadTangents = meshHadTangents || primHadTangents;
     }

@@ -289,6 +289,62 @@ if (NOT EXISTS "${SPARK_CESIUM_MAN_GLB}")
     )
 endif ()
 
+# Khronos Avocado (Draco) — KHR_draco_mesh_compression display test asset.
+set(SPARK_AVOCADO_DRACO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/AvocadoDraco")
+set(SPARK_AVOCADO_DRACO_GLTF "${SPARK_AVOCADO_DRACO_DIR}/Avocado.gltf")
+if (NOT EXISTS "${SPARK_AVOCADO_DRACO_GLTF}")
+    file(MAKE_DIRECTORY "${SPARK_AVOCADO_DRACO_DIR}")
+    message(STATUS "Downloading Khronos glTF-Sample-Assets Avocado (Draco)")
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Draco/Avocado.gltf"
+            "${SPARK_AVOCADO_DRACO_GLTF}"
+            TLS_VERIFY ON
+    )
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Draco/Avocado.bin"
+            "${SPARK_AVOCADO_DRACO_DIR}/Avocado.bin"
+            TLS_VERIFY ON
+    )
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Draco/Avocado_baseColor.png"
+            "${SPARK_AVOCADO_DRACO_DIR}/Avocado_baseColor.png"
+            TLS_VERIFY ON
+    )
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Draco/Avocado_roughnessMetallic.png"
+            "${SPARK_AVOCADO_DRACO_DIR}/Avocado_roughnessMetallic.png"
+            TLS_VERIFY ON
+    )
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Draco/Avocado_normal.png"
+            "${SPARK_AVOCADO_DRACO_DIR}/Avocado_normal.png"
+            TLS_VERIFY ON
+    )
+endif ()
+
+# Khronos MeshoptCubeTest — EXT/KHR_meshopt_compression display test asset.
+set(SPARK_MESHOPT_CUBE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/MeshoptCubeTest")
+set(SPARK_MESHOPT_CUBE_GLTF "${SPARK_MESHOPT_CUBE_DIR}/MeshoptCubeTest.gltf")
+if (NOT EXISTS "${SPARK_MESHOPT_CUBE_GLTF}")
+    file(MAKE_DIRECTORY "${SPARK_MESHOPT_CUBE_DIR}")
+    message(STATUS "Downloading Khronos glTF-Sample-Assets MeshoptCubeTest")
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MeshoptCubeTest/glTF/MeshoptCubeTest.gltf"
+            "${SPARK_MESHOPT_CUBE_GLTF}"
+            TLS_VERIFY ON
+    )
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MeshoptCubeTest/glTF/MeshoptCubeTest.bin"
+            "${SPARK_MESHOPT_CUBE_DIR}/MeshoptCubeTest.bin"
+            TLS_VERIFY ON
+    )
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/MeshoptCubeTest/glTF/MeshoptCubeTestFallback.bin"
+            "${SPARK_MESHOPT_CUBE_DIR}/MeshoptCubeTestFallback.bin"
+            TLS_VERIFY ON
+    )
+endif ()
+
 find_package(Vulkan REQUIRED)
 
 find_program(GLSLANG_VALIDATOR glslangValidator
@@ -534,6 +590,12 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/mesh/mesh_gltf.cpp
         src/spark/scene/assets/gltf/GltfContentClassifier.cpp
         src/spark/scene/assets/gltf/GltfMeshBuilder.cpp
+        src/spark/scene/assets/gltf/GltfUncompressedPrimitiveDecoder.cpp
+        src/spark/scene/assets/gltf/GltfDracoPrimitiveDecoder.cpp
+        src/spark/scene/assets/gltf/GltfPrimitiveDecoderRegistry.cpp
+        src/spark/scene/assets/gltf/GltfMeshoptBuffers.cpp
+        src/spark/scene/assets/gltf/GltfDataLoader.cpp
+        src/spark/scene/assets/gltf/GltfSkinnedMeshBuilder.cpp
         src/spark/scene/assets/gltf/GltfNodeTransforms.cpp
         src/spark/scene/assets/gltf/GltfRigidLoader.cpp
         src/spark/scene/assets/gltf/GltfSceneLoader.cpp
@@ -781,6 +843,12 @@ target_link_libraries(SparkEngine PUBLIC
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkTextureCompression.cmake)
 spark_setup_texture_compression(SparkEngine)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkGltfDraco.cmake)
+spark_setup_gltf_draco(SparkEngine)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkGltfMeshopt.cmake)
+spark_setup_gltf_meshopt(SparkEngine)
 
 if (SPARK_ENABLE_IMGUI)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkImGui.cmake)

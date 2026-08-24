@@ -1,7 +1,6 @@
-#include "spark/scene/assets/gltf/GltfMeshBuilder.hpp"
+#include "spark/scene/assets/gltf/GltfSkinnedMeshBuilder.hpp"
 
 #include "spark/scene/assets/gltf/GltfPrimitiveDecoder.hpp"
-#include "spark/scene/material/GltfMaterial.hpp"
 
 #include "cgltf.h"
 
@@ -26,55 +25,94 @@ std::uint32_t MaterialIndex(const cgltf_data* data, const cgltf_material* mat) n
 
 }  // namespace
 
-GltfMeshBuildOutcome GltfMeshBuilder::AppendPrimitive(
+GltfMeshBuildOutcome GltfSkinnedMeshBuilder::AppendSkinnedPrimitive(
         const cgltf_data* data,
         const cgltf_primitive* prim,
-        const Matrix4& transform,
-        Mesh& outMesh) {
+        const Matrix4& bakeWorld,
+        const std::uint32_t texCoordSet,
+        bool* outHadNormals,
+        bool* outHadTangents,
+        SkinnedMesh& outMesh) {
     GltfMeshBuildOutcome outcome{};
-    if (data == nullptr || prim == nullptr || prim->type != cgltf_primitive_type_triangles) {
+    if (prim == nullptr || prim->type != cgltf_primitive_type_triangles) {
         outcome.ok = false;
-        outcome.errorMessage = Utf8String("Unsupported glTF primitive");
+        outcome.errorMessage = Utf8String("Unsupported skinned glTF primitive");
         return outcome;
     }
 
-    const GltfPrimitiveDecodeResult decoded = GltfPrimitiveDecoderRegistry::Decode(data, prim);
+    GltfPrimitiveDecodeOptions options{};
+    options.texCoordSet = texCoordSet;
+    const GltfPrimitiveDecodeResult decoded = GltfPrimitiveDecoderRegistry::Decode(data, prim, options);
     if (!decoded.ok) {
         outcome.ok = false;
         outcome.errorMessage = decoded.errorMessage;
         return outcome;
     }
+    if (!decoded.primitive.HasSkinning()) {
+        outcome.ok = false;
+        outcome.errorMessage = Utf8String("Skinned glTF primitive is missing JOINTS_0 / WEIGHTS_0");
+        return outcome;
+    }
     if (decoded.primitive.positions.IsEmpty()) {
         outcome.ok = false;
-        outcome.errorMessage = Utf8String("Decoded glTF primitive has no vertices");
+        outcome.errorMessage = Utf8String("Decoded skinned glTF primitive has no vertices");
         return outcome;
     }
 
     const std::uint32_t indexOffset = static_cast<std::uint32_t>(outMesh.GetIndices().GetSize());
+    if (outHadNormals != nullptr) {
+        *outHadNormals = *outHadNormals || decoded.primitive.normals.GetSize() == decoded.primitive.positions.GetSize();
+    }
+    if (outHadTangents != nullptr) {
+        *outHadTangents = *outHadTangents || decoded.primitive.tangents.GetSize() == decoded.primitive.positions.GetSize();
+    }
+
     const std::uint32_t base = static_cast<std::uint32_t>(outMesh.GetVertices().GetSize());
-    const bool flipWinding = ShouldFlipGltfTriangleWinding(transform);
+    const bool flipWinding = ShouldFlipGltfTriangleWinding(bakeWorld);
     const cgltf_size vertexCount = decoded.primitive.positions.GetSize();
     const bool hasNormals = decoded.primitive.normals.GetSize() == vertexCount;
     const bool hasTexcoords = decoded.primitive.texcoords.GetSize() == vertexCount;
+    const bool hasTangents = decoded.primitive.tangents.GetSize() == vertexCount;
 
     for (cgltf_size vi = 0; vi < vertexCount; ++vi) {
-        const Vector3 pw = transform.TransformPoint(decoded.primitive.positions[vi]);
+        const Vector3 pw = bakeWorld.TransformPoint(decoded.primitive.positions[vi]);
         Vector3 nw{0.0F, 1.0F, 0.0F};
         if (hasNormals) {
-            nw = transform.TransformVector(decoded.primitive.normals[vi]).Normalized();
+            nw = bakeWorld.TransformVector(decoded.primitive.normals[vi]).Normalized();
         }
         Vector2 tc{0.0F, 0.0F};
         if (hasTexcoords) {
             tc = decoded.primitive.texcoords[vi];
         }
-        outMesh.AddVertex({pw, nw, tc});
+        Vector4 tangent{};
+        if (hasTangents) {
+            const Vector4& localTangent = decoded.primitive.tangents[vi];
+            const Vector3 tw = bakeWorld.TransformVector({localTangent.x, localTangent.y, localTangent.z}).Normalized();
+            tangent = {tw.x, tw.y, tw.z, localTangent.w};
+        }
+
+        const GltfDecodedSkinning& skinning = decoded.primitive.skinning[vi];
+        SkinnedMesh::Vertex vertex{};
+        vertex.position = pw;
+        vertex.normal = nw;
+        vertex.texCoord = tc;
+        vertex.tangent = tangent;
+        vertex.joints[0] = skinning.joints[0];
+        vertex.joints[1] = skinning.joints[1];
+        vertex.joints[2] = skinning.joints[2];
+        vertex.joints[3] = skinning.joints[3];
+        vertex.weights[0] = skinning.weights[0];
+        vertex.weights[1] = skinning.weights[1];
+        vertex.weights[2] = skinning.weights[2];
+        vertex.weights[3] = skinning.weights[3];
+        outMesh.GetVertices().PushBack(vertex);
     }
 
     if (!decoded.primitive.indices.IsEmpty()) {
         const cgltf_size icount = decoded.primitive.indices.GetSize();
         if (icount % 3 != 0) {
             outcome.ok = false;
-            outcome.errorMessage = Utf8String("Decoded glTF primitive index count is not divisible by 3");
+            outcome.errorMessage = Utf8String("Decoded skinned glTF primitive index count is not divisible by 3");
             return outcome;
         }
         for (cgltf_size ti = 0; ti < icount; ti += 3) {
@@ -104,7 +142,7 @@ GltfMeshBuildOutcome GltfMeshBuilder::AppendPrimitive(
             static_cast<std::uint32_t>(outMesh.GetIndices().GetSize()) - indexOffset;
     if (indexCount == 0) {
         outcome.ok = false;
-        outcome.errorMessage = Utf8String("Decoded glTF primitive produced no indices");
+        outcome.errorMessage = Utf8String("Decoded skinned glTF primitive produced no indices");
         return outcome;
     }
 
@@ -116,27 +154,36 @@ GltfMeshBuildOutcome GltfMeshBuilder::AppendPrimitive(
     return outcome;
 }
 
-GltfMeshBuildOutcome GltfMeshBuilder::BuildFromCgltfMesh(
+GltfMeshBuildOutcome GltfSkinnedMeshBuilder::BuildFromCgltfMesh(
         const cgltf_data* data,
         const cgltf_mesh* mesh,
-        Mesh& outMesh) {
+        const Matrix4& bakeWorld,
+        const std::uint32_t texCoordSet,
+        bool* outHadNormals,
+        bool* outHadTangents,
+        SkinnedMesh& outMesh) {
     GltfMeshBuildOutcome outcome{};
     if (data == nullptr || mesh == nullptr) {
         outcome.ok = false;
-        outcome.errorMessage = Utf8String("Null glTF mesh");
+        outcome.errorMessage = Utf8String("Null skinned glTF mesh");
         return outcome;
     }
-    outMesh.Clear();
     for (cgltf_size pi = 0; pi < mesh->primitives_count; ++pi) {
-        const GltfMeshBuildOutcome primitiveOutcome =
-                AppendPrimitive(data, &mesh->primitives[pi], Matrix4::Identity, outMesh);
+        const GltfMeshBuildOutcome primitiveOutcome = AppendSkinnedPrimitive(
+                data,
+                &mesh->primitives[pi],
+                bakeWorld,
+                texCoordSet,
+                outHadNormals,
+                outHadTangents,
+                outMesh);
         if (!primitiveOutcome.ok) {
             return primitiveOutcome;
         }
     }
     if (outMesh.GetVertices().IsEmpty()) {
         outcome.ok = false;
-        outcome.errorMessage = Utf8String("glTF mesh has no geometry");
+        outcome.errorMessage = Utf8String("Skinned glTF mesh has no geometry");
         return outcome;
     }
     return outcome;

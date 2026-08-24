@@ -1,5 +1,6 @@
 #include "spark/scene/assets/gltf/GltfRigidLoader.hpp"
 
+#include "spark/scene/assets/gltf/GltfDataLoader.hpp"
 #include "spark/scene/assets/gltf/GltfMeshBuilder.hpp"
 #include "spark/scene/assets/gltf/GltfNodeTransforms.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
@@ -10,9 +11,9 @@ namespace Spark {
 
 namespace {
 
-void VisitNode(cgltf_data* data, cgltf_node* node, const Matrix4& parentWorld, Mesh& outMesh) {
+bool VisitNode(cgltf_data* data, cgltf_node* node, const Matrix4& parentWorld, Mesh& outMesh, Utf8String& outError) {
     if (node == nullptr) {
-        return;
+        return true;
     }
     const Matrix4 local = GltfNodeTransforms::LocalTransform(node).ToMatrix4();
     const Matrix4 world = parentWorld * local;
@@ -20,12 +21,20 @@ void VisitNode(cgltf_data* data, cgltf_node* node, const Matrix4& parentWorld, M
     if (node->mesh != nullptr && node->skin == nullptr) {
         const cgltf_mesh* mesh = node->mesh;
         for (cgltf_size pi = 0; pi < mesh->primitives_count; ++pi) {
-            GltfMeshBuilder::AppendPrimitive(data, &mesh->primitives[pi], world, outMesh);
+            const GltfMeshBuildOutcome primitiveOutcome =
+                    GltfMeshBuilder::AppendPrimitive(data, &mesh->primitives[pi], world, outMesh);
+            if (!primitiveOutcome.ok) {
+                outError = primitiveOutcome.errorMessage;
+                return false;
+            }
         }
     }
     for (cgltf_size ci = 0; ci < node->children_count; ++ci) {
-        VisitNode(data, node->children[ci], world, outMesh);
+        if (!VisitNode(data, node->children[ci], world, outMesh, outError)) {
+            return false;
+        }
     }
+    return true;
 }
 
 void LoadAllMaterials(const cgltf_data* data, const char* path, Array<GltfMaterial>& outMaterials) {
@@ -42,17 +51,14 @@ bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) n
     }
     out.errorMessage = Utf8String(path);
 
-    cgltf_options options{};
-    cgltf_data* data = nullptr;
-    if (cgltf_parse_file(&options, path, &data) != cgltf_result_success || data == nullptr) {
-        out.errorMessage.AppendUtf8(": failed to parse glTF file");
+    const GltfDataLoadResult loaded = LoadParsedGltfFile(path);
+    if (!loaded.ok || loaded.data == nullptr) {
+        out.errorMessage.AppendUtf8(": ");
+        out.errorMessage.AppendUtf8(
+                loaded.errorMessage.IsEmpty() ? "failed to load glTF file" : loaded.errorMessage.CStr());
         return false;
     }
-    if (cgltf_load_buffers(&options, data, path) != cgltf_result_success) {
-        cgltf_free(data);
-        out.errorMessage.AppendUtf8(": failed to load glTF buffers");
-        return false;
-    }
+    cgltf_data* data = loaded.data;
 
     auto mesh = MakeShared<Mesh>(Utf8String(path));
     mesh->Clear();
@@ -61,21 +67,35 @@ bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) n
     if (primary == nullptr && data->scenes_count > 0) {
         primary = &data->scenes[0];
     }
-    auto visitSceneRoots = [&](cgltf_scene* sc) {
+    Utf8String meshError;
+    auto visitSceneRoots = [&](cgltf_scene* sc) -> bool {
         if (sc == nullptr) {
-            return;
+            return true;
         }
         for (cgltf_size i = 0; i < sc->nodes_count; ++i) {
-            VisitNode(data, sc->nodes[i], Matrix4::Identity, *mesh);
+            if (!VisitNode(data, sc->nodes[i], Matrix4::Identity, *mesh, meshError)) {
+                return false;
+            }
         }
+        return true;
     };
-    visitSceneRoots(primary);
+    if (!visitSceneRoots(primary)) {
+        cgltf_free(data);
+        out.errorMessage.AppendUtf8(": ");
+        out.errorMessage.AppendUtf8(meshError.CStr());
+        return false;
+    }
     if (mesh->GetVertices().IsEmpty() && data->scenes_count > 0) {
         for (cgltf_size si = 0; si < data->scenes_count; ++si) {
             if (primary != nullptr && &data->scenes[si] == primary) {
                 continue;
             }
-            visitSceneRoots(&data->scenes[si]);
+            if (!visitSceneRoots(&data->scenes[si])) {
+                cgltf_free(data);
+                out.errorMessage.AppendUtf8(": ");
+                out.errorMessage.AppendUtf8(meshError.CStr());
+                return false;
+            }
             if (!mesh->GetVertices().IsEmpty()) {
                 break;
             }

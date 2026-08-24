@@ -31,18 +31,21 @@ GltfAssetBinder::BindFromPath(*go, "assets/models/Anything.glb");
 
 **Still open:** rigid node animation, scene snapshot serialization.
 
-## Phase 3 — Draco / meshopt (next major milestone)
+## Completed (Phase 3 — compression)
 
-**Goal:** Load compressed geometry from web/CAD exporters.
+| Item | API / behavior |
+|------|----------------|
+| `IGltfPrimitiveDecoder` | Strategy interface; `GltfPrimitiveDecoderRegistry` resolves Draco vs uncompressed |
+| `GltfDracoPrimitiveDecoder` | `KHR_draco_mesh_compression` via Google Draco (`SPARK_ENABLE_GLTF_DRACO`, default ON) |
+| `GltfMeshoptBuffers` | `EXT/KHR_meshopt_compression` buffer-view decode via meshoptimizer (`SPARK_ENABLE_GLTF_MESHOPT`, default ON) |
+| `LoadParsedGltfFile` | Shared parse + buffer load + meshopt decode for all glTF loaders |
+| `GltfSkinnedMeshBuilder` | Skinned primitives decode through the same registry (Draco + meshopt accessors) |
+| `GltfMeshBuilder` | Decodes via registry before baking vertices; returns `GltfMeshBuildOutcome` errors |
+| `GltfContentClassifier` | `ProbeResult::compression.draco` / `.meshopt` flags |
 
-| Task | Notes |
-|------|-------|
-| `KHR_draco_mesh_compression` | Integrate Draco decoder; decompress before `AppendPrimitive` |
-| `EXT_meshopt_compression` | Optional; meshoptimizer decode pass |
-| Classifier extension | Probe reports `Compressed` when extensions present |
-| Failure messages | Actionable errors (“enable Draco” / re-export uncompressed) |
+Meshopt views with a separate fallback buffer are read directly; compression-only views are decompressed into `buffer_view.data`.
 
-**Design:** `IGltfPrimitiveDecoder` strategy — uncompressed path stays default; Draco/meshopt plug in behind the same `AppendPrimitive` interface.
+**Still open:** meshopt color filter (meshoptimizer 0.22), compression-only meshopt regression asset.
 
 ## Phase 4 — visual parity (after display works)
 
@@ -60,6 +63,8 @@ Run `GltfDisplayCompatibilityTest` plus manual checks:
 1. DamagedHelmet.glb — rigid PBR  
 2. SheenChair.glb — multi-material rigid  
 3. Fox.glb — skinned bind pose (no animator)  
-4. Draco sample — expect fail until Phase 3  
-5. Multi-node scene — `GltfSceneGraphTest` + `BindFromPath` hierarchy  
-6. Factor-only colored mesh — scalar PBR visible  
+4. Draco sample — `GltfDracoTest` (AvocadoDraco.gltf)  
+5. Meshopt sample — `GltfMeshoptTest` (MeshoptCubeTest.gltf)  
+6. Skinned decode path — `GltfSkinnedCompressionTest` (Fox.glb)  
+7. Multi-node scene — `GltfSceneGraphTest` + `BindFromPath` hierarchy  
+8. Factor-only colored mesh — scalar PBR visible  
