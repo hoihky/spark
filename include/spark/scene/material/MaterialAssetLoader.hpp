@@ -52,6 +52,9 @@ public:
 
     /** Resolves a logical asset key (e.g. <c>materials/hero.sparkmat</c>) to a readable file path. */
     [[nodiscard]] static Utf8String ResolveReadablePath(const char* keyOrPath);
+
+    /** glTF-derived library key, e.g. <c>models/hero.glb#material/2</c>. */
+    [[nodiscard]] static Utf8String MakeGltfMaterialLibraryKey(const char* gltfPath, std::size_t materialIndex);
 };
 
 }  // namespace Spark

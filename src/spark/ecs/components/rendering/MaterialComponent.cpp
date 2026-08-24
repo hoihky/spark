@@ -2,7 +2,6 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/assets/CachedAssetKind.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/material/MaterialAsset.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -16,7 +15,7 @@ void MaterialComponent::OnSignal(GameObject& /*owner*/, SignalId /*id*/, const S
 }
 
 void MaterialComponent::OnDetach(GameObject& owner) {
-    ClearMaterialAsset(owner.GetWorld());
+    libraryBinding.Release(owner.GetWorld());
 }
 
 void MaterialComponent::NotifyMaterialChanged() {
@@ -123,36 +122,17 @@ void MaterialComponent::SetAlphaCutoff(const float cutoff) {
 }
 
 void MaterialComponent::SetMaterialAsset(GameWorld& world, const char* key) {
-    ClearMaterialAsset(world);
-    materialAssetKey = (key != nullptr && key[0] != '\0') ? Utf8String(key) : Utf8String{};
-    if (materialAssetKey.IsEmpty()) {
-        pendingMaterialApply = false;
-        return;
-    }
-    world.RetainAsset(CachedAssetKind::Material, materialAssetKey.CStr());
-    pendingMaterialApply = true;
-    if (world.TryGetMaterialByKeyOrPath(materialAssetKey.CStr()) == nullptr) {
-        world.RequestMaterial(materialAssetKey.CStr());
-    }
+    libraryBinding.Release(world);
+    libraryBinding.Assign(world, key);
     TryApplyMaterialAsset(world);
 }
 
 void MaterialComponent::ClearMaterialAsset(GameWorld& world) {
-    if (!materialAssetKey.IsEmpty()) {
-        world.ReleaseAsset(CachedAssetKind::Material, materialAssetKey.CStr());
-        materialAssetKey = {};
-    }
-    pendingMaterialApply = false;
+    libraryBinding.Release(world);
 }
 
 void MaterialComponent::TryApplyMaterialAsset(GameWorld& world) {
-    if (!pendingMaterialApply || materialAssetKey.IsEmpty()) {
-        return;
-    }
-    if (const MaterialAsset* asset = world.TryGetMaterialByKeyOrPath(materialAssetKey.CStr())) {
-        asset->ApplyTo(*this);
-        pendingMaterialApply = false;
-    }
+    libraryBinding.TryApply(world, [this](const MaterialAsset& asset) { asset.ApplyTo(*this); });
 }
 
 }  // namespace Spark

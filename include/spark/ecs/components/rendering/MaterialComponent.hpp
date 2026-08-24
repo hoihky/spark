@@ -5,6 +5,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialLibraryBinding.hpp"
 
 #include <cstdint>
 
@@ -80,8 +81,8 @@ public:
     void SetAlphaCutoff(float cutoff);
 
     /** Library asset key (e.g. <c>materials/hero.sparkmat</c> or <c>model.glb#material/0</c>). */
-    [[nodiscard]] const Utf8String& GetMaterialAssetKey() const noexcept { return materialAssetKey; }
-    [[nodiscard]] bool HasMaterialAsset() const noexcept { return !materialAssetKey.IsEmpty(); }
+    [[nodiscard]] const Utf8String& GetMaterialAssetKey() const noexcept { return libraryBinding.GetKey(); }
+    [[nodiscard]] bool HasMaterialAsset() const noexcept { return libraryBinding.HasKey(); }
     void SetMaterialAsset(GameWorld& world, const char* key);
     void ClearMaterialAsset(GameWorld& world);
     /** Applies the cached library asset when async loading has completed. */
@@ -110,8 +111,7 @@ private:
     bool doubleSided = false;
     float opacity = 1.0F;
     float alphaCutoff = 0.0F;
-    Utf8String materialAssetKey;
-    bool pendingMaterialApply = false;
+    MaterialLibraryBinding libraryBinding;
 };
 
 }  // namespace Spark

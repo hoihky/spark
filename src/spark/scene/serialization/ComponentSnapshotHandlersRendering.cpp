@@ -366,12 +366,24 @@ public:
         if (multi == nullptr || multi->GetSlotCount() == 0) {
             return false;
         }
+        bool anyLibrarySlot = false;
+        for (std::size_t i = 0; i < multi->GetSlotCount(); ++i) {
+            if (multi->SlotHasMaterialAsset(i)) {
+                anyLibrarySlot = true;
+                break;
+            }
+        }
         Utf8String payload;
-        payload.AppendUtf8("v1 ");
+        payload.AppendUtf8(anyLibrarySlot ? "v2 " : "v1 ");
         char countBuf[32]{};
         std::snprintf(countBuf, sizeof(countBuf), "%zu ", multi->GetSlotCount());
         payload.AppendUtf8(countBuf);
         for (std::size_t i = 0; i < multi->GetSlotCount(); ++i) {
+            if (anyLibrarySlot) {
+                payload.AppendUtf8("\"");
+                payload.AppendUtf8(multi->GetSlotMaterialAssetKey(i).CStr());
+                payload.AppendUtf8("\" ");
+            }
             MaterialSlotSnapshot::Data slotData{};
             MaterialSlotSnapshot::CaptureFromSlot(multi->GetSlot(i), ctx, owner, slotData);
             MaterialSlotSnapshot::AppendSlotV1(slotData, payload);
@@ -389,9 +401,21 @@ public:
         if (!KindTagEquals(record.kind, GetKindTag())) {
             return false;
         }
+        if (std::strncmp(record.payload.CStr(), "v2 ", 3) == 0) {
+            return TryRestoreV2(owner, record, world, ctx);
+        }
         if (std::strncmp(record.payload.CStr(), "v1 ", 3) != 0) {
             return false;
         }
+        return TryRestoreV1(owner, record, world, ctx);
+    }
+
+private:
+    [[nodiscard]] static bool TryRestoreV1(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) {
         const char* cursor = record.payload.CStr() + 3;
         std::size_t slotCount = 0;
         if (std::sscanf(cursor, "%zu", &slotCount) != 1 || slotCount == 0) {
@@ -408,6 +432,7 @@ public:
         if (multi == nullptr) {
             multi = owner.AddComponent<MultiMaterialComponent>();
         }
+        multi->ClearAllMaterialAssets(world);
         multi->Clear();
         multi->ResizeSlots(slotCount);
 
@@ -415,6 +440,51 @@ public:
             MaterialSlotSnapshot::Data slotData{};
             if (!MaterialSlotSnapshot::TryParseSlotV1(cursor, slotData)) {
                 return false;
+            }
+            MaterialSlotSnapshot::ApplyToSlot(multi->GetSlot(i), slotData, owner, world, ctx);
+        }
+        return true;
+    }
+
+    [[nodiscard]] static bool TryRestoreV2(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& world,
+            const SceneApplyContext& ctx) {
+        const char* cursor = record.payload.CStr() + 3;
+        std::size_t slotCount = 0;
+        if (std::sscanf(cursor, "%zu", &slotCount) != 1 || slotCount == 0) {
+            return false;
+        }
+        while (*cursor != '\0' && *cursor != ' ') {
+            ++cursor;
+        }
+        while (*cursor == ' ') {
+            ++cursor;
+        }
+
+        MultiMaterialComponent* multi = owner.GetComponent<MultiMaterialComponent>();
+        if (multi == nullptr) {
+            multi = owner.AddComponent<MultiMaterialComponent>();
+        }
+        multi->ClearAllMaterialAssets(world);
+        multi->Clear();
+        multi->ResizeSlots(slotCount);
+
+        for (std::size_t i = 0; i < slotCount; ++i) {
+            char assetKey[512]{};
+            if (!ParseLeadingQuotedString(cursor, assetKey, sizeof(assetKey))) {
+                return false;
+            }
+            MaterialSlotSnapshot::Data slotData{};
+            if (!MaterialSlotSnapshot::TryParseSlotV1(cursor, slotData)) {
+                return false;
+            }
+            if (assetKey[0] != '\0') {
+                multi->SetSlotMaterialAsset(world, i, assetKey);
+                if (world.TryGetMaterialByKeyOrPath(assetKey) == nullptr && ctx.onDeferredComponent != nullptr) {
+                    ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
+                }
             }
             MaterialSlotSnapshot::ApplyToSlot(multi->GetSlot(i), slotData, owner, world, ctx);
         }

@@ -173,6 +173,9 @@ void ApplyMultiMaterialSlotToSceneDrawItem(
     item.emissiveIntensity = slot.emissiveIntensity;
     item.emissiveFactor = slot.emissiveFactor;
     item.shadingModel = slot.shadingModel;
+    item.toonDiffuseBands = slot.toonDiffuseBands;
+    item.toonRimIntensity = slot.toonRimIntensity;
+    item.toonRimPower = slot.toonRimPower;
     item.doubleSided = slot.doubleSided;
     item.opacity = slot.opacity;
     item.alphaCutoff = slot.alphaCutoff;

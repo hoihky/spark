@@ -116,28 +116,29 @@ void SyncLegacyFields(SkinnedGltfAsset& asset) {
     return PathEndsWithInsensitive(path, ".glb") || PathEndsWithInsensitive(path, ".gltf");
 }
 
-Utf8String MakeGltfMaterialLibraryKey(const char* gltfPath, const std::size_t materialIndex) {
-    Utf8String key(gltfPath != nullptr ? gltfPath : "");
-    key.AppendUtf8("#material/");
-    char indexBuf[16]{};
-    std::snprintf(indexBuf, sizeof(indexBuf), "%zu", materialIndex);
-    key.AppendUtf8(indexBuf);
-    return key;
-}
-
 }  // namespace
 
 void GameWorldAssetCache::RegisterGltfMaterialsInLibrary(
         const char* gltfPath,
-        const Array<GltfMaterialDesc>& materials) {
+        const Array<GltfMaterialDesc>& materials,
+        const GltfMaterialDesc* legacyMaterial) {
     if (gltfPath == nullptr || gltfPath[0] == '\0') {
         return;
     }
-    for (std::size_t i = 0; i < materials.GetSize(); ++i) {
+    auto registerOne = [&](const GltfMaterialDesc& source, const std::size_t index) {
         MaterialAsset libraryMaterial{};
-        libraryMaterial.CopyFromGltfMaterial(materials[i]);
-        libraryMaterial.name = MakeGltfMaterialLibraryKey(gltfPath, i);
+        libraryMaterial.CopyFromGltfMaterial(source);
+        libraryMaterial.name = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfPath, index);
         RegisterMaterial(libraryMaterial, libraryMaterial.name.CStr());
+    };
+    if (!materials.IsEmpty()) {
+        for (std::size_t i = 0; i < materials.GetSize(); ++i) {
+            registerOne(materials[i], i);
+        }
+        return;
+    }
+    if (legacyMaterial != nullptr && legacyMaterial->HasAnyTexture()) {
+        registerOne(*legacyMaterial, 0);
     }
 }
 
@@ -191,7 +192,7 @@ AssetLoadOutcome<GltfAsset> GameWorldAssetCache::TryLoadGltf(const char* path) {
     asset.materials = loaded.materials;
     SyncLegacyFields(asset);
     RegisterAllMaterialTextures(*this, asset);
-    RegisterGltfMaterialsInLibrary(path, asset.materials);
+    RegisterGltfMaterialsInLibrary(path, asset.materials, &asset.material);
     gltfCache.Add(key, asset);
     EnsureInitialRetainCount(CachedAssetKind::Gltf, key);
     outcome.ok = true;
@@ -208,7 +209,7 @@ void GameWorldAssetCache::RegisterGltf(const GltfAsset& asset, const char* cache
     gltfCache.Add(Utf8String(cacheKey), stored);
     EnsureInitialRetainCount(CachedAssetKind::Gltf, Utf8String(cacheKey));
     RegisterAllMaterialTextures(*this, stored);
-    RegisterGltfMaterialsInLibrary(cacheKey, stored.materials);
+    RegisterGltfMaterialsInLibrary(cacheKey, stored.materials, &stored.material);
 }
 
 SkinnedGltfAsset GameWorldAssetCache::LoadSkinnedGltf(const char* path) {
@@ -263,7 +264,7 @@ AssetLoadOutcome<SkinnedGltfAsset> GameWorldAssetCache::TryLoadSkinnedGltf(const
     asset.bindFacingYawOffset = facingYaw;
     SyncLegacyFields(asset);
     RegisterAllMaterialTextures(*this, asset);
-    RegisterGltfMaterialsInLibrary(path, asset.materials);
+    RegisterGltfMaterialsInLibrary(path, asset.materials, &asset.material);
     skinnedGltfCache.Add(key, asset);
     EnsureInitialRetainCount(CachedAssetKind::SkinnedGltf, key);
     outcome.ok = true;
@@ -280,7 +281,7 @@ void GameWorldAssetCache::RegisterSkinnedGltf(const SkinnedGltfAsset& asset, con
     skinnedGltfCache.Add(Utf8String(cacheKey), stored);
     EnsureInitialRetainCount(CachedAssetKind::SkinnedGltf, Utf8String(cacheKey));
     RegisterAllMaterialTextures(*this, stored);
-    RegisterGltfMaterialsInLibrary(cacheKey, stored.materials);
+    RegisterGltfMaterialsInLibrary(cacheKey, stored.materials, &stored.material);
 }
 
 SharedPtr<Texture2D> GameWorldAssetCache::LoadTexture(const char* path) {

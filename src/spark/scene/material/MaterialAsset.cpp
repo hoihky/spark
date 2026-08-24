@@ -129,6 +129,9 @@ void MaterialAsset::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.emissiveIntensity = emissiveIntensity;
     slot.emissiveFactor = emissiveFactor;
     slot.shadingModel = shadingModel;
+    slot.toonDiffuseBands = toonDiffuseBands;
+    slot.toonRimIntensity = toonRimIntensity;
+    slot.toonRimPower = toonRimPower;
     slot.doubleSided = doubleSided;
     slot.opacity = opacity;
     slot.alphaCutoff = alphaCutoff;

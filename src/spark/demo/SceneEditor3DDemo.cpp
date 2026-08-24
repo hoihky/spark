@@ -851,7 +851,7 @@ void SceneEditor3DDemo::LightPresetParams(
             tr->SetTranslation({hitXZ.x, yOnGround, hitXZ.z});
             tr->SetRotation(rot);
             Spark::GltfAssetBinder::BindRigidMesh(
-                    *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
+                    *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F}, full.CStr());
         }
 
         roots.PushBack(go);
@@ -1175,7 +1175,7 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
                     continue;
                 }
                 Spark::GltfAssetBinder::BindRigidMesh(
-                        *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
+                        *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F}, full.CStr());
             }
             roots.PushBack(go);
             placed.PushBack(go);

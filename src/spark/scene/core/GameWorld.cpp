@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/text/Font.hpp"
 #include "spark/engine/IEngineContext.hpp"
@@ -106,6 +107,9 @@ void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& con
         }
         if (MaterialComponent* material = o->GetComponent<MaterialComponent>()) {
             material->TryApplyMaterialAsset(*this);
+        }
+        if (MultiMaterialComponent* multiMaterial = o->GetComponent<MultiMaterialComponent>()) {
+            multiMaterial->TryApplyMaterialAssets(*this);
         }
         o->UpdateComponents(timing, context);
     }

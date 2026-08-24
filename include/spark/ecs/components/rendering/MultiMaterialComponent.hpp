@@ -1,14 +1,17 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
+#include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialLibraryBinding.hpp"
 
 namespace Spark {
 
 class Texture2D;
+class GameWorld;
 struct GltfAsset;
 
 /**
@@ -34,24 +37,49 @@ public:
         float emissiveIntensity = 0.0F;
         Vector3 emissiveFactor{Vector3::One};
         SceneShadingModel shadingModel = SceneShadingModel::LitPbr;
+        std::int32_t toonDiffuseBands = 3;
+        float toonRimIntensity = 0.35F;
+        float toonRimPower = 4.0F;
         bool doubleSided = false;
         float opacity = 1.0F;
         float alphaCutoff = 0.0F;
+        Utf8String materialAssetKey;
     };
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
-    void Clear() noexcept { slots.Clear(); }
+    void OnDetach(GameObject& owner) override;
+
+    void Clear() noexcept;
     void ResizeSlots(std::size_t count);
     [[nodiscard]] std::size_t GetSlotCount() const noexcept { return slots.GetSize(); }
     [[nodiscard]] Slot& GetSlot(std::size_t index) { return slots[index]; }
     [[nodiscard]] const Slot& GetSlot(std::size_t index) const { return slots[index]; }
 
+    [[nodiscard]] const Utf8String& GetSlotMaterialAssetKey(std::size_t index) const;
+    [[nodiscard]] bool SlotHasMaterialAsset(std::size_t index) const noexcept;
+
+    void SetSlotMaterialAsset(GameWorld& world, std::size_t index, const char* key);
+    void ClearSlotMaterialAsset(GameWorld& world, std::size_t index);
+    void ClearAllMaterialAssets(GameWorld& world);
+    void TryApplyMaterialAssets(GameWorld& world);
+
     /** Sizes slots to the glTF material table and copies textures/factors from the asset. */
     void PopulateFromGltfAsset(const GltfAsset& asset);
 
+    /**
+     * Sizes slots and binds <c>gltfPath#material/N</c> library keys when <c>gltfPath</c> is set;
+     * otherwise falls back to <c>PopulateFromGltfAsset</c>.
+     */
+    void BindFromGltfAsset(GameWorld& world, const char* gltfPath, const GltfAsset& asset);
+
 private:
+    void NotifyMaterialChanged();
+    void EnsureSlotAuxSize(std::size_t count);
+    void ReleaseSlotBinding(GameWorld& world, std::size_t index);
+
     Array<Slot> slots;
+    Array<MaterialLibraryBinding> slotBindings;
 };
 
 }  // namespace Spark

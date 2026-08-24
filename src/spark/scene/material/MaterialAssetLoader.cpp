@@ -98,6 +98,9 @@ bool PopulateAssetFromSlot(
     out.emissiveIntensity = slot.emissiveIntensity;
     out.emissiveFactor = slot.emissiveFactor;
     out.shadingModel = slot.shadingModel;
+    out.toonDiffuseBands = slot.toonDiffuseBands;
+    out.toonRimIntensity = slot.toonRimIntensity;
+    out.toonRimPower = slot.toonRimPower;
     out.doubleSided = slot.doubleSided;
     out.opacity = slot.opacity;
     out.alphaCutoff = slot.alphaCutoff;
@@ -166,6 +169,17 @@ bool TryReadSparkMatBody(const char* path, MaterialSlotSnapshot::Data& slot) {
 }
 
 }  // namespace
+
+Utf8String MaterialAssetLoader::MakeGltfMaterialLibraryKey(
+        const char* gltfPath,
+        const std::size_t materialIndex) {
+    Utf8String key(gltfPath != nullptr ? gltfPath : "");
+    key.AppendUtf8("#material/");
+    char indexBuf[16]{};
+    std::snprintf(indexBuf, sizeof(indexBuf), "%zu", materialIndex);
+    key.AppendUtf8(indexBuf);
+    return key;
+}
 
 Utf8String MaterialAssetLoader::ResolveReadablePath(const char* keyOrPath) {
     if (keyOrPath == nullptr || keyOrPath[0] == '\0') {

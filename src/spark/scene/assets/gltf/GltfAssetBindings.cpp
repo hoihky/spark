@@ -5,7 +5,9 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
+#include "spark/scene/material/MaterialAssetLoader.hpp"
 
 namespace Spark {
 
@@ -33,19 +35,25 @@ bool AssetHasMaterials(const SkinnedGltfAsset& asset) noexcept {
     return asset.material.HasAnyTexture();
 }
 
-void BindMaterials(GameObject& owner, const GltfAsset& asset) {
+void BindMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLibraryKey) {
     if (!asset.mesh || !AssetHasMaterials(asset)) {
         return;
     }
+    GameWorld& world = owner.GetWorld();
     const bool multiSubmesh = asset.mesh->GetSubmeshes().GetSize() > 1 ||
                               (!asset.materials.IsEmpty() && asset.materials.GetSize() > 1);
     if (multiSubmesh) {
         if (MultiMaterialComponent* multi = owner.AddComponent<MultiMaterialComponent>()) {
-            multi->PopulateFromGltfAsset(asset);
+            multi->BindFromGltfAsset(world, gltfLibraryKey, asset);
         }
         return;
     }
     if (MaterialComponent* mat = owner.AddComponent<MaterialComponent>()) {
+        if (gltfLibraryKey != nullptr && gltfLibraryKey[0] != '\0') {
+            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfLibraryKey, 0);
+            mat->SetMaterialAsset(world, key.CStr());
+            return;
+        }
         if (!asset.materials.IsEmpty()) {
             ApplyGltfMaterialDesc(*mat, asset.materials[0]);
         } else {
@@ -54,10 +62,11 @@ void BindMaterials(GameObject& owner, const GltfAsset& asset) {
     }
 }
 
-void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset) {
+void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset, const char* gltfLibraryKey) {
     if (!asset.mesh || !AssetHasMaterials(asset)) {
         return;
     }
+    GameWorld& world = owner.GetWorld();
     const bool multiSubmesh = asset.mesh->GetSubmeshes().GetSize() > 1 ||
                               (!asset.materials.IsEmpty() && asset.materials.GetSize() > 1);
     if (multiSubmesh) {
@@ -65,11 +74,16 @@ void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset) {
         rigidView.material = asset.material;
         rigidView.materials = asset.materials;
         if (MultiMaterialComponent* multi = owner.AddComponent<MultiMaterialComponent>()) {
-            multi->PopulateFromGltfAsset(rigidView);
+            multi->BindFromGltfAsset(world, gltfLibraryKey, rigidView);
         }
         return;
     }
     if (MaterialComponent* mat = owner.AddComponent<MaterialComponent>()) {
+        if (gltfLibraryKey != nullptr && gltfLibraryKey[0] != '\0') {
+            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfLibraryKey, 0);
+            mat->SetMaterialAsset(world, key.CStr());
+            return;
+        }
         if (!asset.materials.IsEmpty()) {
             ApplyGltfMaterialDesc(*mat, asset.materials[0]);
         } else {
@@ -80,39 +94,41 @@ void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset) {
 
 }  // namespace
 
-void GltfAssetBinder::ApplyMaterials(GameObject& owner, const GltfAsset& asset) {
-    BindMaterials(owner, asset);
+void GltfAssetBinder::ApplyMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLibraryKey) {
+    BindMaterials(owner, asset, gltfLibraryKey);
 }
 
-void GltfAssetBinder::ApplyMaterials(GameObject& owner, const SkinnedGltfAsset& asset) {
-    BindMaterials(owner, asset);
+void GltfAssetBinder::ApplyMaterials(GameObject& owner, const SkinnedGltfAsset& asset, const char* gltfLibraryKey) {
+    BindMaterials(owner, asset, gltfLibraryKey);
 }
 
 void GltfAssetBinder::BindRigidMesh(
         GameObject& owner,
         const GltfAsset& asset,
         const SceneMeshSlot slot,
-        const Vector3& albedo) {
+        const Vector3& albedo,
+        const char* gltfLibraryKey) {
     if (!asset.mesh) {
         return;
     }
     if (owner.GetComponent<MeshComponent>() == nullptr) {
         owner.AddComponent<MeshComponent>(asset.mesh, slot, albedo);
     }
-    BindMaterials(owner, asset);
+    BindMaterials(owner, asset, gltfLibraryKey);
 }
 
 void GltfAssetBinder::BindSkinnedMesh(
         GameObject& owner,
         const SkinnedGltfAsset& asset,
-        const Vector3& /*albedo*/) {
+        const Vector3& /*albedo*/,
+        const char* gltfLibraryKey) {
     if (!asset.mesh) {
         return;
     }
     if (owner.GetComponent<SkinnedMeshComponent>() == nullptr) {
         owner.AddComponent<SkinnedMeshComponent>(asset.mesh);
     }
-    BindMaterials(owner, asset);
+    BindMaterials(owner, asset, gltfLibraryKey);
 }
 
 }  // namespace Spark

@@ -40,6 +40,10 @@ public:
         float opacity = 1.0F;
         float alphaCutoff = 0.0F;
         SceneShadingModel shadingModel = SceneShadingModel::LitPbr;
+        std::int32_t toonDiffuseBands = 3;
+        float toonRimIntensity = 0.35F;
+        float toonRimPower = 4.0F;
+        Utf8String materialAssetKey;
     };
 
     static void CaptureFromMaterial(
@@ -51,7 +55,8 @@ public:
             const MultiMaterialComponent::Slot& slot,
             const SceneCaptureContext& ctx,
             const GameObject& owner,
-            Data& out);
+            Data& out,
+            const char* materialAssetKey = nullptr);
     static void CaptureFromAsset(
             const MaterialAsset& asset,
             Data& out,

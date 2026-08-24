@@ -38,8 +38,8 @@ private:
 
     void PollPendingGltfLoads(Spark::GameWorld& w);
     void SpawnHero(Spark::GameWorld& w, const Spark::GltfAsset& asset, const Spark::Utf8String& path);
-    void SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset);
-    void SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& asset);
+    void SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset, const Spark::Utf8String& path);
+    void SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& asset, const Spark::Utf8String& path);
 
     Spark::Array<PendingGltfLoad> pendingGltfLoads{};
     Spark::GameWorld* loadedWorld = nullptr;

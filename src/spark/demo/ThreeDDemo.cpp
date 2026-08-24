@@ -251,7 +251,8 @@ void ThreeDDemo::SpawnHero(
             usedHelmetGltf ? asset : Spark::GltfAsset{.mesh = heroMeshAsset},
             Spark::SceneMeshSlot::Custom,
             Spark::Vector3{usedHelmetGltf ? 1.0F : 0.92F, usedHelmetGltf ? 1.0F : 0.18F,
-                           usedHelmetGltf ? 1.0F : 0.12F});
+                           usedHelmetGltf ? 1.0F : 0.12F},
+            usedHelmetGltf ? path.CStr() : nullptr);
     std::println(
             std::cerr,
             "Spark: {} — {} vertices, {} indices, {} submeshes",
@@ -262,7 +263,7 @@ void ThreeDDemo::SpawnHero(
     roots.PushBack(heroObject);
 }
 
-void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset) {
+void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset, const Spark::Utf8String& path) {
     if (!asset.mesh) {
         return;
     }
@@ -290,7 +291,7 @@ void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset) 
         tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi * 0.35F));
     }
     Spark::GltfAssetBinder::BindRigidMesh(
-            *chairObject, asset, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F});
+            *chairObject, asset, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F}, path.CStr());
     std::println(
             std::cerr,
             "Spark: Khronos SheenChair — {} vertices, {} indices, {} submeshes",
@@ -300,7 +301,7 @@ void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset) 
     roots.PushBack(chairObject);
 }
 
-void ThreeDDemo::SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& asset) {
+void ThreeDDemo::SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& asset, const Spark::Utf8String& path) {
     if (!asset.mesh || !asset.skeleton) {
         return;
     }
@@ -317,7 +318,7 @@ void ThreeDDemo::SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& as
     foxObject->AddComponent<Spark::AnimatorComponent>(asset.skeleton, asset.walkClipIndex, 1.2F);
     foxFsm->ConfigureLocomotionFromSkeleton(*asset.skeleton, asset.walkClipIndex);
     foxFsm->SetWalkSpeedThreshold(0.25F);
-    Spark::GltfAssetBinder::BindSkinnedMesh(*foxObject, asset);
+    Spark::GltfAssetBinder::BindSkinnedMesh(*foxObject, asset, Spark::Vector3::One, path.CStr());
     std::println(
             std::cerr,
             "Spark: Khronos Fox — walk clip {}, {} joints, {} skinned verts, {} submeshes",
@@ -347,7 +348,7 @@ void ThreeDDemo::PollPendingGltfLoads(Spark::GameWorld& w) {
                 }
                 continue;
             }
-            SpawnFox(w, skinned);
+            SpawnFox(w, skinned, pending.path);
             pending.spawned = true;
             continue;
         }
@@ -371,7 +372,7 @@ void ThreeDDemo::PollPendingGltfLoads(Spark::GameWorld& w) {
         if (pending.kind == PendingGltfKind::Hero) {
             SpawnHero(w, asset, pending.path);
         } else {
-            SpawnChair(w, asset);
+            SpawnChair(w, asset, pending.path);
         }
         pending.spawned = true;
     }

@@ -51,18 +51,32 @@ public:
 
 ## Multi-Material glTF
 
-For assets with multiple material slots per mesh:
+For assets with multiple material slots per mesh, prefer `GltfAssetBinder` so slots bind to shared library keys (`path.glb#material/N`):
 
 ```cpp
 GltfAsset building = world.LoadGltf("assets/models/Building.glb");
 auto* go = world.CreateGameObject();
 go->AddComponent<TransformComponent>();
-go->AddComponent<MeshComponent>(building.mesh, SceneMeshSlot::Custom, Vector3::One);
-auto* multi = go->AddComponent<MultiMaterialComponent>();
-multi->PopulateFromGltfAsset(building);
+GltfAssetBinder::BindRigidMesh(*go, building, SceneMeshSlot::Custom, Vector3::One,
+        "assets/models/Building.glb");
 ```
 
-`ThreeDDemo` and `SkyDemo` use `MultiMaterialComponent` for glTF props with per-submesh textures.
+`BindRigidMesh` / `ApplyMaterials` register and retain glTF materials in the world cache. Each slot can also reference a standalone `.sparkmat` via `MultiMaterialComponent::SetSlotMaterialAsset`.
+
+For inline-only setup (no library retain), `PopulateFromGltfAsset` still copies textures and factors directly into slot storage.
+
+`ThreeDDemo` and `SkyDemo` use multi-material glTF props with library keys when loaded through `GltfAssetBinder`.
+
+## Material library (`.sparkmat`)
+
+Author reusable materials under `assets/materials/*.sparkmat`. Components reference them by key:
+
+```cpp
+material->SetMaterialAsset(world, "materials/hero.sparkmat");
+multi->SetSlotMaterialAsset(world, 0, "materials/trim.sparkmat");
+```
+
+glTF imports also expose `models/Foo.glb#material/0` keys. `.sparkmat` files persist full PBR scalars, shading model, and toon fields (`sparkmat_v1` + slot v1 payload).
 
 ## Spawn a Lit glTF Prop
 

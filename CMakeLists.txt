@@ -536,6 +536,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/assets/gltf/GltfAssetBindings.cpp
         src/spark/scene/material/GltfMaterial.cpp
         src/spark/scene/material/MaterialAsset.cpp
+        src/spark/scene/material/MaterialLibraryBinding.cpp
         src/spark/scene/material/MaterialAssetLoader.cpp
         src/spark/scene/texture/SceneTextureAtlas.cpp
         src/spark/scene/mesh/SkinnedMesh.cpp

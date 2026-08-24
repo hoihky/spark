@@ -104,8 +104,8 @@ See `include/spark/engine/SceneRenderParams.hpp` (`MaxSceneTextures = 32`) and `
 |----------|-----|----------------|
 | **P1** | **32 textures/frame at 1024²** | Large scenes still overflow the layer budget |
 | **P1** | **Runtime ASTC encode needs astc-encoder fetch** | Use `.ktx2` pre-bakes or BC7/RGBA8 fallback until CMake downloads succeed |
-| **P1** | **No shared `MaterialAsset`** | Per-instance duplication; no material library |
-| **P1** | **Multi-material glTF meshes** | Only primary material per file is imported |
+| **P1** | ~~**No shared `MaterialAsset`**~~ | ✅ `MaterialAsset`, `.sparkmat`, glTF `#material/N` keys, `MultiMaterialComponent` parity |
+| **P1** | **Multi-material glTF meshes** | Import + library keys exist; per-slot editing workflow still maturing |
 | **P2** | **No GPU decals** | Bullet holes, blood, ability marks need mesh/sprite workarounds |
 | **P2** | **Single UV set** | No lightmaps or detail UV |
 | **P2** | **No texture streaming** | Large arenas / open hubs |
@@ -220,7 +220,7 @@ DIY LevelManager
 
 14. Foot IK + aim IK
 15. Texture compression + streaming
-16. Shared `MaterialAsset` + `.sparkmat` assets
+16. ~~Shared `MaterialAsset` + `.sparkmat` assets~~ ✅ (Phase 2 complete)
 17. World region streaming
 18. Skinned draw budget + palette cache
 19. Full component serialization (FSM, AI, audio, sockets)

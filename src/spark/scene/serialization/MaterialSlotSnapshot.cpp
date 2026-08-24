@@ -171,6 +171,9 @@ void ApplyScalarsToMaterial(MaterialComponent& material, const MaterialSlotSnaps
     material.SetEmissive(data.emissiveColor, data.emissiveIntensity);
     material.SetEmissiveFactor(data.emissiveFactor);
     material.SetShadingModel(data.shadingModel);
+    material.SetToonDiffuseBands(data.toonDiffuseBands);
+    material.SetToonRimIntensity(data.toonRimIntensity);
+    material.SetToonRimPower(data.toonRimPower);
     material.SetDoubleSided(data.doubleSided);
     material.SetOpacity(data.opacity);
     material.SetAlphaCutoff(data.alphaCutoff);
@@ -187,6 +190,9 @@ void ApplyScalarsToSlot(MultiMaterialComponent::Slot& slot, const MaterialSlotSn
     slot.emissiveIntensity = data.emissiveIntensity;
     slot.emissiveFactor = data.emissiveFactor;
     slot.shadingModel = data.shadingModel;
+    slot.toonDiffuseBands = data.toonDiffuseBands;
+    slot.toonRimIntensity = data.toonRimIntensity;
+    slot.toonRimPower = data.toonRimPower;
     slot.doubleSided = data.doubleSided;
     slot.opacity = data.opacity;
     slot.alphaCutoff = data.alphaCutoff;
@@ -217,13 +223,18 @@ void MaterialSlotSnapshot::CaptureFromMaterial(
     out.opacity = material.GetOpacity();
     out.alphaCutoff = material.GetAlphaCutoff();
     out.shadingModel = material.GetShadingModel();
+    out.toonDiffuseBands = material.GetToonDiffuseBands();
+    out.toonRimIntensity = material.GetToonRimIntensity();
+    out.toonRimPower = material.GetToonRimPower();
+    out.materialAssetKey = material.GetMaterialAssetKey();
 }
 
 void MaterialSlotSnapshot::CaptureFromSlot(
         const MultiMaterialComponent::Slot& slot,
         const SceneCaptureContext& ctx,
         const GameObject& owner,
-        Data& out) {
+        Data& out,
+        const char* materialAssetKey) {
     out = Data{};
     out.baseColorPath = ResolveTexturePath(slot.baseColor, owner, ctx);
     out.normalPath = ResolveTexturePath(slot.normalMap, owner, ctx);
@@ -242,6 +253,14 @@ void MaterialSlotSnapshot::CaptureFromSlot(
     out.opacity = slot.opacity;
     out.alphaCutoff = slot.alphaCutoff;
     out.shadingModel = slot.shadingModel;
+    out.toonDiffuseBands = slot.toonDiffuseBands;
+    out.toonRimIntensity = slot.toonRimIntensity;
+    out.toonRimPower = slot.toonRimPower;
+    if (materialAssetKey != nullptr && materialAssetKey[0] != '\0') {
+        out.materialAssetKey = Utf8String(materialAssetKey);
+    } else {
+        out.materialAssetKey = slot.materialAssetKey;
+    }
 }
 
 void MaterialSlotSnapshot::CaptureFromAsset(
@@ -267,6 +286,9 @@ void MaterialSlotSnapshot::CaptureFromAsset(
     out.opacity = asset.opacity;
     out.alphaCutoff = asset.alphaCutoff;
     out.shadingModel = asset.shadingModel;
+    out.toonDiffuseBands = asset.toonDiffuseBands;
+    out.toonRimIntensity = asset.toonRimIntensity;
+    out.toonRimPower = asset.toonRimPower;
 }
 
 void MaterialSlotSnapshot::AppendSlotV1(const Data& data, Utf8String& out) {
@@ -276,7 +298,7 @@ void MaterialSlotSnapshot::AppendSlotV1(const Data& data, Utf8String& out) {
             buf,
             sizeof(buf),
             "\"%s\" \"%s\" \"%s\" \"%s\" %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f "
-            "%.6f %.6f %.6f %.6f %.6f %d %.6f %.6f %d",
+            "%.6f %.6f %.6f %.6f %.6f %d %.6f %.6f %d %d %.6f %.6f",
             data.baseColorPath.CStr(),
             data.normalPath.CStr(),
             data.metallicRoughnessPath.CStr(),
@@ -299,7 +321,10 @@ void MaterialSlotSnapshot::AppendSlotV1(const Data& data, Utf8String& out) {
             data.doubleSided ? 1 : 0,
             data.opacity,
             data.alphaCutoff,
-            shadingModel);
+            shadingModel,
+            data.toonDiffuseBands,
+            data.toonRimIntensity,
+            data.toonRimPower);
     if (written <= 0 || static_cast<std::size_t>(written) >= sizeof(buf)) {
         return;
     }
@@ -359,6 +384,16 @@ bool MaterialSlotSnapshot::TryParseSlotV1(const char*& cursor, Data& out) {
     }
     cursor += consumed;
 
+    std::int32_t toonDiffuseBands = 3;
+    float toonRimIntensity = 0.35F;
+    float toonRimPower = 4.0F;
+    int toonConsumed = 0;
+    int toonBandsInt = 3;
+    if (std::sscanf(cursor, "%d %f %f%n", &toonBandsInt, &toonRimIntensity, &toonRimPower, &toonConsumed) >= 3) {
+        cursor += toonConsumed;
+        toonDiffuseBands = toonBandsInt;
+    }
+
     out = Data{};
     out.baseColorPath = Utf8String(basePath);
     out.normalPath = Utf8String(normalPath);
@@ -377,6 +412,9 @@ bool MaterialSlotSnapshot::TryParseSlotV1(const char*& cursor, Data& out) {
     out.opacity = opacity;
     out.alphaCutoff = alphaCutoff;
     out.shadingModel = static_cast<SceneShadingModel>(shadingModel);
+    out.toonDiffuseBands = toonDiffuseBands;
+    out.toonRimIntensity = toonRimIntensity;
+    out.toonRimPower = toonRimPower;
     return true;
 }
 

@@ -117,7 +117,10 @@ private:
     bool EvictIfUnretained(CachedAssetKind kind, const Utf8String& key);
     [[nodiscard]] std::uint32_t GetRetainCount(CachedAssetKind kind, const Utf8String& key) const;
 
-    void RegisterGltfMaterialsInLibrary(const char* gltfPath, const Array<GltfMaterialDesc>& materials);
+    void RegisterGltfMaterialsInLibrary(
+            const char* gltfPath,
+            const Array<GltfMaterialDesc>& materials,
+            const GltfMaterialDesc* legacyMaterial = nullptr);
 
     HashMap<Utf8String, SharedPtr<Mesh>, Detail::Utf8StringHasher> meshCache;
     HashMap<Utf8String, GltfAsset, Detail::Utf8StringHasher> gltfCache;

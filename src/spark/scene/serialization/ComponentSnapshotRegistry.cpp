@@ -273,7 +273,7 @@ public:
                     owner.AddComponent<MeshComponent>(mesh, slot, albedo);
                 }
                 if (world.TryGetCachedGltf(full.CStr(), gltfAsset) && gltfAsset.mesh) {
-                    GltfAssetBinder::ApplyMaterials(owner, gltfAsset);
+                    GltfAssetBinder::ApplyMaterials(owner, gltfAsset, full.CStr());
                 }
                 return true;
             } else {
@@ -283,7 +283,7 @@ public:
                     if (owner.GetComponent<MeshComponent>() == nullptr) {
                         owner.AddComponent<MeshComponent>(mesh, slot, albedo);
                     }
-                    GltfAssetBinder::ApplyMaterials(owner, g);
+                    GltfAssetBinder::ApplyMaterials(owner, g, full.CStr());
                 }
             }
         }
@@ -817,7 +817,7 @@ public:
         if (owner.GetComponent<SkinnedMeshComponent>() == nullptr) {
             owner.AddComponent<SkinnedMeshComponent>(skinned.mesh);
         }
-        GltfAssetBinder::ApplyMaterials(owner, skinned);
+        GltfAssetBinder::ApplyMaterials(owner, skinned, full.CStr());
         AnimatorComponent* anim = owner.GetComponent<AnimatorComponent>();
         if (anim == nullptr) {
             anim = owner.AddComponent<AnimatorComponent>(skinned.skeleton, clipIndex, speed);
