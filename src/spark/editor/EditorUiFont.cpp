@@ -2,7 +2,7 @@
 
 #include "spark/config.hpp"
 #include "spark/text/Font.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <iostream>
 #include <print>

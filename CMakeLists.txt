@@ -514,42 +514,42 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/LocomotionClipSet.cpp
-        src/spark/scene/FlyCamera.cpp
-        src/spark/scene/Camera2D.cpp
-        src/spark/scene/Camera.cpp
-        src/spark/scene/CharacterCameraRig.cpp
-        src/spark/scene/GameWorld.cpp
-        src/spark/scene/GameWorldAssetCache.cpp
-        src/spark/scene/SpatialMath.cpp
-        src/spark/scene/SceneSpatialCull.cpp
-        src/spark/scene/SceneSpriteTileCull.cpp
-        src/spark/scene/SceneTileAtlas.cpp
-        src/spark/scene/SceneTilemapSubmit.cpp
-        src/spark/scene/RenderLayerRegistry.cpp
-        src/spark/scene/DrawableSortResolver.cpp
-        src/spark/scene/mesh.cpp
-        src/spark/scene/MeshRaycast.cpp
-        src/spark/scene/SceneRaycast.cpp
-        src/spark/scene/TerrainMeshGenerator.cpp
-        src/spark/scene/mesh_gltf.cpp
-        src/spark/scene/GltfRigidLoader.cpp
-        src/spark/scene/GltfAssetBindings.cpp
-        src/spark/scene/GltfMaterial.cpp
-        src/spark/scene/MaterialAsset.cpp
-        src/spark/scene/MaterialAssetLoader.cpp
-        src/spark/scene/SceneTextureAtlas.cpp
-        src/spark/scene/SkinnedMesh.cpp
-        src/spark/scene/skinned_mesh_gltf.cpp
-        src/spark/scene/cgltf_impl.cpp
-        src/spark/scene/Texture2D.cpp
-        src/spark/scene/TextureMipLevel.cpp
-        src/spark/scene/TextureFormat.cpp
-        src/spark/scene/TextureMipChain.cpp
-        src/spark/scene/TextureBlockCompressor.cpp
-        src/spark/scene/TextureLoader.cpp
-        src/spark/scene/StbImageTextureLoader.cpp
-        src/spark/scene/Ktx2TextureLoader.cpp
-        src/spark/scene/stb_image_impl.cpp
+        src/spark/scene/camera/FlyCamera.cpp
+        src/spark/scene/camera/Camera2D.cpp
+        src/spark/scene/camera/Camera.cpp
+        src/spark/scene/camera/CharacterCameraRig.cpp
+        src/spark/scene/core/GameWorld.cpp
+        src/spark/scene/assets/GameWorldAssetCache.cpp
+        src/spark/scene/query/SpatialMath.cpp
+        src/spark/scene/submit/SceneSpatialCull.cpp
+        src/spark/scene/submit/SceneSpriteTileCull.cpp
+        src/spark/scene/texture/SceneTileAtlas.cpp
+        src/spark/scene/submit/SceneTilemapSubmit.cpp
+        src/spark/scene/submit/RenderLayerRegistry.cpp
+        src/spark/scene/submit/DrawableSortResolver.cpp
+        src/spark/scene/mesh/Mesh.cpp
+        src/spark/scene/mesh/MeshRaycast.cpp
+        src/spark/scene/query/SceneRaycast.cpp
+        src/spark/scene/mesh/TerrainMeshGenerator.cpp
+        src/spark/scene/mesh/mesh_gltf.cpp
+        src/spark/scene/assets/gltf/GltfRigidLoader.cpp
+        src/spark/scene/assets/gltf/GltfAssetBindings.cpp
+        src/spark/scene/material/GltfMaterial.cpp
+        src/spark/scene/material/MaterialAsset.cpp
+        src/spark/scene/material/MaterialAssetLoader.cpp
+        src/spark/scene/texture/SceneTextureAtlas.cpp
+        src/spark/scene/mesh/SkinnedMesh.cpp
+        src/spark/scene/mesh/skinned_mesh_gltf.cpp
+        src/spark/scene/assets/gltf/cgltf_impl.cpp
+        src/spark/scene/texture/Texture2D.cpp
+        src/spark/scene/texture/TextureMipLevel.cpp
+        src/spark/scene/texture/TextureFormat.cpp
+        src/spark/scene/texture/TextureMipChain.cpp
+        src/spark/scene/texture/TextureBlockCompressor.cpp
+        src/spark/scene/texture/TextureLoader.cpp
+        src/spark/scene/texture/StbImageTextureLoader.cpp
+        src/spark/scene/texture/Ktx2TextureLoader.cpp
+        src/spark/scene/texture/stb_image_impl.cpp
         src/spark/text/Font.cpp
         src/spark/ecs/components/rendering/TextOverlayComponent.cpp
         src/spark/ecs/components/ui/UiCanvasComponent.cpp
@@ -630,20 +630,20 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/present/VulkanDepthResources.cpp
         src/spark/render/present/VulkanPresentationSwapchain.cpp
         src/spark/render/present/VulkanPresentationFramebuffers.cpp
-        src/spark/scene/RenderVolumes.cpp
-        src/spark/scene/VolumeRegions.cpp
-        src/spark/scene/SceneSubmit.cpp
-        src/spark/scene/SceneSubmitDrawPartition.cpp
-        src/spark/scene/SceneSubmitLighting.cpp
-        src/spark/scene/SceneSubmitMaterial.cpp
+        src/spark/scene/volume/RenderVolumes.cpp
+        src/spark/scene/volume/VolumeRegions.cpp
+        src/spark/scene/submit/SceneSubmit.cpp
+        src/spark/scene/submit/SceneSubmitDrawPartition.cpp
+        src/spark/scene/submit/SceneSubmitLighting.cpp
+        src/spark/scene/submit/SceneSubmitMaterial.cpp
         src/spark/scene/serialization/ComponentSnapshotRegistry.cpp
         src/spark/scene/serialization/MaterialSlotSnapshot.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp
         src/spark/scene/serialization/SceneSerializer.cpp
-        src/spark/scene/GameWorldAssetLoader.cpp
-        src/spark/scene/SceneManager.cpp
+        src/spark/scene/assets/GameWorldAssetLoader.cpp
+        src/spark/scene/core/SceneManager.cpp
         src/spark/physics/BroadPhase2D.cpp
         src/spark/physics/BroadPhase3D.cpp
         src/spark/physics/colliders/Collider2D.cpp

@@ -4,7 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/math/Vector4.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -3,7 +3,7 @@
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TilemapObjectQuery.hpp"
 #include "spark/scene/tilemap/TilemapObjectSpawnRegistry.hpp"
 

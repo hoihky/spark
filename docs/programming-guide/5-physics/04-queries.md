@@ -96,8 +96,8 @@ Or use `Rigidbody2DComponent::IsGrounded()` after simulation.
 3D physics queries for triggers and overlaps are handled via `TriggerVolume3DComponent` signals and `PhysicsSubsystem::SimulateAll3D`. For **picking** and **hitscan weapons**, use scene raycast helpers:
 
 ```cpp
-#include "spark/scene/MeshRaycast.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/mesh/MeshRaycast.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 // Sphere hit test (FPS targets, simple pickups)
 float hitT = 0.0F;

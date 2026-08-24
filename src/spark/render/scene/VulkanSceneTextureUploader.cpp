@@ -3,10 +3,10 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/core/VulkanRendererGpu.hpp"
 #include "spark/render/gpu/VulkanTextureFormatSupport.hpp"
-#include "spark/scene/Texture2D.hpp"
-#include "spark/scene/TextureBlockCompressor.hpp"
-#include "spark/scene/TextureFormat.hpp"
-#include "spark/scene/TextureMipChain.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
+#include "spark/scene/texture/TextureBlockCompressor.hpp"
+#include "spark/scene/texture/TextureFormat.hpp"
+#include "spark/scene/texture/TextureMipChain.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -122,6 +122,15 @@ void VulkanSceneTextureUploader::CreateResources(
                             cb, stagingBuffer, arrayImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
                     mipOffset += mipBytes;
                 }
+                VulkanRendererGpu::SceneTexBarrierRegion(
+                        cb,
+                        arrayImage,
+                        i,
+                        1,
+                        0,
+                        mipLevelCount,
+                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             } else {
                 VkBufferImageCopy region{};
                 region.bufferOffset = layerPitch * static_cast<VkDeviceSize>(i);
@@ -136,13 +145,6 @@ void VulkanSceneTextureUploader::CreateResources(
                         cb, arrayImage, kLayerSize, kLayerSize, i, 1, mipLevelCount);
             }
         }
-        VulkanRendererGpu::SceneTexBarrier(
-                cb,
-                arrayImage,
-                kLayerCount,
-                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                mipLevelCount);
     });
     layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     ResetUploadCache();
@@ -325,13 +327,22 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
 
     const VkDeviceSize layerPitch = LayerStagingPitch();
 
-    VulkanRendererGpu::SceneTexBarrier(
-            commandBuffer, arrayImage, kLayerCount, layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevelCount);
-
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
         if (!pendingLayerDirty[i]) {
             continue;
         }
+
+        const std::uint32_t mipsForUpload = pendingNearestMip[i] ? 1U : mipLevelCount;
+        VulkanRendererGpu::SceneTexBarrierRegion(
+                commandBuffer,
+                arrayImage,
+                i,
+                1,
+                0,
+                mipsForUpload,
+                layout,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
         const VkDeviceSize layerOffset = layerPitch * static_cast<VkDeviceSize>(i);
         if (UsesBlockCompression(arrayMode)) {
             VkDeviceSize mipOffset = 0;
@@ -356,6 +367,15 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
                         &region);
                 mipOffset += mipBytes;
             }
+            VulkanRendererGpu::SceneTexBarrierRegion(
+                    commandBuffer,
+                    arrayImage,
+                    i,
+                    1,
+                    0,
+                    mipLevelCount,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         } else {
             VkBufferImageCopy region{};
             region.bufferOffset = layerOffset;
@@ -372,7 +392,15 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
                     1,
                     &region);
             if (pendingNearestMip[i]) {
-                // Sprites sample mip 0 only; skip mip generation to avoid atlas bleed in unused levels.
+                VulkanRendererGpu::SceneTexBarrierRegion(
+                        commandBuffer,
+                        arrayImage,
+                        i,
+                        1,
+                        0,
+                        1,
+                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             } else {
                 VulkanRendererGpu::GenerateMipmapsBlit(
                         commandBuffer, arrayImage, kLayerSize, kLayerSize, i, 1, mipLevelCount);
@@ -380,13 +408,6 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
         }
     }
 
-    VulkanRendererGpu::SceneTexBarrier(
-            commandBuffer,
-            arrayImage,
-            kLayerCount,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            mipLevelCount);
     layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     lastUploadedCount = pendingUploadCount;

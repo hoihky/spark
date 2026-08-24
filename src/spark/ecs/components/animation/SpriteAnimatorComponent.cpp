@@ -2,7 +2,7 @@
 
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 #include <algorithm>
 #include <cmath>

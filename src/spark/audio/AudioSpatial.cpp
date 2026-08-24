@@ -5,8 +5,8 @@
 #include "spark/ecs/components/camera/CameraComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scene/Camera.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/camera/Camera.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <cmath>
 

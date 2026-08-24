@@ -4,7 +4,7 @@
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/Mesh.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
 
 #include <algorithm>
 

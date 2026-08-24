@@ -3,8 +3,8 @@
 #include "spark/audio/AudioListenerPose.hpp"
 #include "spark/ecs/components/audio/AmbientZoneComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/VolumeRegions.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/volume/VolumeRegions.hpp"
 
 namespace Spark {
 

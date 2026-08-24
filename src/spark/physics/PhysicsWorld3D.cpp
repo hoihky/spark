@@ -8,7 +8,7 @@
 #include "spark/physics/simulation/JointSolver3D.hpp"
 #include "spark/physics/simulation/RigidbodyIntegrator3D.hpp"
 #include "spark/physics/SpatialHashGrid3D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 

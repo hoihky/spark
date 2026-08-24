@@ -3,7 +3,7 @@
 #include "spark/audio/SoundSubsystem.hpp"
 #include "spark/engine/IGame.hpp"
 #include "spark/engine/ISceneProvider.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 namespace Spark {
 

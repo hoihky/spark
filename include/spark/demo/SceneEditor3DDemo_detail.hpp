@@ -2,7 +2,7 @@
 
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/scene/MeshRaycast.hpp"
+#include "spark/scene/mesh/MeshRaycast.hpp"
 
 #include <algorithm>
 #include <cmath>

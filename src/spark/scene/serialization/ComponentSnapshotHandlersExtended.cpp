@@ -13,8 +13,8 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/GameWorldAssetLoader.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 

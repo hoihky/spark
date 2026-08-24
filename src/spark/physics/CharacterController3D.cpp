@@ -11,7 +11,7 @@
 #include "spark/physics/colliders/ColliderBakePipeline3D.hpp"
 #include "spark/physics/Collision3D.hpp"
 #include "spark/physics/SpatialHashGrid3D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 #include <cmath>

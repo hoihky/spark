@@ -3,7 +3,7 @@
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
-#include "spark/scene/SceneSubmit.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <cmath>
 #include <format>

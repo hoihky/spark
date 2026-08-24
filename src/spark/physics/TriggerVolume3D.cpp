@@ -6,7 +6,7 @@
 #include "spark/ecs/Signal.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 #include <cmath>

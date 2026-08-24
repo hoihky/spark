@@ -2,7 +2,7 @@
 
 #include "spark/editor/EditorSelection.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/ui/Ui.hpp"
 #include "spark/ui/spark/UiChild.hpp"
 

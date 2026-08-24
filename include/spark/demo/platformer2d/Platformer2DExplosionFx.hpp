@@ -5,8 +5,8 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark::Platformer2D {
 

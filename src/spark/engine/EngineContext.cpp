@@ -4,7 +4,7 @@
 #include "spark/engine/IFramePresenter.hpp"
 #include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 namespace Spark {
 

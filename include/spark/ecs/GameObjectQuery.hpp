@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scene/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
 
 namespace Spark {
 

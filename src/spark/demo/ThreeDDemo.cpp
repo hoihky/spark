@@ -1,14 +1,14 @@
 #include "spark/demo/ThreeDDemo.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
-#include "spark/scene/GltfAssetBindings.hpp"
+#include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
 
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/rendering/BillboardComponent.hpp"
 #include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
-#include "spark/scene/Mesh.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
-#include "spark/scene/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
 

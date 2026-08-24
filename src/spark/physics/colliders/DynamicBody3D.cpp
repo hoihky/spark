@@ -5,7 +5,7 @@
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
 

@@ -256,7 +256,7 @@ Adjust length if team size or scope changes.
 - `docs/GUI_EDITOR_ROADMAP.md` — retained GUI inventory + Spark Editor milestones (E0–E6).
 - `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md` — ECS, rendering, physics summary, `SceneRenderParams`, Vulkan overview.
 - `include/spark/engine/SceneRenderParams.hpp` — GPU snapshot contract.
-- `include/spark/scene/Scene.hpp` — world queries and optional spatial policies.
+- `include/spark/scene/core/Scene.hpp` — world queries and optional spatial policies.
 - `include/spark/physics/PhysicsWorld3D.hpp` — 3D simulation entry point.
 - 3D demos under `include/spark/demo/` / `src/spark/demo/` (e.g. `ThreeDDemo`, `Maze3DDemo`, `PhysicsBallThrow3DDemo`, `SceneEditor3DDemo`).
 

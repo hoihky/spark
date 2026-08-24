@@ -2,7 +2,7 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/SkinnedMesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
 
 namespace Spark {
 

@@ -5,7 +5,7 @@
 #include "spark/render/scene/SceneShadingModel.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 
-#include "spark/scene/MaterialAsset.hpp"
+#include "spark/scene/material/MaterialAsset.hpp"
 
 namespace Spark {
 

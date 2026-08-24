@@ -1,7 +1,7 @@
 #include "spark/demo/SkyDemo.hpp"
 
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
-#include "spark/scene/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
 

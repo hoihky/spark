@@ -2,7 +2,7 @@
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/config.hpp"
 
-#include "spark/scene/SceneSubmit.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
@@ -13,7 +13,7 @@
 #include "spark/math/Constants.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 #include <algorithm>
 #include <cmath>

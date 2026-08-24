@@ -16,14 +16,14 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/core/Utility.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/GameWorldAssetLoader.hpp"
-#include "spark/scene/GltfAssetBindings.hpp"
-#include "spark/scene/GltfMaterial.hpp"
-#include "spark/scene/Mesh.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/assets/GameWorldAssetLoader.hpp"
+#include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
+#include "spark/scene/material/GltfMaterial.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 #include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 #include <cstdio>
 #include <cstring>

@@ -3,9 +3,9 @@
 #include "spark/core/ContentFingerprint.hpp"
 #include "spark/render/core/VulkanRendererGpu.hpp"
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/MeshSubmesh.hpp"
-#include "spark/scene/SkinnedMesh.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/MeshSubmesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
 
 #include <algorithm>
 #include <cstring>

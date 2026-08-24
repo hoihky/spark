@@ -5,7 +5,7 @@
 #include "spark/physics/colliders/ColliderBakePipeline3D.hpp"
 #include "spark/physics/colliders/IColliderBakeStrategy2D.hpp"
 #include "spark/physics/colliders/IColliderBakeStrategy3D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace {
 

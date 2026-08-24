@@ -4,7 +4,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scene/TerrainGeneratorSettings.hpp"
+#include "spark/scene/mesh/TerrainGeneratorSettings.hpp"
 
 namespace Spark {
 

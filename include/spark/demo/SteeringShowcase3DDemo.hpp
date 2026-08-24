@@ -17,7 +17,7 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/physics/Collision3D.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 #include <cmath>
 #include <format>

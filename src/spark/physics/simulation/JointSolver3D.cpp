@@ -9,7 +9,7 @@
 #include "spark/physics/Collision3D.hpp"
 #include "spark/physics/PhysicsJoints.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 #include <cmath>

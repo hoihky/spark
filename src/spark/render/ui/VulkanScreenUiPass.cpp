@@ -5,7 +5,7 @@
 
 #include "spark/render/core/VulkanRendererGpu.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 #include "spark/text/Font.hpp"
 
 #include <cmath>

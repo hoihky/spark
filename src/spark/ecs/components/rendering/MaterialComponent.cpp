@@ -2,10 +2,10 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/CachedAssetKind.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/MaterialAsset.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/assets/CachedAssetKind.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/material/MaterialAsset.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
 

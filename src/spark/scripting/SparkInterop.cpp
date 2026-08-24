@@ -8,8 +8,8 @@
 #include "spark/engine/IInput.hpp"
 #include "spark/engine/IRenderFrame.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 #include <cstring>
 

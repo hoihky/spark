@@ -197,6 +197,19 @@ inline void SceneTexBarrier(
     VulkanGpuBufferImage::SceneTexBarrier(cmd, image, layerCount, oldLayout, newLayout, mipLevelCount);
 }
 
+inline void SceneTexBarrierRegion(
+        VkCommandBuffer cmd,
+        VkImage image,
+        const std::uint32_t baseArrayLayer,
+        const std::uint32_t layerCount,
+        const std::uint32_t baseMipLevel,
+        const std::uint32_t mipLevelCount,
+        const VkImageLayout oldLayout,
+        const VkImageLayout newLayout) {
+    VulkanGpuBufferImage::SceneTexBarrierRegion(
+            cmd, image, baseArrayLayer, layerCount, baseMipLevel, mipLevelCount, oldLayout, newLayout);
+}
+
 inline void GenerateMipmapsBlit(
         VkCommandBuffer cmd,
         VkImage image,

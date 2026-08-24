@@ -13,7 +13,7 @@
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/RenderLayerRegistry.hpp"
+#include "spark/scene/submit/RenderLayerRegistry.hpp"
 
 namespace Spark {
 

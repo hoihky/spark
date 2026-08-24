@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/core/Utf8String.hpp"
-#include "spark/scene/CachedAssetKind.hpp"
+#include "spark/scene/assets/CachedAssetKind.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/render/gpu/VulkanSpvShaderLoader.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 #include <vulkan/vulkan.h>
 

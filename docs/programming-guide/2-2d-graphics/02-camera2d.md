@@ -2,7 +2,7 @@
 
 ## Class Design: `Camera2D`
 
-`Camera2D` (`spark/scene/Camera2D.hpp`) is a **plain struct** (not a component) holding orthographic view parameters:
+`Camera2D` (`spark/scene/camera/Camera2D.hpp`) is a **plain struct** (not a component) holding orthographic view parameters:
 
 | Field | Default | Meaning |
 |-------|---------|---------|

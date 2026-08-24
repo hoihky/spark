@@ -54,6 +54,7 @@ public:
         float alphaCutoff = 0.0F;
         float textureUvScale[2]{1.0F, 1.0F};
         float textureUvOffset[2]{};
+        float _padAlignEmissiveFactor[2]{};
         float emissiveFactor[4]{1.0F, 1.0F, 1.0F, 0.0F};
     };
 

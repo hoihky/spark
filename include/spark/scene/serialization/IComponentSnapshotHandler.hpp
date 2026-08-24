@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scene/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
 namespace Spark {

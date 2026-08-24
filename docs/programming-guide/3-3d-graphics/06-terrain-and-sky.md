@@ -19,7 +19,7 @@ void ApplyHeightBrushWorld(GameObject& owner, Vector3 centerWorld,
 
 ```cpp
 #include "spark/ecs/components/rendering/TerrainComponent.hpp"
-#include "spark/scene/TerrainGeneratorSettings.hpp"
+#include "spark/scene/mesh/TerrainGeneratorSettings.hpp"
 
 TerrainGeneratorSettings ts{};
 ts.subdivX = 288;

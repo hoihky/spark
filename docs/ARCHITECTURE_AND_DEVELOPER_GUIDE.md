@@ -35,11 +35,11 @@ The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemo
 Key header groups:
 
 - **Engine loop:** `spark/engine/` — `Engine`, `IGame`, `Game`, `ISceneProvider`, `IEngineContext`, `EngineContext`, `GlfwInput`, `FrameTiming`, `SceneRenderParams`.
-- **World & entities:** `spark/scene/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/Scene.hpp`.
+- **World & entities:** `spark/scene/core/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/core/Scene.hpp`.
 - **Components:** `spark/ecs/components/` — domain subfolders (`core/`, `rendering/`, `lighting/`, `camera/`, `physics/2d|3d/`, `animation/`, `ai/`, `audio/`, `ui/`, `world/`).
 - **Math & containers:** `spark/math/`, `spark/core/`, `spark/memory/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
-- **Fast path for lit scenes:** `spark/scene/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).
+- **Fast path for lit scenes:** `spark/scene/submit/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).
 
 ---
 
@@ -188,10 +188,10 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
-| **Entity storage** | Create/destroy objects, hierarchy, tick components | `GameWorld` (`spark/scene/GameWorld.hpp`) |
+| **Entity storage** | Create/destroy objects, hierarchy, tick components | `GameWorld` (`spark/scene/core/GameWorld.hpp`) |
 | **Entity** | Named node + component bag + world matrix | `GameObject` (`spark/ecs/GameObject.hpp`) |
 | **Local transform** | TRS; parent chain → `GetWorldMatrix` | `TransformComponent` |
-| **Render-side queries** | Iterate drawables, lights, UI roots without owning entities | `Scene` (`spark/scene/Scene.hpp`) — `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachUiCanvas` |
+| **Render-side queries** | Iterate drawables, lights, UI roots without owning entities | `Scene` (`spark/scene/core/Scene.hpp`) — `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachUiCanvas` |
 | **Optional culling** | Frustum-limited variants + partition policy | `SetSpatialPartitionKind`, `ForEachDrawableInViewFrustum`, `SceneSpatialPolicyComponent`, `ScenePartitionKind` |
 | **Sibling messaging** | Decouple components on the same object | `EmitSignal` / `OnSignal` (`spark/ecs/Signal.hpp`) |
 
@@ -213,7 +213,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **World sprites** | Alpha quads after opaque scene | `SceneSpriteDraw`, `sprites`, `spriteSortMode` (`SceneSpriteSortMode`) |
 | **Particles** | CPU billboards, additive pass | `SceneParticleInstance`, `particles`, `particleCameraRight` / `Up` |
 | **Screen UI** | Solid rects + text, three paint layers | `screenRects` / `screenTexts`, overlay, late; `ScreenRectDraw`, `ScreenTextDraw`, `NextUiPaintOrder` |
-| **ECS → standard frame** | One-call fill for typical 3D scenes | `SubmitStandardLitSceneFromWorld` (`spark/scene/SceneSubmit.hpp`) |
+| **ECS → standard frame** | One-call fill for typical 3D scenes | `SubmitStandardLitSceneFromWorld` (`spark/scene/submit/SceneSubmit.hpp`) |
 
 Gap analysis (more light types, material channels, IBL, caps): [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md).
 
@@ -238,7 +238,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Sprites** | Textured quads, sorting, optional 2D lighting modes | `SpriteComponent`, `SceneSpriteDraw`, `SpriteLighting2DMode` (`spark/render/sprites2d/SpriteLighting2D.hpp`) |
 | **Sprite animation** | Flipbook / state machine hooks | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` |
 | **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
-| **2D camera** | Ortho view-projection helper | `Camera2D` (`spark/scene/Camera2D.hpp`) |
+| **2D camera** | Ortho view-projection helper | `Camera2D` (`spark/scene/camera/Camera2D.hpp`) |
 | **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `PhysicsSubsystem`, `PhysicsQueryWorld2D` (see §11) |
 
 ### 5.6 3D physics and joints
@@ -255,7 +255,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
-| **Heightfield terrain** | Procedural or authored height → mesh | `TerrainComponent`, `TerrainMeshGenerator`, settings in `spark/scene/TerrainGeneratorSettings.hpp` |
+| **Heightfield terrain** | Procedural or authored height → mesh | `TerrainComponent`, `TerrainMeshGenerator`, settings in `spark/scene/mesh/TerrainGeneratorSettings.hpp` |
 | **Sky backdrop** | Box / dome / plane modes | `SkyComponent`, `SceneSkyMode` on draws; often combined with `MeshComponent` |
 
 ### 5.8 Characters and animation
@@ -266,7 +266,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Skeletal animation** | Clip playback, loop modes, crossfade | `AnimatorComponent` (`AnimLoopMode`, `SetClipIndexWithCrossfade`, `ComputeJointPalette`), `Skeleton` under `spark/animation/` |
 | **3D character FSM (M2)** | Locomotion + optional attack overlay | `Character3DAnimFsmComponent` drives `AnimatorComponent` from speed |
 | **3D animation roadmap** | Milestones M1–M6 (API, FSM, blend, events, scale, tooling) | [`docs/ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) — **M1 complete** |
-| **Character camera** | Third-person style rig (demos) | `CharacterCameraRig` (`spark/scene/CharacterCameraRig.hpp`) |
+| **Character camera** | Third-person style rig (demos) | `CharacterCameraRig` (`spark/scene/camera/CharacterCameraRig.hpp`) |
 
 ### 5.9 UI (retained mode, `spark/ui/`)
 
@@ -355,7 +355,7 @@ engine.Run();
 
 ### 7.1 `GameWorld`
 
-`GameWorld` (`spark/scene/GameWorld.hpp`):
+`GameWorld` (`spark/scene/core/GameWorld.hpp`):
 
 - Allocates **`GameObject`** instances (`CreateGameObject` / `DestroyGameObject`).
 - Maintains **parent/child** links (`SetParent` on world or object).
@@ -375,7 +375,7 @@ engine.Run();
 
 ### 7.3 `Scene`
 
-`Scene` (`spark/scene/Scene.hpp`) wraps a `GameWorld` and adds **render queries**:
+`Scene` (`spark/scene/core/Scene.hpp`) wraps a `GameWorld` and adds **render queries**:
 
 - `ForEachDrawable`, `ForEachSkinnedDrawable`, `ForEachPointLight`, `ForEachSpotLight`, `ForEachSky`, `ForEachTextOverlay`, `ForEachParticleEmitter`, `ForEachUiCanvas`, etc.
 - Optional **view-frustum** variants (`SetSpatialPartitionKind`, `ForEachDrawableInViewFrustum`, …) driven by `SceneSpatialPolicyComponent` / `ScenePartitionKind`.
@@ -387,9 +387,9 @@ Use these iterators to build **`SceneRenderParams`** manually (demos often do th
 | API | Header | Role |
 |-----|--------|------|
 | `SceneSerializer` / `SceneDeserializer` | `spark/scene/serialization/SceneSerializer.hpp` | Capture / apply `SceneDocument` (writes **v4**, reads v3 + v4) |
-| `SceneManager` | `spark/scene/SceneManager.hpp` | `LoadSceneFromFile`, `BeginLoadSceneAsync`, `Pump`, `UnloadScene` |
-| `GameWorldAssetLoader` | `spark/scene/GameWorldAssetLoader.hpp` | Worker-thread I/O + decode; `Pump(GameWorld&)` commits caches on main thread |
-| `SceneInstanceId` | `spark/scene/SceneInstanceId.hpp` | Opaque id per loaded scene instance; stored on `GameObject` |
+| `SceneManager` | `spark/scene/core/SceneManager.hpp` | `LoadSceneFromFile`, `BeginLoadSceneAsync`, `Pump`, `UnloadScene` |
+| `GameWorldAssetLoader` | `spark/scene/assets/GameWorldAssetLoader.hpp` | Worker-thread I/O + decode; `Pump(GameWorld&)` commits caches on main thread |
+| `SceneInstanceId` | `spark/scene/core/SceneInstanceId.hpp` | Opaque id per loaded scene instance; stored on `GameObject` |
 
 Typical async usage from `IGame::OnUpdate`:
 
@@ -559,7 +559,7 @@ See `include/spark/demo/ThreeDDemo.hpp` and related demos for full examples (sor
 
 ### 9.2 Convenience: `SubmitStandardLitSceneFromWorld`
 
-`SubmitStandardLitSceneFromWorld` (`spark/scene/SceneSubmit.hpp`) walks the world and fills **standard lit** parameters (sky, rigid meshes, skinned meshes via `DispatchSkinnedDrawableFrustumCull` when a `SceneSpatialPolicyComponent` is present, point lights, **spot lights**, optional particles, time for sprite effects). Materials pick up **base color**, **normal**, and **metallic–roughness (ORM)** textures when you pass the **`SceneRenderParams*`** overload of `ApplyMaterialComponentToSceneDrawItem` inside the submitter. Optional **`SceneSpriteSortMode::SortOrderThenWorldY`** enables top-down sprite occlusion by world Y after `sortOrder`.
+`SubmitStandardLitSceneFromWorld` (`spark/scene/submit/SceneSubmit.hpp`) walks the world and fills **standard lit** parameters (sky, rigid meshes, skinned meshes via `DispatchSkinnedDrawableFrustumCull` when a `SceneSpatialPolicyComponent` is present, point lights, **spot lights**, optional particles, time for sprite effects). Materials pick up **base color**, **normal**, and **metallic–roughness (ORM)** textures when you pass the **`SceneRenderParams*`** overload of `ApplyMaterialComponentToSceneDrawItem` inside the submitter. Optional **`SceneSpriteSortMode::SortOrderThenWorldY`** enables top-down sprite occlusion by world Y after `sortOrder`.
 
 Use this when your game matches the **stock lit pipeline** and you do not need custom draw ordering beyond what the submitter provides.
 
@@ -744,7 +744,7 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#19**, key **G**). See programming gui
 ## 14. Learning Path (Recommended Reading Order)
 
 1. `spark/engine/IGame.hpp`, `Game.hpp`, `Engine.hpp`, `IEngineContext.hpp`
-2. `spark/scene/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/Scene.hpp`
+2. `spark/scene/core/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/core/Scene.hpp`
 3. `spark/engine/SceneRenderParams.hpp` (what a frame expects on the GPU side)
 4. **This guide — §4.1 (class map), §7.4 (sim vs render), §9.3 (`VulkanRenderer` internals), §5 (feature catalog)**
 5. `include/spark/render/core/VulkanRenderer.hpp` + `src/spark/render/core/VulkanRenderer.cpp` (implementation detail; large)

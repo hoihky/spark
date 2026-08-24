@@ -4,7 +4,7 @@
 #include "spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TilemapDocumentSerializer.hpp"
 #include "spark/scene/tilemap/TilemapFileResolve.hpp"
 #include "spark/scene/tilemap/TmxImporter.hpp"

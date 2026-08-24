@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scene/ScenePartitionKind.hpp"
+#include "spark/scene/core/ScenePartitionKind.hpp"
 
 namespace Spark {
 

@@ -2,7 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scene/VolumeRegions.hpp"
+#include "spark/scene/volume/VolumeRegions.hpp"
 
 namespace Spark {
 

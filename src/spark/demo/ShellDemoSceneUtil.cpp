@@ -3,7 +3,7 @@
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/text/Font.hpp"
 
 #include <algorithm>

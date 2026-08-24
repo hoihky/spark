@@ -6,7 +6,7 @@
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
 

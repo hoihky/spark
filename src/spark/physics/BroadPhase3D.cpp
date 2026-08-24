@@ -1,7 +1,7 @@
 #include "spark/physics/BroadPhase3D.hpp"
 
 #include "spark/physics/colliders/ColliderBakePipeline3D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
 

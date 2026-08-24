@@ -5,8 +5,8 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/math/Constants.hpp"
 #include "spark/math/Quaternion.hpp"
-#include "spark/scene/Camera.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/camera/Camera.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <cmath>
 

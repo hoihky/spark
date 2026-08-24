@@ -1,7 +1,7 @@
 #include "spark/scene/tilemap/TilemapObjectSpawnRegistry.hpp"
 
 #include "spark/core/HashMap.hpp"
-#include "spark/scene/GameWorldAssetCache.hpp"
+#include "spark/scene/assets/GameWorldAssetCache.hpp"
 
 namespace Spark {
 

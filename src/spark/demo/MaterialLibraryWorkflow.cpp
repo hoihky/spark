@@ -2,9 +2,9 @@
 
 #include "spark/config.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
-#include "spark/scene/AssetLoadEvents.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/MaterialAsset.hpp"
+#include "spark/scene/assets/AssetLoadEvents.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/material/MaterialAsset.hpp"
 
 #include <cstdio>
 #include <format>

@@ -9,7 +9,7 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/Scene.hpp"
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/ui/runtime/UiSystem.hpp"
 #include "spark/ui/spark/SparkUiControlsFactory.hpp"

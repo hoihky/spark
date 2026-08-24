@@ -8,9 +8,9 @@
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/memory/UniquePtr.hpp"
-#include "spark/scene/Scene.hpp"
-#include "spark/scene/SceneInstanceId.hpp"
-#include "spark/scene/SceneManager.hpp"
+#include "spark/scene/core/Scene.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneManager.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
 #include <array>

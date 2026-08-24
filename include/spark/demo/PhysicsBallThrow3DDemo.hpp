@@ -19,7 +19,7 @@
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/Scene.hpp"
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/ui/runtime/UiSystem.hpp"
 #include "spark/ui/spark/SparkUiControlsFactory.hpp"

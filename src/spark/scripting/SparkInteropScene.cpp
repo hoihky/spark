@@ -8,10 +8,10 @@
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/Scene.hpp"
-#include "spark/scene/SceneSubmit.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/Scene.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 using namespace Spark::Scripting;
 

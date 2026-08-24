@@ -10,9 +10,9 @@
 #include "spark/render/scene/SceneShadingModel.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/SkinnedMesh.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/text/Font.hpp"
 

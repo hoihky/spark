@@ -3,7 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
 

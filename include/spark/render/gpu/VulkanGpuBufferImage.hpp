@@ -84,6 +84,16 @@ public:
             VkImageLayout newLayout,
             std::uint32_t mipLevelCount = 1);
 
+    static void SceneTexBarrierRegion(
+            VkCommandBuffer cmd,
+            VkImage image,
+            std::uint32_t baseArrayLayer,
+            std::uint32_t layerCount,
+            std::uint32_t baseMipLevel,
+            std::uint32_t mipLevelCount,
+            VkImageLayout oldLayout,
+            VkImageLayout newLayout);
+
     /** Generate mip chain for array layers [baseArrayLayer, baseArrayLayer + layerCount). */
     static void GenerateMipmapsBlit(
             VkCommandBuffer cmd,

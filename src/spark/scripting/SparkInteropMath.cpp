@@ -2,7 +2,7 @@
 #include "spark/scripting/SparkInteropInternal.hpp"
 
 #include "spark/math/Matrix4.hpp"
-#include "spark/scene/Camera2D.hpp"
+#include "spark/scene/camera/Camera2D.hpp"
 
 #include <cmath>
 

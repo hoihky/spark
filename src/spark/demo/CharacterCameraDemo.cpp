@@ -11,9 +11,9 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
-#include "spark/scene/GltfMaterial.hpp"
+#include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/physics/CharacterController3D.hpp"
-#include "spark/scene/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 #include <algorithm>
 #include <cmath>

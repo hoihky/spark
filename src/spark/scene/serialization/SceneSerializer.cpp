@@ -4,7 +4,7 @@
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
 #include <cstdio>

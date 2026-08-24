@@ -2,7 +2,7 @@
 
 #include "spark/physics/PhysicsJoints.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 

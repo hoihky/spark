@@ -4,7 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/SceneRenderParams.hpp"

@@ -17,7 +17,7 @@
 #include "spark/physics/PhysicsWorld2D.hpp"
 #include "spark/physics/simulation/TriggerDispatcher2D.hpp"
 #include "spark/physics/shapes/ShapeType2D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 #include <cmath>

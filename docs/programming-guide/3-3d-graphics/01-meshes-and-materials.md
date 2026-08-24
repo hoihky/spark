@@ -2,7 +2,7 @@
 
 ## Class Design: `Mesh`
 
-CPU vertex/index buffers. Loaders and primitives live on `Mesh` (`spark/scene/Mesh.hpp`):
+CPU vertex/index buffers. Loaders and primitives live on `Mesh` (`spark/scene/mesh/Mesh.hpp`):
 
 ```cpp
 struct Vertex {

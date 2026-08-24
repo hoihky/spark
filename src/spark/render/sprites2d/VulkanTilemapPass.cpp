@@ -3,7 +3,7 @@
 #include "spark/render/gpu/VulkanBlendAttachment.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 #include "spark/render/sprites2d/VulkanSpritePass.hpp"
-#include "spark/scene/SceneTileAtlas.hpp"
+#include "spark/scene/texture/SceneTileAtlas.hpp"
 #include "spark/scene/tilemap/TileTransform.hpp"
 
 #include "spark/core/Array.hpp"

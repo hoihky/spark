@@ -2,7 +2,7 @@
 
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 

@@ -79,12 +79,12 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 |------------|----------|
 | Full PBR material model (albedo, normal, ORM, emissive, AO) | `include/spark/ecs/components/rendering/MaterialComponent.hpp`, `shaders/scene.frag` |
 | Per-draw texture layers via push constants + 32-layer array | `include/spark/render/scene/VulkanSceneDescriptors.hpp`, `src/spark/scene/SceneSubmitMaterial.cpp` |
-| glTF PBR material import (base color, normal, ORM, emissive + factors) | `include/spark/scene/GltfMaterial.hpp`, `src/spark/scene/gltf_material.cpp` |
+| glTF PBR material import (base color, normal, ORM, emissive + factors) | `include/spark/scene/material/GltfMaterial.hpp`, `src/spark/scene/gltf_material.cpp` |
 | Mipmapped scene texture array (GPU blit or uploaded mips) | `src/spark/render/scene/VulkanSceneTextureUploader.cpp` |
 | BC7 runtime encode + ASTC via KTX2 (`Texture2D::TryLoadFromKtx2File`) | `src/spark/scene/texture_block_compression.cpp`, `src/spark/scene/texture_ktx2.cpp` |
-| glTF mesh UV import (`TEXCOORD_0`) | `src/spark/scene/mesh_gltf.cpp`, `include/spark/scene/SkinnedMesh.hpp` |
+| glTF mesh UV import (`TEXCOORD_0`) | `src/spark/scene/mesh_gltf.cpp`, `include/spark/scene/mesh/SkinnedMesh.hpp` |
 | Sprite/tilemap atlas UV (2D) | `include/spark/ecs/components/rendering/SpriteComponent.hpp`, `src/spark/scene/SceneTileAtlas.cpp` |
-| Async texture decode | `include/spark/scene/GameWorldAssetLoader.hpp` |
+| Async texture decode | `include/spark/scene/assets/GameWorldAssetLoader.hpp` |
 | IBL, SSAO, shadows, clustered lights | `shaders/ibl.glsl`, post passes |
 | Material showcase demo | `src/spark/demo/MaterialShowcase3DDemo.cpp` |
 
@@ -125,14 +125,14 @@ See `include/spark/engine/SceneRenderParams.hpp` (`MaxSceneTextures = 32`) and `
 
 | Capability | Evidence |
 |------------|----------|
-| `GameWorld` + hierarchy, parenting, active flag | `include/spark/scene/GameWorld.hpp`, `include/spark/ecs/GameObject.hpp` |
-| `SceneManager` — additive/replace load, async assets | `include/spark/scene/SceneManager.hpp`, `include/spark/scene/GameWorldAssetLoader.hpp` |
+| `GameWorld` + hierarchy, parenting, active flag | `include/spark/scene/core/GameWorld.hpp`, `include/spark/ecs/GameObject.hpp` |
+| `SceneManager` — additive/replace load, async assets | `include/spark/scene/core/SceneManager.hpp`, `include/spark/scene/assets/GameWorldAssetLoader.hpp` |
 | `spark_scene_v4` text serialization | `include/spark/scene/serialization/SceneDocument.hpp`, `SceneSerializer.hpp` |
 | ~28 component snapshot handlers | `src/spark/scene/serialization/ComponentSnapshotRegistry.cpp` |
-| Frustum spatial culling (BVH/octree/etc.) | `include/spark/scene/ScenePartitionKind.hpp`, `src/spark/scene/SceneSpatialCull.cpp` |
+| Frustum spatial culling (BVH/octree/etc.) | `include/spark/scene/core/ScenePartitionKind.hpp`, `src/spark/scene/SceneSpatialCull.cpp` |
 | 3D trigger volumes | `include/spark/ecs/components/physics3d/TriggerVolume3DComponent.hpp` |
 | Editor prototype save/load | `src/spark/demo/SceneEditor3DDemo.cpp` |
-| Regional fog/post volumes | `include/spark/scene/RenderVolumes.hpp` |
+| Regional fog/post volumes | `include/spark/scene/volume/RenderVolumes.hpp` |
 
 ### Gaps for 3D action
 
@@ -257,8 +257,8 @@ DIY LevelManager
 | glTF skinned import | `src/spark/scene/skinned_mesh_gltf.cpp` |
 | Materials | `include/spark/ecs/components/rendering/MaterialComponent.hpp` |
 | Texture upload | `include/spark/render/scene/VulkanSceneTextureUploader.hpp` |
-| Scene I/O | `include/spark/scene/serialization/`, `include/spark/scene/SceneManager.hpp` |
-| Scene submit | `include/spark/scene/SceneSubmit.hpp` |
+| Scene I/O | `include/spark/scene/serialization/`, `include/spark/scene/core/SceneManager.hpp` |
+| Scene submit | `include/spark/scene/submit/SceneSubmit.hpp` |
 | Editor prototype | `include/spark/demo/SceneEditor3DDemo.hpp` |
 | Demos | `CharacterCameraDemo.cpp`, `Maze3DDemo.cpp`, `MaterialShowcase3DDemo.cpp` |
 

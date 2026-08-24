@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/scene/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Matrix4.hpp"

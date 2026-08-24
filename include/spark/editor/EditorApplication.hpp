@@ -9,9 +9,9 @@
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
-#include "spark/scene/FlyCamera.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/camera/FlyCamera.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 namespace Spark {
 

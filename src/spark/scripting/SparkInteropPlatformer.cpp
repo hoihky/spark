@@ -5,8 +5,8 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 #include "spark/text/Font.hpp"
 
 #include <algorithm>

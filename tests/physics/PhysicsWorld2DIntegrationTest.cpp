@@ -5,7 +5,7 @@
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 TEST(PhysicsWorld2DIntegration, DynamicBoxRestsOnStaticPlatform) {
     Spark::GameWorld world{};

@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TileCell.hpp"
 #include "spark/scene/tilemap/TilemapLayer.hpp"
 #include "spark/scene/tilemap/TilemapGameplayGrid.hpp"

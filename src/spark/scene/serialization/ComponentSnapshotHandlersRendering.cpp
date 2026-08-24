@@ -9,8 +9,8 @@
 #include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/RenderLayerRegistry.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/submit/RenderLayerRegistry.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 

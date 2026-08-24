@@ -1,0 +1,663 @@
+#include "spark/scene/submit/SceneSubmit.hpp"
+
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/submit/detail/SceneSubmitLighting.hpp"
+
+#include "spark/animation/Skeleton.hpp"
+#include "spark/core/Array.hpp"
+#include "spark/core/Utility.hpp"
+#include "spark/ecs/GameObject.hpp"
+#include "spark/scene/camera/Camera.hpp"
+#include "spark/ecs/components/animation/AnimatorComponent.hpp"
+#include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
+#include "spark/ecs/components/lighting/PointLightComponent.hpp"
+#include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/ecs/components/lighting/SpotLightComponent.hpp"
+#include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
+#include "spark/ecs/components/rendering/SkyComponent.hpp"
+#include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
+#include "spark/engine/IEngineContext.hpp"
+#include "spark/engine/SceneRenderParams.hpp"
+#include "spark/math/Matrix4.hpp"
+#include "spark/math/Vector2.hpp"
+#include "spark/math/Vector3.hpp"
+#include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/Scene.hpp"
+#include "spark/scene/core/SceneDrawableFrustumSink.hpp"
+#include "spark/scene/core/ScenePartitionKind.hpp"
+#include "spark/scene/submit/DrawableSortResolver.hpp"
+#include "spark/scene/submit/SceneSpriteTileCull.hpp"
+#include "spark/scene/submit/SceneTilemapSubmit.hpp"
+#include "spark/render/lighting/SceneLightingResolver.hpp"
+#include "spark/scene/volume/RenderVolumes.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
+
+#include "spark/math/Constants.hpp"
+
+#include <functional>
+
+namespace Spark {
+
+namespace SceneSubmitDetail {
+
+void ApplyAlbedoTexture(
+        SceneDrawItem& item,
+        const SharedPtr<Texture2D>& baseColor,
+        const Vector3& tint,
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+    if (!baseColor) {
+        return;
+    }
+    item.albedo = {item.albedo.x * tint.x, item.albedo.y * tint.y, item.albedo.z * tint.z};
+    item.textureLayer = findOrAddTexture(baseColor, &item.textureUvScale, &item.textureUvOffset);
+}
+
+void PushRigidMeshDraws(
+        Array<SceneDrawItem>& drawList,
+        SceneDrawItem baseItem,
+        const Mesh& mesh,
+        const MaterialComponent* mat,
+        const MultiMaterialComponent* multiMat,
+        SceneRenderParams& params,
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+    const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
+    if (submeshes.IsEmpty() || multiMat == nullptr) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = kSceneDrawFullSubmesh;
+        if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+        return;
+    }
+
+    for (std::size_t si = 0; si < submeshes.GetSize(); ++si) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = static_cast<std::uint32_t>(si);
+        const MeshSubmesh& sm = submeshes[si];
+        if (sm.materialIndex < multiMat->GetSlotCount()) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(sm.materialIndex);
+            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
+            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
+        } else if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+    }
+}
+
+void PushSkinnedMeshDraws(
+        Array<SceneDrawItem>& drawList,
+        SceneDrawItem baseItem,
+        const SkinnedMesh& mesh,
+        const MaterialComponent* mat,
+        const MultiMaterialComponent* multiMat,
+        SceneRenderParams& params,
+        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+    const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
+    if (submeshes.IsEmpty() || multiMat == nullptr) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = kSceneDrawFullSubmesh;
+        if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+        return;
+    }
+
+    for (std::size_t si = 0; si < submeshes.GetSize(); ++si) {
+        SceneDrawItem item = baseItem;
+        item.submeshIndex = static_cast<std::uint32_t>(si);
+        const MeshSubmesh& sm = submeshes[si];
+        if (sm.materialIndex < multiMat->GetSlotCount()) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(sm.materialIndex);
+            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
+            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
+        } else if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+    }
+}
+
+}  // namespace SceneSubmitDetail
+
+namespace {
+
+struct RigidDrawableSubmitSink final : DrawableFrustumSink {
+    Array<SceneDrawItem>& drawList;
+    SceneRenderParams& params;
+    const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture;
+    std::int32_t defaultShadowFlags = 0;
+
+    RigidDrawableSubmitSink(
+            Array<SceneDrawItem>& inDrawList,
+            SceneRenderParams& inParams,
+            const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
+            const std::int32_t inDefaultShadowFlags) noexcept
+        : drawList(inDrawList),
+          params(inParams),
+          findOrAddTexture(inFindTex),
+          defaultShadowFlags(inDefaultShadowFlags) {}
+
+    void OnDrawable(
+            GameObject* o,
+            const MeshComponent& mc,
+            const MaterialComponent* mat,
+            const Matrix4& worldM) override {
+        if (o == nullptr || !mc.GetMesh()) {
+            return;
+        }
+        const MultiMaterialComponent* multiMat = o->GetComponent<MultiMaterialComponent>();
+        const SkyComponent* sky = o->GetComponent<SkyComponent>();
+        if (sky != nullptr && sky->IsSkyEnabled()) {
+            SceneDrawItem item{};
+            item.mesh = SceneMeshSlot::Custom;
+            item.skyMode = sky->GetSkyMode();
+            item.model = worldM;
+            item.customMesh = mc.GetMesh();
+            item.albedo = sky->GetTint();
+            item.textureLayer = -1;
+            item.metallic = 0.0F;
+            item.roughness = 1.0F;
+            if (mat != nullptr && mat->GetBaseColorTexture()) {
+                const Vector3& t = mat->GetTint();
+                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
+                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), &item.textureUvScale, &item.textureUvOffset);
+            }
+            item.shadowFlags = 0;
+            drawList.PushBack(item);
+            return;
+        }
+        SceneDrawItem baseItem{};
+        baseItem.model = worldM;
+        baseItem.mesh = mc.GetSlot();
+        baseItem.albedo = mc.GetAlbedo();
+        baseItem.textureLayer = -1;
+        if (mc.GetSlot() == SceneMeshSlot::Custom) {
+            baseItem.customMesh = mc.GetMesh();
+        }
+        if (mc.GetSlot() == SceneMeshSlot::GroundPlane) {
+            baseItem.doubleSided = true;
+        }
+        baseItem.shadowFlags = defaultShadowFlags;
+
+        if (mc.GetSlot() == SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+            !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+            SceneSubmitDetail::PushRigidMeshDraws(
+                    drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+            return;
+        }
+
+        SceneDrawItem item = baseItem;
+        if (mat != nullptr) {
+            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+            SceneSubmitDetail::ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        }
+        drawList.PushBack(item);
+    }
+};
+
+}  // namespace
+
+void FillStandardLitSceneFromWorld(
+        GameWorld& world,
+        IEngineContext& /*context*/,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        const Vector3& lightDirectionWorld,
+        const Vector3& lightColor,
+        float lightIntensity,
+        const Vector3& ambientColor,
+        bool enableParticles,
+        const Vector3& particleCameraRight,
+        const Vector3& particleCameraUp,
+        const float sceneTimeSeconds,
+        SceneRenderParams& params,
+        const SceneSpriteSortMode spriteSortMode,
+        const Scene* sceneForCulling) {
+    params.sceneTimeSeconds = sceneTimeSeconds;
+    params.spriteSortMode = spriteSortMode;
+    params.viewProjection = viewProjection;
+    params.cameraPositionWorld = cameraPositionWorld;
+    params.lightDirectionWorld = lightDirectionWorld.Normalized();
+    params.lightColor = lightColor;
+    params.lightIntensity = lightIntensity;
+    params.ambientColor = ambientColor;
+    SceneSubmitDetail::ApplyEcsDirectionalLight(world, params);
+
+    params.draws.Clear();
+    params.transparentDraws.Clear();
+    params.sceneTextures.Clear();
+    params.pointLights.Clear();
+    params.spotLights.Clear();
+    params.screenRects.Clear();
+    params.screenSprites.Clear();
+    params.uiTextures.Clear();
+    params.screenTexts.Clear();
+    params.screenOverlayRects.Clear();
+    params.screenOverlaySprites.Clear();
+    params.screenOverlayTexts.Clear();
+    params.screenLateRects.Clear();
+    params.screenLateSprites.Clear();
+    params.screenLateTexts.Clear();
+    params.uiPaintOrderNext = 0U;
+    params.sprites.Clear();
+    params.tilemaps.Clear();
+    params.tilemapTiles.Clear();
+    params.uiFont = world.GetUiFont();
+    params.uiBoldFont = world.GetUiBoldFont();
+    params.draws.Reserve(32);
+
+    {
+        static float sLastSceneTime = 0.0F;
+        float dt = sceneTimeSeconds - sLastSceneTime;
+        if (dt < 0.0F || dt > 1.0F) {
+            dt = 0.0F;
+        }
+        sLastSceneTime = sceneTimeSeconds;
+        ProcessTimeOfDayDrivers(world, dt);
+    }
+    ApplyRegionalRenderVolumes(world, cameraPositionWorld, params);
+
+    const ResolvedSceneLighting resolvedLighting = SceneLightingResolver::Resolve(params);
+    const std::int32_t defaultShadowFlags = DefaultShadowFlagsFor(resolvedLighting);
+
+    world.ForEachActiveGameObject([&params](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        const PointLightComponent* pl = o->GetComponent<PointLightComponent>();
+        if (pl == nullptr || !pl->IsEnabled()) {
+            return;
+        }
+        if (params.pointLights.GetSize() >= SceneRenderParams::MaxPointLights) {
+            return;
+        }
+        const Matrix4 worldMat = o->GetWorldMatrix();
+        ScenePointLight gpu{};
+        gpu.positionWorld = worldMat.TranslationVector();
+        gpu.range = pl->GetRange();
+        gpu.color = pl->GetColor();
+        gpu.intensity = pl->GetIntensity();
+        gpu.castsShadow = pl->CastsShadow();
+        params.pointLights.PushBack(gpu);
+    });
+
+    world.ForEachActiveGameObject([&params](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        const SpotLightComponent* sl = o->GetComponent<SpotLightComponent>();
+        if (sl == nullptr || !sl->IsEnabled()) {
+            return;
+        }
+        if (params.spotLights.GetSize() >= SceneRenderParams::MaxSpotLights) {
+            return;
+        }
+        const Matrix4 worldM = o->GetWorldMatrix();
+        Vector3 axis = worldM.TransformVector(Vector3{0.0F, 0.0F, -1.0F});
+        if (axis.LengthSquared() < 1e-10F) {
+            axis = {0.0F, -1.0F, 0.0F};
+        } else {
+            axis = axis.Normalized();
+        }
+        SceneSpotLight gpu{};
+        gpu.positionWorld = worldM.TranslationVector();
+        gpu.range = sl->GetRange();
+        gpu.directionWorld = axis;
+        const float innerRad = DegreesToRadians(sl->GetInnerConeDegrees());
+        float outerRad = DegreesToRadians(sl->GetOuterConeDegrees());
+        if (outerRad < innerRad) {
+            outerRad = innerRad;
+        }
+        gpu.innerConeRadians = innerRad;
+        gpu.outerConeRadians = outerRad;
+        gpu.color = sl->GetColor();
+        gpu.intensity = sl->GetIntensity();
+        gpu.castsShadow = sl->CastsShadow();
+        params.spotLights.PushBack(gpu);
+    });
+
+    auto findOrAddTexture = [&params, &world](const SharedPtr<Texture2D>& tex, Vector2* uvScale, Vector2* uvOffset) -> std::int32_t {
+        if (tex && !tex->HasAtlasBinding() &&
+            params.sceneTextures.GetSize() + 4U >= SceneRenderParams::MaxSceneTextures) {
+            world.TryAutoPackTextureIntoAtlas("scene_auto", tex);
+        }
+        return SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
+    };
+
+    Array<SceneDrawItem> drawList;
+    drawList.Reserve(48);
+
+    RigidDrawableSubmitSink rigidSink{drawList, params, findOrAddTexture, defaultShadowFlags};
+    if (sceneForCulling != nullptr) {
+        DispatchDrawableFrustumCull(
+                *sceneForCulling, viewProjection, sceneForCulling->GetSpatialPartitionKind(), rigidSink);
+    } else {
+        world.ForEachActiveGameObject([&](GameObject* o) {
+            if (o == nullptr) {
+                return;
+            }
+            const MeshComponent* mc = o->GetComponent<MeshComponent>();
+            if (mc == nullptr || !mc->GetMesh()) {
+                return;
+            }
+            rigidSink.OnDrawable(o, *mc, o->GetComponent<MaterialComponent>(), o->GetWorldMatrix());
+        });
+    }
+
+    ScenePartitionKind skinnedPartition = ScenePartitionKind::None;
+    world.ForEachActiveGameObject([&](GameObject* o) {
+        if (o == nullptr || skinnedPartition != ScenePartitionKind::None) {
+            return;
+        }
+        if (const SceneSpatialPolicyComponent* policy = o->GetComponent<SceneSpatialPolicyComponent>()) {
+            skinnedPartition = policy->GetPartitionKind();
+        }
+    });
+
+    struct SkinnedSubmitSink final : SkinnedDrawableFrustumSink {
+        Array<SceneDrawItem>& draws;
+        SceneRenderParams& params;
+        const SceneSubmitDetail::FindSceneTextureFn& findTex;
+        std::int32_t defaultShadowFlags = 0;
+
+        SkinnedSubmitSink(
+                Array<SceneDrawItem>& inDraws,
+                SceneRenderParams& inParams,
+                const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
+                const std::int32_t inDefaultShadowFlags) noexcept
+            : draws(inDraws),
+              params(inParams),
+              findTex(inFindTex),
+              defaultShadowFlags(inDefaultShadowFlags) {}
+
+        void OnSkinnedDrawable(GameObject* object,
+                const SkinnedMeshComponent& smc,
+                const MaterialComponent* mat,
+                const AnimatorComponent* anim,
+                const Matrix4& world) override {
+            if (!smc.GetMesh() || anim == nullptr || !anim->GetSkeleton()) {
+                return;
+            }
+            const std::uint32_t jc = anim->GetSkeleton()->GetJointCount();
+            if (jc == 0) {
+                return;
+            }
+            const MultiMaterialComponent* multiMat =
+                    object != nullptr ? object->GetComponent<MultiMaterialComponent>() : nullptr;
+
+            SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = SceneMeshSlot::Custom;
+            baseItem.skinnedMesh = smc.GetMesh();
+            baseItem.albedo = {0.9F, 0.88F, 0.82F};
+            baseItem.textureLayer = -1;
+            baseItem.metallic = 0.0F;
+            baseItem.roughness = 0.5F;
+            baseItem.jointPalette.Resize(jc);
+            anim->ComputeJointPalette(baseItem.jointPalette.GetData(), Skeleton::MaxJoints);
+            baseItem.shadowFlags = defaultShadowFlags;
+
+            if (multiMat != nullptr && !smc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                SceneSubmitDetail::PushSkinnedMeshDraws(
+                        draws, baseItem, *smc.GetMesh(), mat, multiMat, params, findTex);
+                return;
+            }
+
+            SceneDrawItem item = baseItem;
+            if (mat != nullptr) {
+                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
+                SceneSubmitDetail::ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findTex);
+            }
+            draws.PushBack(item);
+        }
+    };
+
+    SkinnedSubmitSink skinnedSink{drawList, params, findOrAddTexture, defaultShadowFlags};
+    DispatchSkinnedDrawableFrustumCull(world, viewProjection, skinnedPartition, skinnedSink);
+
+    SceneSubmitDetail::StableSortDrawItems(drawList);
+    PartitionSortedDrawItemsIntoSceneParams(drawList, params, cameraPositionWorld);
+
+    const SceneSpriteTileCull spriteTileCull(viewProjection);
+    const SceneTilemapSubmitter tilemapSubmitter{};
+
+    world.ForEachActiveGameObject([&](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        const SpriteComponent* sc = o->GetComponent<SpriteComponent>();
+        if (sc == nullptr) {
+            return;
+        }
+        if (params.sprites.GetSize() >= SceneRenderParams::MaxSprites) {
+            return;
+        }
+        const Matrix4 spriteModel = o->GetWorldMatrix();
+        if (const SharedPtr<Texture2D>& spriteTex = sc->GetTexture()) {
+            findOrAddTexture(spriteTex, nullptr, nullptr);
+        }
+        if (!spriteTileCull.IsSpriteVisible(spriteModel)) {
+            return;
+        }
+        SceneSpriteDraw sd{};
+        sd.model = spriteModel;
+        sd.tint = sc->GetTint();
+        sd.uvRect = sc->GetUvRect();
+        if (const SharedPtr<Texture2D>& spriteTex = sc->GetTexture()) {
+            sd.uvRect = spriteTex->ScaleUvRectForSceneLayer(sd.uvRect);
+        }
+        const ResolvedDrawableSort resolved = DrawableSortResolver::Resolve(*o, sc->GetSortOrder());
+        sd.sortOrder = resolved.key.sortingOrder;
+        sd.sortingLayerOrder = resolved.key.sortingLayerOrder;
+        sd.sortWorldY = resolved.worldYAnchor;
+        if (sc->GetTexture()) {
+            sd.textureLayer = findOrAddTexture(sc->GetTexture(), nullptr, nullptr);
+        } else {
+            sd.textureLayer = -1;
+        }
+        if (const SpriteLighting2DComponent* lit = o->GetComponent<SpriteLighting2DComponent>()) {
+            sd.lightingMode = lit->GetMode();
+            sd.lightingParam0 = lit->GetParam0();
+            sd.lightingParam1 = lit->GetParam1();
+        }
+        sd.blendMode = SceneSubmitDetail::ResolveSpriteBlendMode(*o);
+        params.sprites.PushBack(sd);
+    });
+
+    tilemapSubmitter.Submit(
+            world,
+            params,
+            spriteTileCull,
+            [&](const SharedPtr<Texture2D>& tex) { return findOrAddTexture(tex, nullptr, nullptr); },
+            SceneSubmitDetail::ResolveSpriteBlendMode);
+
+    SceneSubmitDetail::StableSortSprites(params.sprites, params.spriteSortMode);
+
+    params.particles.Clear();
+    if (enableParticles) {
+        params.particleCameraRight = particleCameraRight.Normalized();
+        params.particleCameraUp = particleCameraUp.Normalized();
+        world.ForEachActiveGameObject([&params](GameObject* o) {
+            if (o == nullptr) {
+                return;
+            }
+            if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
+                return;
+            }
+            const ParticleEmitterComponent* pe = o->GetComponent<ParticleEmitterComponent>();
+            if (pe == nullptr || !pe->IsEmitterEnabled()) {
+                return;
+            }
+            Array<SceneParticleInstance> chunk;
+            pe->CollectInstances(chunk);
+            for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
+                if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
+                    return;
+                }
+                params.particles.PushBack(chunk[ci]);
+            }
+        });
+    }
+
+    params.decals.Clear();
+    world.ForEachActiveGameObject([&params, &findOrAddTexture](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        if (params.decals.GetSize() >= SceneRenderParams::MaxDecals) {
+            return;
+        }
+        const DecalProjectorComponent* decal = o->GetComponent<DecalProjectorComponent>();
+        if (decal == nullptr || !decal->IsEnabled()) {
+            return;
+        }
+        SceneDecalDraw draw{};
+        draw.projectorWorld = o->GetWorldMatrix();
+        const Vector3 size = decal->GetSize();
+        draw.halfExtents = {size.x * 0.5F, size.y * 0.5F, size.z * 0.5F};
+        draw.opacity = decal->GetOpacity();
+        if (decal->GetTexture()) {
+            draw.textureLayer = findOrAddTexture(decal->GetTexture(), nullptr, nullptr);
+        }
+        params.decals.PushBack(draw);
+    });
+
+    world.ForEachActiveGameObject([&params](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        const TextOverlayComponent* tc = o->GetComponent<TextOverlayComponent>();
+        if (tc == nullptr || !tc->IsVisible()) {
+            return;
+        }
+        ScreenTextDraw d{};
+        d.text = tc->GetText();
+        d.x = tc->GetScreenX();
+        d.y = tc->GetScreenY();
+        d.sizePixels = tc->GetFontSizePixels();
+        d.color = tc->GetColor();
+        d.alpha = tc->GetAlpha();
+        d.paintOrder = params.NextUiPaintOrder();
+        params.screenTexts.PushBack(MoveTemp(d));
+    });
+
+    SceneSubmitDetail::ResolveIblEnvironmentLayer(params);
+
+    world.FinalizePendingAutoPackAtlas("scene_auto");
+
+    if (params.draws.IsEmpty() && (!params.sprites.IsEmpty() || !params.tilemaps.IsEmpty())) {
+        params.directionalShadowsEnabled = false;
+        params.punctualShadowsEnabled = false;
+        params.ssaoEnabled = false;
+    }
+}
+
+void SubmitStandardLitSceneFromWorld(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        const Vector3& lightDirectionWorld,
+        const Vector3& lightColor,
+        const float lightIntensity,
+        const Vector3& ambientColor,
+        const bool enableParticles,
+        const Vector3& particleCameraRight,
+        const Vector3& particleCameraUp,
+        const float sceneTimeSeconds,
+        const SceneSpriteSortMode spriteSortMode) {
+    SceneRenderParams params{};
+    FillStandardLitSceneFromWorld(world,
+            context,
+            viewProjection,
+            cameraPositionWorld,
+            lightDirectionWorld,
+            lightColor,
+            lightIntensity,
+            ambientColor,
+            enableParticles,
+            particleCameraRight,
+            particleCameraUp,
+            sceneTimeSeconds,
+            params,
+            spriteSortMode);
+    context.SetSceneRenderParams(params);
+}
+
+bool TryFillSceneCameraFromWorld(
+        const GameWorld& world,
+        const float framebufferWidth,
+        const float framebufferHeight,
+        SceneRenderParams& outParams) noexcept {
+    SceneCameraMatrices cam{};
+    if (!TryBuildSceneCameraMatrices(world, framebufferWidth, framebufferHeight, cam)) {
+        return false;
+    }
+    outParams.viewProjection = cam.viewProjection;
+    outParams.cameraPositionWorld = cam.positionWorld;
+    outParams.particleCameraRight = cam.rightWorld;
+    outParams.particleCameraUp = cam.upWorld;
+    return true;
+}
+
+bool SubmitStandardLitSceneFromWorldWithCamera(
+        GameWorld& world,
+        IEngineContext& context,
+        const Vector3& lightDirectionWorld,
+        const Vector3& lightColor,
+        const float lightIntensity,
+        const Vector3& ambientColor,
+        const bool enableParticles,
+        const float sceneTimeSeconds,
+        const SceneSpriteSortMode spriteSortMode) {
+    int fbW = 0;
+    int fbH = 0;
+    context.GetFramebufferSize(fbW, fbH);
+    if (fbW <= 0) {
+        fbW = 1;
+    }
+    if (fbH <= 0) {
+        fbH = 1;
+    }
+    SceneRenderParams params{};
+    if (!TryFillSceneCameraFromWorld(
+                world,
+                static_cast<float>(fbW),
+                static_cast<float>(fbH),
+                params)) {
+        return false;
+    }
+    FillStandardLitSceneFromWorld(
+            world,
+            context,
+            params.viewProjection,
+            params.cameraPositionWorld,
+            lightDirectionWorld,
+            lightColor,
+            lightIntensity,
+            ambientColor,
+            enableParticles,
+            params.particleCameraRight,
+            params.particleCameraUp,
+            sceneTimeSeconds,
+            params,
+            spriteSortMode);
+    context.SetSceneRenderParams(params);
+    return true;
+}
+
+}  // namespace Spark

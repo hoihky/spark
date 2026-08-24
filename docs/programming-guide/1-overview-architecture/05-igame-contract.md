@@ -43,8 +43,8 @@ public:
 
 ```cpp
 #include "spark/engine/Game.hpp"
-#include "spark/scene/SceneSubmit.hpp"
-#include "spark/scene/FlyCamera.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/camera/FlyCamera.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"

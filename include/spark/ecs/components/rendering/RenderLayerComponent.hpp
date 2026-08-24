@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scene/RenderLayerId.hpp"
+#include "spark/scene/submit/RenderLayerId.hpp"
 
 namespace Spark {
 

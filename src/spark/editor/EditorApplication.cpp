@@ -22,9 +22,9 @@
 #include "spark/math/Constants.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/render/platform/Window.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/ScenePartitionKind.hpp"
-#include "spark/scene/SceneSubmit.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/core/ScenePartitionKind.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <GLFW/glfw3.h>
 

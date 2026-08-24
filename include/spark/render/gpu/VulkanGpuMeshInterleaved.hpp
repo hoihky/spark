@@ -1,8 +1,8 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/SkinnedMesh.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
 
 namespace Spark {
 

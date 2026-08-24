@@ -20,7 +20,7 @@
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/audio/SoundEngine.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 #include <algorithm>
 #include <cmath>

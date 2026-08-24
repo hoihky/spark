@@ -2,7 +2,7 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/physics/colliders/ColliderBakeContext3D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
 

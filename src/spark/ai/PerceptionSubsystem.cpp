@@ -4,7 +4,7 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <cmath>
 

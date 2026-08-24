@@ -12,8 +12,8 @@
 
 namespace Spark {
 
-static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 184);
-static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 200);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 192);
+static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 208);
 
 void VulkanSceneOpaquePass::Record(
         const VkCommandBuffer commandBuffer,

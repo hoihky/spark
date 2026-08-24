@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/scene/TextureFormat.hpp"
+#include "spark/scene/texture/TextureFormat.hpp"
 
 #include <vulkan/vulkan.h>
 

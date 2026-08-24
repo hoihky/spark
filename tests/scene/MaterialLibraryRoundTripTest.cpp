@@ -3,14 +3,14 @@
 #include "spark/config.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/MaterialAsset.hpp"
-#include "spark/scene/MaterialAssetLoader.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/material/MaterialAsset.hpp"
+#include "spark/scene/material/MaterialAssetLoader.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 #include "spark/scene/serialization/SceneSerializer.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 #include <cstdio>
 #include <cstring>

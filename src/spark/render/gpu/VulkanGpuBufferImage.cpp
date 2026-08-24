@@ -295,13 +295,18 @@ VkImageAspectFlags VulkanGpuBufferImage::ImageAspectForFormat(const VkFormat for
     }
 }
 
-void VulkanGpuBufferImage::SceneTexBarrier(
+void VulkanGpuBufferImage::SceneTexBarrierRegion(
         VkCommandBuffer cmd,
         VkImage image,
+        const std::uint32_t baseArrayLayer,
         const std::uint32_t layerCount,
+        const std::uint32_t baseMipLevel,
+        const std::uint32_t mipLevelCount,
         const VkImageLayout oldLayout,
-        const VkImageLayout newLayout,
-        const std::uint32_t mipLevelCount) {
+        const VkImageLayout newLayout) {
+    if (cmd == VK_NULL_HANDLE || image == VK_NULL_HANDLE || layerCount == 0 || mipLevelCount == 0) {
+        return;
+    }
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = oldLayout;
@@ -310,9 +315,9 @@ void VulkanGpuBufferImage::SceneTexBarrier(
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.image = image;
     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = std::max(mipLevelCount, 1U);
-    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.baseMipLevel = baseMipLevel;
+    barrier.subresourceRange.levelCount = mipLevelCount;
+    barrier.subresourceRange.baseArrayLayer = baseArrayLayer;
     barrier.subresourceRange.layerCount = layerCount;
 
     VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
@@ -337,9 +342,25 @@ void VulkanGpuBufferImage::SceneTexBarrier(
         dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
+               newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     }
 
     vkCmdPipelineBarrier(cmd, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
+
+void VulkanGpuBufferImage::SceneTexBarrier(
+        VkCommandBuffer cmd,
+        VkImage image,
+        const std::uint32_t layerCount,
+        const VkImageLayout oldLayout,
+        const VkImageLayout newLayout,
+        const std::uint32_t mipLevelCount) {
+    SceneTexBarrierRegion(cmd, image, 0, layerCount, 0, mipLevelCount, oldLayout, newLayout);
 }
 
 void VulkanGpuBufferImage::GenerateMipmapsBlit(
@@ -428,6 +449,27 @@ void VulkanGpuBufferImage::GenerateMipmapsBlit(
 
             mipWidth = nextWidth;
             mipHeight = nextHeight;
+        }
+
+        if (mipLevelCount > 1U) {
+            SceneTexBarrierRegion(
+                    cmd,
+                    image,
+                    layer,
+                    1,
+                    0,
+                    mipLevelCount - 1U,
+                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            SceneTexBarrierRegion(
+                    cmd,
+                    image,
+                    layer,
+                    1,
+                    mipLevelCount - 1U,
+                    1,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     }
 }

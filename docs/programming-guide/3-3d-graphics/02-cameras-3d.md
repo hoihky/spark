@@ -38,7 +38,7 @@ Update order: `SpringArm3D` (295) places the camera along the orbit; `CameraFoll
 
 ## Class Design: `FlyCamera`
 
-FPS-style camera struct (`spark/scene/FlyCamera.hpp`) for demos without ECS:
+FPS-style camera struct (`spark/scene/camera/FlyCamera.hpp`) for demos without ECS:
 
 ```cpp
 struct FlyCamera {
@@ -87,7 +87,7 @@ Or use `CameraComponent::ViewProjection(owner, aspect)` when using ECS cameras.
 
 ## `CharacterCameraRig`
 
-For third-person characters without ECS rigs, see `spark/scene/CharacterCameraRig.hpp` and `CharacterCameraDemo` — orbit camera with collision pull-in.
+For third-person characters without ECS rigs, see `spark/scene/camera/CharacterCameraRig.hpp` and `CharacterCameraDemo` — orbit camera with collision pull-in.
 
 ## Billboards
 

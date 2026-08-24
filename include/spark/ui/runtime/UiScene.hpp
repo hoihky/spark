@@ -1,7 +1,7 @@
 #pragma once
 
-#include "spark/scene/GameWorld.hpp"
-#include "spark/scene/Scene.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/Scene.hpp"
 #include "spark/ui/core/IUiRenderer.hpp"
 #include "spark/ui/core/UiPointerState.hpp"
 

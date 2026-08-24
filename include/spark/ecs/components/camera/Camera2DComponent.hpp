@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scene/Camera2D.hpp"
+#include "spark/scene/camera/Camera2D.hpp"
 
 #include <cstdint>
 

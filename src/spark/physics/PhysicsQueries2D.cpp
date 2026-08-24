@@ -9,7 +9,7 @@
 #include "spark/physics/colliders/DynamicBody2D.hpp"
 #include "spark/physics/colliders/DynamicCollider2D.hpp"
 #include "spark/physics/shapes/ShapeType2D.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
 #include <cmath>

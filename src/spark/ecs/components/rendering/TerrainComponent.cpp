@@ -5,8 +5,8 @@
 #include "spark/math/Constants.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/TerrainMeshGenerator.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/TerrainMeshGenerator.hpp"
 
 #include <algorithm>
 #include <cmath>

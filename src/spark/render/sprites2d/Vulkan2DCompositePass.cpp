@@ -4,7 +4,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/scene/DrawableSortKey.hpp"
+#include "spark/scene/submit/DrawableSortKey.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 
 namespace Spark {

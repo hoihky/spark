@@ -1,8 +1,8 @@
 #include "spark/render/gpu/VulkanGpuMeshInterleaved.hpp"
 
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/SkinnedMesh.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
 
 #include <bit>
 

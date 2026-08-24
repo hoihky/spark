@@ -1,7 +1,7 @@
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 
-#include "spark/scene/GameWorldAssetCache.hpp"
-#include "spark/scene/GltfMaterial.hpp"
+#include "spark/scene/assets/GameWorldAssetCache.hpp"
+#include "spark/scene/material/GltfMaterial.hpp"
 
 namespace Spark {
 

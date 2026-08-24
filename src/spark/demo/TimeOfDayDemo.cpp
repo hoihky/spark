@@ -4,7 +4,7 @@
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"
 #include "spark/ecs/components/rendering/FogVolumeComponent.hpp"
 #include "spark/ecs/components/rendering/PostProcessVolumeComponent.hpp"
-#include "spark/scene/RenderVolumes.hpp"
+#include "spark/scene/volume/RenderVolumes.hpp"
 
 #include <algorithm>
 #include <cmath>

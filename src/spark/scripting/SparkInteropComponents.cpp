@@ -1,6 +1,6 @@
 #include "spark/scripting/SparkInterop.h"
 #include "spark/scripting/SparkInteropInternal.hpp"
-#include "spark/scene/GltfMaterial.hpp"
+#include "spark/scene/material/GltfMaterial.hpp"
 
 #include "spark/animation/Skeleton.hpp"
 #include "spark/ecs/GameObject.hpp"
@@ -33,9 +33,9 @@
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/scene/RenderLayerRegistry.hpp"
+#include "spark/scene/submit/RenderLayerRegistry.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 #include <cstring>
 

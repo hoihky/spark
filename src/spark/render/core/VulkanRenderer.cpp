@@ -7,9 +7,9 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
-#include "spark/scene/Mesh.hpp"
-#include "spark/scene/SkinnedMesh.hpp"
-#include "spark/scene/Texture2D.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 #include "spark/media/VideoRecorder.hpp"
 #include "spark/render/platform/Window.hpp"
 

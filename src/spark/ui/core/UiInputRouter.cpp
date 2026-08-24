@@ -4,7 +4,7 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/IInput.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ui/runtime/UiContextMenu.hpp"
 

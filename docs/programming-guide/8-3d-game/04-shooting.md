@@ -20,10 +20,10 @@ Press **F1** or right-click to toggle cursor capture (pattern from `CharacterCam
 
 ## Hitscan Ray vs Sphere
 
-Use `TryRaycastSphereWorld` from `spark/scene/MeshRaycast.hpp`. World position comes from the transform's world matrix:
+Use `TryRaycastSphereWorld` from `spark/scene/mesh/MeshRaycast.hpp`. World position comes from the transform's world matrix:
 
 ```cpp
-#include "spark/scene/MeshRaycast.hpp"
+#include "spark/scene/mesh/MeshRaycast.hpp"
 
 void TryShootTarget(IEngineContext& context) {
     const Vector3 origin = camera.position;

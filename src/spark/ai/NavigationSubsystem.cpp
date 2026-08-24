@@ -2,7 +2,7 @@
 
 #include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/GameWorld.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
 
