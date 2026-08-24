@@ -399,7 +399,7 @@ void VulkanPunctualShadowPass::CreateGraphicsPipeline(
     attrs[2].binding = 0;
     attrs[2].location = 2;
     attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attrs[2].offset = sizeof(float) * VL::kOffTexCoord;
+    attrs[2].offset = sizeof(float) * VL::kOffTexCoord0;
     attrs[3].binding = 0;
     attrs[3].location = 3;
     attrs[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;

@@ -108,6 +108,8 @@ bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) n
         return false;
     }
 
+    Mesh::RecomputeTangentSpace(*mesh);
+
     LoadAllMaterials(data, path, out.materials);
     cgltf_free(data);
 

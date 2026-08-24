@@ -21,9 +21,9 @@ class VulkanSpritePass;
  */
 class VulkanSceneDescriptors {
 public:
-    static constexpr std::uint32_t kMaxSkinJoints = 64;
-    /** std430 mat4 skinPalette[kMaxSkinJoints] — 64 joints × 64 bytes. */
-    static constexpr VkDeviceSize kSkinSsboBytes = 4096;
+    static constexpr std::uint32_t kMaxSkinJoints = 128;
+    /** std430 mat4 skinPalette[kMaxSkinJoints]. */
+    static constexpr VkDeviceSize kSkinSsboBytes = 8192;
 
     struct BindingSources {
         const VulkanSceneTextureUploader& sceneTextureUploader;

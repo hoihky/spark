@@ -5,6 +5,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
 
 #include <cstdint>
@@ -80,6 +81,15 @@ public:
     [[nodiscard]] float GetAlphaCutoff() const noexcept { return alphaCutoff; }
     void SetAlphaCutoff(float cutoff);
 
+    [[nodiscard]] const MaterialUvMap& GetBaseColorUvMap() const noexcept { return baseColorUv; }
+    [[nodiscard]] const MaterialUvMap& GetNormalUvMap() const noexcept { return normalUv; }
+    [[nodiscard]] const MaterialUvMap& GetMetallicRoughnessUvMap() const noexcept { return metallicRoughnessUv; }
+    [[nodiscard]] const MaterialUvMap& GetEmissiveUvMap() const noexcept { return emissiveUv; }
+    void SetBaseColorUvMap(const MaterialUvMap& map) noexcept { baseColorUv = map; }
+    void SetNormalUvMap(const MaterialUvMap& map) noexcept { normalUv = map; }
+    void SetMetallicRoughnessUvMap(const MaterialUvMap& map) noexcept { metallicRoughnessUv = map; }
+    void SetEmissiveUvMap(const MaterialUvMap& map) noexcept { emissiveUv = map; }
+
     /** Library asset key (e.g. <c>materials/hero.sparkmat</c> or <c>model.glb#material/0</c>). */
     [[nodiscard]] const Utf8String& GetMaterialAssetKey() const noexcept { return libraryBinding.GetKey(); }
     [[nodiscard]] bool HasMaterialAsset() const noexcept { return libraryBinding.HasKey(); }
@@ -111,6 +121,10 @@ private:
     bool doubleSided = false;
     float opacity = 1.0F;
     float alphaCutoff = 0.0F;
+    MaterialUvMap baseColorUv{};
+    MaterialUvMap normalUv{};
+    MaterialUvMap metallicRoughnessUv{};
+    MaterialUvMap emissiveUv{};
     MaterialLibraryBinding libraryBinding;
 };
 

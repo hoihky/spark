@@ -75,7 +75,7 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
     binding.stride = stride;
     binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-    VkVertexInputAttributeDescription attrs[6]{};
+    VkVertexInputAttributeDescription attrs[8]{};
     attrs[0].binding = 0;
     attrs[0].location = 0;
     attrs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -87,7 +87,7 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
     attrs[2].binding = 0;
     attrs[2].location = 2;
     attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attrs[2].offset = sizeof(float) * VL::kOffTexCoord;
+    attrs[2].offset = sizeof(float) * VL::kOffTexCoord0;
     attrs[3].binding = 0;
     attrs[3].location = 3;
     attrs[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
@@ -100,12 +100,20 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
     attrs[5].location = 5;
     attrs[5].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attrs[5].offset = sizeof(float) * VL::kOffWeights;
+    attrs[6].binding = 0;
+    attrs[6].location = 6;
+    attrs[6].format = VK_FORMAT_R32G32_SFLOAT;
+    attrs[6].offset = sizeof(float) * VL::kOffTexCoord1;
+    attrs[7].binding = 0;
+    attrs[7].location = 7;
+    attrs[7].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attrs[7].offset = sizeof(float) * VL::kOffColor;
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount = 1;
     vertexInputInfo.pVertexBindingDescriptions = &binding;
-    vertexInputInfo.vertexAttributeDescriptionCount = 6;
+    vertexInputInfo.vertexAttributeDescriptionCount = 8;
     vertexInputInfo.pVertexAttributeDescriptions = attrs;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};

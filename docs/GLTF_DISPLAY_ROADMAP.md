@@ -47,14 +47,24 @@ Meshopt views with a separate fallback buffer are read directly; compression-onl
 
 **Still open:** meshopt color filter (meshoptimizer 0.22), compression-only meshopt regression asset.
 
-## Phase 4 — visual parity (after display works)
+## Completed (Phase 4 — visual parity)
 
-- Vertex colors (`COLOR_0`)
-- Per-map texcoord indices + `KHR_texture_transform`
-- `KHR_materials_unlit`
-- Multiple skinned meshes per file
-- Joint count > 64 (split palettes or GPU skinning budget)
+| Item | API / behavior |
+|------|----------------|
+| `COLOR_0` | Decoded in primitive decoders; stored on `Mesh` / `SkinnedMesh` vertices; shaded in `scene.frag` |
+| Per-map texcoord | `MaterialUvMap` per texture slot; `TEXCOORD_0` / `TEXCOORD_1` in vertex layout; map index in shader push constants |
+| `KHR_materials_unlit` | `GltfMaterial::unlit` → `SceneShadingModel::Unlit` (emissive + base, no lighting) |
+| Joint budget | `Skeleton::MaxJoints` raised to **128** (GPU skin SSBO 8 KB) |
+| Multi-skinned meshes | `GltfSceneDocument::skinnedMeshes` / `skeletons`; `GltfSkinNodeLoader`; scene import binds each skinned node |
+| `KHR_texture_transform` | Parsed into `MaterialUvMap`; applied per map in `scene.frag` via `gltf_map_uv.glsl` |
+
+**Still open:** morph targets, skin palette splitting beyond 128 joints.
+
+## Phase 5 — animation & advanced
+
 - Morph targets
+- Rigid node animation
+- Scene snapshot serialization
 
 ## Test matrix
 
@@ -68,3 +78,4 @@ Run `GltfDisplayCompatibilityTest` plus manual checks:
 6. Skinned decode path — `GltfSkinnedCompressionTest` (Fox.glb)  
 7. Multi-node scene — `GltfSceneGraphTest` + `BindFromPath` hierarchy  
 8. Factor-only colored mesh — scalar PBR visible  
+9. Visual parity — `GltfVisualParityTest` (vertex color/UV path, unlit, multi-skinned scene)

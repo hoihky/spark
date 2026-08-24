@@ -25,6 +25,8 @@ public:
         Vector3 position{Vector3::Zero};
         Vector3 normal{Vector3::UnitZ};
         Vector2 texCoord{Vector2::Zero};
+        Vector2 texCoord1{Vector2::Zero};
+        Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
         /** xyz = tangent direction, w = bitangent handedness; zero xyz = derivative TBN fallback. */
         Vector4 tangent{};
         std::uint32_t joints[4]{0, 0, 0, 0};

@@ -501,6 +501,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/SteeringShowcase3DDemo.cpp
         src/spark/demo/SceneEditor3DDemo.cpp
         src/spark/demo/ImGuiShowcaseDemo.cpp
+        src/spark/demo/GltfSamples3DDemo.cpp
 )
 
 set(SPARK_ENGINE_EDITOR_SOURCES
@@ -596,6 +597,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/assets/gltf/GltfMeshoptBuffers.cpp
         src/spark/scene/assets/gltf/GltfDataLoader.cpp
         src/spark/scene/assets/gltf/GltfSkinnedMeshBuilder.cpp
+        src/spark/scene/assets/gltf/GltfSkinNodeLoader.cpp
         src/spark/scene/assets/gltf/GltfNodeTransforms.cpp
         src/spark/scene/assets/gltf/GltfRigidLoader.cpp
         src/spark/scene/assets/gltf/GltfSceneLoader.cpp

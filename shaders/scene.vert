@@ -5,9 +5,10 @@ layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inTexCoord;
 layout(location = 3) in vec4 inTangent;
-// Packed joint indices (bit pattern of uint stored in float) — avoids integer vertex fetch issues on some MVK paths.
 layout(location = 4) in vec4 inJointsPacked;
 layout(location = 5) in vec4 inWeights;
+layout(location = 6) in vec2 inTexCoord1;
+layout(location = 7) in vec4 inColor;
 
 #include "scene_ubo.glsl"
 
@@ -37,20 +38,24 @@ layout(push_constant) uniform Push {
     float occlusionStrength;
     int shadowFlags;
     float alphaCutoff;
-    vec2 textureUvScale;
-    vec2 textureUvOffset;
+    vec2 mapUvScale[4];
+    vec2 mapUvOffset[4];
+    float mapUvRotation[4];
+    int mapTexCoordSet[4];
     vec4 emissiveFactor;
 } push;
 
 layout(location = 0) out vec3 vWorldPos;
 layout(location = 1) out vec3 vNormal;
 layout(location = 2) out vec3 vAlbedo;
-layout(location = 3) out vec2 vTexCoord;
+layout(location = 3) out vec2 vTexCoord0;
 layout(location = 4) flat out int vTextureLayer;
 layout(location = 5) out float vMetallic;
 layout(location = 6) out float vRoughness;
 layout(location = 7) out vec4 vEmissive;
 layout(location = 8) out vec4 vTangent;
+layout(location = 9) out vec2 vTexCoord1;
+layout(location = 10) out vec4 vVertexColor;
 
 void main() {
     vec3 worldPos;
@@ -116,7 +121,9 @@ void main() {
 
     vWorldPos = worldPos;
     vAlbedo = push.albedoTint.rgb;
-    vTexCoord = inTexCoord * push.textureUvScale + push.textureUvOffset;
+    vTexCoord0 = inTexCoord;
+    vTexCoord1 = inTexCoord1;
+    vVertexColor = inColor;
     vTextureLayer = push.textureLayer;
     vMetallic = push.metallic;
     vRoughness = push.roughness;
@@ -124,7 +131,6 @@ void main() {
     vTangent = vec4(worldTan, inTangent.w);
     vec4 clip = ubo.viewProj * vec4(worldPos, 1.0);
     if (push.skyMode != 0) {
-        // Push clip z slightly below w so NDC depth < 1 (depth buffer clears to 1; pipeline skips depth test).
         float zw = max(clip.w, 1e-5);
         gl_Position = vec4(clip.x, clip.y, zw * (1.0 - 1e-4), zw);
     } else {

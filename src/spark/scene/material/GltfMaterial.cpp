@@ -204,6 +204,19 @@ bool TryDecodeTextureView(
     return true;
 }
 
+void ReadTextureViewUv(const cgltf_texture_view& tv, MaterialUvMap& out) noexcept {
+    out.texCoordSet = static_cast<std::uint32_t>(tv.texcoord);
+    if (tv.has_transform) {
+        const cgltf_texture_transform& xform = tv.transform;
+        out.uvOffset = {static_cast<float>(xform.offset[0]), static_cast<float>(xform.offset[1])};
+        out.uvScale = {static_cast<float>(xform.scale[0]), static_cast<float>(xform.scale[1])};
+        out.uvRotation = static_cast<float>(xform.rotation);
+        if (xform.has_texcoord) {
+            out.texCoordSet = static_cast<std::uint32_t>(xform.texcoord);
+        }
+    }
+}
+
 void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
     if (mat.has_pbr_metallic_roughness) {
         const cgltf_pbr_metallic_roughness& pbr = mat.pbr_metallic_roughness;
@@ -231,6 +244,7 @@ void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
         out.emissiveIntensity = 0.0F;
     }
     out.doubleSided = mat.double_sided;
+    out.unlit = mat.unlit != 0;
     if (mat.occlusion_texture.texture != nullptr) {
         out.occlusionStrength = static_cast<float>(mat.occlusion_texture.scale);
     }
@@ -252,27 +266,32 @@ bool TryLoadTexturesFromMaterial(
         const cgltf_pbr_metallic_roughness& pbr = mat.pbr_metallic_roughness;
         if (pbr.base_color_texture.texture != nullptr) {
             const Utf8String name = MakeTextureName(gltfPath, pbr.base_color_texture.texture->image, "base");
+            ReadTextureViewUv(pbr.base_color_texture, out.baseColorUv);
             (void)TryDecodeTextureView(pbr.base_color_texture, dir, name, out.baseColor);
         }
         if (pbr.metallic_roughness_texture.texture != nullptr) {
             const Utf8String name = MakeTextureName(gltfPath, pbr.metallic_roughness_texture.texture->image, "orm");
+            ReadTextureViewUv(pbr.metallic_roughness_texture, out.metallicRoughnessUv);
             (void)TryDecodeTextureView(pbr.metallic_roughness_texture, dir, name, out.metallicRoughness);
         }
     }
 
     if (mat.normal_texture.texture != nullptr) {
         const Utf8String name = MakeTextureName(gltfPath, mat.normal_texture.texture->image, "normal");
+        ReadTextureViewUv(mat.normal_texture, out.normalUv);
         (void)TryDecodeTextureView(mat.normal_texture, dir, name, out.normalMap);
     }
 
     if (mat.emissive_texture.texture != nullptr) {
         const Utf8String name = MakeTextureName(gltfPath, mat.emissive_texture.texture->image, "emissive");
+        ReadTextureViewUv(mat.emissive_texture, out.emissiveUv);
         (void)TryDecodeTextureView(mat.emissive_texture, dir, name, out.emissiveMap);
     }
 
     if (mat.occlusion_texture.texture != nullptr) {
         SharedPtr<Texture2D> occlusion;
         const Utf8String name = MakeTextureName(gltfPath, mat.occlusion_texture.texture->image, "occlusion");
+        ReadTextureViewUv(mat.occlusion_texture, out.metallicRoughnessUv);
         if (TryDecodeTextureView(mat.occlusion_texture, dir, name, occlusion)) {
             MergeOcclusionIntoMetallicRoughness(out.metallicRoughness, occlusion);
         }
@@ -362,6 +381,13 @@ void GltfMaterial::ApplyTo(MaterialComponent& material) const {
     material.SetDoubleSided(doubleSided);
     material.SetOpacity(opacity);
     material.SetAlphaCutoff(alphaCutoff);
+    material.SetBaseColorUvMap(baseColorUv);
+    material.SetNormalUvMap(normalUv);
+    material.SetMetallicRoughnessUvMap(metallicRoughnessUv);
+    material.SetEmissiveUvMap(emissiveUv);
+    if (unlit) {
+        material.SetShadingModel(SceneShadingModel::Unlit);
+    }
 }
 
 void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
@@ -388,6 +414,13 @@ void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.doubleSided = doubleSided;
     slot.opacity = opacity;
     slot.alphaCutoff = alphaCutoff;
+    slot.baseColorUv = baseColorUv;
+    slot.normalUv = normalUv;
+    slot.metallicRoughnessUv = metallicRoughnessUv;
+    slot.emissiveUv = emissiveUv;
+    if (unlit) {
+        slot.shadingModel = SceneShadingModel::Unlit;
+    }
 }
 
 bool GltfMaterialLoader::LoadFromCgltf(

@@ -29,6 +29,9 @@ void SkinnedMesh::AppendRigidMeshAsSkinned(const Mesh& source, SkinnedMesh& outS
         sv.position = v.position;
         sv.normal = v.normal;
         sv.texCoord = v.texCoord;
+        sv.texCoord1 = v.texCoord1;
+        sv.color = v.color;
+        sv.tangent = v.tangent;
         sv.joints[0] = 0;
         sv.joints[1] = 0;
         sv.joints[2] = 0;

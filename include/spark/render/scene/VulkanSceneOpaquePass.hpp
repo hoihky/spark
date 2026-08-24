@@ -52,10 +52,13 @@ public:
         float occlusionStrength = 1.0F;
         std::int32_t shadowFlags = 0;
         float alphaCutoff = 0.0F;
-        float textureUvScale[2]{1.0F, 1.0F};
-        float textureUvOffset[2]{};
-        float _padAlignEmissiveFactor[2]{};
+        float mapUvScale[4][2];
+        float mapUvOffset[4][2];
+        float mapUvRotation[4]{};
+        std::int32_t mapTexCoordSet[4]{};
         float emissiveFactor[4]{1.0F, 1.0F, 1.0F, 0.0F};
+        /** std430 push block end padding (SPIR-V rounds block size up to 16 bytes). */
+        std::int32_t pushBlockPad[2]{};
     };
 
     void Record(VkCommandBuffer commandBuffer, const VulkanSceneOpaqueRecordContext& ctx) const;

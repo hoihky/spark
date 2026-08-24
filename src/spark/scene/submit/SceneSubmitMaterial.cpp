@@ -32,6 +32,10 @@ void ApplyMaterialComponentToSceneDrawItemImpl(SceneDrawItem& item, const Materi
     item.doubleSided = mat->IsDoubleSided();
     item.opacity = mat->GetOpacity();
     item.alphaCutoff = mat->GetAlphaCutoff();
+    item.baseColorUv = mat->GetBaseColorUvMap();
+    item.normalUv = mat->GetNormalUvMap();
+    item.metallicRoughnessUv = mat->GetMetallicRoughnessUvMap();
+    item.emissiveUv = mat->GetEmissiveUvMap();
 }
 
 }  // namespace
@@ -179,6 +183,10 @@ void ApplyMultiMaterialSlotToSceneDrawItem(
     item.doubleSided = slot.doubleSided;
     item.opacity = slot.opacity;
     item.alphaCutoff = slot.alphaCutoff;
+    item.baseColorUv = slot.baseColorUv;
+    item.normalUv = slot.normalUv;
+    item.metallicRoughnessUv = slot.metallicRoughnessUv;
+    item.emissiveUv = slot.emissiveUv;
     item.normalMapLayer = -1;
     item.metallicRoughnessMapLayer = -1;
     item.emissiveMapLayer = -1;

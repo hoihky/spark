@@ -10,10 +10,15 @@
 
 #include <cstdint>
 
+struct cgltf_data;
+struct cgltf_node;
+
 namespace Spark {
 
 class SkinnedMesh;
 class Texture2D;
+
+struct GltfSkinNodeBuildResult;
 
 /**
  * Joint hierarchy + inverse bind matrices + sampled glTF animations.
@@ -24,7 +29,7 @@ using GltfMaterialDesc = GltfMaterial;
 
 class Skeleton {
 public:
-    static constexpr std::uint32_t MaxJoints = 64;
+    static constexpr std::uint32_t MaxJoints = 128;
 
     Skeleton() = default;
 
@@ -101,6 +106,10 @@ private:
             float* outBindFacingYawOffset,
             Array<GltfMaterialDesc>* outMaterials,
             Utf8String* outError);
+    friend GltfSkinNodeBuildResult TryBuildSkinNode(
+            const cgltf_data* data,
+            cgltf_node* skinNode,
+            const char* sourcePath) noexcept;
 
     struct Vec3Channel {
         std::uint32_t jointIndex = 0;

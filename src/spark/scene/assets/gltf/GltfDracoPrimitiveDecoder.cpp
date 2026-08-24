@@ -207,6 +207,10 @@ public:
             }
             return FindDracoAttribute(mesh, data, dracoExt, cgltf_attribute_type_texcoord, 0);
         }();
+        const draco::PointAttribute* const texcoord1Attribute =
+                FindDracoAttribute(mesh, data, dracoExt, cgltf_attribute_type_texcoord, 1);
+        const draco::PointAttribute* const colorAttribute =
+                FindDracoAttribute(mesh, data, dracoExt, cgltf_attribute_type_color, 0);
 
         const cgltf_size vertexCount = mesh.num_points();
         result.primitive.positions.Resize(vertexCount);
@@ -215,6 +219,12 @@ public:
         }
         if (texcoordAttribute != nullptr) {
             result.primitive.texcoords.Resize(vertexCount);
+        }
+        if (texcoord1Attribute != nullptr) {
+            result.primitive.texcoords1.Resize(vertexCount);
+        }
+        if (colorAttribute != nullptr) {
+            result.primitive.colors.Resize(vertexCount);
         }
         if (tangentAttribute != nullptr) {
             result.primitive.tangents.Resize(vertexCount);
@@ -239,6 +249,27 @@ public:
                 if (!ReadAttributeVec2(texcoordAttribute, pointIndex, result.primitive.texcoords[outIndex])) {
                     result.errorMessage = Utf8String("Failed to read Draco TEXCOORD");
                     return result;
+                }
+            }
+            if (texcoord1Attribute != nullptr) {
+                if (!ReadAttributeVec2(texcoord1Attribute, pointIndex, result.primitive.texcoords1[outIndex])) {
+                    result.errorMessage = Utf8String("Failed to read Draco TEXCOORD_1");
+                    return result;
+                }
+            }
+            if (colorAttribute != nullptr) {
+                if (colorAttribute->num_components() >= 4) {
+                    if (!ReadAttributeVec4(colorAttribute, pointIndex, result.primitive.colors[outIndex])) {
+                        result.errorMessage = Utf8String("Failed to read Draco COLOR");
+                        return result;
+                    }
+                } else {
+                    Vector3 rgb{};
+                    if (!ReadAttributeVec3(colorAttribute, pointIndex, rgb)) {
+                        result.errorMessage = Utf8String("Failed to read Draco COLOR");
+                        return result;
+                    }
+                    result.primitive.colors[outIndex] = {rgb.x, rgb.y, rgb.z, 1.0F};
                 }
             }
             if (tangentAttribute != nullptr) {

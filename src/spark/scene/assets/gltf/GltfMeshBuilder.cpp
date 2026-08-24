@@ -56,6 +56,8 @@ GltfMeshBuildOutcome GltfMeshBuilder::AppendPrimitive(
     const cgltf_size vertexCount = decoded.primitive.positions.GetSize();
     const bool hasNormals = decoded.primitive.normals.GetSize() == vertexCount;
     const bool hasTexcoords = decoded.primitive.texcoords.GetSize() == vertexCount;
+    const bool hasTexcoords1 = decoded.primitive.texcoords1.GetSize() == vertexCount;
+    const bool hasColors = decoded.primitive.colors.GetSize() == vertexCount;
 
     for (cgltf_size vi = 0; vi < vertexCount; ++vi) {
         const Vector3 pw = transform.TransformPoint(decoded.primitive.positions[vi]);
@@ -67,7 +69,21 @@ GltfMeshBuildOutcome GltfMeshBuilder::AppendPrimitive(
         if (hasTexcoords) {
             tc = decoded.primitive.texcoords[vi];
         }
-        outMesh.AddVertex({pw, nw, tc});
+        Vector2 tc1{0.0F, 0.0F};
+        if (hasTexcoords1) {
+            tc1 = decoded.primitive.texcoords1[vi];
+        }
+        Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
+        if (hasColors) {
+            color = decoded.primitive.colors[vi];
+        }
+        Mesh::Vertex vertex{};
+        vertex.position = pw;
+        vertex.normal = nw;
+        vertex.texCoord = tc;
+        vertex.texCoord1 = tc1;
+        vertex.color = color;
+        outMesh.AddVertex(vertex);
     }
 
     if (!decoded.primitive.indices.IsEmpty()) {
@@ -139,6 +155,7 @@ GltfMeshBuildOutcome GltfMeshBuilder::BuildFromCgltfMesh(
         outcome.errorMessage = Utf8String("glTF mesh has no geometry");
         return outcome;
     }
+    Mesh::RecomputeTangentSpace(outMesh);
     return outcome;
 }
 

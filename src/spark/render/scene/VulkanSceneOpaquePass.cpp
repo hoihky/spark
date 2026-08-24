@@ -1,3 +1,4 @@
+#include "spark/engine/SceneRenderParams.hpp"
 #include "spark/render/scene/VulkanSceneOpaquePass.hpp"
 
 #include "spark/core/Array.hpp"
@@ -5,15 +6,45 @@
 #include "spark/render/scene/VulkanSceneRaster.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
 
+namespace {
+
+void WriteMapUvPush(
+        Spark::VulkanSceneOpaquePass::ModelPushConstants& push,
+        const int mapIndex,
+        const Spark::MaterialUvMap& map) noexcept {
+    push.mapUvScale[mapIndex][0] = map.uvScale.x;
+    push.mapUvScale[mapIndex][1] = map.uvScale.y;
+    push.mapUvOffset[mapIndex][0] = map.uvOffset.x;
+    push.mapUvOffset[mapIndex][1] = map.uvOffset.y;
+    push.mapUvRotation[mapIndex] = map.uvRotation;
+    push.mapTexCoordSet[mapIndex] = static_cast<std::int32_t>(map.texCoordSet);
+}
+
+void FillMaterialMapUvPush(
+        Spark::VulkanSceneOpaquePass::ModelPushConstants& push,
+        const Spark::SceneDrawItem& draw) noexcept {
+    Spark::MaterialUvMap base = draw.baseColorUv;
+    base.uvScale.x *= draw.textureUvScale.x;
+    base.uvScale.y *= draw.textureUvScale.y;
+    base.uvOffset.x += draw.textureUvOffset.x;
+    base.uvOffset.y += draw.textureUvOffset.y;
+    WriteMapUvPush(push, 0, base);
+    WriteMapUvPush(push, 1, draw.normalUv);
+    WriteMapUvPush(push, 2, draw.metallicRoughnessUv);
+    WriteMapUvPush(push, 3, draw.emissiveUv);
+}
+
+}  // namespace
+
 namespace Spark {
 
-static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 192);
-static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 208);
+static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 288);
 
 void VulkanSceneOpaquePass::Record(
         const VkCommandBuffer commandBuffer,
@@ -107,10 +138,7 @@ void VulkanSceneOpaquePass::Record(
         push.occlusionStrength = d.occlusionStrength;
         push.shadowFlags = d.shadowFlags;
         push.alphaCutoff = d.alphaCutoff;
-        push.textureUvScale[0] = d.textureUvScale.x;
-        push.textureUvScale[1] = d.textureUvScale.y;
-        push.textureUvOffset[0] = d.textureUvOffset.x;
-        push.textureUvOffset[1] = d.textureUvOffset.y;
+        FillMaterialMapUvPush(push, d);
         push.emissive[0] = d.emissiveColor.x;
         push.emissive[1] = d.emissiveColor.y;
         push.emissive[2] = d.emissiveColor.z;
@@ -231,10 +259,7 @@ void VulkanSceneOpaquePass::RecordTransparent(
         push.occlusionStrength = d.occlusionStrength;
         push.shadowFlags = d.shadowFlags;
         push.alphaCutoff = d.alphaCutoff;
-        push.textureUvScale[0] = d.textureUvScale.x;
-        push.textureUvScale[1] = d.textureUvScale.y;
-        push.textureUvOffset[0] = d.textureUvOffset.x;
-        push.textureUvOffset[1] = d.textureUvOffset.y;
+        FillMaterialMapUvPush(push, d);
         push.emissive[0] = d.emissiveColor.x;
         push.emissive[1] = d.emissiveColor.y;
         push.emissive[2] = d.emissiveColor.z;

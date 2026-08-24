@@ -4,6 +4,7 @@
 #include "spark/demo/ThreeDDemo.hpp"
 #include "spark/demo/ToonShadingDemo.hpp"
 #include "spark/demo/MaterialShowcase3DDemo.hpp"
+#include "spark/demo/GltfSamples3DDemo.hpp"
 #include "spark/demo/SkyDemo.hpp"
 #include "spark/demo/ParticleDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
@@ -56,6 +57,7 @@ static constexpr const char* kLauncherDemoLabels[] = {
         "18 - Farming RPG render layers",
         "19 - Tilemap layers, animation & pathfinding",
         "20 - Dear ImGui tools (docking)",
+        "21 - glTF sample (DamagedHelmet)",
 };
 constexpr int kLauncherDemoCount = static_cast<int>(sizeof(kLauncherDemoLabels) / sizeof(kLauncherDemoLabels[0]));
 
@@ -132,6 +134,8 @@ public:
                 EnterDemoByListIndex(16);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_G)) {
                 EnterDemoByListIndex(19);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Q)) {
+                EnterDemoByListIndex(20);
             }
         }
 
@@ -235,6 +239,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::GltfSamples3D) {
+            gltfSamples3DDemo.Simulate(timing, context, GetWorld());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
         }
         Game::OnUpdate(timing, context);
     }
@@ -283,6 +292,8 @@ public:
             timeOfDayDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::ImGuiShowcase) {
             imguiShowcaseDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::GltfSamples3D) {
+            gltfSamples3DDemo.Render(GetScene(), GetWorld(), context);
         } else {
             RenderUiOnly(context, fbW, fbH);
         }
@@ -1327,6 +1338,73 @@ public:
         context.GetInput().SetCursorCaptured(false);
     }
 
+    void EnterGltfSamples3DDemo(IEngineContext& context) {
+        UnloadPhysicsBall3DDemoIfAny();
+        UnloadTimeOfDayDemoIfAny();
+        if (threeDLoaded) {
+            threeD.Unload(GetWorld());
+            threeDLoaded = false;
+        }
+        if (skyDemoLoaded) {
+            skyDemo.Unload(GetWorld());
+            skyDemoLoaded = false;
+        }
+        if (timeOfDayDemoLoaded) {
+            timeOfDayDemo.Unload(GetWorld());
+            timeOfDayDemoLoaded = false;
+        }
+        if (particleDemoLoaded) {
+            particleDemo.Unload(GetWorld());
+            particleDemoLoaded = false;
+        }
+        if (terrainDemoLoaded) {
+            terrainDemo.Unload(GetWorld());
+            terrainDemoLoaded = false;
+        }
+        if (characterDemoLoaded) {
+            characterDemo.Unload(GetWorld());
+            characterDemoLoaded = false;
+        }
+        if (tetris2DLoaded) {
+            tetris2DDemo.Unload(GetWorld());
+            tetris2DLoaded = false;
+        }
+        if (connect3Loaded) {
+            connect3Demo.Unload(GetWorld());
+            connect3Loaded = false;
+        }
+        if (spaceInvaders2DLoaded) {
+            spaceInvaders2DDemo.Unload(GetWorld());
+            spaceInvaders2DLoaded = false;
+        }
+        if (platformer2DLoaded) {
+            platformer2DDemo.Unload(GetWorld());
+            platformer2DLoaded = false;
+        }
+        if (broadPhase2DLoaded) {
+            broadPhase2DDemo.Unload(GetWorld());
+            broadPhase2DLoaded = false;
+        }
+        if (renderLayers2DLoaded) {
+            renderLayers2DDemo.Unload(GetWorld());
+            renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
+        if (maze3DLoaded) {
+            maze3DDemo.Unload(GetWorld());
+            maze3DLoaded = false;
+        }
+        if (!gltfSamplesLoaded) {
+            gltfSamples3DDemo.Load(GetWorld(), context);
+            gltfSamplesLoaded = true;
+        }
+        mode = DemoMode::GltfSamples3D;
+        context.GetInput().SetCursorCaptured(true);
+    }
+
     void EnterMaze3DDemo(IEngineContext& context) {
         UnloadPhysicsBall3DDemoIfAny();
         UnloadTimeOfDayDemoIfAny();
@@ -1712,6 +1790,10 @@ private:
             toonShadingDemo.Unload(GetWorld());
             toonShadingLoaded = false;
         }
+        if (gltfSamplesLoaded) {
+            gltfSamples3DDemo.Unload(GetWorld());
+            gltfSamplesLoaded = false;
+        }
     }
 
     void EnterDemoByListIndex(const int idx) {
@@ -1740,9 +1822,10 @@ private:
                 &ShellGame::EnterRenderLayers2DDemo,
                 &ShellGame::EnterTilemapShowcase2DDemo,
                 &ShellGame::EnterImGuiShowcase,
+                &ShellGame::EnterGltfSamples3DDemo,
         };
         static_assert(
-                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == 20,
+                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == 21,
                 "kDemoEnter must match launcher demo list count");
         if (idx < 0 || idx >= static_cast<int>(sizeof(kDemoEnter) / sizeof(kDemoEnter[0]))) {
             return;
@@ -1778,7 +1861,7 @@ private:
         panelDesc.id = Utf8String("launcher");
         panelDesc.title = Utf8String("Spark Demo Launcher");
         panelDesc.width = DemoGui::kDemoLauncherPanelWidth;
-        panelDesc.height = 520.0F;
+        panelDesc.height = 560.0F;
         panelDesc.centerInParent = true;
         auto panel = factory.CreatePanel(panelDesc);
 
@@ -1932,6 +2015,8 @@ private:
     TimeOfDayDemo timeOfDayDemo{};
     bool timeOfDayDemoLoaded = false;
     ImGuiShowcaseDemo imguiShowcaseDemo{};
+    GltfSamples3DDemo gltfSamples3DDemo{};
+    bool gltfSamplesLoaded = false;
     DemoFpsToggleOverlay fpsOverlay{};
 };
 

@@ -12,6 +12,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/text/Font.hpp"
@@ -224,6 +225,10 @@ struct SceneDrawItem {
     /** Base-color UV transform when sampling a packed atlas (<c>uv * scale + offset</c>). */
     Vector2 textureUvScale{1.0F, 1.0F};
     Vector2 textureUvOffset{};
+    MaterialUvMap baseColorUv{};
+    MaterialUvMap normalUv{};
+    MaterialUvMap metallicRoughnessUv{};
+    MaterialUvMap emissiveUv{};
 };
 
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */

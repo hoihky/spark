@@ -28,6 +28,7 @@ function(spark_add_physics_tests)
             tests/scene/GltfDracoTest.cpp
             tests/scene/GltfMeshoptTest.cpp
             tests/scene/GltfSkinnedCompressionTest.cpp
+            tests/scene/GltfVisualParityTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

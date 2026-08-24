@@ -72,6 +72,8 @@ GltfMeshBuildOutcome GltfSkinnedMeshBuilder::AppendSkinnedPrimitive(
     const cgltf_size vertexCount = decoded.primitive.positions.GetSize();
     const bool hasNormals = decoded.primitive.normals.GetSize() == vertexCount;
     const bool hasTexcoords = decoded.primitive.texcoords.GetSize() == vertexCount;
+    const bool hasTexcoords1 = decoded.primitive.texcoords1.GetSize() == vertexCount;
+    const bool hasColors = decoded.primitive.colors.GetSize() == vertexCount;
     const bool hasTangents = decoded.primitive.tangents.GetSize() == vertexCount;
 
     for (cgltf_size vi = 0; vi < vertexCount; ++vi) {
@@ -83,6 +85,14 @@ GltfMeshBuildOutcome GltfSkinnedMeshBuilder::AppendSkinnedPrimitive(
         Vector2 tc{0.0F, 0.0F};
         if (hasTexcoords) {
             tc = decoded.primitive.texcoords[vi];
+        }
+        Vector2 tc1{0.0F, 0.0F};
+        if (hasTexcoords1) {
+            tc1 = decoded.primitive.texcoords1[vi];
+        }
+        Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
+        if (hasColors) {
+            color = decoded.primitive.colors[vi];
         }
         Vector4 tangent{};
         if (hasTangents) {
@@ -96,6 +106,8 @@ GltfMeshBuildOutcome GltfSkinnedMeshBuilder::AppendSkinnedPrimitive(
         vertex.position = pw;
         vertex.normal = nw;
         vertex.texCoord = tc;
+        vertex.texCoord1 = tc1;
+        vertex.color = color;
         vertex.tangent = tangent;
         vertex.joints[0] = skinning.joints[0];
         vertex.joints[1] = skinning.joints[1];

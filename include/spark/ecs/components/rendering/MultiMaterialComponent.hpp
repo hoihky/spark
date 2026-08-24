@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
 
 namespace Spark {
@@ -43,6 +44,10 @@ public:
         bool doubleSided = false;
         float opacity = 1.0F;
         float alphaCutoff = 0.0F;
+        MaterialUvMap baseColorUv{};
+        MaterialUvMap normalUv{};
+        MaterialUvMap metallicRoughnessUv{};
+        MaterialUvMap emissiveUv{};
         Utf8String materialAssetKey;
     };
 

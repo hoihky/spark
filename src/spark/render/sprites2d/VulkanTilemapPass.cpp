@@ -166,7 +166,7 @@ void VulkanTilemapPass::CreateGraphicsPipeline(
     attrs[2].binding = 0;
     attrs[2].location = 2;
     attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
-    attrs[2].offset = sizeof(float) * VL::kOffTexCoord;
+    attrs[2].offset = sizeof(float) * VL::kOffTexCoord0;
 
     VkPipelineVertexInputStateCreateInfo vtxIn{};
     vtxIn.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

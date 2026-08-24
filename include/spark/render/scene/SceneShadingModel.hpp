@@ -11,6 +11,7 @@ namespace Spark {
 enum class SceneShadingModel : std::uint8_t {
     LitPbr = 0,
     ToonCel = 1,
+    Unlit = 2,
 };
 
 }  // namespace Spark

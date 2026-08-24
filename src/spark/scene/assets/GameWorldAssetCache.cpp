@@ -245,12 +245,6 @@ AssetLoadOutcome<GltfSceneDocument> GameWorldAssetCache::TryLoadGltfScene(const 
         outcome.value = *cached;
         return outcome;
     }
-    const GltfContentClassifier::ProbeResult probe = GltfContentClassifier::ProbeFile(path);
-    if (probe.parseOk && probe.kind == GltfContentKind::Skinned) {
-        outcome.errorMessage = Utf8String(
-                "glTF contains skinned mesh; use LoadSkinnedGltf or GltfAssetBinder::BindFromPath");
-        return outcome;
-    }
     AssetLoadOutcome<GltfSceneDocument> loaded = GltfSceneLoader::TryLoadFromFile(path);
     if (!loaded.ok) {
         outcome.errorMessage = loaded.errorMessage.IsEmpty() ? Utf8String("Failed to load glTF scene") : loaded.errorMessage;

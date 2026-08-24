@@ -1,4 +1,6 @@
 option(SPARK_TEXTURE_COMPRESSION "Build BC7/ASTC encoders (used for KTX2 and optional runtime scene arrays)" ON)
+option(SPARK_ENABLE_ASTC_ENCODER
+        "Download and build astc-encoder (runtime ASTC encode; BC7/RGBA8 work without it)" OFF)
 option(SPARK_SCENE_RUNTIME_BLOCK_COMPRESSION
         "Use BC7/ASTC scene texture arrays at runtime (slow upload; prefer pre-baked KTX2)" OFF)
 
@@ -45,39 +47,43 @@ function(spark_setup_texture_compression target_name)
     set(SPARK_ASTC_TGZ "${CMAKE_BINARY_DIR}/_deps/astc-encoder-5.0.1.tar.gz")
     set(SPARK_ASTC_SRC "${CMAKE_BINARY_DIR}/_deps/astc-encoder-5.0.1")
     set(SPARK_HAS_ASTCENC OFF)
-    if (EXISTS "${SPARK_ASTC_TGZ}")
-        file(SIZE "${SPARK_ASTC_TGZ}" _spark_astc_tgz_size)
-        if (_spark_astc_tgz_size LESS 1000)
-            file(REMOVE "${SPARK_ASTC_TGZ}")
-        endif ()
-    endif ()
-    if (NOT EXISTS "${SPARK_ASTC_SRC}/CMakeLists.txt")
-        if (NOT EXISTS "${SPARK_ASTC_TGZ}")
-            message(STATUS "Downloading astc-encoder 5.0.1")
-            file(DOWNLOAD
-                    "https://github.com/ARM-software/astc-encoder/archive/refs/tags/5.0.1.tar.gz"
-                    "${SPARK_ASTC_TGZ}"
-                    TLS_VERIFY ON
-                    STATUS _spark_astc_dl_status)
-            list(GET _spark_astc_dl_status 0 _spark_astc_dl_rc)
-            if (NOT _spark_astc_dl_rc EQUAL 0)
+    if (SPARK_ENABLE_ASTC_ENCODER)
+        if (EXISTS "${SPARK_ASTC_TGZ}")
+            file(SIZE "${SPARK_ASTC_TGZ}" _spark_astc_tgz_size)
+            if (_spark_astc_tgz_size LESS 1000)
                 file(REMOVE "${SPARK_ASTC_TGZ}")
             endif ()
         endif ()
-        if (EXISTS "${SPARK_ASTC_TGZ}")
-            message(STATUS "Extracting astc-encoder")
-            execute_process(
-                    COMMAND ${CMAKE_COMMAND} -E tar xzf "${SPARK_ASTC_TGZ}"
-                    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/_deps"
-                    RESULT_VARIABLE _spark_astc_extract_rc)
-            if (_spark_astc_extract_rc EQUAL 0 AND EXISTS "${SPARK_ASTC_SRC}/CMakeLists.txt")
-                set(SPARK_HAS_ASTCENC ON)
+        if (NOT EXISTS "${SPARK_ASTC_SRC}/CMakeLists.txt")
+            if (NOT EXISTS "${SPARK_ASTC_TGZ}")
+                message(STATUS "Downloading astc-encoder 5.0.1")
+                file(DOWNLOAD
+                        "https://github.com/ARM-software/astc-encoder/archive/refs/tags/5.0.1.tar.gz"
+                        "${SPARK_ASTC_TGZ}"
+                        TLS_VERIFY ON
+                        STATUS _spark_astc_dl_status)
+                list(GET _spark_astc_dl_status 0 _spark_astc_dl_rc)
+                if (NOT _spark_astc_dl_rc EQUAL 0)
+                    file(REMOVE "${SPARK_ASTC_TGZ}")
+                endif ()
             endif ()
+            if (EXISTS "${SPARK_ASTC_TGZ}")
+                message(STATUS "Extracting astc-encoder")
+                execute_process(
+                        COMMAND ${CMAKE_COMMAND} -E tar xzf "${SPARK_ASTC_TGZ}"
+                        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/_deps"
+                        RESULT_VARIABLE _spark_astc_extract_rc)
+                if (_spark_astc_extract_rc EQUAL 0 AND EXISTS "${SPARK_ASTC_SRC}/CMakeLists.txt")
+                    set(SPARK_HAS_ASTCENC ON)
+                endif ()
+            endif ()
+        else ()
+            set(SPARK_HAS_ASTCENC ON)
         endif ()
     else ()
-        set(SPARK_HAS_ASTCENC ON)
+        message(STATUS "Spark: astc-encoder skipped (SPARK_ENABLE_ASTC_ENCODER=OFF). BC7 / RGBA8 mips remain.")
     endif ()
-    if (NOT SPARK_HAS_ASTCENC)
+    if (SPARK_ENABLE_ASTC_ENCODER AND NOT SPARK_HAS_ASTCENC)
         message(STATUS "Spark: astc-encoder unavailable; runtime ASTC encode disabled (BC7 / RGBA8 mips remain).")
     endif ()
 

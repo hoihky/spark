@@ -4,6 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/math/Vector4.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/mesh/MeshSubmesh.hpp"
 
@@ -25,6 +26,10 @@ public:
         Vector3 position{Vector3::Zero};
         Vector3 normal{Vector3::UnitZ};
         Vector2 texCoord{Vector2::Zero};
+        Vector2 texCoord1{Vector2::Zero};
+        Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
+        /** xyz = tangent direction, w = bitangent handedness; zero xyz = derivative TBN fallback. */
+        Vector4 tangent{};
     };
 
     Mesh() = default;
@@ -91,6 +96,9 @@ public:
 
     /** Axis-aligned bounds from vertex positions; false if there are no vertices. */
     [[nodiscard]] bool TryComputeAxisAlignedBounds(Vector3& outMin, Vector3& outMax) const noexcept;
+
+    /** MikkTSpace-style tangents from positions, normals, and UVs (when glTF omits TANGENT). */
+    static void RecomputeTangentSpace(Mesh& mesh);
 
 private:
     Utf8String name;

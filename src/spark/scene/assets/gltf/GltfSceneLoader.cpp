@@ -5,6 +5,7 @@
 #include "spark/scene/assets/gltf/GltfDataLoader.hpp"
 #include "spark/scene/assets/gltf/GltfMeshBuilder.hpp"
 #include "spark/scene/assets/gltf/GltfNodeTransforms.hpp"
+#include "spark/scene/assets/gltf/GltfSkinNodeLoader.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 
 #include "cgltf.h"
@@ -20,6 +21,10 @@ void LoadAllMaterials(const cgltf_data* data, const char* path, Array<GltfMateri
 class MeshTableBuilder {
 public:
     explicit MeshTableBuilder(const char* sourcePath) : sourcePath(sourcePath) {}
+
+    [[nodiscard]] const char* GetSourcePath() const noexcept { return sourcePath; }
+
+    void SetLastError(const Utf8String& message) { lastError = message; }
 
     [[nodiscard]] std::uint32_t GetOrCreateMeshIndex(const cgltf_data* data, const cgltf_mesh* mesh, Array<SharedPtr<Mesh>>& outMeshes) {
         if (mesh == nullptr) {
@@ -73,6 +78,16 @@ void VisitSceneNode(
     sceneNode.hasSkin = node->skin != nullptr;
     if (node->mesh != nullptr && node->skin == nullptr) {
         sceneNode.meshIndex = meshBuilder.GetOrCreateMeshIndex(data, node->mesh, outDocument.meshes);
+    } else if (node->mesh != nullptr && node->skin != nullptr) {
+        const GltfSkinNodeBuildResult built = TryBuildSkinNode(data, node, meshBuilder.GetSourcePath());
+        if (!built.ok) {
+            meshBuilder.SetLastError(built.errorMessage);
+        } else {
+            sceneNode.skinnedMeshIndex = static_cast<std::uint32_t>(outDocument.skinnedMeshes.GetSize());
+            outDocument.skinnedMeshes.PushBack(built.mesh);
+            sceneNode.skeletonIndex = static_cast<std::uint32_t>(outDocument.skeletons.GetSize());
+            outDocument.skeletons.PushBack(built.skeleton);
+        }
     }
 
     const std::uint32_t nodeIndex = static_cast<std::uint32_t>(outDocument.nodes.GetSize());

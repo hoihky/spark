@@ -5,6 +5,7 @@
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 struct cgltf_data;
@@ -36,6 +37,11 @@ public:
     float opacity = 1.0F;
     /** glTF alpha_mode=MASK cutoff; 0 = disabled (no alpha test). */
     float alphaCutoff = 0.0F;
+    bool unlit = false;
+    MaterialUvMap baseColorUv{};
+    MaterialUvMap normalUv{};
+    MaterialUvMap metallicRoughnessUv{};
+    MaterialUvMap emissiveUv{};
 
     [[nodiscard]] bool HasAnyTexture() const noexcept {
         return static_cast<bool>(baseColor) || static_cast<bool>(normalMap) ||

@@ -4,12 +4,14 @@
 layout(location = 0) in vec3 vWorldPos;
 layout(location = 1) in vec3 vNormal;
 layout(location = 2) in vec3 vAlbedo;
-layout(location = 3) in vec2 vTexCoord;
+layout(location = 3) in vec2 vTexCoord0;
 layout(location = 4) flat in int vTextureLayer;
 layout(location = 5) in float vMetallic;
 layout(location = 6) in float vRoughness;
 layout(location = 7) in vec4 vEmissive;
 layout(location = 8) in vec4 vTangent;
+layout(location = 9) in vec2 vTexCoord1;
+layout(location = 10) in vec4 vVertexColor;
 
 layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
 
@@ -20,6 +22,8 @@ layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
 #include "color_space.glsl"
 
 #include "ibl.glsl"
+
+#include "gltf_map_uv.glsl"
 
 layout(push_constant) uniform Push {
     mat4 model;
@@ -43,10 +47,24 @@ layout(push_constant) uniform Push {
     float occlusionStrength;
     int shadowFlags;
     float alphaCutoff;
+    vec2 mapUvScale[4];
+    vec2 mapUvOffset[4];
+    float mapUvRotation[4];
+    int mapTexCoordSet[4];
     vec4 emissiveFactor;
 } push;
 
 layout(location = 0) out vec4 outColor;
+
+vec2 sparkMapUv(int mapIndex) {
+    return sparkGltfMapUv(
+            vTexCoord0,
+            vTexCoord1,
+            push.mapTexCoordSet[mapIndex],
+            push.mapUvScale[mapIndex],
+            push.mapUvOffset[mapIndex],
+            push.mapUvRotation[mapIndex]);
+}
 
 const float PI = 3.14159265359;
 
@@ -415,7 +433,7 @@ void main() {
             vec3 high = vec3(0.55, 0.78, 1.0);
             skyCol = mix(low, high, clamp(1.0 - mu, 0.0, 1.0));
         } else {
-            float h = clamp(vTexCoord.y, 0.0, 1.0);
+            float h = clamp(vTexCoord0.y, 0.0, 1.0);
             vec3 bottom = push.albedoTint.rgb;
             vec3 top = vec3(0.75, 0.88, 1.0);
             skyCol = mix(bottom, top, h);
@@ -424,11 +442,11 @@ void main() {
         return;
     }
 
-    vec3 base = vAlbedo;
-    float alpha = push.albedoTint.a;
+    vec3 base = vAlbedo * vVertexColor.rgb;
+    float alpha = push.albedoTint.a * vVertexColor.a;
     if (vTextureLayer >= 0) {
         int layer = clamp(vTextureLayer, 0, 31);
-        vec4 tex = texture(sceneTextures, vec3(vTexCoord, float(layer)));
+        vec4 tex = texture(sceneTextures, vec3(sparkMapUv(0), float(layer)));
         base *= sparkSrgbToLinear(tex.rgb);
         alpha *= tex.a;
     }
@@ -443,7 +461,7 @@ void main() {
     float occlusion = push.occlusionStrength;
     if (push.metallicRoughnessMapLayer >= 0) {
         int mrl = clamp(push.metallicRoughnessMapLayer, 0, 31);
-        vec3 orm = texture(sceneTextures, vec3(vTexCoord, float(mrl))).rgb;
+        vec3 orm = texture(sceneTextures, vec3(sparkMapUv(2), float(mrl))).rgb;
         rough = clamp(orm.g * push.roughnessFactor, 0.04, 1.0);
         met = clamp(orm.b * push.metallicFactor, 0.0, 1.0);
         occlusion = push.occlusionStrength > 0.0
@@ -455,7 +473,7 @@ void main() {
     vec3 N = nGeom;
     if (push.normalMapLayer >= 0) {
         int nl = clamp(push.normalMapLayer, 0, 31);
-        vec3 tN = texture(sceneTextures, vec3(vTexCoord, float(nl))).xyz * 2.0 - 1.0;
+        vec3 tN = texture(sceneTextures, vec3(sparkMapUv(1), float(nl))).xyz * 2.0 - 1.0;
         tN.y = -tN.y;
         mat3 TBN;
         if (dot(vTangent.xyz, vTangent.xyz) > 1e-8) {
@@ -465,8 +483,8 @@ void main() {
         } else {
             vec3 dp1 = dFdx(vWorldPos);
             vec3 dp2 = dFdy(vWorldPos);
-            vec2 duv1 = dFdx(vTexCoord);
-            vec2 duv2 = dFdy(vTexCoord);
+            vec2 duv1 = dFdx(vTexCoord0);
+            vec2 duv2 = dFdy(vTexCoord0);
             float det = duv1.x * duv2.y - duv1.y * duv2.x;
             if (abs(det) > 1e-8) {
                 float invDet = 1.0 / det;
@@ -504,6 +522,17 @@ void main() {
             float fade = smoothstep(fadeStart, shadowFadeEnd, distCam);
             sunShadow = mix(sunShadow, 1.0, fade);
         }
+    }
+
+    /** KHR_materials_unlit: base * texture + emissive, no lighting. */
+    if (push.shadingModel == 2) {
+        vec3 emissiveU = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
+        if (push.emissiveMapLayer >= 0) {
+            int el = clamp(push.emissiveMapLayer, 0, 31);
+            emissiveU *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
+        }
+        outColor = vec4(base + emissiveU, alpha);
+        return;
     }
 
     /** Toon/cel: banded wrap diffuse, hard spec band, view rim (push.toon*). */
@@ -548,7 +577,7 @@ void main() {
         vec3 emissiveT = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
         if (push.emissiveMapLayer >= 0) {
             int el = clamp(push.emissiveMapLayer, 0, 31);
-            emissiveT *= texture(sceneTextures, vec3(vTexCoord, float(el))).rgb;
+            emissiveT *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
         }
         outColor = vec4(ambientT + Lo + emissiveT, alpha);
         return;
@@ -581,7 +610,7 @@ void main() {
     vec3 emissive = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
     if (push.emissiveMapLayer >= 0) {
         int el = clamp(push.emissiveMapLayer, 0, 31);
-        emissive *= texture(sceneTextures, vec3(vTexCoord, float(el))).rgb;
+        emissive *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
     }
 
     outColor = vec4(ambient + Lo + iblSpecular + emissive, alpha);

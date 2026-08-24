@@ -31,6 +31,22 @@ GltfAsset MakeAssetView(const GltfSceneDocument& document, const GltfSceneNode& 
     return asset;
 }
 
+SkinnedGltfAsset MakeSkinnedAssetView(const GltfSceneDocument& document, const GltfSceneNode& node) {
+    SkinnedGltfAsset asset{};
+    if (node.HasSkinnedMesh() && node.skinnedMeshIndex < document.skinnedMeshes.GetSize()) {
+        asset.mesh = document.skinnedMeshes[node.skinnedMeshIndex];
+    }
+    if (node.skeletonIndex < document.skeletons.GetSize()) {
+        asset.skeleton = document.skeletons[node.skeletonIndex];
+    }
+    asset.materials = document.materials;
+    if (!asset.materials.IsEmpty()) {
+        asset.material = asset.materials[0];
+        asset.baseColorTexture = asset.material.baseColor;
+    }
+    return asset;
+}
+
 void ImportNode(
         GameObject& object,
         const GltfSceneDocument& document,
@@ -48,7 +64,10 @@ void ImportNode(
     }
     ApplyLocalTransform(object, sceneNode.localTransform);
 
-    if (sceneNode.HasMesh() && !sceneNode.hasSkin) {
+    if (sceneNode.HasSkinnedMesh()) {
+        const SkinnedGltfAsset assetView = MakeSkinnedAssetView(document, sceneNode);
+        GltfAssetBinder::BindSkinnedMesh(object, assetView, albedo, gltfLibraryKey);
+    } else if (sceneNode.HasMesh() && !sceneNode.hasSkin) {
         const GltfAsset assetView = MakeAssetView(document, sceneNode);
         GltfAssetBinder::BindRigidMesh(object, assetView, slot, albedo, gltfLibraryKey);
     }

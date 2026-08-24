@@ -5,6 +5,7 @@
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 
 #include <cstdint>
 
@@ -25,6 +26,8 @@ struct GltfDecodedPrimitive {
     Array<Vector3> positions;
     Array<Vector3> normals;
     Array<Vector2> texcoords;
+    Array<Vector2> texcoords1;
+    Array<Vector4> colors;
     Array<Vector4> tangents;
     Array<GltfDecodedSkinning> skinning;
     /** Empty means non-indexed triangle list (0, 1, 2, …). */

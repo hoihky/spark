@@ -5,7 +5,6 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
-#include "spark/scene/assets/gltf/GltfContentClassifier.hpp"
 #include "spark/scene/assets/gltf/GltfSceneImporter.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
@@ -134,18 +133,6 @@ bool GltfAssetBinder::BindFromPath(
         return false;
     }
     GameWorld& world = owner.GetWorld();
-    const GltfContentClassifier::ProbeResult probe = GltfContentClassifier::ProbeFile(gltfPath);
-    if (!probe.parseOk) {
-        return false;
-    }
-    if (probe.kind == GltfContentKind::Skinned) {
-        SkinnedGltfAsset skinned = world.LoadSkinnedGltf(gltfPath);
-        if (!skinned.mesh) {
-            return false;
-        }
-        BindSkinnedMesh(owner, skinned, albedo, gltfPath);
-        return true;
-    }
     const AssetLoadOutcome<GltfSceneDocument> sceneOutcome = world.TryLoadGltfScene(gltfPath);
     if (!sceneOutcome.ok) {
         return false;

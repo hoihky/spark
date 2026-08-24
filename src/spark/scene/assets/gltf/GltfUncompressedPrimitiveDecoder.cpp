@@ -82,9 +82,15 @@ public:
         const cgltf_accessor* tan = FindAccessor(prim, cgltf_attribute_type_tangent, 0);
         const cgltf_accessor* joints = FindAccessor(prim, cgltf_attribute_type_joints, 0);
         const cgltf_accessor* weights = FindAccessor(prim, cgltf_attribute_type_weights, 0);
-        const cgltf_accessor* uv = FindAccessor(prim, cgltf_attribute_type_texcoord, static_cast<cgltf_int>(options.texCoordSet));
+        const cgltf_accessor* uv0 = FindAccessor(prim, cgltf_attribute_type_texcoord, 0);
+        const cgltf_accessor* uv1 = FindAccessor(prim, cgltf_attribute_type_texcoord, 1);
+        const cgltf_accessor* col = FindAccessor(prim, cgltf_attribute_type_color, 0);
+        const cgltf_accessor* uv = uv0;
         if (uv == nullptr && options.texCoordSet != 0) {
-            uv = FindAccessor(prim, cgltf_attribute_type_texcoord, 0);
+            uv = FindAccessor(prim, cgltf_attribute_type_texcoord, static_cast<cgltf_int>(options.texCoordSet));
+        }
+        if (uv == nullptr) {
+            uv = uv0;
         }
 
         if (pos == nullptr || pos->type != cgltf_type_vec3) {
@@ -99,6 +105,12 @@ public:
         }
         if (uv != nullptr && uv->type == cgltf_type_vec2) {
             result.primitive.texcoords.Resize(vertexCount);
+        }
+        if (uv1 != nullptr && uv1->type == cgltf_type_vec2) {
+            result.primitive.texcoords1.Resize(vertexCount);
+        }
+        if (col != nullptr && (col->type == cgltf_type_vec3 || col->type == cgltf_type_vec4)) {
+            result.primitive.colors.Resize(vertexCount);
         }
         if (tan != nullptr && tan->type == cgltf_type_vec4) {
             result.primitive.tangents.Resize(vertexCount);
@@ -121,6 +133,22 @@ public:
                 float texcoord[2]{};
                 cgltf_accessor_read_float(uv, vi, texcoord, 2);
                 result.primitive.texcoords[vi] = {texcoord[0], texcoord[1]};
+            }
+            if (!result.primitive.texcoords1.IsEmpty()) {
+                float texcoord[2]{};
+                cgltf_accessor_read_float(uv1, vi, texcoord, 2);
+                result.primitive.texcoords1[vi] = {texcoord[0], texcoord[1]};
+            }
+            if (!result.primitive.colors.IsEmpty()) {
+                if (col->type == cgltf_type_vec4) {
+                    float color[4]{1.0F, 1.0F, 1.0F, 1.0F};
+                    cgltf_accessor_read_float(col, vi, color, 4);
+                    result.primitive.colors[vi] = {color[0], color[1], color[2], color[3]};
+                } else {
+                    float color[3]{1.0F, 1.0F, 1.0F};
+                    cgltf_accessor_read_float(col, vi, color, 3);
+                    result.primitive.colors[vi] = {color[0], color[1], color[2], 1.0F};
+                }
             }
             if (!result.primitive.tangents.IsEmpty()) {
                 float tangent[4]{};
