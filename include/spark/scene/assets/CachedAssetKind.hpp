@@ -10,6 +10,7 @@ enum class CachedAssetKind : std::uint8_t {
     Texture,
     Material,
     Gltf,
+    GltfScene,
     SkinnedGltf,
 };
 
@@ -23,6 +24,8 @@ enum class CachedAssetKind : std::uint8_t {
         case CachedAssetKind::Material:
             return AssetLoadJobKind::Material;
         case CachedAssetKind::Gltf:
+            return AssetLoadJobKind::Gltf;
+        case CachedAssetKind::GltfScene:
             return AssetLoadJobKind::Gltf;
         case CachedAssetKind::SkinnedGltf:
             return AssetLoadJobKind::SkinnedGltf;

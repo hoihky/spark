@@ -305,6 +305,34 @@ bool TryLoadTexturesFromMaterial(
 
 }  // namespace
 
+namespace {
+
+bool ApproximatelyEqual(const float a, const float b) noexcept {
+    return std::fabs(a - b) <= 1.0e-5F;
+}
+
+}  // namespace
+
+bool GltfMaterial::HasScalarPresentation() const noexcept {
+    if (!ApproximatelyEqual(baseColorFactor.x, 1.0F) || !ApproximatelyEqual(baseColorFactor.y, 1.0F) ||
+        !ApproximatelyEqual(baseColorFactor.z, 1.0F) || opacity < 0.999F) {
+        return true;
+    }
+    if (!ApproximatelyEqual(metallicFactor, 1.0F) || !ApproximatelyEqual(roughnessFactor, 1.0F)) {
+        return true;
+    }
+    if (emissiveIntensity > 1.0e-6F) {
+        return true;
+    }
+    if (!ApproximatelyEqual(occlusionStrength, 1.0F)) {
+        return true;
+    }
+    if (doubleSided || alphaCutoff > 1.0e-6F) {
+        return true;
+    }
+    return false;
+}
+
 void GltfMaterial::ApplyTo(MaterialComponent& material) const {
     if (baseColor) {
         material.SetBaseColorTexture(baseColor);

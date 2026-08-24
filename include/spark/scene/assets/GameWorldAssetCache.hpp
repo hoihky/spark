@@ -10,6 +10,7 @@
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
 #include "spark/scene/material/MaterialAsset.hpp"
+#include "spark/scene/assets/gltf/GltfSceneDocument.hpp"
 #include "spark/scene/texture/SceneTextureAtlas.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
@@ -74,6 +75,9 @@ public:
     [[nodiscard]] GltfAsset LoadGltf(const char* path);
     [[nodiscard]] AssetLoadOutcome<GltfAsset> TryLoadGltf(const char* path);
     void RegisterGltf(const GltfAsset& asset, const char* cacheKey);
+    [[nodiscard]] GltfSceneDocument LoadGltfScene(const char* path);
+    [[nodiscard]] AssetLoadOutcome<GltfSceneDocument> TryLoadGltfScene(const char* path);
+    [[nodiscard]] bool TryGetCachedGltfScene(const char* path, GltfSceneDocument& out) const;
     [[nodiscard]] SkinnedGltfAsset LoadSkinnedGltf(const char* path);
     [[nodiscard]] AssetLoadOutcome<SkinnedGltfAsset> TryLoadSkinnedGltf(const char* path);
     void RegisterSkinnedGltf(const SkinnedGltfAsset& asset, const char* cacheKey);
@@ -124,6 +128,7 @@ private:
 
     HashMap<Utf8String, SharedPtr<Mesh>, Detail::Utf8StringHasher> meshCache;
     HashMap<Utf8String, GltfAsset, Detail::Utf8StringHasher> gltfCache;
+    HashMap<Utf8String, GltfSceneDocument, Detail::Utf8StringHasher> gltfSceneCache;
     HashMap<Utf8String, SkinnedGltfAsset, Detail::Utf8StringHasher> skinnedGltfCache;
     HashMap<Utf8String, SharedPtr<Texture2D>, Detail::Utf8StringHasher> textureCache;
     HashMap<const Texture2D*, Utf8String, Detail::TexturePointerHasher> textureKeyByPointer;
@@ -132,6 +137,7 @@ private:
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> textureRetainCounts;
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> materialRetainCounts;
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> gltfRetainCounts;
+    HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> gltfSceneRetainCounts;
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> skinnedGltfRetainCounts;
     HashMap<Utf8String, SharedPtr<Texture2D>, Detail::Utf8StringHasher> finalizedAtlases;
     UniquePtr<SceneTextureAtlas> autoPackAtlasBuilder;

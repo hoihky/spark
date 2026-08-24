@@ -5,9 +5,10 @@
 
 namespace Spark {
 
+class Skeleton;
 class SkinnedMesh;
 
-/** References GPU-uploaded skinned geometry (Custom slot); pair with AnimatorComponent + MaterialComponent. */
+/** References GPU-uploaded skinned geometry (Custom slot); pair with optional Skeleton and/or AnimatorComponent. */
 class SkinnedMeshComponent final : public GameComponent {
 public:
     static constexpr ComponentKind TypeKind = ComponentKind::SkinnedMesh;
@@ -21,8 +22,13 @@ public:
     [[nodiscard]] const SharedPtr<SkinnedMesh>& GetMesh() const noexcept { return mesh; }
     void SetMesh(SharedPtr<SkinnedMesh> m);
 
+    /** Rest/bind skeleton for palette when no <c>AnimatorComponent</c> is present. */
+    [[nodiscard]] const SharedPtr<Skeleton>& GetSkeleton() const noexcept { return skeleton; }
+    void SetSkeleton(SharedPtr<Skeleton> sk);
+
 private:
     SharedPtr<SkinnedMesh> mesh;
+    SharedPtr<Skeleton> skeleton;
 };
 
 }  // namespace Spark

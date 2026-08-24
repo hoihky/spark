@@ -49,6 +49,9 @@ public:
     /** Samples clip pose at timeSec (clamped to [0, duration], no wrap). */
     void SampleClipPose(std::uint32_t clipIndex, float timeSec, Array<Transform>& outPose) const;
 
+    /** Builds skin palette from rest/bind local transforms (no animation clip). */
+    void BuildBindPosePalette(Matrix4* outPalette, std::uint32_t paletteMax) const;
+
     /** Builds skin palette from a local joint pose (size must be jointCount). */
     void BuildPaletteFromPose(const Array<Transform>& pose, Matrix4* outPalette, std::uint32_t paletteMax) const;
 

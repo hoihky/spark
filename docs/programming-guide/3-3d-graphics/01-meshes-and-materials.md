@@ -54,14 +54,12 @@ public:
 For assets with multiple material slots per mesh, prefer `GltfAssetBinder` so slots bind to shared library keys (`path.glb#material/N`):
 
 ```cpp
-GltfAsset building = world.LoadGltf("assets/models/Building.glb");
 auto* go = world.CreateGameObject();
 go->AddComponent<TransformComponent>();
-GltfAssetBinder::BindRigidMesh(*go, building, SceneMeshSlot::Custom, Vector3::One,
-        "assets/models/Building.glb");
+GltfAssetBinder::BindFromPath(*go, "assets/models/Building.glb");
 ```
 
-`BindRigidMesh` / `ApplyMaterials` register and retain glTF materials in the world cache. Each slot can also reference a standalone `.sparkmat` via `MultiMaterialComponent::SetSlotMaterialAsset`.
+`BindFromPath` probes the file, loads rigid or skinned content automatically, and attaches mesh + materials (+ skeleton for skinned bind-pose display). For explicit control, use `BindRigidMesh` / `BindSkinnedMesh` with a known asset type.
 
 For inline-only setup (no library retain), `PopulateFromGltfAsset` still copies textures and factors directly into slot storage.
 

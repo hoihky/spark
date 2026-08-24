@@ -5,6 +5,8 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/scene/assets/gltf/GltfContentClassifier.hpp"
+#include "spark/scene/assets/gltf/GltfSceneImporter.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/material/MaterialAssetLoader.hpp"
@@ -13,30 +15,16 @@ namespace Spark {
 
 namespace {
 
-bool AssetHasMaterials(const GltfAsset& asset) noexcept {
-    if (!asset.materials.IsEmpty()) {
-        for (std::size_t i = 0; i < asset.materials.GetSize(); ++i) {
-            if (asset.materials[i].HasAnyTexture()) {
-                return true;
-            }
-        }
-    }
-    return asset.material.HasAnyTexture();
+bool ShouldBindGltfMaterials(const GltfAsset& asset) noexcept {
+    return static_cast<bool>(asset.mesh);
 }
 
-bool AssetHasMaterials(const SkinnedGltfAsset& asset) noexcept {
-    if (!asset.materials.IsEmpty()) {
-        for (std::size_t i = 0; i < asset.materials.GetSize(); ++i) {
-            if (asset.materials[i].HasAnyTexture()) {
-                return true;
-            }
-        }
-    }
-    return asset.material.HasAnyTexture();
+bool ShouldBindGltfMaterials(const SkinnedGltfAsset& asset) noexcept {
+    return static_cast<bool>(asset.mesh);
 }
 
 void BindMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLibraryKey) {
-    if (!asset.mesh || !AssetHasMaterials(asset)) {
+    if (!ShouldBindGltfMaterials(asset)) {
         return;
     }
     GameWorld& world = owner.GetWorld();
@@ -63,7 +51,7 @@ void BindMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLi
 }
 
 void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset, const char* gltfLibraryKey) {
-    if (!asset.mesh || !AssetHasMaterials(asset)) {
+    if (!ShouldBindGltfMaterials(asset)) {
         return;
     }
     GameWorld& world = owner.GetWorld();
@@ -125,10 +113,44 @@ void GltfAssetBinder::BindSkinnedMesh(
     if (!asset.mesh) {
         return;
     }
-    if (owner.GetComponent<SkinnedMeshComponent>() == nullptr) {
-        owner.AddComponent<SkinnedMeshComponent>(asset.mesh);
+    SkinnedMeshComponent* skinned = owner.GetComponent<SkinnedMeshComponent>();
+    if (skinned == nullptr) {
+        skinned = owner.AddComponent<SkinnedMeshComponent>(asset.mesh);
+    } else {
+        skinned->SetMesh(asset.mesh);
+    }
+    if (asset.skeleton) {
+        skinned->SetSkeleton(asset.skeleton);
     }
     BindMaterials(owner, asset, gltfLibraryKey);
+}
+
+bool GltfAssetBinder::BindFromPath(
+        GameObject& owner,
+        const char* gltfPath,
+        const SceneMeshSlot slot,
+        const Vector3& albedo) {
+    if (gltfPath == nullptr || gltfPath[0] == '\0') {
+        return false;
+    }
+    GameWorld& world = owner.GetWorld();
+    const GltfContentClassifier::ProbeResult probe = GltfContentClassifier::ProbeFile(gltfPath);
+    if (!probe.parseOk) {
+        return false;
+    }
+    if (probe.kind == GltfContentKind::Skinned) {
+        SkinnedGltfAsset skinned = world.LoadSkinnedGltf(gltfPath);
+        if (!skinned.mesh) {
+            return false;
+        }
+        BindSkinnedMesh(owner, skinned, albedo, gltfPath);
+        return true;
+    }
+    const AssetLoadOutcome<GltfSceneDocument> sceneOutcome = world.TryLoadGltfScene(gltfPath);
+    if (!sceneOutcome.ok) {
+        return false;
+    }
+    return GltfSceneImporter::ImportInto(owner, sceneOutcome.value, slot, albedo, gltfPath);
 }
 
 }  // namespace Spark

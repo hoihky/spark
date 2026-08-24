@@ -245,6 +245,13 @@ void Skeleton::SampleClipPose(std::uint32_t clipIndex, float timeSec, Array<Tran
     }
 }
 
+void Skeleton::BuildBindPosePalette(Matrix4* outPalette, const std::uint32_t paletteMax) const {
+    if (jointCount == 0 || restLocal.GetSize() < jointCount) {
+        return;
+    }
+    BuildPaletteFromPose(restLocal, outPalette, paletteMax);
+}
+
 void Skeleton::BuildPaletteFromPose(
         const Array<Transform>& pose,
         Matrix4* outPalette,

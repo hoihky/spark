@@ -23,6 +23,8 @@ function(spark_add_physics_tests)
             tests/physics/DynamicColliderTest.cpp
             tests/physics/PhysicsWorld2DIntegrationTest.cpp
             tests/scene/MaterialLibraryRoundTripTest.cpp
+            tests/scene/GltfDisplayCompatibilityTest.cpp
+            tests/scene/GltfSceneGraphTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

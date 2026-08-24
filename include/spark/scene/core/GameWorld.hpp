@@ -47,6 +47,10 @@ public:
     [[nodiscard]] SharedPtr<Mesh> LoadMesh(const char* path) { return assetCache.LoadMesh(path); }
     [[nodiscard]] GltfAsset LoadGltf(const char* path) { return assetCache.LoadGltf(path); }
     [[nodiscard]] AssetLoadOutcome<GltfAsset> TryLoadGltf(const char* path) { return assetCache.TryLoadGltf(path); }
+    [[nodiscard]] GltfSceneDocument LoadGltfScene(const char* path) { return assetCache.LoadGltfScene(path); }
+    [[nodiscard]] AssetLoadOutcome<GltfSceneDocument> TryLoadGltfScene(const char* path) {
+        return assetCache.TryLoadGltfScene(path);
+    }
     void RequestGltf(const char* path) { assetLoader.RequestGltf(path); }
     void RequestSkinnedGltf(const char* path) { assetLoader.RequestSkinnedGltf(path); }
     void OnGltfReady(const char* path, AssetLoadCallback callback) { assetLoader.OnGltfReady(path, callback); }

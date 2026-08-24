@@ -8,6 +8,7 @@
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/camera/Camera.hpp"
+#include "spark/scene/submit/detail/SkinnedMeshPalette.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
@@ -389,10 +390,12 @@ void FillStandardLitSceneFromWorld(
                 const MaterialComponent* mat,
                 const AnimatorComponent* anim,
                 const Matrix4& world) override {
-            if (!smc.GetMesh() || anim == nullptr || !anim->GetSkeleton()) {
+            if (!smc.GetMesh()) {
                 return;
             }
-            const std::uint32_t jc = anim->GetSkeleton()->GetJointCount();
+            const std::uint32_t jc = anim != nullptr && anim->GetSkeleton()
+                    ? anim->GetSkeleton()->GetJointCount()
+                    : (smc.GetSkeleton() ? smc.GetSkeleton()->GetJointCount() : 0U);
             if (jc == 0) {
                 return;
             }
@@ -408,7 +411,9 @@ void FillStandardLitSceneFromWorld(
             baseItem.metallic = 0.0F;
             baseItem.roughness = 0.5F;
             baseItem.jointPalette.Resize(jc);
-            anim->ComputeJointPalette(baseItem.jointPalette.GetData(), Skeleton::MaxJoints);
+            if (!SkinnedMeshPalette::TryFill(smc, anim, baseItem.jointPalette.GetData(), Skeleton::MaxJoints)) {
+                return;
+            }
             baseItem.shadowFlags = defaultShadowFlags;
 
             if (multiMat != nullptr && !smc.GetMesh()->GetSubmeshes().IsEmpty()) {

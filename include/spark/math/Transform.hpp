@@ -35,6 +35,9 @@ struct Transform {
         return r;
     }
 
+    /** Decomposes an affine 3×4 matrix (column-major) into TRS. */
+    [[nodiscard]] static Transform FromAffineMatrix(const Matrix4& matrix) noexcept;
+
     [[nodiscard]] Matrix4 ToMatrix4() const noexcept {
         const Matrix4 s = Matrix4::Scale(scale);
         const Matrix4 r = Matrix4::Rotation(rotation);

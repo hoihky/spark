@@ -1,6 +1,8 @@
 #include "spark/scene/assets/GameWorldAssetCache.hpp"
+#include "spark/scene/assets/gltf/GltfContentClassifier.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/assets/gltf/GltfRigidLoader.hpp"
+#include "spark/scene/assets/gltf/GltfSceneLoader.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/material/MaterialAsset.hpp"
 #include "spark/scene/material/MaterialAssetLoader.hpp"
@@ -70,6 +72,12 @@ void RegisterAllMaterialTextures(GameWorldAssetCache& cache, const SkinnedGltfAs
     }
     if (asset.materials.IsEmpty()) {
         RegisterMaterialTextures(cache, asset.material);
+    }
+}
+
+void RegisterAllMaterialTextures(GameWorldAssetCache& cache, const GltfSceneDocument& document) {
+    for (std::size_t i = 0; i < document.materials.GetSize(); ++i) {
+        RegisterMaterialTextures(cache, document.materials[i]);
     }
 }
 
@@ -181,6 +189,12 @@ AssetLoadOutcome<GltfAsset> GameWorldAssetCache::TryLoadGltf(const char* path) {
         outcome.value = *cached;
         return outcome;
     }
+    const GltfContentClassifier::ProbeResult probe = GltfContentClassifier::ProbeFile(path);
+    if (probe.parseOk && probe.kind == GltfContentKind::Skinned) {
+        outcome.errorMessage = Utf8String(
+                "glTF contains skinned mesh; use LoadSkinnedGltf or GltfAssetBinder::BindFromPath");
+        return outcome;
+    }
     GltfRigidLoadResult loaded{};
     if (!GltfRigidLoader{}.LoadFromFile(path, loaded) || !loaded.mesh) {
         outcome.errorMessage = loaded.errorMessage.IsEmpty() ? Utf8String("Failed to load glTF mesh") : loaded.errorMessage;
@@ -210,6 +224,58 @@ void GameWorldAssetCache::RegisterGltf(const GltfAsset& asset, const char* cache
     EnsureInitialRetainCount(CachedAssetKind::Gltf, Utf8String(cacheKey));
     RegisterAllMaterialTextures(*this, stored);
     RegisterGltfMaterialsInLibrary(cacheKey, stored.materials, &stored.material);
+}
+
+GltfSceneDocument GameWorldAssetCache::LoadGltfScene(const char* path) {
+    return TryLoadGltfScene(path).value;
+}
+
+AssetLoadOutcome<GltfSceneDocument> GameWorldAssetCache::TryLoadGltfScene(const char* path) {
+    AssetLoadOutcome<GltfSceneDocument> outcome{};
+    if (path != nullptr) {
+        outcome.path = Utf8String(path);
+    }
+    if (path == nullptr || path[0] == '\0') {
+        outcome.errorMessage = Utf8String("Empty glTF scene path");
+        return outcome;
+    }
+    const Utf8String key(path);
+    if (const GltfSceneDocument* cached = gltfSceneCache.Find(key)) {
+        outcome.ok = true;
+        outcome.value = *cached;
+        return outcome;
+    }
+    const GltfContentClassifier::ProbeResult probe = GltfContentClassifier::ProbeFile(path);
+    if (probe.parseOk && probe.kind == GltfContentKind::Skinned) {
+        outcome.errorMessage = Utf8String(
+                "glTF contains skinned mesh; use LoadSkinnedGltf or GltfAssetBinder::BindFromPath");
+        return outcome;
+    }
+    AssetLoadOutcome<GltfSceneDocument> loaded = GltfSceneLoader::TryLoadFromFile(path);
+    if (!loaded.ok) {
+        outcome.errorMessage = loaded.errorMessage.IsEmpty() ? Utf8String("Failed to load glTF scene") : loaded.errorMessage;
+        std::fprintf(stderr, "Spark: LoadGltfScene failed: %s\n", outcome.errorMessage.CStr());
+        return outcome;
+    }
+    GltfSceneDocument document = MoveTemp(loaded.value);
+    RegisterAllMaterialTextures(*this, document);
+    RegisterGltfMaterialsInLibrary(path, document.materials, nullptr);
+    gltfSceneCache.Add(key, document);
+    EnsureInitialRetainCount(CachedAssetKind::GltfScene, key);
+    outcome.ok = true;
+    outcome.value = document;
+    return outcome;
+}
+
+bool GameWorldAssetCache::TryGetCachedGltfScene(const char* path, GltfSceneDocument& out) const {
+    if (path == nullptr || path[0] == '\0') {
+        return false;
+    }
+    if (const GltfSceneDocument* cached = gltfSceneCache.Find(Utf8String(path))) {
+        out = *cached;
+        return true;
+    }
+    return false;
 }
 
 SkinnedGltfAsset GameWorldAssetCache::LoadSkinnedGltf(const char* path) {
@@ -533,6 +599,9 @@ void GameWorldAssetCache::BumpRetainCount(const CachedAssetKind kind, const Utf8
         case CachedAssetKind::Gltf:
             map = &gltfRetainCounts;
             break;
+        case CachedAssetKind::GltfScene:
+            map = &gltfSceneRetainCounts;
+            break;
         case CachedAssetKind::SkinnedGltf:
             map = &skinnedGltfRetainCounts;
             break;
@@ -562,6 +631,9 @@ void GameWorldAssetCache::EnsureInitialRetainCount(const CachedAssetKind kind, c
         case CachedAssetKind::Gltf:
             map = &gltfRetainCounts;
             break;
+        case CachedAssetKind::GltfScene:
+            map = &gltfSceneRetainCounts;
+            break;
         case CachedAssetKind::SkinnedGltf:
             map = &skinnedGltfRetainCounts;
             break;
@@ -585,6 +657,9 @@ std::uint32_t GameWorldAssetCache::GetRetainCount(const CachedAssetKind kind, co
             break;
         case CachedAssetKind::Gltf:
             map = &gltfRetainCounts;
+            break;
+        case CachedAssetKind::GltfScene:
+            map = &gltfSceneRetainCounts;
             break;
         case CachedAssetKind::SkinnedGltf:
             map = &skinnedGltfRetainCounts;
@@ -623,6 +698,9 @@ bool GameWorldAssetCache::EvictIfUnretained(const CachedAssetKind kind, const Ut
         case CachedAssetKind::Gltf:
             gltfCache.Remove(key);
             break;
+        case CachedAssetKind::GltfScene:
+            gltfSceneCache.Remove(key);
+            break;
         case CachedAssetKind::SkinnedGltf:
             skinnedGltfCache.Remove(key);
             break;
@@ -637,6 +715,8 @@ bool GameWorldAssetCache::EvictIfUnretained(const CachedAssetKind kind, const Ut
                 return &materialRetainCounts;
             case CachedAssetKind::Gltf:
                 return &gltfRetainCounts;
+            case CachedAssetKind::GltfScene:
+                return &gltfSceneRetainCounts;
             case CachedAssetKind::SkinnedGltf:
                 return &skinnedGltfRetainCounts;
         }
@@ -672,6 +752,9 @@ bool GameWorldAssetCache::ReleaseAsset(const CachedAssetKind kind, const char* k
             break;
         case CachedAssetKind::Gltf:
             map = &gltfRetainCounts;
+            break;
+        case CachedAssetKind::GltfScene:
+            map = &gltfSceneRetainCounts;
             break;
         case CachedAssetKind::SkinnedGltf:
             map = &skinnedGltfRetainCounts;

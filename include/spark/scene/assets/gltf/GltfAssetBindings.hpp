@@ -29,6 +29,16 @@ public:
           const SkinnedGltfAsset& asset,
           const Vector3& albedo = Vector3::One,
           const char* gltfLibraryKey = nullptr);
+
+    /**
+     * Probes <c>gltfPath</c>, loads rigid or skinned content, and attaches mesh + materials (+ skeleton for skinned).
+     * Preferred entry point for displaying arbitrary glTF files.
+     */
+    [[nodiscard]] static bool BindFromPath(
+            GameObject& owner,
+            const char* gltfPath,
+            SceneMeshSlot slot = SceneMeshSlot::Custom,
+            const Vector3& albedo = Vector3::One);
 };
 
 }  // namespace Spark

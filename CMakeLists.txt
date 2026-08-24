@@ -532,7 +532,12 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/query/SceneRaycast.cpp
         src/spark/scene/mesh/TerrainMeshGenerator.cpp
         src/spark/scene/mesh/mesh_gltf.cpp
+        src/spark/scene/assets/gltf/GltfContentClassifier.cpp
+        src/spark/scene/assets/gltf/GltfMeshBuilder.cpp
+        src/spark/scene/assets/gltf/GltfNodeTransforms.cpp
         src/spark/scene/assets/gltf/GltfRigidLoader.cpp
+        src/spark/scene/assets/gltf/GltfSceneLoader.cpp
+        src/spark/scene/assets/gltf/GltfSceneImporter.cpp
         src/spark/scene/assets/gltf/GltfAssetBindings.cpp
         src/spark/scene/material/GltfMaterial.cpp
         src/spark/scene/material/MaterialAsset.cpp
@@ -634,6 +639,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/volume/RenderVolumes.cpp
         src/spark/scene/volume/VolumeRegions.cpp
         src/spark/scene/submit/SceneSubmit.cpp
+        src/spark/scene/submit/detail/SkinnedMeshPalette.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitLighting.cpp
         src/spark/scene/submit/SceneSubmitMaterial.cpp

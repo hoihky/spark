@@ -30,7 +30,7 @@ public:
     float metallicFactor = 1.0F;
     float roughnessFactor = 1.0F;
     Vector3 emissiveFactor{Vector3::One};
-    float emissiveIntensity = 1.0F;
+    float emissiveIntensity = 0.0F;
     float occlusionStrength = 1.0F;
     bool doubleSided = false;
     float opacity = 1.0F;
@@ -40,6 +40,14 @@ public:
     [[nodiscard]] bool HasAnyTexture() const noexcept {
         return static_cast<bool>(baseColor) || static_cast<bool>(normalMap) ||
                static_cast<bool>(metallicRoughness) || static_cast<bool>(emissiveMap);
+    }
+
+    /** True when scalar factors or flags differ from implicit glTF defaults (no textures required). */
+    [[nodiscard]] bool HasScalarPresentation() const noexcept;
+
+    /** True when this material should be bound for rendering (textures and/or scalar PBR). */
+    [[nodiscard]] bool HasPresentationContent() const noexcept {
+        return HasAnyTexture() || HasScalarPresentation();
     }
 
     /** Apply glTF factors and texture slots onto a <c>MaterialComponent</c>. */
