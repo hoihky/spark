@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -28,10 +28,10 @@
         <h1 id="ui-system-game-editor-roadmap-tracked-tasks">UI System &amp; Game Editor — Roadmap &amp; Tracked Tasks</h1>
 <p>Plan for evolving Spark’s <strong>retained-mode UI</strong> (<code>spark/ui/</code>) into <strong>in-engine authoring tools</strong> (scene, material, animation, scripting) and an <strong>integrated editor</strong> comparable in <em>workflow</em> to Unity, Unreal Editor, or Godot 4.5+ — built on Spark’s Vulkan forward renderer and ECS.</p>
 <blockquote>
-<p><strong>Migration complete (Phase 6):</strong> Legacy <code>spark/gui/</code> (<code>Widget</code>, <code>GuiCanvasComponent</code>, <code>GuiControls.hpp</code>) was removed. All demos and <code>SparkEditor</code> use <strong><code>UiCanvasComponent</code></strong>, <strong><code>IUiElement</code></strong>, and <strong><code>IUiControlsFactory</code></strong> under <code>spark/ui/</code>. See <a href="GUI_TOOLKIT_ARCHITECTURE.md"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a>.</p>
+<p><strong>Migration complete (Phase 6):</strong> Legacy <code>spark/gui/</code> (<code>Widget</code>, <code>GuiCanvasComponent</code>, <code>GuiControls.hpp</code>) was removed. All demos and <code>SparkEditor</code> use <strong><code>UiCanvasComponent</code></strong>, <strong><code>IUiElement</code></strong>, and <strong><code>IUiControlsFactory</code></strong> under <code>spark/ui/</code>. See <a href="gui-toolkit-architecture.html"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a>.</p>
 </blockquote>
-<p><strong>Dear ImGui</strong> (<code>SPARK_ENABLE_IMGUI</code>) remains available as an <strong>optional layer</strong> (<code>DearImguiControlsFactory</code> + raw <code>ImGui::</code> windows) for internal tools and the docking demo (<strong>#19</strong>); Spark native (<code>SparkUiControlsFactory</code>) is the default for shipped menus and <code>SparkEditor</code>.</p>
-<p><strong>Related:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.9–§5.10 / §12, <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><code>programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code></a>, <a href="SCENE_AND_RENDERING_GAPS.md"><code>SCENE_AND_RENDERING_GAPS.md</code></a>, <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a>, demo <strong>#10</strong> <code>SceneEditor3DDemo</code>.</p>
+<p><strong>Dear ImGui</strong> (<code>SPARK_ENABLE_IMGUI</code>) remains available as an <strong>optional layer</strong> (<code>DearImguiControlsFactory</code> + raw <code>ImGui::</code> windows) for internal tools and the docking demo (<strong>#20</strong>); Spark native (<code>SparkUiControlsFactory</code>) is the default for shipped menus and <code>SparkEditor</code>.</p>
+<p><strong>Related:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.9–§5.10 / §12, <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><code>programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code></a>, <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a>, <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a>, demo <strong>#10</strong> <code>SceneEditor3DDemo</code>.</p>
 <hr />
 <h2 id="how-to-track-work">How to track work</h2>
 <table>
@@ -153,7 +153,7 @@
 <td><code>SceneEditor3DDemo</code> — left strip UI + 3D pick/place (prototype)</td>
 </tr>
 <tr>
-<td><strong>Dear ImGui (#19)</strong></td>
+<td><strong>Dear ImGui (#20)</strong></td>
 <td><code>ImGuiShowcaseDemo</code> — docking tool panels, hotkey <strong>G</strong></td>
 </tr>
 <tr>
@@ -1031,8 +1031,7 @@
   E2 --> E6
   E3 --> E6
   E4 --> E6
-  E5 --> E6
-</div></div>
+  E5 --> E6</div></div>
 <hr />
 <h2 id="7-suggested-24-month-critical-path-small-team">7. Suggested 24-month critical path (small team)</h2>
 <table>
@@ -1113,7 +1112,7 @@
 </tr>
 <tr>
 <td><code>src/spark/demo/ImGuiShowcaseDemo.cpp</code></td>
-<td>Dear ImGui docking demo (#19)</td>
+<td>Dear ImGui docking demo (#20)</td>
 </tr>
 <tr>
 <td><code>include/spark/ecs/components/ui/UiCanvasComponent.hpp</code></td>

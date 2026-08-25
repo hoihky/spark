@@ -29,6 +29,15 @@ PAGES: list[tuple[Path, str, str]] = [
     (DOCS_ROOT / "SPARK_EDITOR_PLAN.md", "spark-editor-plan.html", "Spark Editor Plan"),
     (DOCS_ROOT / "GUI_EDITOR_ROADMAP.md", "gui-editor-roadmap.html", "GUI & Editor Roadmap"),
     (DOCS_ROOT / "ANIMATION_3D_ROADMAP.md", "animation-3d-roadmap.html", "3D Animation Roadmap"),
+    (DOCS_ROOT / "GLTF_DISPLAY_ROADMAP.md", "gltf-display-roadmap.html", "glTF Display Roadmap"),
+    (DOCS_ROOT / "SCENE_AND_RENDERING_GAPS.md", "scene-and-rendering-gaps.html", "Scene & Rendering Gaps"),
+    (DOCS_ROOT / "3D_ACTION_GAME_GAPS.md", "3d-action-game-gaps.html", "3D Action Game Gaps"),
+    (DOCS_ROOT / "OPEN_WORLD_ACTION_ROADMAP.md", "open-world-action-roadmap.html", "Open World Action Roadmap"),
+    (DOCS_ROOT / "CSHARP_SCRIPTING.md", "csharp-scripting.html", "C# Scripting"),
+    (DOCS_ROOT / "2D_ARPG_FEATURES.md", "2d-arpg-features.html", "2D ARPG Features"),
+    (DOCS_ROOT / "GUI_TOOLKIT_ARCHITECTURE.md", "gui-toolkit-architecture.html", "GUI Toolkit Architecture"),
+    (DOCS_ROOT / "CLION.md", "clion.html", "CLion"),
+    (DOCS_ROOT / "README.md", "docs-readme.html", "Documentation Index"),
 ]
 
 # Maps any .md basename (or docs/foo.md path) to site/docs HTML output.
@@ -41,7 +50,16 @@ MD_LINK_MAP.update(
         "SPARK_EDITOR_PLAN.md": "spark-editor-plan.html",
         "GUI_EDITOR_ROADMAP.md": "gui-editor-roadmap.html",
         "ANIMATION_3D_ROADMAP.md": "animation-3d-roadmap.html",
+        "GLTF_DISPLAY_ROADMAP.md": "gltf-display-roadmap.html",
+        "SCENE_AND_RENDERING_GAPS.md": "scene-and-rendering-gaps.html",
+        "3D_ACTION_GAME_GAPS.md": "3d-action-game-gaps.html",
+        "OPEN_WORLD_ACTION_ROADMAP.md": "open-world-action-roadmap.html",
+        "CSHARP_SCRIPTING.md": "csharp-scripting.html",
+        "2D_ARPG_FEATURES.md": "2d-arpg-features.html",
+        "GUI_TOOLKIT_ARCHITECTURE.md": "gui-toolkit-architecture.html",
+        "CLION.md": "clion.html",
         "README.md": "readme.html",
+        "docs/README.md": "docs-readme.html",
     }
 )
 
@@ -58,7 +76,7 @@ TEMPLATE = """<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({{ startOnLoad: true, theme: 'dark', securityLevel: 'loose' }});</script>
 </head>
 <body>
@@ -116,8 +134,9 @@ def fix_mermaid(html: str) -> str:
     )
 
     def to_mermaid_div(match: re.Match[str]) -> str:
-        body = match.group(1)
-        body = body.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+        import html as html_module
+
+        body = html_module.unescape(match.group(1)).strip()
         return f'<div class="mermaid-wrap"><div class="mermaid">{body}</div></div>'
 
     return pattern.sub(to_mermaid_div, html)

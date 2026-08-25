@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GUI Toolkit Architecture · Spark Game Engine</title>
+  <meta name="description" content="GUI toolkit architecture">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="gui-toolkit-architecture">GUI toolkit architecture</h1>
+<p>Spark’s retained UI lives in <strong><code>spark/ui/</code></strong> — a retained tree with Abstract Factory backends (Spark native + Dear ImGui). Legacy <code>spark/gui/</code> was removed in Phase 6.</p>
+<h2 id="layers">Layers</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>IUiElement</code> / <code>UiCanvasComponent</code></strong></td>
+<td>Retained tree on ECS entities; measure, arrange, paint, hit-test.</td>
+</tr>
+<tr>
+<td><strong><code>IUiControlsFactory</code></strong></td>
+<td>Abstract Factory: <code>SparkUiControlsFactory</code> vs <code>DearImguiControlsFactory</code>.</td>
+</tr>
+<tr>
+<td><strong><code>IUiBackend</code></strong></td>
+<td>Strategy: input routing + paint for one stack.</td>
+</tr>
+<tr>
+<td><strong><code>UiSystem</code></strong></td>
+<td>Facade: active backend, <code>ProcessInput</code> / <code>Paint</code>, factory access via <code>GetContext</code>.</td>
+</tr>
+<tr>
+<td><strong><code>SparkUiRenderer</code></strong></td>
+<td>Adapts <code>IUiRenderer</code> → <code>UiPaintContext</code> → <code>SceneRenderParams</code> (Vulkan screen UI pass over 2D/3D).</td>
+</tr>
+<tr>
+<td><strong><code>ImguiUiRenderer</code></strong></td>
+<td>Dear ImGui adapter (Phase 3+ full control paint).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="phase-6-current">Phase 6 (current)</h2>
+<ul>
+<li><strong>Deleted <code>spark/gui/</code></strong> — legacy <code>GuiSystem</code>, <code>GuiCanvasComponent</code>, <code>Widget</code> tree removed</li>
+<li><strong>Infrastructure moved to <code>spark/ui/</code></strong> — <code>UiPaintContext</code>, <code>UiSpriteSlice</code>, <code>UiThemeCatalog</code>, <code>EditorLayoutStore</code>, <code>UiContextMenu</code></li>
+<li><strong>All demos migrated</strong> — shell launcher, editor, ImGui showcase, particle demo, scene editor 3D</li>
+<li><strong>Input routing fix</strong> — context menu works without an enabled canvas (Scene Editor RMB menu).</li>
+<li><strong><code>ShouldProcessSparkUiInput()</code></strong> — wired in <code>DearImguiUiBackend</code>; Spark-native router runs when preferred backend is <code>SparkNative</code>.</li>
+<li><strong>Layout metrics</strong> — <code>PrepareUiCanvasFrame()</code> shared by input and paint paths so hit-testing matches painted layout.</li>
+<li><strong><code>ComponentKind::GuiCanvas</code> removed</strong> — use <code>UiCanvasComponent</code> (<code>ComponentKind::UiCanvas</code>)</li>
+</ul>
+<h2 id="phase-5">Phase 5</h2>
+<ul>
+<li><strong><code>UiTheme::SceneEditorDark()</code></strong> — editor chrome palette for <code>UiCanvasComponent</code></li>
+<li><strong><code>UiConsumesGamePointer()</code> / <code>UiPointerOverUi()</code></strong> — replace <code>GuiConsumesGamePointer</code> in migrated apps</li>
+<li><strong><code>IDockWorkspace</code> layout API</strong> — collapse toggles, <code>GetCenterBounds()</code>, width get/set</li>
+<li><strong><code>SparkDockWorkspace</code></strong> — collapsible left/right panes, passthrough center hit-test</li>
+<li><strong><code>SparkEditor</code> migration</strong> — <code>EditorDockShell</code> + Hierarchy/Inspector/Project panels on <code>UiCanvasComponent</code> + <code>SparkDockWorkspace</code></li>
+<li><strong><code>ImGuiShowcaseDemo</code> migration</strong> — retained <code>ImguiDockWorkspace</code> via <code>UiSystem::Paint</code> (overlay demo/metrics windows remain raw ImGui)</li>
+</ul>
+<h2 id="phase-4">Phase 4</h2>
+<ul>
+<li><strong><code>IList</code> / <code>IMultiSelectList</code> / <code>ITreeView</code></strong> — factory interfaces + <code>ListDesc</code>, <code>MultiSelectListDesc</code>, <code>TreeViewDesc</code></li>
+<li><strong><code>SparkList</code></strong>, <strong><code>SparkMultiSelectList</code></strong>, <strong><code>SparkTreeView</code></strong> — ported from legacy <code>spark/gui/</code> with scrollbars, keyboard nav, multi-select modifiers, tree expand/collapse</li>
+<li><strong><code>ImguiList</code></strong>, <strong><code>ImguiMultiSelectList</code></strong>, <strong><code>ImguiTreeView</code></strong> — Dear ImGui <code>ListBox</code> / <code>Selectable</code> / <code>TreeNodeEx</code> paint path</li>
+<li><strong><code>UiIntCallback</code></strong> + <strong><code>UiFrameVoidCallback</code></strong> — list selection and frame-aware row clicks</li>
+<li><strong><code>SparkButton</code></strong> — <code>SetAccentSelected</code>, <code>SetOpaqueSurface</code>, <code>SetOnClickWithFrame</code> for list rows</li>
+<li><strong><code>PanelDesc::centerInParent</code></strong> — centered launcher panel layout</li>
+<li><strong>Shell launcher migration</strong> — <code>SparkShellDemo</code> menu uses retained <code>UiCanvasComponent</code> + <code>SparkList</code> instead of immediate-mode <code>Gui::Ui()</code> selectables</li>
+</ul>
+<h2 id="phase-3">Phase 3</h2>
+<ul>
+<li><strong><code>ImguiUiRenderer</code> widget API</strong> — <code>Button</code>, <code>Checkbox</code>, <code>SliderFloat</code>, <code>BeginPanel</code> / <code>EndPanel</code>, scroll regions, and dock workspace host</li>
+<li><strong>Dear ImGui retained controls</strong> — <code>ImguiButton</code>, <code>ImguiPanel</code>, <code>ImguiLabel</code>, <code>ImguiSeparator</code>, <code>ImguiScrollPanel</code>, <code>ImguiSlider</code>, <code>ImguiCheckBox</code> emit ImGui widgets during <code>Paint</code></li>
+<li><strong><code>ImguiDockWorkspace</code></strong> — <code>ImGui::DockSpace</code> + <code>DockBuilder</code> split for left / center / right panes</li>
+<li><strong><code>DearImguiUiBackend</code></strong> — owns <code>ImGui::NewFrame</code> / <code>Render</code> via <code>OnEnginePreRender</code> / <code>OnEnginePostRender</code>; paints canvases through <code>ImguiUiRenderer</code></li>
+<li><strong><code>UiToolkitSettings</code></strong> — <code>SetPreferred(SparkNative | DearImGui)</code> swaps <code>UiSystem</code> backend (mirrors legacy <code>GuiToolkitSettings</code>)</li>
+<li><strong><code>PaintUiCanvases(world, IUiRenderer&amp;)</code></strong> — backend-neutral paint entry for Dear ImGui path</li>
+</ul>
+<p>Switch backend:</p>
+<pre><code class="language-cpp">Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
+</code></pre>
+<h2 id="phase-2">Phase 2</h2>
+<ul>
+<li><strong><code>UiInputRouter</code> polish</strong> — framebuffer cursor coords, scroll-wheel routing, modal canvas gating, cross-canvas focus clear, <code>keyCanvas</code> selection, <code>consumesGamePointer</code> during drag capture</li>
+<li><strong><code>UiScrollWheelConsumed()</code></strong> — gate 3D camera zoom when UI ate the wheel (mirrors <code>GuiScrollWheelConsumed</code>)</li>
+<li><strong>Focus lifecycle</strong> — parent-chain focus lookup, <code>OnFocusGained</code> / <code>OnFocusLost</code>, <code>ProcessKeyInput</code> on focused controls</li>
+<li><strong><code>SparkScrollPanel</code></strong> — vertical stack with clipped viewport, scrollbar thumb drag, mouse wheel</li>
+<li><strong>Keyboard</strong> — sliders use arrow keys; checkboxes toggle with Space when focused</li>
+</ul>
+<h2 id="building-a-retained-canvas">Building a retained canvas</h2>
+<pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
+
+Ui::IUiControlsFactory&amp; factory = Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
+
+Ui::PanelDesc panelDesc{};
+panelDesc.id = Utf8String(&quot;tune&quot;);
+panelDesc.title = Utf8String(&quot;Tuning&quot;);
+panelDesc.width = 560.0F;
+panelDesc.anchorRight = true;
+auto panel = factory.CreatePanel(panelDesc);
+
+Ui::ScrollPanelDesc scrollDesc{};
+scrollDesc.id = Utf8String(&quot;scroll&quot;);
+scrollDesc.height = 220.0F;
+auto scroll = factory.CreateScrollPanel(scrollDesc);
+// add children to scroll, then panel...
+</code></pre>
+<p>Each frame:</p>
+<pre><code class="language-cpp">ProcessUiCanvasesInput(world, input, fbW, fbH);
+if (!UiScrollWheelConsumed()) {
+    // apply camera zoom from scroll wheel
+}
+PaintUiCanvases(world, params, fbW, fbH);
+</code></pre>
+<h2 id="roadmap">Roadmap</h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0</strong></td>
+<td>Skeleton</td>
+</tr>
+<tr>
+<td><strong>1</strong></td>
+<td>Full Spark controls + PhysicsBallThrow3D demo</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>Input router polish, focus, scroll</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>ImGui control paint + <code>ImguiDockWorkspace</code></td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td>Lists + shell launcher migration</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td>Editor docking migration</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td>Delete <code>spark/gui/</code> (complete)</td>
+</tr>
+</tbody>
+</table>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

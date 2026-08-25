@@ -391,7 +391,7 @@ void ApplyHeightBrushWorld(GameObject&amp; owner, Vector3 centerWorld,
 </code></pre>
 <h2 id="procedural-terrain-from-terraindemo">Procedural Terrain (from <code>TerrainDemo</code>)</h2>
 <pre><code class="language-cpp">#include "spark/ecs/components/rendering/TerrainComponent.hpp"
-#include "spark/scene/TerrainGeneratorSettings.hpp"
+#include "spark/scene/mesh/TerrainGeneratorSettings.hpp"
 
 TerrainGeneratorSettings ts{};
 ts.subdivX = 288;
@@ -469,6 +469,18 @@ void SetSkyTexture(SharedPtr&lt;Texture2D&gt; t);
 void SetTint(const Vector3&amp; c) noexcept;
 </code></pre>
 <p>Pair with <code>MeshComponent</code> using matching sky mesh (<code>Mesh::CreateSkyDome</code>) and <code>SceneSkyMode</code> on the draw item. See <code>SkyDemo</code> for box/dome/plane modes and HDR equirect textures.</p>
+<p><code>GltfSamples3DDemo</code> (launcher <strong>#21</strong>, key <strong>Q</strong>) uses a scaled sky sphere + <code>SkyComponent</code> with <code>studio_small_08_1k.hdr</code> for PBR image-based lighting on <code>DamagedHelmet.glb</code>:</p>
+<pre><code class="language-cpp">auto skyMesh = MakeShared&lt;Mesh&gt;(Mesh::CreateSkySphere(1.0F, 20, 40));
+auto* skyGo = world.CreateGameObject();
+skyGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetUniformScale(120.0F);
+skyGo-&gt;AddComponent&lt;SkyComponent&gt;(SceneSkyMode::Dome);
+skyGo-&gt;AddComponent&lt;MeshComponent&gt;(skyMesh, SceneMeshSlot::Custom, Vector3::One);
+skyGo-&gt;AddComponent&lt;MaterialComponent&gt;()-&gt;SetBaseColorTexture(hdrEquirectTex);
+
+SceneRenderParams params{};
+params.iblEnabled = true;
+params.iblEnvironmentLayer = -1;  // pick env from sky draw
+</code></pre>
 <pre><code class="language-cpp">auto skyMesh = MakeShared&lt;Mesh&gt;(Mesh::CreateSkyDome(500.0F, 32, 64));
 auto* skyGo = world.CreateGameObject();
 skyGo-&gt;AddComponent&lt;MeshComponent&gt;(skyMesh, SceneMeshSlot::Custom, Vector3::One);

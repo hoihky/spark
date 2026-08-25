@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -40,7 +40,7 @@
 <li>Optional <strong>Dear ImGui</strong> tool UI (<code>spark/imgui/</code>, <code>SPARK_ENABLE_IMGUI</code>, docking branch) alongside the retained stack.</li>
 <li><strong>Asset loading</strong> (meshes, glTF, textures, fonts, skinned characters) with caching on <code>GameWorldAssetCache</code> (via <code>GameWorld</code>).</li>
 </ul>
-<p>The default executable (<code>src/main.cpp</code>) constructs <code>Engine</code> with <strong><code>NewShellDemoGame()</code></strong> (<code>spark/demo/NewShellDemoGame.hpp</code>) — the interactive launcher plus <strong>20</strong> built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, Dear ImGui docking demo, etc.).</p>
+<p>The default executable (<code>src/main.cpp</code>) constructs <code>Engine</code> with <strong><code>NewShellDemoGame()</code></strong> (<code>spark/demo/NewShellDemoGame.hpp</code>) — the interactive launcher plus <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, Dear ImGui docking demo, etc.).</p>
 <hr />
 <h2 id="2-repository-layout-mental-map">2. Repository Layout (Mental Map)</h2>
 <table>
@@ -69,7 +69,7 @@
 </tr>
 <tr>
 <td><code>docs/</code></td>
-<td>Supplementary design notes — e.g. <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>, <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a>, <a href="SCENE_AND_RENDERING_GAPS.md"><code>SCENE_AND_RENDERING_GAPS.md</code></a>, <a href="2D_ARPG_FEATURES.md"><code>2D_ARPG_FEATURES.md</code></a>, <a href="OPEN_WORLD_ACTION_ROADMAP.md"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a>.</td>
+<td>Supplementary design notes — e.g. <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>, <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a>, <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a>, <a href="2d-arpg-features.html"><code>2D_ARPG_FEATURES.md</code></a>, <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a>.</td>
 </tr>
 <tr>
 <td><code>CMakeLists.txt</code></td>
@@ -80,11 +80,11 @@
 <p>Key header groups:</p>
 <ul>
 <li><strong>Engine loop:</strong> <code>spark/engine/</code> — <code>Engine</code>, <code>IGame</code>, <code>Game</code>, <code>ISceneProvider</code>, <code>IEngineContext</code>, <code>EngineContext</code>, <code>GlfwInput</code>, <code>FrameTiming</code>, <code>SceneRenderParams</code>.</li>
-<li><strong>World &amp; entities:</strong> <code>spark/scene/GameWorld.hpp</code>, <code>spark/ecs/GameObject.hpp</code>, <code>spark/scene/Scene.hpp</code>.</li>
+<li><strong>World &amp; entities:</strong> <code>spark/scene/core/GameWorld.hpp</code>, <code>spark/ecs/GameObject.hpp</code>, <code>spark/scene/core/Scene.hpp</code>.</li>
 <li><strong>Components:</strong> <code>spark/ecs/components/</code> — domain subfolders (<code>core/</code>, <code>rendering/</code>, <code>lighting/</code>, <code>camera/</code>, <code>physics/2d|3d/</code>, <code>animation/</code>, <code>ai/</code>, <code>audio/</code>, <code>ui/</code>, <code>world/</code>).</li>
 <li><strong>Math &amp; containers:</strong> <code>spark/math/</code>, <code>spark/core/</code>, <code>spark/memory/</code> (<code>SharedPtr</code>, <code>UniquePtr</code>, <code>Array</code>, <code>Utf8String</code>).</li>
 <li><strong>Rendering contract:</strong> <code>spark/engine/SceneRenderParams.hpp</code> — what the GPU path consumes each frame.</li>
-<li><strong>Fast path for lit scenes:</strong> <code>spark/scene/SceneSubmit.hpp</code> — <code>SubmitStandardLitSceneFromWorld</code> (implementation split across <code>SceneSubmit.cpp</code>, <code>SceneSubmitLighting.cpp</code>, <code>SceneSubmitMaterial.cpp</code>, <code>SceneSubmitDrawPartition.cpp</code>).</li>
+<li><strong>Fast path for lit scenes:</strong> <code>spark/scene/submit/SceneSubmit.hpp</code> — <code>SubmitStandardLitSceneFromWorld</code> (implementation split across <code>SceneSubmit.cpp</code>, <code>SceneSubmitLighting.cpp</code>, <code>SceneSubmitMaterial.cpp</code>, <code>SceneSubmitDrawPartition.cpp</code>).</li>
 </ul>
 <hr />
 <h2 id="3-build-run-c">3. Build &amp; Run (C++)</h2>
@@ -119,25 +119,25 @@ cmake --build cmake-build-debug -j
 ./cmake-build-debug/SparkDemo
 ./cmake-build-debug/spark_editor/SparkEditor
 </code></pre>
-<p>See <a href="readme.html"><code>README.md</code></a>, <a href="CLION.md"><code>docs/CLION.md</code></a>, and <a href="readme.html"><code>.run/README.md</code></a> for CLion profiles and run configs.</p>
+<p>See <a href="readme.html"><code>README.md</code></a>, <a href="clion.html"><code>docs/CLION.md</code></a>, and <a href="readme.html"><code>.run/README.md</code></a> for CLion profiles and run configs.</p>
 <p>External games: link against <code>SparkEngine</code> from your own CMake target (see programming guide <a href="../../programming-guide/site/1-overview-architecture/03-building-and-running.html">Building and Running</a>). Copy patterns from <code>src/spark/demo/</code> — <code>Platformer2DDemo</code> for 2D, <code>CharacterCameraDemo</code> for 3D.</p>
 <hr />
 <h2 id="4-high-level-architecture">4. High-Level Architecture</h2>
 <div class="mermaid-wrap"><div class="mermaid">flowchart TB
     subgraph app [Application]
-        IGame[IGame implementation]
+        IGame["IGame implementation"]
     end
     subgraph engine [Engine]
-        Loop[Main loop: poll input, tick, render, present]
+        Loop["Main loop — poll, tick, render, present"]
         Ctx[IEngineContext]
     end
     subgraph world [Simulation]
         GW[GameWorld]
-        GO[GameObjects + Components]
+        GO["GameObjects and Components"]
     end
     subgraph draw [Frame output]
         SRP[SceneRenderParams]
-        VK[VulkanRenderer / IFramePresenter]
+        VK["VulkanRenderer / IFramePresenter"]
     end
     IGame --> Loop
     Loop --> Ctx
@@ -145,68 +145,49 @@ cmake --build cmake-build-debug -j
     GW --> GO
     IGame --> SRP
     Ctx --> VK
-    SRP --> VK
-</div></div>
+    SRP --> VK</div></div>
 <p><strong>Design idea:</strong> game code depends on <strong>small interfaces</strong> (<code>IGame</code>, <code>IEngineContext</code>, <code>IFramePresenter</code>) and on <strong>data</strong> (<code>SceneRenderParams</code>), not on the concrete Vulkan implementation inside <code>Engine</code>.</p>
 <h3 id="41-class-relationships-engine-layer">4.1 Class relationships (engine layer)</h3>
 <p>The runtime object graph is intentionally shallow: <strong><code>Engine</code></strong> owns the window, the concrete <strong><code>VulkanRenderer</code></strong> (as <code>IFramePresenter</code>), input, an <strong><code>IEngineContext</code></strong> implementation, and your <strong><code>IGame</code></strong>. Simulation state lives under <strong><code>GameWorld</code></strong>; rendering is a <strong>pure data hand-off</strong> via <strong><code>SceneRenderParams</code></strong> each frame.</p>
 <div class="mermaid-wrap"><div class="mermaid">classDiagram
-    direction TB
-    class Engine {
-        +Run()
-    }
-    class IGame {
-        <<interface>>
-        +OnAttach(IEngineContext)
-        +OnUpdate(FrameTiming, IEngineContext)
-        +OnRender(IRenderFrame, IEngineContext)
-        +OnDetach()
-    }
-    class Game {
-        Scene scene
-        +GetWorld() GameWorld
-    }
-    class Scene {
-        +GetWorld() GameWorld
-        +ForEachDrawable(...)
-    }
-    class GameWorld {
-        +CreateGameObject()
-        +UpdateGameObjects(...)
-    }
-    class GameObject {
-        +AddComponent()
-        +GetComponent()
-    }
-    class GameComponent {
-        <<abstract>>
-        +OnUpdate(...)
-    }
-    class IEngineContext {
-        <<interface>>
-        +GetInput()
-        +SetSceneRenderParams(SceneRenderParams)
-    }
-    class IFramePresenter {
-        <<interface>>
-        +PresentFrame()
-        +SetSceneRenderParams(SceneRenderParams)
-    }
-    class VulkanRenderer {
-        +DrawFrame()
-    }
-
-    Engine o-- &quot;1&quot; IGame : owns
-    Engine o-- &quot;1&quot; IEngineContext
-    Engine o-- &quot;1&quot; IFramePresenter : presenter
-    IFramePresenter <|.. VulkanRenderer
-    IEngineContext ..> IFramePresenter : forwards SetSceneRenderParams
+    class Engine
+    class IGame
+    class Game
+    class Scene
+    class GameWorld
+    class GameObject
+    class GameComponent
+    class IEngineContext
+    class IFramePresenter
+    class VulkanRenderer
+    Engine o-- IGame
+    Engine o-- IEngineContext
+    Engine o-- IFramePresenter
+    VulkanRenderer ..|> IFramePresenter
+    IEngineContext ..> IFramePresenter
     Game --|> IGame
-    Game *-- Scene : owns
-    Scene *-- GameWorld : wraps
-    GameWorld o-- &quot;*&quot; GameObject
-    GameObject o-- &quot;*&quot; GameComponent
-</div></div>
+    Game *-- Scene
+    Scene *-- GameWorld
+    GameWorld o-- GameObject
+    GameObject o-- GameComponent
+    Engine : +Run()
+    IGame : +OnAttach()
+    IGame : +OnUpdate()
+    IGame : +OnRender()
+    IGame : +OnDetach()
+    Game : +GetWorld()
+    Scene : +GetWorld()
+    Scene : +ForEachDrawable()
+    GameWorld : +CreateGameObject()
+    GameWorld : +UpdateGameObjects()
+    GameObject : +AddComponent()
+    GameObject : +GetComponent()
+    GameComponent : +OnUpdate()
+    IEngineContext : +GetInput()
+    IEngineContext : +SetSceneRenderParams()
+    IFramePresenter : +PresentFrame()
+    IFramePresenter : +SetSceneRenderParams()
+    VulkanRenderer : +DrawFrame()</div></div>
 <p><strong>How to read this diagram</strong></p>
 <ul>
 <li><strong><code>IGame</code></strong> is the only polymorphic “application” type the engine loop calls; <strong><code>Game</code></strong> is an optional base that owns <strong><code>Scene</code></strong>, implements <strong><code>ISceneProvider</code></strong>, and forwards <strong><code>OnUpdate</code></strong> to <strong><code>GameWorld::UpdateGameObjects</code></strong>.</li>
@@ -216,7 +197,7 @@ cmake --build cmake-build-debug -j
 </ul>
 <hr />
 <h2 id="5-engine-feature-catalog-by-subsystem">5. Engine feature catalog (by subsystem)</h2>
-<p>This section is a <strong>feature-oriented index</strong>: what exists in the tree today, which headers to open first, and how features connect. Deeper lighting notes live in <a href="lighting-and-shadows.html"><code>docs/LIGHTING_AND_SHADOWS.md</code></a>; ARPG-oriented 2D notes in <a href="2D_ARPG_FEATURES.md"><code>docs/2D_ARPG_FEATURES.md</code></a>.</p>
+<p>This section is a <strong>feature-oriented index</strong>: what exists in the tree today, which headers to open first, and how features connect. Deeper lighting notes live in <a href="lighting-and-shadows.html"><code>docs/LIGHTING_AND_SHADOWS.md</code></a>; ARPG-oriented 2D notes in <a href="2d-arpg-features.html"><code>docs/2D_ARPG_FEATURES.md</code></a>.</p>
 <h3 id="51-application-shell-and-frame-loop">5.1 Application shell and frame loop</h3>
 <table>
 <thead>
@@ -272,7 +253,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Entity storage</strong></td>
 <td>Create/destroy objects, hierarchy, tick components</td>
-<td><code>GameWorld</code> (<code>spark/scene/GameWorld.hpp</code>)</td>
+<td><code>GameWorld</code> (<code>spark/scene/core/GameWorld.hpp</code>)</td>
 </tr>
 <tr>
 <td><strong>Entity</strong></td>
@@ -287,7 +268,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Render-side queries</strong></td>
 <td>Iterate drawables, lights, UI roots without owning entities</td>
-<td><code>Scene</code> (<code>spark/scene/Scene.hpp</code>) — <code>ForEachDrawable</code>, <code>ForEachSkinnedDrawable</code>, <code>ForEachPointLight</code>, <code>ForEachSpotLight</code>, <code>ForEachSky</code>, <code>ForEachTextOverlay</code>, <code>ForEachParticleEmitter</code>, <code>ForEachUiCanvas</code></td>
+<td><code>Scene</code> (<code>spark/scene/core/Scene.hpp</code>) — <code>ForEachDrawable</code>, <code>ForEachSkinnedDrawable</code>, <code>ForEachPointLight</code>, <code>ForEachSpotLight</code>, <code>ForEachSky</code>, <code>ForEachTextOverlay</code>, <code>ForEachParticleEmitter</code>, <code>ForEachUiCanvas</code></td>
 </tr>
 <tr>
 <td><strong>Optional culling</strong></td>
@@ -384,7 +365,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>ECS → standard frame</strong></td>
 <td>One-call fill for typical 3D scenes</td>
-<td><code>SubmitStandardLitSceneFromWorld</code> (<code>spark/scene/SceneSubmit.hpp</code>)</td>
+<td><code>SubmitStandardLitSceneFromWorld</code> (<code>spark/scene/submit/SceneSubmit.hpp</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -465,7 +446,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>2D camera</strong></td>
 <td>Ortho view-projection helper</td>
-<td><code>Camera2D</code> (<code>spark/scene/Camera2D.hpp</code>)</td>
+<td><code>Camera2D</code> (<code>spark/scene/camera/Camera2D.hpp</code>)</td>
 </tr>
 <tr>
 <td><strong>2D physics &amp; queries</strong></td>
@@ -524,7 +505,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Heightfield terrain</strong></td>
 <td>Procedural or authored height → mesh</td>
-<td><code>TerrainComponent</code>, <code>TerrainMeshGenerator</code>, settings in <code>spark/scene/TerrainGeneratorSettings.hpp</code></td>
+<td><code>TerrainComponent</code>, <code>TerrainMeshGenerator</code>, settings in <code>spark/scene/mesh/TerrainGeneratorSettings.hpp</code></td>
 </tr>
 <tr>
 <td><strong>Sky backdrop</strong></td>
@@ -566,7 +547,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Character camera</strong></td>
 <td>Third-person style rig (demos)</td>
-<td><code>CharacterCameraRig</code> (<code>spark/scene/CharacterCameraRig.hpp</code>)</td>
+<td><code>CharacterCameraRig</code> (<code>spark/scene/camera/CharacterCameraRig.hpp</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -628,7 +609,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Architecture</strong></td>
 <td>Migration complete (Phase 6)</td>
-<td><a href="GUI_TOOLKIT_ARCHITECTURE.md"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a></td>
+<td><a href="gui-toolkit-architecture.html"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a></td>
 </tr>
 </tbody>
 </table>
@@ -670,7 +651,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Demo</strong></td>
 <td>Docking tool panels + 3D backdrop</td>
-<td><code>ImGuiShowcaseDemo</code>, launcher item <strong>20</strong> (hotkey <strong>G</strong>)</td>
+<td><code>ImGuiShowcaseDemo</code>, launcher item <strong>20</strong> (hotkey <strong>G</strong>); glTF PBR sample <strong>21</strong> (<code>GltfSamples3DDemo</code>, hotkey <strong>Q</strong>)</td>
 </tr>
 </tbody>
 </table>
@@ -775,7 +756,7 @@ engine.Run();
 <hr />
 <h2 id="7-scene-world-and-entities">7. Scene, World, and Entities</h2>
 <h3 id="71-gameworld">7.1 <code>GameWorld</code></h3>
-<p><code>GameWorld</code> (<code>spark/scene/GameWorld.hpp</code>):</p>
+<p><code>GameWorld</code> (<code>spark/scene/core/GameWorld.hpp</code>):</p>
 <ul>
 <li>Allocates <strong><code>GameObject</code></strong> instances (<code>CreateGameObject</code> / <code>DestroyGameObject</code>).</li>
 <li>Maintains <strong>parent/child</strong> links (<code>SetParent</code> on world or object).</li>
@@ -793,7 +774,7 @@ engine.Run();
 <li><strong>Signals:</strong> <code>EmitSignal</code> / <code>OnSignal</code> on <code>GameComponent</code> for sibling chatter (<code>spark/ecs/Signal.hpp</code>).</li>
 </ul>
 <h3 id="73-scene">7.3 <code>Scene</code></h3>
-<p><code>Scene</code> (<code>spark/scene/Scene.hpp</code>) wraps a <code>GameWorld</code> and adds <strong>render queries</strong>:</p>
+<p><code>Scene</code> (<code>spark/scene/core/Scene.hpp</code>) wraps a <code>GameWorld</code> and adds <strong>render queries</strong>:</p>
 <ul>
 <li><code>ForEachDrawable</code>, <code>ForEachSkinnedDrawable</code>, <code>ForEachPointLight</code>, <code>ForEachSpotLight</code>, <code>ForEachSky</code>, <code>ForEachTextOverlay</code>, <code>ForEachParticleEmitter</code>, <code>ForEachUiCanvas</code>, etc.</li>
 <li>Optional <strong>view-frustum</strong> variants (<code>SetSpatialPartitionKind</code>, <code>ForEachDrawableInViewFrustum</code>, …) driven by <code>SceneSpatialPolicyComponent</code> / <code>ScenePartitionKind</code>.</li>
@@ -816,17 +797,17 @@ engine.Run();
 </tr>
 <tr>
 <td><code>SceneManager</code></td>
-<td><code>spark/scene/SceneManager.hpp</code></td>
+<td><code>spark/scene/core/SceneManager.hpp</code></td>
 <td><code>LoadSceneFromFile</code>, <code>BeginLoadSceneAsync</code>, <code>Pump</code>, <code>UnloadScene</code></td>
 </tr>
 <tr>
 <td><code>GameWorldAssetLoader</code></td>
-<td><code>spark/scene/GameWorldAssetLoader.hpp</code></td>
+<td><code>spark/scene/assets/GameWorldAssetLoader.hpp</code></td>
 <td>Worker-thread I/O + decode; <code>Pump(GameWorld&amp;)</code> commits caches on main thread</td>
 </tr>
 <tr>
 <td><code>SceneInstanceId</code></td>
-<td><code>spark/scene/SceneInstanceId.hpp</code></td>
+<td><code>spark/scene/core/SceneInstanceId.hpp</code></td>
 <td>Opaque id per loaded scene instance; stored on <code>GameObject</code></td>
 </tr>
 </tbody>
@@ -843,28 +824,27 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <h3 id="76-simulation-vs-rendering-per-frame">7.6 Simulation vs rendering (per frame)</h3>
 <p>Simulation updates <strong>mutable world state</strong> (<code>GameWorld</code>, transforms, physics, components). Rendering <strong>samples</strong> that state (or cached matrices) into an immutable <strong>snapshot</strong> (<code>SceneRenderParams</code>) for the GPU. The two concerns meet only at <strong><code>IEngineContext::SetSceneRenderParams</code></strong>.</p>
 <div class="mermaid-wrap"><div class="mermaid">sequenceDiagram
-    participant Loop as Engine loop
+    participant Eng as Engine loop
     participant Game as IGame
-    participant World as GameWorld / Scene
+    participant World as GameWorldScene
     participant ImGui as IImGuiLayer
     participant Ctx as IEngineContext
-    participant Present as IFramePresenter
+    participant Presenter as IFramePresenter
 
-    Loop->>Game: OnUpdate(timing, context)
+    Eng->>Game: OnUpdate
     Game->>World: logic, physics, components
     opt ImGui enabled
-        Loop->>ImGui: BeginFrame (NewFrame)
+        Eng->>ImGui: BeginFrame
     end
-    Loop->>Game: OnRender(frame, context)
-    Game->>World: queries (ForEach..., matrices)
-    Game->>Ctx: SetSceneRenderParams(params)
+    Eng->>Game: OnRender
+    Game->>World: queries and matrices
+    Game->>Ctx: SetSceneRenderParams
     opt ImGui enabled
-        Loop->>ImGui: EndFrame (Render)
+        Eng->>ImGui: EndFrame
     end
-    Ctx->>Present: SetSceneRenderParams (VulkanRenderer stores copy)
-    Loop->>Present: PresentFrame
-    Note over Present: shadows → HDR scene → SSAO → tonemap → screen UI → ImGui
-</div></div>
+    Ctx->>Presenter: SetSceneRenderParams
+    Eng->>Presenter: PresentFrame
+    Note over Presenter: shadows, HDR scene, SSAO, tonemap, UI, ImGui</div></div>
 <hr />
 <h2 id="8-components-ecs">8. Components (ECS)</h2>
 <p>All gameplay building blocks inherit <strong><code>GameComponent</code></strong> (<code>spark/ecs/GameComponent.hpp</code>):</p>
@@ -1131,14 +1111,13 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <div class="mermaid-wrap"><div class="mermaid">flowchart TB
     GW[GameWorld]
     GO[GameObject]
-    GC[GameComponent instances]
-    GW -->|&quot;Create / destroy&quot;| GO
-    GO -->|&quot;AddComponent / owns&quot;| GC
+    GC["GameComponent instances"]
+    GW -->|"Create / destroy"| GO
+    GO -->|"AddComponent / owns"| GC
     GC --> T[TransformComponent]
-    GC --> M[MeshComponent / SkinnedMeshComponent]
-    GC --> L[PointLight / SpotLight]
-    GC --> U[UiCanvasComponent]
-</div></div>
+    GC --> M["MeshComponent / SkinnedMeshComponent"]
+    GC --> L["PointLight / SpotLight"]
+    GC --> U[UiCanvasComponent]</div></div>
 <hr />
 <h2 id="9-rendering-two-common-patterns">9. Rendering: Two Common Patterns</h2>
 <h3 id="91-manual-iterate-scene-fill-scenerenderparams">9.1 Manual: iterate <code>Scene</code> → fill <code>SceneRenderParams</code></h3>
@@ -1153,7 +1132,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </ol>
 <p>See <code>include/spark/demo/ThreeDDemo.hpp</code> and related demos for full examples (sorting helpers live in <code>spark/demo/ShellDemoSceneUtil.hpp</code>).</p>
 <h3 id="92-convenience-submitstandardlitscenefromworld">9.2 Convenience: <code>SubmitStandardLitSceneFromWorld</code></h3>
-<p><code>SubmitStandardLitSceneFromWorld</code> (<code>spark/scene/SceneSubmit.hpp</code>) walks the world and fills <strong>standard lit</strong> parameters (sky, rigid meshes, skinned meshes via <code>DispatchSkinnedDrawableFrustumCull</code> when a <code>SceneSpatialPolicyComponent</code> is present, point lights, <strong>spot lights</strong>, optional particles, time for sprite effects). Materials pick up <strong>base color</strong>, <strong>normal</strong>, and <strong>metallic–roughness (ORM)</strong> textures when you pass the <strong><code>SceneRenderParams*</code></strong> overload of <code>ApplyMaterialComponentToSceneDrawItem</code> inside the submitter. Optional <strong><code>SceneSpriteSortMode::SortOrderThenWorldY</code></strong> enables top-down sprite occlusion by world Y after <code>sortOrder</code>.</p>
+<p><code>SubmitStandardLitSceneFromWorld</code> (<code>spark/scene/submit/SceneSubmit.hpp</code>) walks the world and fills <strong>standard lit</strong> parameters (sky, rigid meshes, skinned meshes via <code>DispatchSkinnedDrawableFrustumCull</code> when a <code>SceneSpatialPolicyComponent</code> is present, point lights, <strong>spot lights</strong>, optional particles, time for sprite effects). Materials pick up <strong>base color</strong>, <strong>normal</strong>, and <strong>metallic–roughness (ORM)</strong> textures when you pass the <strong><code>SceneRenderParams*</code></strong> overload of <code>ApplyMaterialComponentToSceneDrawItem</code> inside the submitter. Optional <strong><code>SceneSpriteSortMode::SortOrderThenWorldY</code></strong> enables top-down sprite occlusion by world Y after <code>sortOrder</code>.</p>
 <p>Use this when your game matches the <strong>stock lit pipeline</strong> and you do not need custom draw ordering beyond what the submitter provides.</p>
 <h3 id="93-vulkanrenderer-internals-rendering-logic">9.3 VulkanRenderer internals (rendering logic)</h3>
 <p><code>VulkanRenderer</code> (<code>include/spark/render/core/VulkanRenderer.hpp</code>, <code>src/spark/render/core/VulkanRenderer.cpp</code>) is the default <strong><code>IFramePresenter</code></strong>. It <strong>orchestrates</strong> the frame graph and scene draw recording; lower-level ownership is split across focused types:</p>
@@ -1266,14 +1245,14 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <h4 id="scene-geometry-and-draws">Scene geometry and draws</h4>
 <ul>
 <li><strong>Static packed mesh:</strong> <code>CreateSceneGeometry</code> uploads one <strong>vertex + index</strong> buffer containing the <strong>unit cube</strong>, <strong>ground plane</strong>, and a <strong>sprite quad</strong> topology. <code>SceneMeshSlot::UnitCube</code> / <code>GroundPlane</code> draws index into that buffer with per-draw <strong><code>ModelPushConstants</code></strong> (model matrix, albedo, <code>textureLayer</code>, <code>normalMapLayer</code>, <code>metallicRoughnessMapLayer</code>, sky mode, PBR, emissive, skinning summary).</li>
-<li><strong>Custom rigid meshes:</strong> CPU <code>Mesh</code> data is packed into <strong>dynamic <code>customVertexBuffer</code> / <code>customIndexBuffer</code></strong> when fingerprints change (<code>RebuildCustomMeshGeometry</code>, <code>ComputeCustomGeometryFingerprint</code>). Each <code>SceneDrawItem</code> with <code>mesh == Custom</code> maps to a <strong><code>CustomMeshGpuSlice</code></strong> (first index, count, vertex offset).</li>
-<li><strong>Skinned meshes:</strong> joint matrices are copied each draw into a <strong>per–frame-in-flight storage buffer</strong> (<code>skinSsboBuffers</code>, std430 palette, up to <strong><code>kMaxSkinJoints</code> = 64</strong>). Push constants select skinning on the same scene pipeline path.</li>
+<li><strong>Custom rigid meshes:</strong> CPU <code>Mesh</code> / <code>SkinnedMesh</code> data is packed by <strong><code>VulkanCustomMeshPool</code></strong> into dynamic vertex/index buffers when the geometry fingerprint changes. Each <code>SceneDrawItem</code> with <code>mesh == Custom</code> maps to a <strong><code>CustomMeshGpuSlice</code></strong> (first index, count, vertex offset). When switching demos or submitting params with no custom draws, <strong><code>ClearKnownMeshes()</code></strong> drops cached CPU mesh pointers so destroyed assets are not repacked.</li>
+<li><strong>Skinned meshes:</strong> joint matrices are copied each draw into a <strong>per–frame-in-flight storage buffer</strong> (<code>skinSsboBuffers</code>, std430 palette, up to <strong><code>kMaxSkinJoints</code> = 128</strong>). Push constants select skinning on the same scene pipeline path.</li>
 </ul>
 <h4 id="scene-uniforms-and-textures">Scene uniforms and textures</h4>
 <ul>
 <li><strong><code>WriteUniformBuffer</code></strong> fills <strong><code>SceneUniformGpu</code></strong> via <code>VulkanSceneUniformWriter</code> (struct in <code>include/spark/render/scene/VulkanSceneUniformGpu.hpp</code>) — view-projection, directional light, camera position, ambient, inverse view-projection, viewport size (shadow V-flip in <code>.w</code>), CSM data, cluster grid metadata, IBL params, and time. <code>SceneLightingResolver::Resolve</code> may adjust sun/ambient before upload. Punctual lights are uploaded to <strong>cluster SSBOs</strong> (not the UBO).</li>
 <li><strong>Descriptor set (scene):</strong> binding <strong>0</strong> UBO, <strong>1</strong> scene texture array, <strong>2</strong> skin SSBO, <strong>3</strong> directional shadow atlas, <strong>4</strong>–<strong>5</strong> cluster lights/grid SSBOs, <strong>6</strong>–<strong>8</strong> punctual shadow SSBO + atlases.</li>
-<li><strong><code>RecordSceneTextureUploads</code></strong> resizes/stages <strong>RGBA8</strong> textures from <code>SceneRenderParams::sceneTextures</code> into the array image when the <strong>pointer set</strong> changes (dirty tracking via <code>lastSceneUploadedTexturePtrs</code>), so unchanged frames skip redundant <strong><code>vkCmdCopyBufferToImage</code></strong>.</li>
+<li><strong><code>RecordSceneTextureUploads</code></strong> resizes/stages <strong>RGBA8</strong> textures from <code>SceneRenderParams::sceneTextures</code> into the array image when the <strong>pointer set</strong> changes (dirty tracking via <code>lastSceneUploadedTexturePtrs</code>), so unchanged frames skip redundant <strong><code>vkCmdCopyBufferToImage</code></strong>. <code>FindOrAddSceneTexture</code> assigns <strong>dense per-frame</strong> layer indices (0…N−1); <code>SetSceneRenderParams</code> replaces the merged texture list each submit so demo switches do not retain stale layers.</li>
 </ul>
 <h4 id="ui-recording-recordscreenui">UI recording (<code>RecordScreenUi</code>)</h4>
 <p>Screen-space draws are <strong>not</strong> interleaved arbitrarily: the renderer batches geometry into <strong>CPU scratch buffers</strong>, then issues draws with optional <strong>Vulkan scissor</strong> derived from <code>ScreenRectDraw</code> / <code>ScreenTextDraw</code> clip rectangles.</p>
@@ -1373,7 +1352,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 </code></pre>
 <p>Sort order: <code>UiCanvasComponent::SetSortOrder</code> — lower draws first. Overlay/late layers via <code>UiPaintContext::PushOverlayLayer</code> / <code>PushLateLayer</code>.</p>
 <p>Input gating: <code>UiConsumesGamePointer()</code>, <code>UiPointerOverUi()</code>, <code>UiScrollWheelConsumed()</code>.</p>
-<p>See <a href="GUI_TOOLKIT_ARCHITECTURE.md"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a> for the full layer diagram and migration phases.</p>
+<p>See <a href="gui-toolkit-architecture.html"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a> for the full layer diagram and migration phases.</p>
 <p><strong>UI GPU note:</strong> <code>VulkanScreenUiPass</code> draws all solid rects then all text per layer (main, overlay, late) for stable Vulkan batching. Dear ImGui draws <strong>after</strong> screen UI in the present subpass when enabled.</p>
 <hr />
 <h2 id="121-dear-imgui-sparkimgui">12.1 Dear ImGui (<code>spark/imgui/</code>)</h2>
@@ -1384,7 +1363,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <li><strong>Frame contract:</strong> engine calls <code>BeginFrame</code> after <code>OnUpdate</code>, game builds UI in <code>OnRender</code>, engine calls <code>EndFrame</code> before <code>PresentFrame</code>.</li>
 <li><strong>Retained ImGui controls</strong> — <code>DearImguiControlsFactory</code> paints <code>ImguiButton</code>, <code>ImguiPanel</code>, <code>ImguiDockWorkspace</code>, etc. during <code>UiSystem::Paint</code>.</li>
 </ul>
-<p>Demo: <strong><code>ImGuiShowcaseDemo</code></strong> (launcher <strong>#19</strong>, key <strong>G</strong>). See programming guide chapter <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
+<p>Demo: <strong><code>ImGuiShowcaseDemo</code></strong> (launcher <strong>#20</strong>, key <strong>G</strong>). <strong><code>GltfSamples3DDemo</code></strong> (launcher <strong>#21</strong>, key <strong>Q</strong>) — Khronos <code>DamagedHelmet.glb</code> with studio HDR IBL (<code>studio_small_08_1k.hdr</code>). See programming guide chapter <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
 <hr />
 <h2 id="13-conventions-types">13. Conventions &amp; Types</h2>
 <ul>
@@ -1397,15 +1376,16 @@ PaintUiCanvases(world, params, fbW, fbH);
 <h2 id="14-learning-path-recommended-reading-order">14. Learning Path (Recommended Reading Order)</h2>
 <ol>
 <li><code>spark/engine/IGame.hpp</code>, <code>Game.hpp</code>, <code>Engine.hpp</code>, <code>IEngineContext.hpp</code></li>
-<li><code>spark/scene/GameWorld.hpp</code>, <code>spark/ecs/GameObject.hpp</code>, <code>spark/scene/Scene.hpp</code></li>
+<li><code>spark/scene/core/GameWorld.hpp</code>, <code>spark/ecs/GameObject.hpp</code>, <code>spark/scene/core/Scene.hpp</code></li>
 <li><code>spark/engine/SceneRenderParams.hpp</code> (what a frame expects on the GPU side)</li>
 <li><strong>This guide — §4.1 (class map), §7.4 (sim vs render), §9.3 (<code>VulkanRenderer</code> internals), §5 (feature catalog)</strong></li>
 <li><code>include/spark/render/core/VulkanRenderer.hpp</code> + <code>src/spark/render/core/VulkanRenderer.cpp</code> (implementation detail; large)</li>
 <li><code>include/spark/demo/ThreeDDemo.hpp</code> — camera + glTF + lights + manual submit pattern</li>
+<li><code>include/spark/demo/GltfSamples3DDemo.hpp</code> — glTF PBR + HDR sky dome IBL reference</li>
 <li><code>include/spark/demo/PhysicsBallThrow3DDemo.hpp</code> — minimal <strong>3D physics</strong> usage</li>
 <li><code>spark/ui/runtime/UiScene.hpp</code> + <code>spark/ui/Ui.hpp</code> — retained UI input/paint and factory controls</li>
 <li><code>docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code> — retained GUI vs Dear ImGui</li>
-<li><a href="SCENE_AND_RENDERING_GAPS.md"><code>docs/SCENE_AND_RENDERING_GAPS.md</code></a> — C++ public API gaps for scene management and 3D rendering</li>
+<li><a href="scene-and-rendering-gaps.html"><code>docs/SCENE_AND_RENDERING_GAPS.md</code></a> — C++ public API gaps for scene management and 3D rendering</li>
 </ol>
 <hr />
 <h2 id="15-extending-the-engine-safely">15. Extending the Engine Safely</h2>

@@ -301,60 +301,7 @@ public:
     }
 
     void EnterThreeD(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!threeDLoaded) {
             threeD.Load(GetWorld(), context);
             threeDLoaded = true;
@@ -364,64 +311,7 @@ public:
     }
 
     void EnterToonShadingDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!toonShadingLoaded) {
             toonShadingDemo.Load(GetWorld(), context);
             toonShadingLoaded = true;
@@ -431,64 +321,7 @@ public:
     }
 
     void EnterMaterialShowcase3DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!materialShowcaseLoaded) {
             materialShowcase3DDemo.Load(GetWorld(), context);
             materialShowcaseLoaded = true;
@@ -498,56 +331,7 @@ public:
     }
 
     void EnterSkyDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!skyDemoLoaded) {
             skyDemo.Load(GetWorld(), context);
             skyDemoLoaded = true;
@@ -557,72 +341,7 @@ public:
     }
 
     void EnterTimeOfDayDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
-        if (toonShadingLoaded) {
-            toonShadingDemo.Unload(GetWorld());
-            toonShadingLoaded = false;
-        }
-        if (materialShowcaseLoaded) {
-            materialShowcase3DDemo.Unload(GetWorld());
-            materialShowcaseLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!timeOfDayDemoLoaded) {
             timeOfDayDemo.Load(GetWorld(), context);
             timeOfDayDemoLoaded = true;
@@ -633,60 +352,7 @@ public:
 
     void EnterParticleDemo(IEngineContext& context) {
         DemoGui::ActivateDearImGuiDemoUi(context);
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!particleDemoLoaded) {
             particleDemo.Load(GetWorld(), context);
             particleDemoLoaded = true;
@@ -696,60 +362,7 @@ public:
     }
 
     void EnterTerrainDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!terrainDemoLoaded) {
             terrainDemo.Load(GetWorld(), context);
             terrainDemoLoaded = true;
@@ -759,60 +372,7 @@ public:
     }
 
     void EnterCharacterDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!characterDemoLoaded) {
             characterDemo.Load(GetWorld(), context);
             characterDemoLoaded = true;
@@ -822,60 +382,7 @@ public:
     }
 
     void EnterTetris2DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!tetris2DLoaded) {
             tetris2DDemo.Load(GetWorld(), context);
             tetris2DLoaded = true;
@@ -885,60 +392,7 @@ public:
     }
 
     void EnterConnect3Demo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!connect3Loaded) {
             connect3Demo.Load(GetWorld(), context);
             connect3Loaded = true;
@@ -948,60 +402,7 @@ public:
     }
 
     void EnterSpaceInvaders2DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!spaceInvaders2DLoaded) {
             spaceInvaders2DDemo.Load(GetWorld(), context);
             spaceInvaders2DLoaded = true;
@@ -1011,64 +412,7 @@ public:
     }
 
     void EnterPlatformer2DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         platformer2DDemo.Load(GetWorld(), context);
         platformer2DLoaded = true;
         mode = DemoMode::Platformer2D;
@@ -1076,64 +420,7 @@ public:
     }
 
     void EnterBroadPhase2DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         broadPhase2DDemo.Load(GetWorld(), context);
         broadPhase2DLoaded = true;
         mode = DemoMode::BroadPhase2D;
@@ -1141,64 +428,7 @@ public:
     }
 
     void EnterRenderLayers2DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!renderLayers2DLoaded) {
             renderLayers2DDemo.Load(GetWorld(), context);
             renderLayers2DLoaded = true;
@@ -1208,64 +438,7 @@ public:
     }
 
     void EnterTilemapShowcase2DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!tilemapShowcase2DLoaded) {
             tilemapShowcase2DDemo.Load(GetWorld(), context);
             tilemapShowcase2DLoaded = true;
@@ -1275,128 +448,14 @@ public:
     }
 
     void EnterImGuiShowcase(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         imguiShowcaseDemo.Enter(context);
         mode = DemoMode::ImGuiShowcase;
         context.GetInput().SetCursorCaptured(false);
     }
 
     void EnterGltfSamples3DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         if (!gltfSamplesLoaded) {
             gltfSamples3DDemo.Load(GetWorld(), context);
             gltfSamplesLoaded = true;
@@ -1406,64 +465,7 @@ public:
     }
 
     void EnterMaze3DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         maze3DDemo.Load(GetWorld(), context);
         maze3DLoaded = true;
         mode = DemoMode::Maze3D;
@@ -1528,8 +530,7 @@ public:
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
         }
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
+        UnloadAllActiveDemos(context);
         physicsBall3D.Load(GetWorld(), context);
         physicsBall3DLoaded = true;
         mode = DemoMode::PhysicsBall3D;
@@ -1593,8 +594,7 @@ public:
             maze3DDemo.Unload(GetWorld());
             maze3DLoaded = false;
         }
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
+        UnloadAllActiveDemos(context);
         steeringShowcase3D.Load(GetWorld(), context);
         steeringShowcase3DLoaded = true;
         mode = DemoMode::SteeringShowcase3D;
@@ -1602,64 +602,7 @@ public:
     }
 
     void EnterSceneEditor3DDemo(IEngineContext& context) {
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
+        UnloadAllActiveDemos(context);
         sceneEditor3D.Load(GetWorld(), context);
         sceneEditor3DLoaded = true;
         mode = DemoMode::SceneEditor3D;
@@ -1667,68 +610,7 @@ public:
     }
 
     void ReturnToMenu(IEngineContext& context) {
-        if (mode == DemoMode::ImGuiShowcase) {
-            imguiShowcaseDemo.Leave(context, GetWorld());
-        }
-        UnloadPhysicsBall3DDemoIfAny();
-        UnloadTimeOfDayDemoIfAny();
-        if (threeDLoaded) {
-            threeD.Unload(GetWorld());
-            threeDLoaded = false;
-        }
-        if (skyDemoLoaded) {
-            skyDemo.Unload(GetWorld());
-            skyDemoLoaded = false;
-        }
-        if (timeOfDayDemoLoaded) {
-            timeOfDayDemo.Unload(GetWorld());
-            timeOfDayDemoLoaded = false;
-        }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
-        }
-        if (terrainDemoLoaded) {
-            terrainDemo.Unload(GetWorld());
-            terrainDemoLoaded = false;
-        }
-        if (characterDemoLoaded) {
-            characterDemo.Unload(GetWorld());
-            characterDemoLoaded = false;
-        }
-        if (tetris2DLoaded) {
-            tetris2DDemo.Unload(GetWorld());
-            tetris2DLoaded = false;
-        }
-        if (connect3Loaded) {
-            connect3Demo.Unload(GetWorld());
-            connect3Loaded = false;
-        }
-        if (spaceInvaders2DLoaded) {
-            spaceInvaders2DDemo.Unload(GetWorld());
-            spaceInvaders2DLoaded = false;
-        }
-        if (platformer2DLoaded) {
-            platformer2DDemo.Unload(GetWorld());
-            platformer2DLoaded = false;
-        }
-        if (broadPhase2DLoaded) {
-            broadPhase2DDemo.Unload(GetWorld());
-            broadPhase2DLoaded = false;
-        }
-        if (renderLayers2DLoaded) {
-            renderLayers2DDemo.Unload(GetWorld());
-            renderLayers2DLoaded = false;
-        }
-        if (tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Unload(GetWorld());
-            tilemapShowcase2DLoaded = false;
-        }
-        if (maze3DLoaded) {
-            maze3DDemo.Unload(GetWorld());
-            maze3DLoaded = false;
-        }
-        GetScene().SetSpatialPartitionKind(Spark::ScenePartitionKind::None);
+        UnloadAllActiveDemos(context);
         mode = DemoMode::Menu;
         launcherSelectedIndex = -1;
         pendingDemoLaunch = -1;
@@ -1750,25 +632,34 @@ public:
     }
 
 private:
-    void UnloadTimeOfDayDemoIfAny() {
+    void UnloadAllActiveDemos(IEngineContext& context) {
+        if (mode == DemoMode::ImGuiShowcase) {
+            imguiShowcaseDemo.Leave(context, GetWorld());
+        }
+        context.SetSceneRenderParams(SceneRenderParams{});
+        if (threeDLoaded) {
+            threeD.Unload(GetWorld());
+            threeDLoaded = false;
+        }
+        if (skyDemoLoaded) {
+            skyDemo.Unload(GetWorld());
+            skyDemoLoaded = false;
+        }
         if (timeOfDayDemoLoaded) {
             timeOfDayDemo.Unload(GetWorld());
             timeOfDayDemoLoaded = false;
         }
-    }
-
-    void UnloadPhysicsBall3DDemoIfAny() {
-        if (physicsBall3DLoaded) {
-            physicsBall3D.Unload(GetWorld());
-            physicsBall3DLoaded = false;
+        if (particleDemoLoaded) {
+            particleDemo.Unload(GetWorld());
+            particleDemoLoaded = false;
         }
-        if (steeringShowcase3DLoaded) {
-            steeringShowcase3D.Unload(GetWorld());
-            steeringShowcase3DLoaded = false;
+        if (terrainDemoLoaded) {
+            terrainDemo.Unload(GetWorld());
+            terrainDemoLoaded = false;
         }
-        if (sceneEditor3DLoaded) {
-            sceneEditor3D.Unload(GetWorld());
-            sceneEditor3DLoaded = false;
+        if (characterDemoLoaded) {
+            characterDemo.Unload(GetWorld());
+            characterDemoLoaded = false;
         }
         if (tetris2DLoaded) {
             tetris2DDemo.Unload(GetWorld());
@@ -1782,18 +673,51 @@ private:
             spaceInvaders2DDemo.Unload(GetWorld());
             spaceInvaders2DLoaded = false;
         }
-        if (materialShowcaseLoaded) {
-            materialShowcase3DDemo.Unload(GetWorld());
-            materialShowcaseLoaded = false;
+        if (platformer2DLoaded) {
+            platformer2DDemo.Unload(GetWorld());
+            platformer2DLoaded = false;
+        }
+        if (broadPhase2DLoaded) {
+            broadPhase2DDemo.Unload(GetWorld());
+            broadPhase2DLoaded = false;
+        }
+        if (renderLayers2DLoaded) {
+            renderLayers2DDemo.Unload(GetWorld());
+            renderLayers2DLoaded = false;
+        }
+        if (tilemapShowcase2DLoaded) {
+            tilemapShowcase2DDemo.Unload(GetWorld());
+            tilemapShowcase2DLoaded = false;
+        }
+        if (maze3DLoaded) {
+            maze3DDemo.Unload(GetWorld());
+            maze3DLoaded = false;
+        }
+        if (physicsBall3DLoaded) {
+            physicsBall3D.Unload(GetWorld());
+            physicsBall3DLoaded = false;
+        }
+        if (steeringShowcase3DLoaded) {
+            steeringShowcase3D.Unload(GetWorld());
+            steeringShowcase3DLoaded = false;
+        }
+        if (sceneEditor3DLoaded) {
+            sceneEditor3D.Unload(GetWorld());
+            sceneEditor3DLoaded = false;
         }
         if (toonShadingLoaded) {
             toonShadingDemo.Unload(GetWorld());
             toonShadingLoaded = false;
         }
+        if (materialShowcaseLoaded) {
+            materialShowcase3DDemo.Unload(GetWorld());
+            materialShowcaseLoaded = false;
+        }
         if (gltfSamplesLoaded) {
             gltfSamples3DDemo.Unload(GetWorld());
             gltfSamplesLoaded = false;
         }
+        GetScene().SetSpatialPartitionKind(Spark::ScenePartitionKind::None);
     }
 
     void EnterDemoByListIndex(const int idx) {

@@ -445,8 +445,8 @@ physics.GetQueries2D().OverlapArcDynamics(
 <p>Or use <code>Rigidbody2DComponent::IsGrounded()</code> after simulation.</p>
 <h2 id="d-raycasts-scene-mesh">3D Raycasts (Scene / Mesh)</h2>
 <p>3D physics queries for triggers and overlaps are handled via <code>TriggerVolume3DComponent</code> signals and <code>PhysicsSubsystem::SimulateAll3D</code>. For <strong>picking</strong> and <strong>hitscan weapons</strong>, use scene raycast helpers:</p>
-<pre><code class="language-cpp">#include "spark/scene/MeshRaycast.hpp"
-#include "spark/scene/Scene.hpp"
+<pre><code class="language-cpp">#include "spark/scene/mesh/MeshRaycast.hpp"
+#include "spark/scene/core/Scene.hpp"
 
 // Sphere hit test (FPS targets, simple pickups)
 float hitT = 0.0F;

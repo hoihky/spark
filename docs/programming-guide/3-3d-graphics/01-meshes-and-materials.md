@@ -78,17 +78,25 @@ glTF imports also expose `models/Foo.glb#material/0` keys. `.sparkmat` files per
 
 ## Spawn a Lit glTF Prop
 
+Prefer `GltfAssetBinder` for display-ready binding (mesh + material maps + library keys):
+
+```cpp
+GltfAssetBinder::BindFromPath(*go, "assets/models/DamagedHelmet.glb");
+```
+
+Or load and bind manually:
+
 ```cpp
 GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
 auto* go = world.CreateGameObject();
 go->AddComponent<TransformComponent>()->SetTranslation({0, 0, 0});
-go->AddComponent<MeshComponent>(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
-
-auto* mat = go->AddComponent<MaterialComponent>(asset.baseColorTexture);
-mat->SetRoughness(0.55F);
-mat->SetMetallic(0.1F);
-mat->SetShadingModel(SceneShadingModel::LitPbr);
+GltfAssetBinder::BindRigidMesh(*go, asset, SceneMeshSlot::Custom, Vector3::One, "assets/models/Crate.glb");
+if (MaterialComponent* mat = go->GetComponent<MaterialComponent>()) {
+    ApplyGltfMaterialDesc(*mat, asset.material);
+}
 ```
+
+Imported meshes include tangent space for normal maps (`Mesh::RecomputeTangentSpace` on glTF load). See launcher **#21** / key **Q** (`GltfSamples3DDemo`) for a full PBR + HDR IBL reference scene.
 
 ## Procedural Cube (FPS Sample Style)
 

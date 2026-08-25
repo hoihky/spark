@@ -33,7 +33,7 @@ cmake --build cmake-build-debug -j
 
 | Target | Path (debug preset) | Purpose |
 |--------|---------------------|---------|
-| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **19** built-in modes |
+| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **21** built-in modes |
 | **SparkEditor** | `cmake-build-debug/spark_editor/SparkEditor` | 3D editor shell (edit mode, dock UI) |
 | **SparkInterop** | `cmake-build-debug/scripting/libSparkInterop.dylib` | C ABI for managed tools (`-DSPARK_BUILD_INTEROP=ON`) |
 
@@ -49,6 +49,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 | [**Architecture & Developer Guide**](docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine loop, ECS, rendering data path, feature catalog |
 | [**Scene & Rendering API Gaps**](docs/SCENE_AND_RENDERING_GAPS.md) | C++ public API gap analysis (`include/spark/`, scene + 3D render) |
 | [**3D Action Game Gaps**](docs/3D_ACTION_GAME_GAPS.md) | Animation, materials, and scene management gaps for action games |
+| [**glTF Display Roadmap**](docs/GLTF_DISPLAY_ROADMAP.md) | glTF compatibility phases and SparkDemo reference |
 | [**Lighting & Shadows**](docs/LIGHTING_AND_SHADOWS.md) | CSM, punctual lights, SSAO, HDR/tonemap |
 | [**Materials & Lighting**](docs/MATERIALS_AND_LIGHTING.md) | PBR channels, IBL, material limits |
 | [**Spark Editor Plan**](docs/SPARK_EDITOR_PLAN.md) | Editor milestones, project/asset workflow |

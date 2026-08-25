@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -93,7 +93,11 @@
 </tr>
 <tr>
 <td><strong>Time-of-day demo</strong></td>
-<td>SparkDemo menu <strong>19</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn).</td>
+<td>SparkDemo menu <strong>17</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn).</td>
+</tr>
+<tr>
+<td><strong>HDR studio IBL demo</strong></td>
+<td>SparkDemo menu <strong>21</strong> / key <strong>Q</strong> — <code>GltfSamples3DDemo</code> loads Khronos <code>DamagedHelmet.glb</code> under a Poly Haven <code>studio_small_08_1k.hdr</code> sky dome (<code>iblEnvironmentLayer = -1</code>).</td>
 </tr>
 <tr>
 <td><strong>Per-draw shadow flags</strong></td>
@@ -154,7 +158,7 @@
 <tr>
 <td>P0</td>
 <td><strong>Image-based ambient</strong></td>
-<td>SH or irradiance volume from probes for outdoor bounce fill (basic equirect IBL exists for PBR metals).</td>
+<td><strong>Partial:</strong> equirect IBL for PBR metals (sky dome + <code>ibl.glsl</code>); no SH probes or irradiance volumes yet.</td>
 </tr>
 <tr>
 <td>P1</td>

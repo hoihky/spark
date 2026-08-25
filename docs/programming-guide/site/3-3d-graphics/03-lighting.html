@@ -470,6 +470,16 @@ SubmitStandardLitSceneFromWorld(
 <p>See <code>Maze3DDemo</code> gem pickups and guard mesh for this pattern.</p>
 <h2 id="clustered-forward">Clustered Forward</h2>
 <p><code>VulkanRenderer</code> packs up to <strong>256 point</strong> and <strong>128 spot</strong> lights per frame via clustered shading (<code>VulkanClusteredForwardLights</code>).</p>
+<h2 id="image-based-lighting-ibl">Image-Based Lighting (IBL)</h2>
+<p>For metallic PBR materials, set <code>iblEnabled</code> and either bind an equirect environment map on a sky draw or set <code>iblEnvironmentLayer</code> explicitly. When <code>iblEnvironmentLayer == -1</code>, submit resolves the first sky draw with a bound texture (see <code>ResolveIblEnvironmentLayer</code> in <code>SceneSubmitMaterial.cpp</code>).</p>
+<pre><code class="language-cpp">SceneRenderParams params{};
+params.iblEnabled = true;
+params.iblEnvironmentLayer = -1;  // auto from sky dome texture
+params.iblIntensity = 1.0F;
+FillStandardLitSceneFromWorld(world, ctx, viewProj, cameraPos, sunDir, sunColor, sunIntensity,
+                              ambient, false, {}, {}, 0.0F, params, SceneSpriteSortMode::SortOrderOnly, &amp;scene);
+</code></pre>
+<p><code>GltfSamples3DDemo</code> (launcher <strong>#21</strong>, key <strong>Q</strong>) pairs Khronos <code>DamagedHelmet.glb</code> with Poly Haven <code>studio_small_08_1k.hdr</code> on a sky dome. HDR files are loaded via <code>Texture2D::TryLoadFromFile</code> (currently tonemapped to LDR for the scene texture array).</p>
 <h2 id="scene-lighting-profile">Scene Lighting Profile</h2>
 <p><code>SceneLightingProfile</code> on <code>SceneRenderParams</code> controls exposure, tonemap, and IBL contribution — see <code>spark/render/SceneLightingProfile.hpp</code>.</p>
 <p>Read engine docs: <code>docs/LIGHTING_AND_SHADOWS.md</code>, <code>docs/MATERIALS_AND_LIGHTING.md</code>.</p>
@@ -503,6 +513,10 @@ SubmitStandardLitSceneFromWorld(
                         
                         <li class="toc-h2">
                           <a href="#clustered-forward">Clustered Forward</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#image-based-lighting-ibl">Image-Based Lighting (IBL)</a>
                         </li>
                         
                         <li class="toc-h2">

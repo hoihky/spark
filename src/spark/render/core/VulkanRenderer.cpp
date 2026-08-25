@@ -518,16 +518,33 @@ VideoRecorder* VulkanRenderer::GetActiveVideoRecorder() {
     return frameCapture.GetRecorder();
 }
 
-void VulkanRenderer::SetSceneRenderParams(const SceneRenderParams& params) {
-    pendingScene = params;
-    for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-        if (params.sceneTextures[i]) {
-            if (mergedSceneTextures.GetSize() <= i) {
-                mergedSceneTextures.Resize(i + 1U);
-            }
-            mergedSceneTextures[i] = params.sceneTextures[i];
+namespace {
+
+bool SceneHasCustomMeshDraws(const SceneRenderParams& scene) noexcept {
+    auto isCustom = [](const SceneDrawItem& d) noexcept {
+        return d.mesh == SceneMeshSlot::Custom && (d.customMesh || d.skinnedMesh);
+    };
+    for (std::size_t i = 0; i < scene.draws.GetSize(); ++i) {
+        if (isCustom(scene.draws[i])) {
+            return true;
         }
     }
+    for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
+        if (isCustom(scene.transparentDraws[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+}  // namespace
+
+void VulkanRenderer::SetSceneRenderParams(const SceneRenderParams& params) {
+    if (!SceneHasCustomMeshDraws(params)) {
+        customMeshPool.ClearKnownMeshes();
+    }
+    mergedSceneTextures = params.sceneTextures;
+    pendingScene = params;
     pendingScene.sceneTextures = mergedSceneTextures;
     sceneParamsValid = true;
     resolvedLighting = SceneLightingResolver::Resolve(pendingScene);

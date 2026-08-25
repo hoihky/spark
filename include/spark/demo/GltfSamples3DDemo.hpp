@@ -26,8 +26,11 @@ private:
     FlyCamera camera{};
 
     SharedPtr<Mesh> groundMesh{};
+    SharedPtr<Mesh> skyMesh{};
+    SharedPtr<Texture2D> envEquirectTex{};
 
     bool helmetLoaded = false;
+    bool envHdrLoaded = false;
 
     GameObject* helpHud = nullptr;
     TextOverlayComponent* helpText = nullptr;

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLion · Spark Game Engine</title>
+  <meta name="description" content="CLion — CMake profiles">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="clion-cmake-profiles">CLion — CMake profiles</h1>
+<h2 id="profiles-from-cmakepresetsjson">Profiles (from <code>CMakePresets.json</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th>Build directory</th>
+<th>Use for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>debug</strong></td>
+<td><code>cmake-build-debug/</code></td>
+<td>SparkDemo + SparkEditor (default dev)</td>
+</tr>
+<tr>
+<td><strong>editor-debug</strong></td>
+<td><code>cmake-build-editor/</code></td>
+<td>SparkEditor only — shared <code>libSparkEngine.dylib</code>, no demos</td>
+</tr>
+</tbody>
+</table>
+<h2 id="enable-editor-debug-in-clion">Enable <code>editor-debug</code> in CLion</h2>
+<ol>
+<li><strong>Settings → Build, Execution, Deployment → CMake</strong></li>
+<li>Enable <strong>Load CMake presets from CMakePresets.json</strong> (if not already on)</li>
+<li>You should see <strong>editor-debug</strong> in the profile list (also seeded via <code>.idea/cmake.xml</code>)</li>
+<li><strong>Tools → CMake → Reload CMake Project</strong></li>
+<li>Select profile <strong>editor-debug</strong> in the CMake tool window, build <strong>SparkEditor</strong></li>
+<li>Run <strong>SparkEditor (editor-debug)</strong> from <code>.run/SparkEditor.editor-debug.run.xml</code></li>
+</ol>
+<p>Executable: <code>cmake-build-editor/spark_editor/SparkEditor</code></p>
+<p><code>DYLD_LIBRARY_PATH</code> must include <code>cmake-build-editor/</code> (set in the run config).</p>
+<h2 id="manual-cmake-options-editor-debug">Manual CMake options (editor-debug)</h2>
+<p>If not using presets, create a profile with build directory <code>cmake-build-editor</code> and options:</p>
+<pre><code>-DSPARK_BUILD_ENGINE_SHARED=ON
+-DSPARK_BUILD_ENGINE_DEMOS=OFF
+-DSPARK_BUILD_EDITOR=ON
+-DSPARK_BUILD_SPARK_EDITOR=ON
+-DSPARK_BUILD_DEMO=OFF
+</code></pre>
+<p>See also <a href="readme.html"><code>.run/README.md</code></a>.</p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

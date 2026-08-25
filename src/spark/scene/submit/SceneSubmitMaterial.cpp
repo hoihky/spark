@@ -97,27 +97,16 @@ std::int32_t FindOrAddSceneTexture(
         }
     }
 
-    if (resolved->GetGpuSceneLayer() < 0) {
-        static std::int32_t nextGpuSceneLayer = 0;
-        if (nextGpuSceneLayer >= static_cast<std::int32_t>(SceneRenderParams::MaxSceneTextures)) {
-            std::fprintf(
-                    stderr,
-                    "Spark: scene texture limit (%u) reached; dropping \"%s\"\n",
-                    SceneRenderParams::MaxSceneTextures,
-                    resolved->GetName().CStr());
-            return -1;
-        }
-        resolved->EnsureGpuSceneLayer(nextGpuSceneLayer);
-    }
-    const std::int32_t layer = resolved->GetGpuSceneLayer();
-    if (layer < 0 || static_cast<std::uint32_t>(layer) >= SceneRenderParams::MaxSceneTextures) {
+    if (params.sceneTextures.GetSize() >= SceneRenderParams::MaxSceneTextures) {
+        std::fprintf(
+                stderr,
+                "Spark: scene texture limit (%u) reached; dropping \"%s\"\n",
+                SceneRenderParams::MaxSceneTextures,
+                resolved->GetName().CStr());
         return -1;
     }
-    const std::size_t layerIndex = static_cast<std::size_t>(layer);
-    if (params.sceneTextures.GetSize() <= layerIndex) {
-        params.sceneTextures.Resize(layerIndex + 1U);
-    }
-    params.sceneTextures[layerIndex] = resolved;
+    const std::int32_t layer = static_cast<std::int32_t>(params.sceneTextures.GetSize());
+    params.sceneTextures.PushBack(resolved);
     return layer;
 }
 

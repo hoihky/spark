@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2D ARPG Features · Spark Game Engine</title>
+  <meta name="description" content="2D ARPG engine gaps — prioritized backlog">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="2d-arpg-engine-gaps-prioritized-backlog">2D ARPG engine gaps — prioritized backlog</h1>
+<p>Assessment against the current ECS (<code>GameWorld</code>, <code>GameComponent</code>), 2D physics (<code>PhysicsSubsystem</code>), rendering (<code>SpriteComponent</code>, <code>TilemapComponent</code>, <code>Camera2D</code>), AI (<code>AiAgentComponent</code>), and GUI.</p>
+<h2 id="p0-must-have-for-a-credible-arpg-prototype">P0 — Must-have for a credible ARPG prototype</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0.1</strong></td>
+<td><strong>Collision layers / filtering</strong></td>
+<td>Implemented</td>
+<td>Category + mask bits on <code>BoxCollider2D</code> / <code>CircleCollider2D</code> / <code>TilemapCollider2D</code>; baked into <code>StaticCollider2D</code>; honored in dynamic-vs-static resolution.</td>
+</tr>
+<tr>
+<td><strong>P0.2</strong></td>
+<td><strong>Trigger volumes</strong> (overlap without blocking)</td>
+<td>Implemented</td>
+<td><code>GetIsTrigger</code> / <code>SetIsTrigger</code> on 2D colliders; baked into <code>Collider2D</code> with <code>owner</code>; <code>PhysicsWorld2D</code> skips separation for trigger pairs; <code>SignalId::Physics2DTriggerOverlap</code> after resolution (<code>ptr</code> = other <code>GameObject*</code>, <code>a</code> = id, <code>b</code> = static index).</td>
+</tr>
+<tr>
+<td><strong>P0.3</strong></td>
+<td><strong>World queries</strong> (<code>OverlapCircle</code>, <code>OverlapAabb</code>, <code>Raycast</code> in XY)</td>
+<td>Implemented</td>
+<td><code>PhysicsQueryWorld2D</code> / <code>PhysicsQueries2D.hpp</code>: <code>BroadPhase2D</code> + <code>QueryOverlapCircleStatics2D</code> / <code>QueryOverlapAabbStatics2D</code> / <code>RaycastStatics2D</code> (same static bake + hash as simulation); convenience <code>QueryOverlapCircleWorld2D</code> / <code>RaycastWorld2D</code>. Uses <code>CollisionFilter2D::ShouldCollide</code>; <code>hitTriggers</code> / <code>hitSolids</code> flags. <strong>Does not</strong> emit <code>Physics2DTriggerOverlap</code> (signals are simulation-only).</td>
+</tr>
+<tr>
+<td><strong>P0.4</strong></td>
+<td><strong>Dynamic-vs-dynamic</strong> resolution</td>
+<td>Implemented</td>
+<td>After static resolution, dynamic pairs are broad-phased with <code>SpatialHashGrid2D</code> (same 4-unit cell as statics), then narrow-tested (same layer rules). Overlapping <strong>triggers</strong> emit <code>Physics2DTriggerOverlap</code> (<code>payload.b</code> = <code>kPhysics2DTriggerOverlapNoStaticIndex</code>). Optional <code>PhysicsWorld2DSettings::resolveDynamicVsDynamic</code>: one shallow separation for solid–solid (circle–circle, box–box, box–circle); no second static pass. C: <code>spark_world_physics_simulate_2d_with_settings</code>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="p1-strongly-recommended">P1 — Strongly recommended</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P1.1</strong></td>
+<td><strong>Sorting policy for top-down</strong> (Y-sort / painter’s algorithm)</td>
+<td>Implemented</td>
+<td><c>SceneSpriteSortMode</c> on <c>SceneRenderParams</c> / <c>SubmitStandardLitSceneFromWorld</c>: <c>SortOrderThenWorldY</c> sorts by ascending <c>sortOrder</c>, then lower world Y on top (+Y-up). C API: last arg to <c>spark_context_submit_standard_lit_scene</c>.</td>
+</tr>
+<tr>
+<td><strong>P1.2</strong></td>
+<td><strong>Character stats / vitals</strong> (<code>Health</code>, <code>Damage</code>)</td>
+<td>Implemented</td>
+<td><code>HealthComponent</code> (HP pool, <code>ApplyDamage</code>, <code>Died</code> signal) + <code>DamageableComponent</code> (multiplier, invulnerability). See programming guide component reference.</td>
+</tr>
+<tr>
+<td><strong>P1.3</strong></td>
+<td><strong>Animation state machine wiring</strong></td>
+<td>Implemented</td>
+<td><c>Sprite2DCharacterAnimFsmComponent</c> drives <c>SpriteAnimatorComponent</c> clips from <c>Rigidbody2D</c> velocity (idle/move) plus one-shot or <c>AiBlackboard</c> combat commands (hurt/attack; slot <c>kAiBlackboardIntSprite2DCombatCommand</c>). <c>SpriteAnimatorComponent::IsCurrentClipFinished</c> for non-loop overlays. Platformer demo: J/K + locomotion via speed.</td>
+</tr>
+<tr>
+<td><strong>P1.4</strong></td>
+<td><strong>Hitboxes / attack arcs</strong></td>
+<td>Implemented</td>
+<td><code>PhysicsQueries2D.hpp</code>: <strong><code>QueryOverlapCircleDynamics2D</code></strong> (P0.4-style dynamic broad-phase + circle narrow), <strong><code>QueryOverlapArcStatics2D</code></strong> / <strong><code>QueryOverlapArcDynamics2D</code></strong> (disk ∩ symmetric sector; direction normalized internally), convenience <strong><code>QueryOverlapArcWorldStatics2D</code></strong> / <strong><code>QueryOverlapArcWorldDynamics2D</code></strong>. <code>PhysicsQueryHitDynamic2D</code> for dynamic hits. Platformer demo: gems use <strong>layer 1</strong> static trigger circles + <strong>layer 2</strong> weapon query; <strong>J</strong> attack clip active frames run an arc overlap vs statics (P0.3) and collect gems; proximity collect unchanged.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="p2-full-vertical-slice">P2 — Full vertical slice</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P2.1</strong></td>
+<td>Inventory / equipment</td>
+<td>Missing</td>
+<td>UI + save + item defs (often game-specific).</td>
+</tr>
+<tr>
+<td><strong>P2.2</strong></td>
+<td>Dialogue / quests</td>
+<td>Missing</td>
+<td>Data-driven quests + UI; optional scripting hooks.</td>
+</tr>
+<tr>
+<td><strong>P2.3</strong></td>
+<td>Save/load game state</td>
+<td>Partial</td>
+<td>Asset paths and textures cached; no unified save blob API for ECS state.</td>
+</tr>
+<tr>
+<td><strong>P2.4</strong></td>
+<td>Minimap / fog</td>
+<td>Missing</td>
+<td>Render targets / secondary camera or UI overlay.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="design-principles-solid-ecs">Design principles (SOLID + ECS)</h2>
+<ul>
+<li><strong>Single responsibility</strong>: Physics filtering lives in collision helpers + collider data; simulation stays in <code>PhysicsWorld2D</code>.</li>
+<li><strong>Open/closed</strong>: New gameplay systems consume masks without editing the solver.</li>
+<li><strong>Interface segregation</strong>: Colliders expose only category/mask accessors used by physics and queries.</li>
+<li><strong>Dependency inversion</strong>: Higher-level combat/trigger systems depend on abstract overlap events, not raw collision internals.</li>
+</ul>
+<p>Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), unified save blob (P2.3).</p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

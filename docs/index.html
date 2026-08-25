@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="site/css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -58,7 +58,7 @@
             Spark is an experimental, education-oriented engine prototype built to explore modern C++ game
             architecture: explicit frame contracts, dependency inversion over concrete Vulkan types, and
             composition via components rather than deep inheritance hierarchies. The default binary
-            <code>SparkDemo</code> ships an interactive launcher with <strong>20 built-in modes</strong> —
+            <code>SparkDemo</code> ships an interactive launcher with <strong>21 built-in modes</strong> —
             from 3D fly scenes and a scene editor prototype to 2D platformers, tilemap showcases, and
             classic arcade demos.
           </p>
@@ -423,6 +423,7 @@ int main() {
             <li>Farming RPG render layers</li>
             <li>Tilemap layers, animation &amp; pathfinding</li>
             <li>Dear ImGui docking tools demo</li>
+            <li>glTF sample — DamagedHelmet PBR + studio HDR IBL</li>
           </ul>
         </section>
 
@@ -438,7 +439,7 @@ cmake --build cmake-build-debug -j
               <tr><th>Target</th><th>Purpose</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 20 built-in demo modes</td></tr>
+              <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 21 built-in demo modes</td></tr>
               <tr><td><code>SparkEditor</code></td><td>3D editor shell with dock UI (<code>editor-debug</code> preset)</td></tr>
               <tr><td><code>SparkScriptHost</code></td><td>C# scripting host via CoreCLR (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td></tr>
             </tbody>
@@ -484,6 +485,18 @@ cmake --build cmake-build-debug -j
               <tr>
                 <td><a href="site/docs/animation-3d-roadmap.html">3D Animation Roadmap</a></td>
                 <td>Skeletal animation milestones</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/gltf-display-roadmap.html">glTF Display Roadmap</a></td>
+                <td>glTF compatibility phases and test matrix</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/scene-and-rendering-gaps.html">Scene &amp; Rendering Gaps</a></td>
+                <td>Public C++ API gaps for scene and 3D rendering</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/3d-action-game-gaps.html">3D Action Game Gaps</a></td>
+                <td>Combat, animation, and material backlog</td>
               </tr>
               
             </tbody>

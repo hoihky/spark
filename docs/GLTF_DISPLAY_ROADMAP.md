@@ -66,6 +66,16 @@ Meshopt views with a separate fallback buffer are read directly; compression-onl
 - Rigid node animation
 - Scene snapshot serialization
 
+## SparkDemo reference (`GltfSamples3DDemo`)
+
+Launcher item **#21** (hotkey **Q**) demonstrates end-to-end glTF PBR display:
+
+- Khronos **`DamagedHelmet.glb`** via `GltfAssetBinder::BindRigidMesh` + `ApplyGltfMaterialDesc` (normal, ORM, emissive maps)
+- Poly Haven **`studio_small_08_1k.hdr`** sky dome for image-based lighting (`iblEnvironmentLayer = -1`, `SkyComponent` + equirect texture)
+- CMake downloads the HDR to `assets/textures/sky/` on first configure (`SPARK_STUDIO_HDR_PATH`)
+
+See [`GLTF_DISPLAY_ROADMAP.md`](GLTF_DISPLAY_ROADMAP.md) for the full compatibility matrix and [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md) for PBR channel details.
+
 ## Test matrix
 
 Run `GltfDisplayCompatibilityTest` plus manual checks:

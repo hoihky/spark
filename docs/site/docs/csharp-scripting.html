@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C# Scripting · Spark Game Engine</title>
+  <meta name="description" content="C# interop (ClangSharp + SparkInterop)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="c-interop-clangsharp-sparkinterop">C# interop (ClangSharp + SparkInterop)</h1>
+<p>Spark exposes a stable <strong>C ABI</strong> (<code>SparkInterop</code>) for managed editors and tools. C# P/Invoke types are <strong>generated</strong> from <code>include/spark/scripting/SparkInterop.h</code> with <strong>ClangSharp</strong>.</p>
+<blockquote>
+<p><strong>Note:</strong> The CoreCLR game host (<code>SparkScriptHost</code>, <code>Spark.Scripting</code> SDK, HelloCsGame) is not built in the current tree. Enable <code>-DSPARK_BUILD_INTEROP=ON</code> for <code>SparkInterop</code> + <code>Spark.Bindings</code> only.</p>
+</blockquote>
+<h2 id="architecture">Architecture</h2>
+<div class="mermaid-wrap"><div class="mermaid">flowchart LR
+  subgraph native [Native C++]
+    Host[SparkScriptHost]
+    Engine[Engine + Vulkan]
+    Interop[SparkInterop C ABI]
+    Host --> Engine
+    Host --> Interop
+    Engine --> Interop
+  end
+  subgraph managed [.NET 8]
+    Entry[GameEntry / ScriptHostEntry]
+    Game[YourGame : Game]
+    Bindings[Spark.Bindings generated]
+    Entry --> Game
+    Game --> Bindings
+  end
+  Host -->|hostfxr| Entry
+  Bindings -->|DllImport| Interop</div></div>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SparkScriptHost</strong></td>
+<td>Executable: loads <code>nethost</code> → <code>hostfxr</code> → game <code>.dll</code>, runs <code>Engine::Run()</code></td>
+</tr>
+<tr>
+<td><strong>SparkInterop</strong></td>
+<td>Shared library: stable C exports (<code>spark_*</code>) implemented with real C++ types</td>
+</tr>
+<tr>
+<td><strong>Spark.Bindings.Generator</strong></td>
+<td>ClangSharp tool: parses <code>SparkInterop.h</code>, emits <code>Native.g.cs</code> + <code>CppMirrors.g.cs</code></td>
+</tr>
+<tr>
+<td><strong>Spark.Scripting</strong></td>
+<td>SDK: <code>ScriptHostEntry</code>, <code>GameBootstrap</code>, wires managed <code>Game</code> to native loop</td>
+</tr>
+<tr>
+<td><strong>HelloCsGame</strong></td>
+<td>Sample game assembly</td>
+</tr>
+</tbody>
+</table>
+<h2 id="one-to-one-c-c-mapping">One-to-one C++ ↔ C# mapping</h2>
+<table>
+<thead>
+<tr>
+<th>C++</th>
+<th>C#</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Spark::FrameTiming</code></td>
+<td><code>Spark.Bindings.FrameTiming</code></td>
+</tr>
+<tr>
+<td><code>Spark::IGame</code></td>
+<td><code>Spark.Bindings.IGame</code></td>
+</tr>
+<tr>
+<td><code>Spark::Game</code></td>
+<td><code>Spark.Bindings.Game</code></td>
+</tr>
+<tr>
+<td><code>Spark::IEngineContext</code></td>
+<td><code>Spark.Bindings.IEngineContext</code></td>
+</tr>
+<tr>
+<td><code>Spark::IInput</code></td>
+<td><code>Spark.Bindings.IInput</code></td>
+</tr>
+<tr>
+<td><code>Spark::Scene</code> / <code>GameWorld</code> / <code>GameObject</code></td>
+<td>Same names under <code>Spark.Bindings</code></td>
+</tr>
+<tr>
+<td><code>ComponentKind</code></td>
+<td><code>SparkComponentKind</code> (from <code>SparkInterop.h</code>, ClangSharp)</td>
+</tr>
+</tbody>
+</table>
+<p>Virtual C++ APIs are mirrored as C# classes that call <code>spark_*</code> exports. Plain structs/enums come from ClangSharp with sequential layout matching the headers.</p>
+<p><strong>When C++ changes:</strong> extend <code>SparkInterop.h</code> (and C++ engine if needed), then regenerate:</p>
+<pre><code class="language-bash">./tools/generate-csharp-bindings.sh
+</code></pre>
+<p>From the repo root (uses <a href="../.config/dotnet-tools.json">.config/dotnet-tools.json</a>):</p>
+<pre><code class="language-bash">dotnet tool restore
+./tools/generate-csharp-bindings.sh
+</code></pre>
+<p>This writes <strong><code>scripting/bindings/generated/Spark.Bindings/Native.g.cs</code></strong> (ClangSharp P/Invoke from <code>SparkInteropTypes.h</code> + <code>SparkInterop.h</code>). Companion files <strong><code>CppMirrors.g.cs</code></strong>, <strong><code>ComponentMirrors.g.cs</code></strong>, <strong><code>InteropPtr.cs</code></strong> are hand-maintained ergonomic wrappers.</p>
+<p>CI (<code>.github/workflows/csharp-bindings.yml</code>) regenerates and fails if <code>Native.g.cs</code> drifts from the headers.</p>
+<h2 id="build">Build</h2>
+<p>Prerequisites: <strong>.NET 8 SDK</strong>, <strong>CMake 3.28+</strong>, Vulkan/GLFW (same as engine).</p>
+<h3 id="clion">CLion</h3>
+<p>A shared run configuration is at <a href="../.run/SparkScriptHost.run.xml"><code>.run/SparkScriptHost.run.xml</code></a>. See <a href="readme.html"><code>.run/README.md</code></a> if <strong>Target</strong> / <strong>Executable</strong> show <strong>Not found</strong>.</p>
+<ol>
+<li>Enable scripting in CMake: <strong><code>-DSPARK_BUILD_SCRIPT_HOST=ON</code></strong> (also set in <a href="../CMakePresets.json">CMakePresets.json</a> preset <code>debug</code>).</li>
+<li><strong>Reload CMake Project</strong> — <strong>SparkScriptHost</strong> must appear in the CMake targets list.</li>
+<li>Run <strong>SparkScriptHost (HelloCsGame)</strong>.</li>
+</ol>
+<p>If your build directory is not <code>cmake-build-debug</code>, edit <code>DYLD_LIBRARY_PATH</code> / <code>LD_LIBRARY_PATH</code> in the <code>.run.xml</code> file.</p>
+<h3 id="command-line">Command line</h3>
+<pre><code class="language-bash">cmake -B build
+cmake --build build --target SparkScriptHost SparkScriptingBuild
+</code></pre>
+<p>Copy <code>libSparkInterop.dylib</code> (or <code>.so</code>) next to <code>SparkScriptHost</code> and managed outputs, then:</p>
+<pre><code class="language-bash">./build/SparkScriptHost \
+  scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.runtimeconfig.json \
+  scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.dll
+</code></pre>
+<p>Optional entry override:</p>
+<pre><code class="language-bash">SparkScriptHost &lt;runtimeconfig&gt; &lt;assembly.dll&gt; &lt;TypeName&gt; &lt;MethodName&gt;
+</code></pre>
+<h2 id="writing-a-game">Writing a game</h2>
+<ol>
+<li>Class library targeting <code>net8.0</code>, reference <code>Spark.Scripting</code>.</li>
+<li>Subclass <code>Game</code> (same hooks as C++ <code>Spark::Game</code>).</li>
+<li>Register in <code>[ModuleInitializer]</code>:</li>
+</ol>
+<pre><code class="language-csharp">[ModuleInitializer]
+internal static void Init() =&gt; GameBootstrap.Factory = static () =&gt; new MyGame();
+</code></pre>
+<ol>
+<li>Expose native entry (sample uses <code>HelloCsGame.GameEntry.Initialize</code>).</li>
+</ol>
+<h2 id="interop-surface-expanded">Interop surface (expanded)</h2>
+<p><code>SparkInterop.h</code> now exports bindings for:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Components</strong></td>
+<td><code>spark_transform_*</code>, <code>spark_mesh_*</code>, <code>spark_material_*</code>, <code>spark_sprite_*</code>, lights, colliders, rigidbodies</td>
+</tr>
+<tr>
+<td><strong>Add component</strong></td>
+<td><code>spark_object_add_mesh</code>, <code>spark_object_add_skinned_character_from_gltf</code>, …</td>
+</tr>
+<tr>
+<td><strong>Scene</strong></td>
+<td><code>spark_scene_submit_standard_lit_from_world</code>, <code>spark_scene_fill_standard_lit_from_world</code></td>
+</tr>
+<tr>
+<td><strong>UI</strong></td>
+<td><code>spark_ui_process_canvases_input</code>, <code>spark_ui_paint_canvases</code>, <code>spark_context_process_ui_input</code></td>
+</tr>
+<tr>
+<td><strong>Animation</strong></td>
+<td><code>spark_animator_*</code> — clip index/time/speed, <code>loop_mode</code>, <code>is_clip_finished</code>, <code>set_clip_index_with_crossfade</code>, <code>find_clip_index_by_name</code>, <code>get_clip_name</code>; C# <code>AnimatorComponent</code> mirror</td>
+</tr>
+<tr>
+<td><strong>Physics / AI</strong></td>
+<td><code>spark_world_physics_simulate_2d</code>, <code>spark_world_simulate_game_ai</code></td>
+</tr>
+<tr>
+<td><strong>Math</strong></td>
+<td><code>spark_mat4_perspective_vulkan</code>, <code>spark_mat4_mul</code>, …</td>
+</tr>
+<tr>
+<td><strong>2D platformer</strong></td>
+<td><code>spark_world_register_platformer2d_demo_textures</code>, <code>spark_world_mount_platformer_ui_font</code>, <code>spark_platformer2d_kenney_tile_uv</code>, <code>spark_sprite_2d_fsm_*</code>, <code>spark_object_add_sprite_2d_character_anim_fsm</code></td>
+</tr>
+<tr>
+<td><strong>2D physics queries</strong></td>
+<td><code>spark_physics_query_overlap_circle_world_2d</code>, <code>spark_physics_query_overlap_arc_world_statics_2d</code>, <code>spark_collision_filter_2d_*</code></td>
+</tr>
+<tr>
+<td><strong>2D collider layers</strong></td>
+<td><code>spark_box_collider_2d_set_category_bits</code>, <code>spark_circle_collider_2d_set_is_trigger</code>, …</td>
+</tr>
+</tbody>
+</table>
+<p>C# mirrors: <code>CppMirrors.g.cs</code> (engine types) + <code>ComponentMirrors.g.cs</code> (sample component wrappers). Regenerate P/Invoke with <code>./tools/generate-csharp-bindings.sh</code> after header changes.</p>
+<h3 id="hellocsgame-2d-platformer-sample">HelloCsGame (2D platformer sample)</h3>
+<p><code>HelloCsGame</code> registers Kenney tilesheet + player atlas + gem texture via <code>GameWorld.RegisterPlatformer2DDemoTextures</code>, mounts UI fonts for <code>TextOverlayComponent</code>, drives locomotion/combat through <code>Sprite2DCharacterAnimFsmComponent</code> + <code>SpriteAnimatorComponent</code>, collects gems by proximity and <strong>J</strong> attack arc (<code>QueryOverlapArcWorldStatics2D</code> + layer masks), and implements fall respawn + summit goal. See <code>assets/sprites/kenney_simplified-platformer-pack/README.md</code> for optional PNG paths.</p>
+<h2 id="roadmap">Roadmap</h2>
+<ul>
+<li>SpriteAnimator, Terrain, AiAgent, SoundCue, GUI widget builders (old <code>spark_shell_*</code> helpers).</li>
+<li>Parse additional engine headers directly once ClangSharp config includes <code>compile_commands.json</code>.</li>
+<li>In-editor <code>dotnet build</code> + hot reload (GUI roadmap E5).</li>
+</ul>
+<p>Legacy <strong>P/Invoke / SparkNative</strong> remains removed; this stack replaces it.</p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -178,7 +178,9 @@ sequenceDiagram
 
 ### Demo
 
-**SparkDemo** launcher item **19 — Dear ImGui tools (docking)** (hotkey **G**): docked Hierarchy / Inspector / Console, optional `ShowDemoWindow`, 3D backdrop. Source: `ImGuiShowcaseDemo` (`include/spark/demo/ImGuiShowcaseDemo.hpp`).
+**SparkDemo** launcher item **20 — Dear ImGui tools (docking)** (hotkey **G**): docked Hierarchy / Inspector / Console, optional `ShowDemoWindow`, 3D backdrop. Source: `ImGuiShowcaseDemo` (`include/spark/demo/ImGuiShowcaseDemo.hpp`).
+
+**glTF PBR sample** — launcher item **21** (hotkey **Q**): `GltfSamples3DDemo` loads `DamagedHelmet.glb` with studio HDR sky dome IBL. See [Meshes and Materials](../3-3d-graphics/01-meshes-and-materials.md) and [Terrain and Sky](../3-3d-graphics/06-terrain-and-sky.md).
 
 ### Disable ImGui
 

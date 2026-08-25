@@ -229,6 +229,26 @@ if (NOT EXISTS "${SPARK_SKY_TEXTURE_PATH}")
     set(SPARK_SKY_TEXTURE_PATH "${SPARK_SKY_TEX_SRC}")
 endif ()
 
+# Neutral studio HDRI for glTF PBR showcase (Poly Haven CC0; stb loads .hdr as LDR).
+set(SPARK_STUDIO_HDR_NAME "studio_small_08_1k.hdr")
+set(SPARK_STUDIO_HDR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/sky/${SPARK_STUDIO_HDR_NAME}")
+if (NOT EXISTS "${SPARK_STUDIO_HDR_SRC}")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/sky")
+    message(STATUS "Downloading Poly Haven studio HDR for glTF samples demo")
+    file(DOWNLOAD
+            "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_08_1k.hdr"
+            "${SPARK_STUDIO_HDR_SRC}"
+            TLS_VERIFY ON
+    )
+endif ()
+if (EXISTS "${SPARK_STUDIO_HDR_SRC}")
+    file(COPY "${SPARK_STUDIO_HDR_SRC}" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/textures/sky")
+endif ()
+set(SPARK_STUDIO_HDR_PATH "${SPARK_BUILD_ASSETS_DIR}/textures/sky/${SPARK_STUDIO_HDR_NAME}")
+if (NOT EXISTS "${SPARK_STUDIO_HDR_PATH}")
+    set(SPARK_STUDIO_HDR_PATH "${SPARK_STUDIO_HDR_SRC}")
+endif ()
+
 set(SPARK_CGLTF_DIR "${CMAKE_BINARY_DIR}/_deps/spark_cgltf")
 set(SPARK_CGLTF_H "${SPARK_CGLTF_DIR}/cgltf.h")
 if (NOT EXISTS "${SPARK_CGLTF_H}")

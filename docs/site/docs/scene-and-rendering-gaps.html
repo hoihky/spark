@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scene & Rendering Gaps · Spark Game Engine</title>
+  <meta name="description" content="Engine C++ API — Gap Analysis (Scene & 3D Rendering)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="engine-c-api-gap-analysis-scene-3d-rendering">Engine C++ API — Gap Analysis (Scene &amp; 3D Rendering)</h1>
+<p>Gap analysis for Spark’s <strong>public C++ API</strong> under <code>include/spark/</code>. This document is for <strong>gameplay and engine contributors</strong> building with <code>IGame</code>, <code>GameWorld</code>, <code>Scene</code>, and <code>SceneRenderParams</code> — <strong>not</strong> editor tooling (<code>spark/editor/</code> is out of scope).</p>
+<p>Complements <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> (feature catalog), material/lighting notes in <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a>, and the cross-system action-game view in <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
+<hr />
+<h2 id="1-api-surface-today">1. API surface today</h2>
+<p>Gameplay code should depend on these headers, not on <code>VulkanRenderer</code> internals.</p>
+<h3 id="application-frame-contract">Application &amp; frame contract</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IGame</code></td>
+<td><code>OnAttach</code> / <code>OnUpdate</code> / <code>OnRender</code> / <code>OnDetach</code></td>
+</tr>
+<tr>
+<td><code>Game</code></td>
+<td>Optional base owning <code>Scene</code>; forwards <code>UpdateGameObjects</code></td>
+</tr>
+<tr>
+<td><code>IEngineContext</code></td>
+<td><code>GetInput</code>, <code>GetFramebufferSize</code>, <code>SetSceneRenderParams</code>, <code>TryGetSoundEngine</code>, <code>TryGetScene</code></td>
+</tr>
+<tr>
+<td><code>IFramePresenter</code></td>
+<td>Abstract present; default impl is Vulkan (games rarely include this header)</td>
+</tr>
+<tr>
+<td><code>FrameTiming</code></td>
+<td><code>deltaTimeSeconds</code>, <code>totalTimeSeconds</code>, <code>frameIndex</code></td>
+</tr>
+<tr>
+<td><code>SceneRenderParams</code></td>
+<td>Per-frame GPU snapshot: draws, lights, sprites, particles, UI, textures</td>
+</tr>
+</tbody>
+</table>
+<h3 id="world-ecs">World &amp; ECS</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GameWorld</code></td>
+<td><code>CreateGameObject</code>, <code>DestroyGameObject</code>, <code>SetParent</code>, <code>UpdateGameObjects</code>; asset I/O via <strong><code>GameWorldAssetCache</code></strong> (<code>Load*</code> / <code>Register*</code>)</td>
+</tr>
+<tr>
+<td><code>GameObject</code></td>
+<td><code>AddComponent&lt;T&gt;</code>, <code>GetComponent&lt;T&gt;</code>, <code>GetWorldMatrix</code>, signals</td>
+</tr>
+<tr>
+<td><code>GameComponent</code></td>
+<td><code>OnAttach</code> / <code>OnUpdate</code> / <code>OnDetach</code> / <code>OnSignal</code>; <strong>64</strong> concrete <code>ComponentKind</code> values (+ <code>Unknown</code>)</td>
+</tr>
+<tr>
+<td><code>Scene</code></td>
+<td>Query iterators: <code>ForEachDrawable</code>, <code>ForEachSkinnedDrawable</code>, lights, sky, GUI, particles; frustum variants</td>
+</tr>
+</tbody>
+</table>
+<h3 id="scene-render-bridge">Scene → render bridge</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FillStandardLitSceneFromWorld</code></td>
+<td>Walk ECS → fill <code>SceneRenderParams</code> (optional <code>Scene*</code> for frustum culling)</td>
+</tr>
+<tr>
+<td><code>SubmitStandardLitSceneFromWorld</code></td>
+<td>Fill + <code>IEngineContext::SetSceneRenderParams</code></td>
+</tr>
+<tr>
+<td><code>SceneSubmitLighting.cpp</code> / <code>SceneSubmitMaterial.cpp</code> / <code>SceneSubmitDrawPartition.cpp</code></td>
+<td>Lighting overrides, material texture resolve, opaque/transparent partition</td>
+</tr>
+<tr>
+<td><code>ApplyMaterialComponentToSceneDrawItem</code></td>
+<td>Map <code>MaterialComponent</code> textures/scalars onto <code>SceneDrawItem</code></td>
+</tr>
+<tr>
+<td><code>PaintUiCanvases</code> / <code>ProcessUiCanvasesInput</code></td>
+<td>Retained UI → params + input</td>
+</tr>
+</tbody>
+</table>
+<h3 id="persistence">Persistence</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SceneSerializer</code> / <code>SceneDeserializer</code></td>
+<td>Text format <strong><code>spark_scene_v4</code></strong> (reads v3)</td>
+</tr>
+<tr>
+<td><code>SceneDocument</code> / <code>SceneDocumentHeader</code></td>
+<td>Entity list + optional <code>name</code>, <code>assets_root</code>, <code>scene_uid</code> headers</td>
+</tr>
+<tr>
+<td><code>ComponentSnapshotRegistry</code></td>
+<td>Pluggable handlers; <strong>28+</strong> kinds registered today</td>
+</tr>
+<tr>
+<td><code>SceneManager</code></td>
+<td>Runtime load/unload of scene files on one <code>GameWorld</code> (additive by default)</td>
+</tr>
+<tr>
+<td><code>GameWorldAssetLoader</code></td>
+<td>Background decode for glTF, skinned glTF, textures, OBJ; commit via <code>Pump</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>v4 file layout:</strong></p>
+<pre><code>spark_scene_v4
+&lt;entity_count&gt;
+H name &quot;My Level&quot;
+H assets_root &quot;assets&quot;
+H scene_uid &lt;uint64&gt;
+E &lt;id&gt; &lt;parentId&gt; &quot;Name&quot;
+C &lt;kind&gt; &lt;payload&gt;
+...
+</code></pre>
+<h3 id="assets-spatial">Assets &amp; spatial</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Mesh</code>, <code>SkinnedMesh</code>, <code>Skeleton</code>, <code>Texture2D</code>, <code>Font</code></td>
+<td>CPU-side assets</td>
+</tr>
+<tr>
+<td><code>GameWorld::LoadMesh</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, <code>LoadTexture</code></td>
+<td>Path-keyed synchronous load</td>
+</tr>
+<tr>
+<td><code>ScenePartitionKind</code>, <code>SceneSpatialPolicyComponent</code></td>
+<td>Frustum culling mode (BVH, octree, …)</td>
+</tr>
+<tr>
+<td><code>MeshRaycast</code></td>
+<td>CPU triangle ray tests</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cameras-lighting-c-helpers">Cameras &amp; lighting (C++ helpers)</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Camera</code>, <code>Camera2D</code>, <code>CameraComponent</code></td>
+<td>View/projection</td>
+</tr>
+<tr>
+<td><code>FlyCamera</code>, <code>CharacterCameraRig</code></td>
+<td>Demo-grade controllers (not ECS components)</td>
+</tr>
+<tr>
+<td><code>PointLightComponent</code>, <code>SpotLightComponent</code>, <code>DirectionalLightComponent</code></td>
+<td>Punctual + directional lights → <code>SceneRenderParams</code></td>
+</tr>
+<tr>
+<td><code>SceneLightingProfile</code></td>
+<td>Outdoor / interior presets for sun, shadows, exposure</td>
+</tr>
+<tr>
+<td>Directional sun</td>
+<td><code>DirectionalLightComponent</code> overrides submit params when present; explicit <code>SceneRenderParams</code> fields remain fallback</td>
+</tr>
+</tbody>
+</table>
+<h3 id="physics-animation-audio-adjacent-apis">Physics, animation, audio (adjacent APIs)</h3>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SimulatePhysics2D</code> / <code>SimulatePhysics3D</code></td>
+<td>Minimal solvers; call from <code>OnUpdate</code> via <code>PhysicsSubsystem</code></td>
+</tr>
+<tr>
+<td><code>PhysicsQueries2D</code></td>
+<td>Overlap / raycast helpers</td>
+</tr>
+<tr>
+<td><code>AnimatorComponent</code>, <code>Skeleton</code>, <code>AnimLoopMode</code></td>
+<td>Skeletal playback, crossfade, joint palette</td>
+</tr>
+<tr>
+<td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
+<td>Playback stack</td>
+</tr>
+<tr>
+<td><code>SimulateGameAi</code></td>
+<td>Optional AI tick</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-scene-management-api-gaps">2. Scene management API gaps</h2>
+<p><strong>P0</strong> = blocks shipping most games with only the public API; <strong>P1</strong> = scale/quality; <strong>P2</strong> = polish.</p>
+<h3 id="21-gameworld-gameobject-scene">2.1 <code>GameWorld</code> / <code>GameObject</code> / <code>Scene</code></h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Stable handles</strong></td>
+<td><code>GameObject*</code> only</td>
+<td><code>EntityId</code> or opaque handle surviving reorder; no dangling-pointer-safe lookup</td>
+</tr>
+<tr>
+<td><strong>Multi-scene</strong></td>
+<td><code>SceneManager</code> additive load/unload on one <code>GameWorld</code></td>
+<td>Named scene registry, cross-scene references, persistent “manager” world separate from gameplay</td>
+</tr>
+<tr>
+<td><strong>Prefab API</strong></td>
+<td>Manual duplicate in code</td>
+<td><code>InstantiatePrefab(path, parent, overrides)</code> with component override map</td>
+</tr>
+<tr>
+<td><strong>Tags / layers</strong></td>
+<td>Name string on <code>GameObject</code></td>
+<td><code>Tag</code>, <code>LayerMask</code>, query by tag/layer on <code>Scene</code></td>
+</tr>
+<tr>
+<td><strong>Deferred destroy</strong></td>
+<td><code>DestroyGameObject</code> immediate</td>
+<td><code>DestroyAtEndOfFrame</code> to avoid iterator invalidation during <code>OnUpdate</code></td>
+</tr>
+<tr>
+<td><strong>Component queries</strong></td>
+<td>Per-object <code>GetComponent&lt;T&gt;</code></td>
+<td>World queries: <code>ForEach&lt;MeshComponent&gt;</code>, archetype-style iteration</td>
+</tr>
+<tr>
+<td><strong>Enable/disable</strong></td>
+<td>Per-component visibility flags vary</td>
+<td>Uniform <code>GameObject::SetEnabled</code> affecting update + render submit</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-componentsnapshotregistry-serialization">2.2 <code>ComponentSnapshotRegistry</code> / serialization</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Handler coverage</strong></td>
+<td>28+ / 51 kinds</td>
+<td>Handlers for remaining 2D physics, <code>UiCanvas</code>, <code>Tilemap</code>, <code>AiAgent</code>, audio, animation sockets, …</td>
+</tr>
+<tr>
+<td><strong>Asset references</strong></td>
+<td>Paths embedded in snapshots</td>
+<td>Stable asset IDs, optional binary format, version migration hooks</td>
+</tr>
+<tr>
+<td><strong>Partial apply</strong></td>
+<td><code>Apply</code> creates full document</td>
+<td>Merge into existing world, diff/patch documents</td>
+</tr>
+<tr>
+<td><strong>Runtime registration</strong></td>
+<td><code>ComponentSnapshotRegistry::Default()</code> fixed set</td>
+<td>Public <code>RegisterHandler</code> for game-specific <code>GameComponent</code> subclasses</td>
+</tr>
+</tbody>
+</table>
+<p>Registered today: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig.</p>
+<p><strong>Runtime load flow:</strong> <code>SceneManager::BeginLoadSceneAsync</code> → entities created immediately → asset-dependent components deferred → call <code>Pump()</code> each frame until <code>IsSceneReady</code>. Sync path: <code>LoadSceneFromFile</code> pumps until ready.</p>
+<h3 id="23-asset-loading-gameworld">2.3 Asset loading (<code>GameWorld</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Async load</strong></td>
+<td><code>GameWorldAssetLoader</code> + <code>SceneManager::Pump</code></td>
+<td>Per-asset callbacks, priority queues, cancellation</td>
+</tr>
+<tr>
+<td><strong>No unload</strong></td>
+<td>Cache grows until world destroyed</td>
+<td><code>ReleaseMesh(path)</code>, ref-counted <code>AssetHandle</code></td>
+</tr>
+<tr>
+<td><strong>glTF surface</strong></td>
+<td>Rigid + skinned mesh paths</td>
+<td>Morph targets, multiple UV sets, animation events, sparse accessors</td>
+</tr>
+<tr>
+<td><strong>Material import</strong></td>
+<td>Textures via separate <code>MaterialComponent</code> setup</td>
+<td><code>LoadGltfMaterial</code> or auto-apply from glTF to <code>MaterialComponent</code></td>
+</tr>
+<tr>
+<td><strong>Streaming hooks</strong></td>
+<td>None</td>
+<td><code>IAssetStreamer</code> interface for region-based load/unload</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24-scene-query-culling-api">2.4 <code>Scene</code> query &amp; culling API</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Occlusion</strong></td>
+<td>Frustum culling only (<code>ForEach*InViewFrustum</code>)</td>
+<td>Occlusion query API or prebuilt cell visibility</td>
+</tr>
+<tr>
+<td><strong>LOD</strong></td>
+<td>Always full mesh</td>
+<td><code>MeshLodComponent</code> + <code>Scene::ForEachDrawableLod(view, distance)</code></td>
+</tr>
+<tr>
+<td><strong>Light iterators</strong></td>
+<td>Point, spot, directional (<code>ForEachDirectionalLight</code>)</td>
+<td>Area lights, light probes</td>
+</tr>
+<tr>
+<td><strong>Physics overlap from Scene</strong></td>
+<td>Separate <code>PhysicsQueries2D</code></td>
+<td><code>Scene::OverlapSphere</code>, <code>Raycast</code> unified with 3D physics bodies</td>
+</tr>
+<tr>
+<td><strong>Picking</strong></td>
+<td><code>Scene::RaycastPick</code> (rigid + skinned bind pose); <code>MeshRaycast</code> for low-level use</td>
+<td>Physics-body picks, deformed skinned mesh picks</td>
+</tr>
+</tbody>
+</table>
+<h3 id="25-physics-api-sparkphysics">2.5 Physics API (<code>spark/physics/</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>3D scope</strong></td>
+<td>Spheres/capsules vs static boxes/capsules + dynamic pairs</td>
+<td>Meshes, convex hulls, compound colliders</td>
+</tr>
+<tr>
+<td><strong>Character controller</strong></td>
+<td><code>CharacterController3DComponent</code> + <code>SimulateCharacterControllers3D</code></td>
+<td>Capsule mesh, moving platforms, dynamic body pushes</td>
+</tr>
+<tr>
+<td><strong>3D triggers</strong></td>
+<td><code>TriggerVolume3DComponent</code> + <code>SimulateTriggerVolumes3D</code> (enter/exit callbacks + signals)</td>
+<td>Layer masks, trigger stay events</td>
+</tr>
+<tr>
+<td><strong>Triggers</strong></td>
+<td>2D overlap signals; 3D enter/exit</td>
+<td><code>OnTriggerStay3D</code>, unified layer filtering</td>
+</tr>
+<tr>
+<td><strong>Fixed timestep</strong></td>
+<td><code>PhysicsWorld3DSettings::substeps</code> only</td>
+<td><code>IPhysicsWorld::Step(fixedDt)</code> decoupled from render rate</td>
+</tr>
+<tr>
+<td><strong>Determinism</strong></td>
+<td>Float integration</td>
+<td>Documented deterministic mode or fixed-point option</td>
+</tr>
+</tbody>
+</table>
+<h3 id="26-animation-api-sparkanimation-animatorcomponent">2.6 Animation API (<code>spark/animation/</code>, <code>AnimatorComponent</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Root motion</strong></td>
+<td>Joint palette only</td>
+<td><code>AnimatorComponent::ConsumeRootMotion()</code></td>
+</tr>
+<tr>
+<td><strong>Animation events</strong></td>
+<td>None</td>
+<td><code>OnAnimationEvent</code> / clip notify markers</td>
+</tr>
+<tr>
+<td><strong>Blend trees</strong></td>
+<td>Single clip + crossfade</td>
+<td><code>BlendTree</code>, 1D/2D parameter blend</td>
+</tr>
+<tr>
+<td><strong>IK</strong></td>
+<td>None</td>
+<td>Foot IK, look-at IK hooks on <code>Skeleton</code></td>
+</tr>
+<tr>
+<td><strong>State machine</strong></td>
+<td><code>Character3DAnimFsmComponent</code> (locomotion)</td>
+<td>General <code>AnimationStateMachineComponent</code> API</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> for planned milestones.</p>
+<h3 id="27-gameplay-layer">2.7 Gameplay layer</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>spark/gameplay/</code></strong></td>
+<td>Empty directory</td>
+<td>No public damage, health, inventory, interaction interfaces — games roll their own</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-rendering-api-gaps-scenerenderparams-submit-path">3. Rendering API gaps (<code>SceneRenderParams</code> &amp; submit path)</h2>
+<p>Games control rendering through <strong><code>SceneRenderParams</code></strong> and submit helpers — not through Vulkan types.</p>
+<h3 id="31-scenedrawitem-submit-model">3.1 <code>SceneDrawItem</code> / submit model</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Transparency queue</strong></td>
+<td><code>transparentDraws</code> + <code>SceneTransparentSortMode</code> (material opacity &lt; 1); opaque <code>draws</code></td>
+<td><code>SceneDrawItem::sortKey</code> for fine-grained ordering within queues</td>
+</tr>
+<tr>
+<td><strong>Render layers</strong></td>
+<td><code>shadowFlags</code> only</td>
+<td><code>layerMask</code>, <code>renderQueue</code> (background / opaque / transparent / overlay)</td>
+</tr>
+<tr>
+<td><strong>Instancing</strong></td>
+<td>One <code>SceneDrawItem</code> per object</td>
+<td><code>InstanceBatch</code> or <code>drawInstances</code> with shared mesh + per-instance data</td>
+</tr>
+<tr>
+<td><strong>LOD selection</strong></td>
+<td>Caller picks mesh</td>
+<td>Submit helper chooses LOD from camera distance</td>
+</tr>
+<tr>
+<td><strong>Custom shaders</strong></td>
+<td><code>SceneShadingModel::LitPbr</code> / <code>ToonCel</code></td>
+<td>Material shader graph or <code>userShaderId</code> escape hatch</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-scenerenderparams-limits">3.2 <code>SceneRenderParams</code> limits</h3>
+<table>
+<thead>
+<tr>
+<th>Field / cap</th>
+<th>Value</th>
+<th>Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sceneTextures</code></td>
+<td>16 RGBA8 layers</td>
+<td>No bindless handle; games with many unique materials must atlas or batch</td>
+</tr>
+<tr>
+<td><code>MaxPointLights</code></td>
+<td>256</td>
+<td>OK for forward; no API to prioritize / cull lights per tile</td>
+</tr>
+<tr>
+<td><code>MaxSpotLights</code></td>
+<td>128</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Punctual shadows</td>
+<td>Max 2 point + 4 spot per frame</td>
+<td>No API to assign shadow priority to lights</td>
+</tr>
+<tr>
+<td><code>MaxSprites</code></td>
+<td>Fixed cap on <code>sprites</code> array</td>
+<td>Documented limit; no spill or batch API</td>
+</tr>
+<tr>
+<td>Skinning</td>
+<td>128 joints per draw (<code>Skeleton::MaxJoints</code>)</td>
+<td>No multi-draw skinned instancing</td>
+</tr>
+<tr>
+<td>Custom meshes</td>
+<td><code>SceneMeshSlot::Custom</code> + <code>VulkanCustomMeshPool</code> GPU upload</td>
+<td>No persistent <code>GpuMeshHandle</code> owned by game code; pool clears cached mesh pointers when params have no custom draws (demo switch safe)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-materials-materialcomponent-scenedrawitem">3.3 Materials (<code>MaterialComponent</code> → <code>SceneDrawItem</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>glTF extensions</strong></td>
+<td>Core PBR + emissive map</td>
+<td>Clearcoat, sheen, transmission, unlit</td>
+</tr>
+<tr>
+<td><strong>Second UV</strong></td>
+<td>Single UV in mesh</td>
+<td><code>uv1</code> channel on <code>Mesh</code> / material</td>
+</tr>
+<tr>
+<td><strong>Decals</strong></td>
+<td><code>DecalProjectorComponent</code> → <code>SceneRenderParams::decals</code></td>
+<td>GPU decal projection pass in <code>VulkanRenderer</code> (data path implemented)</td>
+</tr>
+<tr>
+<td><strong>Directional light ECS</strong></td>
+<td><code>DirectionalLightComponent</code> + <code>FillStandardLitSceneFromWorld</code> override</td>
+<td>Multiple directional lights with blending / priority</td>
+</tr>
+<tr>
+<td><strong>Reflection probes</strong></td>
+<td><code>iblEnabled</code> + env layer index</td>
+<td><code>ReflectionProbeComponent</code>, blend weights per object</td>
+</tr>
+<tr>
+<td><strong>Material instances</strong></td>
+<td>Per-object <code>MaterialComponent</code></td>
+<td>Shared <code>MaterialAsset</code> + instance overrides</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34-lighting-atmosphere-params-level">3.4 Lighting &amp; atmosphere (params-level)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Post stack</strong></td>
+<td><code>ssaoEnabled</code> + tonemap exposure</td>
+<td><code>bloomStrength</code>, <code>vignette</code>, color grading LUT slot on params</td>
+</tr>
+<tr>
+<td><strong>Fog</strong></td>
+<td>None</td>
+<td><code>fogColor</code>, <code>fogDensity</code> / height fog on <code>SceneRenderParams</code></td>
+</tr>
+<tr>
+<td><strong>Contact shadows</strong></td>
+<td>None</td>
+<td>Toggle + tunables on params</td>
+</tr>
+<tr>
+<td><strong>Time of day</strong></td>
+<td><code>useTimeOfDay</code>, <code>timeOfDay</code></td>
+<td><code>TimeOfDayDriverComponent</code> + <code>ProcessTimeOfDayDrivers</code> (submit path); GPU uses existing analytic sun</td>
+</tr>
+<tr>
+<td><strong>Regional fog</strong></td>
+<td><code>fogEnabled</code>, <code>fogColor</code>, <code>fogDensity</code>, …</td>
+<td><code>FogVolumeComponent</code> → <code>SceneRenderParams</code> (data path; Vulkan fog pass optional)</td>
+</tr>
+<tr>
+<td><strong>Regional post</strong></td>
+<td>SSAO / exposure overrides</td>
+<td><code>PostProcessVolumeComponent</code> at camera position</td>
+</tr>
+<tr>
+<td><strong>Area lights</strong></td>
+<td>None</td>
+<td><code>RectLightComponent</code></td>
+</tr>
+</tbody>
+</table>
+<p>Details: <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>, <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a>.</p>
+<h3 id="35-cameras-viewports-params-level">3.5 Cameras &amp; viewports (params-level)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Single view</strong></td>
+<td>One <code>viewProjection</code> on params</td>
+<td><code>SceneRenderParams</code> array for split-screen / picture-in-picture</td>
+</tr>
+<tr>
+<td><strong>Offscreen targets</strong></td>
+<td>Swapchain + full-frame HDR only</td>
+<td><code>IRenderTarget</code> / <code>RenderTexture</code> handle for mirrors, UI 3D, thumbnails</td>
+</tr>
+<tr>
+<td><strong>Viewport rect</strong></td>
+<td><code>worldViewportScissor*</code> (clip rect)</td>
+<td>Sub-rect render without scissor hack; normalized viewport on params</td>
+</tr>
+<tr>
+<td><strong>Orthographic 3D</strong></td>
+<td><code>Camera</code> supports it</td>
+<td>First-class in <code>SubmitStandardLitSceneFromWorld</code> + shadow fitting</td>
+</tr>
+</tbody>
+</table>
+<h3 id="36-2d-ui-render-api-runtime">3.6 2D / UI render API (runtime)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sprite batching</strong></td>
+<td>Per-sprite <code>SceneSpriteDraw</code></td>
+<td><code>SubmitSpritesBatched</code> from <code>SpriteComponent</code> tiles</td>
+</tr>
+<tr>
+<td><strong>GUI paint order</strong></td>
+<td><code>paintOrder</code> on draws; GPU pass batches rects then text per layer</td>
+<td>Documented limitation; no <code>ForceInterleavedUiPaint</code> flag</td>
+</tr>
+<tr>
+<td><strong>World-space UI</strong></td>
+<td>Screen-space <code>UiCanvasComponent</code> only</td>
+<td>World-space canvas or billboard UI component</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-cross-cutting-api-design-gaps">4. Cross-cutting API design gaps</h2>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No render abstraction enum</strong></td>
+<td>Games include <code>SceneRenderParams</code> Vulkan-specific comments (clip Y, shadow flip)</td>
+</tr>
+<tr>
+<td><strong>No job system</strong></td>
+<td>All load, cull, submit on main thread</td>
+</tr>
+<tr>
+<td><strong>No event bus</strong></td>
+<td><code>EmitSignal</code> is per-object only; no world-level <code>Subscribe&lt;CollisionEvent&gt;</code></td>
+</tr>
+<tr>
+<td><strong>C++ scripting surface</strong></td>
+<td><code>SparkInterop.h</code> C ABI exists; not all <code>ComponentKind</code> values exposed to C#</td>
+</tr>
+<tr>
+<td><strong>Error reporting</strong></td>
+<td><code>LoadMesh</code> returns empty <code>SharedPtr</code>; no <code>LoadResult</code> with error code / message</td>
+</tr>
+<tr>
+<td><strong>Thread safety</strong></td>
+<td><code>GameWorld</code> is main-thread only; not documented on public headers</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-recommended-api-evolution-order">5. Recommended API evolution order</h2>
+<p>Prioritized for <strong>C++ game authors</strong> (no editor dependency):</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Public API work</th>
+<th>Unlocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td>~~Serialization handlers for lights, sprites, 3D physics, terrain~~; extend for <code>UiCanvas</code>, <code>Tilemap</code>, 2D physics, <code>AiAgent</code>, …</td>
+<td>Save/load real gameplay scenes</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>~~<code>DirectionalLightComponent</code>; <code>Scene::RaycastPick</code>~~</td>
+<td>Less boilerplate in <code>OnRender</code></td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>~~Transparent draw list + sort on <code>SceneRenderParams</code>~~</td>
+<td>Glass, foliage, alpha meshes</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><code>AssetHandle</code> + async <code>RequestLoad*</code></td>
+<td>Large levels without hitches</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><code>EntityId</code> + deferred destroy</td>
+<td>Safer gameplay code</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td>Instancing fields on submit path</td>
+<td>Crowds, props</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><code>RenderTexture</code> / multi-view <code>SceneRenderParams</code></td>
+<td>Mirrors, split-screen</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td>Character controller + trigger callbacks (3D)</td>
+<td>Action games without custom physics</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-strengths-to-preserve">6. Strengths to preserve</h2>
+<ul>
+<li><strong><code>IGame</code> + <code>IEngineContext</code></strong> — small, stable gameplay boundary.</li>
+<li><strong><code>SceneRenderParams</code> snapshot</strong> — simulation and GPU stay decoupled; easy to test fill logic.</li>
+<li><strong><code>Scene</code> iterators + <code>SceneSubmit</code></strong> — opt-in manual path or one-call submit.</li>
+<li><strong><code>ComponentSnapshotRegistry</code></strong> — extend serialization without changing <code>SceneSerializer</code> signature.</li>
+<li><strong>Header modularization</strong> — <code>spark/ecs/components/&lt;domain&gt;/</code>, <code>spark/scene/</code>, <code>spark/engine/</code> compose without monolithic include.</li>
+</ul>
+<hr />
+<h2 id="7-related-documents">7. Related documents</h2>
+<table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a></td>
+<td>Full API catalog and frame flow</td>
+</tr>
+<tr>
+<td><a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a></td>
+<td>Material channels and shader limits</td>
+</tr>
+<tr>
+<td><a href="LIGHTING_AND_SHADOWING.md"><code>LIGHTING_AND_SHADOWS.md</code></a></td>
+<td>Shadow/light implementation status</td>
+</tr>
+<tr>
+<td><a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a></td>
+<td>Animation API roadmap</td>
+</tr>
+<tr>
+<td><a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a></td>
+<td>Long-horizon streaming/combat (many items need new public API)</td>
+</tr>
+<tr>
+<td><a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a></td>
+<td>Animation + materials + scenes for 3D action games</td>
+</tr>
+<tr>
+<td><a href="csharp-scripting.html"><code>CSHARP_SCRIPTING.md</code></a></td>
+<td>Managed interop surface</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: 2026-07 — 64 <code>ComponentKind</code> values (+ <code>Unknown</code>), P2 components (<code>PhysicsMaterial2D</code>, <code>MeshCollider3D</code>, <code>NavMeshAgent</code>, <code>PatrolPath</code>, <code>PerceptionSensor</code>, <code>AmbientZone</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>HingeJoint3D</code>, <code>SpringJoint3D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code>, <code>TimeOfDayDriver</code>). See <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

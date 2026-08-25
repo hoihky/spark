@@ -379,7 +379,7 @@
           </header>
           <div class="doc-body"><h1 id="meshes-and-materials">Meshes and Materials</h1>
 <h2 id="class-design-mesh">Class Design: <code>Mesh</code></h2>
-<p>CPU vertex/index buffers. Loaders and primitives live on <code>Mesh</code> (<code>spark/scene/Mesh.hpp</code>):</p>
+<p>CPU vertex/index buffers. Loaders and primitives live on <code>Mesh</code> (<code>spark/scene/mesh/Mesh.hpp</code>):</p>
 <pre><code class="language-cpp">struct Vertex {
     Vector3 position;
     Vector3 normal;
@@ -433,26 +433,34 @@ public:
 </code></pre>
 <p><code>ApplyMaterialComponentToSceneDrawItem()</code> copies PBR fields into <code>SceneDrawItem</code>.</p>
 <h2 id="multi-material-gltf">Multi-Material glTF</h2>
-<p>For assets with multiple material slots per mesh:</p>
-<pre><code class="language-cpp">GltfAsset building = world.LoadGltf("assets/models/Building.glb");
-auto* go = world.CreateGameObject();
+<p>For assets with multiple material slots per mesh, prefer <code>GltfAssetBinder</code> so slots bind to shared library keys (<code>path.glb#material/N</code>):</p>
+<pre><code class="language-cpp">auto* go = world.CreateGameObject();
 go-&gt;AddComponent&lt;TransformComponent&gt;();
-go-&gt;AddComponent&lt;MeshComponent&gt;(building.mesh, SceneMeshSlot::Custom, Vector3::One);
-auto* multi = go-&gt;AddComponent&lt;MultiMaterialComponent&gt;();
-multi-&gt;PopulateFromGltfAsset(building);
+GltfAssetBinder::BindFromPath(*go, "assets/models/Building.glb");
 </code></pre>
-<p><code>ThreeDDemo</code> and <code>SkyDemo</code> use <code>MultiMaterialComponent</code> for glTF props with per-submesh textures.</p>
+<p><code>BindFromPath</code> probes the file, loads rigid or skinned content automatically, and attaches mesh + materials (+ skeleton for skinned bind-pose display). For explicit control, use <code>BindRigidMesh</code> / <code>BindSkinnedMesh</code> with a known asset type.</p>
+<p>For inline-only setup (no library retain), <code>PopulateFromGltfAsset</code> still copies textures and factors directly into slot storage.</p>
+<p><code>ThreeDDemo</code> and <code>SkyDemo</code> use multi-material glTF props with library keys when loaded through <code>GltfAssetBinder</code>.</p>
+<h2 id="material-library.sparkmat">Material library (<code>.sparkmat</code>)</h2>
+<p>Author reusable materials under <code>assets/materials/*.sparkmat</code>. Components reference them by key:</p>
+<pre><code class="language-cpp">material-&gt;SetMaterialAsset(world, "materials/hero.sparkmat");
+multi-&gt;SetSlotMaterialAsset(world, 0, "materials/trim.sparkmat");
+</code></pre>
+<p>glTF imports also expose <code>models/Foo.glb#material/0</code> keys. <code>.sparkmat</code> files persist full PBR scalars, shading model, and toon fields (<code>sparkmat_v1</code> + slot v1 payload).</p>
 <h2 id="spawn-a-lit-gltf-prop">Spawn a Lit glTF Prop</h2>
+<p>Prefer <code>GltfAssetBinder</code> for display-ready binding (mesh + material maps + library keys):</p>
+<pre><code class="language-cpp">GltfAssetBinder::BindFromPath(*go, "assets/models/DamagedHelmet.glb");
+</code></pre>
+<p>Or load and bind manually:</p>
 <pre><code class="language-cpp">GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
 auto* go = world.CreateGameObject();
 go-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({0, 0, 0});
-go-&gt;AddComponent&lt;MeshComponent&gt;(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
-
-auto* mat = go-&gt;AddComponent&lt;MaterialComponent&gt;(asset.baseColorTexture);
-mat-&gt;SetRoughness(0.55F);
-mat-&gt;SetMetallic(0.1F);
-mat-&gt;SetShadingModel(SceneShadingModel::LitPbr);
+GltfAssetBinder::BindRigidMesh(*go, asset, SceneMeshSlot::Custom, Vector3::One, "assets/models/Crate.glb");
+if (MaterialComponent* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;()) {
+    ApplyGltfMaterialDesc(*mat, asset.material);
+}
 </code></pre>
+<p>Imported meshes include tangent space for normal maps (<code>Mesh::RecomputeTangentSpace</code> on glTF load). See launcher <strong>#21</strong> / key <strong>Q</strong> (<code>GltfSamples3DDemo</code>) for a full PBR + HDR IBL reference scene.</p>
 <h2 id="procedural-cube-fps-sample-style">Procedural Cube (FPS Sample Style)</h2>
 <pre><code class="language-cpp">auto unitCube = MakeShared&lt;Mesh&gt;(Mesh::CreateUnitCube());
 world.RegisterMesh(unitCube, "fps/unit_cube");
@@ -492,6 +500,10 @@ target-&gt;AddComponent&lt;MaterialComponent&gt;(nullptr)-&gt;SetRoughness(0.35F
                         
                         <li class="toc-h2">
                           <a href="#multi-material-gltf">Multi-Material glTF</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#material-library">Material library ()</a>
                         </li>
                         
                         <li class="toc-h2">

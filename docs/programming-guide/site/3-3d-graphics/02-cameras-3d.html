@@ -406,7 +406,7 @@ follow-&gt;SetLookAtTarget(true);
 </code></pre>
 <p>Update order: <code>SpringArm3D</code> (295) places the camera along the orbit; <code>CameraFollow3D</code> (300) smooth-follows the look target.</p>
 <h2 id="class-design-flycamera">Class Design: <code>FlyCamera</code></h2>
-<p>FPS-style camera struct (<code>spark/scene/FlyCamera.hpp</code>) for demos without ECS:</p>
+<p>FPS-style camera struct (<code>spark/scene/camera/FlyCamera.hpp</code>) for demos without ECS:</p>
 <pre><code class="language-cpp">struct FlyCamera {
     Vector3 position{0.0F, 4.2F, 16.0F};
     float yaw = 0.0F;
@@ -444,7 +444,7 @@ const Matrix4 viewProj = proj * camera.ViewMatrix();
 </code></pre>
 <p>Or use <code>CameraComponent::ViewProjection(owner, aspect)</code> when using ECS cameras.</p>
 <h2 id="charactercamerarig"><code>CharacterCameraRig</code></h2>
-<p>For third-person characters without ECS rigs, see <code>spark/scene/CharacterCameraRig.hpp</code> and <code>CharacterCameraDemo</code> — orbit camera with collision pull-in.</p>
+<p>For third-person characters without ECS rigs, see <code>spark/scene/camera/CharacterCameraRig.hpp</code> and <code>CharacterCameraDemo</code> — orbit camera with collision pull-in.</p>
 <h2 id="billboards">Billboards</h2>
 <p><code>BillboardComponent</code> orients its owner's transform toward the main camera each frame (priority 50). Used for particles, pickups, and impostor sprites in 3D.</p>
 <p>See <a href="../1-overview-architecture/07-game-component-reference.html#camera">Game Component Reference</a>.</p>

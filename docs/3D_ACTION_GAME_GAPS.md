@@ -86,6 +86,7 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 | Sprite/tilemap atlas UV (2D) | `include/spark/ecs/components/rendering/SpriteComponent.hpp`, `src/spark/scene/SceneTileAtlas.cpp` |
 | Async texture decode | `include/spark/scene/assets/GameWorldAssetLoader.hpp` |
 | IBL, SSAO, shadows, clustered lights | `shaders/ibl.glsl`, post passes |
+| glTF PBR + HDR IBL reference demo | `GltfSamples3DDemo` (launcher **#21**, key **Q**) — `DamagedHelmet.glb`, studio HDR sky |
 | Material showcase demo | `src/spark/demo/MaterialShowcase3DDemo.cpp` |
 
 ### Architecture constraint

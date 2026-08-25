@@ -4,7 +4,7 @@ Plan for evolving Spark’s **retained-mode UI** (`spark/ui/`) into **in-engine 
 
 > **Migration complete (Phase 6):** Legacy `spark/gui/` (`Widget`, `GuiCanvasComponent`, `GuiControls.hpp`) was removed. All demos and `SparkEditor` use **`UiCanvasComponent`**, **`IUiElement`**, and **`IUiControlsFactory`** under `spark/ui/`. See [`GUI_TOOLKIT_ARCHITECTURE.md`](GUI_TOOLKIT_ARCHITECTURE.md).
 
-**Dear ImGui** (`SPARK_ENABLE_IMGUI`) remains available as an **optional layer** (`DearImguiControlsFactory` + raw `ImGui::` windows) for internal tools and the docking demo (**#19**); Spark native (`SparkUiControlsFactory`) is the default for shipped menus and `SparkEditor`.
+**Dear ImGui** (`SPARK_ENABLE_IMGUI`) remains available as an **optional layer** (`DearImguiControlsFactory` + raw `ImGui::` windows) for internal tools and the docking demo (**#20**); Spark native (`SparkUiControlsFactory`) is the default for shipped menus and `SparkEditor`.
 
 **Related:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.9–§5.10 / §12, [`programming-guide/1-overview-architecture/08-ui-and-toolkits.md`](programming-guide/1-overview-architecture/08-ui-and-toolkits.md), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md), [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md), demo **#10** `SceneEditor3DDemo`.
 
@@ -57,7 +57,7 @@ Plan for evolving Spark’s **retained-mode UI** (`spark/ui/`) into **in-engine 
 |----------|----------------|
 | **Shell menu** | `SparkShellDemo` — launcher list + theme picker on `UiCanvasComponent` |
 | **Scene editor (#10)** | `SceneEditor3DDemo` — left strip UI + 3D pick/place (prototype) |
-| **Dear ImGui (#19)** | `ImGuiShowcaseDemo` — docking tool panels, hotkey **G** |
+| **Dear ImGui (#20)** | `ImGuiShowcaseDemo` — docking tool panels, hotkey **G** |
 | **SparkEditor** | `spark_editor/SparkEditor` — dock shell, hierarchy/inspector stubs, fly viewport (`EditorApplication`) |
 
 ### 1.4 Scene editor prototype (not a general editor)
@@ -373,7 +373,7 @@ Adjust if team size > 3 or if editor is **tools-only** (no ship-as-product).
 | `include/spark/ui/runtime/UiSystem.hpp` | Backend facade |
 | `src/spark/demo/SceneEditor3DDemo.cpp` | Editor prototype |
 | `src/spark/demo/SparkShellDemo.cpp` | Demo launcher shell |
-| `src/spark/demo/ImGuiShowcaseDemo.cpp` | Dear ImGui docking demo (#19) |
+| `src/spark/demo/ImGuiShowcaseDemo.cpp` | Dear ImGui docking demo (#20) |
 | `include/spark/ecs/components/ui/UiCanvasComponent.hpp` | Canvas ECS |
 | `docs/GUI_TOOLKIT_ARCHITECTURE.md` | Phase 6 migration notes |
 

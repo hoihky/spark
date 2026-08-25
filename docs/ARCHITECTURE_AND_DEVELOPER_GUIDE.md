@@ -17,7 +17,7 @@ Spark is a **C++23** codebase that provides:
 - Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
 
-The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **20** built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, Dear ImGui docking demo, etc.).
+The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **21** built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, Dear ImGui docking demo, etc.).
 
 ---
 
@@ -72,19 +72,19 @@ External games: link against `SparkEngine` from your own CMake target (see progr
 ```mermaid
 flowchart TB
     subgraph app [Application]
-        IGame[IGame implementation]
+        IGame["IGame implementation"]
     end
     subgraph engine [Engine]
-        Loop[Main loop: poll input, tick, render, present]
+        Loop["Main loop — poll, tick, render, present"]
         Ctx[IEngineContext]
     end
     subgraph world [Simulation]
         GW[GameWorld]
-        GO[GameObjects + Components]
+        GO["GameObjects and Components"]
     end
     subgraph draw [Frame output]
         SRP[SceneRenderParams]
-        VK[VulkanRenderer / IFramePresenter]
+        VK["VulkanRenderer / IFramePresenter"]
     end
     IGame --> Loop
     Loop --> Ctx
@@ -103,61 +103,44 @@ The runtime object graph is intentionally shallow: **`Engine`** owns the window,
 
 ```mermaid
 classDiagram
-    direction TB
-    class Engine {
-        +Run()
-    }
-    class IGame {
-        <<interface>>
-        +OnAttach(IEngineContext)
-        +OnUpdate(FrameTiming, IEngineContext)
-        +OnRender(IRenderFrame, IEngineContext)
-        +OnDetach()
-    }
-    class Game {
-        Scene scene
-        +GetWorld() GameWorld
-    }
-    class Scene {
-        +GetWorld() GameWorld
-        +ForEachDrawable(...)
-    }
-    class GameWorld {
-        +CreateGameObject()
-        +UpdateGameObjects(...)
-    }
-    class GameObject {
-        +AddComponent()
-        +GetComponent()
-    }
-    class GameComponent {
-        <<abstract>>
-        +OnUpdate(...)
-    }
-    class IEngineContext {
-        <<interface>>
-        +GetInput()
-        +SetSceneRenderParams(SceneRenderParams)
-    }
-    class IFramePresenter {
-        <<interface>>
-        +PresentFrame()
-        +SetSceneRenderParams(SceneRenderParams)
-    }
-    class VulkanRenderer {
-        +DrawFrame()
-    }
-
-    Engine o-- "1" IGame : owns
-    Engine o-- "1" IEngineContext
-    Engine o-- "1" IFramePresenter : presenter
-    IFramePresenter <|.. VulkanRenderer
-    IEngineContext ..> IFramePresenter : forwards SetSceneRenderParams
+    class Engine
+    class IGame
+    class Game
+    class Scene
+    class GameWorld
+    class GameObject
+    class GameComponent
+    class IEngineContext
+    class IFramePresenter
+    class VulkanRenderer
+    Engine o-- IGame
+    Engine o-- IEngineContext
+    Engine o-- IFramePresenter
+    VulkanRenderer ..|> IFramePresenter
+    IEngineContext ..> IFramePresenter
     Game --|> IGame
-    Game *-- Scene : owns
-    Scene *-- GameWorld : wraps
-    GameWorld o-- "*" GameObject
-    GameObject o-- "*" GameComponent
+    Game *-- Scene
+    Scene *-- GameWorld
+    GameWorld o-- GameObject
+    GameObject o-- GameComponent
+    Engine : +Run()
+    IGame : +OnAttach()
+    IGame : +OnUpdate()
+    IGame : +OnRender()
+    IGame : +OnDetach()
+    Game : +GetWorld()
+    Scene : +GetWorld()
+    Scene : +ForEachDrawable()
+    GameWorld : +CreateGameObject()
+    GameWorld : +UpdateGameObjects()
+    GameObject : +AddComponent()
+    GameObject : +GetComponent()
+    GameComponent : +OnUpdate()
+    IEngineContext : +GetInput()
+    IEngineContext : +SetSceneRenderParams()
+    IFramePresenter : +PresentFrame()
+    IFramePresenter : +SetSceneRenderParams()
+    VulkanRenderer : +DrawFrame()
 ```
 
 **How to read this diagram**
@@ -292,7 +275,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Vulkan hook** | Record draw lists after screen UI in present pass | `IImGuiVulkanBackend`, `VulkanRenderer::RecordImGuiDrawData` |
 | **Input capture** | Gate game pointer when ImGui hovers widgets | `WantsCaptureMouse`, `WantsCaptureKeyboard` |
 | **GLFW chaining** | Install callbacks after `GlfwInput::WireToWindow` | `IImGuiLayer::InstallPlatformCallbacks` |
-| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **20** (hotkey **G**) |
+| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **20** (hotkey **G**); glTF PBR sample **21** (`GltfSamples3DDemo`, hotkey **Q**) |
 
 ImGui UI must be built in **`IGame::OnRender`** (after engine `BeginFrame`, before `EndFrame`). Retained GUI remains the primary stack for shipped menus and `SparkEditor`.
 
@@ -412,27 +395,27 @@ Simulation updates **mutable world state** (`GameWorld`, transforms, physics, co
 
 ```mermaid
 sequenceDiagram
-    participant Loop as Engine loop
+    participant Eng as Engine loop
     participant Game as IGame
-    participant World as GameWorld / Scene
+    participant World as GameWorldScene
     participant ImGui as IImGuiLayer
     participant Ctx as IEngineContext
-    participant Present as IFramePresenter
+    participant Presenter as IFramePresenter
 
-    Loop->>Game: OnUpdate(timing, context)
+    Eng->>Game: OnUpdate
     Game->>World: logic, physics, components
     opt ImGui enabled
-        Loop->>ImGui: BeginFrame (NewFrame)
+        Eng->>ImGui: BeginFrame
     end
-    Loop->>Game: OnRender(frame, context)
-    Game->>World: queries (ForEach..., matrices)
-    Game->>Ctx: SetSceneRenderParams(params)
+    Eng->>Game: OnRender
+    Game->>World: queries and matrices
+    Game->>Ctx: SetSceneRenderParams
     opt ImGui enabled
-        Loop->>ImGui: EndFrame (Render)
+        Eng->>ImGui: EndFrame
     end
-    Ctx->>Present: SetSceneRenderParams (VulkanRenderer stores copy)
-    Loop->>Present: PresentFrame
-    Note over Present: shadows → HDR scene → SSAO → tonemap → screen UI → ImGui
+    Ctx->>Presenter: SetSceneRenderParams
+    Eng->>Presenter: PresentFrame
+    Note over Presenter: shadows, HDR scene, SSAO, tonemap, UI, ImGui
 ```
 
 ---
@@ -532,12 +515,12 @@ Each **`GameObject`** owns a **closed set** of **`GameComponent`** instances key
 flowchart TB
     GW[GameWorld]
     GO[GameObject]
-    GC[GameComponent instances]
+    GC["GameComponent instances"]
     GW -->|"Create / destroy"| GO
     GO -->|"AddComponent / owns"| GC
     GC --> T[TransformComponent]
-    GC --> M[MeshComponent / SkinnedMeshComponent]
-    GC --> L[PointLight / SpotLight]
+    GC --> M["MeshComponent / SkinnedMeshComponent"]
+    GC --> L["PointLight / SpotLight"]
     GC --> U[UiCanvasComponent]
 ```
 
@@ -612,14 +595,14 @@ Inside the **HDR scene** subpass the renderer switches pipelines:
 #### Scene geometry and draws
 
 - **Static packed mesh:** `CreateSceneGeometry` uploads one **vertex + index** buffer containing the **unit cube**, **ground plane**, and a **sprite quad** topology. `SceneMeshSlot::UnitCube` / `GroundPlane` draws index into that buffer with per-draw **`ModelPushConstants`** (model matrix, albedo, `textureLayer`, `normalMapLayer`, `metallicRoughnessMapLayer`, sky mode, PBR, emissive, skinning summary).
-- **Custom rigid meshes:** CPU `Mesh` data is packed into **dynamic `customVertexBuffer` / `customIndexBuffer`** when fingerprints change (`RebuildCustomMeshGeometry`, `ComputeCustomGeometryFingerprint`). Each `SceneDrawItem` with `mesh == Custom` maps to a **`CustomMeshGpuSlice`** (first index, count, vertex offset).
-- **Skinned meshes:** joint matrices are copied each draw into a **per–frame-in-flight storage buffer** (`skinSsboBuffers`, std430 palette, up to **`kMaxSkinJoints` = 64**). Push constants select skinning on the same scene pipeline path.
+- **Custom rigid meshes:** CPU `Mesh` / `SkinnedMesh` data is packed by **`VulkanCustomMeshPool`** into dynamic vertex/index buffers when the geometry fingerprint changes. Each `SceneDrawItem` with `mesh == Custom` maps to a **`CustomMeshGpuSlice`** (first index, count, vertex offset). When switching demos or submitting params with no custom draws, **`ClearKnownMeshes()`** drops cached CPU mesh pointers so destroyed assets are not repacked.
+- **Skinned meshes:** joint matrices are copied each draw into a **per–frame-in-flight storage buffer** (`skinSsboBuffers`, std430 palette, up to **`kMaxSkinJoints` = 128**). Push constants select skinning on the same scene pipeline path.
 
 #### Scene uniforms and textures
 
 - **`WriteUniformBuffer`** fills **`SceneUniformGpu`** via `VulkanSceneUniformWriter` (struct in `include/spark/render/scene/VulkanSceneUniformGpu.hpp`) — view-projection, directional light, camera position, ambient, inverse view-projection, viewport size (shadow V-flip in `.w`), CSM data, cluster grid metadata, IBL params, and time. `SceneLightingResolver::Resolve` may adjust sun/ambient before upload. Punctual lights are uploaded to **cluster SSBOs** (not the UBO).
 - **Descriptor set (scene):** binding **0** UBO, **1** scene texture array, **2** skin SSBO, **3** directional shadow atlas, **4**–**5** cluster lights/grid SSBOs, **6**–**8** punctual shadow SSBO + atlases.
-- **`RecordSceneTextureUploads`** resizes/stages **RGBA8** textures from `SceneRenderParams::sceneTextures` into the array image when the **pointer set** changes (dirty tracking via `lastSceneUploadedTexturePtrs`), so unchanged frames skip redundant **`vkCmdCopyBufferToImage`**.
+- **`RecordSceneTextureUploads`** resizes/stages **RGBA8** textures from `SceneRenderParams::sceneTextures` into the array image when the **pointer set** changes (dirty tracking via `lastSceneUploadedTexturePtrs`), so unchanged frames skip redundant **`vkCmdCopyBufferToImage`**. `FindOrAddSceneTexture` assigns **dense per-frame** layer indices (0…N−1); `SetSceneRenderParams` replaces the merged texture list each submit so demo switches do not retain stale layers.
 
 #### UI recording (`RecordScreenUi`)
 
@@ -728,7 +711,7 @@ Optional when `SPARK_ENABLE_IMGUI=ON` (default):
 - **Frame contract:** engine calls `BeginFrame` after `OnUpdate`, game builds UI in `OnRender`, engine calls `EndFrame` before `PresentFrame`.
 - **Retained ImGui controls** — `DearImguiControlsFactory` paints `ImguiButton`, `ImguiPanel`, `ImguiDockWorkspace`, etc. during `UiSystem::Paint`.
 
-Demo: **`ImGuiShowcaseDemo`** (launcher **#19**, key **G**). See programming guide chapter [UI and Toolkits](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
+Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDemo`** (launcher **#21**, key **Q**) — Khronos `DamagedHelmet.glb` with studio HDR IBL (`studio_small_08_1k.hdr`). See programming guide chapter [UI and Toolkits](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
 
 ---
 
@@ -749,10 +732,11 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#19**, key **G**). See programming gui
 4. **This guide — §4.1 (class map), §7.4 (sim vs render), §9.3 (`VulkanRenderer` internals), §5 (feature catalog)**
 5. `include/spark/render/core/VulkanRenderer.hpp` + `src/spark/render/core/VulkanRenderer.cpp` (implementation detail; large)
 6. `include/spark/demo/ThreeDDemo.hpp` — camera + glTF + lights + manual submit pattern
-7. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
-8. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
-9. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
-10. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
+7. `include/spark/demo/GltfSamples3DDemo.hpp` — glTF PBR + HDR sky dome IBL reference
+8. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
+9. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
+10. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
+11. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
 ---
 
 ## 15. Extending the Engine Safely

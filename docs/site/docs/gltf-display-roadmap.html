@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>glTF Display Roadmap · Spark Game Engine</title>
+  <meta name="description" content="glTF display compatibility roadmap">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="gltf-display-compatibility-roadmap">glTF display compatibility roadmap</h1>
+<p>Companion to <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a>. Tracks work toward <strong>“pick any glTF and display it”</strong>.</p>
+<h2 id="completed-phase-1-quick-wins">Completed (Phase 1 — quick wins)</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Factor-only materials</td>
+<td><code>GltfAssetBinder</code> always binds materials when a mesh is present (scalar PBR included)</td>
+</tr>
+<tr>
+<td>Bind-pose skinned display</td>
+<td><code>SkinnedMeshComponent::SetSkeleton</code> + <code>SkinnedMeshPalette</code> (no <code>AnimatorComponent</code> required)</td>
+</tr>
+<tr>
+<td>Auto loader routing</td>
+<td><code>GltfContentClassifier</code> + <code>GltfAssetBinder::BindFromPath</code></td>
+</tr>
+<tr>
+<td>Rigid load guard</td>
+<td><code>TryLoadGltf</code> rejects skinned files with a clear error</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended display entry point:</strong></p>
+<pre><code class="language-cpp">GltfAssetBinder::BindFromPath(*go, &quot;assets/models/Anything.glb&quot;);
+</code></pre>
+<h2 id="completed-phase-2-scene-graph">Completed (Phase 2 — scene graph)</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GltfSceneLoader</code></td>
+<td>Parses rigid glTF into <code>GltfSceneDocument</code> (local-space meshes, dedup by <code>cgltf_mesh*</code>)</td>
+</tr>
+<tr>
+<td><code>GltfSceneImporter</code></td>
+<td>Walks node tree → <code>GameObject</code> hierarchy with per-node <code>TransformComponent</code></td>
+</tr>
+<tr>
+<td><code>GameWorld::TryLoadGltfScene</code></td>
+<td>Path-keyed scene cache (<code>CachedAssetKind::GltfScene</code>)</td>
+</tr>
+<tr>
+<td><code>BindFromPath</code> (rigid)</td>
+<td>Imports scene graph instead of baking into one mesh</td>
+</tr>
+<tr>
+<td><code>GltfMeshBuilder</code></td>
+<td>Shared primitive builder for merged loader + scene loader</td>
+</tr>
+</tbody>
+</table>
+<p><code>LoadGltf</code> / <code>GltfRigidLoader</code> still merge geometry for legacy single-mesh workflows.</p>
+<p><strong>Still open:</strong> rigid node animation, scene snapshot serialization.</p>
+<h2 id="completed-phase-3-compression">Completed (Phase 3 — compression)</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IGltfPrimitiveDecoder</code></td>
+<td>Strategy interface; <code>GltfPrimitiveDecoderRegistry</code> resolves Draco vs uncompressed</td>
+</tr>
+<tr>
+<td><code>GltfDracoPrimitiveDecoder</code></td>
+<td><code>KHR_draco_mesh_compression</code> via Google Draco (<code>SPARK_ENABLE_GLTF_DRACO</code>, default ON)</td>
+</tr>
+<tr>
+<td><code>GltfMeshoptBuffers</code></td>
+<td><code>EXT/KHR_meshopt_compression</code> buffer-view decode via meshoptimizer (<code>SPARK_ENABLE_GLTF_MESHOPT</code>, default ON)</td>
+</tr>
+<tr>
+<td><code>LoadParsedGltfFile</code></td>
+<td>Shared parse + buffer load + meshopt decode for all glTF loaders</td>
+</tr>
+<tr>
+<td><code>GltfSkinnedMeshBuilder</code></td>
+<td>Skinned primitives decode through the same registry (Draco + meshopt accessors)</td>
+</tr>
+<tr>
+<td><code>GltfMeshBuilder</code></td>
+<td>Decodes via registry before baking vertices; returns <code>GltfMeshBuildOutcome</code> errors</td>
+</tr>
+<tr>
+<td><code>GltfContentClassifier</code></td>
+<td><code>ProbeResult::compression.draco</code> / <code>.meshopt</code> flags</td>
+</tr>
+</tbody>
+</table>
+<p>Meshopt views with a separate fallback buffer are read directly; compression-only views are decompressed into <code>buffer_view.data</code>.</p>
+<p><strong>Still open:</strong> meshopt color filter (meshoptimizer 0.22), compression-only meshopt regression asset.</p>
+<h2 id="completed-phase-4-visual-parity">Completed (Phase 4 — visual parity)</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>COLOR_0</code></td>
+<td>Decoded in primitive decoders; stored on <code>Mesh</code> / <code>SkinnedMesh</code> vertices; shaded in <code>scene.frag</code></td>
+</tr>
+<tr>
+<td>Per-map texcoord</td>
+<td><code>MaterialUvMap</code> per texture slot; <code>TEXCOORD_0</code> / <code>TEXCOORD_1</code> in vertex layout; map index in shader push constants</td>
+</tr>
+<tr>
+<td><code>KHR_materials_unlit</code></td>
+<td><code>GltfMaterial::unlit</code> → <code>SceneShadingModel::Unlit</code> (emissive + base, no lighting)</td>
+</tr>
+<tr>
+<td>Joint budget</td>
+<td><code>Skeleton::MaxJoints</code> raised to <strong>128</strong> (GPU skin SSBO 8 KB)</td>
+</tr>
+<tr>
+<td>Multi-skinned meshes</td>
+<td><code>GltfSceneDocument::skinnedMeshes</code> / <code>skeletons</code>; <code>GltfSkinNodeLoader</code>; scene import binds each skinned node</td>
+</tr>
+<tr>
+<td><code>KHR_texture_transform</code></td>
+<td>Parsed into <code>MaterialUvMap</code>; applied per map in <code>scene.frag</code> via <code>gltf_map_uv.glsl</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Still open:</strong> morph targets, skin palette splitting beyond 128 joints.</p>
+<h2 id="phase-5-animation-advanced">Phase 5 — animation &amp; advanced</h2>
+<ul>
+<li>Morph targets</li>
+<li>Rigid node animation</li>
+<li>Scene snapshot serialization</li>
+</ul>
+<h2 id="sparkdemo-reference-gltfsamples3ddemo">SparkDemo reference (<code>GltfSamples3DDemo</code>)</h2>
+<p>Launcher item <strong>#21</strong> (hotkey <strong>Q</strong>) demonstrates end-to-end glTF PBR display:</p>
+<ul>
+<li>Khronos <strong><code>DamagedHelmet.glb</code></strong> via <code>GltfAssetBinder::BindRigidMesh</code> + <code>ApplyGltfMaterialDesc</code> (normal, ORM, emissive maps)</li>
+<li>Poly Haven <strong><code>studio_small_08_1k.hdr</code></strong> sky dome for image-based lighting (<code>iblEnvironmentLayer = -1</code>, <code>SkyComponent</code> + equirect texture)</li>
+<li>CMake downloads the HDR to <code>assets/textures/sky/</code> on first configure (<code>SPARK_STUDIO_HDR_PATH</code>)</li>
+</ul>
+<p>See <a href="gltf-display-roadmap.html"><code>GLTF_DISPLAY_ROADMAP.md</code></a> for the full compatibility matrix and <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a> for PBR channel details.</p>
+<h2 id="test-matrix">Test matrix</h2>
+<p>Run <code>GltfDisplayCompatibilityTest</code> plus manual checks:</p>
+<ol>
+<li>DamagedHelmet.glb — rigid PBR  </li>
+<li>SheenChair.glb — multi-material rigid  </li>
+<li>Fox.glb — skinned bind pose (no animator)  </li>
+<li>Draco sample — <code>GltfDracoTest</code> (AvocadoDraco.gltf)  </li>
+<li>Meshopt sample — <code>GltfMeshoptTest</code> (MeshoptCubeTest.gltf)  </li>
+<li>Skinned decode path — <code>GltfSkinnedCompressionTest</code> (Fox.glb)  </li>
+<li>Multi-node scene — <code>GltfSceneGraphTest</code> + <code>BindFromPath</code> hierarchy  </li>
+<li>Factor-only colored mesh — scalar PBR visible  </li>
+<li>Visual parity — <code>GltfVisualParityTest</code> (vertex color/UV path, unlit, multi-skinned scene)</li>
+</ol>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -43,6 +43,9 @@ public:
     /** Records staging→device copies + vertex/index barriers before custom mesh draws. */
     void RecordUploads(VkCommandBuffer commandBuffer);
 
+    /** Drop cached mesh pointers (e.g. when leaving a 3D demo so stale CPU meshes are not repacked). */
+    void ClearKnownMeshes() noexcept;
+
     [[nodiscard]] Bindings GetBindings() const noexcept;
     void FillCustomDrawPacked(
             const SceneRenderParams& scene,

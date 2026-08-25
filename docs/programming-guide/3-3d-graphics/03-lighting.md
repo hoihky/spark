@@ -91,6 +91,21 @@ See `Maze3DDemo` gem pickups and guard mesh for this pattern.
 
 `VulkanRenderer` packs up to **256 point** and **128 spot** lights per frame via clustered shading (`VulkanClusteredForwardLights`).
 
+## Image-Based Lighting (IBL)
+
+For metallic PBR materials, set `iblEnabled` and either bind an equirect environment map on a sky draw or set `iblEnvironmentLayer` explicitly. When `iblEnvironmentLayer == -1`, submit resolves the first sky draw with a bound texture (see `ResolveIblEnvironmentLayer` in `SceneSubmitMaterial.cpp`).
+
+```cpp
+SceneRenderParams params{};
+params.iblEnabled = true;
+params.iblEnvironmentLayer = -1;  // auto from sky dome texture
+params.iblIntensity = 1.0F;
+FillStandardLitSceneFromWorld(world, ctx, viewProj, cameraPos, sunDir, sunColor, sunIntensity,
+                              ambient, false, {}, {}, 0.0F, params, SceneSpriteSortMode::SortOrderOnly, &scene);
+```
+
+`GltfSamples3DDemo` (launcher **#21**, key **Q**) pairs Khronos `DamagedHelmet.glb` with Poly Haven `studio_small_08_1k.hdr` on a sky dome. HDR files are loaded via `Texture2D::TryLoadFromFile` (currently tonemapped to LDR for the scene texture array).
+
 ## Scene Lighting Profile
 
 `SceneLightingProfile` on `SceneRenderParams` controls exposure, tonemap, and IBL contribution — see `spark/render/SceneLightingProfile.hpp`.

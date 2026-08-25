@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Action Game Gaps · Spark Game Engine</title>
+  <meta name="description" content="3D Action Game — Gap Analysis">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="3d-action-game-gap-analysis">3D Action Game — Gap Analysis</h1>
+<p>Gap analysis across Spark's <strong>animation</strong>, <strong>texture/material</strong>, and <strong>scene management</strong> systems for shipping a <strong>3D action game</strong> (combat arenas, locomotion, weapons, level flow, multiple enemies).</p>
+<p>Complements:</p>
+<ul>
+<li><a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> — animation milestone tasks</li>
+<li><a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a> — PBR pipeline and limits</li>
+<li><a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a> — public C++ API gaps</li>
+<li><a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> — long-horizon streaming/combat/AI</li>
+</ul>
+<hr />
+<h2 id="executive-summary">Executive summary</h2>
+<p>Spark has a <strong>solid prototype foundation</strong>: skeletal playback, forward PBR, additive scene loading, and <code>spark_scene_v4</code> serialization. It is <strong>not yet production-ready</strong> for a shipping action title.</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Maturity</th>
+<th>Action-game verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Animation</strong></td>
+<td>M1 done, M2 partial</td>
+<td>Locomotion works; combat depth (blend trees, hurt/stagger, root motion, IK, events) is missing</td>
+</tr>
+<tr>
+<td><strong>Textures / materials</strong></td>
+<td>PBR pipeline exists</td>
+<td>Mipmapped scene arrays; BC7/ASTC (KTX2 + runtime BC7); 32×1024² budget</td>
+</tr>
+<tr>
+<td><strong>Scene management</strong></td>
+<td>Core load/save works</td>
+<td>No prefabs, 3D spawn points, transitions, physics layers, or streaming</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-animation-system">1. Animation system</h2>
+<h3 id="what-exists">What exists</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>glTF skinned import, GPU skinning (≤64 joints)</td>
+<td><code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>shaders/scene.vert</code></td>
+</tr>
+<tr>
+<td><code>AnimatorComponent</code> — loop modes, crossfade, clip API</td>
+<td><code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/animation/Skeleton.hpp</code></td>
+</tr>
+<tr>
+<td><code>Character3DAnimFsmComponent</code> — idle/walk/run + attack one-shot</td>
+<td><code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code></td>
+</tr>
+<tr>
+<td>Manual animation events → signals</td>
+<td><code>include/spark/ecs/components/animation/AnimationEventReceiverComponent.hpp</code></td>
+</tr>
+<tr>
+<td>Bone attachments by joint index</td>
+<td><code>include/spark/ecs/components/animation/AttachmentSocketComponent.hpp</code></td>
+</tr>
+<tr>
+<td>C# bindings for animator + 3D FSM</td>
+<td><code>include/spark/scripting/SparkInterop.h</code>, <code>scripting/bindings/generated/Spark.Bindings/ComponentMirrors.g.cs</code></td>
+</tr>
+<tr>
+<td>Scene save: skinned mesh + animator</td>
+<td><code>src/spark/scene/serialization/ComponentSnapshotRegistry.cpp</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="gaps-for-3d-action">Gaps for 3D action</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Gap</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No speed-based blend tree</strong> (walk↔run)</td>
+<td>Discrete clip switches cause pops; action games need smooth locomotion</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No animation layers</strong> (upper-body combat while moving)</td>
+<td>Cannot hold weapon aim / attack overlay on lower-body locomotion</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>Combat FSM is thin</strong> — attack only; no hurt/stagger/death/block</td>
+<td>2D FSM (<code>Sprite2DCharacterAnimFsmComponent</code>) is richer; 3D has no parity</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No root motion</strong></td>
+<td>Melee dashes, dodge rolls, attack lunge need motion from clips</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>No glTF animation events</strong></td>
+<td>Hit windows, footstep SFX, VFX spawn must be hand-coded markers</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>No foot IK / aim IK</strong></td>
+<td>Foot sliding on slopes; aim offset while strafing</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>Joint lookup by name</strong></td>
+<td>Weapon sockets require raw <code>jointIndex</code>; no <code>"RightHand"</code> API</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>FSM / events / sockets not serialized</strong></td>
+<td>Save/load loses combat setup</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>64-joint cap, first skinned node only</strong></td>
+<td>Complex rigs or multi-mesh characters fail</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>No morph targets</strong></td>
+<td>Facial hit reactions, damage states</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>No palette cache / skinned draw budget</strong></td>
+<td>Many NPCs will be expensive</td>
+</tr>
+</tbody>
+</table>
+<h3 id="action-game-readiness-animation">Action-game readiness (animation)</h3>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Load animated humanoid from glTF</td>
+<td><strong>Exists</strong></td>
+<td>Fox/CesiumMan demos; ≤64 joints</td>
+</tr>
+<tr>
+<td>Idle / walk / run locomotion</td>
+<td><strong>Exists</strong></td>
+<td>Discrete clips + crossfade; not blended by speed</td>
+</tr>
+<tr>
+<td>Melee attack overlay</td>
+<td><strong>Partial</strong></td>
+<td><code>RequestAttack()</code> + Once clip; no hurt/stagger</td>
+</tr>
+<tr>
+<td>Combo / cancel system</td>
+<td><strong>Missing</strong></td>
+<td>No state graph, no interrupt rules</td>
+</tr>
+<tr>
+<td>Hitbox spawn on anim frame</td>
+<td><strong>Partial</strong></td>
+<td>Manual <code>AnimationEventReceiverComponent</code> markers; no glTF pipeline</td>
+</tr>
+<tr>
+<td>Weapon attach to hand bone</td>
+<td><strong>Partial</strong></td>
+<td><code>AttachmentSocketComponent</code> by index; no name lookup</td>
+</tr>
+<tr>
+<td>Root-motion attacks</td>
+<td><strong>Missing</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Foot sliding fix (foot IK)</td>
+<td><strong>Missing</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Save/load animated enemy</td>
+<td><strong>Partial</strong></td>
+<td>Mesh + animator only; FSM/events/sockets lost</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Roadmap:</strong> <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> — M2 partial, M3–M6 open.</p>
+<hr />
+<h2 id="2-texture-mapping-material-system">2. Texture mapping &amp; material system</h2>
+<h3 id="what-exists_1">What exists</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Full PBR material model (albedo, normal, ORM, emissive, AO)</td>
+<td><code>include/spark/ecs/components/rendering/MaterialComponent.hpp</code>, <code>shaders/scene.frag</code></td>
+</tr>
+<tr>
+<td>Per-draw texture layers via push constants + 32-layer array</td>
+<td><code>include/spark/render/scene/VulkanSceneDescriptors.hpp</code>, <code>src/spark/scene/SceneSubmitMaterial.cpp</code></td>
+</tr>
+<tr>
+<td>glTF PBR material import (base color, normal, ORM, emissive + factors)</td>
+<td><code>include/spark/scene/material/GltfMaterial.hpp</code>, <code>src/spark/scene/gltf_material.cpp</code></td>
+</tr>
+<tr>
+<td>Mipmapped scene texture array (GPU blit or uploaded mips)</td>
+<td><code>src/spark/render/scene/VulkanSceneTextureUploader.cpp</code></td>
+</tr>
+<tr>
+<td>BC7 runtime encode + ASTC via KTX2 (<code>Texture2D::TryLoadFromKtx2File</code>)</td>
+<td><code>src/spark/scene/texture_block_compression.cpp</code>, <code>src/spark/scene/texture_ktx2.cpp</code></td>
+</tr>
+<tr>
+<td>glTF mesh UV import (<code>TEXCOORD_0</code>)</td>
+<td><code>src/spark/scene/mesh_gltf.cpp</code>, <code>include/spark/scene/mesh/SkinnedMesh.hpp</code></td>
+</tr>
+<tr>
+<td>Sprite/tilemap atlas UV (2D)</td>
+<td><code>include/spark/ecs/components/rendering/SpriteComponent.hpp</code>, <code>src/spark/scene/SceneTileAtlas.cpp</code></td>
+</tr>
+<tr>
+<td>Async texture decode</td>
+<td><code>include/spark/scene/assets/GameWorldAssetLoader.hpp</code></td>
+</tr>
+<tr>
+<td>IBL, SSAO, shadows, clustered lights</td>
+<td><code>shaders/ibl.glsl</code>, post passes</td>
+</tr>
+<tr>
+<td>glTF PBR + HDR IBL reference demo</td>
+<td><code>GltfSamples3DDemo</code> (launcher <strong>#21</strong>, key <strong>Q</strong>) — <code>DamagedHelmet.glb</code>, studio HDR sky</td>
+</tr>
+<tr>
+<td>Material showcase demo</td>
+<td><code>src/spark/demo/MaterialShowcase3DDemo.cpp</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="architecture-constraint">Architecture constraint</h3>
+<pre><code class="language-text">MaterialComponent → SceneDrawItem (up to 4 layers/draw)
+                 → sceneTextures[32] @ 1024², full mip chain
+                 → BC7 / ASTC 4x4 (device + build) or RGBA8 + GPU mip blit
+</code></pre>
+<p>See <code>include/spark/engine/SceneRenderParams.hpp</code> (<code>MaxSceneTextures = 32</code>) and <code>include/spark/render/scene/VulkanSceneTextureUploader.hpp</code>.</p>
+<h3 id="gaps-for-3d-action_1">Gaps for 3D action</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Gap</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>32 textures/frame at 1024²</strong></td>
+<td>Large scenes still overflow the layer budget</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>Runtime ASTC encode needs astc-encoder fetch</strong></td>
+<td>Use <code>.ktx2</code> pre-bakes or BC7/RGBA8 fallback until CMake downloads succeed</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>~~<strong>No shared <code>MaterialAsset</code></strong>~~</td>
+<td>✅ <code>MaterialAsset</code>, <code>.sparkmat</code>, glTF <code>#material/N</code> keys, <code>MultiMaterialComponent</code> parity</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>Multi-material glTF meshes</strong></td>
+<td>Import + library keys exist; per-slot editing workflow still maturing</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>No GPU decals</strong></td>
+<td>Bullet holes, blood, ability marks need mesh/sprite workarounds</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>Single UV set</strong></td>
+<td>No lightmaps or detail UV</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>No texture streaming</strong></td>
+<td>Large arenas / open hubs</td>
+</tr>
+</tbody>
+</table>
+<h3 id="workarounds-today">Workarounds today</h3>
+<ol>
+<li>Pack environment textures into atlases manually; reuse materials across props.</li>
+<li>After <code>LoadGltf</code> / <code>LoadSkinnedGltf</code>, materials are applied automatically via <code>GltfMaterialDesc</code> + <code>ApplyGltfMaterialDesc</code>.</li>
+<li>Ship hero props as <code>.ktx2</code> (BC7/ASTC mips) for best quality; PNG/JPEG are mipmapped and BC7-encoded at upload when supported.</li>
+<li>Keep unique textured draws ≤ 32 visible per frame (<code>MaxSceneTextures</code>).</li>
+</ol>
+<hr />
+<h2 id="3-scene-management-system">3. Scene management system</h2>
+<h3 id="what-exists_2">What exists</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GameWorld</code> + hierarchy, parenting, active flag</td>
+<td><code>include/spark/scene/core/GameWorld.hpp</code>, <code>include/spark/ecs/GameObject.hpp</code></td>
+</tr>
+<tr>
+<td><code>SceneManager</code> — additive/replace load, async assets</td>
+<td><code>include/spark/scene/core/SceneManager.hpp</code>, <code>include/spark/scene/assets/GameWorldAssetLoader.hpp</code></td>
+</tr>
+<tr>
+<td><code>spark_scene_v4</code> text serialization</td>
+<td><code>include/spark/scene/serialization/SceneDocument.hpp</code>, <code>SceneSerializer.hpp</code></td>
+</tr>
+<tr>
+<td>~28 component snapshot handlers</td>
+<td><code>src/spark/scene/serialization/ComponentSnapshotRegistry.cpp</code></td>
+</tr>
+<tr>
+<td>Frustum spatial culling (BVH/octree/etc.)</td>
+<td><code>include/spark/scene/core/ScenePartitionKind.hpp</code>, <code>src/spark/scene/SceneSpatialCull.cpp</code></td>
+</tr>
+<tr>
+<td>3D trigger volumes</td>
+<td><code>include/spark/ecs/components/physics3d/TriggerVolume3DComponent.hpp</code></td>
+</tr>
+<tr>
+<td>Editor prototype save/load</td>
+<td><code>src/spark/demo/SceneEditor3DDemo.cpp</code></td>
+</tr>
+<tr>
+<td>Regional fog/post volumes</td>
+<td><code>include/spark/scene/volume/RenderVolumes.hpp</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="gaps-for-3d-action_2">Gaps for 3D action</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Gap</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No prefabs</strong> (<code>InstantiatePrefab</code>)</td>
+<td>Enemies, doors, pickups cannot be reused as authored chunks</td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No 3D spawn points / checkpoints</strong></td>
+<td>2D has tilemap markers; 3D has no <code>SpawnPoint3DComponent</code></td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No scene transition API</strong></td>
+<td>Hub → arena → respawn is DIY on top of <code>SceneManager</code></td>
+</tr>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No physics layer masks</strong></td>
+<td>Player vs enemy vs projectile filtering is tag-on-triggers only</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>Tags not serialized</strong></td>
+<td><code>FindGameObjectWithTag("PlayerSpawn")</code> breaks after save/load</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>Single global physics world</strong></td>
+<td>Unload removes colliders; no per-scene isolation</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>No loading screen / progress API</strong></td>
+<td>Async load exists (<code>Pump</code>) but no % or callbacks</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>No persistent player pattern</strong></td>
+<td>One <code>GameWorld</code>; hub player + additive arena needs custom architecture</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>No world streaming / regions</strong></td>
+<td><a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> — not implemented</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>Lights are global</strong></td>
+<td>Additive arena lights affect hub; first directional wins</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>~28/71 components serialize</strong></td>
+<td>AI, audio, UI canvas, 2D physics, animation sockets missing</td>
+</tr>
+</tbody>
+</table>
+<h3 id="typical-action-flow-today">Typical action flow today</h3>
+<pre><code class="language-text">DIY LevelManager
+  → UnloadScene(oldArenaId)
+  → BeginLoadSceneAsync(arenaPath, { additive: false })
+  → Pump() each frame + status TextOverlay
+  → manually FindGameObject / spawn player in code
+</code></pre>
+<h3 id="comparison-matrix">Comparison matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Level as serialized file</td>
+<td>✅ EXISTS</td>
+</tr>
+<tr>
+<td>Async load (no main-thread hitch on I/O)</td>
+<td>✅ EXISTS</td>
+</tr>
+<tr>
+<td>Additive hub + overlay UI scene</td>
+<td>⚠️ PARTIAL</td>
+</tr>
+<tr>
+<td>Replace arena (single active level)</td>
+<td>⚠️ PARTIAL</td>
+</tr>
+<tr>
+<td>Hub world ↔ combat arena flow</td>
+<td>❌ MISSING</td>
+</tr>
+<tr>
+<td>Loading screen</td>
+<td>❌ MISSING</td>
+</tr>
+<tr>
+<td>Player spawn / checkpoint (3D)</td>
+<td>❌ MISSING</td>
+</tr>
+<tr>
+<td>Prefabs (enemies, doors, pickups)</td>
+<td>❌ MISSING</td>
+</tr>
+<tr>
+<td>Combat trigger volumes</td>
+<td>⚠️ PARTIAL</td>
+</tr>
+<tr>
+<td>Physics layers (player vs enemy vs projectile)</td>
+<td>❌ MISSING</td>
+</tr>
+<tr>
+<td>Streaming open world</td>
+<td>❌ MISSING</td>
+</tr>
+<tr>
+<td>Frustum cull large levels</td>
+<td>✅ EXISTS</td>
+</tr>
+<tr>
+<td>Editor save/load production pipeline</td>
+<td>⚠️ PARTIAL</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cross-system-gaps">Cross-system gaps</h2>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Animation</th>
+<th>Materials</th>
+<th>Scenes</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Player locomotion + combat</td>
+<td>Partial FSM</td>
+<td>—</td>
+<td>—</td>
+<td>Walk/run/attack only</td>
+</tr>
+<tr>
+<td>Enemy wave spawn</td>
+<td>Playback OK</td>
+<td>Material budget tight</td>
+<td>No prefabs</td>
+<td>Manual duplication</td>
+</tr>
+<tr>
+<td>Hit detection on anim frame</td>
+<td>Manual markers only</td>
+<td>—</td>
+<td>—</td>
+<td>No glTF event pipeline</td>
+</tr>
+<tr>
+<td>Weapon on hand bone</td>
+<td>Socket by index</td>
+<td>—</td>
+<td>—</td>
+<td>No joint-by-name</td>
+</tr>
+<tr>
+<td>Arena load/unload</td>
+<td>—</td>
+<td>—</td>
+<td>Async load works</td>
+<td>No transition layer</td>
+</tr>
+<tr>
+<td>Checkpoint respawn</td>
+<td>—</td>
+<td>—</td>
+<td>No 3D spawn component</td>
+<td>Code constants only</td>
+</tr>
+<tr>
+<td>Save mid-combat</td>
+<td>FSM/events lost</td>
+<td>PBR maps persist (v2)</td>
+<td>Tags lost</td>
+<td>Partial round-trip</td>
+</tr>
+<tr>
+<td>10+ skinned enemies</td>
+<td>No draw budget</td>
+<td>32-texture cap</td>
+<td>—</td>
+<td>Performance risk</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="prioritized-build-order">Prioritized build order</h2>
+<h3 id="tier-1-blocks-a-minimal-action-prototype">Tier 1 — Blocks a minimal action prototype</h3>
+<ol>
+<li><strong>glTF full material import</strong> (normal, ORM, emissive + factors)</li>
+<li><strong>Material serialization</strong> — levels round-trip correctly</li>
+<li><strong>Prefab instantiate API</strong> — reusable enemy/prop chunks</li>
+<li><strong>3D spawn point component</strong> + tag serialization</li>
+<li><strong>Speed blend tree</strong> (walk↔run)</li>
+<li><strong>Combat FSM expansion</strong> — hurt, stagger, death states</li>
+</ol>
+<h3 id="tier-2-polished-combat-feel">Tier 2 — Polished combat feel</h3>
+<ol>
+<li><strong>Animation layers</strong> — upper-body attacks while moving</li>
+<li><strong>Root motion</strong> — dodge, lunge, attack displacement</li>
+<li><strong>Animation events from glTF</strong> — hit windows, SFX/VFX triggers</li>
+<li><strong>Joint-by-name sockets</strong> — weapon attachment</li>
+<li><strong>Physics layer masks</strong> — combat collision filtering</li>
+<li><strong>Scene transition manager</strong> — load screen, fade, progress</li>
+<li><strong>Raise texture budget</strong> — more layers, mips, or bindless path</li>
+</ol>
+<h3 id="tier-3-scale-production">Tier 3 — Scale / production</h3>
+<ol>
+<li>Foot IK + aim IK</li>
+<li>Texture compression + streaming</li>
+<li>~~Shared <code>MaterialAsset</code> + <code>.sparkmat</code> assets~~ ✅ (Phase 2 complete)</li>
+<li>World region streaming</li>
+<li>Skinned draw budget + palette cache</li>
+<li>Full component serialization (FSM, AI, audio, sockets)</li>
+<li>GPU decals</li>
+</ol>
+<hr />
+<h2 id="what-you-can-ship-today-vs-what-you-cannot">What you can ship today vs what you cannot</h2>
+<h3 id="feasible-now-with-custom-game-code">Feasible now (with custom game code)</h3>
+<ul>
+<li>Single-arena action prototype with 1–2 animated characters</li>
+<li>glTF characters with manual material setup after load</li>
+<li>Level files via <code>spark_scene_v4</code> + <code>SceneManager</code></li>
+<li>Ray pick + 3D physics (box/sphere/capsule)</li>
+<li>Attack via <code>Character3DAnimFsmComponent::RequestAttack()</code></li>
+</ul>
+<h3 id="not-feasible-without-engine-work">Not feasible without engine work</h3>
+<ul>
+<li>Polished locomotion (blend trees, root motion)</li>
+<li>Multi-enemy combat with varied materials in one frame</li>
+<li>Designer-authored hit windows from glTF</li>
+<li>Hub → arena → checkpoint flow without custom <code>LevelManager</code></li>
+<li>Save/load of a full combat scene with materials + FSM + spawn points</li>
+<li>Open-world or streamed sub-regions</li>
+</ul>
+<hr />
+<h2 id="key-file-index">Key file index</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Paths</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Animation components</td>
+<td><code>include/spark/ecs/components/animation/</code></td>
+</tr>
+<tr>
+<td>glTF skinned import</td>
+<td><code>src/spark/scene/skinned_mesh_gltf.cpp</code></td>
+</tr>
+<tr>
+<td>Materials</td>
+<td><code>include/spark/ecs/components/rendering/MaterialComponent.hpp</code></td>
+</tr>
+<tr>
+<td>Texture upload</td>
+<td><code>include/spark/render/scene/VulkanSceneTextureUploader.hpp</code></td>
+</tr>
+<tr>
+<td>Scene I/O</td>
+<td><code>include/spark/scene/serialization/</code>, <code>include/spark/scene/core/SceneManager.hpp</code></td>
+</tr>
+<tr>
+<td>Scene submit</td>
+<td><code>include/spark/scene/submit/SceneSubmit.hpp</code></td>
+</tr>
+<tr>
+<td>Editor prototype</td>
+<td><code>include/spark/demo/SceneEditor3DDemo.hpp</code></td>
+</tr>
+<tr>
+<td>Demos</td>
+<td><code>CharacterCameraDemo.cpp</code>, <code>Maze3DDemo.cpp</code>, <code>MaterialShowcase3DDemo.cpp</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a></li>
+<li><a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a></li>
+<li><a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a></li>
+<li><a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a></li>
+<li><a href="2d-arpg-features.html"><code>2D_ARPG_FEATURES.md</code></a> — 2D combat FSM reference parity</li>
+</ul>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -393,8 +393,8 @@
 </code></pre>
 <p>Press <strong>F1</strong> or right-click to toggle cursor capture (pattern from <code>CharacterCameraDemo</code>).</p>
 <h2 id="hitscan-ray-vs-sphere">Hitscan Ray vs Sphere</h2>
-<p>Use <code>TryRaycastSphereWorld</code> from <code>spark/scene/MeshRaycast.hpp</code>. World position comes from the transform's world matrix:</p>
-<pre><code class="language-cpp">#include "spark/scene/MeshRaycast.hpp"
+<p>Use <code>TryRaycastSphereWorld</code> from <code>spark/scene/mesh/MeshRaycast.hpp</code>. World position comes from the transform's world matrix:</p>
+<pre><code class="language-cpp">#include "spark/scene/mesh/MeshRaycast.hpp"
 
 void TryShootTarget(IEngineContext&amp; context) {
     const Vector3 origin = camera.position;

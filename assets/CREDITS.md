@@ -9,6 +9,7 @@ Spark ships third-party art for demos and sample games. All listed assets below 
 | Kenney Retro Medieval / Fantasy tile textures (`assets/textures/`) | Kenney | CC0 | ThreeDDemo, Maze3DDemo, TerrainDemo, CharacterCameraDemo, MaterialShowcase3DDemo, FPS template ground |
 | Kenney character PNGs (`assets/sprites/kenney/`, CMake download) | Kenney | CC0 | Platformer2D player atlas fallback path |
 | Poly Haven HDR sky (`textures/sky/equirect_sky_1k.hdr`) | Poly Haven | CC0 | SkyDemo, Maze3DDemo, CharacterCameraDemo (CMake download) |
+| Poly Haven studio HDR (`textures/sky/studio_small_08_1k.hdr`) | Poly Haven | CC0 | GltfSamples3DDemo IBL (CMake download) |
 | Khronos glTF sample models (`assets/models/*.glb`) | Khronos Group | Various permissive | 3D character / PBR demos |
 | Roboto fonts | Google Fonts | Apache 2.0 | UI text overlays |
 

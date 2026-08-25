@@ -397,8 +397,10 @@ void ThreeDDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
 
         cubeYawRadians =
                 std::fmod(cubeYawRadians + timing.deltaTimeSeconds * kCubeSpinRadPerSec, Spark::TwoPi);
-        if (Spark::TransformComponent* tr = cubeObject->GetComponent<Spark::TransformComponent>()) {
-            tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, cubeYawRadians));
+        if (cubeObject != nullptr) {
+            if (Spark::TransformComponent* tr = cubeObject->GetComponent<Spark::TransformComponent>()) {
+                tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, cubeYawRadians));
+            }
         }
 
         if (fpsText != nullptr) {

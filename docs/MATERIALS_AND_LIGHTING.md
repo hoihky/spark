@@ -17,9 +17,9 @@ This note complements [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (shad
 | **IBL / env reflections** | `SceneRenderParams::iblEnabled`, `iblEnvironmentLayer`, `iblIntensity` | `ubo.iblParams` + `ibl.glsl` | Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer -1 = procedural hemisphere; auto-picked from sky draw with texture. |
 | **SSAO** | `SceneRenderParams::ssaoEnabled`, `ssaoRadius`, `ssaoBias`, `ssaoStrength` | `post_process.frag` | Screen-space AO after HDR scene pass, before tonemap; see [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md). |
 
-**Texture budget:** `SceneRenderParams::sceneTextures` holds up to **16** RGBA8 layers (shared array texture). Deduplication happens in `FindOrAddSceneTexture` when filling draws.
+**Texture budget:** `SceneRenderParams::sceneTextures` holds up to **16** RGBA8 layers (shared array texture). `FindOrAddSceneTexture` deduplicates within a single submit and assigns dense indices 0…N−1 each frame.
 
-**Demonstrator:** shell menu item **“18 — Material ball…”** or **B** from the launcher — [`MaterialShowcase3DDemo`](../include/spark/demo/MaterialShowcase3DDemo.hpp) shows one **LitPbr** sphere whose maps, tint, metallic/roughness, and emissive settings are toggled and adjusted at runtime via keyboard.
+**Demonstrator:** shell menu item **“16 — Material ball…”** or **B** from the launcher — [`MaterialShowcase3DDemo`](../include/spark/demo/MaterialShowcase3DDemo.hpp) shows one **LitPbr** sphere whose maps, tint, metallic/roughness, and emissive settings are toggled and adjusted at runtime via keyboard. For a full glTF PBR + HDR IBL scene, see launcher **#21** / hotkey **Q** — [`GltfSamples3DDemo`](../include/spark/demo/GltfSamples3DDemo.hpp) (`DamagedHelmet.glb`, Poly Haven `studio_small_08_1k.hdr` sky dome).
 
 ---
 
@@ -52,7 +52,7 @@ Prioritized for a forward PBR renderer of this size:
 |-----|--------|---------------------|
 | **Directional light ECS** | `DirectionalLightComponent` overrides submit params when present | Multiple directional lights with blending / priority |
 | **No area / line / tube lights** | Architectural interiors harder | LTC rectangles, capsule approximations, or emissive mesh proxies. |
-| **IBL (basic)** | Equirect + GGX importance sample; no dedicated cubemap mips / BRDF LUT texture yet | Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count. |
+| **IBL (basic)** | Equirect + GGX importance sample; auto-picks sky dome texture when `iblEnvironmentLayer == -1`; HDR files load via `stbi_load` (tonemapped to LDR until float texture path lands) | Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count. |
 | **Punctual shadow quality** | 512² tiles; 2 point + 4 spot cap | Higher-res atlases, EVSM, or temporal filtering. |
 | **Contact shadows / volumetric fog** | Small-scale grounding and atmosphere | Screen-space contact trace; height fog or god-ray pass (see roadmap). |
 

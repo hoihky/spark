@@ -197,8 +197,8 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | `MaxSpotLights` | 128 | Same |
 | Punctual shadows | Max 2 point + 4 spot per frame | No API to assign shadow priority to lights |
 | `MaxSprites` | Fixed cap on `sprites` array | Documented limit; no spill or batch API |
-| Skinning | 64 joints per draw | No multi-draw skinned instancing |
-| Custom meshes | `SceneMeshSlot::Custom` + per-frame GPU upload | No persistent `GpuMeshHandle` owned by game code |
+| Skinning | 128 joints per draw (`Skeleton::MaxJoints`) | No multi-draw skinned instancing |
+| Custom meshes | `SceneMeshSlot::Custom` + `VulkanCustomMeshPool` GPU upload | No persistent `GpuMeshHandle` owned by game code; pool clears cached mesh pointers when params have no custom draws (demo switch safe) |
 
 ### 3.3 Materials (`MaterialComponent` → `SceneDrawItem`)
 

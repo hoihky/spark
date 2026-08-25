@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -26,9 +26,9 @@
     <main class="doc-page">
       <article class="doc-body">
         <h1 id="3d-animation-engine-roadmap-tracked-tasks">3D Animation — Engine Roadmap &amp; Tracked Tasks</h1>
-<p>Living plan for <strong>skeletal mesh playback</strong>, <strong>gameplay-driven clip control</strong>, <strong>blending</strong>, <strong>events</strong>, and <strong>scale</strong>. It complements the high-level traversal/combat items in <a href="OPEN_WORLD_ACTION_ROADMAP.md"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase F) with concrete engine work items, and the cross-system gap summary in <a href="3D_ACTION_GAME_GAPS.md"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
+<p>Living plan for <strong>skeletal mesh playback</strong>, <strong>gameplay-driven clip control</strong>, <strong>blending</strong>, <strong>events</strong>, and <strong>scale</strong>. It complements the high-level traversal/combat items in <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase F) with concrete engine work items, and the cross-system gap summary in <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
 <p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.8, <code>include/spark/animation/Skeleton.hpp</code>, <code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code>, <code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>shaders/scene.vert</code>.</p>
-<p><strong>2D reference (target parity for gameplay drivers):</strong> <code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code> — see <a href="2D_ARPG_FEATURES.md"><code>2D_ARPG_FEATURES.md</code></a>.</p>
+<p><strong>2D reference (target parity for gameplay drivers):</strong> <code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code> — see <a href="2d-arpg-features.html"><code>2D_ARPG_FEATURES.md</code></a>.</p>
 <hr />
 <h2 id="how-to-track-work">How to track work</h2>
 <table>
@@ -620,8 +620,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
   M2 --> M4
   M1 --> M5
   M3 --> M5
-  M1 --> M6
-</div></div>
+  M1 --> M6</div></div>
 <hr />
 <h2 id="mapping-to-open_world_action_roadmap-phase-f">Mapping to OPEN_WORLD_ACTION_ROADMAP (Phase F)</h2>
 <table>

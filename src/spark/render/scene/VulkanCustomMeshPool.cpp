@@ -203,6 +203,29 @@ std::uint64_t VulkanCustomMeshPool::ComputeFingerprint(const SceneRenderParams& 
 }
 
 void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scene) {
+    auto isCustomDraw = [](const SceneDrawItem& d) noexcept {
+        return d.mesh == SceneMeshSlot::Custom && (d.customMesh || d.skinnedMesh);
+    };
+    bool hasCustomDraw = false;
+    for (std::size_t i = 0; i < scene.draws.GetSize(); ++i) {
+        if (isCustomDraw(scene.draws[i])) {
+            hasCustomDraw = true;
+            break;
+        }
+    }
+    if (!hasCustomDraw) {
+        for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
+            if (isCustomDraw(scene.transparentDraws[i])) {
+                hasCustomDraw = true;
+                break;
+            }
+        }
+    }
+    if (!hasCustomDraw) {
+        ClearKnownMeshes();
+        return;
+    }
+
     auto tryAddRigid = [this](const Mesh* mesh) {
         if (mesh == nullptr) {
             return;
@@ -536,6 +559,14 @@ void VulkanCustomMeshPool::RecordUploads(const VkCommandBuffer commandBuffer) {
             nullptr);
 
     uploadPending = false;
+}
+
+void VulkanCustomMeshPool::ClearKnownMeshes() noexcept {
+    knownRigidMeshes.Clear();
+    knownSkinnedMeshes.Clear();
+    rigidSlices.Clear();
+    skinnedSlices.Clear();
+    lastFingerprint = 0;
 }
 
 VulkanCustomMeshPool::Bindings VulkanCustomMeshPool::GetBindings() const noexcept {

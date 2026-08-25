@@ -258,7 +258,7 @@ Adjust length if team size or scope changes.
 - `include/spark/engine/SceneRenderParams.hpp` — GPU snapshot contract.
 - `include/spark/scene/core/Scene.hpp` — world queries and optional spatial policies.
 - `include/spark/physics/PhysicsWorld3D.hpp` — 3D simulation entry point.
-- 3D demos under `include/spark/demo/` / `src/spark/demo/` (e.g. `ThreeDDemo`, `Maze3DDemo`, `PhysicsBallThrow3DDemo`, `SceneEditor3DDemo`).
+- 3D demos under `include/spark/demo/` / `src/spark/demo/` (e.g. `ThreeDDemo`, `GltfSamples3DDemo`, `Maze3DDemo`, `PhysicsBallThrow3DDemo`, `SceneEditor3DDemo`).
 
 ---
 

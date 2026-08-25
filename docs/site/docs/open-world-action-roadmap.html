@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open World Action Roadmap · Spark Game Engine</title>
+  <meta name="description" content="Open-World Action — Engine & Game Feature Roadmap">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="open-world-action-engine-game-feature-roadmap">Open-World Action — Engine &amp; Game Feature Roadmap</h1>
+<p>This document is a <strong>detailed plan</strong> for evolving Spark toward <strong>open-world action</strong> games: large spaces, traversal, combat readability, streaming, and production discipline. It assumes Spark’s current architecture (ECS, <code>Scene</code> queries, <code>SceneRenderParams</code> → Vulkan forward path, lit meshes, skinning, terrain, sky, particles, UI) as described in <code>docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code>. For a focused gap analysis of animation, materials, and scene management for 3D action games, see <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
+<p>Use this as a <strong>living spec</strong>: adjust phases when you lock decisions in §0.</p>
+<hr />
+<h2 id="0-lock-the-fantasy-decisions-that-steer-everything">0. Lock the fantasy (decisions that steer everything)</h2>
+<p>Before heavy feature work, pin these so the engine bets match the game:</p>
+<ol>
+<li><strong>World topology</strong> — One continuous map vs stitched regions vs procedural chunks.</li>
+<li><strong>Player fantasy</strong> — Grounded action vs parkour vs superhuman traversal.</li>
+<li><strong>Combat camera</strong> — Over-the-shoulder lock-on vs free cam vs hybrid.</li>
+<li><strong>Online</strong> — Offline-only vs co-op vs live service (drives saves, authority, anti-cheat).</li>
+<li><strong>Target platforms &amp; min spec</strong> — Drives streaming granularity and shadow/light budgets.</li>
+<li><strong>Day/night + weather</strong> — Yes/no; drives lighting, sky, and gameplay readability.</li>
+<li><strong>Vehicles</strong> — Yes/no (large cost: physics, animation, AI, streaming).</li>
+<li><strong>Interiors</strong> — Rare enterable buildings vs many vs mostly façade.</li>
+<li><strong>NPC density</strong> — Crowd tech vs sparse believable agents.</li>
+<li><strong>Mission structure</strong> — Golden path + side content vs mostly systemic loops.</li>
+<li><strong>Peak load</strong> — Order-of-magnitude: max drawables, physics bodies, AI agents active at once.</li>
+<li><strong>Content pipeline</strong> — DCC (Blender/Maya) + glTF rules; skeleton limits; texture formats.</li>
+</ol>
+<hr />
+<h2 id="1-north-star-technical-pillars">1. North-star technical pillars</h2>
+<table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Streaming &amp; memory</strong></td>
+<td>Open world fails without bounded RAM and stable frame time.</td>
+</tr>
+<tr>
+<td><strong>Spatial queries &amp; AI</strong></td>
+<td>Combat, stealth, encounters, navigation need fast “near what” queries.</td>
+</tr>
+<tr>
+<td><strong>Traversal + animation</strong></td>
+<td>Action feel is largely locomotion, hits, and IK.</td>
+</tr>
+<tr>
+<td><strong>Combat loop</strong></td>
+<td>Damage, i-frames, staggers, weapons—not only raw colliders.</td>
+</tr>
+<tr>
+<td><strong>Rendering scale</strong></td>
+<td>LOD, shadows, time-of-day; readable combat at distance.</td>
+</tr>
+<tr>
+<td><strong>Missions &amp; persistence</strong></td>
+<td>Quests and world flags must survive streaming and saves.</td>
+</tr>
+<tr>
+<td><strong>Profiling &amp; tooling</strong></td>
+<td>Open worlds are not shippable without repeatable perf and content validation.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-phased-plan-dependency-order">2. Phased plan (dependency order)</h2>
+<p>Each phase <strong>unlocks</strong> the next. Within a phase: <strong>P0</strong> (must) → <strong>P1</strong> → <strong>P2</strong> (nice).</p>
+<h3 id="phase-a-foundations-world-model-budgets">Phase A — Foundations (world model + budgets)</h3>
+<p><strong>Goal:</strong> Load a <em>region</em> without loading the whole map; measure it reliably.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td><strong>World partitioning contract</strong> — region/cell/layer IDs, coordinate spaces, streaming roots</td>
+<td>P0</td>
+<td>Data-driven region descriptors: bounds, dependencies, preload hints</td>
+</tr>
+<tr>
+<td>A2</td>
+<td><strong>Frame &amp; memory budgets</strong> — caps on draws, skinned draws, particles, UI verts, physics substeps</td>
+<td>P0</td>
+<td>Enforce in submit + sim paths</td>
+</tr>
+<tr>
+<td>A3</td>
+<td><strong>Memory pools</strong> for streaming assets (textures, meshes, nav data)</td>
+<td>P1</td>
+<td>Reduces fragmentation and spikes</td>
+</tr>
+<tr>
+<td>A4</td>
+<td><strong>Determinism hooks</strong> — fixed timestep option, stable ordering where needed</td>
+<td>P0</td>
+<td>QA/replay; prerequisite if you ever add netcode</td>
+</tr>
+<tr>
+<td>A5</td>
+<td><strong>Seedable RNG service</strong> for encounters</td>
+<td>P1</td>
+<td>Reproducible world events</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Load/unload a region in a harness with <strong>stable FPS</strong> and <strong>bounded RAM</strong> on a min-spec profile.</p>
+<hr />
+<h3 id="phase-b-streaming-io-spine-of-open-world">Phase B — Streaming I/O (spine of open world)</h3>
+<p><strong>Goal:</strong> Disk → memory → GPU without unacceptable hitching.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td><strong>Async resource system</strong> — background queue, priorities (near player vs horizon)</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>B2</td>
+<td><strong>Cancellation</strong> when player u-turns; ref-counting for shared assets</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>B3</td>
+<td><strong>Region lifecycle</strong> — <code>LoadRegion</code> / <code>UnloadRegion</code>, explicit GPU+CPU teardown</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>B4</td>
+<td><strong>Staged region load</strong> — collision/low-res first, visuals after</td>
+<td>P1</td>
+<td>Reduces hitches</td>
+</tr>
+<tr>
+<td>B5</td>
+<td><strong>Region overlay state</strong> — destroyed props, doors, dropped loot</td>
+<td>P0</td>
+<td>Serialize per chunk</td>
+</tr>
+<tr>
+<td>B6</td>
+<td><strong>Designer vs player state</strong> conflict rules</td>
+<td>P1</td>
+<td>Patches, versioning</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Traverse <strong>three regions</strong> in sequence without hitches beyond agreed budgets (e.g. cap spike ms per frame).</p>
+<hr />
+<h3 id="phase-c-lod-visibility-scale-without-melting-gpu">Phase C — LOD &amp; visibility (scale without melting GPU)</h3>
+<p><strong>Goal:</strong> Far geometry is cheap; near geometry is rich.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>Mesh LOD</strong> — metadata + distance selection in <code>Scene</code> or submit path</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong>LOD hysteresis</strong> — reduce popping</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>Impostors / billboards / simplified clusters</strong> for distant architecture</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>C4</td>
+<td><strong>Frustum + sector culling</strong> — aggressive defaults</td>
+<td>P0</td>
+<td>Leverage existing <code>Scene</code> spatial options</td>
+</tr>
+<tr>
+<td>C5</td>
+<td><strong>GPU occlusion / PVS</strong></td>
+<td>P2</td>
+<td>Only if profiling proves need</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Same route shows <strong>~2× fewer draws</strong> at mid-distance vs naive submit, without unacceptable visual regression.</p>
+<hr />
+<h3 id="phase-d-rendering-action-open-world-readability">Phase D — Rendering (“action open world” readability)</h3>
+<p><strong>Goal:</strong> Readable combat at noon; mood at dusk/night.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td><strong>Sun + time of day</strong> — dominant directional from game clock</td>
+<td>P0</td>
+<td>Wire to sky where applicable</td>
+</tr>
+<tr>
+<td>D2</td>
+<td><strong>Cascaded shadow maps (CSM)</strong> for sun</td>
+<td>P0</td>
+<td>Non-negotiable for many AAA melee reads</td>
+</tr>
+<tr>
+<td>D3</td>
+<td><strong>Night readability</strong> — tuned ambient / hemisphere fill</td>
+<td>P0</td>
+<td>Avoid mushy stealth/combat</td>
+</tr>
+<tr>
+<td>D4</td>
+<td><strong>Player torch / flashlight</strong> — strict perf cap</td>
+<td>P1</td>
+<td>Optional spotlight in forward pass</td>
+</tr>
+<tr>
+<td>D5</td>
+<td><strong>SSAO</strong></td>
+<td>—</td>
+<td><strong>Done</strong> — <code>VulkanScreenSpaceEffectsPass</code>, <code>ssaoEnabled</code> on <code>SceneRenderParams</code></td>
+</tr>
+<tr>
+<td>D5b</td>
+<td><strong>Contact shadows</strong></td>
+<td>P2</td>
+<td>Short screen-space sun trace (not implemented)</td>
+</tr>
+<tr>
+<td>D6</td>
+<td><strong>Weather</strong> — rain/snow particles + surface wetness/roughness</td>
+<td>P1</td>
+<td>Start cheap, not full fluid sim</td>
+</tr>
+<tr>
+<td>D7</td>
+<td><strong>Volumetric fog / god rays</strong></td>
+<td>P2</td>
+<td>Separate pass or raymarch (not implemented)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> <strong>Day → night</strong> combat encounter stays <strong>readable</strong> within GPU budget.</p>
+<hr />
+<h3 id="phase-e-physics-queries-scale-trust">Phase E — Physics &amp; queries (scale + trust)</h3>
+<p><strong>Goal:</strong> Weapons, interactions, and AI use the same trustworthy query story.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E1</td>
+<td><strong>3D query parity</strong> — raycast / overlap for weapons, interaction, perception</td>
+<td>P0</td>
+<td>Align with game layers/filters</td>
+</tr>
+<tr>
+<td>E2</td>
+<td><strong>Document supported</strong> shapes/constraints for the shipped game</td>
+<td>P0</td>
+<td>Capsule player, ragdoll scope, etc.</td>
+</tr>
+<tr>
+<td>E3</td>
+<td><strong>Extend in-house physics</strong> <em>or</em> <strong>integrate</strong> Jolt/PhysX</td>
+<td>P1</td>
+<td>One big decision; avoid doing both</td>
+</tr>
+<tr>
+<td>E4</td>
+<td><strong>Physics LOD</strong> — sleep/distant simplified collision</td>
+<td>P1</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Melee trace + explosion overlap + vault/mantle probe <strong>stable</strong> on streamed collision.</p>
+<hr />
+<h3 id="phase-f-locomotion-animation-camera">Phase F — Locomotion, animation, camera</h3>
+<p><strong>Goal:</strong> Open world is <em>felt</em> through movement and camera.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1</td>
+<td><strong>Character motor</strong> — slopes, steps, coyote time, jump buffer</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>F2</td>
+<td><strong>Mantle / vault</strong> — world markers + traces</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>F3</td>
+<td><strong>Locomotion blend tree</strong> — walk/run/strafe</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>F4</td>
+<td><strong>Hit reactions, staggers</strong> — animation events + gameplay states</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>F5</td>
+<td><strong>IK</strong> — foot on slopes; aim IK; look-at (pick 1–2 for ship)</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>F6</td>
+<td><strong>Camera</strong> — collision pull-in, occluder handling</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>F7</td>
+<td><strong>Lock-on</strong> (if melee-heavy)</td>
+<td>P1</td>
+<td>Prototype early if core</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Playtest: <strong>“responsive”</strong> on uneven terrain (qualitative + timing metrics).</p>
+<hr />
+<h3 id="phase-g-combat-systems-heart-of-action">Phase G — Combat systems (heart of “action”)</h3>
+<p><strong>Goal:</strong> Tunable, debuggable combat—not one-off demo code.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td><strong>Hit model</strong> — traces, active frames, i-frames</td>
+<td>P0</td>
+<td>Prefer animation-driven windows</td>
+</tr>
+<tr>
+<td>G2</td>
+<td><strong>Damage pipeline</strong> — types, armor, crit, knockback, optional hitstop</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>G3</td>
+<td><strong>Status effects</strong> — stacking rules</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>G4</td>
+<td><strong>AI combat</strong> — aggro, spacing, ranged spread, flee</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>G5</td>
+<td><strong>Group tactics</strong> — pin, alternate attacks</td>
+<td>P1</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Designers tune a <strong>weapon</strong> with data/schema, minimal code churn.</p>
+<hr />
+<h3 id="phase-h-open-world-life-systemic-layer">Phase H — Open-world “life” (systemic layer)</h3>
+<p><strong>Goal:</strong> Busy world without simulating every NPC every frame.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1</td>
+<td><strong>Encounter system</strong> — spawn points, cooldowns, biome tags</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>H2</td>
+<td><strong>Escalation / heat</strong> if player lingers</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>H3</td>
+<td><strong>POI schedules</strong> — lightweight routes + time windows</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>H4</td>
+<td><strong>Factions / crime / reputation</strong></td>
+<td>P2</td>
+<td>Only if core fantasy</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> 10-minute drive loop shows <strong>variety</strong> without hand-authoring every fight.</p>
+<hr />
+<h3 id="phase-i-missions-narrative-persistence">Phase I — Missions, narrative, persistence</h3>
+<p><strong>Goal:</strong> Leave and return; quests survive streaming.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td><strong>Quest/objective graph</strong> — anchors to region + entity + fallbacks</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>I2</td>
+<td><strong>Branching</strong> with save-safe flags</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>I3</td>
+<td><strong>Chunked saves</strong> aligned to regions</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>I4</td>
+<td><strong>Save versioning / migration</strong></td>
+<td>P1</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Save mid-quest → stream out → return → <strong>state intact</strong>.</p>
+<hr />
+<h3 id="phase-j-tools-production">Phase J — Tools &amp; production</h3>
+<p><strong>Goal:</strong> Content ships without engine dev in the daily loop.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>J1</td>
+<td><strong>Validators</strong> — missing LOD, bad collision, oversized textures, nav gaps</td>
+<td>P0</td>
+<td></td>
+</tr>
+<tr>
+<td>J2</td>
+<td><strong>Live tuning</strong> — combat/spawn constants (e.g. ImGui)</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>J3</td>
+<td><strong>Automated perf routes</strong> — scripted flythrough, nightly timings</td>
+<td>P0</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Vertical slice owned primarily by <strong>design + art</strong> with engine support as needed.</p>
+<hr />
+<h2 id="3-vertical-slice-milestones-ordered-proof-builds">3. Vertical slice milestones (ordered proof builds)</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Slice</th>
+<th>Proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Streamed strip</strong></td>
+<td>3 regions, dummy combat, day/night, perf HUD</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Town encounter</strong></td>
+<td>Enemies + mini-boss + objective in streamed area</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Side loop</strong></td>
+<td>Collectible + vendor + save/load after unload</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>“E3 vertical”</strong></td>
+<td>One polished biome + weather + shadows at sunset + crowd-lite</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-risk-register">4. Risk register</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Streaming hitches</td>
+<td>Async IO, staged GPU upload, strict budgets</td>
+</tr>
+<tr>
+<td>LOD pop</td>
+<td>Hysteresis, dither/fade, art rules</td>
+</tr>
+<tr>
+<td>Unreadable combat (no shadows)</td>
+<td>Prioritize CSM (Phase D) early</td>
+</tr>
+<tr>
+<td>Physics blow-ups at scale</td>
+<td>Region sleep, simplified far collision, caps</td>
+</tr>
+<tr>
+<td>Save corruption</td>
+<td>Atomic chunk writes, checksums, versioned schema</td>
+</tr>
+<tr>
+<td>Scope creep (vehicles, bases, …)</td>
+<td>Gate on §0 decisions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-mapping-to-spark-today-honest-anchors">5. Mapping to Spark today (honest anchors)</h2>
+<ul>
+<li><strong>Use:</strong> ECS + <code>Scene</code> + <code>SceneRenderParams</code> snapshot model; existing lit path and skinning; terrain/sky/particles/UI.</li>
+<li><strong>Expect large engine bets:</strong> <strong>streaming</strong>, <strong>shadows + scaled lighting</strong>, and <strong>physics/query breadth</strong> are typical long poles for open-world action.</li>
+<li><strong>Defer until proven:</strong> full GI, full fluid/water sim, city-scale crowds — each is a major program on its own.</li>
+</ul>
+<hr />
+<h2 id="6-example-18-month-critical-path-small-engine-team">6. Example 18-month critical path (small engine team)</h2>
+<table>
+<thead>
+<tr>
+<th>Quarter</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Q1</strong></td>
+<td>Phases A–B, D1–D2 (sun + CSM prototype), perf harness</td>
+</tr>
+<tr>
+<td><strong>Q2</strong></td>
+<td>Phase C, E1, Slice 1</td>
+</tr>
+<tr>
+<td><strong>Q3</strong></td>
+<td>Phases F–G, Slice 2</td>
+</tr>
+<tr>
+<td><strong>Q4</strong></td>
+<td>Phases H–I, Slice 3</td>
+</tr>
+<tr>
+<td><strong>Q5–Q6</strong></td>
+<td>D3–D4 polish, Phase J, Slice 4, scope cut to ship</td>
+</tr>
+</tbody>
+</table>
+<p>Adjust length if team size or scope changes.</p>
+<hr />
+<h2 id="7-references-in-this-repo">7. References in this repo</h2>
+<ul>
+<li><code>docs/ANIMATION_3D_ROADMAP.md</code> — tracked 3D animation milestones (M1–M6); maps to Phase F/G items below.</li>
+<li><code>docs/GUI_EDITOR_ROADMAP.md</code> — retained GUI inventory + Spark Editor milestones (E0–E6).</li>
+<li><code>docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code> — ECS, rendering, physics summary, <code>SceneRenderParams</code>, Vulkan overview.</li>
+<li><code>include/spark/engine/SceneRenderParams.hpp</code> — GPU snapshot contract.</li>
+<li><code>include/spark/scene/core/Scene.hpp</code> — world queries and optional spatial policies.</li>
+<li><code>include/spark/physics/PhysicsWorld3D.hpp</code> — 3D simulation entry point.</li>
+<li>3D demos under <code>include/spark/demo/</code> / <code>src/spark/demo/</code> (e.g. <code>ThreeDDemo</code>, <code>GltfSamples3DDemo</code>, <code>Maze3DDemo</code>, <code>PhysicsBallThrow3DDemo</code>, <code>SceneEditor3DDemo</code>).</li>
+</ul>
+<hr />
+<p><em>Last updated: written for Spark open-world action planning; revise as product scope locks.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -26,7 +26,7 @@
     <main class="doc-page">
       <article class="doc-body">
         <h1 id="materials-lighting-capabilities-and-gaps">Materials &amp; lighting — capabilities and gaps</h1>
-<p>This note complements <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> (shadows + punctual caps) and the feature catalog in <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>. For action-game material gaps (glTF import, texture budget, serialization), see <a href="3D_ACTION_GAME_GAPS.md"><code>3D_ACTION_GAME_GAPS.md</code></a> §2. It answers: <strong>what composition Spark can express today</strong>, <strong>what lights exist</strong>, and <strong>what is still missing</strong> if you want parity with larger engines or glTF feature sets.</p>
+<p>This note complements <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> (shadows + punctual caps) and the feature catalog in <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>. For action-game material gaps (glTF import, texture budget, serialization), see <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a> §2. It answers: <strong>what composition Spark can express today</strong>, <strong>what lights exist</strong>, and <strong>what is still missing</strong> if you want parity with larger engines or glTF feature sets.</p>
 <hr />
 <h2 id="material-composition-today">Material composition (today)</h2>
 <table>
@@ -89,8 +89,8 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Texture budget:</strong> <code>SceneRenderParams::sceneTextures</code> holds up to <strong>16</strong> RGBA8 layers (shared array texture). Deduplication happens in <code>FindOrAddSceneTexture</code> when filling draws.</p>
-<p><strong>Demonstrator:</strong> shell menu item <strong>“18 — Material ball…”</strong> or <strong>B</strong> from the launcher — <a href="../include/spark/demo/MaterialShowcase3DDemo.hpp"><code>MaterialShowcase3DDemo</code></a> shows one <strong>LitPbr</strong> sphere whose maps, tint, metallic/roughness, and emissive settings are toggled and adjusted at runtime via keyboard.</p>
+<p><strong>Texture budget:</strong> <code>SceneRenderParams::sceneTextures</code> holds up to <strong>16</strong> RGBA8 layers (shared array texture). <code>FindOrAddSceneTexture</code> deduplicates within a single submit and assigns dense indices 0…N−1 each frame.</p>
+<p><strong>Demonstrator:</strong> shell menu item <strong>“16 — Material ball…”</strong> or <strong>B</strong> from the launcher — <a href="../include/spark/demo/MaterialShowcase3DDemo.hpp"><code>MaterialShowcase3DDemo</code></a> shows one <strong>LitPbr</strong> sphere whose maps, tint, metallic/roughness, and emissive settings are toggled and adjusted at runtime via keyboard. For a full glTF PBR + HDR IBL scene, see launcher <strong>#21</strong> / hotkey <strong>Q</strong> — <a href="../include/spark/demo/GltfSamples3DDemo.hpp"><code>GltfSamples3DDemo</code></a> (<code>DamagedHelmet.glb</code>, Poly Haven <code>studio_small_08_1k.hdr</code> sky dome).</p>
 <hr />
 <h2 id="lighting-today">Lighting (today)</h2>
 <table>
@@ -181,7 +181,7 @@
 </tr>
 <tr>
 <td><strong>IBL (basic)</strong></td>
-<td>Equirect + GGX importance sample; no dedicated cubemap mips / BRDF LUT texture yet</td>
+<td>Equirect + GGX importance sample; auto-picks sky dome texture when <code>iblEnvironmentLayer == -1</code>; HDR files load via <code>stbi_load</code> (tonemapped to LDR until float texture path lands)</td>
 <td>Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count.</td>
 </tr>
 <tr>
@@ -207,7 +207,7 @@
 <li><strong>Managed / C ABI</strong> — only if you expose new <code>ComponentKind</code> or params through bindings.</li>
 </ol>
 <hr />
-<p><em>Last updated with SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: <a href="SCENE_AND_RENDERING_GAPS.md"><code>SCENE_AND_RENDERING_GAPS.md</code></a>.</em></p>
+<p><em>Last updated with SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a>.</em></p>
       </article>
     </main>
 

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
 </head>
 <body>
@@ -81,7 +81,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>SparkDemo</strong></td>
 <td><code>cmake-build-debug/SparkDemo</code></td>
-<td>Interactive launcher + <strong>19</strong> built-in modes</td>
+<td>Interactive launcher + <strong>21</strong> built-in modes</td>
 </tr>
 <tr>
 <td><strong>SparkEditor</strong></td>
@@ -96,7 +96,7 @@ cmake --build cmake-build-debug -j
 </tbody>
 </table>
 <p><strong>Editor-only slim build:</strong> <code>cmake --preset editor-debug &amp;&amp; cmake --build cmake-build-editor --target SparkEditor</code></p>
-<p>See <a href="docs/CLION.md"><code>docs/CLION.md</code></a> and <a href="readme.html"><code>.run/README.md</code></a> for CLion presets and run configurations.</p>
+<p>See <a href="clion.html"><code>docs/CLION.md</code></a> and <a href="readme.html"><code>.run/README.md</code></a> for CLion presets and run configurations.</p>
 <h2 id="documentation">Documentation</h2>
 <table>
 <thead>
@@ -115,12 +115,16 @@ cmake --build cmake-build-debug -j
 <td>Engine loop, ECS, rendering data path, feature catalog</td>
 </tr>
 <tr>
-<td><a href="docs/SCENE_AND_RENDERING_GAPS.md"><strong>Scene &amp; Rendering API Gaps</strong></a></td>
+<td><a href="scene-and-rendering-gaps.html"><strong>Scene &amp; Rendering API Gaps</strong></a></td>
 <td>C++ public API gap analysis (<code>include/spark/</code>, scene + 3D render)</td>
 </tr>
 <tr>
-<td><a href="docs/3D_ACTION_GAME_GAPS.md"><strong>3D Action Game Gaps</strong></a></td>
+<td><a href="3d-action-game-gaps.html"><strong>3D Action Game Gaps</strong></a></td>
 <td>Animation, materials, and scene management gaps for action games</td>
+</tr>
+<tr>
+<td><a href="gltf-display-roadmap.html"><strong>glTF Display Roadmap</strong></a></td>
+<td>glTF compatibility phases and SparkDemo reference</td>
 </tr>
 <tr>
 <td><a href="lighting-and-shadows.html"><strong>Lighting &amp; Shadows</strong></a></td>
@@ -143,11 +147,11 @@ cmake --build cmake-build-debug -j
 <td>Skeletal animation milestones</td>
 </tr>
 <tr>
-<td><a href="docs/OPEN_WORLD_ACTION_ROADMAP.md"><strong>Open World Roadmap</strong></a></td>
+<td><a href="open-world-action-roadmap.html"><strong>Open World Roadmap</strong></a></td>
 <td>Long-horizon streaming/combat/AI plan</td>
 </tr>
 <tr>
-<td><a href="docs/2D_ARPG_FEATURES.md"><strong>2D ARPG Features</strong></a></td>
+<td><a href="2d-arpg-features.html"><strong>2D ARPG Features</strong></a></td>
 <td>2D gameplay backlog</td>
 </tr>
 </tbody>

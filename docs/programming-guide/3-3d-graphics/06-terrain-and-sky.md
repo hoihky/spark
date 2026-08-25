@@ -74,6 +74,21 @@ void SetTint(const Vector3& c) noexcept;
 
 Pair with `MeshComponent` using matching sky mesh (`Mesh::CreateSkyDome`) and `SceneSkyMode` on the draw item. See `SkyDemo` for box/dome/plane modes and HDR equirect textures.
 
+`GltfSamples3DDemo` (launcher **#21**, key **Q**) uses a scaled sky sphere + `SkyComponent` with `studio_small_08_1k.hdr` for PBR image-based lighting on `DamagedHelmet.glb`:
+
+```cpp
+auto skyMesh = MakeShared<Mesh>(Mesh::CreateSkySphere(1.0F, 20, 40));
+auto* skyGo = world.CreateGameObject();
+skyGo->AddComponent<TransformComponent>()->SetUniformScale(120.0F);
+skyGo->AddComponent<SkyComponent>(SceneSkyMode::Dome);
+skyGo->AddComponent<MeshComponent>(skyMesh, SceneMeshSlot::Custom, Vector3::One);
+skyGo->AddComponent<MaterialComponent>()->SetBaseColorTexture(hdrEquirectTex);
+
+SceneRenderParams params{};
+params.iblEnabled = true;
+params.iblEnvironmentLayer = -1;  // pick env from sky draw
+```
+
 ```cpp
 auto skyMesh = MakeShared<Mesh>(Mesh::CreateSkyDome(500.0F, 32, 64));
 auto* skyGo = world.CreateGameObject();
