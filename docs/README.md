@@ -1,5 +1,7 @@
 # Spark documentation index
 
+**Build / preview HTML:** from this folder run `./build-all.sh`, then `python3 -m http.server 8080` and open `http://127.0.0.1:8080/index.html`. Generated pages embed theme CSS inline so they also work when opened directly as local files.
+
 | Document | Audience | Summary |
 |----------|----------|---------|
 | [**../README.md**](../README.md) | Everyone | Quick start, build targets, repo map |

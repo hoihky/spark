@@ -76,8 +76,10 @@ TEMPLATE = """<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="../../programming-guide/site/assets/vendor/atom-one-dark.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({{ startOnLoad: true, theme: 'dark', securityLevel: 'loose' }});</script>
+  <script src="../../programming-guide/site/assets/vendor/highlight.min.js"></script>
 </head>
 <body>
   <div class="site">
@@ -103,6 +105,12 @@ TEMPLATE = """<!DOCTYPE html>
       </p>
     </footer>
   </div>
+  <script>
+    document.querySelectorAll('pre code').forEach((block) => {{
+      if (block.classList.contains('language-mermaid')) return;
+      if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+    }});
+  </script>
 </body>
 </html>
 """
@@ -179,6 +187,12 @@ def main() -> None:
             continue
         build_page(src, out_name, title)
     print(f"Done — {len(PAGES)} pages in {OUT_DIR.relative_to(DOCS_ROOT)}/")
+
+    ensure = DOCS_ROOT / "ensure-html-theme.py"
+    if ensure.is_file():
+        import subprocess
+
+        subprocess.run([sys.executable, str(ensure)], check=True)
 
 
 if __name__ == "__main__":

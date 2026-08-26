@@ -86,6 +86,22 @@ void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
 
 ## Screenshots
 
-F12 captures the framebuffer to `spark_runtime_assets/screenshots/`.
+**F12** captures the presented framebuffer to `SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png`. The engine handles the key in `Engine.cpp`; games do not need extra code.
+
+Capture is asynchronous: the GPU copies the swapchain image on the next frame, and PNG write happens after the matching in-flight fence signals. A watermark is applied automatically. On macOS, use in-engine **F12** rather than system screen capture — MoltenVK windows often record as black with external tools.
+
+**F9** toggles MP4 video recording (see root `README.md`).
+
+## Demo shell shortcuts
+
+When running **SparkDemo**, these keys work globally:
+
+| Key | Action |
+|-----|--------|
+| **TAB** | Return to launcher menu |
+| **H** | Toggle demo help overlay (`DemoHelpHud`) |
+| **F3** | Toggle FPS overlay |
+| **F9** | Toggle video recording |
+| **F12** | Save PNG screenshot |
 
 Next: [IGame and Game](05-igame-contract.md).

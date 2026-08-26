@@ -17,6 +17,8 @@ void ApplyHeightBrushWorld(GameObject& owner, Vector3 centerWorld,
 
 ## Procedural Terrain (from `TerrainDemo`)
 
+`TerrainDemo` (launcher **#4**) builds a large heightfield with fly camera sculpting (LMB/RMB), point lights, and a **procedural blue sky** via world clear color — no sky mesh required.
+
 ```cpp
 #include "spark/ecs/components/rendering/TerrainComponent.hpp"
 #include "spark/scene/mesh/TerrainGeneratorSettings.hpp"
@@ -41,6 +43,10 @@ if (MaterialComponent* m = terrainGo->AddComponent<MaterialComponent>(groundTex)
     m->SetMetallic(0.02F);
     m->SetRoughness(0.94F);
 }
+
+SceneRenderParams params{};
+params.worldClearColorEnabled = true;
+params.worldClearColor = {0.42F, 0.62F, 0.92F};  // soft blue horizon
 ```
 
 `TerrainGeneratorSettings` fields:
@@ -53,6 +59,8 @@ if (MaterialComponent* m = terrainGo->AddComponent<MaterialComponent>(groundTex)
 | `noiseScale` | 0.055 | Base noise frequency |
 | `octaves`, `persistence`, `lacunarity` | 6, 0.48, 2.05 | fBM detail |
 | `worldUnitsPerTextureRepeat` | 112 | UV tiling scale |
+
+Help text uses `DemoHelpHud` — press **H** to toggle. See [Engine Loop](../1-overview-architecture/04-engine-loop.md#demo-shell-shortcuts).
 
 ## Height Brush Editing
 
@@ -72,9 +80,9 @@ void SetSkyTexture(SharedPtr<Texture2D> t);
 void SetTint(const Vector3& c) noexcept;
 ```
 
-Pair with `MeshComponent` using matching sky mesh (`Mesh::CreateSkyDome`) and `SceneSkyMode` on the draw item. See `SkyDemo` for box/dome/plane modes and HDR equirect textures.
+Pair with `MeshComponent` using matching sky mesh (`Mesh::CreateSkyDome`) and `SceneSkyMode` on the draw item. See `SkyDemo` (launcher **#2**) for box/dome/plane modes and HDR equirect textures.
 
-`GltfSamples3DDemo` (launcher **#21**, key **Q**) uses a scaled sky sphere + `SkyComponent` with `studio_small_08_1k.hdr` for PBR image-based lighting on `DamagedHelmet.glb`:
+`GltfSamples3DDemo` (launcher **#21**, key **Q**) uses a scaled sky sphere + HDR equirect for background and **opt-in** HDR IBL on `DamagedHelmet.glb`:
 
 ```cpp
 auto skyMesh = MakeShared<Mesh>(Mesh::CreateSkySphere(1.0F, 20, 40));
@@ -86,15 +94,17 @@ skyGo->AddComponent<MaterialComponent>()->SetBaseColorTexture(hdrEquirectTex);
 
 SceneRenderParams params{};
 params.iblEnabled = true;
-params.iblEnvironmentLayer = -1;  // pick env from sky draw
+params.iblUseHdrSkyEnvironment = true;  // use HDR sky for reflections (not default)
 ```
 
-```cpp
-auto skyMesh = MakeShared<Mesh>(Mesh::CreateSkyDome(500.0F, 32, 64));
-auto* skyGo = world.CreateGameObject();
-skyGo->AddComponent<MeshComponent>(skyMesh, SceneMeshSlot::Custom, Vector3::One);
-skyGo->AddComponent<SkyComponent>(SceneSkyMode::Dome);
-```
+By default, HDR sky textures are **background-only**; IBL uses the procedural hemisphere from ambient colors unless `iblUseHdrSkyEnvironment` is set.
+
+## World clear color vs sky mesh
+
+| Approach | When to use | API |
+|----------|-------------|-----|
+| **World clear color** | Simple gradient/solid horizon, no cubemap | `worldClearColorEnabled`, `worldClearColor` |
+| **Sky mesh** | Textured dome/box/plane, HDR equirect backdrop | `SkyComponent` + `MeshComponent` + `SceneSkyMode` |
 
 ## Fog
 

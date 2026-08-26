@@ -35,6 +35,7 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 | Time of day | `TimeOfDayDriverComponent` → `SceneRenderParams::timeOfDay` |
 | Terrain | `TerrainComponent` (heightfield) |
 | Sky | `SkyComponent` + `SceneSkyMode` |
+| World clear color | `worldClearColorEnabled` + `worldClearColor` (solid HDR background) |
 | Particles | `ParticleEmitterComponent` |
 | SSAO / IBL | Fields on `SceneRenderParams` |
 

@@ -193,6 +193,8 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | Field / cap | Value | Gap |
 |-------------|-------|-----|
 | `sceneTextures` | 16 RGBA8 layers | No bindless handle; games with many unique materials must atlas or batch |
+| `sceneHdrTextures` | 8 linear float layers (`.hdr` equirect) | Separate upload path; set `SceneDrawItem::textureIsHdr` when indexing HDR layers |
+| `worldClearColor` | Solid HDR background clear | No gradient/skybox mesh — single RGB color only |
 | `MaxPointLights` | 256 | OK for forward; no API to prioritize / cull lights per tile |
 | `MaxSpotLights` | 128 | Same |
 | Punctual shadows | Max 2 point + 4 spot per frame | No API to assign shadow priority to lights |

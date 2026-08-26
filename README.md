@@ -19,6 +19,7 @@ In-engine captures from **SparkDemo** (F12 screenshot, F9 video recording).
 | <img src="docs/media/showcase-01.png" alt="Spark demo screenshot 1" width="400" /> | <img src="docs/media/showcase-02.png" alt="Spark demo screenshot 2" width="400" /> | <img src="docs/media/showcase-03.png" alt="Spark demo screenshot 3" width="400" /> |
 | <img src="docs/media/showcase-04.png" alt="Spark demo screenshot 4" width="400" /> | <img src="docs/media/showcase-05.png" alt="Spark demo screenshot 5" width="400" /> | <img src="docs/media/showcase-06.png" alt="Spark demo screenshot 6" width="400" /> |
 | <img src="docs/media/showcase-07.png" alt="Spark demo screenshot 7" width="400" /> | <img src="docs/media/showcase-08.png" alt="Spark demo screenshot 8" width="400" /> | <img src="docs/media/showcase-09.png" alt="Spark demo screenshot 9" width="400" /> |
+| <img src="docs/media/showcase-10.png" alt="Spark demo screenshot 10" width="400" /> | <img src="docs/media/showcase-11.png" alt="Spark demo screenshot 11" width="400" /> | <img src="docs/media/showcase-12.png" alt="Spark demo screenshot 12" width="400" /> |
  
 
 ## Quick start
@@ -33,7 +34,7 @@ cmake --build cmake-build-debug -j
 
 | Target | Path (debug preset) | Purpose |
 |--------|---------------------|---------|
-| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **21** built-in modes |
+| **SparkDemo** | `cmake-build-debug/SparkDemo` | Interactive launcher + **22** built-in modes |
 | **SparkEditor** | `cmake-build-debug/spark_editor/SparkEditor` | 3D editor shell (edit mode, dock UI) |
 | **SparkInterop** | `cmake-build-debug/scripting/libSparkInterop.dylib` | C ABI for managed tools (`-DSPARK_BUILD_INTEROP=ON`) |
 

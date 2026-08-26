@@ -10,6 +10,381 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/site.css">
   <link rel="stylesheet" href="../assets/vendor/atom-one-dark.min.css">
+  <style id="spark-inline-theme">
+:root {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-hover: #4f46e5;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --sidebar-width: 280px;
+  --topbar-height: 56px;
+  --toc-width: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.site { min-height: 100vh; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-height);
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand:hover { color: var(--accent); text-decoration: none; }
+
+.sidebar-toggle {
+  display: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.search-wrap { flex: 1; max-width: 360px; margin-left: auto; }
+
+.search-wrap input {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--topbar-height);
+  height: calc(100vh - var(--topbar-height));
+  overflow-y: auto;
+  padding: 1.25rem 0.75rem 2rem;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item { margin: 0.1rem 0; }
+
+.nav-link,
+.nav-group {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.nav-group {
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nav-link:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.nav-item.is-active > .nav-link {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-item.depth-1 .nav-link,
+.nav-item.depth-1 .nav-group { padding-left: 1.25rem; }
+.nav-item.depth-2 .nav-link,
+.nav-item.depth-2 .nav-group { padding-left: 2rem; }
+.nav-item.depth-3 .nav-link,
+.nav-item.depth-3 .nav-group { padding-left: 2.75rem; }
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--toc-width);
+  gap: 2rem;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1200px;
+}
+
+.doc { min-width: 0; }
+
+.doc-header h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.doc-body h2,
+.doc-body h3,
+.doc-body h4 {
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+  letter-spacing: -0.01em;
+}
+
+.doc-body h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+}
+
+.doc-body h3 { font-size: 1.2rem; margin-top: 1.75rem; }
+
+.doc-body p,
+.doc-body ul,
+.doc-body ol,
+.doc-body blockquote,
+.doc-body pre {
+  margin: 1rem 0;
+}
+
+.doc-body blockquote {
+  margin-left: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  color: #be185d;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.doc-body pre {
+  margin: 1rem 0;
+  padding: 0;
+  background: transparent;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.doc-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.doc-body pre code.hljs {
+  display: block;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  line-height: 1.55;
+  border-radius: var(--radius);
+}
+
+.doc-body .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #1e293b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  color: #e2e8f0;
+}
+
+.doc-body .mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.doc-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.doc-body tr:nth-child(even) td { background: #fafbfc; }
+
+.doc-body img {
+  max-width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.doc-body .task-list-item {
+  list-style: none;
+}
+
+.doc-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1.5rem);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-height) - 3rem);
+  overflow-y: auto;
+  padding-left: 0.5rem;
+}
+
+.toc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li { margin: 0.35rem 0; }
+
+.toc a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+}
+
+.toc a:hover { color: var(--accent); }
+
+.toc-h3 { padding-left: 0.75rem; }
+.toc-h4 { padding-left: 1.25rem; }
+
+.nav-item.is-hidden { display: none; }
+
+@media (max-width: 1100px) {
+  .content { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+@media (max-width: 900px) {
+  .sidebar-toggle { display: block; }
+
+  .layout { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--topbar-height);
+    width: min(var(--sidebar-width), 85vw);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    z-index: 90;
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar.is-open { transform: translateX(0); }
+
+  .content { padding: 1.25rem 1rem 3rem; }
+
+  .doc-header h1 { font-size: 1.75rem; }
+}
+
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#abb2bf;background:#282c34}.hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}.hljs-doctag,.hljs-formula,.hljs-keyword{color:#c678dd}.hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#e06c75}.hljs-literal{color:#56b6c2}.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#98c379}.hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#d19a66}.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#61aeee}.hljs-built_in,.hljs-class .hljs-title,.hljs-title.class_{color:#e6c07b}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}.hljs-link{text-decoration:underline}
+</style>
 </head>
 <body>
   <div class="site">
@@ -388,9 +763,9 @@
 <li><code>ProcessSoundCues</code> — <code>ProcessAudioListeners</code>, <code>ProcessAmbientZones</code>, cue flush</li>
 <li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
 </ol>
-<hr>
+<hr />
 <h2 id="quick-index">Quick index</h2>
-<table class="table">
+<table>
 <thead>
 <tr>
 <th>Folder</th>
@@ -452,9 +827,9 @@
 </tr>
 </tbody>
 </table>
-<hr>
+<hr />
 <h2 id="update-priorities">Update priorities</h2>
-<table class="table">
+<table>
 <thead>
 <tr>
 <th>Priority</th>
@@ -506,9 +881,9 @@
 </tbody>
 </table>
 <p><strong>Rule of thumb:</strong> add animation <strong>drivers</strong> (FSM) before <strong>playback</strong> (<code>Animator</code> / <code>SpriteAnimator</code>) on the same <code>GameObject</code>.</p>
-<hr>
-<h2 id="signals-sparkecssignal.hpp">Signals (<code>spark/ecs/Signal.hpp</code>)</h2>
-<table class="table">
+<hr />
+<h2 id="signals-sparkecssignalhpp">Signals (<code>spark/ecs/Signal.hpp</code>)</h2>
+<table>
 <thead>
 <tr>
 <th><code>SignalId</code></th>
@@ -579,11 +954,11 @@
     }
 }
 </code></pre>
-<hr>
+<hr />
 <h2 id="core">Core</h2>
 <h3 id="transformcomponent"><code>TransformComponent</code></h3>
-<p><strong>Header:</strong> <code>spark/ecs/components/core/TransformComponent.hpp</code><br>
-<strong>Kind:</strong> <code>ComponentKind::Transform</code><br>
+<p><strong>Header:</strong> <code>spark/ecs/components/core/TransformComponent.hpp</code><br />
+<strong>Kind:</strong> <code>ComponentKind::Transform</code><br />
 <strong>Consumed by:</strong> Everything that needs pose (render, physics, audio, cameras).</p>
 <p>Local translation / rotation / quaternion scale. Parent chain composes <code>GameObject::GetWorldMatrix()</code>.</p>
 <pre><code class="language-cpp">GameObject* player = world.CreateGameObject();
@@ -592,18 +967,18 @@ tr-&gt;SetTranslation({0.0F, 1.0F, 0.0F});
 tr-&gt;SetUniformScale(1.5F);
 tr-&gt;SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
 </code></pre>
-<hr>
+<hr />
 <h2 id="rendering">Rendering</h2>
 <h3 id="meshcomponent"><code>MeshComponent</code></h3>
 <p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
 <p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
-<pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh("assets/models/cube.obj");
+<pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh(&quot;assets/models/cube.obj&quot;);
 auto* mesh = go-&gt;AddComponent&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
 mesh-&gt;SetAlbedo({0.8F, 0.2F, 0.2F});
 </code></pre>
 <h3 id="materialcomponent"><code>MaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Material</code> · <strong>Consumed by:</strong> Scene submit (PBR / toon, transparency partition)</p>
-<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture("assets/brick.png");
+<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture(&quot;assets/brick.png&quot;);
 go-&gt;AddComponent&lt;MaterialComponent&gt;(albedo, Vector3::One);
 auto* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;();
 mat-&gt;SetMetallic(0.1F);
@@ -615,7 +990,7 @@ mat-&gt;SetOpacity(0.85F);  // → transparent pass
 <h3 id="multimaterialcomponent"><code>MultiMaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Unknown</code> (serialization pending) · <strong>Sibling:</strong> <code>MeshComponent</code> on multi-material glTF meshes</p>
 <p>Per-submesh material slots indexed by <code>MeshSubmesh::materialIndex</code>. Populated from a loaded glTF asset:</p>
-<pre><code class="language-cpp">GltfAsset asset = world.LoadGltf("assets/models/Building.glb");
+<pre><code class="language-cpp">GltfAsset asset = world.LoadGltf(&quot;assets/models/Building.glb&quot;);
 go-&gt;AddComponent&lt;MeshComponent&gt;(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
 auto* multi = go-&gt;AddComponent&lt;MultiMaterialComponent&gt;();
 multi-&gt;PopulateFromGltfAsset(asset);
@@ -623,7 +998,7 @@ multi-&gt;PopulateFromGltfAsset(asset);
 </code></pre>
 <h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
-<pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/Fox.glb");
+<pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/Fox.glb&quot;);
 go-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(fox.mesh);
 go-&gt;AddComponent&lt;MaterialComponent&gt;(fox.baseColorTexture);
 auto* anim = go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, 0, 1.0F);
@@ -632,7 +1007,7 @@ anim-&gt;SetClipIndexWithCrossfade(1, 0.25F);
 </code></pre>
 <h3 id="spritecomponent"><code>SpriteComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sprite</code> · <strong>Consumed by:</strong> Sprite pass in <code>SceneRenderParams</code></p>
-<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture("assets/hero.png");
+<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture(&quot;assets/hero.png&quot;);
 auto* sprite = go-&gt;AddComponent&lt;SpriteComponent&gt;(sheet, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 10);
 sprite-&gt;SetSortOrder(5);  // higher draws on top within layer
 </code></pre>
@@ -656,7 +1031,7 @@ sa-&gt;SetClipIndex(0);
 <p>Multi-layer grid; each <code>TilemapLayer</code> holds <code>TileCell</code> data. Rendering uses <code>Tileset</code> atlas layout (including Tiled margin/spacing when set).</p>
 <pre><code class="language-cpp">SharedPtr&lt;Tileset&gt; set = CreateTilesetFromAtlas(atlas, 12, 11);
 auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(set, 32, 20, 1.0F, 0);
-static_cast&lt;void&gt;(tm-&gt;AddLayer("Dungeon"));
+static_cast&lt;void&gt;(tm-&gt;AddLayer(&quot;Dungeon&quot;));
 tm-&gt;SetPaintTile(0, x, y, floorPaintId);
 tm-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 </code></pre>
@@ -667,7 +1042,7 @@ tm-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 tc-&gt;SetCategoryBits(1u &lt;&lt; 1);
 tc-&gt;SetMaskBits(0xFFFF);
 </code></pre>
-<hr>
+<hr />
 <h2 id="tilemap">Tilemap</h2>
 <h3 id="tilemapgameplaygridcomponent"><code>TilemapGameplayGridComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapGameplayGrid</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
@@ -681,7 +1056,7 @@ grid-&gt;RebakeIfNeeded(*go);
 <p><strong>Kind:</strong> <code>TilemapMapSource</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
 <p>Imports <code>.tmx</code> or <code>.sparkmap</code> via <code>ImportNow</code>, optional hot reload. Sets <code>pixelsPerWorldUnit</code> on <code>TilemapDocumentApplyOptions</code>.</p>
 <pre><code class="language-cpp">auto* source = go-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
-source-&gt;SetTmxPath("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx");
+source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;);
 source-&gt;SetPixelsPerWorldUnit(16.0F);
 source-&gt;ImportNow(*go, world);
 </code></pre>
@@ -691,7 +1066,7 @@ source-&gt;ImportNow(*go, world);
 <h3 id="tilemapobjectlayercomponent-tilemapobjectspawncomponent-tilemapobjectgizmocomponent"><code>TilemapObjectLayerComponent</code> / <code>TilemapObjectSpawnComponent</code> / <code>TilemapObjectGizmoComponent</code></h3>
 <p><strong>Kinds:</strong> <code>TilemapObjectLayer</code>, <code>TilemapObjectSpawn</code>, <code>TilemapObjectGizmo</code></p>
 <p>Tiled-style markers (cell + offset), registry-based spawning (<code>TilemapObjectSpawnRegistry</code>), and debug gizmo sprites.</p>
-<hr>
+<hr />
 <h3 id="skycomponent"><code>SkyComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sky</code> · <strong>Siblings:</strong> <code>MeshComponent</code> (sky mesh), <code>TransformComponent</code></p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;MeshComponent&gt;(skyBoxMesh, SceneMeshSlot::Custom);
@@ -756,7 +1131,7 @@ pp-&gt;SetPriority(2);
 <p><strong>Kind:</strong> <code>TextOverlay</code> · <strong>Consumed by:</strong> Screen UI pass</p>
 <pre><code class="language-cpp">world.SetUiFont(font);
 auto* hud = hudGo-&gt;AddComponent&lt;TextOverlayComponent&gt;();
-hud-&gt;SetText("HP: 100");
+hud-&gt;SetText(&quot;HP: 100&quot;);
 hud-&gt;SetScreenPosition({24.0F, 24.0F});
 hud-&gt;SetFontSizePixels(18.0F);
 </code></pre>
@@ -765,12 +1140,12 @@ hud-&gt;SetFontSizePixels(18.0F);
 go-&gt;AddComponent&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
 
 // Named layer from RenderLayerRegistry
-go-&gt;AddComponent&lt;RenderLayerComponent&gt;("Characters", 10);
+go-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
 
 // Batch sort for subtree (descendant sprites/tilemaps)
 parent-&gt;AddComponent&lt;SortingGroupComponent&gt;(100);
 </code></pre>
-<hr>
+<hr />
 <h2 id="lighting">Lighting</h2>
 <h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
 <p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>FillStandardLitSceneFromWorld</code></p>
@@ -785,7 +1160,7 @@ sunGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetRotation(
 auto* spot = go-&gt;AddComponent&lt;SpotLightComponent&gt;(Vector3::One, 6.0F, 15.0F, 25.0F, 40.0F);
 // Cone axis = local −Z in world space
 </code></pre>
-<hr>
+<hr />
 <h2 id="camera">Camera</h2>
 <h3 id="cameracomponent-3d"><code>CameraComponent</code> (3D)</h3>
 <p><strong>Kind:</strong> <code>Camera</code> · <strong>Consumed by:</strong> <code>TryResolveMainCamera</code>, scene submit</p>
@@ -794,7 +1169,7 @@ cam-&gt;SetProjectionMode(CameraProjectionMode::Perspective);
 cam-&gt;SetFovYDegrees(72.0F);
 cam-&gt;SetNearPlane(0.1F);
 cam-&gt;SetFarPlane(500.0F);
-cam-&gt;SetPriority(10);  // higher wins as "main" camera
+cam-&gt;SetPriority(10);  // higher wins as &quot;main&quot; camera
 </code></pre>
 <h3 id="camera2dcomponent-camera2drigcomponent"><code>Camera2DComponent</code> + <code>Camera2DRigComponent</code></h3>
 <pre><code class="language-cpp">auto* cam2d = cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;();
@@ -826,10 +1201,10 @@ follow-&gt;SetTarget(player);
 follow-&gt;SetTargetOffset({0.0F, 1.6F, 0.0F});
 follow-&gt;SetLookAtTarget(true);
 </code></pre>
-<hr>
+<hr />
 <h2 id="physics-2d">Physics 2D</h2>
 <p>Call each frame from <code>OnUpdate</code> (after gameplay input, before render):</p>
-<pre><code class="language-cpp">#include "spark/physics/PhysicsSubsystem.hpp"
+<pre><code class="language-cpp">#include &quot;spark/physics/PhysicsSubsystem.hpp&quot;
 
 PhysicsSubsystem physics;  // member on your Game class
 physics.Simulate2D(world, timing);
@@ -880,7 +1255,7 @@ hj-&gt;SetLocalAnchorB({0.0F, -0.5F});
 <h3 id="layer-filter">Layer filter</h3>
 <pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
 </code></pre>
-<hr>
+<hr />
 <h2 id="physics-3d">Physics 3D</h2>
 <pre><code class="language-cpp">physics.SimulateAll3D(world, timing);
 // or step individually:
@@ -926,7 +1301,7 @@ auto* joint = ballA-&gt;GetComponent&lt;DistanceJoint3DComponent&gt;();
 joint-&gt;SetStiffness(0.9F);
 </code></pre>
 <h3 id="hingejoint3dcomponent-springjoint3dcomponent"><code>HingeJoint3DComponent</code> / <code>SpringJoint3DComponent</code></h3>
-<p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br>
+<p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br />
 <strong>Spring:</strong> velocity spring-damper along the line between sphere centers.</p>
 <pre><code class="language-cpp">doorA-&gt;AddComponent&lt;HingeJoint3DComponent&gt;(doorB);
 auto* hinge = doorA-&gt;GetComponent&lt;HingeJoint3DComponent&gt;();
@@ -942,7 +1317,7 @@ spring-&gt;SetDamping(5.0F);
 <p>Simple world-space sphere bounds; used by some probe paths.</p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;CollisionComponent&gt;(0.5F, Vector3::Zero);
 </code></pre>
-<hr>
+<hr />
 <h2 id="animation">Animation</h2>
 <h3 id="character3danimfsmcomponent"><code>Character3DAnimFsmComponent</code></h3>
 <p><strong>Priority:</strong> 100 · Add <strong>before</strong> <code>AnimatorComponent</code> on same object.</p>
@@ -955,8 +1330,8 @@ fsm-&gt;RequestAttack();
 <h3 id="animationeventreceivercomponent"><code>AnimationEventReceiverComponent</code></h3>
 <p><strong>Priority:</strong> 210 · <strong>Sibling:</strong> <code>AnimatorComponent</code></p>
 <pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
-recv-&gt;AddMarker(0, 0.35F, "Footstep");
-recv-&gt;AddMarker(0, 0.72F, "Footstep");
+recv-&gt;AddMarker(0, 0.35F, &quot;Footstep&quot;);
+recv-&gt;AddMarker(0, 0.72F, &quot;Footstep&quot;);
 
 class FootstepHandler final : public GameComponent {
 public:
@@ -988,7 +1363,7 @@ auto* fsm = go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
 fsm-&gt;RequestAttack();
 fsm-&gt;RequestHurt();
 </code></pre>
-<hr>
+<hr />
 <h2 id="ai">AI</h2>
 <p><code>SimulateGameAi</code> runs, in order: <code>ProcessNavMeshAgents</code> → <code>ProcessPerceptionSensors</code> → each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
 <h3 id="aiagentcomponent"><code>AiAgentComponent</code></h3>
@@ -1031,7 +1406,7 @@ for (GameObject* target : sense-&gt;GetDetectedObjects()) {
     (void)target;
 }
 </code></pre>
-<hr>
+<hr />
 <h2 id="audio">Audio</h2>
 <p><code>Game::OnUpdate</code> calls <code>ProcessSoundCues</code>, which runs <code>ProcessAudioListeners</code>, then <code>ProcessAmbientZones</code>, then flushes cues.</p>
 <h3 id="audiolistenercomponent"><code>AudioListenerComponent</code></h3>
@@ -1056,10 +1431,10 @@ zone-&gt;SetHalfExtents({10.0F, 10.0F, 10.0F});
 zone-&gt;SetVolumeScale(0.7F);
 zone-&gt;SetPriority(3);
 </code></pre>
-<hr>
+<hr />
 <h2 id="ui">UI</h2>
 <h3 id="uicanvascomponent"><code>UiCanvasComponent</code></h3>
-<pre><code class="language-cpp">#include "spark/ui/Ui.hpp"
+<pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
 
 auto canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
 canvas-&gt;SetSortOrder(0);
@@ -1068,7 +1443,7 @@ canvas-&gt;SetTheme(Ui::UiTheme::ClassicMint());
 Ui::IUiControlsFactory&amp; factory =
     Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
 Ui::PanelDesc panelDesc{};
-panelDesc.id = Utf8String("hud");
+panelDesc.id = Utf8String(&quot;hud&quot;);
 auto panel = factory.CreatePanel(panelDesc);
 canvas-&gt;SetRoot(MoveTemp(panel));
 
@@ -1077,7 +1452,7 @@ ProcessUiCanvasesInput(world, input, fbW, fbH);
 // After FillStandardLitSceneFromWorld (or equivalent):
 PaintUiCanvases(world, params, fbW, fbH);
 </code></pre>
-<hr>
+<hr />
 <h2 id="world">World</h2>
 <h3 id="scenespatialpolicycomponent"><code>SceneSpatialPolicyComponent</code></h3>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::BoundingVolumeHierarchy);
@@ -1092,7 +1467,7 @@ tod-&gt;SetDayLengthSeconds(90.0F);
 tod-&gt;SetLooping(true);
 tod-&gt;SetPriority(1);
 </code></pre>
-<hr>
+<hr />
 <h2 id="gameplay">Gameplay</h2>
 <h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
 <pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
@@ -1113,9 +1488,9 @@ hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
     }
 }
 </code></pre>
-<hr>
+<hr />
 <h2 id="typical-object-recipes">Typical object recipes</h2>
-<h3 id="d-platformer-player">2D platformer player</h3>
+<h3 id="2d-platformer-player">2D platformer player</h3>
 <pre><code class="language-cpp">player-&gt;AddComponent&lt;TransformComponent&gt;();
 player-&gt;AddComponent&lt;SpriteComponent&gt;(heroTex);
 player-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
@@ -1126,7 +1501,7 @@ player-&gt;AddComponent&lt;SoundCueComponent&gt;();
 player-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
 player-&gt;AddComponent&lt;DamageableComponent&gt;();
 </code></pre>
-<h3 id="d-skinned-enemy">3D skinned enemy</h3>
+<h3 id="3d-skinned-enemy">3D skinned enemy</h3>
 <pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
 enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
 enemy-&gt;AddComponent&lt;MaterialComponent&gt;(tex);
@@ -1137,7 +1512,7 @@ enemy-&gt;AddComponent&lt;Rigidbody3DComponent&gt;();
 enemy-&gt;AddComponent&lt;HealthComponent&gt;(50.0F);
 enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
 </code></pre>
-<h3 id="d-patrolling-guard">3D patrolling guard</h3>
+<h3 id="3d-patrolling-guard">3D patrolling guard</h3>
 <pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
 enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
 enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
@@ -1150,20 +1525,19 @@ enemy-&gt;AddComponent&lt;HealthComponent&gt;(80.0F);
 level-&gt;AddComponent&lt;TilemapComponent&gt;(...);
 level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
 </code></pre>
-<hr>
+<hr />
 <h2 id="serialization">Serialization</h2>
 <p>Scene format <strong><code>spark_scene_v4</code></strong> captures a subset of components via <code>ComponentSnapshotRegistry</code>. Registered kinds include Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, and more — see <code>SceneSerializer.cpp</code> <code>kCaptureOrder</code>.</p>
 <p>Components without handlers still work at runtime; they are omitted from saved scenes until a handler is added.</p>
-<hr>
+<hr />
 <h2 id="related-chapters">Related chapters</h2>
 <ul>
 <li><a href="06-ecs-and-scene.html">ECS and Scene</a> — <code>GameObject</code>, signals, submit hand-off</li>
 <li><a href="../5-physics/03-colliders.html">Colliders</a> — layer masks, triggers</li>
 <li><a href="../6-sound/03-cues.html">Sound Cues</a> — mixer and spatial audio</li>
 <li><a href="../3-3d-graphics/02-cameras-3d.html">Cameras in 3D</a> — fly camera vs ECS rigs</li>
-<li><a href="../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> — contributor deep-dive</li>
-</ul>
-</div>
+<li><a href="../../ARCHITECTURE_AND_DEVELOPER_GUIDE.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> — contributor deep-dive</li>
+</ul></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>

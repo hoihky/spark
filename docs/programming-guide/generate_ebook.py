@@ -332,7 +332,19 @@ void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
 
 ## Screenshots
 
-F12 captures the framebuffer to `spark_runtime_assets/screenshots/`.
+**F12** captures the presented framebuffer to `SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png`. Capture is asynchronous (GPU readback + PNG write after fence). On macOS, use in-engine F12 — external screen capture often records MoltenVK windows as black.
+
+**F9** toggles MP4 video recording.
+
+## Demo shell shortcuts
+
+| Key | Action |
+|-----|--------|
+| TAB | Return to launcher menu |
+| H | Toggle demo help overlay |
+| F3 | Toggle FPS overlay |
+| F9 | Toggle video recording |
+| F12 | Save PNG screenshot |
 
 Next: [IGame and Game](overview-architecture/05-igame-contract.html).
 """)
@@ -1203,28 +1215,12 @@ chapter(P3, "06-terrain-and-sky.md", "Terrain and Sky", 6, """
 
 ## Class Design: `TerrainComponent`
 
-Heightfield mesh with brush editing API:
+Heightfield mesh with brush editing API (see `TerrainDemo`, launcher #4).
 
 ```cpp
-explicit TerrainComponent(TerrainGeneratorSettings settings, Vector3 meshAlbedo = ...);
-
-void ResetHeightsToProcedural(GameObject& owner);
-void RegenerateMesh(GameObject& owner);
-bool TryRaycastWorld(const GameObject& owner, Vector3 rayOriginWorld,
-                     Vector3 rayDirWorld, float maxDistance, Vector3& outHitWorld) const;
-void ApplyHeightBrushWorld(GameObject& owner, Vector3 centerWorld,
-                           float radiusWorld, float deltaY);
-```
-
-```cpp
-TerrainGeneratorSettings settings{};
-settings.gridCellsX = 128;
-settings.gridCellsZ = 128;
-settings.cellWorldSize = 1.0F;
-
-auto* terrainGo = world.CreateGameObject();
-terrainGo->AddComponent<TransformComponent>();
-terrainGo->AddComponent<TerrainComponent>(settings);
+SceneRenderParams params{};
+params.worldClearColorEnabled = true;
+params.worldClearColor = {0.42F, 0.62F, 0.92F};  // procedural blue sky
 ```
 
 ## Class Design: `SkyComponent`
@@ -1235,7 +1231,7 @@ void SetSkyTexture(SharedPtr<Texture2D> t);
 void SetTint(const Vector3& c) noexcept;
 ```
 
-Pair with `MeshComponent` using matching sky mesh (`CreateSkyDome`) and `SceneSkyMode` on the draw item.
+Pair with `MeshComponent` using matching sky mesh (`CreateSkyDome`) and `SceneSkyMode` on the draw item. HDR sky textures are background-only unless `iblUseHdrSkyEnvironment` is set on `SceneRenderParams`.
 
 ## Fog
 

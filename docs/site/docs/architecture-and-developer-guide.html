@@ -9,8 +9,477 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="../../programming-guide/site/assets/vendor/atom-one-dark.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+  <script src="../../programming-guide/site/assets/vendor/highlight.min.js"></script>
+  <style id="spark-inline-theme">
+:root {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-hover: #4f46e5;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --topbar-height: 56px;
+  --toc-width: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.site { min-height: 100vh; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-height);
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand:hover { color: var(--accent); text-decoration: none; }
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.topbar-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.topbar-nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.portfolio-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--toc-width);
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.portfolio-main { min-width: 0; }
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.hero-text h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero-tagline {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.92rem;
+}
+
+.hero-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.section-title {
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.section-lead {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+}
+
+.subsection-title {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.doc-body p,
+.doc-body ul,
+.doc-body ol {
+  margin: 1rem 0;
+}
+
+.doc-body h3 {
+  font-size: 1.05rem;
+  margin-top: 1.5rem;
+}
+
+.doc-body blockquote {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  color: #be185d;
+}
+
+.doc-body pre {
+  margin: 1rem 0;
+  padding: 1rem 1.15rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  box-shadow: var(--shadow);
+}
+
+.doc-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.doc-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.doc-body tr:nth-child(even) td { background: #fafbfc; }
+
+.doc-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.doc-page-footer {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+
+.doc-body h1 {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.doc-body h2 {
+  margin: 2.25rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.35rem;
+  font-weight: 700;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.doc-body h3 {
+  font-size: 1.1rem;
+  margin-top: 1.75rem;
+}
+
+.doc-body h4 {
+  font-size: 1rem;
+  margin-top: 1.25rem;
+}
+
+.doc-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.doc-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.pillar-grid,
+.feature-grid,
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.pillar-card,
+.feature-card,
+.career-card {
+  padding: 1.15rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.pillar-card h3,
+.feature-card h3,
+.career-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.pillar-card p,
+.feature-card p,
+.career-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-list li {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.showcase-item {
+  margin: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.showcase-item:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
+}
+
+.showcase-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.showcase-item figcaption {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.mermaid-wrap {
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #1e293b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.mermaid-wrap .mermaid {
+  display: flex;
+  justify-content: center;
+}
+
+.demo-list {
+  columns: 2;
+  column-gap: 2rem;
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.demo-list li {
+  margin-bottom: 0.35rem;
+  break-inside: avoid;
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1.5rem);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-height) - 3rem);
+  overflow-y: auto;
+  padding-left: 0.5rem;
+}
+
+.toc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li { margin: 0.35rem 0; }
+
+.toc a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+}
+
+.toc a:hover { color: var(--accent); }
+
+.toc-h3 { padding-left: 0.75rem; }
+
+.site-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .portfolio-layout { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+@media (max-width: 600px) {
+  .hero { flex-direction: column; align-items: center; text-align: center; }
+  .hero-links { justify-content: center; }
+  .portfolio-layout { padding: 1.5rem 1rem 3rem; }
+  .hero-text h1 { font-size: 1.75rem; }
+  .topbar-nav { display: none; }
+  .demo-list { columns: 1; }
+}
+
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#abb2bf;background:#282c34}.hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}.hljs-doctag,.hljs-formula,.hljs-keyword{color:#c678dd}.hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#e06c75}.hljs-literal{color:#56b6c2}.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#98c379}.hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#d19a66}.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#61aeee}.hljs-built_in,.hljs-class .hljs-title,.hljs-title.class_{color:#e6c07b}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}.hljs-link{text-decoration:underline}
+</style>
 </head>
 <body>
   <div class="site">
@@ -40,7 +509,7 @@
 <li>Optional <strong>Dear ImGui</strong> tool UI (<code>spark/imgui/</code>, <code>SPARK_ENABLE_IMGUI</code>, docking branch) alongside the retained stack.</li>
 <li><strong>Asset loading</strong> (meshes, glTF, textures, fonts, skinned characters) with caching on <code>GameWorldAssetCache</code> (via <code>GameWorld</code>).</li>
 </ul>
-<p>The default executable (<code>src/main.cpp</code>) constructs <code>Engine</code> with <strong><code>NewShellDemoGame()</code></strong> (<code>spark/demo/NewShellDemoGame.hpp</code>) — the interactive launcher plus <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, Dear ImGui docking demo, etc.).</p>
+<p>The default executable (<code>src/main.cpp</code>) constructs <code>Engine</code> with <strong><code>NewShellDemoGame()</code></strong> (<code>spark/demo/NewShellDemoGame.hpp</code>) — the interactive launcher plus <strong>22</strong> built-in modes (3D fly scenes, terrain sculpting, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, 3D model viewer, Dear ImGui docking demo, etc.). Launcher rows are defined in <strong><code>DemoCatalog</code></strong> (<code>include/spark/demo/DemoCatalog.hpp</code>); recommended demos are marked with <code>*</code> in the menu.</p>
 <hr />
 <h2 id="2-repository-layout-mental-map">2. Repository Layout (Mental Map)</h2>
 <table>
@@ -236,7 +705,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Shell / demos</strong></td>
 <td>Launcher and built-in modes</td>
-<td><code>NewShellDemoGame</code>, modes under <code>include/spark/demo/</code></td>
+<td><code>NewShellDemoGame</code>, <code>DemoCatalog</code>, <code>DemoHelpHud</code>, modes under <code>include/spark/demo/</code></td>
 </tr>
 </tbody>
 </table>
@@ -311,6 +780,16 @@ cmake --build cmake-build-debug -j
 <td><strong>Texture array</strong></td>
 <td>Up to <strong>16</strong> RGBA8 layers bound as one array texture</td>
 <td><code>sceneTextures</code>, <code>MaxSceneTextures</code>; uploads in <code>VulkanRenderer::RecordSceneTextureUploads</code></td>
+</tr>
+<tr>
+<td><strong>HDR texture array</strong></td>
+<td>Up to <strong>8</strong> linear float (equirect / <code>.hdr</code>) layers for skies and IBL</td>
+<td><code>sceneHdrTextures</code>, <code>MaxSceneHdrTextures</code>; <code>VulkanSceneHdrTextureUploader</code>; <code>SceneDrawItem::textureIsHdr</code></td>
+</tr>
+<tr>
+<td><strong>World clear color</strong></td>
+<td>Optional solid-color HDR scene background (no sky mesh)</td>
+<td><code>worldClearColorEnabled</code>, <code>worldClearColor</code> on <code>SceneRenderParams</code></td>
 </tr>
 <tr>
 <td><strong>Directional “sun”</strong></td>
@@ -512,6 +991,11 @@ cmake --build cmake-build-debug -j
 <td>Box / dome / plane modes</td>
 <td><code>SkyComponent</code>, <code>SceneSkyMode</code> on draws; often combined with <code>MeshComponent</code></td>
 </tr>
+<tr>
+<td><strong>Solid sky tint</strong></td>
+<td>Clear HDR color attachment when no sky draw covers the horizon</td>
+<td><code>worldClearColorEnabled</code> + <code>worldClearColor</code> (see <code>TerrainDemo</code>)</td>
+</tr>
 </tbody>
 </table>
 <h3 id="58-characters-and-animation">5.8 Characters and animation</h3>
@@ -651,7 +1135,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Demo</strong></td>
 <td>Docking tool panels + 3D backdrop</td>
-<td><code>ImGuiShowcaseDemo</code>, launcher item <strong>20</strong> (hotkey <strong>G</strong>); glTF PBR sample <strong>21</strong> (<code>GltfSamples3DDemo</code>, hotkey <strong>Q</strong>)</td>
+<td><code>ImGuiShowcaseDemo</code>, launcher item <strong>20</strong> (hotkey <strong>G</strong>); glTF PBR sample <strong>21</strong> (<code>GltfSamples3DDemo</code>, hotkey <strong>Q</strong>); 3D model viewer <strong>22</strong> (<code>ModelViewer3DDemo</code>, hotkey <strong>V</strong>)</td>
 </tr>
 </tbody>
 </table>
@@ -1172,8 +1656,36 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <li>Each engine frame, after <code>IGame::OnRender</code>, the loop calls <strong><code>PresentFrame()</code></strong>, which forwards to <strong><code>DrawFrame()</code></strong>.</li>
 <li><strong><code>DrawFrame</code></strong> follows the usual swapchain pattern: <strong><code>vkAcquireNextImageKHR</code></strong> → wait/reset fences → <strong><code>WriteUniformBuffer</code></strong> → <strong><code>RecordSceneCommandBuffer</code></strong> for the acquired image → <strong><code>vkQueueSubmit</code></strong> (graphics queue) → <strong><code>vkQueuePresentKHR</code></strong>.</li>
 <li><strong>Frames in flight:</strong> <code>maxFramesInFlight == 2</code> — there are <strong>two</strong> in-flight fence slots and <strong>paired</strong> uniform/skin SSBO resources indexed by <code>frameIndex % 2</code>, while <strong><code>renderFinishedSemaphores</code></strong> are sized <strong>per swapchain image</strong> so presentation never reuses a semaphore still waited-on by the display stack.</li>
-<li><strong>Resize:</strong> <code>NotifySwapchainResize</code> sets a flag; acquire / present may return <strong><code>OUT_OF_DATE</code></strong> / suboptimal, triggering <strong><code>RecreateSwapchain</code></strong> (tear down framebuffers, depth, HDR/SSAO targets, swapchain views, then rebuild pipelines that depend on extent).</li>
+<li><strong>Resize:</strong> <code>NotifySwapchainResize</code> sets a flag; acquire / present may return <strong><code>OUT_OF_DATE</code></strong> / suboptimal, triggering <strong><code>RecreateSwapchain</code></strong> (tear down framebuffers, depth, HDR/SSAO targets, swapchain views, then rebuild pipelines that depend on extent). Pending PNG screenshots are flushed <strong>before</strong> staging buffers are recreated.</li>
 </ul>
+<h4 id="frame-capture-screenshots-video">Frame capture (screenshots &amp; video)</h4>
+<p><code>VulkanFrameCapture</code> (<code>include/spark/render/core/VulkanFrameCapture.hpp</code>) hooks into the tail of <code>RecordSceneCommandBuffer</code> after the present render pass:</p>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F12</strong></td>
+<td>Queue a PNG readback of the swapchain image to <code>SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png</code></td>
+</tr>
+<tr>
+<td><strong>F9</strong></td>
+<td>Toggle MP4 recording (H.264 + AAC) via <code>VulkanVideoCapture</code></td>
+</tr>
+</tbody>
+</table>
+<p>Screenshot path (<code>VulkanScreenshotCapture</code>):</p>
+<ol>
+<li><code>RequestScreenshotSave</code> sets a pending path.</li>
+<li>Next frame records a GPU copy from the presented swapchain image into a host-visible staging buffer.</li>
+<li>After the matching in-flight fence signals, <code>TrySavePendingPngForFlight</code> converts BGRA rows to RGBA, applies a bottom-right watermark, and writes PNG via <code>stbi_write_png</code>.</li>
+<li><code>RecreateSwapchain</code> calls <code>FlushPendingCaptures</code> after <code>WaitDeviceIdle</code> so readback completes before staging memory is resized.</li>
+</ol>
+<p><strong>Demo help overlay:</strong> <code>DemoHelpHud</code> (<code>include/spark/demo/DemoHelpHud.hpp</code>) patches help text into <code>SceneRenderParams::screenTexts</code> (not a <code>TextOverlayComponent</code>). Press <strong>H</strong> to toggle globally; <strong>TAB</strong> returns to the launcher from any demo; <strong>F3</strong> toggles the FPS overlay.</p>
 <h4 id="multi-pass-frame-graph">Multi-pass frame graph</h4>
 <p><code>VulkanRenderer</code> composes several subsystems (<code>VulkanDirectionalShadowPass</code>, <code>VulkanPunctualShadowPass</code>, <code>VulkanHdrTonemapPass</code>, <code>VulkanScreenSpaceEffectsPass</code>, <code>VulkanSceneOpaquePass</code>, <code>VulkanSpritePass</code>, <code>VulkanParticlePass</code>, <code>VulkanScreenUiPass</code>). One primary command buffer per swapchain image records:</p>
 <table>
@@ -1274,7 +1786,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <li><strong><code>GetInput()</code></strong> → <code>IInput</code> (GLFW-backed): key/mouse state, cursor capture, etc.</li>
 <li><strong><code>GetWindow()</code></strong>, <strong><code>GetFramePresenter()</code></strong> — rarely needed in gameplay; prefer <code>SetSceneRenderParams</code>.</li>
 </ul>
-<p>Demos typically toggle <strong>mouse capture</strong> (e.g. <strong>F1</strong>) for first-person cameras.</p>
+<p>Demos typically toggle <strong>mouse capture</strong> (e.g. <strong>F1</strong>) for first-person cameras. Global shell shortcuts: <strong>TAB</strong> (launcher menu), <strong>H</strong> (help overlay), <strong>F3</strong> (FPS overlay), <strong>F9</strong> (video recording), <strong>F12</strong> (screenshot).</p>
 <hr />
 <h2 id="11-physics-apis-summary">11. Physics APIs (Summary)</h2>
 <p>Primary entry point: <strong><code>PhysicsSubsystem</code></strong> (<code>spark/physics/PhysicsSubsystem.hpp</code>). Include everything with <code>spark/physics/Physics.hpp</code>.</p>
@@ -1363,7 +1875,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <li><strong>Frame contract:</strong> engine calls <code>BeginFrame</code> after <code>OnUpdate</code>, game builds UI in <code>OnRender</code>, engine calls <code>EndFrame</code> before <code>PresentFrame</code>.</li>
 <li><strong>Retained ImGui controls</strong> — <code>DearImguiControlsFactory</code> paints <code>ImguiButton</code>, <code>ImguiPanel</code>, <code>ImguiDockWorkspace</code>, etc. during <code>UiSystem::Paint</code>.</li>
 </ul>
-<p>Demo: <strong><code>ImGuiShowcaseDemo</code></strong> (launcher <strong>#20</strong>, key <strong>G</strong>). <strong><code>GltfSamples3DDemo</code></strong> (launcher <strong>#21</strong>, key <strong>Q</strong>) — Khronos <code>DamagedHelmet.glb</code> with studio HDR IBL (<code>studio_small_08_1k.hdr</code>). See programming guide chapter <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
+<p>Demo: <strong><code>ImGuiShowcaseDemo</code></strong> (launcher <strong>#20</strong>, key <strong>G</strong>). <strong><code>GltfSamples3DDemo</code></strong> (launcher <strong>#21</strong>, key <strong>Q</strong>) — Khronos <code>DamagedHelmet.glb</code> with studio HDR sky dome (<code>studio_small_08_1k.hdr</code>) and opt-in HDR IBL (<code>iblUseHdrSkyEnvironment</code>). <strong><code>ModelViewer3DDemo</code></strong> (launcher <strong>#22</strong>, key <strong>V</strong>) cycles bundled Khronos glTF samples. See programming guide chapter <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
 <hr />
 <h2 id="13-conventions-types">13. Conventions &amp; Types</h2>
 <ul>
@@ -1381,7 +1893,8 @@ PaintUiCanvases(world, params, fbW, fbH);
 <li><strong>This guide — §4.1 (class map), §7.4 (sim vs render), §9.3 (<code>VulkanRenderer</code> internals), §5 (feature catalog)</strong></li>
 <li><code>include/spark/render/core/VulkanRenderer.hpp</code> + <code>src/spark/render/core/VulkanRenderer.cpp</code> (implementation detail; large)</li>
 <li><code>include/spark/demo/ThreeDDemo.hpp</code> — camera + glTF + lights + manual submit pattern</li>
-<li><code>include/spark/demo/GltfSamples3DDemo.hpp</code> — glTF PBR + HDR sky dome IBL reference</li>
+<li><code>include/spark/demo/GltfSamples3DDemo.hpp</code> — glTF PBR + HDR sky dome reference</li>
+<li><code>include/spark/demo/ModelViewer3DDemo.hpp</code> — bundled glTF sample browser</li>
 <li><code>include/spark/demo/PhysicsBallThrow3DDemo.hpp</code> — minimal <strong>3D physics</strong> usage</li>
 <li><code>spark/ui/runtime/UiScene.hpp</code> + <code>spark/ui/Ui.hpp</code> — retained UI input/paint and factory controls</li>
 <li><code>docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code> — retained GUI vs Dear ImGui</li>
@@ -1453,5 +1966,11 @@ PaintUiCanvases(world, params, fbW, fbH);
       </p>
     </footer>
   </div>
+  <script>
+    document.querySelectorAll('pre code').forEach((block) => {
+      if (block.classList.contains('language-mermaid')) return;
+      if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+    });
+  </script>
 </body>
 </html>

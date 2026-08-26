@@ -17,7 +17,7 @@ Spark is a **C++23** codebase that provides:
 - Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
 
-The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **21** built-in modes (3D fly scenes, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, Dear ImGui docking demo, etc.).
+The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **22** built-in modes (3D fly scenes, terrain sculpting, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, 3D model viewer, Dear ImGui docking demo, etc.). Launcher rows are defined in **`DemoCatalog`** (`include/spark/demo/DemoCatalog.hpp`); recommended demos are marked with `*` in the menu.
 
 ---
 
@@ -165,7 +165,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Per-frame timing** | Delta time, wall time, frame counter | `FrameTiming` (`spark/engine/FrameTiming.hpp`) |
 | **Engine façade to gameplay** | Input, framebuffer size, scene params hand-off, optional ImGui layer | `IEngineContext` / `EngineContext`; `TryGetImGuiLayer()`; input via `GlfwInput` |
 | **Presentation abstraction** | Swapchain / GPU without leaking into `IGame` | `IFramePresenter` (`spark/engine/IFramePresenter.hpp`), default impl `VulkanRenderer` |
-| **Shell / demos** | Launcher and built-in modes | `NewShellDemoGame`, modes under `include/spark/demo/` |
+| **Shell / demos** | Launcher and built-in modes | `NewShellDemoGame`, `DemoCatalog`, `DemoHelpHud`, modes under `include/spark/demo/` |
 
 ### 5.2 World, entities, and scene queries
 
@@ -186,6 +186,8 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Built-in mesh buckets** | Packed unit cube / ground in GPU VB/IB | `SceneMeshSlot` (`UnitCube`, `GroundPlane`, `Custom`) |
 | **Per-object draw** | Model matrix, albedo, textures, PBR scalars, toon params, skin palette | `SceneDrawItem` — `textureLayer`, `normalMapLayer`, `metallicRoughnessMapLayer` index `sceneTextures`; optional `customMesh` / `skinnedMesh` + `jointPalette` |
 | **Texture array** | Up to **16** RGBA8 layers bound as one array texture | `sceneTextures`, `MaxSceneTextures`; uploads in `VulkanRenderer::RecordSceneTextureUploads` |
+| **HDR texture array** | Up to **8** linear float (equirect / `.hdr`) layers for skies and IBL | `sceneHdrTextures`, `MaxSceneHdrTextures`; `VulkanSceneHdrTextureUploader`; `SceneDrawItem::textureIsHdr` |
+| **World clear color** | Optional solid-color HDR scene background (no sky mesh) | `worldClearColorEnabled`, `worldClearColor` on `SceneRenderParams` |
 | **Directional “sun”** | Key light direction + color + intensity on params | `lightDirectionWorld`, `lightColor`, `lightIntensity` |
 | **Hemisphere / flat ambient** | Fill lighting | `ambientColor` |
 | **Directional shadows** | CSM atlas + PCF in `scene.frag` | `directionalShadowsEnabled`, `shadowBias`, `shadowNormalBias`, `shadowDepthSampleFlipV` — details in [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) |
@@ -240,6 +242,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 |--------|------|------------------------|
 | **Heightfield terrain** | Procedural or authored height → mesh | `TerrainComponent`, `TerrainMeshGenerator`, settings in `spark/scene/mesh/TerrainGeneratorSettings.hpp` |
 | **Sky backdrop** | Box / dome / plane modes | `SkyComponent`, `SceneSkyMode` on draws; often combined with `MeshComponent` |
+| **Solid sky tint** | Clear HDR color attachment when no sky draw covers the horizon | `worldClearColorEnabled` + `worldClearColor` (see `TerrainDemo`) |
 
 ### 5.8 Characters and animation
 
@@ -275,7 +278,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Vulkan hook** | Record draw lists after screen UI in present pass | `IImGuiVulkanBackend`, `VulkanRenderer::RecordImGuiDrawData` |
 | **Input capture** | Gate game pointer when ImGui hovers widgets | `WantsCaptureMouse`, `WantsCaptureKeyboard` |
 | **GLFW chaining** | Install callbacks after `GlfwInput::WireToWindow` | `IImGuiLayer::InstallPlatformCallbacks` |
-| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **20** (hotkey **G**); glTF PBR sample **21** (`GltfSamples3DDemo`, hotkey **Q**) |
+| **Demo** | Docking tool panels + 3D backdrop | `ImGuiShowcaseDemo`, launcher item **20** (hotkey **G**); glTF PBR sample **21** (`GltfSamples3DDemo`, hotkey **Q**); 3D model viewer **22** (`ModelViewer3DDemo`, hotkey **V**) |
 
 ImGui UI must be built in **`IGame::OnRender`** (after engine `BeginFrame`, before `EndFrame`). Retained GUI remains the primary stack for shipped menus and `SparkEditor`.
 
@@ -565,7 +568,25 @@ Pass implementations live under `include/spark/render/{shadow,scene,post,sprites
 - Each engine frame, after `IGame::OnRender`, the loop calls **`PresentFrame()`**, which forwards to **`DrawFrame()`**.
 - **`DrawFrame`** follows the usual swapchain pattern: **`vkAcquireNextImageKHR`** → wait/reset fences → **`WriteUniformBuffer`** → **`RecordSceneCommandBuffer`** for the acquired image → **`vkQueueSubmit`** (graphics queue) → **`vkQueuePresentKHR`**.
 - **Frames in flight:** `maxFramesInFlight == 2` — there are **two** in-flight fence slots and **paired** uniform/skin SSBO resources indexed by `frameIndex % 2`, while **`renderFinishedSemaphores`** are sized **per swapchain image** so presentation never reuses a semaphore still waited-on by the display stack.
-- **Resize:** `NotifySwapchainResize` sets a flag; acquire / present may return **`OUT_OF_DATE`** / suboptimal, triggering **`RecreateSwapchain`** (tear down framebuffers, depth, HDR/SSAO targets, swapchain views, then rebuild pipelines that depend on extent).
+- **Resize:** `NotifySwapchainResize` sets a flag; acquire / present may return **`OUT_OF_DATE`** / suboptimal, triggering **`RecreateSwapchain`** (tear down framebuffers, depth, HDR/SSAO targets, swapchain views, then rebuild pipelines that depend on extent). Pending PNG screenshots are flushed **before** staging buffers are recreated.
+
+#### Frame capture (screenshots & video)
+
+`VulkanFrameCapture` (`include/spark/render/core/VulkanFrameCapture.hpp`) hooks into the tail of `RecordSceneCommandBuffer` after the present render pass:
+
+| Shortcut | Behavior |
+|----------|----------|
+| **F12** | Queue a PNG readback of the swapchain image to `SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png` |
+| **F9** | Toggle MP4 recording (H.264 + AAC) via `VulkanVideoCapture` |
+
+Screenshot path (`VulkanScreenshotCapture`):
+
+1. `RequestScreenshotSave` sets a pending path.
+2. Next frame records a GPU copy from the presented swapchain image into a host-visible staging buffer.
+3. After the matching in-flight fence signals, `TrySavePendingPngForFlight` converts BGRA rows to RGBA, applies a bottom-right watermark, and writes PNG via `stbi_write_png`.
+4. `RecreateSwapchain` calls `FlushPendingCaptures` after `WaitDeviceIdle` so readback completes before staging memory is resized.
+
+**Demo help overlay:** `DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) patches help text into `SceneRenderParams::screenTexts` (not a `TextOverlayComponent`). Press **H** to toggle globally; **TAB** returns to the launcher from any demo; **F3** toggles the FPS overlay.
 
 #### Multi-pass frame graph
 
@@ -633,7 +654,7 @@ From **`IEngineContext`**:
 - **`GetInput()`** → `IInput` (GLFW-backed): key/mouse state, cursor capture, etc.
 - **`GetWindow()`**, **`GetFramePresenter()`** — rarely needed in gameplay; prefer `SetSceneRenderParams`.
 
-Demos typically toggle **mouse capture** (e.g. **F1**) for first-person cameras.
+Demos typically toggle **mouse capture** (e.g. **F1**) for first-person cameras. Global shell shortcuts: **TAB** (launcher menu), **H** (help overlay), **F3** (FPS overlay), **F9** (video recording), **F12** (screenshot).
 
 ---
 
@@ -711,7 +732,7 @@ Optional when `SPARK_ENABLE_IMGUI=ON` (default):
 - **Frame contract:** engine calls `BeginFrame` after `OnUpdate`, game builds UI in `OnRender`, engine calls `EndFrame` before `PresentFrame`.
 - **Retained ImGui controls** — `DearImguiControlsFactory` paints `ImguiButton`, `ImguiPanel`, `ImguiDockWorkspace`, etc. during `UiSystem::Paint`.
 
-Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDemo`** (launcher **#21**, key **Q**) — Khronos `DamagedHelmet.glb` with studio HDR IBL (`studio_small_08_1k.hdr`). See programming guide chapter [UI and Toolkits](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
+Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDemo`** (launcher **#21**, key **Q**) — Khronos `DamagedHelmet.glb` with studio HDR sky dome (`studio_small_08_1k.hdr`) and opt-in HDR IBL (`iblUseHdrSkyEnvironment`). **`ModelViewer3DDemo`** (launcher **#22**, key **V**) cycles bundled Khronos glTF samples. See programming guide chapter [UI and Toolkits](programming-guide/1-overview-architecture/08-ui-and-toolkits.md).
 
 ---
 
@@ -732,8 +753,9 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDem
 4. **This guide — §4.1 (class map), §7.4 (sim vs render), §9.3 (`VulkanRenderer` internals), §5 (feature catalog)**
 5. `include/spark/render/core/VulkanRenderer.hpp` + `src/spark/render/core/VulkanRenderer.cpp` (implementation detail; large)
 6. `include/spark/demo/ThreeDDemo.hpp` — camera + glTF + lights + manual submit pattern
-7. `include/spark/demo/GltfSamples3DDemo.hpp` — glTF PBR + HDR sky dome IBL reference
-8. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
+7. `include/spark/demo/GltfSamples3DDemo.hpp` — glTF PBR + HDR sky dome reference
+8. `include/spark/demo/ModelViewer3DDemo.hpp` — bundled glTF sample browser
+9. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
 9. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
 10. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
 11. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering

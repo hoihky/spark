@@ -14,10 +14,10 @@ This note complements [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (shad
 | **Emissive** | `SetEmissive` + optional `SetEmissiveTexture` | `emissiveMapLayer`, `emissiveFactor` | Color × intensity × factor; texture RGB multiplies when bound. |
 | **glTF factors** | `SetMetallicFactor`, `SetRoughnessFactor`, `SetOcclusionStrength`, `SetEmissiveFactor` | `ModelPushConstants` | Defaults **1**; applied in `scene.frag` with scalars and ORM samples. |
 | **Shading model** | `SceneShadingModel::LitPbr` / `ToonCel` | `push.shadingModel` | Toon: banded diffuse, stylized spec, rim; still uses punctual lights + shadow on sun where applicable. |
-| **IBL / env reflections** | `SceneRenderParams::iblEnabled`, `iblEnvironmentLayer`, `iblIntensity` | `ubo.iblParams` + `ibl.glsl` | Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer -1 = procedural hemisphere; auto-picked from sky draw with texture. |
+| **IBL / env reflections** | `SceneRenderParams::iblEnabled`, `iblEnvironmentLayer`, `iblIntensity`, `iblUseHdrSkyEnvironment` | `ubo.iblParams` + `ibl.glsl` | Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer **−1** = procedural hemisphere from ambient colors. When a sky draw has an HDR equirect texture, it is used for **background only** unless `iblUseHdrSkyEnvironment = true` (see `GltfSamples3DDemo`). |
 | **SSAO** | `SceneRenderParams::ssaoEnabled`, `ssaoRadius`, `ssaoBias`, `ssaoStrength` | `post_process.frag` | Screen-space AO after HDR scene pass, before tonemap; see [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md). |
 
-**Texture budget:** `SceneRenderParams::sceneTextures` holds up to **16** RGBA8 layers (shared array texture). `FindOrAddSceneTexture` deduplicates within a single submit and assigns dense indices 0…N−1 each frame.
+**Texture budget:** `SceneRenderParams::sceneTextures` holds up to **16** RGBA8 layers (shared array texture). `sceneHdrTextures` holds up to **8** linear float layers (`.hdr` equirect via `StbHdrFloatTextureLoader`). `FindOrAddSceneTexture` deduplicates within a single submit and assigns dense indices 0…N−1 each frame.
 
 **Demonstrator:** shell menu item **“16 — Material ball…”** or **B** from the launcher — [`MaterialShowcase3DDemo`](../include/spark/demo/MaterialShowcase3DDemo.hpp) shows one **LitPbr** sphere whose maps, tint, metallic/roughness, and emissive settings are toggled and adjusted at runtime via keyboard. For a full glTF PBR + HDR IBL scene, see launcher **#21** / hotkey **Q** — [`GltfSamples3DDemo`](../include/spark/demo/GltfSamples3DDemo.hpp) (`DamagedHelmet.glb`, Poly Haven `studio_small_08_1k.hdr` sky dome).
 
@@ -52,7 +52,7 @@ Prioritized for a forward PBR renderer of this size:
 |-----|--------|---------------------|
 | **Directional light ECS** | `DirectionalLightComponent` overrides submit params when present | Multiple directional lights with blending / priority |
 | **No area / line / tube lights** | Architectural interiors harder | LTC rectangles, capsule approximations, or emissive mesh proxies. |
-| **IBL (basic)** | Equirect + GGX importance sample; auto-picks sky dome texture when `iblEnvironmentLayer == -1`; HDR files load via `stbi_load` (tonemapped to LDR until float texture path lands) | Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count. |
+| **IBL (basic)** | Equirect + GGX importance sample; procedural hemisphere by default; HDR sky dome opt-in via `iblUseHdrSkyEnvironment`; float `.hdr` uploads via `sceneHdrTextures` | Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count. |
 | **Punctual shadow quality** | 512² tiles; 2 point + 4 spot cap | Higher-res atlases, EVSM, or temporal filtering. |
 | **Contact shadows / volumetric fog** | Small-scale grounding and atmosphere | Screen-space contact trace; height fog or god-ray pass (see roadmap). |
 
@@ -69,4 +69,4 @@ Prioritized for a forward PBR renderer of this size:
 
 ---
 
-*Last updated with SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md).*
+*Last updated with HDR float texture uploads, world clear color, SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md).*

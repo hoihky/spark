@@ -180,7 +180,13 @@ sequenceDiagram
 
 **SparkDemo** launcher item **20 — Dear ImGui tools (docking)** (hotkey **G**): docked Hierarchy / Inspector / Console, optional `ShowDemoWindow`, 3D backdrop. Source: `ImGuiShowcaseDemo` (`include/spark/demo/ImGuiShowcaseDemo.hpp`).
 
-**glTF PBR sample** — launcher item **21** (hotkey **Q**): `GltfSamples3DDemo` loads `DamagedHelmet.glb` with studio HDR sky dome IBL. See [Meshes and Materials](../3-3d-graphics/01-meshes-and-materials.md) and [Terrain and Sky](../3-3d-graphics/06-terrain-and-sky.md).
+**glTF PBR sample** — launcher item **21** (hotkey **Q**): `GltfSamples3DDemo` loads `DamagedHelmet.glb` with studio HDR sky dome and opt-in HDR IBL (`iblUseHdrSkyEnvironment`). See [Meshes and Materials](../3-3d-graphics/01-meshes-and-materials.md) and [Terrain and Sky](../3-3d-graphics/06-terrain-and-sky.md).
+
+**3D model viewer** — launcher item **22** (hotkey **V**): `ModelViewer3DDemo` cycles bundled Khronos glTF samples (chair, watch, plant, shoe, etc.) with orbit camera.
+
+### Demo help overlay
+
+`DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) provides a shared top-left help panel for shell demos. It patches text into `SceneRenderParams::screenTexts` via `PatchSceneRenderParams` — not a scene `TextOverlayComponent`. Press **H** to toggle globally; **TAB** returns to the launcher.
 
 ### Disable ImGui
 
