@@ -67,6 +67,7 @@ Spark::Vector4 RenderLayers2DDemo::FarmerFrameUv(const std::uint32_t frameIndex)
 }
 
 void RenderLayers2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
+    Unload(w);
     (void)context;
     roots.Clear();
     brokenShadowOnTop = true;

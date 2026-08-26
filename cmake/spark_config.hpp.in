@@ -18,7 +18,7 @@
 /** Equirectangular sky image path for the sky demo (Poly Haven 1k .hdr by default; CMake downloads if missing). */
 #define SPARK_SKY_TEXTURE_PATH "@SPARK_SKY_TEXTURE_PATH@"
 
-/** Studio equirect HDR for glTF PBR showcase (Poly Haven 1k .hdr; CMake downloads if missing). */
+/** Studio equirect HDR for glTF PBR showcase (Poly Haven Venice sunset 1k .hdr; CMake downloads if missing). */
 #define SPARK_STUDIO_HDR_PATH "@SPARK_STUDIO_HDR_PATH@"
 
 /** 1 when Dear ImGui (docking) is linked into SparkEngine; 0 for null backend only. */

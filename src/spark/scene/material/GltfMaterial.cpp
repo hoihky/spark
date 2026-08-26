@@ -4,16 +4,34 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 
 #include "spark/core/Array.hpp"
+#include "spark/core/HashMap.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/memory/SharedPtr.hpp"
 
 #include "cgltf.h"
 
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
 namespace Spark {
+
+namespace {
+
+struct GltfTextureLoadCaches {
+    HashMap<const cgltf_image*, SharedPtr<Texture2D>> decodedImages;
+    HashMap<std::uint64_t, SharedPtr<Texture2D>> mergedOrmTextures;
+};
+
+[[nodiscard]] std::uint64_t MakeOrmCacheKey(const cgltf_image* mrImage, const cgltf_image* occImage) noexcept {
+    const auto pack = [](const void* ptr) -> std::uint64_t {
+        return static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(ptr));
+    };
+    return (pack(mrImage) << 1U) ^ pack(occImage);
+}
+
+}  // namespace
 
 namespace {
 
@@ -120,16 +138,22 @@ bool TryDecodeDataUriImage(const char* uri, Texture2D& outDecoded) {
     return Texture2D::TryLoadFromMemory(bytes.GetData(), bytes.GetSize(), outDecoded, "data-uri");
 }
 
-void MergeOcclusionIntoMetallicRoughness(SharedPtr<Texture2D>& orm, const SharedPtr<Texture2D>& occlusion) {
+SharedPtr<Texture2D> CreateMergedOrmTexture(
+        const SharedPtr<Texture2D>& metallicRoughness,
+        const SharedPtr<Texture2D>& occlusion,
+        const Utf8String& textureName) {
     if (!occlusion || occlusion->GetWidth() == 0 || occlusion->GetHeight() == 0) {
-        return;
+        return metallicRoughness;
     }
     const std::uint32_t w = occlusion->GetWidth();
     const std::uint32_t h = occlusion->GetHeight();
-    if (!orm || orm->GetWidth() != w || orm->GetHeight() != h) {
-        Array<std::uint8_t> pixels;
-        pixels.Resize(static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U);
-        const Array<std::uint8_t>& occ = occlusion->GetRgba();
+    const Array<std::uint8_t>& occ = occlusion->GetRgba();
+    Array<std::uint8_t> pixels;
+    pixels.Resize(static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U);
+    if (metallicRoughness && metallicRoughness->GetWidth() == w && metallicRoughness->GetHeight() == h &&
+        metallicRoughness->GetRgba().GetSize() == pixels.GetSize()) {
+        pixels = metallicRoughness->GetRgba();
+    } else {
         for (std::uint32_t y = 0; y < h; ++y) {
             for (std::uint32_t x = 0; x < w; ++x) {
                 const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(w) + static_cast<std::size_t>(x)) * 4U;
@@ -140,20 +164,29 @@ void MergeOcclusionIntoMetallicRoughness(SharedPtr<Texture2D>& orm, const Shared
                 pixels[i + 3] = 255;
             }
         }
-        auto tex = MakeShared<Texture2D>(occlusion->GetName());
-        tex->SetPixels(w, h, MoveTemp(pixels));
-        orm = tex;
-        return;
     }
-    Array<std::uint8_t> pixels = orm->GetRgba();
-    if (pixels.GetSize() != static_cast<std::size_t>(w) * static_cast<std::size_t>(h) * 4U) {
-        return;
-    }
-    const Array<std::uint8_t>& occ = occlusion->GetRgba();
     for (std::size_t i = 0; i < pixels.GetSize(); i += 4U) {
         pixels[i] = occ[i];
     }
-    orm->SetPixels(w, h, MoveTemp(pixels));
+    auto tex = MakeShared<Texture2D>(textureName);
+    tex->SetPixels(w, h, MoveTemp(pixels));
+    return tex;
+}
+
+SharedPtr<Texture2D> GetOrCreateMergedOrmTexture(
+        GltfTextureLoadCaches& caches,
+        const SharedPtr<Texture2D>& metallicRoughness,
+        const SharedPtr<Texture2D>& occlusion,
+        const cgltf_image* mrImage,
+        const cgltf_image* occImage,
+        const Utf8String& textureName) {
+    const std::uint64_t key = MakeOrmCacheKey(mrImage, occImage);
+    if (const SharedPtr<Texture2D>* cached = caches.mergedOrmTextures.Find(key)) {
+        return *cached;
+    }
+    SharedPtr<Texture2D> merged = CreateMergedOrmTexture(metallicRoughness, occlusion, textureName);
+    caches.mergedOrmTextures.Add(key, merged);
+    return merged;
 }
 
 bool TryDecodeGltfImage(const cgltf_image* img, const Utf8String& dir, Texture2D& outDecoded) {
@@ -188,19 +221,27 @@ bool TryDecodeGltfImage(const cgltf_image* img, const Utf8String& dir, Texture2D
     return false;
 }
 
-bool TryDecodeTextureView(
+bool TryGetOrDecodeTextureView(
         const cgltf_texture_view& tv,
         const Utf8String& dir,
         const Utf8String& textureName,
+        GltfTextureLoadCaches& caches,
         SharedPtr<Texture2D>& outTexture) {
     if (tv.texture == nullptr || tv.texture->image == nullptr) {
         return false;
     }
+    const cgltf_image* image = tv.texture->image;
+    if (const SharedPtr<Texture2D>* cached = caches.decodedImages.Find(image)) {
+        outTexture = *cached;
+        return true;
+    }
     Texture2D decoded(textureName);
-    if (!TryDecodeGltfImage(tv.texture->image, dir, decoded)) {
+    if (!TryDecodeGltfImage(image, dir, decoded)) {
         return false;
     }
-    outTexture = SharedPtr<Texture2D>(new Texture2D(MoveTemp(decoded)));
+    SharedPtr<Texture2D> tex(new Texture2D(MoveTemp(decoded)));
+    caches.decodedImages.Add(image, tex);
+    outTexture = tex;
     return true;
 }
 
@@ -258,42 +299,49 @@ void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
 bool TryLoadTexturesFromMaterial(
         const cgltf_material& mat,
         const char* gltfPath,
-        GltfMaterial& out) {
+        GltfMaterial& out,
+        GltfTextureLoadCaches& caches) {
     const Utf8String dir = ParentDirectory(gltfPath);
     ApplyScalarFactors(mat, out);
+
+    const cgltf_image* mrImage = nullptr;
+    const cgltf_image* occImage = nullptr;
+    SharedPtr<Texture2D> occlusion;
 
     if (mat.has_pbr_metallic_roughness) {
         const cgltf_pbr_metallic_roughness& pbr = mat.pbr_metallic_roughness;
         if (pbr.base_color_texture.texture != nullptr) {
             const Utf8String name = MakeTextureName(gltfPath, pbr.base_color_texture.texture->image, "base");
             ReadTextureViewUv(pbr.base_color_texture, out.baseColorUv);
-            (void)TryDecodeTextureView(pbr.base_color_texture, dir, name, out.baseColor);
+            (void)TryGetOrDecodeTextureView(pbr.base_color_texture, dir, name, caches, out.baseColor);
         }
         if (pbr.metallic_roughness_texture.texture != nullptr) {
-            const Utf8String name = MakeTextureName(gltfPath, pbr.metallic_roughness_texture.texture->image, "orm");
+            mrImage = pbr.metallic_roughness_texture.texture->image;
+            const Utf8String name = MakeTextureName(gltfPath, mrImage, "orm");
             ReadTextureViewUv(pbr.metallic_roughness_texture, out.metallicRoughnessUv);
-            (void)TryDecodeTextureView(pbr.metallic_roughness_texture, dir, name, out.metallicRoughness);
+            (void)TryGetOrDecodeTextureView(pbr.metallic_roughness_texture, dir, name, caches, out.metallicRoughness);
         }
     }
 
     if (mat.normal_texture.texture != nullptr) {
         const Utf8String name = MakeTextureName(gltfPath, mat.normal_texture.texture->image, "normal");
         ReadTextureViewUv(mat.normal_texture, out.normalUv);
-        (void)TryDecodeTextureView(mat.normal_texture, dir, name, out.normalMap);
+        (void)TryGetOrDecodeTextureView(mat.normal_texture, dir, name, caches, out.normalMap);
     }
 
     if (mat.emissive_texture.texture != nullptr) {
         const Utf8String name = MakeTextureName(gltfPath, mat.emissive_texture.texture->image, "emissive");
         ReadTextureViewUv(mat.emissive_texture, out.emissiveUv);
-        (void)TryDecodeTextureView(mat.emissive_texture, dir, name, out.emissiveMap);
+        (void)TryGetOrDecodeTextureView(mat.emissive_texture, dir, name, caches, out.emissiveMap);
     }
 
     if (mat.occlusion_texture.texture != nullptr) {
-        SharedPtr<Texture2D> occlusion;
-        const Utf8String name = MakeTextureName(gltfPath, mat.occlusion_texture.texture->image, "occlusion");
+        occImage = mat.occlusion_texture.texture->image;
+        const Utf8String name = MakeTextureName(gltfPath, occImage, "occlusion");
         ReadTextureViewUv(mat.occlusion_texture, out.metallicRoughnessUv);
-        if (TryDecodeTextureView(mat.occlusion_texture, dir, name, occlusion)) {
-            MergeOcclusionIntoMetallicRoughness(out.metallicRoughness, occlusion);
+        if (TryGetOrDecodeTextureView(mat.occlusion_texture, dir, name, caches, occlusion)) {
+            out.metallicRoughness = GetOrCreateMergedOrmTexture(
+                    caches, out.metallicRoughness, occlusion, mrImage, occImage, name);
         }
     }
 
@@ -308,14 +356,14 @@ bool TryLoadTexturesFromMaterial(
         out.roughnessFactor = 1.0F - static_cast<float>(sg.glossiness_factor);
         if (sg.diffuse_texture.texture != nullptr) {
             const Utf8String name = MakeTextureName(gltfPath, sg.diffuse_texture.texture->image, "diffuse");
-            (void)TryDecodeTextureView(sg.diffuse_texture, dir, name, out.baseColor);
+            (void)TryGetOrDecodeTextureView(sg.diffuse_texture, dir, name, caches, out.baseColor);
         }
     }
 
     if (!mat.has_pbr_metallic_roughness && mat.has_sheen) {
         if (mat.sheen.sheen_color_texture.texture != nullptr && !out.baseColor) {
             const Utf8String name = MakeTextureName(gltfPath, mat.sheen.sheen_color_texture.texture->image, "sheen");
-            (void)TryDecodeTextureView(mat.sheen.sheen_color_texture, dir, name, out.baseColor);
+            (void)TryGetOrDecodeTextureView(mat.sheen.sheen_color_texture, dir, name, caches, out.baseColor);
         }
     }
 
@@ -431,7 +479,8 @@ bool GltfMaterialLoader::LoadFromCgltf(
         return false;
     }
     outMaterial = GltfMaterial{};
-    return TryLoadTexturesFromMaterial(*mat, gltfPath, outMaterial);
+    GltfTextureLoadCaches caches;
+    return TryLoadTexturesFromMaterial(*mat, gltfPath, outMaterial, caches);
 }
 
 bool GltfMaterialLoader::LoadPrimary(
@@ -472,9 +521,11 @@ void GltfMaterialLoader::LoadAll(
     if (data == nullptr || gltfPath == nullptr) {
         return;
     }
+    GltfTextureLoadCaches caches;
     outMaterials.Resize(static_cast<std::size_t>(data->materials_count));
     for (cgltf_size mi = 0; mi < data->materials_count; ++mi) {
-        (void)LoadFromCgltf(&data->materials[mi], gltfPath, outMaterials[static_cast<std::size_t>(mi)]);
+        (void)TryLoadTexturesFromMaterial(
+                data->materials[mi], gltfPath, outMaterials[static_cast<std::size_t>(mi)], caches);
     }
 }
 

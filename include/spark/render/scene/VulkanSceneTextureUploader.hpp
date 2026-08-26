@@ -9,6 +9,8 @@
 
 namespace Spark {
 
+class Texture2D;
+
 /**
  * GPU 2D texture array for scene PBR materials.
  * Supports mipmapped RGBA8, BC7, or ASTC 4x4 encodings depending on device capabilities.
@@ -16,7 +18,7 @@ namespace Spark {
 class VulkanSceneTextureUploader {
 public:
     static constexpr std::uint32_t kLayerSize = 1024;
-    static constexpr std::uint32_t kLayerCount = 32;
+    static constexpr std::uint32_t kLayerCount = SceneRenderParams::MaxSceneTextures;
 
     void CreateResources(
             VkPhysicalDevice physicalDevice,
@@ -59,11 +61,13 @@ private:
     void* stagingMapped = nullptr;
     VkDeviceSize stagingSize = 0;
     VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+    const Texture2D* lastUploadedTextures[kLayerCount]{};
     std::uint64_t lastFingerprints[kLayerCount]{};
     std::uint32_t lastUploadedCount = 0;
     bool uploadPending = false;
     std::uint32_t pendingUploadCount = 0;
     std::uint64_t pendingFingerprints[kLayerCount]{};
+    const Texture2D* pendingTextures[kLayerCount]{};
     bool pendingNearestMip[kLayerCount]{};
     bool pendingLayerDirty[kLayerCount]{};
 };

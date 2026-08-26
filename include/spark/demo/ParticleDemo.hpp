@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ParticleDemoDetail.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
@@ -7,7 +8,6 @@
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
-#include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/scene/core/Scene.hpp"
 #include "spark/ui/runtime/UiScene.hpp"
@@ -43,8 +43,7 @@ private:
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset;
     Spark::GameObject* effectObjects[Detail::kParticleDemoEffectCount]{};
     Spark::ParticleEmitterComponent* effectEmitters[Detail::kParticleDemoEffectCount]{};
-    Spark::GameObject* fpsHudObject = nullptr;
-    Spark::TextOverlayComponent* fpsText = nullptr;
+    DemoHelpHud helpHud{};
     Spark::FlyCamera camera{};
     Spark::GameObject* uiRoot = nullptr;
     Spark::UiCanvasComponent* uiCanvas = nullptr;
@@ -70,7 +69,6 @@ private:
     float guiSpeedMax = 4.2F;
     float guiGravY = 0.35F;
     bool guiEnabled = true;
-    float fpsSmoothed = 0.0F;
 };
 
 }  // namespace Spark

@@ -4,6 +4,7 @@
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
 namespace {
@@ -283,9 +284,9 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 w.RegisterTexture(humanAsset.baseColorTexture, "spark/maze3d/human_basecolor");
             }
             humanModelBindFix = humanAsset.bindUpAlignment.Normalized();
-            humanModelYawOffset = humanAsset.bindFacingYawOffset;
+            humanModelYawOffset = humanAsset.bindFacingYawOffset + Spark::Pi;
             if (!loadedCesium) {
-                humanModelYawOffset = -Spark::HalfPi;
+                humanModelYawOffset = Spark::HalfPi;
             }
 
             Spark::Vector3 bmin{};
@@ -476,14 +477,8 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 ->SetCastsShadow(true);
         roots.PushBack(lightB);
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("Maze3DFpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String(
-                "3D maze — FP WASD — guard patrols (NavMeshAgent+AiAgent) — F1 mouse — ESC menu"));
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "3D maze");
+        helpHud.SetControlHints("FP WASD · guard patrols (NavMeshAgent+AiAgent) · F1 mouse");
 
         rig = {};
         rig.mode = Spark::CharacterCameraMode::FirstPerson;
@@ -521,6 +516,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
 void Maze3DDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         if (audioEngine != nullptr) {
             audioEngine->ClearBackgroundMusic();
             audioEngine = nullptr;
@@ -556,8 +552,6 @@ void Maze3DDemo::Unload(Spark::GameWorld& w)
         guardGo = nullptr;
         guardPerception = nullptr;
         useHumanAvatar = false;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
     }
 
 void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
@@ -665,14 +659,7 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             }
         }
 
-        if (fpsText != nullptr) {
-            const float tdt = timing.deltaTimeSeconds;
-            const float instant = (tdt > 1.0e-6F) ? (1.0F / tdt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
+        {
             bool guardSeesPlayer = false;
             if (guardPerception != nullptr && playerGo != nullptr) {
                 const Spark::Array<Spark::GameObject*>& detected = guardPerception->GetDetectedObjects();
@@ -684,17 +671,17 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
                 }
             }
             const std::string hud = std::format(
-                    "3D maze {}×{} — {} — {} walls — gems {}/{} — guard {} — {:.0f} FPS — FP WASD — F1 — ESC",
+                    "{}×{} — {} — {} walls — gems {}/{} — guard {}",
                     kMazeW,
                     kMazeH,
                     characterAvatarHudName.CStr(),
                     wallCount,
                     gemsCollected,
                     gemsTotal,
-                    guardSeesPlayer ? "ALERT" : "patrol",
-                    static_cast<double>(fpsSmoothed));
-            fpsText->SetText(Spark::Utf8String(hud.c_str()));
+                    guardSeesPlayer ? "ALERT" : "patrol");
+            helpHud.SetDetail(hud.c_str());
         }
+        helpHud.Update(timing, context);
         (void)dt;
     }
 
@@ -725,6 +712,7 @@ void Maze3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
 
         params.draws.Clear();
         params.sceneTextures.Clear();
+        params.sceneHdrTextures.Clear();
         params.pointLights.Clear();
         params.particles.Clear();
         params.sprites.Clear();
@@ -776,20 +764,9 @@ void Maze3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             params.pointLights.PushBack(gpu);
         });
 
-        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            if (!tex) {
-                return -1;
-            }
-            for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-                if (params.sceneTextures[i].Get() == tex.Get()) {
-                    return static_cast<std::int32_t>(i);
-                }
-            }
-            if (params.sceneTextures.GetSize() >= Spark::SceneRenderParams::MaxSceneTextures) {
-                return -1;
-            }
-            params.sceneTextures.PushBack(tex);
-            return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* uvScale = nullptr,
+                                            Spark::Vector2* uvOffset = nullptr) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
@@ -798,19 +775,7 @@ void Maze3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
                                  const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
             Spark::SceneDrawItem item{};
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skyMode = sk.GetSkyMode();
-            item.model = world;
-            item.customMesh = mc.GetMesh();
-            item.albedo = sk.GetTint();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 1.0F;
-            if (mat != nullptr && mat->GetBaseColorTexture()) {
-                const Spark::Vector3& t = mat->GetTint();
-                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-            }
+            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
             drawList.PushBack(item);
         });
 
@@ -895,6 +860,7 @@ void Maze3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 

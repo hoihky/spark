@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
@@ -41,9 +42,7 @@ private:
     Spark::TransformComponent* editCursorTransform = nullptr;
     Spark::MaterialComponent* editCursorMaterial = nullptr;
     Spark::GameObject* markerObject = nullptr;
-    Spark::GameObject* fpsHudObject = nullptr;
-    Spark::TextOverlayComponent* fpsText = nullptr;
-    float fpsSmoothed = 0.0F;
+    DemoHelpHud helpHud{};
 
 };
 

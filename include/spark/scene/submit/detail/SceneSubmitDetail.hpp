@@ -5,6 +5,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/math/Matrix4.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -14,8 +15,10 @@ namespace Spark {
 class GameObject;
 class MaterialComponent;
 class Mesh;
+class MeshComponent;
 class MultiMaterialComponent;
 class SkinnedMesh;
+class SkyComponent;
 class Texture2D;
 struct SceneDrawItem;
 
@@ -25,7 +28,8 @@ std::int32_t FindOrAddSceneTexture(
         SceneRenderParams& params,
         const SharedPtr<Texture2D>& tex,
         Vector2* outUvScale = nullptr,
-        Vector2* outUvOffset = nullptr);
+        Vector2* outUvOffset = nullptr,
+        bool* outIsHdrLinear = nullptr);
 
 using FindSceneTextureFn = std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>;
 
@@ -53,6 +57,14 @@ void PushSkinnedMeshDraws(
         SceneRenderParams& params,
         const FindSceneTextureFn& findOrAddTexture);
 void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept;
+
+void PopulateSkyDrawItem(
+        SceneDrawItem& item,
+        const SkyComponent& sky,
+        const MeshComponent& mc,
+        const MaterialComponent* mat,
+        const Matrix4& worldM,
+        SceneRenderParams& params) noexcept;
 
 void StableSortDrawItems(Array<SceneDrawItem>& items);
 void StableSortSprites(Array<SceneSpriteDraw>& items, SceneSpriteSortMode mode);

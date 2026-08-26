@@ -51,6 +51,8 @@ void VulkanScreenshotCapture::Destroy(VkDevice device) {
     bufferExtent = {};
     pendingCapture = false;
     copyQueued = false;
+    captureRowPitch = 0;
+    captureStagingBytes = 0;
     pendingPath[0] = '\0';
     this->device = VK_NULL_HANDLE;
     this->physicalDevice = VK_NULL_HANDLE;
@@ -58,6 +60,10 @@ void VulkanScreenshotCapture::Destroy(VkDevice device) {
 
 void VulkanScreenshotCapture::EnsureBuffer(const VkExtent2D extent) {
     if (device == VK_NULL_HANDLE || extent.width == 0 || extent.height == 0) {
+        return;
+    }
+    // Do not resize/replace staging memory while a GPU copy is still pending readback.
+    if (copyQueued && pendingCapture) {
         return;
     }
     if (bufferExtent.width == extent.width && bufferExtent.height == extent.height && stagingBuffer != VK_NULL_HANDLE) {
@@ -116,6 +122,8 @@ void VulkanScreenshotCapture::RecordCopyFromSwapchain(
 
     EnsureBuffer(extent);
     captureExtent = extent;
+    captureRowPitch = rowPitch;
+    captureStagingBytes = stagingBytes;
     captureFlightIndex = flightIndex;
     copyQueued = true;
 
@@ -182,9 +190,40 @@ void VulkanScreenshotCapture::RecordCopyFromSwapchain(
             &toPresent);
 }
 
+void VulkanScreenshotCapture::FlushPendingSave() noexcept {
+    if (!pendingCapture || !copyQueued || stagingMapped == nullptr || captureExtent.width == 0 ||
+        captureExtent.height == 0 || device == VK_NULL_HANDLE) {
+        return;
+    }
+    (void)TrySavePendingPngForFlight(captureFlightIndex);
+}
+
 bool VulkanScreenshotCapture::TrySavePendingPngForFlight(const std::uint32_t flightIndex) {
     if (!pendingCapture || !copyQueued || captureFlightIndex != flightIndex || stagingMapped == nullptr ||
-        captureExtent.width == 0 || captureExtent.height == 0 || device == VK_NULL_HANDLE) {
+        captureExtent.width == 0 || captureExtent.height == 0 || device == VK_NULL_HANDLE ||
+        captureRowPitch == 0) {
+        return false;
+    }
+
+    const VkDeviceSize readRowPitch = captureRowPitch;
+    const VkDeviceSize readStagingBytes = captureStagingBytes > 0 ? captureStagingBytes : stagingBytes;
+    const std::uint32_t width = captureExtent.width;
+    const std::uint32_t height = captureExtent.height;
+    const VkDeviceSize requiredBytes =
+            readRowPitch * static_cast<VkDeviceSize>(height > 0 ? height - 1U : 0U) +
+            static_cast<VkDeviceSize>(width) * 4U;
+    if (readStagingBytes < requiredBytes) {
+        std::fprintf(
+                stderr,
+                "Spark: screenshot readback buffer too small (%llu bytes, need %llu)\n",
+                static_cast<unsigned long long>(readStagingBytes),
+                static_cast<unsigned long long>(requiredBytes));
+        pendingCapture = false;
+        copyQueued = false;
+        captureExtent = {};
+        captureRowPitch = 0;
+        captureStagingBytes = 0;
+        pendingPath[0] = '\0';
         return false;
     }
 
@@ -192,19 +231,17 @@ bool VulkanScreenshotCapture::TrySavePendingPngForFlight(const std::uint32_t fli
         VkMappedMemoryRange range{};
         range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
         range.memory = stagingMemory;
-        range.size = stagingBytes;
+        range.size = readStagingBytes;
         (void)vkInvalidateMappedMemoryRanges(device, 1, &range);
     }
 
-    const std::uint32_t width = captureExtent.width;
-    const std::uint32_t height = captureExtent.height;
     const auto* src = static_cast<const std::uint8_t*>(stagingMapped);
     const std::size_t rgbaCount = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4U;
     Array<std::uint8_t> rgba;
     rgba.Resize(rgbaCount);
 
     for (std::uint32_t y = 0; y < height; ++y) {
-        const std::uint8_t* row = src + static_cast<std::size_t>(y) * static_cast<std::size_t>(rowPitch);
+        const std::uint8_t* row = src + static_cast<std::size_t>(y) * static_cast<std::size_t>(readRowPitch);
         std::uint8_t* dstRow = rgba.GetData() + static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 4U;
         for (std::uint32_t x = 0; x < width; ++x) {
             const std::uint8_t b = row[x * 4 + 0];
@@ -238,6 +275,8 @@ bool VulkanScreenshotCapture::TrySavePendingPngForFlight(const std::uint32_t fli
     copyQueued = false;
     pendingPath[0] = '\0';
     captureExtent = {};
+    captureRowPitch = 0;
+    captureStagingBytes = 0;
     return saved;
 }
 

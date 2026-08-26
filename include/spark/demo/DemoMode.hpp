@@ -33,6 +33,7 @@ enum class DemoMode : std::uint8_t {
     TilemapShowcase2D,
     ImGuiShowcase,
     GltfSamples3D,
+    ModelViewer3D,
 };
 
 }  // namespace Spark

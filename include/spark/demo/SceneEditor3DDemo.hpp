@@ -1,11 +1,11 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
-#include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/core/Scene.hpp"
@@ -154,11 +154,9 @@ private:
     Spark::FlyCamera camera{};
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset;
     Spark::SharedPtr<Spark::Mesh> groundAsset;
-    Spark::GameObject* fpsHudObject = nullptr;
-    Spark::TextOverlayComponent* fpsText = nullptr;
     Spark::GameObject* lightEditTarget = nullptr;
     Spark::Array<Spark::GameObject*> userLights{};
-    float fpsSmoothed = 0.0F;
+    DemoHelpHud helpHud{};
     Spark::GameObject* selectedObject = nullptr;
     Spark::GameObject* dragPlaced = nullptr;
     float dragPlaneY = 0.0F;

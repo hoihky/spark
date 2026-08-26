@@ -11,6 +11,8 @@ enum class TexturePixelFormat : std::uint8_t {
     Rgba8Unorm = 0,
     Bc7Unorm,
     Astc4x4Unorm,
+    /** Linear RGBA32F CPU pixels (Radiance .hdr); uploaded as R16G16B16A16_SFLOAT on GPU. */
+    Rgba32Float,
 };
 
 /** GPU scene texture array encoding selected at device init. */

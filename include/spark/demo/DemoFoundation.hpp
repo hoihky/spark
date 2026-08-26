@@ -93,6 +93,8 @@ private:
     TextOverlayComponent* text = nullptr;
     bool visible = false;
     DemoSmoothedFps fps{};
+    int lastFpsRounded = -1;
+    int lastFramebufferWidth = 0;
 };
 
 }  // namespace Spark

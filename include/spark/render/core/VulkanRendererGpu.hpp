@@ -179,6 +179,10 @@ inline void CreateImage2DArray(
     return VulkanGpuBufferImage::CreateTextureSampler(vkDevice, maxLod);
 }
 
+[[nodiscard]] inline VkSampler CreateEquirectSceneTextureSampler(VkDevice vkDevice, const float maxLod = 0.0F) {
+    return VulkanGpuBufferImage::CreateEquirectSceneTextureSampler(vkDevice, maxLod);
+}
+
 [[nodiscard]] inline VkSampler CreateSpriteSceneTextureSampler(VkDevice vkDevice) {
     return VulkanGpuBufferImage::CreateSpriteSceneTextureSampler(vkDevice);
 }

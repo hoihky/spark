@@ -65,13 +65,8 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
 
         SetupContextMenuCanvas(w);
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("SceneEditorFpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(480.0F, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String("Scene editor — RMB menu · drag RMB look · Alt+LMB orbit · F1 fly"));
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "Scene editor");
+        helpHud.SetControlHints("RMB menu · drag RMB look · Alt+LMB orbit · F1 fly · LMB select");
 
         sceneManager = Spark::MakeUnique<Spark::SceneManager>(w);
 
@@ -90,6 +85,7 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
 
 void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         Spark::Ui::GetUiContextMenu().Close();
         if (sceneManager && loadedSceneId != Spark::kInvalidSceneInstanceId) {
             sceneManager->UnloadScene(loadedSceneId);
@@ -113,8 +109,6 @@ void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
         orbitDragActive = false;
         selectedObject = nullptr;
         gizmoDragAxis = -1;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
         unitCubeAsset.Reset();
         groundAsset.Reset();
     }
@@ -324,26 +318,16 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
 
         ValidateLightEditTarget();
 
-        if (fpsText != nullptr) {
-            const float dt = timing.deltaTimeSeconds;
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
-            std::string hud = std::format(
-                    "Scene editor — {:.0f} FPS · {} meshes · {} lights · RMB menu · LMB select · Alt+LMB orbit",
-                    static_cast<double>(fpsSmoothed),
-                    static_cast<int>(placed.GetSize()),
-                    static_cast<int>(userLights.GetSize()));
-            if (!statusMessage.IsEmpty()) {
-                hud += " · ";
-                hud += statusMessage.CStr();
-            }
-            fpsText->SetText(Spark::Utf8String(hud.c_str()));
-            fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
+        std::string hud = std::format(
+                "{} meshes · {} lights",
+                static_cast<int>(placed.GetSize()),
+                static_cast<int>(userLights.GetSize()));
+        if (!statusMessage.IsEmpty()) {
+            hud += " · ";
+            hud += statusMessage.CStr();
         }
+        helpHud.SetDetail(hud.c_str());
+        helpHud.Update(timing, context);
     }
 
 void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -496,6 +480,7 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 
@@ -842,9 +827,11 @@ void SceneEditor3DDemo::LightPresetParams(
                     uniformScale = 2.2F / maxExt;
                 }
             }
+            float faceCameraYaw = Spark::Pi;
             if (std::strstr(rel, "DamagedHelmet") != nullptr) {
-                rot = Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi);
+                faceCameraYaw = 0.0F;
             }
+            rot = Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, faceCameraYaw);
             constexpr float kGroundClearance = 0.08F;
             const float yOnGround = -bmin.y * uniformScale + kGroundClearance;
             tr->SetUniformScale(uniformScale);

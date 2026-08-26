@@ -1,13 +1,13 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 
 #include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
 
 void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
 {
         roots.Clear();
-        hudText = nullptr;
         primaryVel = Vector3::Zero;
         flockVels.Clear();
         flockVels.Reserve(64);
@@ -132,12 +132,10 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
             pathPoints.PushBack(Vector3{std::cos(ang) * 9.0F, 0.55F, std::sin(ang) * 9.0F});
         }
 
-        GameObject* hud = w.CreateGameObject();
-        hud->GetName() = Spark::Utf8String("SteerHud");
-        hudText = hud->AddComponent<TextOverlayComponent>();
-        hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*hudText);
-        roots.PushBack(hud);
+        helpHud.Mount(w, "Steering AI");
+        helpHud.SetControlHints(
+                "[ ] cycle · 1-9 Seek…Interpose · 0 Hide · - Path · = Offset · QWER flock · TYUI O combines · "
+                "arrows move magenta target · cyan agent = ECS AiAgent patrol · F1");
 
         ecsPatrolPathGo = w.CreateGameObject();
         ecsPatrolPathGo->GetName() = Spark::Utf8String("SteerEcsPatrolPath");
@@ -173,13 +171,13 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
 
 void SteeringShowcase3DDemo::Unload(GameWorld& w)
 {
+        helpHud.Unmount(w);
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
             }
         }
         roots.Clear();
-        hudText = nullptr;
         targetGo = nullptr;
         pursuerGo = nullptr;
         secondaryGo = nullptr;
@@ -395,14 +393,8 @@ void SteeringShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         ResolveSteeringDemoCollisions();
         SimulateGameAi(world, timing, context);
 
-        if (hudText != nullptr) {
-            hudText->SetText(Spark::Utf8String(
-                    std::format(
-                            "[ ] cycle · 1-9 Seek…Interpose · 0 Hide · - Path · = Offset · QWER flock · TYUI O "
-                            "combines · arrows move magenta target · cyan agent = ECS AiAgent patrol · F1 · ESC\n{}",
-                            ModeName(mode))
-                            .c_str()));
-        }
+        helpHud.SetDetail(ModeName(mode));
+        helpHud.Update(timing, context);
     }
 
 void SteeringShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& context)
@@ -424,6 +416,7 @@ void SteeringShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
         params.ambientColor = {0.10F, 0.12F, 0.16F};
         params.draws.Clear();
         params.sceneTextures.Clear();
+        params.sceneHdrTextures.Clear();
         params.pointLights.Clear();
         params.sprites.Clear();
         params.screenRects.Clear();
@@ -454,18 +447,7 @@ void SteeringShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
         scene.ForEachSky([&](GameObject&, const SkyComponent& sk, const MeshComponent& mc, const MaterialComponent* mat,
                                 const Matrix4& world) {
             SceneDrawItem item{};
-            item.mesh = SceneMeshSlot::Custom;
-            item.skyMode = sk.GetSkyMode();
-            item.model = world;
-            item.customMesh = mc.GetMesh();
-            item.albedo = sk.GetTint();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 1.0F;
-            if (mat != nullptr && mat->GetBaseColorTexture()) {
-                const Vector3& t = mat->GetTint();
-                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-            }
+            SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
             drawList.PushBack(item);
         });
 
@@ -510,6 +492,7 @@ void SteeringShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
             params.screenTexts.PushBack(MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 

@@ -10,6 +10,7 @@ void VulkanFrameCapture::RecreateSwapchainResources(
         VkDevice device,
         VkFormat swapchainFormat,
         VkExtent2D extent) {
+    screenshotCapture.FlushPendingSave();
     screenshotCapture.Create(physicalDevice, device, swapchainFormat);
     screenshotCapture.EnsureBuffer(extent);
     videoCapture.Create(physicalDevice, device, swapchainFormat);
@@ -70,12 +71,16 @@ void VulkanFrameCapture::FlushPendingCaptures(VkDevice device, const VkFence* in
     if (videoCapture.IsRecording()) {
         videoCapture.FlushPendingCaptures(device, inFlightFences);
     }
-    if (screenshotCapture.HasPendingCapture() && inFlightFences != nullptr) {
+    if (!screenshotCapture.HasPendingCapture()) {
+        return;
+    }
+    if (inFlightFences != nullptr) {
         for (std::uint32_t i = 0; i < VulkanFrameSync::kMaxFramesInFlight; ++i) {
             vkWaitForFences(device, 1, &inFlightFences[i], VK_TRUE, UINT64_MAX);
             (void)screenshotCapture.TrySavePendingPngForFlight(i);
         }
     }
+    screenshotCapture.FlushPendingSave();
 }
 
 }  // namespace Spark

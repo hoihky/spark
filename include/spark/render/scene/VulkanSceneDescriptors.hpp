@@ -12,12 +12,13 @@ namespace Spark {
 class VulkanClusteredForwardLights;
 class VulkanDirectionalShadowPass;
 class VulkanPunctualShadowPass;
+class VulkanSceneHdrTextureUploader;
 class VulkanSceneTextureUploader;
 class VulkanSpritePass;
 
 /**
  * Scene descriptor set layout, per-flight uniform/skin SSBOs, pool, and bound descriptor sets.
- * Binding slots 0–9 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites).
+ * Binding slots 0–11 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR array).
  */
 class VulkanSceneDescriptors {
 public:
@@ -27,6 +28,7 @@ public:
 
     struct BindingSources {
         const VulkanSceneTextureUploader& sceneTextureUploader;
+        const VulkanSceneHdrTextureUploader& sceneHdrTextureUploader;
         const VulkanClusteredForwardLights& clusteredForwardLights;
         const VulkanDirectionalShadowPass& directionalShadow;
         const VulkanPunctualShadowPass& punctualShadow;

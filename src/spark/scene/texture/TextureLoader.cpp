@@ -1,6 +1,7 @@
 #include "spark/scene/texture/TextureLoader.hpp"
 
 #include "spark/scene/texture/Ktx2TextureLoader.hpp"
+#include "spark/scene/texture/StbHdrFloatTextureLoader.hpp"
 #include "spark/scene/texture/StbImageTextureLoader.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/texture/TextureLoadOptions.hpp"
@@ -19,6 +20,11 @@ const StbImageTextureLoader& StbLoader() {
     return loader;
 }
 
+const StbHdrFloatTextureLoader& HdrLoader() {
+    static const StbHdrFloatTextureLoader loader;
+    return loader;
+}
+
 }  // namespace
 
 bool TextureLoader::LoadFromFile(const char* path, Texture2D& out, const bool flipVerticalOnLoad) {
@@ -27,6 +33,9 @@ bool TextureLoader::LoadFromFile(const char* path, Texture2D& out, const bool fl
     }
     if (Ktx2Loader().CanLoad(path)) {
         return Ktx2Loader().Load(path, out, TextureLoadOptions{}.SetFlipVerticalOnLoad(flipVerticalOnLoad));
+    }
+    if (HdrLoader().CanLoad(path)) {
+        return HdrLoader().Load(path, out, TextureLoadOptions{}.SetFlipVerticalOnLoad(flipVerticalOnLoad));
     }
     return StbLoader().Load(path, out, TextureLoadOptions{}.SetFlipVerticalOnLoad(flipVerticalOnLoad));
 }

@@ -120,7 +120,13 @@ void DemoFpsToggleOverlay::Update(const FrameTiming& timing, const int framebuff
         return;
     }
     const float smoothed = fps.Update(timing.deltaTimeSeconds, static_cast<std::uint32_t>(timing.frameIndex));
-    const std::string label = std::format("{:.0f} FPS", static_cast<double>(smoothed));
+    const int fpsRounded = static_cast<int>(smoothed + 0.5F);
+    if (fpsRounded == lastFpsRounded && framebufferWidth == lastFramebufferWidth) {
+        return;
+    }
+    lastFpsRounded = fpsRounded;
+    lastFramebufferWidth = framebufferWidth;
+    const std::string label = std::format("{} FPS", fpsRounded);
     text->SetText(Utf8String(label.c_str()));
     const float margin = DemoHud::kScreenMargin;
     const float x = framebufferWidth > 0 ? static_cast<float>(framebufferWidth) - 132.0F : 800.0F;

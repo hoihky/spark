@@ -145,13 +145,9 @@ void ParticleDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             roots.PushBack(go);
         }
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("ParticleFpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String("Particles — Fire · Snow · Smoke · Magic — UI panel"));
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "Particles");
+        helpHud.SetDetail("Fire · Snow · Smoke · Magic — UI panel");
+        helpHud.SetControlHints("F1 toggles fly camera (use panel when mouse is free)");
 
         guiSelectedEffect = 0;
         BuildRetainedUi(w);
@@ -164,6 +160,7 @@ void ParticleDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
 void ParticleDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -176,8 +173,6 @@ void ParticleDemo::Unload(Spark::GameWorld& w)
             effectObjects[static_cast<std::size_t>(i)] = nullptr;
             effectEmitters[static_cast<std::size_t>(i)] = nullptr;
         }
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
         uiCanvas = nullptr;
         uiRoot = nullptr;
         uiEmitterList = nullptr;
@@ -200,21 +195,12 @@ void ParticleDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
             in.SetCursorCaptured(!in.IsCursorCaptured());
         }
-        if (fpsText != nullptr) {
-            const float dt = timing.deltaTimeSeconds;
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
-            fpsText->SetText(Spark::Utf8String(
-                    std::format(
-                            "Particles — {:.0f} FPS — F1: {} (use panel when mouse is free)",
-                            static_cast<double>(fpsSmoothed),
-                            in.IsCursorCaptured() ? "release mouse" : "fly camera")
-                            .c_str()));
-        }
+        helpHud.SetDetail(
+                std::format(
+                        "Fire · Snow · Smoke · Magic — F1: {} (use panel when mouse is free)",
+                        in.IsCursorCaptured() ? "release mouse" : "fly camera")
+                        .c_str());
+        helpHud.Update(timing, context);
     }
 
 void ParticleDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -308,6 +294,7 @@ void ParticleDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::I
         });
 
         PaintUiCanvases(world, params, fbW, fbH);
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 

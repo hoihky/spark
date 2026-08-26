@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
@@ -24,8 +25,7 @@ private:
     SharedPtr<Mesh> unitCube{};
     SharedPtr<Mesh> groundMesh{};
 
-    GameObject* helpHud = nullptr;
-    TextOverlayComponent* helpText = nullptr;
+    DemoHelpHud helpHud{};
 
     GameObject* toonBandsDemoCube = nullptr;
     MaterialComponent* toonBandsMaterial = nullptr;

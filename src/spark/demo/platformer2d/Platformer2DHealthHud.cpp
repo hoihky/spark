@@ -79,6 +79,7 @@ void HealthHud::Initialize(
 
     displayedRatio = 1.0F;
     targetRatio = 1.0F;
+    lastHealthLabel[0] = '\0';
 }
 
 void HealthHud::Shutdown(Spark::GameWorld& /*world*/) noexcept
@@ -156,7 +157,10 @@ void HealthHud::SyncToCamera(
                 "HP %.0f / %.0f",
                 static_cast<double>(currentHealth),
                 static_cast<double>(maxHealth));
-        healthText->SetText(Spark::Utf8String(label));
+        if (label != lastHealthLabel) {
+            std::snprintf(lastHealthLabel, sizeof(lastHealthLabel), "%s", label);
+            healthText->SetText(Spark::Utf8String(label));
+        }
     }
 }
 

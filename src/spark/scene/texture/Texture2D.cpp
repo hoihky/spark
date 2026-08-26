@@ -22,6 +22,10 @@ void Texture2D::RefreshContentFingerprint() noexcept {
     if (!rgba.IsEmpty()) {
         h = Fnv64HashBytes(h, rgba.GetData(), rgba.GetSize());
     }
+    Fnv64Mix(h, static_cast<std::uint64_t>(rgbaFloat.GetSize()));
+    if (!rgbaFloat.IsEmpty()) {
+        h = Fnv64HashBytes(h, reinterpret_cast<const std::uint8_t*>(rgbaFloat.GetData()), rgbaFloat.GetSize() * sizeof(float));
+    }
     Fnv64Mix(h, static_cast<std::uint64_t>(mipChain.GetSize()));
     for (std::size_t i = 0; i < mipChain.GetSize(); ++i) {
         const TextureMipLevel& mip = mipChain[i];
@@ -72,7 +76,19 @@ void Texture2D::SetPixels(std::uint32_t w, std::uint32_t h, Array<std::uint8_t> 
     width = w;
     height = h;
     rgba = MoveTemp(bytes);
+    rgbaFloat.Clear();
     pixelFormat = TexturePixelFormat::Rgba8Unorm;
+    mipChain.Clear();
+    RefreshContentFingerprint();
+    RefreshSceneLayerUvScale();
+}
+
+void Texture2D::SetFloatPixels(std::uint32_t w, std::uint32_t h, Array<float> pixels) {
+    width = w;
+    height = h;
+    rgbaFloat = MoveTemp(pixels);
+    rgba.Clear();
+    pixelFormat = TexturePixelFormat::Rgba32Float;
     mipChain.Clear();
     RefreshContentFingerprint();
     RefreshSceneLayerUvScale();
@@ -87,6 +103,7 @@ void Texture2D::SetCompressedMipChain(
     height = h;
     pixelFormat = format;
     rgba.Clear();
+    rgbaFloat.Clear();
     mipChain = MoveTemp(mips);
     RefreshContentFingerprint();
     RefreshSceneLayerUvScale();
@@ -161,6 +178,46 @@ void Texture2D::ResampleBilinear(std::uint32_t targetW, std::uint32_t targetH, A
                 const float bot = static_cast<float>(c01[channel]) + fx * static_cast<float>(c11[channel] - c01[channel]);
                 outRgba[di + static_cast<std::size_t>(channel)] =
                         static_cast<std::uint8_t>(std::clamp(top + fy * (bot - top), 0.0F, 255.0F));
+            }
+        }
+    }
+}
+
+void Texture2D::ResampleBilinearFloat(
+        const std::uint32_t targetW,
+        const std::uint32_t targetH,
+        Array<float>& outRgba) const {
+    if (width == 0 || height == 0 || targetW == 0 || targetH == 0 || rgbaFloat.IsEmpty()) {
+        outRgba.Clear();
+        return;
+    }
+    outRgba.Clear();
+    outRgba.Resize(static_cast<std::size_t>(targetW) * static_cast<std::size_t>(targetH) * 4U);
+    const auto sample = [this](const std::uint32_t x, const std::uint32_t y) -> const float* {
+        const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + x) * 4U;
+        return rgbaFloat.GetData() + i;
+    };
+    for (std::uint32_t y = 0; y < targetH; ++y) {
+        const float fy = (static_cast<float>(y) + 0.5F) * static_cast<float>(height) / static_cast<float>(targetH) - 0.5F;
+        const std::uint32_t y0 = static_cast<std::uint32_t>(std::clamp(std::floor(fy), 0.0F, static_cast<float>(height - 1U)));
+        const std::uint32_t y1 = std::min(y0 + 1U, height - 1U);
+        const float ty = fy - static_cast<float>(y0);
+        for (std::uint32_t x = 0; x < targetW; ++x) {
+            const float fx = (static_cast<float>(x) + 0.5F) * static_cast<float>(width) / static_cast<float>(targetW) - 0.5F;
+            const std::uint32_t x0 = static_cast<std::uint32_t>(std::clamp(std::floor(fx), 0.0F, static_cast<float>(width - 1U)));
+            const std::uint32_t x1 = std::min(x0 + 1U, width - 1U);
+            const float tx = fx - static_cast<float>(x0);
+            const float* c00 = sample(x0, y0);
+            const float* c10 = sample(x1, y0);
+            const float* c01 = sample(x0, y1);
+            const float* c11 = sample(x1, y1);
+            const std::size_t di =
+                    (static_cast<std::size_t>(y) * static_cast<std::size_t>(targetW) + static_cast<std::size_t>(x)) *
+                    4U;
+            for (int channel = 0; channel < 4; ++channel) {
+                const float top = c00[channel] + tx * (c10[channel] - c00[channel]);
+                const float bot = c01[channel] + tx * (c11[channel] - c01[channel]);
+                outRgba[di + static_cast<std::size_t>(channel)] = top + ty * (bot - top);
             }
         }
     }
@@ -262,6 +319,105 @@ void Texture2D::PrepareSceneLayerUpload(const std::uint32_t layerSize, Array<std
                 fitted.GetData() + srcRow,
                 static_cast<std::size_t>(contentW) * 4U);
     }
+}
+
+namespace {
+
+void ExtendSceneLayerLetterboxPaddingFloat(
+        Array<float>& layer,
+        const std::uint32_t layerSize,
+        const std::uint32_t contentW,
+        const std::uint32_t contentH) noexcept {
+    if (contentW == 0U || contentH == 0U || layer.IsEmpty()) {
+        return;
+    }
+    const std::uint32_t cw = std::min(contentW, layerSize);
+    const std::uint32_t ch = std::min(contentH, layerSize);
+    const std::size_t rowStride = static_cast<std::size_t>(layerSize) * 4U;
+    for (std::uint32_t y = 0U; y < ch; ++y) {
+        const std::size_t row = static_cast<std::size_t>(y) * rowStride;
+        const std::size_t edge = row + (static_cast<std::size_t>(cw) - 1U) * 4U;
+        for (std::uint32_t x = cw; x < layerSize; ++x) {
+            const std::size_t dst = row + static_cast<std::size_t>(x) * 4U;
+            layer[dst + 0U] = layer[edge + 0U];
+            layer[dst + 1U] = layer[edge + 1U];
+            layer[dst + 2U] = layer[edge + 2U];
+            layer[dst + 3U] = layer[edge + 3U];
+        }
+    }
+    if (ch < layerSize) {
+        const std::size_t srcRow = static_cast<std::size_t>(ch - 1U) * rowStride;
+        for (std::uint32_t y = ch; y < layerSize; ++y) {
+            const std::size_t dstRow = static_cast<std::size_t>(y) * rowStride;
+            std::memcpy(layer.GetData() + dstRow, layer.GetData() + srcRow, rowStride * sizeof(float));
+        }
+    }
+}
+
+}  // namespace
+
+void Texture2D::PrepareSceneLayerUploadFloat(const std::uint32_t layerSize, Array<float>& outRgba) {
+    if (width == 0 || height == 0 || layerSize == 0 || rgbaFloat.IsEmpty()) {
+        outRgba.Clear();
+        sceneLayerUvScale = {1.0F, 1.0F};
+        return;
+    }
+
+    if (!sceneUploadNearest) {
+        sceneLayerUvScale = {1.0F, 1.0F};
+        if (width == layerSize && height == layerSize) {
+            outRgba = rgbaFloat;
+            return;
+        }
+        ResampleBilinearFloat(layerSize, layerSize, outRgba);
+        return;
+    }
+
+    RefreshSceneLayerUvScale();
+
+    if (width <= layerSize && height <= layerSize) {
+        outRgba.Clear();
+        outRgba.Resize(static_cast<std::size_t>(layerSize) * static_cast<std::size_t>(layerSize) * 4U);
+        for (std::size_t i = 3; i < outRgba.GetSize(); i += 4U) {
+            outRgba[i] = 1.0F;
+        }
+        for (std::uint32_t y = 0; y < height; ++y) {
+            const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(width) * 4U;
+            const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(layerSize) * 4U;
+            std::memcpy(
+                    outRgba.GetData() + dstRow,
+                    rgbaFloat.GetData() + srcRow,
+                    static_cast<std::size_t>(width) * 4U * sizeof(float));
+        }
+        ExtendSceneLayerLetterboxPaddingFloat(outRgba, layerSize, width, height);
+        return;
+    }
+
+    const float scale =
+            (std::min)(static_cast<float>(layerSize) / static_cast<float>(width),
+                       static_cast<float>(layerSize) / static_cast<float>(height));
+    const std::uint32_t contentW =
+            std::min(layerSize, static_cast<std::uint32_t>(std::lround(static_cast<float>(width) * scale)));
+    const std::uint32_t contentH =
+            std::min(layerSize, static_cast<std::uint32_t>(std::lround(static_cast<float>(height) * scale)));
+
+    Array<float> fitted;
+    ResampleBilinearFloat(contentW, contentH, fitted);
+
+    outRgba.Clear();
+    outRgba.Resize(static_cast<std::size_t>(layerSize) * static_cast<std::size_t>(layerSize) * 4U);
+    for (std::size_t i = 3; i < outRgba.GetSize(); i += 4U) {
+        outRgba[i] = 1.0F;
+    }
+    for (std::uint32_t y = 0; y < contentH; ++y) {
+        const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(contentW) * 4U;
+        const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(layerSize) * 4U;
+        std::memcpy(
+                outRgba.GetData() + dstRow,
+                fitted.GetData() + srcRow,
+                static_cast<std::size_t>(contentW) * 4U * sizeof(float));
+    }
+    ExtendSceneLayerLetterboxPaddingFloat(outRgba, layerSize, contentW, contentH);
 }
 
 Texture2D Texture2D::CreateCheckerboard(

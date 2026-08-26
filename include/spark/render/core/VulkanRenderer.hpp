@@ -28,6 +28,7 @@
 #include "spark/render/scene/VulkanSceneMeshGpu.hpp"
 #include "spark/render/scene/VulkanSceneOpaquePass.hpp"
 #include "spark/render/scene/VulkanScenePipeline.hpp"
+#include "spark/render/scene/VulkanSceneHdrTextureUploader.hpp"
 #include "spark/render/scene/VulkanSceneTextureUploader.hpp"
 #include "spark/render/scene/VulkanSceneUniformWriter.hpp"
 #include "spark/render/ui/VulkanScreenUiPass.hpp"
@@ -129,6 +130,7 @@ private:
     VulkanScreenSpaceEffectsPass screenSpaceEffectsPass;
     VulkanSceneOpaquePass sceneOpaquePass;
     VulkanSceneTextureUploader sceneTextureUploader;
+    VulkanSceneHdrTextureUploader sceneHdrTextureUploader;
     VulkanCustomMeshPool customMeshPool;
     VulkanDeferredUploadBatch deferredUploadBatch;
     VulkanScreenUiPass screenUi;
@@ -179,6 +181,7 @@ private:
     SceneRenderParams pendingScene{};
     /** Accumulates scene texture bindings across frames so frustum culling does not drop GPU layers. */
     Array<SharedPtr<Texture2D>> mergedSceneTextures{};
+    Array<SharedPtr<Texture2D>> mergedSceneHdrTextures{};
     bool sceneParamsValid = false;
     /** Cached after <c>SetSceneRenderParams</c> from profile + overrides. */
     ResolvedSceneLighting resolvedLighting{};

@@ -7,6 +7,7 @@ layout(std140, set = 0, binding = 0) uniform SceneUBO {
     vec4 cameraPos;
     vec4 lightColor;
     vec4 ambientColor;
+    /** rgb = procedural zenith; w = equirect layer V scale for sky/IBL. */
     vec4 ambientSky;
     vec4 ambientProbe;
     mat4 invViewProj;
@@ -18,7 +19,7 @@ layout(std140, set = 0, binding = 0) uniform SceneUBO {
     vec4 shadowParams;
     vec4 clusterGrid;
     vec4 clusterDepth;
-    /** x = env equirect layer (-1 = procedural sky); y = intensity; w = enabled (1). */
+    /** x = env equirect layer (-1 = procedural sky); y = intensity; z = HDR env (1); w = enabled (1). */
     vec4 iblParams;
 } ubo;
 

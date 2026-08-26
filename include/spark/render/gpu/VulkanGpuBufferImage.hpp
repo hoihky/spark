@@ -72,6 +72,7 @@ public:
             std::uint32_t mipLevelCount = 1);
 
     [[nodiscard]] static VkSampler CreateTextureSampler(VkDevice vkDevice, float maxLod = 0.0F);
+    [[nodiscard]] static VkSampler CreateEquirectSceneTextureSampler(VkDevice vkDevice, float maxLod = 0.0F);
     [[nodiscard]] static VkSampler CreateSpriteSceneTextureSampler(VkDevice vkDevice);
 
     [[nodiscard]] static VkSampler CreateFontAtlasSampler(VkDevice vkDevice);

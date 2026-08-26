@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/demo/MaterialLibraryWorkflow.hpp"
@@ -57,8 +58,7 @@ private:
     float spinRadians = 0.0F;
     float librarySpinRadians = 0.0F;
 
-    GameObject* helpHud = nullptr;
-    TextOverlayComponent* helpText = nullptr;
+    DemoHelpHud helpHud{};
 };
 
 }  // namespace Spark

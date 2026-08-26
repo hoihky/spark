@@ -180,17 +180,14 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         camera.position = {10.5F, 6.5F, 16.0F};
         camera.SnapLookAt({1.1F, 1.15F, 2.0F});
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("FpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String("..."));
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "3D showcase");
+        helpHud.SetControlHints("F1 mouse capture · WASD fly");
+        helpHud.SetDetail("BVH · Billboard · DecalProjector · glTF loading");
     }
 
 void ThreeDDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -199,8 +196,6 @@ void ThreeDDemo::Unload(Spark::GameWorld& w)
         roots.Clear();
         groundObject = nullptr;
         cubeObject = nullptr;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
         pendingGltfLoads.Clear();
         loadedWorld = nullptr;
     }
@@ -242,9 +237,6 @@ void ThreeDDemo::SpawnHero(
         constexpr float kGroundClearance = 0.12F;
         const float yOnGround = -heroMin.y * heroUniformScale + kGroundClearance;
         tr->SetTranslation({6.0F, yOnGround, 0.0F});
-        if (usedHelmetGltf) {
-            tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi));
-        }
     }
     Spark::GltfAssetBinder::BindRigidMesh(
             *heroObject,
@@ -288,7 +280,7 @@ void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset, 
         constexpr float kGroundClearance = 0.12F;
         const float yOnGround = -chairMin.y * chairUniformScale + kGroundClearance;
         tr->SetTranslation({-4.25F, yOnGround, 4.0F});
-        tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi * 0.35F));
+        tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi * 1.35F));
     }
     Spark::GltfAssetBinder::BindRigidMesh(
             *chairObject, asset, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F}, path.CStr());
@@ -311,7 +303,7 @@ void ThreeDDemo::SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& as
         Spark::TransformComponent* tr = foxObject->AddComponent<Spark::TransformComponent>();
         tr->SetUniformScale(0.032F);
         tr->SetTranslation({1.8F, 0.0F, 7.25F});
-        tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, -Spark::Pi * 0.5F));
+        tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, Spark::Pi * 0.5F));
     }
     foxObject->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
     Spark::Character3DAnimFsmComponent* foxFsm = foxObject->AddComponent<Spark::Character3DAnimFsmComponent>();
@@ -403,19 +395,7 @@ void ThreeDDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             }
         }
 
-        if (fpsText != nullptr) {
-            const float dt = timing.deltaTimeSeconds;
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
-            fpsText->SetText(Spark::Utf8String(
-                    std::format("{:.0f} FPS — BVH policy · Billboard · DecalProjector",
-                                static_cast<double>(fpsSmoothed))
-                            .c_str()));
-        }
+        helpHud.Update(timing, context);
     }
 
 void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -584,6 +564,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 }  // namespace Spark

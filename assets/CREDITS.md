@@ -9,8 +9,10 @@ Spark ships third-party art for demos and sample games. All listed assets below 
 | Kenney Retro Medieval / Fantasy tile textures (`assets/textures/`) | Kenney | CC0 | ThreeDDemo, Maze3DDemo, TerrainDemo, CharacterCameraDemo, MaterialShowcase3DDemo, FPS template ground |
 | Kenney character PNGs (`assets/sprites/kenney/`, CMake download) | Kenney | CC0 | Platformer2D player atlas fallback path |
 | Poly Haven HDR sky (`textures/sky/equirect_sky_1k.hdr`) | Poly Haven | CC0 | SkyDemo, Maze3DDemo, CharacterCameraDemo (CMake download) |
-| Poly Haven studio HDR (`textures/sky/studio_small_08_1k.hdr`) | Poly Haven | CC0 | GltfSamples3DDemo IBL (CMake download) |
+| Poly Haven studio HDR (`textures/sky/studio_small_08_1k.hdr`) | Poly Haven | CC0 | Optional legacy asset (superseded for glTF demo) |
+| Poly Haven Venice sunset HDR (`textures/sky/venice_sunset_1k.hdr`) | Poly Haven | CC0 | GltfSamples3DDemo IBL (CMake download) |
 | Khronos glTF sample models (`assets/models/*.glb`) | Khronos Group | Various permissive | 3D character / PBR demos |
+| Khronos Car Concept (`assets/models/CarConcept.glb`) | Eric Chadwick / Darmstadt Graphics Group | [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) | Time of Day demo |
 | Roboto fonts | Google Fonts | Apache 2.0 | UI text overlays |
 
 Procedural checkerboards, gem shapes, Tetris/Connect-3/Space Invaders palettes, and synthesized audio remain engine-generated fallbacks when files are absent.

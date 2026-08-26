@@ -1,10 +1,9 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 
 namespace Spark {
-
-class TextOverlayComponent;
 
 /** Fly-camera scene displaying Khronos DamagedHelmet.glb. */
 class GltfSamples3DDemo {
@@ -32,8 +31,7 @@ private:
     bool helmetLoaded = false;
     bool envHdrLoaded = false;
 
-    GameObject* helpHud = nullptr;
-    TextOverlayComponent* helpText = nullptr;
+    DemoHelpHud helpHud{};
 };
 
 }  // namespace Spark

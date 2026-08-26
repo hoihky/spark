@@ -1,13 +1,19 @@
 #include "spark/demo/TimeOfDayDemo.hpp"
 
 #include "spark/config.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"
 #include "spark/ecs/components/rendering/FogVolumeComponent.hpp"
 #include "spark/ecs/components/rendering/PostProcessVolumeComponent.hpp"
+#include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
+#include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/volume/RenderVolumes.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstring>
 #include <format>
 
 namespace Spark {
@@ -44,23 +50,74 @@ namespace {
     return x;
 }
 
+[[nodiscard]] bool TryResolveModelPath(const char* relativePath, char* outPath, const std::size_t outSize) {
+    if (relativePath == nullptr || relativePath[0] == '\0' || outPath == nullptr || outSize == 0) {
+        return false;
+    }
+    const char* roots[] = {SPARK_ASSETS_DIR, SPARK_BUILD_ASSETS_DIR, "assets", nullptr};
+    for (std::size_t ri = 0; roots[ri] != nullptr; ++ri) {
+        std::snprintf(outPath, outSize, "%s%s", roots[ri], relativePath);
+        FILE* f = std::fopen(outPath, "rb");
+        if (f != nullptr) {
+            std::fclose(f);
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
-void TimeOfDayDemo::SpawnPillar(
-        Spark::GameWorld& w, const float x, const float z, const float height, const Spark::Vector3& color) {
-    Spark::GameObject* pillar = w.CreateGameObject();
-    pillar->GetName() = Spark::Utf8String("Pillar");
-    Spark::TransformComponent* tr = pillar->AddComponent<Spark::TransformComponent>();
-    tr->SetTranslation({x, height * 0.5F, z});
-    tr->SetUniformScale(1.0F);
-    tr->SetScale({0.55F, height * 0.5F, 0.55F});
-    pillar->AddComponent<Spark::MeshComponent>(
-            unitCubeAsset, Spark::SceneMeshSlot::UnitCube, color);
-    roots.PushBack(pillar);
+bool TimeOfDayDemo::TryPlaceCar(
+        Spark::GameWorld& w,
+        const char* relativePath,
+        const Spark::Vector3& pos,
+        const float yawRadians,
+        const float targetMaxExtentM) {
+    char pathBuf[768]{};
+    if (!TryResolveModelPath(relativePath, pathBuf, sizeof(pathBuf))) {
+        return false;
+    }
+
+    const Spark::GltfAsset asset = w.LoadGltf(pathBuf);
+    if (!asset.mesh) {
+        return false;
+    }
+
+    Spark::Vector3 bmin{};
+    Spark::Vector3 bmax{};
+    float uniformScale = 1.0F;
+    if (asset.mesh->TryComputeAxisAlignedBounds(bmin, bmax)) {
+        const float maxExt = std::max({bmax.x - bmin.x, bmax.y - bmin.y, bmax.z - bmin.z});
+        if (maxExt > 1.0e-4F) {
+            uniformScale = targetMaxExtentM / maxExt;
+        }
+    }
+
+    Spark::GameObject* go = w.CreateGameObject();
+    go->GetName() = Spark::Utf8String("CarConcept");
+
+    Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
+    tr->SetUniformScale(uniformScale);
+    constexpr float kGroundClearance = 0.02F;
+    tr->SetTranslation({pos.x, -bmin.y * uniformScale + kGroundClearance, pos.z});
+    tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, yawRadians));
+
+    Spark::GltfAssetBinder::BindRigidMesh(*go, asset, Spark::SceneMeshSlot::Custom, Spark::Vector3::One, pathBuf);
+    if (Spark::MaterialComponent* mat = go->GetComponent<Spark::MaterialComponent>()) {
+        if (!asset.materials.IsEmpty()) {
+            Spark::ApplyGltfMaterialDesc(*mat, asset.materials[0]);
+        } else if (asset.material.HasAnyTexture()) {
+            Spark::ApplyGltfMaterialDesc(*mat, asset.material);
+        }
+    }
+    roots.PushBack(go);
+    return true;
 }
 
 void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     roots.Clear();
+    carLoaded = false;
     cycleClockSeconds = 0.32F;
     cycleDurationSeconds = 90.0F;
     timeSpeed = 1.0F;
@@ -70,8 +127,6 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     *skyBoxMesh = Spark::Mesh::CreateSkySphere(1.0F, 20, 40);
     groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TodGround"));
     *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
-    unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TodCube"));
-    *unitCubeAsset = Spark::Mesh::CreateUnitCube();
 
     skyEquirectTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("TodSkyEquirect"));
     skyHasEquirect = false;
@@ -97,22 +152,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
             groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.38F, 0.42F, 0.34F});
     roots.PushBack(groundObject);
 
-    SpawnPillar(w, -6.0F, -4.0F, 3.5F, {0.72F, 0.68F, 0.62F});
-    SpawnPillar(w, 6.0F, -4.0F, 4.2F, {0.68F, 0.7F, 0.74F});
-    SpawnPillar(w, -5.0F, 5.5F, 2.8F, {0.7F, 0.66F, 0.6F});
-    SpawnPillar(w, 5.5F, 5.0F, 3.8F, {0.66F, 0.68F, 0.7F});
-    SpawnPillar(w, 0.0F, -7.0F, 5.0F, {0.74F, 0.72F, 0.68F});
-
-    Spark::GameObject* center = w.CreateGameObject();
-    center->GetName() = Spark::Utf8String("CenterCube");
-    {
-        Spark::TransformComponent* tr = center->AddComponent<Spark::TransformComponent>();
-        tr->SetTranslation({0.0F, 0.6F, 0.0F});
-        tr->SetUniformScale(1.2F);
-    }
-    center->AddComponent<Spark::MeshComponent>(
-            unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{0.85F, 0.55F, 0.3F});
-    roots.PushBack(center);
+    carLoaded = TryPlaceCar(w, "/models/CarConcept.glb", {0.0F, 0.0F, 0.0F}, Spark::Pi * 0.12F, 5.6F);
 
     skyObject = w.CreateGameObject();
     skyObject->GetName() = Spark::Utf8String("Sky");
@@ -146,31 +186,35 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     Spark::GameObject* postGo = w.CreateGameObject();
     postGo->GetName() = Spark::Utf8String("TodPostVolume");
     postGo->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
-    Spark::PostProcessVolumeComponent* post = postGo->AddComponent<Spark::PostProcessVolumeComponent>();
-    post->SetHalfExtents({10.0F, 4.0F, 10.0F});
-    post->SetSsaoEnabled(false);
-    post->SetExposure(1.12F);
+    postVolume = postGo->AddComponent<Spark::PostProcessVolumeComponent>();
+    postVolume->SetHalfExtents({10.0F, 4.0F, 10.0F});
+    postVolume->SetSsaoEnabled(true);
+    postVolume->SetExposure(1.12F);
     roots.PushBack(postGo);
 
-    hudObject = w.CreateGameObject();
-    hudObject->GetName() = Spark::Utf8String("TodHud");
-    hudText = hudObject->AddComponent<Spark::TextOverlayComponent>();
-    hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-    DemoHud::Apply(*hudText);
-    roots.PushBack(hudObject);
+    ssaoEnabled = true;
+    hudDetailClock = 0.0F;
+    hudDetailDirty = true;
+    helpHud.Mount(w, "Time of day");
+    helpHud.SetControlHints("SPACE pause | +/- speed | R dawn | O SSAO | F1 fly");
+    if (!carLoaded) {
+        helpHud.SetDetail("CarConcept.glb missing — run CMake configure to download Khronos sample.");
+    }
 
     context.GetInput().SetCursorCaptured(true);
-    camera.position = {0.0F, 3.5F, 16.0F};
-    camera.SnapLookAt({0.0F, 1.5F, 0.0F});
+    camera.position = {3.2F, 2.6F, 10.5F};
+    camera.SnapLookAt({0.0F, 0.75F, 0.0F});
 }
 
 void TimeOfDayDemo::Unload(Spark::GameWorld& w) {
+    helpHud.Unmount(w);
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
         if (roots[i] != nullptr) {
             w.DestroyGameObject(roots[i]);
         }
     }
     roots.Clear();
+    carLoaded = false;
     groundObject = nullptr;
     skyObject = nullptr;
     skyTransform = nullptr;
@@ -178,10 +222,9 @@ void TimeOfDayDemo::Unload(Spark::GameWorld& w) {
     skyMat = nullptr;
     skyEquirectTex.Reset();
     skyHasEquirect = false;
-    hudObject = nullptr;
-    hudText = nullptr;
     timeDriver = nullptr;
     fogVolume = nullptr;
+    postVolume = nullptr;
 }
 
 void TimeOfDayDemo::UpdateSkyTintForTime(const float normalizedTime) {
@@ -228,19 +271,31 @@ void TimeOfDayDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCon
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_SPACE)) {
         animateTime = !animateTime;
+        hudDetailDirty = true;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_EQUAL) || in.IsKeyPressedThisFrame(GLFW_KEY_KP_ADD)) {
         timeSpeed = std::min(timeSpeed * 1.35F, 8.0F);
+        hudDetailDirty = true;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_MINUS) || in.IsKeyPressedThisFrame(GLFW_KEY_KP_SUBTRACT)) {
         timeSpeed = std::max(timeSpeed / 1.35F, 0.15F);
+        hudDetailDirty = true;
     }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_R)) {
         cycleClockSeconds = 0.35F * cycleDurationSeconds;
+        hudDetailDirty = true;
+    }
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_O)) {
+        ssaoEnabled = !ssaoEnabled;
+        if (postVolume != nullptr) {
+            postVolume->SetSsaoEnabled(ssaoEnabled);
+        }
+        hudDetailDirty = true;
     }
 
     if (animateTime) {
         cycleClockSeconds += timing.deltaTimeSeconds * timeSpeed;
+        hudDetailClock += timing.deltaTimeSeconds;
     }
     const float timeNorm = Wrap01(cycleClockSeconds / cycleDurationSeconds);
     if (timeDriver != nullptr) {
@@ -254,25 +309,38 @@ void TimeOfDayDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCon
         skyTransform->SetUniformScale(92.0F);
     }
 
-    if (hudText != nullptr) {
-        const float dt = timing.deltaTimeSeconds;
-        const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-        if (timing.frameIndex < 2U) {
-            fpsSmoothed = instant;
-        } else {
-            fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-        }
-        hudText->SetText(Spark::Utf8String(
-                std::format(
-                        "Time of day — {} — t={:.2f} — {:.0f}s/cycle — {:.1f}x — {:.0f} FPS — "
-                        "TimeOfDayDriver · FogVolume · PostProcess — SPACE pause  +/- speed  R dawn",
-                        TimeOfDayPhaseLabel(timeNorm),
-                        static_cast<double>(timeNorm),
-                        static_cast<double>(cycleDurationSeconds),
-                        static_cast<double>(timeSpeed),
-                        static_cast<double>(fpsSmoothed))
-                        .c_str()));
+    if (hudDetailDirty || (animateTime && hudDetailClock >= 0.35F)) {
+        hudDetailClock = 0.0F;
+        hudDetailDirty = false;
+        RefreshHudDetail(timeNorm);
     }
+    helpHud.Update(timing, context);
+}
+
+void TimeOfDayDemo::RefreshHudDetail(const float timeNorm) noexcept {
+    char detail[200]{};
+    if (!carLoaded) {
+        std::snprintf(
+                detail,
+                sizeof(detail),
+                "CarConcept.glb missing | %s | t=%.2f | %.0fs cycle | %.1fx | SSAO %s",
+                TimeOfDayPhaseLabel(timeNorm),
+                static_cast<double>(timeNorm),
+                static_cast<double>(cycleDurationSeconds),
+                static_cast<double>(timeSpeed),
+                ssaoEnabled ? "on" : "off");
+    } else {
+        std::snprintf(
+                detail,
+                sizeof(detail),
+                "%s | t=%.2f | %.0fs cycle | %.1fx | SSAO %s",
+                TimeOfDayPhaseLabel(timeNorm),
+                static_cast<double>(timeNorm),
+                static_cast<double>(cycleDurationSeconds),
+                static_cast<double>(timeSpeed),
+                ssaoEnabled ? "on" : "off");
+    }
+    helpHud.SetDetail(detail);
 }
 
 void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context) {
@@ -300,6 +368,7 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
 
     params.draws.Clear();
     params.sceneTextures.Clear();
+    params.sceneHdrTextures.Clear();
     params.pointLights.Clear();
     params.sprites.Clear();
     params.screenRects.Clear();
@@ -314,20 +383,9 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
 
     ApplyRegionalRenderVolumes(world, camera.position, params);
 
-    auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-        if (!tex) {
-            return -1;
-        }
-        for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-            if (params.sceneTextures[i].Get() == tex.Get()) {
-                return static_cast<std::int32_t>(i);
-            }
-        }
-        if (params.sceneTextures.GetSize() >= Spark::SceneRenderParams::MaxSceneTextures) {
-            return -1;
-        }
-        params.sceneTextures.PushBack(tex);
-        return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+    auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* uvScale = nullptr,
+                                        Spark::Vector2* uvOffset = nullptr) -> std::int32_t {
+        return SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
     };
 
     Spark::Array<Spark::SceneDrawItem> drawList;
@@ -336,20 +394,7 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
     scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
                              const Spark::MaterialComponent* mat, const Spark::Matrix4& worldMatrix) {
         Spark::SceneDrawItem item{};
-        item.mesh = Spark::SceneMeshSlot::Custom;
-        item.skyMode = sk.GetSkyMode();
-        item.model = worldMatrix;
-        item.customMesh = mc.GetMesh();
-        item.albedo = sk.GetTint();
-        item.textureLayer = -1;
-        item.shadowFlags = 0;
-        item.metallic = 0.0F;
-        item.roughness = 1.0F;
-        if (mat != nullptr && mat->GetBaseColorTexture()) {
-            const Spark::Vector3& t = mat->GetTint();
-            item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-            item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-        }
+        SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, worldMatrix, params);
         drawList.PushBack(item);
     });
 
@@ -358,14 +403,23 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
         if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
             return;
         }
-        Spark::SceneDrawItem item{};
-        item.model = worldMatrix;
-        item.mesh = mc.GetSlot();
+        Spark::SceneDrawItem baseItem{};
+        baseItem.model = worldMatrix;
+        baseItem.mesh = mc.GetSlot();
         if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-            item.customMesh = mc.GetMesh();
+            baseItem.customMesh = mc.GetMesh();
         }
         Spark::Vector3 alb = mc.GetAlbedo();
-        item.textureLayer = -1;
+        baseItem.textureLayer = -1;
+        const Spark::MultiMaterialComponent* multiMat =
+                obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+        if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+            !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+            Spark::SceneSubmitDetail::PushRigidMeshDraws(
+                    drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+            return;
+        }
+        Spark::SceneDrawItem item = baseItem;
         if (mat != nullptr) {
             ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
             if (mat->GetBaseColorTexture()) {
@@ -395,6 +449,7 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
         params.screenTexts.PushBack(Spark::MoveTemp(d));
     });
 
+    helpHud.PatchSceneRenderParams(params, world);
     context.SetSceneRenderParams(params);
 }
 

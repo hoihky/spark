@@ -99,24 +99,19 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     camera.position = {0.0F, 4.8F, 14.5F};
     camera.SnapLookAt({0.0F, 1.2F, 0.0F});
 
-    helpHud = w.CreateGameObject();
-    helpHud->GetName() = Utf8String("ToonHelpHud");
-    helpText = helpHud->AddComponent<TextOverlayComponent>();
-    helpText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-    DemoHud::Apply(*helpText);
-    helpText->SetText(Utf8String("…"));
-    roots.PushBack(helpHud);
+    helpHud.Mount(w, "Toon shading");
+    helpHud.SetControlHints("[ ] bands on green toon cube · F1 mouse · WASD fly");
+    helpHud.SetDetail("Lit PBR (left) vs ToonCel (center/right) on MaterialComponent");
 }
 
 void ToonShadingDemo::Unload(GameWorld& w) {
+    helpHud.Unmount(w);
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
         if (roots[i] != nullptr) {
             w.DestroyGameObject(roots[i]);
         }
     }
     roots.Clear();
-    helpHud = nullptr;
-    helpText = nullptr;
     toonBandsDemoCube = nullptr;
     toonBandsMaterial = nullptr;
 }
@@ -154,15 +149,10 @@ void ToonShadingDemo::Simulate(const FrameTiming& timing, IEngineContext& contex
         }
     }
 
-    if (helpText != nullptr) {
-        const int bands = toonBandsMaterial != nullptr ? toonBandsMaterial->GetToonDiffuseBands() : 3;
-        helpText->SetText(Utf8String(
-                std::format(
-                        "Toon / cel shading — Lit PBR (left) vs ToonCel (center/right) on MaterialComponent\n"
-                        "  F1 mouse · WASD fly · [ ] bands on green toon cube ({} levels) · ESC menu",
-                        bands)
-                        .c_str()));
-    }
+    const int bands = toonBandsMaterial != nullptr ? toonBandsMaterial->GetToonDiffuseBands() : 3;
+    helpHud.SetDetail(
+            std::format("Lit PBR (left) vs ToonCel (center/right) — {} bands on green cube", bands).c_str());
+    helpHud.Update(timing, context);
 }
 
 void ToonShadingDemo::Render(Scene& scene, GameWorld& world, IEngineContext& context) {
@@ -198,6 +188,11 @@ void ToonShadingDemo::Render(Scene& scene, GameWorld& world, IEngineContext& con
             pu,
             0.0F,
             SceneSpriteSortMode::SortOrderOnly);
+
+    Spark::SceneRenderParams* sceneParams = nullptr;
+    if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {
+        helpHud.PatchSceneRenderParams(*sceneParams, world);
+    }
 }
 
 }  // namespace Spark

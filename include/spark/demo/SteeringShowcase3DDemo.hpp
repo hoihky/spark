@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/ai/GameAiSubsystem.hpp"
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
 #include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
@@ -13,7 +14,6 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
-#include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/physics/Collision3D.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
@@ -113,7 +113,7 @@ private:
 
     FlyCamera camera{};
     Array<GameObject*> roots{};
-    TextOverlayComponent* hudText = nullptr;
+    DemoHelpHud helpHud{};
     SharedPtr<Mesh> skyMesh{};
     SharedPtr<Mesh> groundMesh{};
     SharedPtr<Mesh> sphereMesh{};

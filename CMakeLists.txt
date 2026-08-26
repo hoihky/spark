@@ -229,14 +229,14 @@ if (NOT EXISTS "${SPARK_SKY_TEXTURE_PATH}")
     set(SPARK_SKY_TEXTURE_PATH "${SPARK_SKY_TEX_SRC}")
 endif ()
 
-# Neutral studio HDRI for glTF PBR showcase (Poly Haven CC0; stb loads .hdr as LDR).
-set(SPARK_STUDIO_HDR_NAME "studio_small_08_1k.hdr")
+# Outdoor sunset HDRI for glTF PBR showcase (Poly Haven CC0; float .hdr via StbHdrFloatTextureLoader).
+set(SPARK_STUDIO_HDR_NAME "venice_sunset_1k.hdr")
 set(SPARK_STUDIO_HDR_SRC "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/sky/${SPARK_STUDIO_HDR_NAME}")
 if (NOT EXISTS "${SPARK_STUDIO_HDR_SRC}")
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/sky")
-    message(STATUS "Downloading Poly Haven studio HDR for glTF samples demo")
+    message(STATUS "Downloading Poly Haven Venice sunset HDR for glTF samples demo")
     file(DOWNLOAD
-            "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_08_1k.hdr"
+            "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/venice_sunset_1k.hdr"
             "${SPARK_STUDIO_HDR_SRC}"
             TLS_VERIFY ON
     )
@@ -308,6 +308,32 @@ if (NOT EXISTS "${SPARK_CESIUM_MAN_GLB}")
             TLS_VERIFY ON
     )
 endif ()
+
+# Khronos Car Concept — PBR concept car (Time of Day demo; glTF-Sample-Assets).
+set(SPARK_CAR_CONCEPT_GLB "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/CarConcept.glb")
+set(SPARK_CAR_CONCEPT_GLB_MIN_BYTES 11000000)
+set(_spark_car_concept_needs_download FALSE)
+if (NOT EXISTS "${SPARK_CAR_CONCEPT_GLB}")
+    set(_spark_car_concept_needs_download TRUE)
+else ()
+    file(SIZE "${SPARK_CAR_CONCEPT_GLB}" _spark_car_concept_glb_bytes)
+    if (_spark_car_concept_glb_bytes LESS SPARK_CAR_CONCEPT_GLB_MIN_BYTES)
+        message(WARNING "CarConcept.glb appears truncated (${_spark_car_concept_glb_bytes} bytes); re-downloading")
+        file(REMOVE "${SPARK_CAR_CONCEPT_GLB}")
+        set(_spark_car_concept_needs_download TRUE)
+    endif ()
+endif ()
+if (_spark_car_concept_needs_download)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/assets/models")
+    message(STATUS "Downloading Khronos glTF-Sample-Assets CarConcept.glb")
+    file(DOWNLOAD
+            "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CarConcept/glTF-Binary/CarConcept.glb"
+            "${SPARK_CAR_CONCEPT_GLB}"
+            TLS_VERIFY ON
+    )
+endif ()
+unset(_spark_car_concept_needs_download)
+unset(_spark_car_concept_glb_bytes)
 
 # Khronos Avocado (Draco) — KHR_draco_mesh_compression display test asset.
 set(SPARK_AVOCADO_DRACO_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/models/AvocadoDraco")
@@ -407,7 +433,7 @@ foreach (SHADER ${SHADER_SOURCES})
             OUTPUT ${SPV}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SPV_DIR}
             COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0 -I${SHADER_DIR} ${SHADER} -o ${SPV}
-            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/post_common.glsl
+            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/post_common.glsl
             COMMENT "SPIR-V: ${NAME_WE}.${EXT_NO_DOT}"
             VERBATIM
     )
@@ -492,6 +518,8 @@ configure_file(
 set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/DemoAssetLoad.cpp
         src/spark/demo/DemoFoundation.cpp
+        src/spark/demo/DemoCatalog.cpp
+        src/spark/demo/DemoHelpHud.cpp
         src/spark/demo/DemoGuiFrame.cpp
         src/spark/demo/SparkShellDemo.cpp
         src/spark/demo/ShellDemoSceneUtil.cpp
@@ -522,6 +550,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/SceneEditor3DDemo.cpp
         src/spark/demo/ImGuiShowcaseDemo.cpp
         src/spark/demo/GltfSamples3DDemo.cpp
+        src/spark/demo/ModelViewer3DDemo.cpp
 )
 
 set(SPARK_ENGINE_EDITOR_SOURCES
@@ -638,6 +667,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/texture/TextureBlockCompressor.cpp
         src/spark/scene/texture/TextureLoader.cpp
         src/spark/scene/texture/StbImageTextureLoader.cpp
+        src/spark/scene/texture/StbHdrFloatTextureLoader.cpp
+        src/spark/scene/texture/TextureHalfFloat.cpp
         src/spark/scene/texture/Ktx2TextureLoader.cpp
         src/spark/scene/texture/stb_image_impl.cpp
         src/spark/text/Font.cpp
@@ -697,6 +728,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/scene/VulkanSceneOpaquePass.cpp
         src/spark/render/scene/VulkanScenePipeline.cpp
         src/spark/render/scene/VulkanSceneTextureUploader.cpp
+        src/spark/render/scene/VulkanSceneHdrTextureUploader.cpp
         src/spark/render/scene/VulkanCustomMeshPool.cpp
         src/spark/render/scene/VulkanDeferredUploadBatch.cpp
         src/spark/render/scene/VulkanSceneUniformWriter.cpp

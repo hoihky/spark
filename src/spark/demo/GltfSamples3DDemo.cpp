@@ -39,21 +39,21 @@ namespace {
     return false;
 }
 
-[[nodiscard]] bool TryLoadStudioHdr(GameWorld& w, SharedPtr<Texture2D>& outTex) {
+[[nodiscard]] bool TryLoadGltfEnvHdr(GameWorld& w, SharedPtr<Texture2D>& outTex) {
     Texture2D decoded;
     if (Texture2D::TryLoadFromFile(SPARK_STUDIO_HDR_PATH, decoded)) {
         outTex = MakeShared<Texture2D>(MoveTemp(decoded));
-        w.RegisterTexture(outTex, "spark/demo/gltf_studio_hdr");
+        w.RegisterTexture(outTex, "spark/demo/gltf_env_hdr");
         return true;
     }
-    const char* relativePath = "/textures/sky/studio_small_08_1k.hdr";
+    const char* relativePath = "/textures/sky/venice_sunset_1k.hdr";
     const char* roots[] = {SPARK_ASSETS_DIR, SPARK_BUILD_ASSETS_DIR, "assets", nullptr};
     char pathBuf[768]{};
     for (std::size_t ri = 0; roots[ri] != nullptr; ++ri) {
         std::snprintf(pathBuf, sizeof(pathBuf), "%s%s", roots[ri], relativePath);
         if (Texture2D::TryLoadFromFile(pathBuf, decoded)) {
             outTex = MakeShared<Texture2D>(MoveTemp(decoded));
-            w.RegisterTexture(outTex, "spark/demo/gltf_studio_hdr");
+            w.RegisterTexture(outTex, "spark/demo/gltf_env_hdr");
             return true;
         }
     }
@@ -115,12 +115,12 @@ void GltfSamples3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     envHdrLoaded = false;
     envEquirectTex.Reset();
 
-    envHdrLoaded = TryLoadStudioHdr(w, envEquirectTex);
+    envHdrLoaded = TryLoadGltfEnvHdr(w, envEquirectTex);
 
     skyMesh = MakeShared<Mesh>(Utf8String("GltfSamplesSky"));
     *skyMesh = Mesh::CreateSkySphere(1.0F, 20, 40);
     GameObject* sky = w.CreateGameObject();
-    sky->GetName() = Utf8String("StudioSky");
+    sky->GetName() = Utf8String("EnvSky");
     if (TransformComponent* skyTr = sky->AddComponent<TransformComponent>()) {
         skyTr->SetUniformScale(120.0F);
     }
@@ -147,36 +147,30 @@ void GltfSamples3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     ground->AddComponent<MeshComponent>(groundMesh, SceneMeshSlot::GroundPlane, Vector3{0.48F, 0.50F, 0.52F});
     roots.PushBack(ground);
 
-    helmetLoaded = TryPlaceRigidGltf(w, "/models/DamagedHelmet.glb", {0.0F, 0.0F, 0.0F}, Pi, 2.4F);
+    helmetLoaded = TryPlaceRigidGltf(w, "/models/DamagedHelmet.glb", {0.0F, 0.0F, 0.0F}, 0.0F, 2.4F);
 
     constexpr Vector3 kHelmetTarget{0.0F, 1.0F, 0.0F};
 
-    helpHud = w.CreateGameObject();
-    helpHud->GetName() = Utf8String("GltfSamplesHelp");
-    helpText = helpHud->AddComponent<TextOverlayComponent>();
-    helpText->SetScreenPosition(DemoHud::kScreenMargin, DemoHud::kScreenMargin);
-    DemoHud::Apply(*helpText);
-
-    std::string msg = "glTF sample — DamagedHelmet.glb\n";
-    msg += std::format(
-            "  Helmet: {} · IBL: {}\n"
-            "  F1 mouse lock · WASD fly · ESC menu",
+    helpHud.Mount(w, "glTF samples");
+    helpHud.SetControlHints("F1 mouse lock · WASD fly");
+    std::string detail = std::format(
+            "DamagedHelmet.glb — Helmet: {} · IBL: {}",
             helmetLoaded ? "loaded" : "missing",
-            envHdrLoaded ? "studio HDR" : "missing (procedural)");
+            envHdrLoaded ? "Venice sunset HDR" : "missing (procedural)");
     if (!helmetLoaded) {
-        msg += "\n  Expected path: assets/models/DamagedHelmet.glb";
+        detail += "\nExpected path: assets/models/DamagedHelmet.glb";
     }
     if (!envHdrLoaded) {
-        msg += "\n  Expected HDR: assets/textures/sky/studio_small_08_1k.hdr";
+        detail += "\nExpected HDR: assets/textures/sky/venice_sunset_1k.hdr";
     }
-    helpText->SetText(Utf8String(msg.c_str()));
-    roots.PushBack(helpHud);
+    helpHud.SetDetail(detail.c_str());
 
     camera.position = {0.0F, 1.35F, 4.8F};
     camera.SnapLookAt(kHelmetTarget);
 }
 
 void GltfSamples3DDemo::Unload(GameWorld& w) {
+    helpHud.Unmount(w);
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
         if (roots[i] != nullptr) {
             w.DestroyGameObject(roots[i]);
@@ -186,8 +180,6 @@ void GltfSamples3DDemo::Unload(GameWorld& w) {
     groundMesh.Reset();
     skyMesh.Reset();
     envEquirectTex.Reset();
-    helpHud = nullptr;
-    helpText = nullptr;
     helmetLoaded = false;
     envHdrLoaded = false;
 }
@@ -203,6 +195,7 @@ void GltfSamples3DDemo::Simulate(const FrameTiming& timing, IEngineContext& cont
         }
         camera.ProcessMovement(in, timing.deltaTimeSeconds);
     }
+    helpHud.Update(timing, context);
 }
 
 void GltfSamples3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& context) {
@@ -222,6 +215,7 @@ void GltfSamples3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& c
     params.iblEnvironmentLayer = -1;
     params.iblIntensity = 1.0F;
     params.iblEnabled = true;
+    params.iblUseHdrSkyEnvironment = true;
     params.directionalShadowsEnabled = true;
     params.ssaoEnabled = false;
     FillStandardLitSceneFromWorld(
@@ -253,6 +247,7 @@ void GltfSamples3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& c
         params.screenTexts.PushBack(MoveTemp(d));
     });
 
+    helpHud.PatchSceneRenderParams(params, world);
     context.SetSceneRenderParams(params);
 }
 

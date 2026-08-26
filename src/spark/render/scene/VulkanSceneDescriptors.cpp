@@ -6,6 +6,7 @@
 #include "spark/render/shadow/VulkanPunctualShadowGpu.hpp"
 #include "spark/render/shadow/VulkanPunctualShadowPass.hpp"
 #include "spark/render/core/VulkanRendererGpu.hpp"
+#include "spark/render/scene/VulkanSceneHdrTextureUploader.hpp"
 #include "spark/render/scene/VulkanSceneTextureUploader.hpp"
 #include "spark/render/scene/VulkanSceneUniformGpu.hpp"
 #include "spark/render/sprites2d/VulkanSpriteInstanceGpu.hpp"
@@ -16,7 +17,7 @@
 namespace Spark {
 
 void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
-    VkDescriptorSetLayoutBinding bindings[11]{};
+    VkDescriptorSetLayoutBinding bindings[12]{};
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[0].descriptorCount = 1;
@@ -72,9 +73,14 @@ void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
     bindings[10].descriptorCount = 1;
     bindings[10].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    bindings[11].binding = 11;
+    bindings[11].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[11].descriptorCount = 1;
+    bindings[11].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 11;
+    layoutInfo.bindingCount = 12;
     layoutInfo.pBindings = bindings;
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout failed");
@@ -136,7 +142,7 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = framesInFlight;
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = framesInFlight * 5;
+    poolSizes[1].descriptorCount = framesInFlight * 6;
     poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     poolSizes[2].descriptorCount = framesInFlight * 5;
 
@@ -209,6 +215,20 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
         spriteTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         spriteTexWrite.descriptorCount = 1;
         spriteTexWrite.pImageInfo = &spriteImageInfo;
+
+        VkDescriptorImageInfo hdrImageInfo{};
+        hdrImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        hdrImageInfo.imageView = sources.sceneHdrTextureUploader.ArrayView();
+        hdrImageInfo.sampler = sources.sceneHdrTextureUploader.Sampler();
+
+        VkWriteDescriptorSet hdrTexWrite{};
+        hdrTexWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        hdrTexWrite.dstSet = descriptorSets[i];
+        hdrTexWrite.dstBinding = 11;
+        hdrTexWrite.dstArrayElement = 0;
+        hdrTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        hdrTexWrite.descriptorCount = 1;
+        hdrTexWrite.pImageInfo = &hdrImageInfo;
 
         VkDescriptorBufferInfo skinInfo{};
         skinInfo.buffer = skinSsboBuffers[i];
@@ -343,8 +363,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     spotShadowWrite,
                     pointShadowWrite,
                     spriteInstanceWrite,
-                    spriteTexWrite};
-            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
+                    spriteTexWrite,
+                    hdrTexWrite};
+            vkUpdateDescriptorSets(device, 12, writes, 0, nullptr);
         } else if (hasSunShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -354,8 +375,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     clusterWrite,
                     punctualSsboWrite,
                     spriteInstanceWrite,
-                    spriteTexWrite};
-            vkUpdateDescriptorSets(device, 9, writes, 0, nullptr);
+                    spriteTexWrite,
+                    hdrTexWrite};
+            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
         } else if (hasPunctualShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -366,8 +388,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     spotShadowWrite,
                     pointShadowWrite,
                     spriteInstanceWrite,
-                    spriteTexWrite};
-            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
+                    spriteTexWrite,
+                    hdrTexWrite};
+            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
         } else {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -376,8 +399,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     clusterWrite,
                     punctualSsboWrite,
                     spriteInstanceWrite,
-                    spriteTexWrite};
-            vkUpdateDescriptorSets(device, 8, writes, 0, nullptr);
+                    spriteTexWrite,
+                    hdrTexWrite};
+            vkUpdateDescriptorSets(device, 9, writes, 0, nullptr);
         }
     }
 }

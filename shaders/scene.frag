@@ -14,8 +14,11 @@ layout(location = 9) in vec2 vTexCoord1;
 layout(location = 10) in vec4 vVertexColor;
 
 layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
+layout(set = 0, binding = 11) uniform sampler2DArray sceneHdrTextures;
 
 #include "scene_ubo.glsl"
+
+#include "scene_push.glsl"
 
 #include "clustered_lights.glsl"
 
@@ -24,35 +27,6 @@ layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
 #include "ibl.glsl"
 
 #include "gltf_map_uv.glsl"
-
-layout(push_constant) uniform Push {
-    mat4 model;
-    vec4 albedoTint;
-    int textureLayer;
-    int skyMode;
-    float metallic;
-    float roughness;
-    vec4 emissive;
-    int useSkinning;
-    int jointCount;
-    int shadingModel;
-    int toonDiffuseBands;
-    float toonRimIntensity;
-    float toonRimPower;
-    int normalMapLayer;
-    int metallicRoughnessMapLayer;
-    int emissiveMapLayer;
-    float metallicFactor;
-    float roughnessFactor;
-    float occlusionStrength;
-    int shadowFlags;
-    float alphaCutoff;
-    vec2 mapUvScale[4];
-    vec2 mapUvOffset[4];
-    float mapUvRotation[4];
-    int mapTexCoordSet[4];
-    vec4 emissiveFactor;
-} push;
 
 layout(location = 0) out vec4 outColor;
 
@@ -416,13 +390,15 @@ void main() {
         // stbi_set_flip_vertically_on_load(1), so GPU v=0 is the image file bottom; equirect zenith is
         // usually at the file top → map zenith (mu=0) to v=1 via vEq = 1 - mu.
         if (vTextureLayer >= 0) {
-            int layer = clamp(vTextureLayer, 0, 31);
-            float phi = atan(dir.z, dir.x) / (2.0 * PI) + 0.5;
-            phi = fract(phi);
-            float mu = acos(clamp(dir.y, -1.0, 1.0)) / PI;
-            float vEq = 1.0 - mu;
-            vec4 tex = textureLod(sceneTextures, vec3(phi, vEq, float(layer)), 0.0);
-            skyCol = sparkSrgbToLinear(tex.rgb) * push.albedoTint.rgb;
+            int layer = clamp(vTextureLayer, 0, 63);
+            vec2 eqUv = sparkEquirectDirectionUv(dir, push.mapUvScale[0].xy);
+            if (push.albedoHdrLinear != 0) {
+                int hl = clamp(vTextureLayer, 0, 7);
+                skyCol = textureLod(sceneHdrTextures, vec3(eqUv.x, eqUv.y, float(hl)), 0.0).rgb * push.albedoTint.rgb;
+            } else {
+                vec4 tex = textureLod(sceneTextures, vec3(eqUv.x, eqUv.y, float(layer)), 0.0);
+                skyCol = sparkSrgbToLinear(tex.rgb) * push.albedoTint.rgb;
+            }
         } else if (push.skyMode == 1) {
             vec3 horizon = push.albedoTint.rgb;
             vec3 zenith = mix(horizon, vec3(0.45, 0.62, 0.95), 0.65);
@@ -445,10 +421,17 @@ void main() {
     vec3 base = vAlbedo * vVertexColor.rgb;
     float alpha = push.albedoTint.a * vVertexColor.a;
     if (vTextureLayer >= 0) {
-        int layer = clamp(vTextureLayer, 0, 31);
-        vec4 tex = texture(sceneTextures, vec3(sparkMapUv(0), float(layer)));
-        base *= sparkSrgbToLinear(tex.rgb);
-        alpha *= tex.a;
+        if (push.albedoHdrLinear != 0) {
+            int hl = clamp(vTextureLayer, 0, 7);
+            vec4 tex = texture(sceneHdrTextures, vec3(sparkMapUv(0), float(hl)));
+            base *= tex.rgb;
+            alpha *= tex.a;
+        } else {
+            int layer = clamp(vTextureLayer, 0, 63);
+            vec4 tex = texture(sceneTextures, vec3(sparkMapUv(0), float(layer)));
+            base *= sparkSrgbToLinear(tex.rgb);
+            alpha *= tex.a;
+        }
     }
     if (push.alphaCutoff > 0.0) {
         if (alpha < push.alphaCutoff) {
@@ -460,7 +443,7 @@ void main() {
     float rough = clamp(vRoughness * push.roughnessFactor, 0.04, 1.0);
     float occlusion = push.occlusionStrength;
     if (push.metallicRoughnessMapLayer >= 0) {
-        int mrl = clamp(push.metallicRoughnessMapLayer, 0, 31);
+        int mrl = clamp(push.metallicRoughnessMapLayer, 0, 63);
         vec3 orm = texture(sceneTextures, vec3(sparkMapUv(2), float(mrl))).rgb;
         rough = clamp(orm.g * push.roughnessFactor, 0.04, 1.0);
         met = clamp(orm.b * push.metallicFactor, 0.0, 1.0);
@@ -472,7 +455,7 @@ void main() {
     vec3 nGeom = normalize(vNormal);
     vec3 N = nGeom;
     if (push.normalMapLayer >= 0) {
-        int nl = clamp(push.normalMapLayer, 0, 31);
+        int nl = clamp(push.normalMapLayer, 0, 63);
         vec3 tN = texture(sceneTextures, vec3(sparkMapUv(1), float(nl))).xyz * 2.0 - 1.0;
         tN.y = -tN.y;
         mat3 TBN;
@@ -528,7 +511,7 @@ void main() {
     if (push.shadingModel == 2) {
         vec3 emissiveU = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
         if (push.emissiveMapLayer >= 0) {
-            int el = clamp(push.emissiveMapLayer, 0, 31);
+            int el = clamp(push.emissiveMapLayer, 0, 63);
             emissiveU *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
         }
         outColor = vec4(base + emissiveU, alpha);
@@ -576,7 +559,7 @@ void main() {
 
         vec3 emissiveT = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
         if (push.emissiveMapLayer >= 0) {
-            int el = clamp(push.emissiveMapLayer, 0, 31);
+            int el = clamp(push.emissiveMapLayer, 0, 63);
             emissiveT *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
         }
         outColor = vec4(ambientT + Lo + emissiveT, alpha);
@@ -600,8 +583,8 @@ void main() {
     float aoAmb = mix(0.74, 1.0, pow(clamp(dot(N, V), 0.0, 1.0), 0.58));
     ambient *= aoAmb * occlusion;
 
-    vec3 iblSpecular = sparkEvalSpecularIbl(sceneTextures, N, V, base, met, rough, occlusion);
-    vec3 iblDiffuse = sparkEvalDiffuseIbl(sceneTextures, N, base, met, aoAmb * occlusion);
+    vec3 iblSpecular = sparkEvalSpecularIbl(sceneTextures, sceneHdrTextures, N, V, base, met, rough, occlusion);
+    vec3 iblDiffuse = sparkEvalDiffuseIbl(sceneTextures, sceneHdrTextures, N, base, met, aoAmb * occlusion);
     if (ubo.iblParams.w > 0.5) {
         ambient = mix(ambient, iblDiffuse, mix(0.55, 0.92, met));
         ambient *= mix(1.0, 0.12, met);
@@ -609,7 +592,7 @@ void main() {
 
     vec3 emissive = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
     if (push.emissiveMapLayer >= 0) {
-        int el = clamp(push.emissiveMapLayer, 0, 31);
+        int el = clamp(push.emissiveMapLayer, 0, 63);
         emissive *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
     }
 

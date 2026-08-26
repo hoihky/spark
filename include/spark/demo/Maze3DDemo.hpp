@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoProceduralSound.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
@@ -84,12 +85,10 @@ private:
     Spark::Quaternion humanModelBindFix{Spark::Quaternion::Identity};
     Spark::Utf8String characterAvatarHudName{};
 
-    Spark::GameObject* fpsHudObject = nullptr;
-    Spark::TextOverlayComponent* fpsText = nullptr;
     Spark::GameObject* patrolPathGo = nullptr;
     Spark::GameObject* guardGo = nullptr;
     Spark::PerceptionSensorComponent* guardPerception = nullptr;
-    float fpsSmoothed = 0.0F;
+    DemoHelpHud helpHud{};
     int gemsCollected = 0;
     int gemsTotal = 0;
     Spark::CharacterCameraRig rig{};

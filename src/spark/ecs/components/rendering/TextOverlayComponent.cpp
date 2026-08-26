@@ -8,6 +8,9 @@ namespace Spark {
 void TextOverlayComponent::OnSignal(GameObject& /*owner*/, SignalId /*id*/, const SignalPayload& /*payload*/) {}
 
 void TextOverlayComponent::SetText(Utf8String value) {
+    if (text == value) {
+        return;
+    }
     text = MoveTemp(value);
 }
 

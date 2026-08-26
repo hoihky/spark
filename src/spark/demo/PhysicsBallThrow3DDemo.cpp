@@ -1,6 +1,7 @@
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
 
 #include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 #include "spark/ui/factory/ControlDesc.hpp"
 #include "spark/ui/factory/IUiControlsFactory.hpp"
 #include "spark/ui/runtime/IUiBackend.hpp"
@@ -15,7 +16,6 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         ballRb = nullptr;
         ballTr = nullptr;
         pendulumBobRb = nullptr;
-        fpsText = nullptr;
 
         skyMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("PhysBallSky"));
         *skyMesh = Spark::Mesh::CreateSkySphere(1.0F, 16, 32);
@@ -143,14 +143,9 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         pl->SetCastsShadow(true);
         roots.PushBack(light);
 
-        Spark::GameObject* hud = w.CreateGameObject();
-        hud->GetName() = Spark::Utf8String("PhysBallHud");
-        fpsText = hud->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String(
-                "Physics — panel right · LMB throw · R reset · SpringJoint3D pendulum left · WASD+mouse · F1 · ESC"));
-        roots.PushBack(hud);
+        helpHud.Mount(w, "Physics ball throw");
+        helpHud.SetControlHints(
+                "panel right · LMB throw · R reset · SpringJoint3D pendulum left · WASD+mouse · F1");
 
         BuildRetainedUi(w);
         ApplyTuningFromGui();
@@ -166,6 +161,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
 
 void PhysicsBallThrow3DDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -177,7 +173,6 @@ void PhysicsBallThrow3DDemo::Unload(Spark::GameWorld& w)
         ballRb = nullptr;
         ballTr = nullptr;
         pendulumBobRb = nullptr;
-        fpsText = nullptr;
         uiCanvas = nullptr;
         uiRoot = nullptr;
     }
@@ -238,26 +233,13 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
             }
         }
 
-        if (fpsText != nullptr) {
-            const float tdt = timing.deltaTimeSeconds;
-            const float instant = (tdt > 1.0e-6F) ? (1.0F / tdt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
-            Spark::Vector3 v{};
-            if (ballRb != nullptr) {
-                v = ballRb->GetVelocity();
-            }
-            fpsText->SetText(Spark::Utf8String(
-                    std::format("Ball v ({:.1f},{:.1f},{:.1f}) m/s  {:.0f} FPS",
-                                  static_cast<double>(v.x),
-                                  static_cast<double>(v.y),
-                                  static_cast<double>(v.z),
-                                  static_cast<double>(fpsSmoothed))
-                            .c_str()));
+        Spark::Vector3 v{};
+        if (ballRb != nullptr) {
+            v = ballRb->GetVelocity();
         }
+        helpHud.SetDetail(
+                std::format("Ball v ({:.1f},{:.1f},{:.1f}) m/s", v.x, v.y, v.z).c_str());
+        helpHud.Update(timing, context);
     }
 
 void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -281,6 +263,7 @@ void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world
 
         params.draws.Clear();
         params.sceneTextures.Clear();
+        params.sceneHdrTextures.Clear();
         params.pointLights.Clear();
         params.sprites.Clear();
         params.screenRects.Clear();
@@ -311,18 +294,7 @@ void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world
         scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
                                   const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
             Spark::SceneDrawItem item{};
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skyMode = sk.GetSkyMode();
-            item.model = world;
-            item.customMesh = mc.GetMesh();
-            item.albedo = sk.GetTint();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 1.0F;
-            if (mat != nullptr && mat->GetBaseColorTexture()) {
-                const Spark::Vector3& t = mat->GetTint();
-                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-            }
+            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
             drawList.PushBack(item);
         });
 
@@ -368,6 +340,7 @@ void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world
         });
 
         PaintUiCanvases(world, params, fbW, fbH);
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 

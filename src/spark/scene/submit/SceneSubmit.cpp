@@ -53,11 +53,22 @@ void ApplyAlbedoTexture(
         const SharedPtr<Texture2D>& baseColor,
         const Vector3& tint,
         const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+    item.albedo = {item.albedo.x * tint.x, item.albedo.y * tint.y, item.albedo.z * tint.z};
     if (!baseColor) {
         return;
     }
-    item.albedo = {item.albedo.x * tint.x, item.albedo.y * tint.y, item.albedo.z * tint.z};
+    bool isHdr = false;
     item.textureLayer = findOrAddTexture(baseColor, &item.textureUvScale, &item.textureUvOffset);
+    if (baseColor) {
+        Vector2 uvScale{1.0F, 1.0F};
+        Vector2 uvOffset{};
+        SharedPtr<Texture2D> resolved = baseColor->ResolveAtlasUv(uvScale, uvOffset);
+        if (!resolved) {
+            resolved = baseColor;
+        }
+        isHdr = resolved->IsHdrFloatPixels();
+    }
+    item.textureIsHdrLinear = isHdr && item.textureLayer >= 0;
 }
 
 void PushRigidMeshDraws(
@@ -141,16 +152,19 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
     SceneRenderParams& params;
     const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture;
     std::int32_t defaultShadowFlags = 0;
+    bool skiesSubmittedOutsideCull = false;
 
     RigidDrawableSubmitSink(
             Array<SceneDrawItem>& inDrawList,
             SceneRenderParams& inParams,
             const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
-            const std::int32_t inDefaultShadowFlags) noexcept
+            const std::int32_t inDefaultShadowFlags,
+            const bool inSkiesSubmittedOutsideCull) noexcept
         : drawList(inDrawList),
           params(inParams),
           findOrAddTexture(inFindTex),
-          defaultShadowFlags(inDefaultShadowFlags) {}
+          defaultShadowFlags(inDefaultShadowFlags),
+          skiesSubmittedOutsideCull(inSkiesSubmittedOutsideCull) {}
 
     void OnDrawable(
             GameObject* o,
@@ -163,21 +177,11 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
         const MultiMaterialComponent* multiMat = o->GetComponent<MultiMaterialComponent>();
         const SkyComponent* sky = o->GetComponent<SkyComponent>();
         if (sky != nullptr && sky->IsSkyEnabled()) {
-            SceneDrawItem item{};
-            item.mesh = SceneMeshSlot::Custom;
-            item.skyMode = sky->GetSkyMode();
-            item.model = worldM;
-            item.customMesh = mc.GetMesh();
-            item.albedo = sky->GetTint();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 1.0F;
-            if (mat != nullptr && mat->GetBaseColorTexture()) {
-                const Vector3& t = mat->GetTint();
-                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), &item.textureUvScale, &item.textureUvOffset);
+            if (skiesSubmittedOutsideCull) {
+                return;
             }
-            item.shadowFlags = 0;
+            SceneDrawItem item{};
+            SceneSubmitDetail::PopulateSkyDrawItem(item, *sky, mc, mat, worldM, params);
             drawList.PushBack(item);
             return;
         }
@@ -241,6 +245,7 @@ void FillStandardLitSceneFromWorld(
     params.draws.Clear();
     params.transparentDraws.Clear();
     params.sceneTextures.Clear();
+    params.sceneHdrTextures.Clear();
     params.pointLights.Clear();
     params.spotLights.Clear();
     params.screenRects.Clear();
@@ -342,7 +347,18 @@ void FillStandardLitSceneFromWorld(
     Array<SceneDrawItem> drawList;
     drawList.Reserve(48);
 
-    RigidDrawableSubmitSink rigidSink{drawList, params, findOrAddTexture, defaultShadowFlags};
+    const bool skiesSubmittedOutsideCull = (sceneForCulling != nullptr);
+    if (sceneForCulling != nullptr) {
+        sceneForCulling->ForEachSky([&](GameObject&, const SkyComponent& sk, const MeshComponent& mc,
+                                             const MaterialComponent* mat, const Matrix4& world) {
+            SceneDrawItem item{};
+            SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
+            drawList.PushBack(item);
+        });
+    }
+
+    RigidDrawableSubmitSink rigidSink{
+            drawList, params, findOrAddTexture, defaultShadowFlags, skiesSubmittedOutsideCull};
     if (sceneForCulling != nullptr) {
         DispatchDrawableFrustumCull(
                 *sceneForCulling, viewProjection, sceneForCulling->GetSpatialPartitionKind(), rigidSink);

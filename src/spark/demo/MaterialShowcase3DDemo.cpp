@@ -427,16 +427,14 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     camera.position = {0.0F, 2.2F, 5.8F};
     camera.SnapLookAt({0.0F, 0.65F, 0.0F});
 
-    helpHud = w.CreateGameObject();
-    helpHud->GetName() = Utf8String("MatShowHelp");
-    helpText = helpHud->AddComponent<TextOverlayComponent>();
-    helpText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-    DemoHud::Apply(*helpText);
-    helpText->SetText(Utf8String("…"));
-    roots.PushBack(helpHud);
+    helpHud.Mount(w, "Material showcase");
+    helpHud.SetControlHints(
+            "1/2/3/4/5 maps · Q/E metallic · R/F roughness · Z/X emissive · 0 reset · S/L/P/U/A library · F1 · "
+            "WASD fly");
 }
 
 void MaterialShowcase3DDemo::Unload(GameWorld& w) {
+    helpHud.Unmount(w);
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
         if (roots[i] != nullptr) {
             w.DestroyGameObject(roots[i]);
@@ -450,8 +448,6 @@ void MaterialShowcase3DDemo::Unload(GameWorld& w) {
     librarySphere = nullptr;
     libraryMaterial = nullptr;
     libraryTransform = nullptr;
-    helpHud = nullptr;
-    helpText = nullptr;
     libraryWorkflow.Reset();
     sphereMesh.Reset();
     groundMesh.Reset();
@@ -483,7 +479,7 @@ void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         libraryTransform->SetRotation(Quaternion::FromAxisAngle(Vector3{0.0F, 1.0F, 0.0F}, librarySpinRadians));
     }
 
-    if (helpText != nullptr && showcaseMaterial != nullptr) {
+    if (showcaseMaterial != nullptr) {
         const char* asyncLabel = "idle";
         switch (libraryWorkflow.GetAsyncState()) {
         case MaterialLibraryWorkflow::AsyncState::Pending:
@@ -501,10 +497,8 @@ void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         std::string msg = std::format(
                 "Material ball (left) + library preview (right)\n"
                 "  1 base {} · 2 normal {} · 3 emissive map {} · 4 emissive ({}) · 5 tint ({})\n"
-                "  Q/E metallic {:.2f} · R/F roughness {:.2f} · Z/X emissive {:.1f} · 0 reset\n"
-                "  Library: S save .sparkmat · L async load (right) · P apply to left · U release · A pack atlas\n"
-                "  Status: {} · retain={}\n"
-                "  F1 mouse lock · WASD fly · ESC menu",
+                "  Q/E metallic {:.2f} · R/F roughness {:.2f} · Z/X emissive {:.1f}\n"
+                "  Status: {} · retain={}",
                 useBaseMap ? "on" : "off",
                 useNormalMap ? "on" : "off",
                 useEmissiveMap ? "on" : "off",
@@ -519,8 +513,9 @@ void MaterialShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
             msg += "\n  ";
             msg += libraryWorkflow.GetLastMessage().CStr();
         }
-        helpText->SetText(Utf8String(msg.c_str()));
+        helpHud.SetDetail(msg.c_str());
     }
+    helpHud.Update(timing, context);
 }
 
 void MaterialShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& context) {
@@ -556,6 +551,11 @@ void MaterialShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
             pu,
             0.0F,
             SceneSpriteSortMode::SortOrderOnly);
+
+    Spark::SceneRenderParams* sceneParams = nullptr;
+    if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {
+        helpHud.PatchSceneRenderParams(*sceneParams, world);
+    }
 }
 
 }  // namespace Spark

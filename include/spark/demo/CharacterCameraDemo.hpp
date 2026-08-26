@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/audio/SoundEngine.hpp"
@@ -83,10 +84,8 @@ private:
     /** Bind-pose upright correction (e.g. Z-up mesh) composed after yaw each frame. */
     Spark::Quaternion humanModelBindFix;
     Spark::Utf8String characterAvatarHudName{};
-    Spark::GameObject* fpsHudObject = nullptr;
-    Spark::TextOverlayComponent* fpsText = nullptr;
     Spark::CharacterController3DComponent* characterController = nullptr;
-    float fpsSmoothed = 0.0F;
+    DemoHelpHud helpHud{};
     Spark::SoundEngine* audioEngine = nullptr;
 
 };

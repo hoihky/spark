@@ -75,6 +75,8 @@ Platformer2D::BulletProfile Platformer2DDemo::MakeEnemyBulletProfile() const noe
 
 void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
+    Unload(w);
+
     roots.Clear();
     for (std::size_t gi = 0; gi < gemObjects.GetSize(); ++gi) {
         if (gemObjects[gi] != nullptr) {
@@ -291,7 +293,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     camTr->SetTranslation({kPlayerSpawnX, spawnY + 1.2F, 0.0F});
     Spark::Camera2DComponent* cam = mainCameraGo->AddComponent<Spark::Camera2DComponent>();
     cam->SetHalfExtentY(8.5F);
-    cam->SetPriority(10);
+    cam->SetPriority(100);
     cameraRig = mainCameraGo->AddComponent<Spark::Camera2DRigComponent>();
     cameraRig->SetMode(Spark::Camera2DRigMode::BoundedFollow);
     cameraRig->SetTarget(playerObject);
@@ -301,11 +303,19 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     cameraRig->SetBoundsMin({-8.0F, -1.5F});
     cameraRig->SetBoundsMax({50.0F, 9.0F});
 
+    physics.GetQueries2D().RebuildStatics(w);
+
+    helpHud.Mount(w, "2D platformer", DemoHelpHud::Style::DarkOnBright);
+    helpHud.SetScreenOffset(Spark::DemoHud::kScreenMargin, 58.0F);
+    helpHud.SetControlHints("WASD move | Space jump | J attack | TAB menu");
+    helpHud.SetDetail("Collect gems, defeat enemies, reach the goal flag");
+
     context.GetInput().SetCursorCaptured(false);
 }
 
 void Platformer2DDemo::Unload(Spark::GameWorld& w)
 {
+    helpHud.Unmount(w);
     if (audioEngine != nullptr) {
         audioEngine->ClearBackgroundMusic();
         audioEngine = nullptr;
@@ -343,6 +353,13 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     playerCharFsm = nullptr;
     mainCameraGo = nullptr;
     cameraRig = nullptr;
+
+    physics = PhysicsSubsystem{};
+    gemsCollected = 0;
+    gemsTotal = 0;
+    goalReached = false;
+    sceneTime = 0.0F;
+    facingLeft = false;
 }
 
 void Platformer2DDemo::Simulate(
@@ -485,6 +502,8 @@ void Platformer2DDemo::Simulate(
     if (playerHealth != nullptr) {
         healthHud.SetHealth(playerHealth->GetCurrent(), playerHealth->GetMaximum());
     }
+
+    helpHud.Update(timing, context);
 }
 
 void Platformer2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -498,6 +517,11 @@ void Platformer2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, 
             Spark::Vector3{0.18F, 0.20F, 0.26F},
             false,
             sceneTime);
+
+    Spark::SceneRenderParams* sceneParams = nullptr;
+    if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {
+        helpHud.PatchSceneRenderParams(*sceneParams, world);
+    }
 }
 
 }  // namespace Spark

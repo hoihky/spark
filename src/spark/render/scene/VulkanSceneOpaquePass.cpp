@@ -29,12 +29,18 @@ void WriteMapUvPush(
 void FillMaterialMapUvPush(
         Spark::VulkanSceneOpaquePass::ModelPushConstants& push,
         const Spark::SceneDrawItem& draw) noexcept {
-    Spark::MaterialUvMap base = draw.baseColorUv;
-    base.uvScale.x *= draw.textureUvScale.x;
-    base.uvScale.y *= draw.textureUvScale.y;
-    base.uvOffset.x += draw.textureUvOffset.x;
-    base.uvOffset.y += draw.textureUvOffset.y;
-    WriteMapUvPush(push, 0, base);
+    if (draw.skyMode != Spark::SceneSkyMode::None) {
+        Spark::MaterialUvMap equirectUv{};
+        equirectUv.uvScale = draw.textureUvScale;
+        WriteMapUvPush(push, 0, equirectUv);
+    } else {
+        Spark::MaterialUvMap base = draw.baseColorUv;
+        base.uvScale.x *= draw.textureUvScale.x;
+        base.uvScale.y *= draw.textureUvScale.y;
+        base.uvOffset.x += draw.textureUvOffset.x;
+        base.uvOffset.y += draw.textureUvOffset.y;
+        WriteMapUvPush(push, 0, base);
+    }
     WriteMapUvPush(push, 1, draw.normalUv);
     WriteMapUvPush(push, 2, draw.metallicRoughnessUv);
     WriteMapUvPush(push, 3, draw.emissiveUv);
@@ -44,7 +50,9 @@ void FillMaterialMapUvPush(
 
 namespace Spark {
 
-static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 288);
+static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 296);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 272);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, albedoHdrLinear) == 288);
 
 void VulkanSceneOpaquePass::Record(
         const VkCommandBuffer commandBuffer,
@@ -147,6 +155,8 @@ void VulkanSceneOpaquePass::Record(
         push.emissiveFactor[1] = d.emissiveFactor.y;
         push.emissiveFactor[2] = d.emissiveFactor.z;
         push.emissiveFactor[3] = 0.0F;
+        push.albedoHdrLinear = d.textureIsHdrLinear ? 1 : 0;
+        push.pushPad = 0;
         push.useSkinning = 0;
         push.jointCount = 0;
         push.shadingModel = static_cast<std::int32_t>(d.shadingModel);
@@ -268,6 +278,8 @@ void VulkanSceneOpaquePass::RecordTransparent(
         push.emissiveFactor[1] = d.emissiveFactor.y;
         push.emissiveFactor[2] = d.emissiveFactor.z;
         push.emissiveFactor[3] = 0.0F;
+        push.albedoHdrLinear = d.textureIsHdrLinear ? 1 : 0;
+        push.pushPad = 0;
         push.useSkinning = 0;
         push.jointCount = 0;
         push.shadingModel = static_cast<std::int32_t>(d.shadingModel);

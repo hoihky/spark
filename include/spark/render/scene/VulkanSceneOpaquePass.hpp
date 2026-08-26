@@ -56,9 +56,11 @@ public:
         float mapUvOffset[4][2];
         float mapUvRotation[4]{};
         std::int32_t mapTexCoordSet[4]{};
+        /** std430 aligns vec4 to 16 bytes after int[4] (offset 264–271). */
+        std::int32_t padBeforeEmissiveFactor[2]{};
         float emissiveFactor[4]{1.0F, 1.0F, 1.0F, 0.0F};
-        /** std430 push block end padding (SPIR-V rounds block size up to 16 bytes). */
-        std::int32_t pushBlockPad[2]{};
+        std::int32_t albedoHdrLinear = 0;
+        std::int32_t pushPad = 0;
     };
 
     void Record(VkCommandBuffer commandBuffer, const VulkanSceneOpaqueRecordContext& ctx) const;

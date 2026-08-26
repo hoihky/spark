@@ -175,8 +175,10 @@ struct SceneDrawItem {
     SceneSkyMode skyMode = SceneSkyMode::None;
     Matrix4 model = Matrix4::Identity;
     Vector3 albedo{1.0F, 1.0F, 1.0F};
-    /** Index into SceneRenderParams::sceneTextures; -1 = no texture (albedo only). */
+    /** Index into SceneRenderParams::sceneTextures or sceneHdrTextures; -1 = no texture (albedo only). */
     std::int32_t textureLayer = -1;
+    /** When true, <c>textureLayer</c> indexes <c>sceneHdrTextures</c> (linear float) instead of <c>sceneTextures</c>. */
+    bool textureIsHdrLinear = false;
     /** Tangent-space normal map layer (-1 = use vertex/interpolated normal only). */
     std::int32_t normalMapLayer = -1;
     /**
@@ -311,7 +313,7 @@ struct ScreenTextDraw {
  * (world +Y up; framebuffer Y still increases downward for screenRects / screenTexts).
  */
 struct SceneRenderParams {
-    static constexpr std::uint32_t MaxSceneTextures = 32;
+    static constexpr std::uint32_t MaxSceneTextures = 64;
     /** Must match GPU clustered lights SSBO capacity. */
     static constexpr std::uint32_t MaxPointLights = 256;
 
@@ -319,8 +321,11 @@ struct SceneRenderParams {
     Array<SceneDrawItem> draws;
     /** Alpha-blended lit meshes (after opaque <c>draws</c>, before sprites). */
     Array<SceneDrawItem> transparentDraws;
-    /** Textures packed into a GPU 2D array (same order as textureLayer indices in draws). Max 16. */
+    /** Textures packed into a GPU 2D array (same order as textureLayer indices in draws). Max 64. */
     Array<SharedPtr<Texture2D>> sceneTextures;
+    static constexpr std::uint32_t MaxSceneHdrTextures = 8;
+    /** Linear HDR float textures (R16G16B16A16_SFLOAT GPU array); separate layer indices from <c>sceneTextures</c>. */
+    Array<SharedPtr<Texture2D>> sceneHdrTextures;
     /** Normalized; direction from a surface point toward the light (N·L). */
     Vector3 lightDirectionWorld{0.35F, 0.92F, 0.18F};
     Vector3 cameraPositionWorld{};
@@ -407,9 +412,18 @@ struct SceneRenderParams {
      * with a bound texture, else procedural hemisphere from ambient colors.
      */
     std::int32_t iblEnvironmentLayer = -1;
+    /** When true, <c>iblEnvironmentLayer</c> indexes <c>sceneHdrTextures</c> (linear equirect). */
+    bool iblEnvironmentIsHdr = false;
+    /** UV scale for equirect env sampling (letterboxed scene layer fractions). */
+    Vector2 iblEnvironmentUvScale{1.0F, 1.0F};
     /** Multiplier on diffuse + specular IBL contribution. */
     float iblIntensity = 1.0F;
     bool iblEnabled = true;
+    /**
+     * When <c>iblEnvironmentLayer == -1</c>, auto-resolve picks the first sky draw with a texture.
+     * HDR equirect skies are background-only unless this is true (e.g. GLTF PBR showcase).
+     */
+    bool iblUseHdrSkyEnvironment = false;
 
     /** Authoritative scene time (seconds) for animated sprite lighting; set by SubmitStandardLitSceneFromWorld. */
     float sceneTimeSeconds = 0.0F;
@@ -479,6 +493,13 @@ struct SceneRenderParams {
     float worldViewportScissorY = 0.0F;
     float worldViewportScissorW = 0.0F;
     float worldViewportScissorH = 0.0F;
+
+    /**
+     * When true, the HDR scene color attachment is cleared to <c>worldClearColor</c> instead of black.
+     * Use for simple outdoor backgrounds without a sky mesh.
+     */
+    bool worldClearColorEnabled = false;
+    Vector3 worldClearColor{0.0F, 0.0F, 0.0F};
 
     [[nodiscard]] std::uint32_t NextUiPaintOrder() noexcept { return ++uiPaintOrderNext; }
 };

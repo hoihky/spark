@@ -20,6 +20,9 @@ public:
     /** Queue a PNG path (UTF-8). Captured on the next completed frame. */
     void RequestSave(const char* pathUtf8);
 
+    /** After device idle + fence wait; saves any completed GPU readback. */
+    void FlushPendingSave() noexcept;
+
     [[nodiscard]] bool HasPendingCapture() const noexcept { return pendingCapture; }
 
     void RecordCopyFromSwapchain(
@@ -48,6 +51,8 @@ private:
     bool copyQueued = false;
     std::uint32_t captureFlightIndex = 0;
     VkExtent2D captureExtent{};
+    VkDeviceSize captureRowPitch = 0;
+    VkDeviceSize captureStagingBytes = 0;
 };
 
 }  // namespace Spark

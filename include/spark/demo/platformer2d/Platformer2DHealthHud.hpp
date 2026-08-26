@@ -47,6 +47,7 @@ private:
     float barHeightWorld = 0.42F;
     float displayedRatio = 1.0F;
     float targetRatio = 1.0F;
+    char lastHealthLabel[48]{};
 };
 
 }  // namespace Spark::Platformer2D

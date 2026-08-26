@@ -63,17 +63,10 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         roots.PushBack(skyObject);
         ApplySkyModeVisuals();
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("SkyFpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        {
-            const char* src = skyHasEquirect ? "HDR equirect" : "procedural (HDR file missing)";
-            fpsText->SetText(Spark::Utf8String(
-                    std::format("Sky demo — {} — TAB: Box / Dome / Plane", src).c_str()));
-        }
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "Sky");
+        helpHud.SetControlHints("M cycle box / dome / plane | F1 mouse capture | WASD fly");
+        const char* src = skyHasEquirect ? "HDR equirect" : "procedural fallback";
+        helpHud.SetDetail(src);
 
         context.GetInput().SetCursorCaptured(true);
         camera.position = {0.0F, 4.5F, 14.0F};
@@ -82,6 +75,7 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
 void SkyDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -95,8 +89,6 @@ void SkyDemo::Unload(Spark::GameWorld& w)
         skyMesh = nullptr;
         sky = nullptr;
         skyMat = nullptr;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
     }
 
 void SkyDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context)
@@ -111,9 +103,19 @@ void SkyDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& 
             }
             camera.ProcessMovement(in, timing.deltaTimeSeconds);
         }
-        if (in.IsKeyPressedThisFrame(GLFW_KEY_TAB)) {
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_M)) {
             skyModeIndex = (skyModeIndex + 1) % 3;
             ApplySkyModeVisuals();
+            const char* label = "SkyBox";
+            if (skyModeIndex == 1) {
+                label = "SkyDome";
+            } else if (skyModeIndex == 2) {
+                label = "SkyPlane";
+            }
+            const char* src = skyHasEquirect ? "HDR equirect" : "procedural fallback";
+            char detail[96]{};
+            std::snprintf(detail, sizeof(detail), "%s - %s", label, src);
+            helpHud.SetDetail(detail);
         }
 
         int fbW = 0;
@@ -123,28 +125,7 @@ void SkyDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& 
         skyLastFbH = fbH;
         UpdateSkyTransform(fbW, fbH);
 
-        if (fpsText != nullptr) {
-            const float dt = timing.deltaTimeSeconds;
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
-            const char* label = "SkyBox";
-            if (skyModeIndex == 1) {
-                label = "SkyDome";
-            } else if (skyModeIndex == 2) {
-                label = "SkyPlane";
-            }
-            const char* src = skyHasEquirect ? "HDR" : "procedural";
-            fpsText->SetText(Spark::Utf8String(
-                    std::format("{} · {} — {:.0f} FPS — TAB cycle",
-                            label,
-                            src,
-                            static_cast<double>(fpsSmoothed))
-                            .c_str()));
-        }
+        helpHud.Update(timing, context);
     }
 
 void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -170,6 +151,7 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
 
         params.draws.Clear();
         params.sceneTextures.Clear();
+        params.sceneHdrTextures.Clear();
         params.pointLights.Clear();
         params.sprites.Clear();
         params.screenRects.Clear();
@@ -193,19 +175,7 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
         scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
                                  const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
             Spark::SceneDrawItem item{};
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skyMode = sk.GetSkyMode();
-            item.model = world;
-            item.customMesh = mc.GetMesh();
-            item.albedo = sk.GetTint();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 1.0F;
-            if (mat != nullptr && mat->GetBaseColorTexture()) {
-                const Spark::Vector3& t = mat->GetTint();
-                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture(), nullptr, nullptr);
-            }
+            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
             drawList.PushBack(item);
         });
 
@@ -259,6 +229,7 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 

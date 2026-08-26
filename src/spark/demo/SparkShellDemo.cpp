@@ -1,10 +1,13 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
+#include "spark/demo/DemoHelpHud.hpp"
+#include "spark/demo/DemoCatalog.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/DemoGuiFrame.hpp"
 #include "spark/demo/ThreeDDemo.hpp"
 #include "spark/demo/ToonShadingDemo.hpp"
 #include "spark/demo/MaterialShowcase3DDemo.hpp"
 #include "spark/demo/GltfSamples3DDemo.hpp"
+#include "spark/demo/ModelViewer3DDemo.hpp"
 #include "spark/demo/SkyDemo.hpp"
 #include "spark/demo/ParticleDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
@@ -35,31 +38,6 @@ namespace Spark {
 class ShellGame;
 
 namespace {
-
-static constexpr const char* kLauncherDemoLabels[] = {
-        "1  - Basic 3D scene",
-        "2  - Sky: box, dome, plane",
-        "3  - Particles",
-        "4  - Terrain",
-        "5  - Character (1st / 3rd person)",
-        "6  - 2D platformer",
-        "7  - 2D Maze",
-        "8  - 3D maze",
-        "9  - 3D physics",
-        "10 - 3D scene editor",
-        "11 - Tetris",
-        "12 - Match-3",
-        "13 - Space Invaders",
-        "14 - 3D steering",
-        "15 - Toon/cel shading",
-        "16 - Material ball",
-        "17 - Time of day",
-        "18 - Farming RPG render layers",
-        "19 - Tilemap layers, animation & pathfinding",
-        "20 - Dear ImGui tools (docking)",
-        "21 - glTF sample (DamagedHelmet)",
-};
-constexpr int kLauncherDemoCount = static_cast<int>(sizeof(kLauncherDemoLabels) / sizeof(kLauncherDemoLabels[0]));
 
 struct LauncherThemeBinding {
     ShellGame* game = nullptr;
@@ -102,6 +80,14 @@ public:
         fpsOverlay.SyncVisibilityFromGlobal();
         fpsOverlay.Update(timing, fbW);
 
+        if (mode != DemoMode::Menu && mode != DemoMode::ImGuiShowcase && mode != DemoMode::ModelViewer3D) {
+            DemoHelpHud::ProcessGlobalToggle(context.GetInput());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_TAB)) {
+                ReturnToMenu(context);
+                return;
+            }
+        }
+
         if (mode == DemoMode::Menu && engineCtx != nullptr && pendingDemoLaunch >= 0) {
             const int idx = pendingDemoLaunch;
             pendingDemoLaunch = -1;
@@ -110,32 +96,48 @@ public:
 
         if (mode == DemoMode::Menu && engineCtx != nullptr) {
             Spark::IInput& in = context.GetInput();
+            DemoStorageId hotkeyId{};
             for (int key = GLFW_KEY_1; key <= GLFW_KEY_9; ++key) {
-                if (in.IsKeyPressedThisFrame(key)) {
-                    EnterDemoByListIndex(key - GLFW_KEY_1);
+                if (in.IsKeyPressedThisFrame(key) &&
+                    DemoCatalog::TryResolveDigitHotkey(key, hotkeyId)) {
+                    EnterDemoByStorageId(hotkeyId);
+                    break;
                 }
             }
-            if (in.IsKeyPressedThisFrame(GLFW_KEY_0)) {
-                EnterDemoByListIndex(9);
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_0) &&
+                DemoCatalog::TryResolveDigitHotkey(GLFW_KEY_0, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
             }
-            if (in.IsKeyPressedThisFrame(GLFW_KEY_T)) {
-                EnterDemoByListIndex(10);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_C)) {
-                EnterDemoByListIndex(11);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_I)) {
-                EnterDemoByListIndex(12);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_SEMICOLON)) {
-                EnterDemoByListIndex(13);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Y)) {
-                EnterDemoByListIndex(14);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_B)) {
-                EnterDemoByListIndex(15);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_N)) {
-                EnterDemoByListIndex(16);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_G)) {
-                EnterDemoByListIndex(19);
-            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Q)) {
-                EnterDemoByListIndex(20);
+            if (DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_T, hotkeyId) &&
+                in.IsKeyPressedThisFrame(GLFW_KEY_T)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_C) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_C, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_I) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_I, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_SEMICOLON) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_SEMICOLON, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Y) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_Y, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_B) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_B, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_N) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_N, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_G) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_G, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Q) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_Q, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_V) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_V, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
             }
         }
 
@@ -244,6 +246,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::ModelViewer3D) {
+            modelViewer3DDemo.Simulate(timing, context, GetWorld());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
         }
         Game::OnUpdate(timing, context);
     }
@@ -294,6 +301,8 @@ public:
             imguiShowcaseDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::GltfSamples3D) {
             gltfSamples3DDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::ModelViewer3D) {
+            modelViewer3DDemo.Render(GetScene(), GetWorld(), context);
         } else {
             RenderUiOnly(context, fbW, fbH);
         }
@@ -429,20 +438,16 @@ public:
 
     void EnterRenderLayers2DDemo(IEngineContext& context) {
         UnloadAllActiveDemos(context);
-        if (!renderLayers2DLoaded) {
-            renderLayers2DDemo.Load(GetWorld(), context);
-            renderLayers2DLoaded = true;
-        }
+        renderLayers2DDemo.Load(GetWorld(), context);
+        renderLayers2DLoaded = true;
         mode = DemoMode::RenderLayers2D;
         context.GetInput().SetCursorCaptured(false);
     }
 
     void EnterTilemapShowcase2DDemo(IEngineContext& context) {
         UnloadAllActiveDemos(context);
-        if (!tilemapShowcase2DLoaded) {
-            tilemapShowcase2DDemo.Load(GetWorld(), context);
-            tilemapShowcase2DLoaded = true;
-        }
+        tilemapShowcase2DDemo.Load(GetWorld(), context);
+        tilemapShowcase2DLoaded = true;
         mode = DemoMode::TilemapShowcase2D;
         context.GetInput().SetCursorCaptured(false);
     }
@@ -461,6 +466,14 @@ public:
             gltfSamplesLoaded = true;
         }
         mode = DemoMode::GltfSamples3D;
+        context.GetInput().SetCursorCaptured(true);
+    }
+
+    void EnterModelViewer3DDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        modelViewer3DDemo.Load(GetWorld(), context);
+        modelViewer3DLoaded = true;
+        mode = DemoMode::ModelViewer3D;
         context.GetInput().SetCursorCaptured(true);
     }
 
@@ -717,10 +730,29 @@ private:
             gltfSamples3DDemo.Unload(GetWorld());
             gltfSamplesLoaded = false;
         }
+        if (modelViewer3DLoaded) {
+            modelViewer3DDemo.Unload(GetWorld());
+            modelViewer3DLoaded = false;
+        }
         GetScene().SetSpatialPartitionKind(Spark::ScenePartitionKind::None);
     }
 
-    void EnterDemoByListIndex(const int idx) {
+    void EnterDemoByListIndex(const int launcherIndex) {
+        if (launcherIndex < 0 ||
+            launcherIndex >= static_cast<int>(DemoCatalog::LauncherRowCount())) {
+            return;
+        }
+        EnterDemoByStorageId(DemoCatalog::LauncherStorageId(static_cast<std::size_t>(launcherIndex)));
+    }
+
+    void EnterDemoByStorageId(const DemoStorageId id) {
+        if (engineCtx == nullptr) {
+            return;
+        }
+        EnterDemoByStorageIndex(static_cast<int>(id));
+    }
+
+    void EnterDemoByStorageIndex(const int storageIndex) {
         if (engineCtx == nullptr) {
             return;
         }
@@ -747,16 +779,18 @@ private:
                 &ShellGame::EnterTilemapShowcase2DDemo,
                 &ShellGame::EnterImGuiShowcase,
                 &ShellGame::EnterGltfSamples3DDemo,
+                &ShellGame::EnterModelViewer3DDemo,
         };
         static_assert(
-                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == 21,
+                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == 22,
                 "kDemoEnter must match launcher demo list count");
-        if (idx < 0 || idx >= static_cast<int>(sizeof(kDemoEnter) / sizeof(kDemoEnter[0]))) {
+        if (storageIndex < 0 ||
+            storageIndex >= static_cast<int>(DemoCatalog::StorageCount())) {
             return;
         }
         SetLauncherCanvasEnabled(false);
         DestroyLauncherRetainedUi(GetWorld());
-        (this->*kDemoEnter[idx])(*engineCtx);
+        (this->*kDemoEnter[storageIndex])(*engineCtx);
     }
 
     void DestroyLauncherRetainedUi(GameWorld& world) {
@@ -785,7 +819,7 @@ private:
         panelDesc.id = Utf8String("launcher");
         panelDesc.title = Utf8String("Spark Demo Launcher");
         panelDesc.width = DemoGui::kDemoLauncherPanelWidth;
-        panelDesc.height = 560.0F;
+        panelDesc.height = 680.0F;
         panelDesc.centerInParent = true;
         auto panel = factory.CreatePanel(panelDesc);
 
@@ -793,7 +827,8 @@ private:
 
         Ui::LabelDesc helpDesc{};
         helpDesc.id = Utf8String("help");
-        helpDesc.text = Utf8String("Click a demo to launch (keyboard shortcuts still work).");
+        helpDesc.text = Utf8String(
+                "* = recommended. Demos listed 1-22. Hotkeys: 1-9, 0, T, C, I, ;, Y, B, N, G, Q, V. H toggles help.");
         helpDesc.muted = true;
         auto help = factory.CreateLabel(helpDesc);
 
@@ -807,9 +842,9 @@ private:
         auto list = factory.CreateList(listDesc);
         launcherList = list.Get();
         Array<Utf8String> items;
-        items.Reserve(static_cast<std::size_t>(kLauncherDemoCount));
-        for (int i = 0; i < kLauncherDemoCount; ++i) {
-            items.PushBack(Utf8String(kLauncherDemoLabels[i]));
+        items.Reserve(DemoCatalog::LauncherRowCount());
+        for (std::size_t i = 0; i < DemoCatalog::LauncherRowCount(); ++i) {
+            items.PushBack(Utf8String(DemoCatalog::LauncherRowLabel(i)));
         }
         list->SetItems(MoveTemp(items));
         if (launcherSelectedIndex >= 0) {
@@ -941,6 +976,8 @@ private:
     ImGuiShowcaseDemo imguiShowcaseDemo{};
     GltfSamples3DDemo gltfSamples3DDemo{};
     bool gltfSamplesLoaded = false;
+    ModelViewer3DDemo modelViewer3DDemo{};
+    bool modelViewer3DLoaded = false;
     DemoFpsToggleOverlay fpsOverlay{};
 };
 

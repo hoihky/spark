@@ -43,7 +43,10 @@ bool StbImageTextureLoader::CanLoad(const char* path) const {
     if (path == nullptr || path[0] == '\0') {
         return false;
     }
-    return !PathEndsWithInsensitive(path, ".ktx2");
+    if (PathEndsWithInsensitive(path, ".ktx2") || PathEndsWithInsensitive(path, ".hdr")) {
+        return false;
+    }
+    return true;
 }
 
 bool StbImageTextureLoader::Load(const char* path, Texture2D& out, const TextureLoadOptions& options) const {

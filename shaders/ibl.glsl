@@ -3,16 +3,48 @@
 #define SPARK_IBL_GLSL
 
 #include "color_space.glsl"
+#include "equirect.glsl"
 
 const float SPARK_PI = 3.14159265359;
 const uint kIblSampleCount = 16u;
+// Matches 1024² scene HDR layers (VulkanSceneHdrTextureUploader::kLayerSize).
+const float SPARK_HDR_ENV_MAX_LOD = 10.0;
+const float SPARK_HDR_DIFFUSE_IBL_LOD = 3.0;
+const float SPARK_HDR_IBL_TONE_KNEE = 2.5;
 
-vec3 sparkSampleEquirect(sampler2DArray tex, vec3 dir, int layer) {
-    float phi = atan(dir.z, dir.x) / (2.0 * SPARK_PI) + 0.5;
-    phi = fract(phi);
-    float mu = acos(clamp(dir.y, -1.0, 1.0)) / SPARK_PI;
-    float vEq = 1.0 - mu;
-    return sparkSrgbToLinear(textureLod(tex, vec3(phi, vEq, float(layer)), 0.0).rgb);
+// Bring HDR equirect samples into the same linear range as direct lights.
+vec3 sparkToneMapHdrIblSample(vec3 rgb) {
+    float lum = dot(rgb, vec3(0.2126, 0.7152, 0.0722));
+    float scale = SPARK_HDR_IBL_TONE_KNEE / max(lum + SPARK_HDR_IBL_TONE_KNEE, 1e-4);
+    return rgb * scale;
+}
+
+float sparkHdrSpecularEnvLod(float roughness, float metallic) {
+    float r = clamp(roughness, 0.0, 1.0);
+    float lod = r * r * SPARK_HDR_ENV_MAX_LOD;
+    // Dielectrics: blur env reflections heavily to avoid HDR texel fireflies on ground/walls.
+    if (metallic < 0.5) {
+        lod = max(lod, 6.0);
+    }
+    return clamp(lod, 0.0, SPARK_HDR_ENV_MAX_LOD);
+}
+
+vec3 sparkSampleEquirect(
+        sampler2DArray ldrTex,
+        sampler2DArray hdrTex,
+        vec3 dir,
+        int layer,
+        bool hdr,
+        vec2 layerUvScale,
+        float sampleLod) {
+    vec2 uv = sparkEquirectDirectionUv(dir, layerUvScale);
+    if (hdr) {
+        int hl = clamp(layer, 0, 7);
+        vec3 rgb = textureLod(hdrTex, vec3(uv.x, uv.y, float(hl)), sampleLod).rgb;
+        return sparkToneMapHdrIblSample(rgb);
+    }
+    int ll = clamp(layer, 0, 63);
+    return sparkSrgbToLinear(textureLod(ldrTex, vec3(uv.x, uv.y, float(ll)), 0.0).rgb);
 }
 
 vec3 sparkSampleProceduralEnv(vec3 dir) {
@@ -22,9 +54,20 @@ vec3 sparkSampleProceduralEnv(vec3 dir) {
     return mix(horizon, zenith, pow(t, 0.65));
 }
 
-vec3 sparkSampleEnvironment(sampler2DArray tex, vec3 dir, int layer) {
+vec2 sparkIblEnvLayerUvScale() {
+    return vec2(ubo.lightDir.w, ubo.ambientSky.w);
+}
+
+vec3 sparkSampleEnvironment(
+        sampler2DArray ldrTex,
+        sampler2DArray hdrTex,
+        vec3 dir,
+        int layer,
+        bool hdr,
+        vec2 layerUvScale,
+        float sampleLod) {
     if (layer >= 0) {
-        return sparkSampleEquirect(tex, dir, layer);
+        return sparkSampleEquirect(ldrTex, hdrTex, dir, layer, hdr, layerUvScale, sampleLod);
     }
     return sparkSampleProceduralEnv(dir);
 }
@@ -54,9 +97,18 @@ vec2 sparkHammersley(uint i, uint n) {
     return vec2(float(i) / float(n), fract(float(i) * 0.6180339887));
 }
 
-vec3 sparkPrefilterEnvironment(sampler2DArray tex, vec3 r, float roughness, int layer) {
+vec3 sparkPrefilterEnvironment(
+        sampler2DArray ldrTex,
+        sampler2DArray hdrTex,
+        vec3 r,
+        float roughness,
+        float metallic,
+        int layer,
+        bool hdr,
+        vec2 layerUvScale) {
+    float specLod = hdr ? sparkHdrSpecularEnvLod(roughness, metallic) : 0.0;
     if (roughness <= 0.04) {
-        return sparkSampleEnvironment(tex, r, layer);
+        return sparkSampleEnvironment(ldrTex, hdrTex, r, layer, hdr, layerUvScale, specLod);
     }
     vec3 n = r;
     vec3 v = r;
@@ -68,7 +120,7 @@ vec3 sparkPrefilterEnvironment(sampler2DArray tex, vec3 r, float roughness, int 
         vec3 l = normalize(2.0 * dot(v, h) * h - v);
         float nDotL = max(dot(n, l), 0.0);
         if (nDotL > 0.0) {
-            prefiltered += sparkSampleEnvironment(tex, l, layer) * nDotL;
+            prefiltered += sparkSampleEnvironment(ldrTex, hdrTex, l, layer, hdr, layerUvScale, specLod) * nDotL;
             totalWeight += nDotL;
         }
     }
@@ -76,7 +128,8 @@ vec3 sparkPrefilterEnvironment(sampler2DArray tex, vec3 r, float roughness, int 
 }
 
 vec3 sparkEvalSpecularIbl(
-        sampler2DArray tex,
+        sampler2DArray ldrTex,
+        sampler2DArray hdrTex,
         vec3 n,
         vec3 v,
         vec3 baseColor,
@@ -88,16 +141,20 @@ vec3 sparkEvalSpecularIbl(
     }
     int layer = int(round(ubo.iblParams.x));
     float intensity = ubo.iblParams.y;
+    bool hdrEnv = ubo.iblParams.z > 0.5;
+    vec2 envUvScale = sparkIblEnvLayerUvScale();
     vec3 f0 = mix(vec3(0.04), baseColor, metallic);
     vec3 r = reflect(-v, n);
     float nDotV = max(dot(n, v), 0.001);
-    vec3 prefiltered = sparkPrefilterEnvironment(tex, r, roughness, layer);
+    vec3 prefiltered = sparkPrefilterEnvironment(ldrTex, hdrTex, r, roughness, metallic, layer, hdrEnv, envUvScale);
     vec2 brdf = sparkEnvBrdfApprox(roughness, nDotV);
-    return prefiltered * (f0 * brdf.x + brdf.y) * intensity * occlusion;
+    float dielectricAtten = mix(0.35, 1.0, smoothstep(0.05, 0.65, metallic));
+    return prefiltered * (f0 * brdf.x + brdf.y) * intensity * occlusion * dielectricAtten;
 }
 
 vec3 sparkEvalDiffuseIbl(
-        sampler2DArray tex,
+        sampler2DArray ldrTex,
+        sampler2DArray hdrTex,
         vec3 n,
         vec3 baseColor,
         float metallic,
@@ -107,7 +164,10 @@ vec3 sparkEvalDiffuseIbl(
     }
     int layer = int(round(ubo.iblParams.x));
     float intensity = ubo.iblParams.y;
-    vec3 irradiance = sparkSampleEnvironment(tex, n, layer);
+    bool hdrEnv = ubo.iblParams.z > 0.5;
+    vec2 envUvScale = sparkIblEnvLayerUvScale();
+    float sampleLod = hdrEnv ? SPARK_HDR_DIFFUSE_IBL_LOD : 0.0;
+    vec3 irradiance = sparkSampleEnvironment(ldrTex, hdrTex, n, layer, hdrEnv, envUvScale, sampleLod);
     return irradiance * baseColor * (1.0 - metallic) * intensity * occlusion;
 }
 

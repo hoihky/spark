@@ -27,7 +27,9 @@ constexpr std::uint32_t kMaxMipLevels = 16;
 void VulkanSceneTextureUploader::ResetUploadCache() noexcept {
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
         lastFingerprints[i] = 0;
+        lastUploadedTextures[i] = nullptr;
         pendingLayerDirty[i] = false;
+        pendingTextures[i] = nullptr;
     }
     lastUploadedCount = 0;
 }
@@ -216,7 +218,8 @@ bool VulkanSceneTextureUploader::NeedsUpload(
         if (!tex) {
             continue;
         }
-        if (tex->GetContentFingerprint() != lastFingerprints[i]) {
+        if (tex->GetContentFingerprint() != lastFingerprints[i] ||
+            tex.Get() != lastUploadedTextures[i]) {
             return true;
         }
     }
@@ -249,6 +252,7 @@ void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, 
         pendingLayerDirty[i] = false;
         pendingNearestMip[i] = false;
         pendingFingerprints[i] = lastFingerprints[i];
+        pendingTextures[i] = lastUploadedTextures[i];
 
         const SharedPtr<Texture2D> tex =
                 (static_cast<std::size_t>(i) < texCount) ? scene.sceneTextures[i] : SharedPtr<Texture2D>{};
@@ -257,7 +261,8 @@ void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, 
         }
 
         const std::uint64_t fp = tex->GetContentFingerprint();
-        const bool layerDirty = i >= lastUploadedCount || fp != lastFingerprints[i];
+        const bool layerDirty =
+                i >= lastUploadedCount || fp != lastFingerprints[i] || tex.Get() != lastUploadedTextures[i];
         if (!layerDirty) {
             continue;
         }
@@ -265,6 +270,7 @@ void VulkanSceneTextureUploader::PrepareUploads(const SceneRenderParams& scene, 
         pendingLayerDirty[i] = true;
         anyLayerDirty = true;
         pendingFingerprints[i] = fp;
+        pendingTextures[i] = tex.Get();
 
         std::uint8_t* const dst = base + static_cast<std::size_t>(layerPitch) * i;
         if (tex->HasPrebuiltMipChain() && tex->GetPixelFormat() == pixelFormat) {
@@ -413,6 +419,7 @@ void VulkanSceneTextureUploader::RecordUploads(const VkCommandBuffer commandBuff
     lastUploadedCount = pendingUploadCount;
     for (std::uint32_t i = 0; i < kLayerCount; ++i) {
         lastFingerprints[i] = pendingFingerprints[i];
+        lastUploadedTextures[i] = pendingTextures[i];
     }
     uploadPending = false;
 }

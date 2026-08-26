@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 
@@ -9,7 +10,7 @@ namespace Spark {
 /** Vertical FOV (degrees) for sky demo projection — must match PerspectiveVulkan in Render(). */
 constexpr float kSkyDemoFovYDeg = 60.0F;
 
-/** ECS SkyComponent + sky env (sphere for box/dome; dome uses same mesh — shading is view-ray based), plane (TAB). */
+    /** Vertical FOV (degrees) for sky demo projection — must match PerspectiveVulkan in Render(). */
 class SkyDemo {
 public:
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
@@ -49,12 +50,9 @@ private:
     Spark::MeshComponent* skyMesh = nullptr;
     Spark::SkyComponent* sky = nullptr;
     Spark::MaterialComponent* skyMat = nullptr;
-    Spark::GameObject* fpsHudObject = nullptr;
-    Spark::TextOverlayComponent* fpsText = nullptr;
+    DemoHelpHud helpHud{};
     int skyLastFbW = 0;
     int skyLastFbH = 0;
-    float fpsSmoothed = 0.0F;
-
 };
 
 

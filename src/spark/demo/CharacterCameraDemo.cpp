@@ -141,8 +141,6 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterRootTr = nullptr;
         characterVisual = nullptr;
         characterVisualTr = nullptr;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
         characterController = nullptr;
         playerAnimator = nullptr;
         useSkinnedAvatar = false;
@@ -302,17 +300,8 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         AddPointLight(w, {12.0F, 14.0F, 10.0F}, {0.95F, 0.9F, 0.75F}, 3.2F, 45.0F);
         AddPointLight(w, {-14.0F, 9.0F, -8.0F}, {0.45F, 0.65F, 1.0F}, 2.4F, 38.0F);
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("CharFpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String(
-                std::format(
-                        "Character — {} · WASD walk · Shift+WASD run · M model · 1/2/3 clips · V FP · F1",
-                        characterAvatarHudName.CStr())
-                        .c_str()));
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "Character camera");
+        helpHud.SetControlHints("WASD walk · Shift+WASD run · M model · 1/2/3 clips · V FP · F1");
 
         Spark::GameObject* springArmRig = w.CreateGameObject();
         springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
@@ -343,6 +332,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
 
 void CharacterCameraDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         if (audioEngine != nullptr) {
             audioEngine->ClearBackgroundMusic();
             audioEngine = nullptr;
@@ -357,8 +347,6 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         characterRootTr = nullptr;
         characterVisual = nullptr;
         characterVisualTr = nullptr;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
         characterController = nullptr;
         playerAnimator = nullptr;
         charAnimFsm = nullptr;
@@ -490,14 +478,7 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             characterRootTr->SetRotation(
                     useSkinnedAvatar ? (qYaw * humanModelBindFix).Normalized() : qYaw);
         }
-        if (fpsText != nullptr) {
-            const float dt = timing.deltaTimeSeconds;
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
+        {
             const char* modeLabel =
                     rig.mode == Spark::CharacterCameraMode::FirstPerson ? "1st person" : "3rd person";
             Spark::Utf8String animHud;
@@ -534,15 +515,10 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                                 driveLabel)
                                 .c_str());
             }
-            fpsText->SetText(Spark::Utf8String(
-                    std::format(
-                            "Character — {:.0f} FPS — {} — {}{} — WASD walk · Shift run · M model · V · F1",
-                            static_cast<double>(fpsSmoothed),
-                            modeLabel,
-                            characterAvatarHudName.CStr(),
-                            animHud.CStr())
-                            .c_str()));
+            helpHud.SetDetail(
+                    std::format("{} — {}{}", modeLabel, characterAvatarHudName.CStr(), animHud.CStr()).c_str());
         }
+        helpHud.Update(timing, context);
     }
 
 void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -569,6 +545,8 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
         params.punctualShadowsEnabled = false;
 
         params.draws.Clear();
+        params.sceneTextures.Clear();
+        params.sceneHdrTextures.Clear();
         params.pointLights.Clear();
         params.sprites.Clear();
         params.screenRects.Clear();
@@ -605,19 +583,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
         scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
                                  const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
             Spark::SceneDrawItem item{};
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skyMode = sk.GetSkyMode();
-            item.model = world;
-            item.customMesh = mc.GetMesh();
-            item.albedo = sk.GetTint();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 1.0F;
-            if (mat != nullptr && mat->GetBaseColorTexture()) {
-                const Spark::Vector3& t = mat->GetTint();
-                item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-            }
+            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
             drawList.PushBack(item);
         });
 
@@ -703,6 +669,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 
@@ -856,7 +823,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
     useSkinnedAvatar = true;
 
     humanModelBindFix = asset.bindUpAlignment.Normalized();
-    humanModelYawOffset = isFox ? -Spark::HalfPi : asset.bindFacingYawOffset;
+    humanModelYawOffset = isFox ? Spark::HalfPi : asset.bindFacingYawOffset + Spark::Pi;
     rig.characterFacingYawOffset = humanModelYawOffset;
     rig.characterRootBindOrientation = humanModelBindFix;
 

@@ -16,7 +16,7 @@
 namespace Spark {
 
 /**
- * CPU-side texture asset. Stores RGBA8 pixels and/or pre-baked block-compressed mip chains
+ * CPU-side texture asset. Stores RGBA8 or RGBA32F pixels and/or pre-baked block-compressed mip chains
  * (BC7, ASTC 4x4). GPU upload may resample, generate mips, or transcode at scene submit time.
  */
 class Texture2D {
@@ -30,17 +30,22 @@ public:
     [[nodiscard]] std::uint32_t GetWidth() const noexcept { return width; }
     [[nodiscard]] std::uint32_t GetHeight() const noexcept { return height; }
     [[nodiscard]] const Array<std::uint8_t>& GetRgba() const noexcept { return rgba; }
+    [[nodiscard]] const Array<float>& GetRgbaFloat() const noexcept { return rgbaFloat; }
     [[nodiscard]] TexturePixelFormat GetPixelFormat() const noexcept { return pixelFormat; }
+    [[nodiscard]] bool IsHdrFloatPixels() const noexcept { return pixelFormat == TexturePixelFormat::Rgba32Float; }
     [[nodiscard]] bool HasPrebuiltMipChain() const noexcept { return !mipChain.IsEmpty(); }
     [[nodiscard]] const Array<TextureMipLevel>& GetMipChain() const noexcept { return mipChain; }
 
     void SetPixels(std::uint32_t w, std::uint32_t h, Array<std::uint8_t> bytes);
+    void SetFloatPixels(std::uint32_t w, std::uint32_t h, Array<float> pixels);
     void SetCompressedMipChain(TexturePixelFormat format, std::uint32_t w, std::uint32_t h, Array<TextureMipLevel> mips);
 
     /** Nearest-neighbor resize into outRgba (w*h*4 bytes). */
     void ResampleNearest(std::uint32_t targetW, std::uint32_t targetH, Array<std::uint8_t>& outRgba) const;
     /** Bilinear resize into outRgba (w*h*4 bytes). */
     void ResampleBilinear(std::uint32_t targetW, std::uint32_t targetH, Array<std::uint8_t>& outRgba) const;
+    /** Bilinear resize into outRgba (w*h*4 floats). */
+    void ResampleBilinearFloat(std::uint32_t targetW, std::uint32_t targetH, Array<float>& outRgba) const;
 
     /** When true, scene upload uses nearest filtering and mip0-only sampling (2D pixel art / atlases). */
     void SetSceneUploadNearest(bool nearest) noexcept { sceneUploadNearest = nearest; }
@@ -64,6 +69,8 @@ public:
 
     /** Uniform-fit into a square scene layer; updates <c>sceneLayerUvScale</c>. */
     void PrepareSceneLayerUpload(std::uint32_t layerSize, Array<std::uint8_t>& outRgba);
+    /** Uniform-fit HDR float pixels into a square scene layer; updates <c>sceneLayerUvScale</c>. */
+    void PrepareSceneLayerUploadFloat(std::uint32_t layerSize, Array<float>& outRgba);
 
     /** Stable GPU array layer for this texture (assigned once on first scene submit). */
     [[nodiscard]] std::int32_t GetGpuSceneLayer() const noexcept { return gpuSceneLayer; }
@@ -102,6 +109,7 @@ private:
     std::uint32_t width = 0;
     std::uint32_t height = 0;
     Array<std::uint8_t> rgba;
+    Array<float> rgbaFloat;
     TexturePixelFormat pixelFormat = TexturePixelFormat::Rgba8Unorm;
     Array<TextureMipLevel> mipChain;
     std::uint64_t contentFingerprint = 0;

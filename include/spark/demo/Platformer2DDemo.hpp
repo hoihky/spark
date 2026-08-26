@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/core/Utility.hpp"
+#include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
@@ -135,6 +136,7 @@ private:
     Platformer2D::EnemySquad enemySquad{};
     Platformer2D::PlayerCombat playerCombat{};
 
+    DemoHelpHud helpHud{};
     PhysicsSubsystem physics{};
 
     int gemsCollected = 0;

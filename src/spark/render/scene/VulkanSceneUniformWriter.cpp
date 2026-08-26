@@ -57,7 +57,7 @@ void VulkanSceneUniformWriter::Write(
     u.lightDir[0] = lightDir.x;
     u.lightDir[1] = lightDir.y;
     u.lightDir[2] = lightDir.z;
-    u.lightDir[3] = 0.0F;
+    u.lightDir[3] = scene.iblEnvironmentUvScale.x;
     u.cameraPos[0] = scene.cameraPositionWorld.x;
     u.cameraPos[1] = scene.cameraPositionWorld.y;
     u.cameraPos[2] = scene.cameraPositionWorld.z;
@@ -75,7 +75,7 @@ void VulkanSceneUniformWriter::Write(
     u.ambientSky[0] = amb.skyColor.x * ambScale;
     u.ambientSky[1] = amb.skyColor.y * ambScale;
     u.ambientSky[2] = amb.skyColor.z * ambScale;
-    u.ambientSky[3] = 1.0F;
+    u.ambientSky[3] = scene.iblEnvironmentUvScale.y;
     u.ambientProbe[0] = amb.probeColor.x * ambScale;
     u.ambientProbe[1] = amb.probeColor.y * ambScale;
     u.ambientProbe[2] = amb.probeColor.z * ambScale;
@@ -153,8 +153,12 @@ void VulkanSceneUniformWriter::Write(
     u.clusterDepth[3] = (npl > 0 || nsl > 0) ? 1.0F : 0.0F;
 
     u.iblParams[0] = static_cast<float>(scene.iblEnvironmentLayer);
-    u.iblParams[1] = scene.iblIntensity;
-    u.iblParams[2] = 0.0F;
+    float iblIntensity = scene.iblIntensity;
+    if (scene.iblEnvironmentIsHdr) {
+        iblIntensity *= 0.4F;
+    }
+    u.iblParams[1] = iblIntensity;
+    u.iblParams[2] = scene.iblEnvironmentIsHdr ? 1.0F : 0.0F;
     u.iblParams[3] = scene.iblEnabled ? 1.0F : 0.0F;
 
     std::memcpy(mappedUbo, &u, sizeof(SceneUniformGpu));

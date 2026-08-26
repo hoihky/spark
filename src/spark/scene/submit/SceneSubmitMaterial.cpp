@@ -1,6 +1,8 @@
 #include "spark/scene/submit/SceneSubmit.hpp"
 
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/memory/SharedPtr.hpp"
@@ -65,7 +67,11 @@ std::int32_t FindOrAddSceneTexture(
         SceneRenderParams& params,
         const SharedPtr<Texture2D>& tex,
         Vector2* outUvScale,
-        Vector2* outUvOffset) {
+        Vector2* outUvOffset,
+        bool* outIsHdrLinear) {
+    if (outIsHdrLinear != nullptr) {
+        *outIsHdrLinear = false;
+    }
     if (!tex) {
         return -1;
     }
@@ -82,44 +88,99 @@ std::int32_t FindOrAddSceneTexture(
         *outUvOffset = uvOffset;
     }
 
-    for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-        if (params.sceneTextures[i].Get() == resolved.Get()) {
+    const bool isHdr = resolved->IsHdrFloatPixels();
+    if (outIsHdrLinear != nullptr) {
+        *outIsHdrLinear = isHdr;
+    }
+
+    Array<SharedPtr<Texture2D>>& targetArray =
+            isHdr ? params.sceneHdrTextures : params.sceneTextures;
+    const std::uint32_t maxLayers =
+            isHdr ? SceneRenderParams::MaxSceneHdrTextures : SceneRenderParams::MaxSceneTextures;
+
+    for (std::size_t i = 0; i < targetArray.GetSize(); ++i) {
+        if (targetArray[i].Get() == resolved.Get()) {
             return static_cast<std::int32_t>(i);
         }
     }
-    const std::uint64_t fingerprint = resolved->GetContentFingerprint();
-    if (fingerprint != 0U) {
-        for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-            const SharedPtr<Texture2D>& existing = params.sceneTextures[i];
-            if (existing && existing->GetContentFingerprint() == fingerprint) {
-                return static_cast<std::int32_t>(i);
-            }
-        }
-    }
 
-    if (params.sceneTextures.GetSize() >= SceneRenderParams::MaxSceneTextures) {
+    if (targetArray.GetSize() >= maxLayers) {
         std::fprintf(
                 stderr,
-                "Spark: scene texture limit (%u) reached; dropping \"%s\"\n",
-                SceneRenderParams::MaxSceneTextures,
+                "Spark: scene %s texture limit (%u) reached; dropping \"%s\"\n",
+                isHdr ? "HDR" : "LDR",
+                maxLayers,
                 resolved->GetName().CStr());
+        if (outIsHdrLinear != nullptr) {
+            *outIsHdrLinear = false;
+        }
         return -1;
     }
-    const std::int32_t layer = static_cast<std::int32_t>(params.sceneTextures.GetSize());
-    params.sceneTextures.PushBack(resolved);
+    const std::int32_t layer = static_cast<std::int32_t>(targetArray.GetSize());
+    targetArray.PushBack(resolved);
     return layer;
 }
 
 void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept {
+    params.iblEnvironmentUvScale = {1.0F, 1.0F};
     if (params.iblEnvironmentLayer >= 0) {
+        const std::size_t idx = static_cast<std::size_t>(params.iblEnvironmentLayer);
+        if (params.iblEnvironmentIsHdr) {
+            if (idx < params.sceneHdrTextures.GetSize() && params.sceneHdrTextures[idx]) {
+                params.iblEnvironmentUvScale = params.sceneHdrTextures[idx]->GetSceneLayerUvScale();
+            }
+        } else if (idx < params.sceneTextures.GetSize() && params.sceneTextures[idx]) {
+            params.iblEnvironmentUvScale = params.sceneTextures[idx]->GetSceneLayerUvScale();
+        }
         return;
     }
+    params.iblEnvironmentIsHdr = false;
     for (std::size_t i = 0; i < params.draws.GetSize(); ++i) {
         const SceneDrawItem& d = params.draws[i];
         if (d.skyMode != SceneSkyMode::None && d.textureLayer >= 0) {
+            if (d.textureIsHdrLinear && !params.iblUseHdrSkyEnvironment) {
+                continue;
+            }
             params.iblEnvironmentLayer = d.textureLayer;
+            params.iblEnvironmentIsHdr = d.textureIsHdrLinear;
+            params.iblEnvironmentUvScale = d.textureUvScale;
             return;
         }
+    }
+    params.iblEnvironmentLayer = -1;
+}
+
+void PopulateSkyDrawItem(
+        SceneDrawItem& item,
+        const SkyComponent& sky,
+        const MeshComponent& mc,
+        const MaterialComponent* mat,
+        const Matrix4& worldM,
+        SceneRenderParams& params) noexcept {
+    item.mesh = SceneMeshSlot::Custom;
+    item.skyMode = sky.GetSkyMode();
+    item.model = worldM;
+    item.customMesh = mc.GetMesh();
+    item.albedo = sky.GetTint();
+    item.textureLayer = -1;
+    item.textureIsHdrLinear = false;
+    item.metallic = 0.0F;
+    item.roughness = 1.0F;
+    item.shadowFlags = 0;
+    if (mat != nullptr && mat->GetBaseColorTexture()) {
+        const Vector3& t = mat->GetTint();
+        item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
+        bool isHdr = false;
+        item.textureLayer = FindOrAddSceneTexture(params, mat->GetBaseColorTexture(), nullptr, nullptr, &isHdr);
+        Vector2 atlasScale{1.0F, 1.0F};
+        Vector2 atlasOffset{};
+        SharedPtr<Texture2D> resolved = mat->GetBaseColorTexture()->ResolveAtlasUv(atlasScale, atlasOffset);
+        if (!resolved) {
+            resolved = mat->GetBaseColorTexture();
+        }
+        item.textureUvScale = resolved->GetSceneLayerUvScale();
+        item.textureUvOffset = {};
+        item.textureIsHdrLinear = isHdr && item.textureLayer >= 0;
     }
 }
 
@@ -138,17 +199,17 @@ void ApplyMaterialComponentToSceneDrawItem(
     item.emissiveMapLayer = -1;
     if (mat->GetNormalTexture()) {
         item.normalMapLayer =
-                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetNormalTexture(), nullptr, nullptr);
+                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetNormalTexture(), nullptr, nullptr, nullptr);
         ApplyFirstAtlasUvTransform(item, mat->GetNormalTexture());
     }
     if (mat->GetMetallicRoughnessTexture()) {
         item.metallicRoughnessMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(
-                *resolveTextures, mat->GetMetallicRoughnessTexture(), nullptr, nullptr);
+                *resolveTextures, mat->GetMetallicRoughnessTexture(), nullptr, nullptr, nullptr);
         ApplyFirstAtlasUvTransform(item, mat->GetMetallicRoughnessTexture());
     }
     if (mat->GetEmissiveTexture()) {
         item.emissiveMapLayer =
-                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetEmissiveTexture(), nullptr, nullptr);
+                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetEmissiveTexture(), nullptr, nullptr, nullptr);
         ApplyFirstAtlasUvTransform(item, mat->GetEmissiveTexture());
     }
 }
@@ -184,17 +245,17 @@ void ApplyMultiMaterialSlotToSceneDrawItem(
     }
     if (slot.normalMap) {
         item.normalMapLayer =
-                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.normalMap, nullptr, nullptr);
+                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.normalMap, nullptr, nullptr, nullptr);
         ApplyFirstAtlasUvTransform(item, slot.normalMap);
     }
     if (slot.metallicRoughness) {
         item.metallicRoughnessMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(
-                *resolveTextures, slot.metallicRoughness, nullptr, nullptr);
+                *resolveTextures, slot.metallicRoughness, nullptr, nullptr, nullptr);
         ApplyFirstAtlasUvTransform(item, slot.metallicRoughness);
     }
     if (slot.emissiveMap) {
         item.emissiveMapLayer =
-                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.emissiveMap, nullptr, nullptr);
+                SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.emissiveMap, nullptr, nullptr, nullptr);
         ApplyFirstAtlasUvTransform(item, slot.emissiveMap);
     }
 }

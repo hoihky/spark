@@ -234,6 +234,30 @@ VkSampler VulkanGpuBufferImage::CreateTextureSampler(VkDevice vkDevice, const fl
     return sampler;
 }
 
+VkSampler VulkanGpuBufferImage::CreateEquirectSceneTextureSampler(const VkDevice vkDevice, const float maxLod) {
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.anisotropyEnable = VK_FALSE;
+    samplerInfo.maxAnisotropy = 1.0F;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0F;
+    samplerInfo.minLod = 0.0F;
+    samplerInfo.maxLod = maxLod;
+    VkSampler sampler = VK_NULL_HANDLE;
+    if (vkCreateSampler(vkDevice, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+        throw std::runtime_error("vkCreateSampler (equirect scene) failed");
+    }
+    return sampler;
+}
+
 VkSampler VulkanGpuBufferImage::CreateSpriteSceneTextureSampler(const VkDevice vkDevice) {
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;

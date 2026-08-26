@@ -12,8 +12,6 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         editCursorTransform = nullptr;
         editCursorMaterial = nullptr;
         markerObject = nullptr;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
 
         groundTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("TerrainGround"));
         if (!DemoAssets::TryLoadTerrainDemoSoilTexture(*groundTex)) {
@@ -81,14 +79,8 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         AddPointLight(w, {92.0F, 52.0F, 78.0F}, {0.4F, 0.75F, 1.0F}, 7.0F, 260.0F);
         AddPointLight(w, {-105.0F, 34.0F, -72.0F}, {1.0F, 0.55F, 0.28F}, 5.8F, 240.0F);
 
-        fpsHudObject = w.CreateGameObject();
-        fpsHudObject->GetName() = Spark::Utf8String("TerrainFpsHud");
-        fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
-        fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
-        DemoHud::Apply(*fpsText);
-        fpsText->SetText(Spark::Utf8String(
-                "Terrain — cyan dot = aim · LMB raise / RMB lower · R reset · F1 mouse"));
-        roots.PushBack(fpsHudObject);
+        helpHud.Mount(w, "Terrain");
+        helpHud.SetControlHints("cyan dot = aim · LMB/RMB sculpt · R reset · F1 mouse");
 
         context.GetInput().SetCursorCaptured(true);
         camera.position = {0.0F, 62.0F, 228.0F};
@@ -97,6 +89,7 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
 void TerrainDemo::Unload(Spark::GameWorld& w)
 {
+        helpHud.Unmount(w);
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -109,8 +102,6 @@ void TerrainDemo::Unload(Spark::GameWorld& w)
         editCursorTransform = nullptr;
         editCursorMaterial = nullptr;
         markerObject = nullptr;
-        fpsHudObject = nullptr;
-        fpsText = nullptr;
         unitCubeAsset.Reset();
         groundTex.Reset();
     }
@@ -187,20 +178,7 @@ void TerrainDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineConte
                 terrainComp->ApplyHeightBrushWorld(*terrainObject, hit, 10.0F, delta);
             }
         }
-        if (fpsText != nullptr) {
-            const float dt = timing.deltaTimeSeconds;
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
-            fpsText->SetText(Spark::Utf8String(
-                    std::format(
-                            "Terrain — {:.0f} FPS — cyan dot = aim · LMB/RMB sculpt · R reset · F1 mouse",
-                            static_cast<double>(fpsSmoothed))
-                            .c_str()));
-        }
+        helpHud.Update(timing, context);
     }
 
 void TerrainDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -226,6 +204,8 @@ void TerrainDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IE
         params.useTimeOfDay = true;
         params.timeOfDay = 0.48F;
         params.shadowCascadeFar = 900.0F;
+        params.worldClearColorEnabled = true;
+        params.worldClearColor = {0.42F, 0.62F, 0.92F};
 
         params.draws.Clear();
         params.sceneTextures.Clear();
@@ -311,6 +291,7 @@ void TerrainDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IE
             params.screenTexts.PushBack(Spark::MoveTemp(d));
         });
 
+        helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }
 

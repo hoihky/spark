@@ -9,6 +9,7 @@
 #include "spark/math/Vector4.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/media/VideoRecorder.hpp"
 #include "spark/render/platform/Window.hpp"
@@ -95,6 +96,7 @@ void VulkanRenderer::CleanupSwapchain() {
 
 void VulkanRenderer::RecreateSwapchain() {
     deviceContext.WaitDeviceIdle();
+    frameCapture.FlushPendingCaptures(device(), frameSync.InFlightFences());
 
     if (!commandBuffers.IsEmpty()) {
         vkFreeCommandBuffers(
@@ -208,7 +210,7 @@ void VulkanRenderer::RecordSceneCommandBuffer(
         throw std::runtime_error("vkBeginCommandBuffer failed");
     }
 
-    deferredUploadBatch.Record(commandBuffer, device(), sceneTextureUploader, screenUi);
+    deferredUploadBatch.Record(commandBuffer, device(), sceneTextureUploader, sceneHdrTextureUploader, screenUi);
     customMeshPool.RecordUploads(commandBuffer);
     RecordShadowMapPass(commandBuffer, frameIndex);
 
@@ -249,6 +251,11 @@ void VulkanRenderer::RecordSceneCommandBuffer(
     clearColors[0].color.float32[1] = 0.0F;
     clearColors[0].color.float32[2] = 0.0F;
     clearColors[0].color.float32[3] = 1.0F;
+    if (sceneParamsValid && pendingScene.worldClearColorEnabled) {
+        clearColors[0].color.float32[0] = pendingScene.worldClearColor.x;
+        clearColors[0].color.float32[1] = pendingScene.worldClearColor.y;
+        clearColors[0].color.float32[2] = pendingScene.worldClearColor.z;
+    }
     clearColors[1].depthStencil.depth = 1.0F;
     clearColors[1].depthStencil.stencil = 0;
 
@@ -425,13 +432,15 @@ void VulkanRenderer::DrawFrame() {
     frameSync.WaitForSwapchainImageFence(device(), imageIndex);
     frameSync.TrackSwapchainImageInFlight(imageIndex);
 
-    if (deferredUploadBatch.NeedsSceneTextureGpuIdle(sceneTextureUploader, pendingScene, sceneParamsValid) ||
+    if (deferredUploadBatch.NeedsSceneTextureGpuIdle(
+                sceneTextureUploader, sceneHdrTextureUploader, pendingScene, sceneParamsValid) ||
         deferredUploadBatch.NeedsUiTextureGpuIdle(screenUi, pendingScene)) {
         frameSync.WaitForAllOtherFrames(device());
     }
 
     deferredUploadBatch.Prepare(
             sceneTextureUploader,
+            sceneHdrTextureUploader,
             screenUi,
             physicalDevice(),
             device(),
@@ -544,8 +553,11 @@ void VulkanRenderer::SetSceneRenderParams(const SceneRenderParams& params) {
         customMeshPool.ClearKnownMeshes();
     }
     mergedSceneTextures = params.sceneTextures;
+    mergedSceneHdrTextures = params.sceneHdrTextures;
     pendingScene = params;
     pendingScene.sceneTextures = mergedSceneTextures;
+    pendingScene.sceneHdrTextures = mergedSceneHdrTextures;
+    SceneSubmitDetail::ResolveIblEnvironmentLayer(pendingScene);
     sceneParamsValid = true;
     resolvedLighting = SceneLightingResolver::Resolve(pendingScene);
 }
@@ -586,8 +598,10 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
     frameCapture.Destroy(device());
 
     sceneTextureUploader.DestroyResources(device());
+    sceneHdrTextureUploader.DestroyResources(device());
     customMeshPool.DestroyResources(device());
     mergedSceneTextures.Clear();
+    mergedSceneHdrTextures.Clear();
     directionalShadow.DestroyResources(device());
     punctualShadow.DestroyResources(device());
 
@@ -624,6 +638,7 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
 void VulkanRenderer::CreatePersistentSceneResources() {
     sceneDescriptors.CreateSetLayout(device());
     sceneTextureUploader.CreateResources(physicalDevice(), device(), commandPool, graphicsQueue());
+    sceneHdrTextureUploader.CreateResources(physicalDevice(), device(), commandPool, graphicsQueue());
     customMeshPool.CreateResources(physicalDevice(), device());
     directionalShadow.CreateResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     directionalShadow.CreateGraphicsPipeline(device(), sceneDescriptors.Layout(), shaderLoader);
@@ -638,6 +653,7 @@ void VulkanRenderer::CreatePersistentSceneResources() {
             VulkanFrameSync::kMaxFramesInFlight,
             VulkanSceneDescriptors::BindingSources{
                     .sceneTextureUploader = sceneTextureUploader,
+                    .sceneHdrTextureUploader = sceneHdrTextureUploader,
                     .clusteredForwardLights = clusteredForwardLights,
                     .directionalShadow = directionalShadow,
                     .punctualShadow = punctualShadow,
