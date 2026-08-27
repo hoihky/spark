@@ -66,6 +66,9 @@ void ApplyAlbedoTexture(
         if (!resolved) {
             resolved = baseColor;
         }
+        const Vector2 layerScale = resolved->GetSceneLayerUvScale();
+        item.textureUvScale.x *= layerScale.x;
+        item.textureUvScale.y *= layerScale.y;
         isHdr = resolved->IsHdrFloatPixels();
     }
     item.textureIsHdrLinear = isHdr && item.textureLayer >= 0;
@@ -242,7 +245,6 @@ void FillStandardLitSceneFromWorld(
     params.lightColor = lightColor;
     params.lightIntensity = lightIntensity;
     params.ambientColor = ambientColor;
-    SceneSubmitDetail::ApplyEcsDirectionalLight(world, params);
 
     params.draws.Clear();
     params.transparentDraws.Clear();
@@ -280,6 +282,7 @@ void FillStandardLitSceneFromWorld(
     ApplyRegionalRenderVolumes(world, cameraPositionWorld, params);
 
     const ResolvedSceneLighting resolvedLighting = SceneLightingResolver::Resolve(params);
+    SceneSubmitDetail::ApplyEcsDirectionalLight(world, params);
     const std::int32_t defaultShadowFlags = DefaultShadowFlagsFor(resolvedLighting);
 
     world.ForEachActiveGameObject([&params](GameObject* o) {

@@ -45,6 +45,7 @@ public:
     bool doubleSided = false;
     float opacity = 1.0F;
     float alphaCutoff = 0.0F;
+    bool alphaBlend = false;
     MaterialGltfExtensions gltfExtensions{};
     MaterialUvMap baseColorUv{};
     MaterialUvMap normalUv{};

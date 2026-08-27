@@ -39,6 +39,8 @@ public:
     float opacity = 1.0F;
     /** glTF alpha_mode=MASK cutoff; 0 = disabled (no alpha test). */
     float alphaCutoff = 0.0F;
+    /** glTF alpha_mode=BLEND; routes draw to the transparent pass. */
+    bool alphaBlend = false;
     bool unlit = false;
     /** glTF normalTexture.scale (default 1). */
     float normalScale = 1.0F;

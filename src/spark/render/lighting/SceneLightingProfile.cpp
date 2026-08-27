@@ -209,6 +209,7 @@ ResolvedSceneLighting ResolveSceneLightingFromParams(
         const float shadowFadeStartRatioOverride,
         const float ambientScaleOverride,
         const bool directionalShadowsEnabled,
+        const bool punctualShadowsEnabled,
         const bool shadowsCastByDefault,
         const bool shadowsReceiveByDefault,
         const bool useTimeOfDay,
@@ -224,12 +225,12 @@ ResolvedSceneLighting ResolveSceneLightingFromParams(
             PickFadeStartRatio(shadowFadeStartRatioOverride, preset.shadow.distanceFadeStartRatio);
     out.shadowCascadeBlendFraction = preset.shadow.cascadeBlendFraction;
     out.directionalShadowsEnabled = directionalShadowsEnabled && preset.shadow.directionalEnabled;
-    out.punctualShadowsEnabled = preset.shadow.punctualShadowsEnabled;
+    out.punctualShadowsEnabled = punctualShadowsEnabled && preset.shadow.punctualShadowsEnabled;
     out.defaultShadowCast = shadowsCastByDefault && preset.shadow.defaultCast;
     out.defaultShadowReceive = shadowsReceiveByDefault && preset.shadow.defaultReceive;
     out.ambientScale = PickOverride(ambientScaleOverride, preset.ambientScale);
     out.ambient = preset.ambient;
-    out.timeOfDayApplied = useTimeOfDay || preset.timeOfDay.enabled;
+    out.timeOfDayApplied = useTimeOfDay;
     return out;
 }
 

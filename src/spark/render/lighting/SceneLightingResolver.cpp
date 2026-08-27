@@ -12,24 +12,30 @@ ResolvedSceneLighting SceneLightingResolver::Resolve(SceneRenderParams& params) 
             params.shadowFadeStartRatio,
             params.ambientScale,
             params.directionalShadowsEnabled,
+            params.punctualShadowsEnabled,
             params.shadowsCastByDefault,
             params.shadowsReceiveByDefault,
             params.useTimeOfDay,
             params.timeOfDay);
 
-    if (resolved.timeOfDayApplied || params.useTimeOfDay) {
-        const SceneLightingProfileSettings preset = LightingProfileSettingsFor(params.lightingProfile);
-        const float tod = params.useTimeOfDay ? params.timeOfDay : preset.timeOfDay.normalizedTime;
+    const bool exposureOverridden = params.exposure > 0.0F;
+    const float savedExposure = resolved.exposure;
+
+    if (params.useTimeOfDay) {
         ApplyTimeOfDayLighting(
-                tod,
+                params.timeOfDay,
                 params.lightingProfile,
                 resolved,
                 &params.lightDirectionWorld,
                 &params.lightColor,
                 &params.lightIntensity);
+        if (exposureOverridden) {
+            resolved.exposure = savedExposure;
+        }
     }
 
-    if (params.ambientColor.x > 0.001F || params.ambientColor.y > 0.001F || params.ambientColor.z > 0.001F) {
+    if (!params.useTimeOfDay &&
+        (params.ambientColor.x > 0.001F || params.ambientColor.y > 0.001F || params.ambientColor.z > 0.001F)) {
         resolved.ambient.groundColor = params.ambientColor;
     }
 

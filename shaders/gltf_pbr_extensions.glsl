@@ -44,7 +44,7 @@ vec3 sparkComputeEmissive(vec4 vEmissive, int emissiveMapLayer) {
     vec3 e = vEmissive.rgb * vEmissive.w * vec3(push.emissiveFactor[0], push.emissiveFactor[1], push.emissiveFactor[2]) * strength;
     if (emissiveMapLayer >= 0) {
         int el = clamp(emissiveMapLayer, 0, 63);
-        e *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
+        e *= sparkSrgbToLinear(texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb);
     }
     return e;
 }

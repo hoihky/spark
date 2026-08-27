@@ -126,6 +126,11 @@ void MaterialComponent::SetAlphaCutoff(const float cutoff) {
     NotifyMaterialChanged();
 }
 
+void MaterialComponent::SetAlphaBlend(const bool blend) {
+    alphaBlend = blend;
+    NotifyMaterialChanged();
+}
+
 void MaterialComponent::SetMaterialAsset(GameWorld& world, const char* key) {
     libraryBinding.Release(world);
     libraryBinding.Assign(world, key);

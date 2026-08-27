@@ -73,6 +73,7 @@ void RegisterMaterialTextures(GameWorldAssetCache& cache, const MaterialAsset& m
     registerOne(material.normalMap);
     registerOne(material.metallicRoughness);
     registerOne(material.emissiveMap);
+    registerOne(material.iridescenceThicknessMap);
 }
 
 bool PopulateAssetFromSlot(

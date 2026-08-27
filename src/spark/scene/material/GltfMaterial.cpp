@@ -10,6 +10,7 @@
 
 #include "cgltf.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -141,6 +142,8 @@ bool TryDecodeDataUriImage(const char* uri, Texture2D& outDecoded) {
 SharedPtr<Texture2D> CreateMergedOrmTexture(
         const SharedPtr<Texture2D>& metallicRoughness,
         const SharedPtr<Texture2D>& occlusion,
+        const float roughnessFactor,
+        const float metallicFactor,
         const Utf8String& textureName) {
     if (!occlusion || occlusion->GetWidth() == 0 || occlusion->GetHeight() == 0) {
         return metallicRoughness;
@@ -159,8 +162,9 @@ SharedPtr<Texture2D> CreateMergedOrmTexture(
                 const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(w) + static_cast<std::size_t>(x)) * 4U;
                 const std::uint8_t ao = occ[i];
                 pixels[i + 0] = ao;
-                pixels[i + 1] = 255;
-                pixels[i + 2] = 255;
+                pixels[i + 1] = static_cast<std::uint8_t>(
+                        std::clamp(roughnessFactor, 0.0F, 1.0F) * 255.0F);
+                pixels[i + 2] = static_cast<std::uint8_t>(std::clamp(metallicFactor, 0.0F, 1.0F) * 255.0F);
                 pixels[i + 3] = 255;
             }
         }
@@ -179,12 +183,15 @@ SharedPtr<Texture2D> GetOrCreateMergedOrmTexture(
         const SharedPtr<Texture2D>& occlusion,
         const cgltf_image* mrImage,
         const cgltf_image* occImage,
+        const float roughnessFactor,
+        const float metallicFactor,
         const Utf8String& textureName) {
     const std::uint64_t key = MakeOrmCacheKey(mrImage, occImage);
     if (const SharedPtr<Texture2D>* cached = caches.mergedOrmTextures.Find(key)) {
         return *cached;
     }
-    SharedPtr<Texture2D> merged = CreateMergedOrmTexture(metallicRoughness, occlusion, textureName);
+    SharedPtr<Texture2D> merged =
+            CreateMergedOrmTexture(metallicRoughness, occlusion, roughnessFactor, metallicFactor, textureName);
     caches.mergedOrmTextures.Add(key, merged);
     return merged;
 }
@@ -303,7 +310,7 @@ void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
     if (mat.alpha_mode == cgltf_alpha_mode_mask) {
         out.alphaCutoff = static_cast<float>(mat.alpha_cutoff);
     } else if (mat.alpha_mode == cgltf_alpha_mode_blend) {
-        // opacity already carries base-color factor alpha; route to transparent pass when < 1.
+        out.alphaBlend = true;
     }
 }
 
@@ -389,11 +396,25 @@ bool TryLoadTexturesFromMaterial(
             if (hasMetallicRoughnessTexture) {
                 if (UvMapsMatch(occlusionUv, out.metallicRoughnessUv)) {
                     out.metallicRoughness = GetOrCreateMergedOrmTexture(
-                            caches, out.metallicRoughness, occlusion, mrImage, occImage, name);
+                            caches,
+                            out.metallicRoughness,
+                            occlusion,
+                            mrImage,
+                            occImage,
+                            out.roughnessFactor,
+                            out.metallicFactor,
+                            name);
                 }
             } else {
                 out.metallicRoughness = GetOrCreateMergedOrmTexture(
-                        caches, out.metallicRoughness, occlusion, mrImage, occImage, name);
+                        caches,
+                        out.metallicRoughness,
+                        occlusion,
+                        mrImage,
+                        occImage,
+                        out.roughnessFactor,
+                        out.metallicFactor,
+                        name);
                 out.metallicRoughnessUv = occlusionUv;
             }
         }
@@ -410,6 +431,7 @@ bool TryLoadTexturesFromMaterial(
         out.roughnessFactor = 1.0F - static_cast<float>(sg.glossiness_factor);
         if (sg.diffuse_texture.texture != nullptr) {
             const Utf8String name = MakeTextureName(gltfPath, sg.diffuse_texture.texture->image, "diffuse");
+            ReadTextureViewUv(sg.diffuse_texture, out.baseColorUv);
             (void)TryGetOrDecodeTextureView(sg.diffuse_texture, dir, name, caches, out.baseColor);
         }
     }
@@ -448,7 +470,7 @@ bool GltfMaterial::HasScalarPresentation() const noexcept {
     if (!ApproximatelyEqual(occlusionStrength, 1.0F)) {
         return true;
     }
-    if (doubleSided || alphaCutoff > 1.0e-6F) {
+    if (doubleSided || alphaCutoff > 1.0e-6F || alphaBlend) {
         return true;
     }
     if (gltfExtensions.HasClearcoat() || gltfExtensions.HasTransmission() || gltfExtensions.HasEmissiveStrength() ||
@@ -490,6 +512,7 @@ void GltfMaterial::ApplyTo(MaterialComponent& material) const {
     material.SetDoubleSided(doubleSided);
     material.SetOpacity(opacity);
     material.SetAlphaCutoff(alphaCutoff);
+    material.SetAlphaBlend(alphaBlend);
     material.SetBaseColorUvMap(baseColorUv);
     material.SetNormalUvMap(normalUv);
     material.SetMetallicRoughnessUvMap(metallicRoughnessUv);
@@ -527,6 +550,7 @@ void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.doubleSided = doubleSided;
     slot.opacity = opacity;
     slot.alphaCutoff = alphaCutoff;
+    slot.alphaBlend = alphaBlend;
     slot.baseColorUv = baseColorUv;
     slot.normalUv = normalUv;
     slot.metallicRoughnessUv = metallicRoughnessUv;

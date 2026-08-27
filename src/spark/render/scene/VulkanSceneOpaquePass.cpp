@@ -291,7 +291,7 @@ void VulkanSceneOpaquePass::RecordTransparent(
         push.roughnessFactor = d.roughnessFactor;
         push.occlusionStrength = d.occlusionStrength;
         push.shadowFlags = d.shadowFlags;
-        push.alphaCutoff = d.alphaCutoff;
+        push.alphaCutoff = 0.0F;
         FillMaterialMapUvPush(push, d);
         push.emissive[0] = d.emissiveColor.x;
         push.emissive[1] = d.emissiveColor.y;

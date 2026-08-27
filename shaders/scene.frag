@@ -82,14 +82,26 @@ const float kShadowPcfW5[5] = float[](0.0625, 0.25, 0.375, 0.25, 0.0625);
  * Directional shadow PCF: weighted 5×5 filter + slightly wider kernel when N·L is low (softer grazing penumbra).
  * Offsets are rotated per pixel to reduce axis-aligned blockiness from the shadow map grid.
  */
-int selectShadowCascade(float distFromCamera) {
-    if (distFromCamera <= ubo.cascadeSplits.x) {
+/**
+ * View-space depth along the camera forward axis (matches CSM split distances).
+ */
+float shadowCascadeViewDepth(vec3 worldPos) {
+    vec4 worldNear = ubo.invViewProj * vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 worldMid = ubo.invViewProj * vec4(0.0, 0.0, 0.5, 1.0);
+    worldNear.xyz /= worldNear.w;
+    worldMid.xyz /= worldMid.w;
+    vec3 viewForward = normalize(worldMid.xyz - worldNear.xyz);
+    return max(dot(worldPos - ubo.cameraPos.xyz, viewForward), 0.0);
+}
+
+int selectShadowCascade(float viewDepth) {
+    if (viewDepth <= ubo.cascadeSplits.x) {
         return 0;
     }
-    if (distFromCamera <= ubo.cascadeSplits.y) {
+    if (viewDepth <= ubo.cascadeSplits.y) {
         return 1;
     }
-    if (distFromCamera <= ubo.cascadeSplits.z) {
+    if (viewDepth <= ubo.cascadeSplits.z) {
         return 2;
     }
     return 3;
@@ -157,8 +169,8 @@ float sampleSunShadowAtCascade(
 }
 
 /** Soft blend between adjacent CSM cascades near split distances (hides resolution pops). */
-float blendSunShadowCascades(float distCam, vec3 worldPos, vec3 N, vec3 Ld, float sunGracing) {
-    int cascade = selectShadowCascade(distCam);
+float blendSunShadowCascades(float viewDepth, vec3 worldPos, vec3 N, vec3 Ld, float sunGracing) {
+    int cascade = selectShadowCascade(viewDepth);
     float sh = sampleSunShadowAtCascade(cascade, worldPos, N, Ld, sunGracing);
 
     float blendFrac = clamp(ubo.timeGlobal.w, 0.001, 0.35);
@@ -167,7 +179,7 @@ float blendSunShadowCascades(float distCam, vec3 worldPos, vec3 N, vec3 Ld, floa
     if (cascade > 0) {
         float splitLow = ubo.cascadeSplits[cascade - 1];
         float blendLen = max(splitLow * blendFrac, kMinBlendM);
-        float wPrev = 1.0 - smoothstep(splitLow - blendLen, splitLow, distCam);
+        float wPrev = 1.0 - smoothstep(splitLow - blendLen, splitLow, viewDepth);
         if (wPrev > 1e-4) {
             float shPrev = sampleSunShadowAtCascade(cascade - 1, worldPos, N, Ld, sunGracing);
             sh = mix(sh, shPrev, wPrev);
@@ -176,7 +188,7 @@ float blendSunShadowCascades(float distCam, vec3 worldPos, vec3 N, vec3 Ld, floa
     if (cascade < 3) {
         float splitHigh = ubo.cascadeSplits[cascade];
         float blendLen = max(splitHigh * blendFrac, kMinBlendM);
-        float wNext = smoothstep(splitHigh - blendLen, splitHigh, distCam);
+        float wNext = smoothstep(splitHigh - blendLen, splitHigh, viewDepth);
         if (wNext > 1e-4) {
             float shNext = sampleSunShadowAtCascade(cascade + 1, worldPos, N, Ld, sunGracing);
             sh = mix(sh, shNext, wNext);
@@ -462,7 +474,7 @@ void main() {
         int nl = clamp(push.normalMapLayer, 0, 63);
         vec3 tN = texture(sceneTextures, vec3(sparkMapUv(1), float(nl))).xyz * 2.0 - 1.0;
         tN.y = -tN.y;
-        tN.xy *= clamp(push.normalScale, 0.0, 1.0);
+        tN.xy *= max(push.normalScale, 0.0);
         tN = normalize(tN);
         mat3 TBN;
         if (dot(vTangent.xyz, vTangent.xyz) > 1e-8) {
@@ -472,8 +484,8 @@ void main() {
         } else {
             vec3 dp1 = dFdx(vWorldPos);
             vec3 dp2 = dFdy(vWorldPos);
-            vec2 duv1 = dFdx(vTexCoord0);
-            vec2 duv2 = dFdy(vTexCoord0);
+            vec2 duv1 = dFdx(push.mapTexCoordSet[1] == 1 ? vTexCoord1 : vTexCoord0);
+            vec2 duv2 = dFdy(push.mapTexCoordSet[1] == 1 ? vTexCoord1 : vTexCoord0);
             float det = duv1.x * duv2.y - duv1.y * duv2.x;
             if (abs(det) > 1e-8) {
                 float invDet = 1.0 / det;
@@ -503,8 +515,9 @@ void main() {
 
     float sunShadow = 1.0;
     if (push.skyMode == 0 && ubo.shadowParams.w > 0.5 && (push.shadowFlags & 2) != 0) {
+        float viewDepth = shadowCascadeViewDepth(vWorldPos);
         float distCam = length(vWorldPos - ubo.cameraPos.xyz);
-        sunShadow = blendSunShadowCascades(distCam, vWorldPos, N, Ld, sunGracing);
+        sunShadow = blendSunShadowCascades(viewDepth, vWorldPos, N, Ld, sunGracing);
         float shadowFadeEnd = ubo.viewportSize.z;
         if (shadowFadeEnd > 0.5) {
             float fadeStart = shadowFadeEnd * clamp(ubo.timeGlobal.y, 0.5, 0.98);

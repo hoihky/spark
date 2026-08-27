@@ -45,6 +45,8 @@ bool VulkanDirectionalShadowCascadeMath::ComputeWorldToShadowClip(
         const Vector3& lightDirectionWorldTowardLight,
         const float distNear,
         const float distFar,
+        const float frustumNear,
+        const float frustumFar,
         const std::uint32_t cascadeTileSize,
         Matrix4& outWorldToShadowClip) {
     Matrix4 invVp{};
@@ -116,11 +118,9 @@ bool VulkanDirectionalShadowCascadeMath::ComputeWorldToShadowClip(
         accumulateWorldInLight(p);
     };
 
-    constexpr float kFrustumNear = 0.12F;
-    constexpr float kFrustumFar = 400.0F;
-    const float frustumSpan = std::max(kFrustumFar - kFrustumNear, 1e-3F);
-    const float tNear = std::clamp((distNear - kFrustumNear) / frustumSpan, 0.0F, 1.0F);
-    const float tFar = std::clamp((distFar - kFrustumNear) / frustumSpan, 0.0F, 1.0F);
+    const float frustumSpan = std::max(frustumFar - frustumNear, 1e-3F);
+    const float tNear = std::clamp((distNear - frustumNear) / frustumSpan, 0.0F, 1.0F);
+    const float tFar = std::clamp((distFar - frustumNear) / frustumSpan, 0.0F, 1.0F);
 
     auto accumulateFrustumSlice = [&](const float t0, const float t1) {
         for (const Vector4& c : ndcCorners) {

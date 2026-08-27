@@ -34,6 +34,7 @@ void ApplyMaterialComponentToSceneDrawItemImpl(SceneDrawItem& item, const Materi
     item.doubleSided = mat->IsDoubleSided();
     item.opacity = mat->GetOpacity();
     item.alphaCutoff = mat->GetAlphaCutoff();
+    item.alphaBlend = mat->IsAlphaBlend();
     item.baseColorUv = mat->GetBaseColorUvMap();
     item.normalUv = mat->GetNormalUvMap();
     item.metallicRoughnessUv = mat->GetMetallicRoughnessUvMap();
@@ -47,19 +48,17 @@ void ApplyMaterialComponentToSceneDrawItemImpl(SceneDrawItem& item, const Materi
 
 namespace {
 
-void ApplyFirstAtlasUvTransform(SceneDrawItem& item, const SharedPtr<Texture2D>& tex) noexcept {
+void ApplyAtlasUvToMap(MaterialUvMap& map, const SharedPtr<Texture2D>& tex) noexcept {
     if (!tex || !tex->HasAtlasBinding()) {
-        return;
-    }
-    if (item.textureUvScale.x != 1.0F || item.textureUvScale.y != 1.0F || item.textureUvOffset.x != 0.0F ||
-        item.textureUvOffset.y != 0.0F) {
         return;
     }
     Vector2 uvScale{1.0F, 1.0F};
     Vector2 uvOffset{};
     (void)tex->ResolveAtlasUv(uvScale, uvOffset);
-    item.textureUvScale = uvScale;
-    item.textureUvOffset = uvOffset;
+    map.uvScale.x *= uvScale.x;
+    map.uvScale.y *= uvScale.y;
+    map.uvOffset.x += uvOffset.x;
+    map.uvOffset.y += uvOffset.y;
 }
 
 }  // namespace
@@ -204,21 +203,22 @@ void ApplyMaterialComponentToSceneDrawItem(
     if (mat->GetNormalTexture()) {
         item.normalMapLayer =
                 SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetNormalTexture(), nullptr, nullptr, nullptr);
-        ApplyFirstAtlasUvTransform(item, mat->GetNormalTexture());
+        ApplyAtlasUvToMap(item.normalUv, mat->GetNormalTexture());
     }
     if (mat->GetMetallicRoughnessTexture()) {
         item.metallicRoughnessMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(
                 *resolveTextures, mat->GetMetallicRoughnessTexture(), nullptr, nullptr, nullptr);
-        ApplyFirstAtlasUvTransform(item, mat->GetMetallicRoughnessTexture());
+        ApplyAtlasUvToMap(item.metallicRoughnessUv, mat->GetMetallicRoughnessTexture());
     }
     if (mat->GetEmissiveTexture()) {
         item.emissiveMapLayer =
                 SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, mat->GetEmissiveTexture(), nullptr, nullptr, nullptr);
-        ApplyFirstAtlasUvTransform(item, mat->GetEmissiveTexture());
+        ApplyAtlasUvToMap(item.emissiveUv, mat->GetEmissiveTexture());
     }
     if (mat->GetIridescenceThicknessTexture()) {
         item.iridescenceThicknessMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(
                 *resolveTextures, mat->GetIridescenceThicknessTexture(), nullptr, nullptr, nullptr);
+        ApplyAtlasUvToMap(item.iridescenceThicknessUv, mat->GetIridescenceThicknessTexture());
     }
 }
 
@@ -241,6 +241,7 @@ void ApplyMultiMaterialSlotToSceneDrawItem(
     item.doubleSided = slot.doubleSided;
     item.opacity = slot.opacity;
     item.alphaCutoff = slot.alphaCutoff;
+    item.alphaBlend = slot.alphaBlend;
     item.baseColorUv = slot.baseColorUv;
     item.normalUv = slot.normalUv;
     item.metallicRoughnessUv = slot.metallicRoughnessUv;
@@ -258,21 +259,22 @@ void ApplyMultiMaterialSlotToSceneDrawItem(
     if (slot.normalMap) {
         item.normalMapLayer =
                 SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.normalMap, nullptr, nullptr, nullptr);
-        ApplyFirstAtlasUvTransform(item, slot.normalMap);
+        ApplyAtlasUvToMap(item.normalUv, slot.normalMap);
     }
     if (slot.metallicRoughness) {
         item.metallicRoughnessMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(
                 *resolveTextures, slot.metallicRoughness, nullptr, nullptr, nullptr);
-        ApplyFirstAtlasUvTransform(item, slot.metallicRoughness);
+        ApplyAtlasUvToMap(item.metallicRoughnessUv, slot.metallicRoughness);
     }
     if (slot.emissiveMap) {
         item.emissiveMapLayer =
                 SceneSubmitDetail::FindOrAddSceneTexture(*resolveTextures, slot.emissiveMap, nullptr, nullptr, nullptr);
-        ApplyFirstAtlasUvTransform(item, slot.emissiveMap);
+        ApplyAtlasUvToMap(item.emissiveUv, slot.emissiveMap);
     }
     if (slot.iridescenceThicknessMap) {
         item.iridescenceThicknessMapLayer = SceneSubmitDetail::FindOrAddSceneTexture(
                 *resolveTextures, slot.iridescenceThicknessMap, nullptr, nullptr, nullptr);
+        ApplyAtlasUvToMap(item.iridescenceThicknessUv, slot.iridescenceThicknessMap);
     }
 }
 

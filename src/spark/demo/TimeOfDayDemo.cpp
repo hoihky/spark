@@ -322,6 +322,7 @@ void TimeOfDayDemo::UpdateSkyTintForTime(const float normalizedTime) {
             true,
             true,
             true,
+            true,
             normalizedTime);
     ApplyTimeOfDayLighting(
             normalizedTime,

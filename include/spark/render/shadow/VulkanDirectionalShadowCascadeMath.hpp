@@ -27,6 +27,8 @@ public:
             const Vector3& lightDirectionWorldTowardLight,
             float distNear,
             float distFar,
+            float frustumNear,
+            float frustumFar,
             std::uint32_t cascadeTileSize,
             Matrix4& outWorldToShadowClip);
 };

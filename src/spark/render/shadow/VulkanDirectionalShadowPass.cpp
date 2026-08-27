@@ -258,8 +258,8 @@ void VulkanDirectionalShadowPass::CreateGraphicsPipeline(
     rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_TRUE;
-    rasterizer.depthBiasConstantFactor = 4.75F;
-    rasterizer.depthBiasSlopeFactor = 4.75F;
+    rasterizer.depthBiasConstantFactor = 1.25F;
+    rasterizer.depthBiasSlopeFactor = 1.25F;
     rasterizer.depthBiasClamp = 0.0F;
 
     VkPipelineMultisampleStateCreateInfo multisampling{};

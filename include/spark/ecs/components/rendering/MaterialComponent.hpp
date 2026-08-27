@@ -86,6 +86,10 @@ public:
     [[nodiscard]] float GetAlphaCutoff() const noexcept { return alphaCutoff; }
     void SetAlphaCutoff(float cutoff);
 
+    /** glTF alpha_mode=BLEND; routes draw to the transparent pass. */
+    [[nodiscard]] bool IsAlphaBlend() const noexcept { return alphaBlend; }
+    void SetAlphaBlend(bool blend);
+
     [[nodiscard]] const MaterialUvMap& GetBaseColorUvMap() const noexcept { return baseColorUv; }
     [[nodiscard]] const MaterialUvMap& GetNormalUvMap() const noexcept { return normalUv; }
     [[nodiscard]] const MaterialUvMap& GetMetallicRoughnessUvMap() const noexcept { return metallicRoughnessUv; }
@@ -137,6 +141,7 @@ private:
     bool doubleSided = false;
     float opacity = 1.0F;
     float alphaCutoff = 0.0F;
+    bool alphaBlend = false;
     MaterialUvMap baseColorUv{};
     MaterialUvMap normalUv{};
     MaterialUvMap metallicRoughnessUv{};

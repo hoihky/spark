@@ -117,6 +117,7 @@ void ApplyTimeOfDayLighting(
         float shadowFadeStartRatioOverride,
         float ambientScaleOverride,
         bool directionalShadowsEnabled,
+        bool punctualShadowsEnabled,
         bool shadowsCastByDefault,
         bool shadowsReceiveByDefault,
         bool useTimeOfDay,

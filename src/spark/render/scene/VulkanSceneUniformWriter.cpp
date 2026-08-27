@@ -119,6 +119,8 @@ void VulkanSceneUniformWriter::Write(
                         lightDir,
                         distSplits[ci],
                         distSplits[ci + 1],
+                        kNear,
+                        kFar,
                         VulkanDirectionalShadowPass::kCascadeTileSize,
                         w2s)) {
                 std::memcpy(u.worldToShadowClip[ci], w2s.m, sizeof(u.worldToShadowClip[ci]));

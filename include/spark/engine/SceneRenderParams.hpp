@@ -227,6 +227,8 @@ struct SceneDrawItem {
     float opacity = 1.0F;
     /** glTF alpha_mode=MASK cutoff; 0 = no alpha test. */
     float alphaCutoff = 0.0F;
+    /** glTF alpha_mode=BLEND; routes draw to the transparent pass. */
+    bool alphaBlend = false;
     /** Base-color UV transform when sampling a packed atlas (<c>uv * scale + offset</c>). */
     Vector2 textureUvScale{1.0F, 1.0F};
     Vector2 textureUvOffset{};

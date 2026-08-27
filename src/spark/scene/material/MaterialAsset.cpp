@@ -54,6 +54,7 @@ void MaterialAsset::CopyFromGltfMaterial(const GltfMaterial& source) {
     doubleSided = source.doubleSided;
     opacity = source.opacity;
     alphaCutoff = source.alphaCutoff;
+    alphaBlend = source.alphaBlend;
     gltfExtensions = source.gltfExtensions;
     baseColorUv = source.baseColorUv;
     normalUv = source.normalUv;
@@ -71,6 +72,7 @@ void MaterialAsset::CaptureFromMaterial(const MaterialComponent& material) {
     normalMap = material.GetNormalTexture();
     metallicRoughness = material.GetMetallicRoughnessTexture();
     emissiveMap = material.GetEmissiveTexture();
+    iridescenceThicknessMap = material.GetIridescenceThicknessTexture();
     tint = material.GetTint();
     metallic = material.GetMetallic();
     roughness = material.GetRoughness();
@@ -87,11 +89,13 @@ void MaterialAsset::CaptureFromMaterial(const MaterialComponent& material) {
     doubleSided = material.IsDoubleSided();
     opacity = material.GetOpacity();
     alphaCutoff = material.GetAlphaCutoff();
+    alphaBlend = material.IsAlphaBlend();
     gltfExtensions = material.GetGltfExtensions();
     baseColorUv = material.GetBaseColorUvMap();
     normalUv = material.GetNormalUvMap();
     metallicRoughnessUv = material.GetMetallicRoughnessUvMap();
     emissiveUv = material.GetEmissiveUvMap();
+    iridescenceThicknessUv = material.GetIridescenceThicknessUvMap();
     normalScale = material.GetNormalScale();
 }
 
@@ -123,6 +127,7 @@ void MaterialAsset::ApplyTo(MaterialComponent& material) const {
     material.SetDoubleSided(doubleSided);
     material.SetOpacity(opacity);
     material.SetAlphaCutoff(alphaCutoff);
+    material.SetAlphaBlend(alphaBlend);
     material.SetGltfExtensions(gltfExtensions);
     material.SetBaseColorUvMap(baseColorUv);
     material.SetNormalUvMap(normalUv);
@@ -161,6 +166,7 @@ void MaterialAsset::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.doubleSided = doubleSided;
     slot.opacity = opacity;
     slot.alphaCutoff = alphaCutoff;
+    slot.alphaBlend = alphaBlend;
     slot.gltfExtensions = gltfExtensions;
     slot.baseColorUv = baseColorUv;
     slot.normalUv = normalUv;
