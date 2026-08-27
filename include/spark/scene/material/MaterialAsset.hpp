@@ -5,6 +5,8 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialGltfExtensions.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
@@ -25,6 +27,7 @@ public:
     SharedPtr<Texture2D> normalMap;
     SharedPtr<Texture2D> metallicRoughness;
     SharedPtr<Texture2D> emissiveMap;
+    SharedPtr<Texture2D> iridescenceThicknessMap;
 
     Vector3 tint{Vector3::One};
     float metallic = 0.0F;
@@ -42,6 +45,13 @@ public:
     bool doubleSided = false;
     float opacity = 1.0F;
     float alphaCutoff = 0.0F;
+    MaterialGltfExtensions gltfExtensions{};
+    MaterialUvMap baseColorUv{};
+    MaterialUvMap normalUv{};
+    MaterialUvMap metallicRoughnessUv{};
+    MaterialUvMap emissiveUv{};
+    MaterialUvMap iridescenceThicknessUv{};
+    float normalScale = 1.0F;
 
     [[nodiscard]] bool HasAnyTexture() const noexcept;
 

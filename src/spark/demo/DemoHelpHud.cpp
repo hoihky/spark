@@ -17,7 +17,7 @@ namespace Spark {
 
 namespace {
 
-bool g_demoHelpHudVisible = true;
+bool g_demoHelpHudVisible = false;
 DemoHelpHud* g_activeHelpHud = nullptr;
 
 constexpr float kWrapWidthFraction = 0.42F;

@@ -5,6 +5,7 @@
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
@@ -26,6 +27,7 @@ public:
     SharedPtr<Texture2D> normalMap;
     SharedPtr<Texture2D> metallicRoughness;
     SharedPtr<Texture2D> emissiveMap;
+    SharedPtr<Texture2D> iridescenceThicknessMap;
 
     Vector3 baseColorFactor{Vector3::One};
     float metallicFactor = 1.0F;
@@ -38,14 +40,19 @@ public:
     /** glTF alpha_mode=MASK cutoff; 0 = disabled (no alpha test). */
     float alphaCutoff = 0.0F;
     bool unlit = false;
+    /** glTF normalTexture.scale (default 1). */
+    float normalScale = 1.0F;
     MaterialUvMap baseColorUv{};
     MaterialUvMap normalUv{};
     MaterialUvMap metallicRoughnessUv{};
     MaterialUvMap emissiveUv{};
+    MaterialUvMap iridescenceThicknessUv{};
+    MaterialGltfExtensions gltfExtensions{};
 
     [[nodiscard]] bool HasAnyTexture() const noexcept {
         return static_cast<bool>(baseColor) || static_cast<bool>(normalMap) ||
-               static_cast<bool>(metallicRoughness) || static_cast<bool>(emissiveMap);
+               static_cast<bool>(metallicRoughness) || static_cast<bool>(emissiveMap) ||
+               static_cast<bool>(iridescenceThicknessMap);
     }
 
     /** True when scalar factors or flags differ from implicit glTF defaults (no textures required). */
@@ -87,6 +94,9 @@ public:
 
     /** Loads every material entry in <c>data->materials</c>. */
     static void LoadAll(const cgltf_data* data, const char* gltfPath, Array<GltfMaterial>& outMaterials);
+
+    /** Loads KHR_materials_variants names from <c>data->variants</c>. */
+    static void LoadVariantNames(const cgltf_data* data, Array<Utf8String>& outVariantNames);
 };
 
 using GltfMaterialDesc = GltfMaterial;

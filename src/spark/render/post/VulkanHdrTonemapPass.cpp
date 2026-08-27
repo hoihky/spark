@@ -66,9 +66,25 @@ void VulkanHdrTonemapPass::CreateRenderPass(VkDevice device, VkFormat depthForma
     if (vkCreateRenderPass(device, &rpInfo, nullptr, &hdrRenderPass) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateRenderPass (HDR) failed");
     }
+
+    VkAttachmentDescription resumeColor = colorAttachment;
+    resumeColor.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+    resumeColor.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkAttachmentDescription resumeDepth = depthAttachment;
+    resumeDepth.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+    resumeDepth.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    const VkAttachmentDescription resumeAttachments[] = {resumeColor, resumeDepth};
+    rpInfo.pAttachments = resumeAttachments;
+    if (vkCreateRenderPass(device, &rpInfo, nullptr, &hdrResumeRenderPass) != VK_SUCCESS) {
+        throw std::runtime_error("vkCreateRenderPass (HDR resume) failed");
+    }
 }
 
 void VulkanHdrTonemapPass::DestroyRenderPass(VkDevice device) {
+    if (hdrResumeRenderPass != VK_NULL_HANDLE) {
+        vkDestroyRenderPass(device, hdrResumeRenderPass, nullptr);
+        hdrResumeRenderPass = VK_NULL_HANDLE;
+    }
     if (hdrRenderPass != VK_NULL_HANDLE) {
         vkDestroyRenderPass(device, hdrRenderPass, nullptr);
         hdrRenderPass = VK_NULL_HANDLE;
@@ -98,7 +114,7 @@ void VulkanHdrTonemapPass::RecreateFlightTargets(
                 extent.height,
                 kColorFormat,
                 VK_IMAGE_TILING_OPTIMAL,
-                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
                 hdr.colorImage,
                 hdr.colorMemory);
@@ -453,6 +469,33 @@ void VulkanHdrTonemapPass::BeginColorAttachmentBarrierIfNeeded(
             1,
             &hdrBarrier);
     hdrFlight.colorLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+}
+
+void VulkanHdrTonemapPass::BeginHdrResumeRenderPass(
+        const VkCommandBuffer commandBuffer,
+        const std::uint32_t frameIndex,
+        const VkExtent2D extent) {
+    if (!HasFlight(frameIndex) || hdrResumeRenderPass == VK_NULL_HANDLE ||
+        flights[frameIndex].framebuffer == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkRenderPassBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    beginInfo.renderPass = hdrResumeRenderPass;
+    beginInfo.framebuffer = flights[frameIndex].framebuffer;
+    beginInfo.renderArea.offset = {0, 0};
+    beginInfo.renderArea.extent = extent;
+    beginInfo.clearValueCount = 0;
+    vkCmdBeginRenderPass(commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    flights[frameIndex].colorLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+}
+
+void VulkanHdrTonemapPass::MarkColorEndedRenderPass(const std::uint32_t frameIndex) noexcept {
+    if (!HasFlight(frameIndex)) {
+        return;
+    }
+    flights[frameIndex].colorLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 void VulkanHdrTonemapPass::TransitionColorToShaderRead(VkCommandBuffer commandBuffer, std::uint32_t frameIndex) {

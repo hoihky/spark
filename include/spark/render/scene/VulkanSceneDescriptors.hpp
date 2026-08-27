@@ -2,6 +2,8 @@
 
 #include "spark/core/Array.hpp"
 
+#include "spark/render/scene/VulkanIblBrdfLut.hpp"
+
 #include <vulkan/vulkan.h>
 
 #include <cstddef>
@@ -18,7 +20,7 @@ class VulkanSpritePass;
 
 /**
  * Scene descriptor set layout, per-flight uniform/skin SSBOs, pool, and bound descriptor sets.
- * Binding slots 0–11 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR array).
+ * Binding slots 0–13 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR, IBL LUT, opaque background).
  */
 class VulkanSceneDescriptors {
 public:
@@ -39,6 +41,16 @@ public:
     void CreateUniformBuffers(VkPhysicalDevice physicalDevice, VkDevice device, std::uint32_t framesInFlight);
     void CreateSkinSsboBuffers(VkPhysicalDevice physicalDevice, VkDevice device, std::uint32_t framesInFlight);
     void CreatePoolAndSets(VkDevice device, std::uint32_t framesInFlight, const BindingSources& sources);
+    void CreateIblBrdfLut(
+            VkPhysicalDevice physicalDevice,
+            VkDevice device,
+            VkCommandPool commandPool,
+            VkQueue graphicsQueue);
+    void UpdateOpaqueBackgroundSampler(
+            VkDevice device,
+            std::uint32_t frameIndex,
+            VkImageView opaqueBackgroundView,
+            VkSampler opaqueBackgroundSampler);
     void Destroy(VkDevice device) noexcept;
 
     [[nodiscard]] VkDescriptorSetLayout Layout() const noexcept { return descriptorSetLayout; }
@@ -67,6 +79,8 @@ private:
     Array<VkBuffer> skinSsboBuffers;
     Array<VkDeviceMemory> skinSsboMemory;
     Array<void*> skinSsboMapped;
+
+    VulkanIblBrdfLut iblBrdfLut;
 };
 
 }  // namespace Spark

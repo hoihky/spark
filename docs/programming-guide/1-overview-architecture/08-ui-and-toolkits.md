@@ -186,7 +186,7 @@ sequenceDiagram
 
 ### Demo help overlay
 
-`DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) provides a shared top-left help panel for shell demos. It patches text into `SceneRenderParams::screenTexts` via `PatchSceneRenderParams` — not a scene `TextOverlayComponent`. Press **H** to toggle globally; **TAB** returns to the launcher.
+`DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) provides a shared top-left help panel for shell demos. It patches text into `SceneRenderParams::screenTexts` via `PatchSceneRenderParams` — not a scene `TextOverlayComponent`. **Hidden by default**; press **H** to toggle globally. **F3** toggles the shell FPS overlay (also off by default). **TAB** returns to the launcher.
 
 ### Disable ImGui
 

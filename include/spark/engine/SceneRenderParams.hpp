@@ -12,6 +12,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
+#include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
@@ -188,6 +189,8 @@ struct SceneDrawItem {
     std::int32_t metallicRoughnessMapLayer = -1;
     /** Emissive map layer in <c>sceneTextures</c> (-1 = uniform emissive only, no texture). */
     std::int32_t emissiveMapLayer = -1;
+    /** KHR_materials_iridescence thickness map layer (-1 = use scalar min/max only). */
+    std::int32_t iridescenceThicknessMapLayer = -1;
     /** Required when mesh == Custom (rigid); used by VulkanRenderer to pack GPU geometry. */
     SharedPtr<Mesh> customMesh{};
     /** When set, custom mesh path uses skinned vertices + jointPalette (mutually exclusive with customMesh). */
@@ -231,6 +234,9 @@ struct SceneDrawItem {
     MaterialUvMap normalUv{};
     MaterialUvMap metallicRoughnessUv{};
     MaterialUvMap emissiveUv{};
+    MaterialUvMap iridescenceThicknessUv{};
+    float normalScale = 1.0F;
+    MaterialGltfExtensions gltfExtensions{};
 };
 
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */

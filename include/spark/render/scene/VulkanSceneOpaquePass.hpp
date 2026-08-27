@@ -47,20 +47,31 @@ public:
         std::int32_t normalMapLayer = -1;
         std::int32_t metallicRoughnessMapLayer = -1;
         std::int32_t emissiveMapLayer = -1;
+        std::int32_t iridescenceThicknessMapLayer = -1;
         float metallicFactor = 1.0F;
         float roughnessFactor = 1.0F;
         float occlusionStrength = 1.0F;
         std::int32_t shadowFlags = 0;
         float alphaCutoff = 0.0F;
-        float mapUvScale[4][2];
-        float mapUvOffset[4][2];
-        float mapUvRotation[4]{};
-        std::int32_t mapTexCoordSet[4]{};
-        /** std430 aligns vec4 to 16 bytes after int[4] (offset 264–271). */
-        std::int32_t padBeforeEmissiveFactor[2]{};
-        float emissiveFactor[4]{1.0F, 1.0F, 1.0F, 0.0F};
+        /** Matches GLSL vec2[] 8-byte alignment (SPIR-V offset 176). */
+        std::uint8_t padMapUvAlign[4]{};
+        float mapUvScale[5][2];
+        float mapUvOffset[5][2];
+        float mapUvRotation[5]{};
+        std::int32_t mapTexCoordSet[5]{};
+        /** KHR_materials_clearcoat factors. */
+        float clearcoatFactor = 0.0F;
+        float clearcoatRoughnessFactor = 0.0F;
+        float emissiveStrength = 1.0F;
+        float transmissionFactor = 0.0F;
+        /** glTF emissiveFactor RGB. */
+        float emissiveFactor[3]{1.0F, 1.0F, 1.0F};
         std::int32_t albedoHdrLinear = 0;
-        std::int32_t pushPad = 0;
+        float normalScale = 1.0F;
+        float iridescenceFactor = 0.0F;
+        float iridescenceIor = 1.3F;
+        float iridescenceThicknessMin = 100.0F;
+        float iridescenceThicknessMax = 400.0F;
     };
 
     void Record(VkCommandBuffer commandBuffer, const VulkanSceneOpaqueRecordContext& ctx) const;

@@ -562,7 +562,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Time-of-day demo</strong></td>
-<td>SparkDemo menu <strong>17</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn).</td>
+<td>SparkDemo menu <strong>17</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn). Props: Khronos <strong><code>Lantern.glb</code></strong> on a ground plane with HDR sky dome, fog/post volumes, and SSAO. Submit uses <code>FillStandardLitSceneFromWorld</code>.</td>
 </tr>
 <tr>
 <td><strong>HDR studio IBL demo</strong></td>
@@ -627,7 +627,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td>P0</td>
 <td><strong>Image-based ambient</strong></td>
-<td><strong>Partial:</strong> equirect IBL for PBR metals (sky dome + <code>ibl.glsl</code>); no SH probes or irradiance volumes yet.</td>
+<td><strong>Partial:</strong> equirect IBL for PBR metals (sky dome + <code>ibl.glsl</code> + <strong>BRDF LUT</strong>); no SH probes or irradiance volumes yet.</td>
 </tr>
 <tr>
 <td>P1</td>
@@ -669,8 +669,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Texture / UI font uploads</strong> (<code>VulkanDeferredUploadBatch</code>)</li>
 <li><strong>Shadow maps</strong> — punctual then directional (<code>VulkanPunctualShadowPass</code>, <code>VulkanDirectionalShadowPass</code>)</li>
 <li><strong>HDR scene pass</strong> — opaque + sky (<code>VulkanSceneOpaquePass</code>), sprites, particles; color → <code>R16G16B16A16</code>, depth stored for copy</li>
-<li><strong>SSAO (optional)</strong> — when <code>ssaoEnabled</code>: <code>vkCmdCopyImage</code> scene depth → per-flight sample image; fullscreen <code>post_process.frag</code> → scratch HDR</li>
-<li><strong>Tonemap</strong> — ACES from HDR or SSAO scratch into swapchain image (<code>VulkanHdrTonemapPass</code>)</li>
+<li><strong>Transparent scene (optional)</strong> — when <code>transparentDraws</code> is non-empty: end HDR pass, copy opaque color to per-flight scratch (<code>VulkanSceneOpaqueBackground</code>), resume HDR pass with load ops, draw transmission/blended meshes (samples scratch at binding <strong>13</strong>)</li>
+<li><strong>SSAO (optional)</strong> — when <code>ssaoEnabled</code>: depth copy → fullscreen <code>post_process.frag</code> → scratch HDR</li>
+<li><strong>Tonemap</strong> — scratch HDR or scene HDR → swapchain image (<code>VulkanHdrTonemapPass</code>)</li>
 <li><strong>Screen UI</strong> — solid rects + text in the <strong>present</strong> render pass (<code>VulkanScreenUiPass</code>; rects then text per layer for stable batching)</li>
 </ol>
 <h2 id="technical-references-repo">Technical references (repo)</h2>

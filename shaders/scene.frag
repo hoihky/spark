@@ -224,6 +224,8 @@ vec3 evalBRDF(
     return (diffuse * NdotL + specular * specNL) * radiance;
 }
 
+#include "gltf_pbr_extensions.glsl"
+
 vec3 evalSpotBrdfFromData(
         vec3 N,
         vec3 V,
@@ -441,15 +443,17 @@ void main() {
 
     float met = clamp(vMetallic * push.metallicFactor, 0.0, 1.0);
     float rough = clamp(vRoughness * push.roughnessFactor, 0.04, 1.0);
-    float occlusion = push.occlusionStrength;
+    float occlusion = 1.0;
     if (push.metallicRoughnessMapLayer >= 0) {
         int mrl = clamp(push.metallicRoughnessMapLayer, 0, 63);
         vec3 orm = texture(sceneTextures, vec3(sparkMapUv(2), float(mrl))).rgb;
-        rough = clamp(orm.g * push.roughnessFactor, 0.04, 1.0);
-        met = clamp(orm.b * push.metallicFactor, 0.0, 1.0);
-        occlusion = push.occlusionStrength > 0.0
-            ? clamp(orm.r * push.occlusionStrength, 0.08, 1.0)
-            : 0.0;
+        if (push.metallic >= 0.999 && push.roughness >= 0.999) {
+            rough = clamp(orm.g * push.roughnessFactor, 0.04, 1.0);
+            met = clamp(orm.b * push.metallicFactor, 0.0, 1.0);
+        }
+        if (push.occlusionStrength > 0.0) {
+            occlusion = clamp(mix(1.0, orm.r, push.occlusionStrength), 0.08, 1.0);
+        }
     }
 
     vec3 nGeom = normalize(vNormal);
@@ -458,6 +462,8 @@ void main() {
         int nl = clamp(push.normalMapLayer, 0, 63);
         vec3 tN = texture(sceneTextures, vec3(sparkMapUv(1), float(nl))).xyz * 2.0 - 1.0;
         tN.y = -tN.y;
+        tN.xy *= clamp(push.normalScale, 0.0, 1.0);
+        tN = normalize(tN);
         mat3 TBN;
         if (dot(vTangent.xyz, vTangent.xyz) > 1e-8) {
             vec3 T = normalize(vTangent.xyz);
@@ -509,11 +515,7 @@ void main() {
 
     /** KHR_materials_unlit: base * texture + emissive, no lighting. */
     if (push.shadingModel == 2) {
-        vec3 emissiveU = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
-        if (push.emissiveMapLayer >= 0) {
-            int el = clamp(push.emissiveMapLayer, 0, 63);
-            emissiveU *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
-        }
+        vec3 emissiveU = sparkComputeEmissive(vEmissive, push.emissiveMapLayer);
         outColor = vec4(base + emissiveU, alpha);
         return;
     }
@@ -557,11 +559,7 @@ void main() {
         float aoT = mix(0.78, 1.0, pow(clamp(dot(N, V), 0.0, 1.0), 0.55));
         ambientT *= aoT * occlusion;
 
-        vec3 emissiveT = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
-        if (push.emissiveMapLayer >= 0) {
-            int el = clamp(push.emissiveMapLayer, 0, 63);
-            emissiveT *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
-        }
+        vec3 emissiveT = sparkComputeEmissive(vEmissive, push.emissiveMapLayer);
         outColor = vec4(ambientT + Lo + emissiveT, alpha);
         return;
     }
@@ -590,11 +588,15 @@ void main() {
         ambient *= mix(1.0, 0.12, met);
     }
 
-    vec3 emissive = vEmissive.rgb * vEmissive.w * push.emissiveFactor.rgb;
-    if (push.emissiveMapLayer >= 0) {
-        int el = clamp(push.emissiveMapLayer, 0, 63);
-        emissive *= texture(sceneTextures, vec3(sparkMapUv(3), float(el))).rgb;
-    }
+    sparkAccumulateClearcoat(nGeom, V, Ld, sunRad, sunShadow, occlusion, Lo, iblSpecular);
 
-    outColor = vec4(ambient + Lo + iblSpecular + emissive, alpha);
+    vec3 iridSpecTint = sparkEvalIridescenceSpecTint(N, V, base);
+    Lo = mix(Lo, Lo * iridSpecTint, clamp(push.iridescenceFactor * mix(0.45, 0.9, met), 0.0, 1.0));
+    iblSpecular *= iridSpecTint;
+
+    vec3 emissive = sparkComputeEmissive(vEmissive, push.emissiveMapLayer);
+
+    vec3 color = ambient + Lo + iblSpecular + emissive;
+    sparkApplyTransmission(vWorldPos, N, V, base, met, color, alpha);
+    outColor = vec4(color, alpha);
 }

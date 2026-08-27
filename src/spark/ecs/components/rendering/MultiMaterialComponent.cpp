@@ -16,6 +16,8 @@ void MultiMaterialComponent::OnDetach(GameObject& owner) {
 void MultiMaterialComponent::Clear() noexcept {
     slots.Clear();
     slotBindings.Clear();
+    variantNames.Clear();
+    activeVariantIndex = 0;
 }
 
 void MultiMaterialComponent::ResizeSlots(const std::size_t count) {
@@ -117,22 +119,84 @@ void MultiMaterialComponent::BindFromGltfAsset(
         const char* gltfPath,
         const GltfAsset& asset) {
     Clear();
+    if (asset.materials.IsEmpty()) {
+        if (asset.material.HasPresentationContent()) {
+            slots.Resize(1);
+            asset.material.ApplyTo(slots[0]);
+        }
+        return;
+    }
+
+    PopulateFromGltfAsset(asset);
+    SetVariantNames(asset.materialVariantNames);
+
     if (gltfPath == nullptr || gltfPath[0] == '\0') {
-        PopulateFromGltfAsset(asset);
         return;
     }
 
-    const std::size_t slotCount = !asset.materials.IsEmpty()
-            ? asset.materials.GetSize()
-            : (asset.material.HasAnyTexture() ? 1U : 0U);
-    if (slotCount == 0) {
-        return;
-    }
-
-    ResizeSlots(slotCount);
-    for (std::size_t i = 0; i < slotCount; ++i) {
+    EnsureSlotAuxSize(slots.GetSize());
+    for (std::size_t i = 0; i < slots.GetSize(); ++i) {
         const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfPath, i);
-        SetSlotMaterialAsset(world, i, key.CStr());
+        slotBindings[i].Retain(world, key.CStr());
+        slots[i].materialAssetKey = key;
+    }
+}
+
+void MultiMaterialComponent::SetVariantNames(const Array<Utf8String>& names) {
+    variantNames = names;
+    if (activeVariantIndex >= variantNames.GetSize()) {
+        activeVariantIndex = 0;
+    }
+    NotifyMaterialChanged();
+}
+
+void MultiMaterialComponent::SetActiveVariantIndex(const std::uint32_t index) {
+    if (variantNames.IsEmpty()) {
+        activeVariantIndex = 0;
+        return;
+    }
+    activeVariantIndex = index % static_cast<std::uint32_t>(variantNames.GetSize());
+    NotifyMaterialChanged();
+}
+
+void MultiMaterialComponent::CycleActiveVariant() {
+    if (variantNames.GetSize() <= 1U) {
+        return;
+    }
+    activeVariantIndex = (activeVariantIndex + 1U) % static_cast<std::uint32_t>(variantNames.GetSize());
+    NotifyMaterialChanged();
+}
+
+void MultiMaterialComponent::CycleVariantsOnObjectTree(GameObject* root) {
+    if (root == nullptr) {
+        return;
+    }
+    Array<MultiMaterialComponent*> multis;
+    Array<GameObject*> stack;
+    stack.PushBack(root);
+    while (!stack.IsEmpty()) {
+        GameObject* obj = stack.GetLast();
+        stack.PopBack();
+        if (obj == nullptr) {
+            continue;
+        }
+        if (MultiMaterialComponent* multi = obj->GetComponent<MultiMaterialComponent>()) {
+            if (multi->HasMaterialVariants()) {
+                multis.PushBack(multi);
+            }
+        }
+        const Array<GameObject*>& children = obj->GetChildren();
+        for (std::size_t i = 0; i < children.GetSize(); ++i) {
+            stack.PushBack(children[i]);
+        }
+    }
+    if (multis.IsEmpty()) {
+        return;
+    }
+    multis[0]->CycleActiveVariant();
+    const std::uint32_t index = multis[0]->GetActiveVariantIndex();
+    for (std::size_t i = 1; i < multis.GetSize(); ++i) {
+        multis[i]->SetActiveVariantIndex(index);
     }
 }
 

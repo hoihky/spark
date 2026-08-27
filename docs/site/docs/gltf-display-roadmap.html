@@ -636,7 +636,43 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <p><strong>Still open:</strong> morph targets, skin palette splitting beyond 128 joints.</p>
-<h2 id="phase-5-animation-advanced">Phase 5 — animation &amp; advanced</h2>
+<h2 id="completed-phase-5-khr-pbr-extensions">Completed (Phase 5 — KHR PBR extensions)</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KHR_materials_clearcoat</code></td>
+<td>Loader → <code>MaterialGltfExtensions</code>; shaded in <code>gltf_pbr_extensions.glsl</code></td>
+</tr>
+<tr>
+<td><code>KHR_materials_transmission</code></td>
+<td>Screen-space sample of opaque HDR scratch (<code>VulkanSceneOpaqueBackground</code>, binding <strong>13</strong>) after opaque pass</td>
+</tr>
+<tr>
+<td><code>KHR_materials_iridescence</code></td>
+<td>Loader + thin-film specular modulation</td>
+</tr>
+<tr>
+<td><code>KHR_materials_variants</code></td>
+<td>Variant names on submeshes; runtime index on <code>MultiMaterialComponent</code></td>
+</tr>
+<tr>
+<td><code>normalTexture.scale</code></td>
+<td><code>MaterialComponent::normalScale</code></td>
+</tr>
+<tr>
+<td>BRDF LUT</td>
+<td><code>VulkanIblBrdfLut</code> (binding <strong>12</strong>) for split-sum IBL</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Still open:</strong> sheen, specular-glossiness, multi-layer / OIT transmission.</p>
+<h2 id="phase-6-animation-advanced">Phase 6 — animation &amp; advanced</h2>
 <ul>
 <li>Morph targets</li>
 <li>Rigid node animation</li>

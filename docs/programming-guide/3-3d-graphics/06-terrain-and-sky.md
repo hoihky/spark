@@ -60,7 +60,7 @@ params.worldClearColor = {0.42F, 0.62F, 0.92F};  // soft blue horizon
 | `octaves`, `persistence`, `lacunarity` | 6, 0.48, 2.05 | fBM detail |
 | `worldUnitsPerTextureRepeat` | 112 | UV tiling scale |
 
-Help text uses `DemoHelpHud` — press **H** to toggle. See [Engine Loop](../1-overview-architecture/04-engine-loop.md#demo-shell-shortcuts).
+Help text uses `DemoHelpHud` — **hidden by default**; press **H** to toggle. See [Engine Loop](../1-overview-architecture/04-engine-loop.md#demo-shell-shortcuts).
 
 ## Height Brush Editing
 
@@ -114,10 +114,12 @@ params.fogColor = {0.65F, 0.75F, 0.85F};
 params.fogDensity = 0.015F;
 ```
 
-See `TimeOfDayDemo` for sun/sky/fog animation, or drive time from ECS:
+See **`TimeOfDayDemo`** (launcher **#17**, key **N**) for sun/sky/fog animation with Khronos **`Lantern.glb`**, HDR equirect sky dome, regional fog/post volumes, and SSAO. The demo submits via `FillStandardLitSceneFromWorld` (lighting resolve, IBL, shadow flags, glTF material maps). Or drive time from ECS:
 
 ```cpp
-worldRoot->AddComponent<TimeOfDayDriverComponent>()->SetDayLengthSeconds(120.0F);
+auto* tod = worldRoot->AddComponent<TimeOfDayDriverComponent>();
+tod->SetDayLengthSeconds(120.0F);
+tod->SetLooping(false);  // when you advance time manually in gameplay code
 // FillStandardLitSceneFromWorld calls ProcessTimeOfDayDrivers internally.
 ```
 

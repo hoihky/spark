@@ -162,6 +162,12 @@ GltfMeshBuildOutcome GltfSkinnedMeshBuilder::AppendSkinnedPrimitive(
     submesh.indexOffset = indexOffset;
     submesh.indexCount = indexCount;
     submesh.materialIndex = MaterialIndex(data, prim->material);
+    for (cgltf_size mi = 0; mi < prim->mappings_count; ++mi) {
+        MeshSubmeshVariantMapping mapping{};
+        mapping.variantIndex = static_cast<std::uint32_t>(prim->mappings[mi].variant);
+        mapping.materialIndex = MaterialIndex(data, prim->mappings[mi].material);
+        submesh.variantMappings.PushBack(mapping);
+    }
     outMesh.GetSubmeshes().PushBack(submesh);
     return outcome;
 }

@@ -27,6 +27,10 @@ public:
     void CreateRenderPass(VkDevice device, VkFormat depthFormat);
     void DestroyRenderPass(VkDevice device);
 
+    void BeginHdrResumeRenderPass(VkCommandBuffer commandBuffer, std::uint32_t frameIndex, VkExtent2D extent);
+    /** Call after vkCmdEndRenderPass on the HDR pass so layout tracking matches finalLayout. */
+    void MarkColorEndedRenderPass(std::uint32_t frameIndex) noexcept;
+
     void RecreateFlightTargets(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
@@ -61,6 +65,7 @@ public:
             float exposure);
 
     [[nodiscard]] VkRenderPass HdrRenderPass() const noexcept { return hdrRenderPass; }
+    [[nodiscard]] VkRenderPass HdrResumeRenderPass() const noexcept { return hdrResumeRenderPass; }
     [[nodiscard]] FlightTarget& Flight(std::uint32_t frameIndex) noexcept { return flights[frameIndex]; }
     [[nodiscard]] const FlightTarget& Flight(std::uint32_t frameIndex) const noexcept { return flights[frameIndex]; }
     [[nodiscard]] bool HasFlight(std::uint32_t frameIndex) const noexcept { return frameIndex < flights.GetSize(); }
@@ -74,6 +79,7 @@ private:
     };
 
     VkRenderPass hdrRenderPass = VK_NULL_HANDLE;
+    VkRenderPass hdrResumeRenderPass = VK_NULL_HANDLE;
     Array<FlightTarget> flights;
     VkSampler colorSampler = VK_NULL_HANDLE;
 

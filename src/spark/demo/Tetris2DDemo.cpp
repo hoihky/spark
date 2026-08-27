@@ -122,7 +122,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
         fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
         DemoHud::Apply(*fpsText, false);
-        fpsText->SetText(Spark::Utf8String("Tetris — multiply ghost · additive line clear · ←→ ↓ ↑/X rotate · Space slam"));
+        fpsText->SetText(Spark::Utf8String("score · lines · lvl · ESC menu"));
         roots.PushBack(fpsHudObject);
 
         camera.position = {static_cast<float>(kCols) * 0.5F * kTileWorld, static_cast<float>(kRows) * 0.5F * kTileWorld, 0.0F};
@@ -232,16 +232,9 @@ void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
         UpdateBoardPad();
 
         if (fpsText != nullptr) {
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
             fpsText->SetText(Spark::Utf8String(
                     std::format(
-                            "Tetris — {:.0f} FPS — score {} · lines {} · lvl {} · ESC menu",
-                            static_cast<double>(fpsSmoothed),
+                            "score {} · lines {} · lvl {} · ESC menu",
                             static_cast<int>(score),
                             static_cast<int>(linesCleared),
                             static_cast<int>(level))

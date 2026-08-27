@@ -712,6 +712,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/core/VulkanFrameCapture.cpp
         src/spark/render/core/VulkanFrameSync.cpp
         src/spark/render/scene/VulkanSceneDescriptors.cpp
+        src/spark/render/scene/VulkanIblBrdfLut.cpp
+        src/spark/render/scene/VulkanSceneOpaqueBackground.cpp
         src/spark/render/core/VulkanRenderer.cpp
         src/spark/render/shadow/VulkanDirectionalShadowCascadeMath.cpp
         src/spark/render/shadow/VulkanDirectionalShadowPass.cpp

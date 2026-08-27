@@ -45,6 +45,11 @@ void MaterialComponent::SetEmissiveTexture(SharedPtr<Texture2D> tex) {
     NotifyMaterialChanged();
 }
 
+void MaterialComponent::SetIridescenceThicknessTexture(SharedPtr<Texture2D> tex) {
+    iridescenceThicknessMap = MoveTemp(tex);
+    NotifyMaterialChanged();
+}
+
 void MaterialComponent::SetTint(const Vector3& t) {
     tint = t;
     NotifyMaterialChanged();

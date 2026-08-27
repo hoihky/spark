@@ -7,6 +7,8 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
+#include "spark/demo/DemoHelpHud.hpp"
+
 #include <format>
 #include <string>
 
@@ -92,6 +94,10 @@ void Apply(TextOverlayComponent& overlay, const bool lightTextOnDarkBackground) 
     overlay.SetFontSizePixels(kFontSizePixels);
     overlay.SetColor(lightTextOnDarkBackground ? kLightTextColor : kDarkTextColor);
     overlay.SetAlpha(kTextAlpha);
+}
+
+void SyncHelpOverlayVisibility(TextOverlayComponent& overlay) noexcept {
+    overlay.SetVisible(DemoHelpHud::IsGlobalVisible());
 }
 
 }  // namespace DemoHud

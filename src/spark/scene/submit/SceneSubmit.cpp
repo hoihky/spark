@@ -95,8 +95,9 @@ void PushRigidMeshDraws(
         SceneDrawItem item = baseItem;
         item.submeshIndex = static_cast<std::uint32_t>(si);
         const MeshSubmesh& sm = submeshes[si];
-        if (sm.materialIndex < multiMat->GetSlotCount()) {
-            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(sm.materialIndex);
+        const std::uint32_t materialIndex = sm.ResolveMaterialIndex(multiMat->GetActiveVariantIndex());
+        if (materialIndex < multiMat->GetSlotCount()) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(materialIndex);
             ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
             ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
         } else if (mat != nullptr) {
@@ -131,8 +132,9 @@ void PushSkinnedMeshDraws(
         SceneDrawItem item = baseItem;
         item.submeshIndex = static_cast<std::uint32_t>(si);
         const MeshSubmesh& sm = submeshes[si];
-        if (sm.materialIndex < multiMat->GetSlotCount()) {
-            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(sm.materialIndex);
+        const std::uint32_t materialIndex = sm.ResolveMaterialIndex(multiMat->GetActiveVariantIndex());
+        if (materialIndex < multiMat->GetSlotCount()) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(materialIndex);
             ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
             ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
         } else if (mat != nullptr) {

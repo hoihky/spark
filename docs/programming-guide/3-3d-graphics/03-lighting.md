@@ -93,7 +93,7 @@ See `Maze3DDemo` gem pickups and guard mesh for this pattern.
 
 ## Image-Based Lighting (IBL)
 
-For metallic PBR materials, set `iblEnabled` and either bind an equirect environment map on a sky draw or set `iblEnvironmentLayer` explicitly. When `iblEnvironmentLayer == -1`, submit resolves the first sky draw with a bound texture (see `ResolveIblEnvironmentLayer` in `SceneSubmitMaterial.cpp`).
+For metallic PBR materials, set `iblEnabled` and either bind an equirect environment map on a sky draw or set `iblEnvironmentLayer` explicitly. When `iblEnvironmentLayer == -1`, submit resolves the first sky draw with a bound texture (see `ResolveIblEnvironmentLayer` in `SceneSubmitMaterial.cpp`). Specular split-sum uses a precomputed **2D BRDF LUT** (`VulkanIblBrdfLut`, descriptor binding **12**).
 
 ```cpp
 SceneRenderParams params{};

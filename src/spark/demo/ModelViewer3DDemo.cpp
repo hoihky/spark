@@ -38,16 +38,16 @@ constexpr ModelEntry kModels[] = {
         {"/models/DamagedHelmet.glb", "Damaged Helmet", 2.4F, 0.0F},
         {"/models/SheenChair.glb", "Sheen Chair", 2.2F, 0.0F},
         {"/models/CarConcept.glb", "Car Concept", 5.6F, Pi * 0.12F},
-        {"/models/Fox.glb", "Fox", 1.2F, HalfPi},
-        {"/models/CesiumMan.glb", "CesiumMan", 1.8F, HalfPi},
-   
-        {"/models/Tree_1_C_Color1.gltf", "Tree (large)", 6.0F, 0.0F},
-        {"/models/Tree_3_A_Color1.gltf", "Tree (small)", 4.0F, 0.0F},
+
 
 
         {"/models/ABeautifulGame.glb", "A Beautiful Game", 8.0F, 0.0F},
         {"/models/LightsPunctualLamp.glb", "Punctual Lamp", 2.0F, 0.0F},
         {"/models/ChairDamaskPurplegold.glb", "Damask Chair", 2.2F, 0.0F},
+{"/models/ChronographWatch.glb", "Chronograph Watch", 2.2F, 0.0F},
+
+{"/models/Lantern.glb", "Lantern", 2.2F, 0.0F},
+
 
 };
 
@@ -311,7 +311,7 @@ void ModelViewer3DDemo::Load(GameWorld& w, IEngineContext& context) {
     sceneRoots.PushBack(ground);
 
     helpHud.Mount(w, "3D model viewer");
-    helpHud.SetControlHints("TAB next model | ESC menu | F1 fly");
+    helpHud.SetControlHints("TAB next model | V paint variant | ESC menu | F1 fly");
     ShowModel(w, 0);
 
     context.GetInput().SetCursorCaptured(true);
@@ -341,6 +341,11 @@ void ModelViewer3DDemo::Simulate(const FrameTiming& timing, IEngineContext& cont
     if (in.IsKeyPressedThisFrame(GLFW_KEY_TAB)) {
         AdvanceModel(world, 1);
     }
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_V)) {
+        for (std::size_t ri = 0; ri < sceneRoots.GetSize(); ++ri) {
+            MultiMaterialComponent::CycleVariantsOnObjectTree(sceneRoots[ri]);
+        }
+    }
     if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
         in.SetCursorCaptured(!in.IsCursorCaptured());
     }
@@ -368,7 +373,7 @@ void ModelViewer3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& c
 
     SceneRenderParams params{};
     params.iblEnvironmentLayer = -1;
-    params.iblIntensity = 1.0F;
+    params.iblIntensity = 0.72F;
     params.iblEnabled = true;
     params.iblUseHdrSkyEnvironment = true;
     params.directionalShadowsEnabled = true;

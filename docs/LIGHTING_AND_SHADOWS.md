@@ -22,7 +22,7 @@ This document lists **recommended features** for open-world action lighting, and
 | **HDR + tonemap** | Scene renders to **R16G16B16A16**, optional **SSAO** composite, then **ACES tonemap** to swapchain; UI drawn after tonemap (LDR). |
 | **Screen-space ambient occlusion (SSAO)** | Optional post pass (`VulkanScreenSpaceEffectsPass`) after the HDR scene pass: copies scene depth to a sampled image, applies 16-tap hemisphere AO in `post_process.frag`, writes to a scratch HDR target consumed by tonemap. Toggles: `ssaoEnabled`, `ssaoRadius`, `ssaoBias`, `ssaoStrength`. |
 | **`SceneLightingProfile`** | `Outdoor` / `Interior` / `NightInterior` / `Default` — shared preset struct: cascades, exposure, **shadow fade** (end + start ratio), **cast/receive defaults**, **hemisphere + probe** ambient, optional **time-of-day**. |
-| **Time-of-day demo** | SparkDemo menu **17** / key **N** — `TimeOfDayDemo` animates `timeOfDay` 0→1 over 90s (sunshine → sunset → night → dawn). |
+| **Time-of-day demo** | SparkDemo menu **17** / key **N** — `TimeOfDayDemo` animates `timeOfDay` 0→1 over 90s (sunshine → sunset → night → dawn). Props: Khronos **`Lantern.glb`** on a ground plane with HDR sky dome, fog/post volumes, and SSAO. Submit uses `FillStandardLitSceneFromWorld`. |
 | **HDR studio IBL demo** | SparkDemo menu **21** / key **Q** — `GltfSamples3DDemo` loads Khronos `DamagedHelmet.glb` under a Poly Haven `studio_small_08_1k.hdr` sky dome (`iblEnvironmentLayer = -1`). |
 | **Per-draw shadow flags** | `SceneDrawItem::shadowFlags` (`kSceneShadowCast` / `kSceneShadowReceive`) — shadow pass skips non-casters; lit pass skips receivers. |
 | **Time of day** | `SceneRenderParams::useTimeOfDay` + `timeOfDay` (0–1) — analytic sun direction/color/intensity and sky/ground/probe fill. |
@@ -43,7 +43,7 @@ This document lists **recommended features** for open-world action lighting, and
 |----------|---------|------|
 | — | **HDR + tonemap** | **Implemented:** R16G16B16A16 scene target, ACES tonemap pass, exposure from `SceneLightingProfile` / overrides. |
 | — | **SSAO** | **Implemented:** `VulkanScreenSpaceEffectsPass` + `post_process.frag` (see § Implemented). |
-| P0 | **Image-based ambient** | **Partial:** equirect IBL for PBR metals (sky dome + `ibl.glsl`); no SH probes or irradiance volumes yet. |
+| P0 | **Image-based ambient** | **Partial:** equirect IBL for PBR metals (sky dome + `ibl.glsl` + **BRDF LUT**); no SH probes or irradiance volumes yet. |
 | P1 | **Physical sun/sky model** | Hosek-Wilkie or Preetham for disk + atmosphere; ties to time-of-day. |
 | P2 | **Volumetric fog / god rays** | Height fog or light shafts; separate pass or raymarch (not implemented). |
 
@@ -61,9 +61,10 @@ Per frame, `VulkanRenderer::RecordSceneCommandBuffer` records (in order):
 1. **Texture / UI font uploads** (`VulkanDeferredUploadBatch`)
 2. **Shadow maps** — punctual then directional (`VulkanPunctualShadowPass`, `VulkanDirectionalShadowPass`)
 3. **HDR scene pass** — opaque + sky (`VulkanSceneOpaquePass`), sprites, particles; color → `R16G16B16A16`, depth stored for copy
-4. **SSAO (optional)** — when `ssaoEnabled`: `vkCmdCopyImage` scene depth → per-flight sample image; fullscreen `post_process.frag` → scratch HDR
-5. **Tonemap** — ACES from HDR or SSAO scratch into swapchain image (`VulkanHdrTonemapPass`)
-6. **Screen UI** — solid rects + text in the **present** render pass (`VulkanScreenUiPass`; rects then text per layer for stable batching)
+4. **Transparent scene (optional)** — when `transparentDraws` is non-empty: end HDR pass, copy opaque color to per-flight scratch (`VulkanSceneOpaqueBackground`), resume HDR pass with load ops, draw transmission/blended meshes (samples scratch at binding **13**)
+5. **SSAO (optional)** — when `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR
+6. **Tonemap** — scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass`)
+7. **Screen UI** — solid rects + text in the **present** render pass (`VulkanScreenUiPass`; rects then text per layer for stable batching)
 
 ## Technical references (repo)
 

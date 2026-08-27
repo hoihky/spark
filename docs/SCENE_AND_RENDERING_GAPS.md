@@ -206,7 +206,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **glTF extensions** | Core PBR + emissive map | Clearcoat, sheen, transmission, unlit |
+| **glTF extensions** | Core PBR + emissive + **clearcoat**, **transmission** (screen-space), **iridescence**, **material variants**, `normalTexture.scale` | Sheen, specular-glossiness, true multi-layer transmission / OIT |
 | **Second UV** | Single UV in mesh | `uv1` channel on `Mesh` / material |
 | **Decals** | `DecalProjectorComponent` → `SceneRenderParams::decals` | GPU decal projection pass in `VulkanRenderer` (data path implemented) |
 | **Directional light ECS** | `DirectionalLightComponent` + `FillStandardLitSceneFromWorld` override | Multiple directional lights with blending / priority |
@@ -267,7 +267,7 @@ Prioritized for **C++ game authors** (no editor dependency):
 |-------|-----------------|---------|
 | **1** | ~~Serialization handlers for lights, sprites, 3D physics, terrain~~; extend for `UiCanvas`, `Tilemap`, 2D physics, `AiAgent`, … | Save/load real gameplay scenes |
 | **2** | ~~`DirectionalLightComponent`; `Scene::RaycastPick`~~ | Less boilerplate in `OnRender` |
-| **3** | ~~Transparent draw list + sort on `SceneRenderParams`~~ | Glass, foliage, alpha meshes |
+| **3** | ~~Transparent draw list + sort on `SceneRenderParams`~~ | Glass, foliage, alpha meshes (opaque HDR copy + resume pass for transmission) |
 | **4** | `AssetHandle` + async `RequestLoad*` | Large levels without hitches |
 | **5** | `EntityId` + deferred destroy | Safer gameplay code |
 | **6** | Instancing fields on submit path | Crowds, props |
@@ -300,4 +300,4 @@ Prioritized for **C++ game authors** (no editor dependency):
 
 ---
 
-*Last updated: 2026-07 — 64 `ComponentKind` values (+ `Unknown`), P2 components (`PhysicsMaterial2D`, `MeshCollider3D`, `NavMeshAgent`, `PatrolPath`, `PerceptionSensor`, `AmbientZone`, `FogVolume`, `PostProcessVolume`, `HingeJoint3D`, `SpringJoint3D`, `DistanceJoint2D`, `HingeJoint2D`, `TimeOfDayDriver`). See [`programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).*
+*Last updated: 2026-08 — glTF KHR extensions (clearcoat, transmission, iridescence, variants), BRDF LUT, screen-space transmission, `FillStandardLitSceneFromWorld` in `TimeOfDayDemo`. See [`programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).*

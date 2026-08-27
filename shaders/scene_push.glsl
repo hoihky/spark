@@ -18,18 +18,27 @@ layout(push_constant) uniform Push {
     int normalMapLayer;
     int metallicRoughnessMapLayer;
     int emissiveMapLayer;
+    int iridescenceThicknessMapLayer;
     float metallicFactor;
     float roughnessFactor;
     float occlusionStrength;
     int shadowFlags;
     float alphaCutoff;
-    vec2 mapUvScale[4];
-    vec2 mapUvOffset[4];
-    float mapUvRotation[4];
-    int mapTexCoordSet[4];
-    vec4 emissiveFactor;
+    vec2 mapUvScale[5];
+    vec2 mapUvOffset[5];
+    float mapUvRotation[5];
+    int mapTexCoordSet[5];
+    float clearcoatFactor;
+    float clearcoatRoughnessFactor;
+    float emissiveStrength;
+    float transmissionFactor;
+    float emissiveFactor[3];
     int albedoHdrLinear;
-    int pushPad;
+    float normalScale;
+    float iridescenceFactor;
+    float iridescenceIor;
+    float iridescenceThicknessMin;
+    float iridescenceThicknessMax;
 } push;
 
 #endif

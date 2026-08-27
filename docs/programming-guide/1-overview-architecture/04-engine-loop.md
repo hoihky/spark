@@ -94,13 +94,13 @@ Capture is asynchronous: the GPU copies the swapchain image on the next frame, a
 
 ## Demo shell shortcuts
 
-When running **SparkDemo**, these keys work globally:
+When running **SparkDemo**, these keys work globally (help and FPS overlays start **hidden**):
 
 | Key | Action |
 |-----|--------|
 | **TAB** | Return to launcher menu |
 | **H** | Toggle demo help overlay (`DemoHelpHud`) |
-| **F3** | Toggle FPS overlay |
+| **F3** | Toggle FPS overlay (top-right shell readout) |
 | **F9** | Toggle video recording |
 | **F12** | Save PNG screenshot |
 

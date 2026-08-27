@@ -958,7 +958,7 @@ void MyToolMode::Leave(Spark::IEngineContext&amp; context) noexcept {
 <p><strong>glTF PBR sample</strong> — launcher item <strong>21</strong> (hotkey <strong>Q</strong>): <code>GltfSamples3DDemo</code> loads <code>DamagedHelmet.glb</code> with studio HDR sky dome and opt-in HDR IBL (<code>iblUseHdrSkyEnvironment</code>). See <a href="../3-3d-graphics/01-meshes-and-materials.html">Meshes and Materials</a> and <a href="../3-3d-graphics/06-terrain-and-sky.html">Terrain and Sky</a>.</p>
 <p><strong>3D model viewer</strong> — launcher item <strong>22</strong> (hotkey <strong>V</strong>): <code>ModelViewer3DDemo</code> cycles bundled Khronos glTF samples (chair, watch, plant, shoe, etc.) with orbit camera.</p>
 <h3 id="demo-help-overlay">Demo help overlay</h3>
-<p><code>DemoHelpHud</code> (<code>include/spark/demo/DemoHelpHud.hpp</code>) provides a shared top-left help panel for shell demos. It patches text into <code>SceneRenderParams::screenTexts</code> via <code>PatchSceneRenderParams</code> — not a scene <code>TextOverlayComponent</code>. Press <strong>H</strong> to toggle globally; <strong>TAB</strong> returns to the launcher.</p>
+<p><code>DemoHelpHud</code> (<code>include/spark/demo/DemoHelpHud.hpp</code>) provides a shared top-left help panel for shell demos. It patches text into <code>SceneRenderParams::screenTexts</code> via <code>PatchSceneRenderParams</code> — not a scene <code>TextOverlayComponent</code>. <strong>Hidden by default</strong>; press <strong>H</strong> to toggle globally. <strong>F3</strong> toggles the shell FPS overlay (also off by default). <strong>TAB</strong> returns to the launcher.</p>
 <h3 id="disable-imgui">Disable ImGui</h3>
 <pre><code class="language-bash">cmake -S . -B build -DSPARK_ENABLE_IMGUI=OFF
 </code></pre>

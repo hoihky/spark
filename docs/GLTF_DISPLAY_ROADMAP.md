@@ -60,7 +60,20 @@ Meshopt views with a separate fallback buffer are read directly; compression-onl
 
 **Still open:** morph targets, skin palette splitting beyond 128 joints.
 
-## Phase 5 — animation & advanced
+## Completed (Phase 5 — KHR PBR extensions)
+
+| Item | API / behavior |
+|------|----------------|
+| `KHR_materials_clearcoat` | Loader → `MaterialGltfExtensions`; shaded in `gltf_pbr_extensions.glsl` |
+| `KHR_materials_transmission` | Screen-space sample of opaque HDR scratch (`VulkanSceneOpaqueBackground`, binding **13**) after opaque pass |
+| `KHR_materials_iridescence` | Loader + thin-film specular modulation |
+| `KHR_materials_variants` | Variant names on submeshes; runtime index on `MultiMaterialComponent` |
+| `normalTexture.scale` | `MaterialComponent::normalScale` |
+| BRDF LUT | `VulkanIblBrdfLut` (binding **12**) for split-sum IBL |
+
+**Still open:** sheen, specular-glossiness, multi-layer / OIT transmission.
+
+## Phase 6 — animation & advanced
 
 - Morph targets
 - Rigid node animation

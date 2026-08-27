@@ -36,15 +36,14 @@ void BindMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLi
         return;
     }
     if (MaterialComponent* mat = owner.AddComponent<MaterialComponent>()) {
-        if (gltfLibraryKey != nullptr && gltfLibraryKey[0] != '\0') {
-            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfLibraryKey, 0);
-            mat->SetMaterialAsset(world, key.CStr());
-            return;
-        }
         if (!asset.materials.IsEmpty()) {
             ApplyGltfMaterialDesc(*mat, asset.materials[0]);
         } else {
             ApplyGltfMaterialDesc(*mat, asset.material);
+        }
+        if (gltfLibraryKey != nullptr && gltfLibraryKey[0] != '\0') {
+            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfLibraryKey, 0);
+            mat->SetMaterialAsset(world, key.CStr());
         }
     }
 }
@@ -60,21 +59,21 @@ void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset, const char*
         GltfAsset rigidView{};
         rigidView.material = asset.material;
         rigidView.materials = asset.materials;
+        rigidView.materialVariantNames = asset.materialVariantNames;
         if (MultiMaterialComponent* multi = owner.AddComponent<MultiMaterialComponent>()) {
             multi->BindFromGltfAsset(world, gltfLibraryKey, rigidView);
         }
         return;
     }
     if (MaterialComponent* mat = owner.AddComponent<MaterialComponent>()) {
-        if (gltfLibraryKey != nullptr && gltfLibraryKey[0] != '\0') {
-            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfLibraryKey, 0);
-            mat->SetMaterialAsset(world, key.CStr());
-            return;
-        }
         if (!asset.materials.IsEmpty()) {
             ApplyGltfMaterialDesc(*mat, asset.materials[0]);
         } else {
             ApplyGltfMaterialDesc(*mat, asset.material);
+        }
+        if (gltfLibraryKey != nullptr && gltfLibraryKey[0] != '\0') {
+            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfLibraryKey, 0);
+            mat->SetMaterialAsset(world, key.CStr());
         }
     }
 }

@@ -24,6 +24,7 @@ GltfAsset MakeAssetView(const GltfSceneDocument& document, const GltfSceneNode& 
         asset.mesh = document.meshes[node.meshIndex];
     }
     asset.materials = document.materials;
+    asset.materialVariantNames = document.materialVariantNames;
     if (!asset.materials.IsEmpty()) {
         asset.material = asset.materials[0];
         asset.baseColorTexture = asset.material.baseColor;
@@ -40,6 +41,7 @@ SkinnedGltfAsset MakeSkinnedAssetView(const GltfSceneDocument& document, const G
         asset.skeleton = document.skeletons[node.skeletonIndex];
     }
     asset.materials = document.materials;
+    asset.materialVariantNames = document.materialVariantNames;
     if (!asset.materials.IsEmpty()) {
         asset.material = asset.materials[0];
         asset.baseColorTexture = asset.material.baseColor;

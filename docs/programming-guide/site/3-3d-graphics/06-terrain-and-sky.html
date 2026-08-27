@@ -836,7 +836,7 @@ params.worldClearColor = {0.42F, 0.62F, 0.92F};  // soft blue horizon
 </tr>
 </tbody>
 </table>
-<p>Help text uses <code>DemoHelpHud</code> — press <strong>H</strong> to toggle. See <a href="../1-overview-architecture/04-engine-loop.html#demo-shell-shortcuts">Engine Loop</a>.</p>
+<p>Help text uses <code>DemoHelpHud</code> — <strong>hidden by default</strong>; press <strong>H</strong> to toggle. See <a href="../1-overview-architecture/04-engine-loop.html#demo-shell-shortcuts">Engine Loop</a>.</p>
 <h2 id="height-brush-editing">Height Brush Editing</h2>
 <pre><code class="language-cpp">TerrainComponent* terrain = terrainGo-&gt;GetComponent&lt;TerrainComponent&gt;();
 Vector3 hitWorld{};
@@ -890,8 +890,10 @@ params.iblUseHdrSkyEnvironment = true;  // use HDR sky for reflections (not defa
 params.fogColor = {0.65F, 0.75F, 0.85F};
 params.fogDensity = 0.015F;
 </code></pre>
-<p>See <code>TimeOfDayDemo</code> for sun/sky/fog animation, or drive time from ECS:</p>
-<pre><code class="language-cpp">worldRoot-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;()-&gt;SetDayLengthSeconds(120.0F);
+<p>See <strong><code>TimeOfDayDemo</code></strong> (launcher <strong>#17</strong>, key <strong>N</strong>) for sun/sky/fog animation with Khronos <strong><code>Lantern.glb</code></strong>, HDR equirect sky dome, regional fog/post volumes, and SSAO. The demo submits via <code>FillStandardLitSceneFromWorld</code> (lighting resolve, IBL, shadow flags, glTF material maps). Or drive time from ECS:</p>
+<pre><code class="language-cpp">auto* tod = worldRoot-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;();
+tod-&gt;SetDayLengthSeconds(120.0F);
+tod-&gt;SetLooping(false);  // when you advance time manually in gameplay code
 // FillStandardLitSceneFromWorld calls ProcessTimeOfDayDrivers internally.
 </code></pre>
 <p>Regional fog: add <code>FogVolumeComponent</code> on a trigger volume (camera-inside test at submit).</p>

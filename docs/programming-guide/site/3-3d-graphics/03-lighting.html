@@ -846,7 +846,7 @@ SubmitStandardLitSceneFromWorld(
 <h2 id="clustered-forward">Clustered Forward</h2>
 <p><code>VulkanRenderer</code> packs up to <strong>256 point</strong> and <strong>128 spot</strong> lights per frame via clustered shading (<code>VulkanClusteredForwardLights</code>).</p>
 <h2 id="image-based-lighting-ibl">Image-Based Lighting (IBL)</h2>
-<p>For metallic PBR materials, set <code>iblEnabled</code> and either bind an equirect environment map on a sky draw or set <code>iblEnvironmentLayer</code> explicitly. When <code>iblEnvironmentLayer == -1</code>, submit resolves the first sky draw with a bound texture (see <code>ResolveIblEnvironmentLayer</code> in <code>SceneSubmitMaterial.cpp</code>).</p>
+<p>For metallic PBR materials, set <code>iblEnabled</code> and either bind an equirect environment map on a sky draw or set <code>iblEnvironmentLayer</code> explicitly. When <code>iblEnvironmentLayer == -1</code>, submit resolves the first sky draw with a bound texture (see <code>ResolveIblEnvironmentLayer</code> in <code>SceneSubmitMaterial.cpp</code>). Specular split-sum uses a precomputed <strong>2D BRDF LUT</strong> (<code>VulkanIblBrdfLut</code>, descriptor binding <strong>12</strong>).</p>
 <pre><code class="language-cpp">SceneRenderParams params{};
 params.iblEnabled = true;
 params.iblEnvironmentLayer = -1;  // auto from sky dome texture

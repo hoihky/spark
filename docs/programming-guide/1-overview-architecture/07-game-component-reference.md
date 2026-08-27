@@ -838,7 +838,7 @@ Affects `Scene::ForEachDrawableInViewFrustum` partition strategy.
 
 **Consumed by:** `ProcessTimeOfDayDrivers` before scene lighting resolve
 
-Drives `SceneRenderParams::useTimeOfDay` and `timeOfDay` (0 = midnight, 0.5 = noon). When `loop` and `dayLengthSeconds > 0`, time advances automatically each submit.
+Drives `SceneRenderParams::useTimeOfDay` and `timeOfDay` (0 = midnight, 0.5 = noon). When `loop` is **true** and `dayLengthSeconds > 0`, `ProcessTimeOfDayDrivers` advances time each `FillStandardLitSceneFromWorld` call. Set `loop = false` when your gameplay code owns the clock (see `TimeOfDayDemo`).
 
 ```cpp
 auto* tod = worldRoot->AddComponent<TimeOfDayDriverComponent>();

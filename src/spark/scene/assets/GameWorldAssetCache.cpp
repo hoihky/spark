@@ -204,6 +204,7 @@ AssetLoadOutcome<GltfAsset> GameWorldAssetCache::TryLoadGltf(const char* path) {
     GltfAsset asset{};
     asset.mesh = loaded.mesh;
     asset.materials = loaded.materials;
+    asset.materialVariantNames = loaded.materialVariantNames;
     SyncLegacyFields(asset);
     RegisterAllMaterialTextures(*this, asset);
     RegisterGltfMaterialsInLibrary(path, asset.materials, &asset.material);

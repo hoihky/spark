@@ -6,6 +6,7 @@
 #include "spark/render/scene/VulkanSceneRaster.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
+#include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 
 #include <algorithm>
@@ -44,15 +45,36 @@ void FillMaterialMapUvPush(
     WriteMapUvPush(push, 1, draw.normalUv);
     WriteMapUvPush(push, 2, draw.metallicRoughnessUv);
     WriteMapUvPush(push, 3, draw.emissiveUv);
+    WriteMapUvPush(push, 4, draw.iridescenceThicknessUv);
+}
+
+void FillMaterialExtensionPush(
+        Spark::VulkanSceneOpaquePass::ModelPushConstants& push,
+        const Spark::MaterialGltfExtensions& ext) noexcept {
+    push.clearcoatFactor = ext.clearcoatFactor;
+    push.clearcoatRoughnessFactor = ext.clearcoatRoughnessFactor;
+    push.transmissionFactor = ext.transmissionFactor;
+    push.emissiveStrength = ext.emissiveStrength;
+    push.iridescenceFactor = ext.iridescenceFactor;
+    push.iridescenceIor = ext.iridescenceIor;
+    push.iridescenceThicknessMin = ext.iridescenceThicknessMin;
+    push.iridescenceThicknessMax = ext.iridescenceThicknessMax;
 }
 
 }  // namespace
 
 namespace Spark {
 
-static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 296);
-static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 272);
-static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, albedoHdrLinear) == 288);
+static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 348);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, mapUvScale) == 176);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, clearcoatFactor) == 296);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveStrength) == 304);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, transmissionFactor) == 308);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveFactor) == 312);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, albedoHdrLinear) == 324);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, normalScale) == 328);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, iridescenceFactor) == 332);
+static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, iridescenceThicknessMax) == 344);
 
 void VulkanSceneOpaquePass::Record(
         const VkCommandBuffer commandBuffer,
@@ -154,9 +176,9 @@ void VulkanSceneOpaquePass::Record(
         push.emissiveFactor[0] = d.emissiveFactor.x;
         push.emissiveFactor[1] = d.emissiveFactor.y;
         push.emissiveFactor[2] = d.emissiveFactor.z;
-        push.emissiveFactor[3] = 0.0F;
+        FillMaterialExtensionPush(push, d.gltfExtensions);
         push.albedoHdrLinear = d.textureIsHdrLinear ? 1 : 0;
-        push.pushPad = 0;
+        push.normalScale = d.normalScale;
         push.useSkinning = 0;
         push.jointCount = 0;
         push.shadingModel = static_cast<std::int32_t>(d.shadingModel);
@@ -166,6 +188,7 @@ void VulkanSceneOpaquePass::Record(
         push.normalMapLayer = d.normalMapLayer;
         push.metallicRoughnessMapLayer = d.metallicRoughnessMapLayer;
         push.emissiveMapLayer = d.emissiveMapLayer;
+        push.iridescenceThicknessMapLayer = d.iridescenceThicknessMapLayer;
 
         if (!d.jointPalette.IsEmpty() && d.skinnedMesh && ctx.skinSsboMapped != nullptr &&
             ctx.frameIndex < ctx.skinSsboMapped->GetSize() &&
@@ -277,9 +300,9 @@ void VulkanSceneOpaquePass::RecordTransparent(
         push.emissiveFactor[0] = d.emissiveFactor.x;
         push.emissiveFactor[1] = d.emissiveFactor.y;
         push.emissiveFactor[2] = d.emissiveFactor.z;
-        push.emissiveFactor[3] = 0.0F;
+        FillMaterialExtensionPush(push, d.gltfExtensions);
         push.albedoHdrLinear = d.textureIsHdrLinear ? 1 : 0;
-        push.pushPad = 0;
+        push.normalScale = d.normalScale;
         push.useSkinning = 0;
         push.jointCount = 0;
         push.shadingModel = static_cast<std::int32_t>(d.shadingModel);
@@ -289,6 +312,7 @@ void VulkanSceneOpaquePass::RecordTransparent(
         push.normalMapLayer = d.normalMapLayer;
         push.metallicRoughnessMapLayer = d.metallicRoughnessMapLayer;
         push.emissiveMapLayer = d.emissiveMapLayer;
+        push.iridescenceThicknessMapLayer = d.iridescenceThicknessMapLayer;
 
         if (!d.jointPalette.IsEmpty() && d.skinnedMesh && ctx.skinSsboMapped != nullptr &&
             ctx.frameIndex < ctx.skinSsboMapped->GetSize() &&

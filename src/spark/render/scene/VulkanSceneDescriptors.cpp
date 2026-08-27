@@ -1,5 +1,6 @@
 #include "spark/render/scene/VulkanSceneDescriptors.hpp"
 
+#include "spark/render/scene/VulkanIblBrdfLut.hpp"
 #include "spark/render/scene/VulkanClusteredForwardLights.hpp"
 #include "spark/render/scene/VulkanClusteredLightGpu.hpp"
 #include "spark/render/shadow/VulkanDirectionalShadowPass.hpp"
@@ -17,7 +18,7 @@
 namespace Spark {
 
 void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
-    VkDescriptorSetLayoutBinding bindings[12]{};
+    VkDescriptorSetLayoutBinding bindings[14]{};
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[0].descriptorCount = 1;
@@ -78,9 +79,19 @@ void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
     bindings[11].descriptorCount = 1;
     bindings[11].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    bindings[12].binding = 12;
+    bindings[12].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[12].descriptorCount = 1;
+    bindings[12].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    bindings[13].binding = 13;
+    bindings[13].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[13].descriptorCount = 1;
+    bindings[13].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 12;
+    layoutInfo.bindingCount = 14;
     layoutInfo.pBindings = bindings;
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout failed");
@@ -134,6 +145,14 @@ void VulkanSceneDescriptors::CreateSkinSsboBuffers(
     }
 }
 
+void VulkanSceneDescriptors::CreateIblBrdfLut(
+        const VkPhysicalDevice physicalDevice,
+        const VkDevice device,
+        const VkCommandPool commandPool,
+        const VkQueue graphicsQueue) {
+    iblBrdfLut.Create(physicalDevice, device, commandPool, graphicsQueue);
+}
+
 void VulkanSceneDescriptors::CreatePoolAndSets(
         VkDevice device,
         std::uint32_t framesInFlight,
@@ -142,7 +161,7 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = framesInFlight;
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = framesInFlight * 6;
+    poolSizes[1].descriptorCount = framesInFlight * 8;
     poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     poolSizes[2].descriptorCount = framesInFlight * 5;
 
@@ -229,6 +248,20 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
         hdrTexWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         hdrTexWrite.descriptorCount = 1;
         hdrTexWrite.pImageInfo = &hdrImageInfo;
+
+        VkDescriptorImageInfo brdfLutInfo{};
+        brdfLutInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        brdfLutInfo.imageView = iblBrdfLut.View();
+        brdfLutInfo.sampler = iblBrdfLut.Sampler();
+
+        VkWriteDescriptorSet brdfLutWrite{};
+        brdfLutWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        brdfLutWrite.dstSet = descriptorSets[i];
+        brdfLutWrite.dstBinding = 12;
+        brdfLutWrite.dstArrayElement = 0;
+        brdfLutWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        brdfLutWrite.descriptorCount = 1;
+        brdfLutWrite.pImageInfo = &brdfLutInfo;
 
         VkDescriptorBufferInfo skinInfo{};
         skinInfo.buffer = skinSsboBuffers[i];
@@ -364,8 +397,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     pointShadowWrite,
                     spriteInstanceWrite,
                     spriteTexWrite,
-                    hdrTexWrite};
-            vkUpdateDescriptorSets(device, 12, writes, 0, nullptr);
+                    hdrTexWrite,
+                    brdfLutWrite};
+            vkUpdateDescriptorSets(device, 13, writes, 0, nullptr);
         } else if (hasSunShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -376,8 +410,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     punctualSsboWrite,
                     spriteInstanceWrite,
                     spriteTexWrite,
-                    hdrTexWrite};
-            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
+                    hdrTexWrite,
+                    brdfLutWrite};
+            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
         } else if (hasPunctualShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -389,8 +424,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     pointShadowWrite,
                     spriteInstanceWrite,
                     spriteTexWrite,
-                    hdrTexWrite};
-            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
+                    hdrTexWrite,
+                    brdfLutWrite};
+            vkUpdateDescriptorSets(device, 12, writes, 0, nullptr);
         } else {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -400,10 +436,37 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     punctualSsboWrite,
                     spriteInstanceWrite,
                     spriteTexWrite,
-                    hdrTexWrite};
-            vkUpdateDescriptorSets(device, 9, writes, 0, nullptr);
+                    hdrTexWrite,
+                    brdfLutWrite};
+            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
         }
     }
+}
+
+void VulkanSceneDescriptors::UpdateOpaqueBackgroundSampler(
+        const VkDevice device,
+        const std::uint32_t frameIndex,
+        const VkImageView opaqueBackgroundView,
+        const VkSampler opaqueBackgroundSampler) {
+    if (frameIndex >= descriptorSets.GetSize() || opaqueBackgroundView == VK_NULL_HANDLE ||
+        opaqueBackgroundSampler == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = opaqueBackgroundView;
+    imageInfo.sampler = opaqueBackgroundSampler;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[frameIndex];
+    write.dstBinding = 13;
+    write.dstArrayElement = 0;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.descriptorCount = 1;
+    write.pImageInfo = &imageInfo;
+    vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
 }
 
 void VulkanSceneDescriptors::Destroy(VkDevice device) noexcept {
@@ -447,6 +510,7 @@ void VulkanSceneDescriptors::Destroy(VkDevice device) noexcept {
     skinSsboMemory.Clear();
     skinSsboMapped.Clear();
 
+    iblBrdfLut.Destroy(device);
     descriptorSets.Clear();
     if (descriptorPool != VK_NULL_HANDLE) {
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);

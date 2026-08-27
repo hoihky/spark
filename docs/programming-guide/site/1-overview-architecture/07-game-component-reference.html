@@ -1460,7 +1460,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <p>Affects <code>Scene::ForEachDrawableInViewFrustum</code> partition strategy.</p>
 <h3 id="timeofdaydrivercomponent"><code>TimeOfDayDriverComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessTimeOfDayDrivers</code> before scene lighting resolve</p>
-<p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> and <code>dayLengthSeconds &gt; 0</code>, time advances automatically each submit.</p>
+<p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> is <strong>true</strong> and <code>dayLengthSeconds &gt; 0</code>, <code>ProcessTimeOfDayDrivers</code> advances time each <code>FillStandardLitSceneFromWorld</code> call. Set <code>loop = false</code> when your gameplay code owns the clock (see <code>TimeOfDayDemo</code>).</p>
 <pre><code class="language-cpp">auto* tod = worldRoot-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;();
 tod-&gt;SetTimeOfDay(0.35F);
 tod-&gt;SetDayLengthSeconds(90.0F);

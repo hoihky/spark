@@ -1087,8 +1087,8 @@ C &lt;kind&gt; &lt;payload&gt;
 <tbody>
 <tr>
 <td><strong>glTF extensions</strong></td>
-<td>Core PBR + emissive map</td>
-<td>Clearcoat, sheen, transmission, unlit</td>
+<td>Core PBR + emissive + <strong>clearcoat</strong>, <strong>transmission</strong> (screen-space), <strong>iridescence</strong>, <strong>material variants</strong>, <code>normalTexture.scale</code></td>
+<td>Sheen, specular-glossiness, true multi-layer transmission / OIT</td>
 </tr>
 <tr>
 <td><strong>Second UV</strong></td>
@@ -1285,7 +1285,7 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>3</strong></td>
 <td>~~Transparent draw list + sort on <code>SceneRenderParams</code>~~</td>
-<td>Glass, foliage, alpha meshes</td>
+<td>Glass, foliage, alpha meshes (opaque HDR copy + resume pass for transmission)</td>
 </tr>
 <tr>
 <td><strong>4</strong></td>
@@ -1364,7 +1364,7 @@ C &lt;kind&gt; &lt;payload&gt;
 </tbody>
 </table>
 <hr />
-<p><em>Last updated: 2026-07 — 64 <code>ComponentKind</code> values (+ <code>Unknown</code>), P2 components (<code>PhysicsMaterial2D</code>, <code>MeshCollider3D</code>, <code>NavMeshAgent</code>, <code>PatrolPath</code>, <code>PerceptionSensor</code>, <code>AmbientZone</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>HingeJoint3D</code>, <code>SpringJoint3D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code>, <code>TimeOfDayDriver</code>). See <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</em></p>
+<p><em>Last updated: 2026-08 — glTF KHR extensions (clearcoat, transmission, iridescence, variants), BRDF LUT, screen-space transmission, <code>FillStandardLitSceneFromWorld</code> in <code>TimeOfDayDemo</code>. See <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</em></p>
       </article>
     </main>
 

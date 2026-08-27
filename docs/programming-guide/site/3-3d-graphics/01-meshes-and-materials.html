@@ -835,7 +835,40 @@ if (MaterialComponent* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;()) {
     ApplyGltfMaterialDesc(*mat, asset.material);
 }
 </code></pre>
-<p>Imported meshes include tangent space for normal maps (<code>Mesh::RecomputeTangentSpace</code> on glTF load). See launcher <strong>#21</strong> / key <strong>Q</strong> (<code>GltfSamples3DDemo</code>) for a full PBR + HDR IBL reference scene.</p>
+<p>Imported meshes include tangent space for normal maps (<code>Mesh::RecomputeTangentSpace</code> on glTF load). See launcher <strong>#21</strong> / key <strong>Q</strong> (<code>GltfSamples3DDemo</code>) for a full PBR + HDR IBL reference scene, and <strong>#22</strong> / key <strong>V</strong> (<code>ModelViewer3DDemo</code>) to cycle bundled samples including <strong><code>Lantern.glb</code></strong>.</p>
+<h2 id="gltf-khr-material-extensions">glTF KHR material extensions</h2>
+<p>The loader maps these into <code>MaterialGltfExtensions</code> and <code>ModelPushConstants</code> (<code>shaders/gltf_pbr_extensions.glsl</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Extension</th>
+<th>Runtime behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KHR_materials_clearcoat</code></td>
+<td>Second specular lobe on geometry normal</td>
+</tr>
+<tr>
+<td><code>KHR_materials_transmission</code></td>
+<td>Screen-space refract of opaque HDR color (descriptor binding <strong>13</strong>)</td>
+</tr>
+<tr>
+<td><code>KHR_materials_iridescence</code></td>
+<td>Thin-film tint on specular</td>
+</tr>
+<tr>
+<td><code>KHR_materials_variants</code></td>
+<td><code>MultiMaterialComponent</code> variant index; cycle at runtime in demos that call <code>CycleVariantsOnObjectTree</code></td>
+</tr>
+<tr>
+<td><code>normalTexture.scale</code></td>
+<td><code>MaterialComponent::GetNormalScale()</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>IBL:</strong> split-sum specular uses a precomputed <strong>BRDF LUT</strong> (<code>VulkanIblBrdfLut</code>, binding <strong>12</strong>). See <a href="../../../GLTF_DISPLAY_ROADMAP.html"><code>GLTF_DISPLAY_ROADMAP.md</code></a> and <a href="../../../MATERIALS_AND_LIGHTING.html"><code>MATERIALS_AND_LIGHTING.md</code></a>.</p>
 <h2 id="procedural-cube-fps-sample-style">Procedural Cube (FPS Sample Style)</h2>
 <pre><code class="language-cpp">auto unitCube = MakeShared&lt;Mesh&gt;(Mesh::CreateUnitCube());
 world.RegisterMesh(unitCube, &quot;fps/unit_cube&quot;);

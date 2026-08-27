@@ -586,7 +586,7 @@ Screenshot path (`VulkanScreenshotCapture`):
 3. After the matching in-flight fence signals, `TrySavePendingPngForFlight` converts BGRA rows to RGBA, applies a bottom-right watermark, and writes PNG via `stbi_write_png`.
 4. `RecreateSwapchain` calls `FlushPendingCaptures` after `WaitDeviceIdle` so readback completes before staging memory is resized.
 
-**Demo help overlay:** `DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) patches help text into `SceneRenderParams::screenTexts` (not a `TextOverlayComponent`). Press **H** to toggle globally; **TAB** returns to the launcher from any demo; **F3** toggles the FPS overlay.
+**Demo help overlay:** `DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) patches help text into `SceneRenderParams::screenTexts` (not a `TextOverlayComponent`). **Hidden by default** in shell demos; press **H** to toggle globally. **F3** toggles the top-right FPS overlay (also off by default). **TAB** returns to the launcher from any demo.
 
 #### Multi-pass frame graph
 
@@ -597,7 +597,7 @@ Screenshot path (`VulkanScreenshotCapture`):
 | **Deferred uploads** | Scene texture array, UI font atlases |
 | **Punctual shadow maps** | Spot atlas + point depth array (`VulkanPunctualShadowPass`) |
 | **Directional shadow maps** | CSM atlas (`VulkanDirectionalShadowPass`) |
-| **HDR scene** | Offscreen **R16G16B16A16** + depth (`VulkanHdrTonemapPass::HdrRenderPass`) — opaque/sky, sprites, particles |
+| **HDR scene** | Offscreen **R16G16B16A16** + depth (`VulkanHdrTonemapPass::HdrRenderPass`) — opaque/sky, optional **transparent resume** (transmission), sprites, particles |
 | **SSAO (optional)** | When `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR (`VulkanScreenSpaceEffectsPass`) |
 | **Tonemap** | Scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass::RecordTonemap`) |
 | **Screen UI** | Solid rects + text in the **present** render pass (`VulkanScreenUiPass`) |
@@ -608,6 +608,7 @@ Inside the **HDR scene** subpass the renderer switches pipelines:
 | Sub-stage | Pipeline / notes |
 |-----------|------------------|
 | **Scene (opaque + sky)** | Lit mesh pipeline; **sky** pipeline when `SceneSkyMode != None` (relaxed depth for backdrop). |
+| **Scene (transparent)** | When `transparentDraws` is non-empty: copy opaque HDR color → scratch, resume HDR pass, lit transparent pipeline (`VulkanSceneOpaquePass::RecordTransparent`). |
 | **Sprites** | Alpha-blended world quads (`SceneSpriteDraw`), sorted by `spriteSortMode`. |
 | **Particles** | Additive billboards (`SceneParticleInstance`). |
 
@@ -654,7 +655,7 @@ From **`IEngineContext`**:
 - **`GetInput()`** → `IInput` (GLFW-backed): key/mouse state, cursor capture, etc.
 - **`GetWindow()`**, **`GetFramePresenter()`** — rarely needed in gameplay; prefer `SetSceneRenderParams`.
 
-Demos typically toggle **mouse capture** (e.g. **F1**) for first-person cameras. Global shell shortcuts: **TAB** (launcher menu), **H** (help overlay), **F3** (FPS overlay), **F9** (video recording), **F12** (screenshot).
+Demos typically toggle **mouse capture** (e.g. **F1**) for first-person cameras. Global shell shortcuts: **TAB** (launcher menu), **H** (help overlay, off by default), **F3** (FPS overlay, off by default), **F9** (video recording), **F12** (screenshot).
 
 ---
 

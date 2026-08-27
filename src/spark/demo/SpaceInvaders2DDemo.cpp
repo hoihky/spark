@@ -298,21 +298,14 @@ void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
         }
 
         if (hudText != nullptr) {
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
             const char* phase = (gamePhase == 0) ? "PLAY" : (gamePhase == 1) ? "YOU WIN" : "GAME OVER";
             const char* art = usingBundledShipArt ? "SpaceShooter art" : "fallback art";
             hudText->SetText(Spark::Utf8String(
                     std::format(
-                            "Space Invaders — {:.0f} FPS — {} — score {} · lives {} — {} — R restart · ESC menu",
-                            static_cast<double>(fpsSmoothed),
-                            phase,
+                            "score {} · lives {} — {} — {} — R restart · ESC menu",
                             score,
                             lives,
+                            phase,
                             art)
                             .c_str()));
         }

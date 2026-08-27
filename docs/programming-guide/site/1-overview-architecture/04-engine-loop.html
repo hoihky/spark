@@ -843,7 +843,7 @@ Scene* TryGetScene() noexcept;
 <p>Capture is asynchronous: the GPU copies the swapchain image on the next frame, and PNG write happens after the matching in-flight fence signals. A watermark is applied automatically. On macOS, use in-engine <strong>F12</strong> rather than system screen capture — MoltenVK windows often record as black with external tools.</p>
 <p><strong>F9</strong> toggles MP4 video recording (see root <code>README.md</code>).</p>
 <h2 id="demo-shell-shortcuts">Demo shell shortcuts</h2>
-<p>When running <strong>SparkDemo</strong>, these keys work globally:</p>
+<p>When running <strong>SparkDemo</strong>, these keys work globally (help and FPS overlays start <strong>hidden</strong>):</p>
 <table>
 <thead>
 <tr>
@@ -862,7 +862,7 @@ Scene* TryGetScene() noexcept;
 </tr>
 <tr>
 <td><strong>F3</strong></td>
-<td>Toggle FPS overlay</td>
+<td>Toggle FPS overlay (top-right shell readout)</td>
 </tr>
 <tr>
 <td><strong>F9</strong></td>

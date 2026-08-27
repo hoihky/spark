@@ -96,7 +96,21 @@ if (MaterialComponent* mat = go->GetComponent<MaterialComponent>()) {
 }
 ```
 
-Imported meshes include tangent space for normal maps (`Mesh::RecomputeTangentSpace` on glTF load). See launcher **#21** / key **Q** (`GltfSamples3DDemo`) for a full PBR + HDR IBL reference scene.
+Imported meshes include tangent space for normal maps (`Mesh::RecomputeTangentSpace` on glTF load). See launcher **#21** / key **Q** (`GltfSamples3DDemo`) for a full PBR + HDR IBL reference scene, and **#22** / key **V** (`ModelViewer3DDemo`) to cycle bundled samples including **`Lantern.glb`**.
+
+## glTF KHR material extensions
+
+The loader maps these into `MaterialGltfExtensions` and `ModelPushConstants` (`shaders/gltf_pbr_extensions.glsl`):
+
+| Extension | Runtime behavior |
+|-----------|-------------------|
+| `KHR_materials_clearcoat` | Second specular lobe on geometry normal |
+| `KHR_materials_transmission` | Screen-space refract of opaque HDR color (descriptor binding **13**) |
+| `KHR_materials_iridescence` | Thin-film tint on specular |
+| `KHR_materials_variants` | `MultiMaterialComponent` variant index; cycle at runtime in demos that call `CycleVariantsOnObjectTree` |
+| `normalTexture.scale` | `MaterialComponent::GetNormalScale()` |
+
+**IBL:** split-sum specular uses a precomputed **BRDF LUT** (`VulkanIblBrdfLut`, binding **12**). See [`GLTF_DISPLAY_ROADMAP.md`](../../../GLTF_DISPLAY_ROADMAP.md) and [`MATERIALS_AND_LIGHTING.md`](../../../MATERIALS_AND_LIGHTING.md).
 
 ## Procedural Cube (FPS Sample Style)
 

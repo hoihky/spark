@@ -280,6 +280,7 @@ void RenderLayers2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& contex
     hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
     hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
     DemoHud::Apply(*hudText, false);
+    hudText->SetVisible(false);
     {
         const char* art = usingKenneyTiles && usingKenneyFarmer ? "Kenney farm art" : "procedural farm fallback";
         hudText->SetText(Spark::Utf8String(
@@ -416,20 +417,20 @@ void RenderLayers2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngi
     }
 
     if (hudText != nullptr) {
-        const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-        fpsSmoothed = (timing.frameIndex < 2U) ? instant : fpsSmoothed * 0.88F + instant * 0.12F;
-        const char* shadowState =
-                brokenShadowOnTop ? "shadow covers farmer (broken)" : "shadow under farmer (fixed)";
-        const char* art = usingKenneyTiles && usingKenneyFarmer ? "Kenney" : "fallback";
-        hudText->SetText(Spark::Utf8String(
-                std::format(
-                        "Farming RPG layers — {:.0f} FPS — {} art\n"
-                        "Background: tilemap + fence + crops · Characters: farmers (Y-sort) · Effects: harvest sparkle\n"
-                        "Left farmer (no group): {} · Right farmer: SortingGroup shadow→body→hat · Q toggles shadow",
-                        static_cast<double>(fpsSmoothed),
-                        art,
-                        shadowState)
-                        .c_str()));
+        DemoHud::SyncHelpOverlayVisibility(*hudText);
+        if (hudText->IsVisible()) {
+            const char* shadowState =
+                    brokenShadowOnTop ? "shadow covers farmer (broken)" : "shadow under farmer (fixed)";
+            const char* art = usingKenneyTiles && usingKenneyFarmer ? "Kenney" : "fallback";
+            hudText->SetText(Spark::Utf8String(
+                    std::format(
+                            "Farming RPG layers — {} art\n"
+                            "Background: tilemap + fence + crops · Characters: farmers (Y-sort) · Effects: harvest sparkle\n"
+                            "Left farmer (no group): {} · Right farmer: SortingGroup shadow→body→hat · Q toggles shadow",
+                            art,
+                            shadowState)
+                            .c_str()));
+        }
     }
 }
 

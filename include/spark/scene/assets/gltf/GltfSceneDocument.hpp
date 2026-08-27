@@ -42,6 +42,7 @@ struct GltfSceneDocument {
     Array<SharedPtr<SkinnedMesh>> skinnedMeshes;
     Array<SharedPtr<Skeleton>> skeletons;
     Array<GltfMaterialDesc> materials;
+    Array<Utf8String> materialVariantNames;
     Array<GltfSceneNode> nodes;
     /** Indices into <c>nodes</c> for scene root nodes (parentIndex == -1). */
     Array<std::uint32_t> rootNodeIndices;

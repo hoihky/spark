@@ -34,7 +34,8 @@ int DrawSortKey(const SceneDrawItem& it) {
 }
 
 [[nodiscard]] bool IsTransparentSceneDraw(const SceneDrawItem& item) noexcept {
-    return item.skyMode == SceneSkyMode::None && item.opacity < 0.999F;
+    return item.skyMode == SceneSkyMode::None &&
+           (item.opacity < 0.999F || item.gltfExtensions.transmissionFactor > 0.01F);
 }
 
 void SortTransparentDrawsBackToFront(

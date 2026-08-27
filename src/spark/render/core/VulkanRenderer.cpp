@@ -80,6 +80,7 @@ void VulkanRenderer::CleanupSwapchain() {
     screenSpaceEffectsPass.DestroyRenderPass(device());
     hdrTonemapPass.DestroyTonemapPipeline(device());
     hdrTonemapPass.DestroyFlightTargets(device());
+    opaqueBackground.Destroy(device());
     hdrTonemapPass.DestroyRenderPass(device());
     DestroyDepthResources();
 
@@ -177,6 +178,19 @@ void VulkanRenderer::RecreateHdrFlightTargets() {
             VulkanFrameSync::kMaxFramesInFlight,
             depthViews.GetData(),
             depthViews.GetSize());
+    opaqueBackground.Recreate(
+            physicalDevice(),
+            device(),
+            presentSwapchain().extent,
+            VulkanFrameSync::kMaxFramesInFlight);
+    opaqueBackground.InitializeLayouts(
+            device(), commandPool, graphicsQueue(), presentSwapchain().extent);
+    for (std::uint32_t fi = 0; fi < VulkanFrameSync::kMaxFramesInFlight; ++fi) {
+        if (opaqueBackground.HasFlight(fi)) {
+            sceneDescriptors.UpdateOpaqueBackgroundSampler(
+                    device(), fi, opaqueBackground.View(fi), opaqueBackground.Sampler());
+        }
+    }
 }
 
 
@@ -304,7 +318,21 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                 .maxSkinJoints = VulkanSceneDescriptors::kMaxSkinJoints,
         };
         sceneOpaquePass.Record(commandBuffer, opaqueCtx);
-        sceneOpaquePass.RecordTransparent(commandBuffer, opaqueCtx, customDrawPackedTransparent);
+
+        const bool hasTransparentDraws =
+                sceneParamsValid && !pendingScene.transparentDraws.IsEmpty();
+        if (hasTransparentDraws) {
+            vkCmdEndRenderPass(commandBuffer);
+            hdrTonemapPass.MarkColorEndedRenderPass(frameIndex);
+
+            const VulkanHdrTonemapPass::FlightTarget& hdrFlight = hdrTonemapPass.Flight(frameIndex);
+            opaqueBackground.RecordCopyFromHdrColor(
+                    commandBuffer, frameIndex, hdrFlight.colorImage, presentSwapchain().extent);
+
+            hdrTonemapPass.BeginColorAttachmentBarrierIfNeeded(commandBuffer, frameIndex);
+            hdrTonemapPass.BeginHdrResumeRenderPass(commandBuffer, frameIndex, presentSwapchain().extent);
+            sceneOpaquePass.RecordTransparent(commandBuffer, opaqueCtx, customDrawPackedTransparent);
+        }
     }
 
     if (sceneParamsValid && frameIndex < sceneDescriptors.DescriptorSetCount()) {
@@ -646,6 +674,7 @@ void VulkanRenderer::CreatePersistentSceneResources() {
     punctualShadow.CreateGraphicsPipeline(device(), sceneDescriptors.Layout(), shaderLoader);
     sceneDescriptors.CreateUniformBuffers(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     sceneDescriptors.CreateSkinSsboBuffers(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
+    sceneDescriptors.CreateIblBrdfLut(physicalDevice(), device(), commandPool, graphicsQueue());
     clusteredForwardLights.CreateBuffers(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     spritePass.CreateGpuResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     sceneDescriptors.CreatePoolAndSets(

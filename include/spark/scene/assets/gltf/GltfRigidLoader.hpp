@@ -14,6 +14,7 @@ struct GltfRigidLoadResult {
     Utf8String errorMessage;
     SharedPtr<Mesh> mesh;
     Array<GltfMaterial> materials;
+    Array<Utf8String> materialVariantNames;
 };
 
 /**

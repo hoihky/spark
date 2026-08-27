@@ -212,18 +212,10 @@ void Connect3Demo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
         UpdateBlendOverlays();
 
         if (hudText != nullptr) {
-            const float instant = (dt > 1.0e-6F) ? (1.0F / dt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
             const std::string selTxt = (selX >= 0) ? std::format("{},{}", selX, selY) : std::string("none");
             hudText->SetText(Spark::Utf8String(
                     std::format(
-                            "Match-3 — {:.0f} FPS — score {} · moves {} — screen cursor/sel · additive match flash · LMB swap · R reshuffle\n"
-                            "cursor ({},{}) · mouse sel ({})",
-                            static_cast<double>(fpsSmoothed),
+                            "score {} · moves {} — cursor ({},{}) · sel ({})",
                             score,
                             moves,
                             cursorX,

@@ -9,12 +9,13 @@ This note complements [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (shad
 | Channel | CPU / ECS | GPU / shader | Notes |
 |--------|-----------|----------------|-------|
 | **Base color** | `MaterialComponent` tint + optional `SetBaseColorTexture` | `SceneDrawItem::textureLayer`, multiplied in `scene.frag` | Scalar tint always applies; texture optional. |
-| **Tangent-space normal** | `SetNormalTexture` | `normalMapLayer`; derivative-built TBN in `scene.frag` | No per-vertex tangents required; Y flip matches common normal-map convention. |
-| **ORM packed map** | `SetMetallicRoughnessTexture` | `metallicRoughnessMapLayer` | **R** = AO × `occlusionStrength`, **G** = roughness × `roughnessFactor`, **B** = metallic × `metallicFactor` (texture replaces scalar when layer ≥ 0). |
+| **Tangent-space normal** | `SetNormalTexture`, `SetNormalScale` | `normalMapLayer`; derivative-built TBN in `scene.frag` | Respects glTF `normalTexture.scale` via `MaterialGltfExtensions` / push constants. |
+| **ORM packed map** | `SetMetallicRoughnessTexture` | `metallicRoughnessMapLayer` | **R** = AO × `occlusionStrength`, **G** = roughness × `roughnessFactor`, **B** = metallic × `metallicFactor` (texture replaces scalar when layer ≥ 0). Occlusion-only textures no longer synthesize fake metallic/roughness. |
 | **Emissive** | `SetEmissive` + optional `SetEmissiveTexture` | `emissiveMapLayer`, `emissiveFactor` | Color × intensity × factor; texture RGB multiplies when bound. |
 | **glTF factors** | `SetMetallicFactor`, `SetRoughnessFactor`, `SetOcclusionStrength`, `SetEmissiveFactor` | `ModelPushConstants` | Defaults **1**; applied in `scene.frag` with scalars and ORM samples. |
 | **Shading model** | `SceneShadingModel::LitPbr` / `ToonCel` | `push.shadingModel` | Toon: banded diffuse, stylized spec, rim; still uses punctual lights + shadow on sun where applicable. |
-| **IBL / env reflections** | `SceneRenderParams::iblEnabled`, `iblEnvironmentLayer`, `iblIntensity`, `iblUseHdrSkyEnvironment` | `ubo.iblParams` + `ibl.glsl` | Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer **−1** = procedural hemisphere from ambient colors. When a sky draw has an HDR equirect texture, it is used for **background only** unless `iblUseHdrSkyEnvironment = true` (see `GltfSamples3DDemo`). |
+| **IBL / env reflections** | `SceneRenderParams::iblEnabled`, `iblEnvironmentLayer`, `iblIntensity`, `iblUseHdrSkyEnvironment` | `ubo.iblParams` + `ibl.glsl` + precomputed **BRDF LUT** (`VulkanIblBrdfLut`, descriptor binding **12**) | Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer **−1** = procedural hemisphere from ambient colors. When a sky draw has an HDR equirect texture, it is used for **background only** unless `iblUseHdrSkyEnvironment = true` (see `GltfSamples3DDemo`, `TimeOfDayDemo`). |
+| **glTF KHR extensions** | `MaterialGltfExtensions` on `MaterialComponent` / `SceneDrawItem` | `gltf_pbr_extensions.glsl` + `ModelPushConstants` | **Clearcoat**, **transmission** (screen-space refract sample of opaque HDR color, binding **13**), **iridescence**, **`KHR_materials_variants`** (runtime variant index on `MultiMaterialComponent`). See [`GLTF_DISPLAY_ROADMAP.md`](GLTF_DISPLAY_ROADMAP.md). |
 | **SSAO** | `SceneRenderParams::ssaoEnabled`, `ssaoRadius`, `ssaoBias`, `ssaoStrength` | `post_process.frag` | Screen-space AO after HDR scene pass, before tonemap; see [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md). |
 
 **Texture budget:** `SceneRenderParams::sceneTextures` holds up to **16** RGBA8 layers (shared array texture). `sceneHdrTextures` holds up to **8** linear float layers (`.hdr` equirect via `StbHdrFloatTextureLoader`). `FindOrAddSceneTexture` deduplicates within a single submit and assigns dense indices 0…N−1 each frame.
@@ -40,8 +41,8 @@ Prioritized for a forward PBR renderer of this size:
 
 | Gap | Impact | Typical follow-up |
 |-----|--------|---------------------|
-| **No clearcoat / sheen / specular-glossiness** | glTF extensions unsupported | New BRDF lobes + parameters or second workflow enum. |
-| **No subsurface / transmission** | Skin, glass, water are approximate | SSS blur pass or thin-surface approximations. |
+| **No sheen / specular-glossiness** | glTF extensions unsupported | Sheen lobe or second workflow enum. |
+| **Transmission (advanced)** | Screen-space single-layer refract only; no OIT / thick glass | Multi-pass depth peel or stochastic transparency. |
 | **Single UV set** | Second UV from glTF ignored unless mesh path extended | Duplicate attributes or atlas. |
 
 ---
@@ -52,7 +53,7 @@ Prioritized for a forward PBR renderer of this size:
 |-----|--------|---------------------|
 | **Directional light ECS** | `DirectionalLightComponent` overrides submit params when present | Multiple directional lights with blending / priority |
 | **No area / line / tube lights** | Architectural interiors harder | LTC rectangles, capsule approximations, or emissive mesh proxies. |
-| **IBL (basic)** | Equirect + GGX importance sample; procedural hemisphere by default; HDR sky dome opt-in via `iblUseHdrSkyEnvironment`; float `.hdr` uploads via `sceneHdrTextures` | Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count. |
+| **IBL (basic)** | Equirect + GGX importance sample + **2D BRDF LUT**; procedural hemisphere by default; HDR sky dome opt-in via `iblUseHdrSkyEnvironment`; float `.hdr` uploads via `sceneHdrTextures` | Offline prefiltered cubemap mips; irradiance volumes. |
 | **Punctual shadow quality** | 512² tiles; 2 point + 4 spot cap | Higher-res atlases, EVSM, or temporal filtering. |
 | **Contact shadows / volumetric fog** | Small-scale grounding and atmosphere | Screen-space contact trace; height fog or god-ray pass (see roadmap). |
 
@@ -69,4 +70,4 @@ Prioritized for a forward PBR renderer of this size:
 
 ---
 
-*Last updated with HDR float texture uploads, world clear color, SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md).*
+*Last updated: 2026-08 — glTF KHR clearcoat/transmission/iridescence/variants, normal scale, BRDF LUT, screen-space transmission scratch, SSAO post pass, punctual shadows, clustered forward lights.*

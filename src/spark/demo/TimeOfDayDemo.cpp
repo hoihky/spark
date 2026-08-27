@@ -1,20 +1,21 @@
 #include "spark/demo/TimeOfDayDemo.hpp"
 
 #include "spark/config.hpp"
-#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"
 #include "spark/ecs/components/rendering/FogVolumeComponent.hpp"
 #include "spark/ecs/components/rendering/PostProcessVolumeComponent.hpp"
+#include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/GameObject.hpp"
+#include "spark/math/Matrix4.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
-#include "spark/scene/material/GltfMaterial.hpp"
-#include "spark/scene/volume/RenderVolumes.hpp"
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <format>
+#include <functional>
 
 namespace Spark {
 
@@ -68,6 +69,98 @@ namespace {
 
 }  // namespace
 
+namespace {
+
+void VisitObjectTree(Spark::GameObject* object, const std::function<void(Spark::GameObject&)>& visitor) {
+    if (object == nullptr) {
+        return;
+    }
+    visitor(*object);
+    const Spark::Array<Spark::GameObject*>& children = object->GetChildren();
+    for (std::size_t i = 0; i < children.GetSize(); ++i) {
+        VisitObjectTree(children[i], visitor);
+    }
+}
+
+void ExpandBoundsPoint(const Spark::Vector3& point, Spark::Vector3& bmin, Spark::Vector3& bmax, bool& any) noexcept {
+    if (!any) {
+        bmin = point;
+        bmax = point;
+        any = true;
+        return;
+    }
+    bmin.x = std::min(bmin.x, point.x);
+    bmin.y = std::min(bmin.y, point.y);
+    bmin.z = std::min(bmin.z, point.z);
+    bmax.x = std::max(bmax.x, point.x);
+    bmax.y = std::max(bmax.y, point.y);
+    bmax.z = std::max(bmax.z, point.z);
+}
+
+void ExpandBoundsWithLocalBox(
+        const Spark::Matrix4& worldMatrix,
+        const Spark::Vector3& localMin,
+        const Spark::Vector3& localMax,
+        Spark::Vector3& bmin,
+        Spark::Vector3& bmax,
+        bool& any) noexcept {
+    const Spark::Vector3 corners[8] = {
+            {localMin.x, localMin.y, localMin.z},
+            {localMax.x, localMin.y, localMin.z},
+            {localMin.x, localMax.y, localMin.z},
+            {localMax.x, localMax.y, localMin.z},
+            {localMin.x, localMin.y, localMax.z},
+            {localMax.x, localMin.y, localMax.z},
+            {localMin.x, localMax.y, localMax.z},
+            {localMax.x, localMax.y, localMax.z},
+    };
+    for (const Spark::Vector3& corner : corners) {
+        ExpandBoundsPoint(worldMatrix.TransformPoint(corner), bmin, bmax, any);
+    }
+}
+
+[[nodiscard]] bool TryComputeSubtreeWorldBounds(Spark::GameObject& root, Spark::Vector3& bmin, Spark::Vector3& bmax) {
+    bool any = false;
+    VisitObjectTree(&root, [&](Spark::GameObject& object) {
+        const Spark::Matrix4 worldMatrix = object.GetWorldMatrix();
+        if (const Spark::MeshComponent* meshComp = object.GetComponent<Spark::MeshComponent>()) {
+            if (const Spark::SharedPtr<Spark::Mesh>& mesh = meshComp->GetMesh()) {
+                Spark::Vector3 localMin{};
+                Spark::Vector3 localMax{};
+                if (mesh->TryComputeAxisAlignedBounds(localMin, localMax)) {
+                    ExpandBoundsWithLocalBox(worldMatrix, localMin, localMax, bmin, bmax, any);
+                }
+            }
+        }
+    });
+    return any;
+}
+
+void FitPivotToGround(Spark::GameObject& pivot, const float targetExtentM) {
+    Spark::TransformComponent* tr = pivot.GetComponent<Spark::TransformComponent>();
+    if (tr == nullptr) {
+        return;
+    }
+    tr->SetUniformScale(1.0F);
+    tr->SetTranslation(Spark::Vector3::Zero);
+
+    Spark::Vector3 bmin{};
+    Spark::Vector3 bmax{};
+    if (!TryComputeSubtreeWorldBounds(pivot, bmin, bmax)) {
+        return;
+    }
+    const float maxExt = std::max({bmax.x - bmin.x, bmax.y - bmin.y, bmax.z - bmin.z});
+    float uniformScale = 1.0F;
+    if (maxExt > 1.0e-4F) {
+        uniformScale = targetExtentM / maxExt;
+    }
+    constexpr float kGroundClearance = 0.02F;
+    tr->SetUniformScale(uniformScale);
+    tr->SetTranslation({0.0F, -bmin.y * uniformScale + kGroundClearance, 0.0F});
+}
+
+}  // namespace
+
 bool TimeOfDayDemo::TryPlaceCar(
         Spark::GameWorld& w,
         const char* relativePath,
@@ -79,38 +172,24 @@ bool TimeOfDayDemo::TryPlaceCar(
         return false;
     }
 
-    const Spark::GltfAsset asset = w.LoadGltf(pathBuf);
-    if (!asset.mesh) {
+    Spark::GameObject* go = w.CreateGameObject();
+    go->GetName() = Spark::Utf8String("Lantern");
+
+    Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
+    tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, yawRadians));
+    tr->SetTranslation(pos);
+
+    if (!Spark::GltfAssetBinder::BindFromPath(*go, pathBuf, Spark::SceneMeshSlot::Custom, Spark::Vector3::One)) {
+        w.DestroyGameObject(go);
         return false;
     }
 
-    Spark::Vector3 bmin{};
-    Spark::Vector3 bmax{};
-    float uniformScale = 1.0F;
-    if (asset.mesh->TryComputeAxisAlignedBounds(bmin, bmax)) {
-        const float maxExt = std::max({bmax.x - bmin.x, bmax.y - bmin.y, bmax.z - bmin.z});
-        if (maxExt > 1.0e-4F) {
-            uniformScale = targetMaxExtentM / maxExt;
-        }
+    FitPivotToGround(*go, targetMaxExtentM);
+    if (tr != nullptr) {
+        const Spark::Vector3 grounded = tr->GetLocalTransform().translation;
+        tr->SetTranslation({pos.x + grounded.x, grounded.y, pos.z + grounded.z});
     }
 
-    Spark::GameObject* go = w.CreateGameObject();
-    go->GetName() = Spark::Utf8String("CarConcept");
-
-    Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
-    tr->SetUniformScale(uniformScale);
-    constexpr float kGroundClearance = 0.02F;
-    tr->SetTranslation({pos.x, -bmin.y * uniformScale + kGroundClearance, pos.z});
-    tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, yawRadians));
-
-    Spark::GltfAssetBinder::BindRigidMesh(*go, asset, Spark::SceneMeshSlot::Custom, Spark::Vector3::One, pathBuf);
-    if (Spark::MaterialComponent* mat = go->GetComponent<Spark::MaterialComponent>()) {
-        if (!asset.materials.IsEmpty()) {
-            Spark::ApplyGltfMaterialDesc(*mat, asset.materials[0]);
-        } else if (asset.material.HasAnyTexture()) {
-            Spark::ApplyGltfMaterialDesc(*mat, asset.material);
-        }
-    }
     roots.PushBack(go);
     return true;
 }
@@ -152,7 +231,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
             groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.38F, 0.42F, 0.34F});
     roots.PushBack(groundObject);
 
-    carLoaded = TryPlaceCar(w, "/models/CarConcept.glb", {0.0F, 0.0F, 0.0F}, Spark::Pi * 0.12F, 5.6F);
+    carLoaded = TryPlaceCar(w, "/models/Lantern.glb", {0.0F, 0.0F, 0.0F}, 0.0F, 2.2F);
 
     skyObject = w.CreateGameObject();
     skyObject->GetName() = Spark::Utf8String("Sky");
@@ -171,7 +250,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     timeDriver = driverGo->AddComponent<Spark::TimeOfDayDriverComponent>();
     timeDriver->SetDayLengthSeconds(cycleDurationSeconds);
     timeDriver->SetTimeOfDay(cycleClockSeconds / cycleDurationSeconds);
-    timeDriver->SetLooping(true);
+    timeDriver->SetLooping(false);
     roots.PushBack(driverGo);
 
     Spark::GameObject* fogGo = w.CreateGameObject();
@@ -198,12 +277,12 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     helpHud.Mount(w, "Time of day");
     helpHud.SetControlHints("SPACE pause | +/- speed | R dawn | O SSAO | F1 fly");
     if (!carLoaded) {
-        helpHud.SetDetail("CarConcept.glb missing — run CMake configure to download Khronos sample.");
+        helpHud.SetDetail("Lantern.glb missing — expected at assets/models/Lantern.glb");
     }
 
     context.GetInput().SetCursorCaptured(true);
     camera.position = {3.2F, 2.6F, 10.5F};
-    camera.SnapLookAt({0.0F, 0.75F, 0.0F});
+    camera.SnapLookAt({0.0F, 0.55F, 0.0F});
 }
 
 void TimeOfDayDemo::Unload(Spark::GameWorld& w) {
@@ -323,7 +402,7 @@ void TimeOfDayDemo::RefreshHudDetail(const float timeNorm) noexcept {
         std::snprintf(
                 detail,
                 sizeof(detail),
-                "CarConcept.glb missing | %s | t=%.2f | %.0fs cycle | %.1fx | SSAO %s",
+                "Lantern.glb missing | %s | t=%.2f | %.0fs cycle | %.1fx | SSAO %s",
                 TimeOfDayPhaseLabel(timeNorm),
                 static_cast<double>(timeNorm),
                 static_cast<double>(cycleDurationSeconds),
@@ -357,85 +436,33 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
     const float timeNorm = Wrap01(cycleClockSeconds / cycleDurationSeconds);
 
     Spark::SceneRenderParams params{};
-    params.viewProjection = viewProj;
-    params.cameraPositionWorld = camera.position;
     params.lightingProfile = SceneLightingProfile::Outdoor;
     params.useTimeOfDay = true;
     params.timeOfDay = timeDriver != nullptr ? timeDriver->GetTimeOfDay() : timeNorm;
     params.directionalShadowsEnabled = true;
     params.shadowDepthSampleFlipV = true;
-    params.sceneTimeSeconds = static_cast<float>(cycleClockSeconds);
+    params.iblEnabled = true;
+    params.iblIntensity = 0.85F;
+    params.iblEnvironmentLayer = -1;
+    params.iblUseHdrSkyEnvironment = skyHasEquirect;
+    params.ssaoEnabled = ssaoEnabled;
 
-    params.draws.Clear();
-    params.sceneTextures.Clear();
-    params.sceneHdrTextures.Clear();
-    params.pointLights.Clear();
-    params.sprites.Clear();
-    params.screenRects.Clear();
-    params.screenTexts.Clear();
-    params.screenOverlayRects.Clear();
-    params.screenOverlayTexts.Clear();
-    params.screenLateRects.Clear();
-    params.screenLateTexts.Clear();
-    params.uiFont = world.GetUiFont();
-    params.uiBoldFont = world.GetUiBoldFont();
-    params.draws.Reserve(24);
-
-    ApplyRegionalRenderVolumes(world, camera.position, params);
-
-    auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* uvScale = nullptr,
-                                        Spark::Vector2* uvOffset = nullptr) -> std::int32_t {
-        return SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
-    };
-
-    Spark::Array<Spark::SceneDrawItem> drawList;
-    drawList.Reserve(16);
-
-    scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
-                             const Spark::MaterialComponent* mat, const Spark::Matrix4& worldMatrix) {
-        Spark::SceneDrawItem item{};
-        SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, worldMatrix, params);
-        drawList.PushBack(item);
-    });
-
-    scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
-                                 const Spark::MaterialComponent* mat, const Spark::Matrix4& worldMatrix) {
-        if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
-            return;
-        }
-        Spark::SceneDrawItem baseItem{};
-        baseItem.model = worldMatrix;
-        baseItem.mesh = mc.GetSlot();
-        if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-            baseItem.customMesh = mc.GetMesh();
-        }
-        Spark::Vector3 alb = mc.GetAlbedo();
-        baseItem.textureLayer = -1;
-        const Spark::MultiMaterialComponent* multiMat =
-                obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
-        if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
-            !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
-            Spark::SceneSubmitDetail::PushRigidMeshDraws(
-                    drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
-            return;
-        }
-        Spark::SceneDrawItem item = baseItem;
-        if (mat != nullptr) {
-            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-            if (mat->GetBaseColorTexture()) {
-                const Spark::Vector3& t = mat->GetTint();
-                alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-            }
-        }
-        item.albedo = alb;
-        item.shadowFlags = kSceneShadowCastAndReceive;
-        drawList.PushBack(item);
-    });
-
-    StableSortDrawItems(drawList);
-    for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
-        params.draws.PushBack(drawList[di]);
-    }
+    FillStandardLitSceneFromWorld(
+            world,
+            context,
+            viewProj,
+            camera.position,
+            Spark::Vector3{0.35F, 0.88F, 0.48F}.Normalized(),
+            {1.0F, 0.98F, 0.92F},
+            0.95F,
+            Spark::Vector3{0.42F, 0.52F, 0.38F},
+            false,
+            {},
+            {},
+            static_cast<float>(cycleClockSeconds),
+            params,
+            SceneSpriteSortMode::SortOrderOnly,
+            &scene);
 
     scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
         Spark::ScreenTextDraw d{};

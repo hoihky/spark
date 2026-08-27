@@ -74,6 +74,9 @@ constexpr float kTextAlpha = 1.0F;
 
 void Apply(TextOverlayComponent& overlay, bool lightTextOnDarkBackground = true) noexcept;
 
+/** Mirrors <c>DemoHelpHud</c> global visibility (H toggle). */
+void SyncHelpOverlayVisibility(TextOverlayComponent& overlay) noexcept;
+
 }  // namespace DemoHud
 
 /** Global F3 toggle (handled in <c>Engine</c> before game input). */

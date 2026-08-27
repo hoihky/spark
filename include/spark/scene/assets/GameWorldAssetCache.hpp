@@ -28,6 +28,8 @@ struct GltfAsset {
     GltfMaterialDesc material;
     /** All materials in the glTF file, indexed by primitive material index. */
     Array<GltfMaterialDesc> materials;
+    /** KHR_materials_variants names (empty when absent). */
+    Array<Utf8String> materialVariantNames;
 };
 
 /** Skinned glTF: mesh + skeleton + animations + full PBR material table. */
@@ -39,6 +41,7 @@ struct SkinnedGltfAsset {
     /** @deprecated Use <c>materials</c>. */
     GltfMaterialDesc material;
     Array<GltfMaterialDesc> materials;
+    Array<Utf8String> materialVariantNames;
     std::uint32_t walkClipIndex = 0;
     Quaternion bindUpAlignment{Quaternion::Identity};
     float bindFacingYawOffset = 0.0F;

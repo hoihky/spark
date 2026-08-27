@@ -34,6 +34,7 @@ void MaterialAsset::CopyFromGltfMaterial(const GltfMaterial& source) {
     normalMap = source.normalMap;
     metallicRoughness = source.metallicRoughness;
     emissiveMap = source.emissiveMap;
+    iridescenceThicknessMap = source.iridescenceThicknessMap;
     tint = source.baseColorFactor;
     metallicFactor = source.metallicFactor;
     roughnessFactor = source.roughnessFactor;
@@ -53,6 +54,16 @@ void MaterialAsset::CopyFromGltfMaterial(const GltfMaterial& source) {
     doubleSided = source.doubleSided;
     opacity = source.opacity;
     alphaCutoff = source.alphaCutoff;
+    gltfExtensions = source.gltfExtensions;
+    baseColorUv = source.baseColorUv;
+    normalUv = source.normalUv;
+    metallicRoughnessUv = source.metallicRoughnessUv;
+    emissiveUv = source.emissiveUv;
+    iridescenceThicknessUv = source.iridescenceThicknessUv;
+    normalScale = source.normalScale;
+    if (source.unlit) {
+        shadingModel = SceneShadingModel::Unlit;
+    }
 }
 
 void MaterialAsset::CaptureFromMaterial(const MaterialComponent& material) {
@@ -76,6 +87,12 @@ void MaterialAsset::CaptureFromMaterial(const MaterialComponent& material) {
     doubleSided = material.IsDoubleSided();
     opacity = material.GetOpacity();
     alphaCutoff = material.GetAlphaCutoff();
+    gltfExtensions = material.GetGltfExtensions();
+    baseColorUv = material.GetBaseColorUvMap();
+    normalUv = material.GetNormalUvMap();
+    metallicRoughnessUv = material.GetMetallicRoughnessUvMap();
+    emissiveUv = material.GetEmissiveUvMap();
+    normalScale = material.GetNormalScale();
 }
 
 void MaterialAsset::ApplyTo(MaterialComponent& material) const {
@@ -83,6 +100,7 @@ void MaterialAsset::ApplyTo(MaterialComponent& material) const {
     material.SetNormalTexture(normalMap);
     material.SetMetallicRoughnessTexture(metallicRoughness);
     material.SetEmissiveTexture(emissiveMap);
+    material.SetIridescenceThicknessTexture(iridescenceThicknessMap);
     if (metallicRoughness) {
         material.SetMetallic(1.0F);
         material.SetRoughness(1.0F);
@@ -105,6 +123,13 @@ void MaterialAsset::ApplyTo(MaterialComponent& material) const {
     material.SetDoubleSided(doubleSided);
     material.SetOpacity(opacity);
     material.SetAlphaCutoff(alphaCutoff);
+    material.SetGltfExtensions(gltfExtensions);
+    material.SetBaseColorUvMap(baseColorUv);
+    material.SetNormalUvMap(normalUv);
+    material.SetMetallicRoughnessUvMap(metallicRoughnessUv);
+    material.SetEmissiveUvMap(emissiveUv);
+    material.SetIridescenceThicknessUvMap(iridescenceThicknessUv);
+    material.SetNormalScale(normalScale);
 }
 
 void MaterialAsset::ApplyTo(MultiMaterialComponent::Slot& slot) const {
@@ -112,6 +137,7 @@ void MaterialAsset::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.normalMap = normalMap;
     slot.metallicRoughness = metallicRoughness;
     slot.emissiveMap = emissiveMap;
+    slot.iridescenceThicknessMap = iridescenceThicknessMap;
     slot.tint = tint;
     if (metallicRoughness) {
         slot.metallic = 1.0F;
@@ -135,6 +161,13 @@ void MaterialAsset::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.doubleSided = doubleSided;
     slot.opacity = opacity;
     slot.alphaCutoff = alphaCutoff;
+    slot.gltfExtensions = gltfExtensions;
+    slot.baseColorUv = baseColorUv;
+    slot.normalUv = normalUv;
+    slot.metallicRoughnessUv = metallicRoughnessUv;
+    slot.emissiveUv = emissiveUv;
+    slot.iridescenceThicknessUv = iridescenceThicknessUv;
+    slot.normalScale = normalScale;
 }
 
 bool MaterialAsset::ApproximatelyEquals(const MaterialComponent& material) const noexcept {
@@ -160,6 +193,13 @@ bool MaterialAsset::ApproximatelyEquals(const MaterialComponent& material) const
         material.IsDoubleSided() != doubleSided ||
         !ApproximatelyEqual(opacity, material.GetOpacity()) ||
         !ApproximatelyEqual(alphaCutoff, material.GetAlphaCutoff())) {
+        return false;
+    }
+    const MaterialGltfExtensions& ext = material.GetGltfExtensions();
+    if (!ApproximatelyEqual(gltfExtensions.clearcoatFactor, ext.clearcoatFactor) ||
+        !ApproximatelyEqual(gltfExtensions.clearcoatRoughnessFactor, ext.clearcoatRoughnessFactor) ||
+        !ApproximatelyEqual(gltfExtensions.transmissionFactor, ext.transmissionFactor) ||
+        !ApproximatelyEqual(gltfExtensions.emissiveStrength, ext.emissiveStrength)) {
         return false;
     }
     return true;

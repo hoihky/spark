@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
 
@@ -28,6 +29,7 @@ public:
         SharedPtr<Texture2D> normalMap;
         SharedPtr<Texture2D> metallicRoughness;
         SharedPtr<Texture2D> emissiveMap;
+        SharedPtr<Texture2D> iridescenceThicknessMap;
         Vector3 tint{Vector3::One};
         float metallic = 0.0F;
         float roughness = 0.45F;
@@ -48,6 +50,9 @@ public:
         MaterialUvMap normalUv{};
         MaterialUvMap metallicRoughnessUv{};
         MaterialUvMap emissiveUv{};
+        MaterialUvMap iridescenceThicknessUv{};
+        float normalScale = 1.0F;
+        MaterialGltfExtensions gltfExtensions{};
         Utf8String materialAssetKey;
     };
 
@@ -69,6 +74,16 @@ public:
     void ClearAllMaterialAssets(GameWorld& world);
     void TryApplyMaterialAssets(GameWorld& world);
 
+    [[nodiscard]] std::uint32_t GetActiveVariantIndex() const noexcept { return activeVariantIndex; }
+    [[nodiscard]] const Array<Utf8String>& GetVariantNames() const noexcept { return variantNames; }
+    [[nodiscard]] bool HasMaterialVariants() const noexcept { return variantNames.GetSize() > 1U; }
+    void SetVariantNames(const Array<Utf8String>& names);
+    void SetActiveVariantIndex(const std::uint32_t index);
+    void CycleActiveVariant();
+
+    /** Advances variant index once and applies it to every variant-capable slot on <c>root</c> and descendants. */
+    static void CycleVariantsOnObjectTree(GameObject* root);
+
     /** Sizes slots to the glTF material table and copies textures/factors from the asset. */
     void PopulateFromGltfAsset(const GltfAsset& asset);
 
@@ -85,6 +100,8 @@ private:
 
     Array<Slot> slots;
     Array<MaterialLibraryBinding> slotBindings;
+    Array<Utf8String> variantNames;
+    std::uint32_t activeVariantIndex = 0;
 };
 
 }  // namespace Spark

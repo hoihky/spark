@@ -1685,7 +1685,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <li>After the matching in-flight fence signals, <code>TrySavePendingPngForFlight</code> converts BGRA rows to RGBA, applies a bottom-right watermark, and writes PNG via <code>stbi_write_png</code>.</li>
 <li><code>RecreateSwapchain</code> calls <code>FlushPendingCaptures</code> after <code>WaitDeviceIdle</code> so readback completes before staging memory is resized.</li>
 </ol>
-<p><strong>Demo help overlay:</strong> <code>DemoHelpHud</code> (<code>include/spark/demo/DemoHelpHud.hpp</code>) patches help text into <code>SceneRenderParams::screenTexts</code> (not a <code>TextOverlayComponent</code>). Press <strong>H</strong> to toggle globally; <strong>TAB</strong> returns to the launcher from any demo; <strong>F3</strong> toggles the FPS overlay.</p>
+<p><strong>Demo help overlay:</strong> <code>DemoHelpHud</code> (<code>include/spark/demo/DemoHelpHud.hpp</code>) patches help text into <code>SceneRenderParams::screenTexts</code> (not a <code>TextOverlayComponent</code>). <strong>Hidden by default</strong> in shell demos; press <strong>H</strong> to toggle globally. <strong>F3</strong> toggles the top-right FPS overlay (also off by default). <strong>TAB</strong> returns to the launcher from any demo.</p>
 <h4 id="multi-pass-frame-graph">Multi-pass frame graph</h4>
 <p><code>VulkanRenderer</code> composes several subsystems (<code>VulkanDirectionalShadowPass</code>, <code>VulkanPunctualShadowPass</code>, <code>VulkanHdrTonemapPass</code>, <code>VulkanScreenSpaceEffectsPass</code>, <code>VulkanSceneOpaquePass</code>, <code>VulkanSpritePass</code>, <code>VulkanParticlePass</code>, <code>VulkanScreenUiPass</code>). One primary command buffer per swapchain image records:</p>
 <table>
@@ -1710,7 +1710,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </tr>
 <tr>
 <td><strong>HDR scene</strong></td>
-<td>Offscreen <strong>R16G16B16A16</strong> + depth (<code>VulkanHdrTonemapPass::HdrRenderPass</code>) — opaque/sky, sprites, particles</td>
+<td>Offscreen <strong>R16G16B16A16</strong> + depth (<code>VulkanHdrTonemapPass::HdrRenderPass</code>) — opaque/sky, optional <strong>transparent resume</strong> (transmission), sprites, particles</td>
 </tr>
 <tr>
 <td><strong>SSAO (optional)</strong></td>
@@ -1742,6 +1742,10 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <tr>
 <td><strong>Scene (opaque + sky)</strong></td>
 <td>Lit mesh pipeline; <strong>sky</strong> pipeline when <code>SceneSkyMode != None</code> (relaxed depth for backdrop).</td>
+</tr>
+<tr>
+<td><strong>Scene (transparent)</strong></td>
+<td>When <code>transparentDraws</code> is non-empty: copy opaque HDR color → scratch, resume HDR pass, lit transparent pipeline (<code>VulkanSceneOpaquePass::RecordTransparent</code>).</td>
 </tr>
 <tr>
 <td><strong>Sprites</strong></td>
@@ -1786,7 +1790,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <li><strong><code>GetInput()</code></strong> → <code>IInput</code> (GLFW-backed): key/mouse state, cursor capture, etc.</li>
 <li><strong><code>GetWindow()</code></strong>, <strong><code>GetFramePresenter()</code></strong> — rarely needed in gameplay; prefer <code>SetSceneRenderParams</code>.</li>
 </ul>
-<p>Demos typically toggle <strong>mouse capture</strong> (e.g. <strong>F1</strong>) for first-person cameras. Global shell shortcuts: <strong>TAB</strong> (launcher menu), <strong>H</strong> (help overlay), <strong>F3</strong> (FPS overlay), <strong>F9</strong> (video recording), <strong>F12</strong> (screenshot).</p>
+<p>Demos typically toggle <strong>mouse capture</strong> (e.g. <strong>F1</strong>) for first-person cameras. Global shell shortcuts: <strong>TAB</strong> (launcher menu), <strong>H</strong> (help overlay, off by default), <strong>F3</strong> (FPS overlay, off by default), <strong>F9</strong> (video recording), <strong>F12</strong> (screenshot).</p>
 <hr />
 <h2 id="11-physics-apis-summary">11. Physics APIs (Summary)</h2>
 <p>Primary entry point: <strong><code>PhysicsSubsystem</code></strong> (<code>spark/physics/PhysicsSubsystem.hpp</code>). Include everything with <code>spark/physics/Physics.hpp</code>.</p>

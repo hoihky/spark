@@ -5,6 +5,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
 
@@ -39,6 +40,9 @@ public:
         return metallicRoughness;
     }
     [[nodiscard]] const SharedPtr<Texture2D>& GetEmissiveTexture() const noexcept { return emissiveMap; }
+    [[nodiscard]] const SharedPtr<Texture2D>& GetIridescenceThicknessTexture() const noexcept {
+        return iridescenceThicknessMap;
+    }
     [[nodiscard]] const Vector3& GetTint() const noexcept { return tint; }
     [[nodiscard]] float GetMetallic() const noexcept { return metallic; }
     [[nodiscard]] float GetRoughness() const noexcept { return roughness; }
@@ -53,6 +57,7 @@ public:
     void SetNormalTexture(SharedPtr<Texture2D> tex);
     void SetMetallicRoughnessTexture(SharedPtr<Texture2D> tex);
     void SetEmissiveTexture(SharedPtr<Texture2D> tex);
+    void SetIridescenceThicknessTexture(SharedPtr<Texture2D> tex);
     void SetTint(const Vector3& t);
     void SetMetallic(float m);
     void SetRoughness(float r);
@@ -85,10 +90,20 @@ public:
     [[nodiscard]] const MaterialUvMap& GetNormalUvMap() const noexcept { return normalUv; }
     [[nodiscard]] const MaterialUvMap& GetMetallicRoughnessUvMap() const noexcept { return metallicRoughnessUv; }
     [[nodiscard]] const MaterialUvMap& GetEmissiveUvMap() const noexcept { return emissiveUv; }
+    [[nodiscard]] const MaterialUvMap& GetIridescenceThicknessUvMap() const noexcept {
+        return iridescenceThicknessUv;
+    }
     void SetBaseColorUvMap(const MaterialUvMap& map) noexcept { baseColorUv = map; }
     void SetNormalUvMap(const MaterialUvMap& map) noexcept { normalUv = map; }
     void SetMetallicRoughnessUvMap(const MaterialUvMap& map) noexcept { metallicRoughnessUv = map; }
     void SetEmissiveUvMap(const MaterialUvMap& map) noexcept { emissiveUv = map; }
+    void SetIridescenceThicknessUvMap(const MaterialUvMap& map) noexcept { iridescenceThicknessUv = map; }
+
+    [[nodiscard]] float GetNormalScale() const noexcept { return normalScale; }
+    void SetNormalScale(const float scale) noexcept { normalScale = scale; }
+
+    [[nodiscard]] const MaterialGltfExtensions& GetGltfExtensions() const noexcept { return gltfExtensions; }
+    void SetGltfExtensions(const MaterialGltfExtensions& ext) noexcept { gltfExtensions = ext; }
 
     /** Library asset key (e.g. <c>materials/hero.sparkmat</c> or <c>model.glb#material/0</c>). */
     [[nodiscard]] const Utf8String& GetMaterialAssetKey() const noexcept { return libraryBinding.GetKey(); }
@@ -105,6 +120,7 @@ private:
     SharedPtr<Texture2D> normalMap;
     SharedPtr<Texture2D> metallicRoughness;
     SharedPtr<Texture2D> emissiveMap;
+    SharedPtr<Texture2D> iridescenceThicknessMap;
     Vector3 tint{Vector3::One};
     float metallic = 0.0F;
     float roughness = 0.45F;
@@ -125,6 +141,9 @@ private:
     MaterialUvMap normalUv{};
     MaterialUvMap metallicRoughnessUv{};
     MaterialUvMap emissiveUv{};
+    MaterialUvMap iridescenceThicknessUv{};
+    float normalScale = 1.0F;
+    MaterialGltfExtensions gltfExtensions{};
     MaterialLibraryBinding libraryBinding;
 };
 

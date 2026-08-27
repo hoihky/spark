@@ -254,6 +254,7 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
     hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
     hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
     DemoHud::Apply(*hudText, false);
+    hudText->SetVisible(false);
     roots.PushBack(hudGo);
 
     camera.position = {static_cast<float>(kCols) * 0.5F * kTileWorld, static_cast<float>(kRows) * 0.5F * kTileWorld, 0.0F};
@@ -632,15 +633,18 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
     }
 
     if (hudText != nullptr) {
-        Utf8String hud{};
-        hud.AppendUtf8("Tilemap showcase — layers, animation, autotile, path grid, object markers\n");
-        hud.AppendUtf8("Left-click: pathfind   R: reset   L: load Kenney sampleMap.tmx\n");
-        if (!tmxStatus.IsEmpty()) {
-            hud.AppendUtf8(tmxStatus.CStr());
-            hud.AppendUtf8("\n");
+        DemoHud::SyncHelpOverlayVisibility(*hudText);
+        if (hudText->IsVisible()) {
+            Utf8String hud{};
+            hud.AppendUtf8("Tilemap showcase — layers, animation, autotile, path grid, object markers\n");
+            hud.AppendUtf8("Left-click: pathfind   R: reset   L: load Kenney sampleMap.tmx\n");
+            if (!tmxStatus.IsEmpty()) {
+                hud.AppendUtf8(tmxStatus.CStr());
+                hud.AppendUtf8("\n");
+            }
+            hud.AppendUtf8("Magenta gizmo = quest marker. Gold = spawned chests.");
+            hudText->SetText(hud);
         }
-        hud.AppendUtf8("Magenta gizmo = quest marker. Gold = spawned chests.");
-        hudText->SetText(hud);
     }
 }
 

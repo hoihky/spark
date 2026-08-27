@@ -20,6 +20,15 @@ void MaterialLibraryBinding::Assign(GameWorld& world, const char* assetKey) {
     }
 }
 
+void MaterialLibraryBinding::Retain(GameWorld& world, const char* assetKey) {
+    Release(world);
+    key = (assetKey != nullptr && assetKey[0] != '\0') ? Utf8String(assetKey) : Utf8String{};
+    pendingApply = false;
+    if (!key.IsEmpty()) {
+        world.RetainAsset(CachedAssetKind::Material, key.CStr());
+    }
+}
+
 void MaterialLibraryBinding::Release(GameWorld& world) {
     if (!key.IsEmpty()) {
         world.ReleaseAsset(CachedAssetKind::Material, key.CStr());

@@ -516,15 +516,15 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Tangent-space normal</strong></td>
-<td><code>SetNormalTexture</code></td>
+<td><code>SetNormalTexture</code>, <code>SetNormalScale</code></td>
 <td><code>normalMapLayer</code>; derivative-built TBN in <code>scene.frag</code></td>
-<td>No per-vertex tangents required; Y flip matches common normal-map convention.</td>
+<td>Respects glTF <code>normalTexture.scale</code> via <code>MaterialGltfExtensions</code> / push constants.</td>
 </tr>
 <tr>
 <td><strong>ORM packed map</strong></td>
 <td><code>SetMetallicRoughnessTexture</code></td>
 <td><code>metallicRoughnessMapLayer</code></td>
-<td><strong>R</strong> = AO × <code>occlusionStrength</code>, <strong>G</strong> = roughness × <code>roughnessFactor</code>, <strong>B</strong> = metallic × <code>metallicFactor</code> (texture replaces scalar when layer ≥ 0).</td>
+<td><strong>R</strong> = AO × <code>occlusionStrength</code>, <strong>G</strong> = roughness × <code>roughnessFactor</code>, <strong>B</strong> = metallic × <code>metallicFactor</code> (texture replaces scalar when layer ≥ 0). Occlusion-only textures no longer synthesize fake metallic/roughness.</td>
 </tr>
 <tr>
 <td><strong>Emissive</strong></td>
@@ -547,8 +547,14 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><strong>IBL / env reflections</strong></td>
 <td><code>SceneRenderParams::iblEnabled</code>, <code>iblEnvironmentLayer</code>, <code>iblIntensity</code>, <code>iblUseHdrSkyEnvironment</code></td>
-<td><code>ubo.iblParams</code> + <code>ibl.glsl</code></td>
-<td>Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer <strong>−1</strong> = procedural hemisphere from ambient colors. When a sky draw has an HDR equirect texture, it is used for <strong>background only</strong> unless <code>iblUseHdrSkyEnvironment = true</code> (see <code>GltfSamples3DDemo</code>).</td>
+<td><code>ubo.iblParams</code> + <code>ibl.glsl</code> + precomputed <strong>BRDF LUT</strong> (<code>VulkanIblBrdfLut</code>, descriptor binding <strong>12</strong>)</td>
+<td>Lit PBR: GGX-prefiltered equirect specular (split-sum BRDF) for metals; diffuse irradiance from same env. Layer <strong>−1</strong> = procedural hemisphere from ambient colors. When a sky draw has an HDR equirect texture, it is used for <strong>background only</strong> unless <code>iblUseHdrSkyEnvironment = true</code> (see <code>GltfSamples3DDemo</code>, <code>TimeOfDayDemo</code>).</td>
+</tr>
+<tr>
+<td><strong>glTF KHR extensions</strong></td>
+<td><code>MaterialGltfExtensions</code> on <code>MaterialComponent</code> / <code>SceneDrawItem</code></td>
+<td><code>gltf_pbr_extensions.glsl</code> + <code>ModelPushConstants</code></td>
+<td><strong>Clearcoat</strong>, <strong>transmission</strong> (screen-space refract sample of opaque HDR color, binding <strong>13</strong>), <strong>iridescence</strong>, <strong><code>KHR_materials_variants</code></strong> (runtime variant index on <code>MultiMaterialComponent</code>). See <a href="gltf-display-roadmap.html"><code>GLTF_DISPLAY_ROADMAP.md</code></a>.</td>
 </tr>
 <tr>
 <td><strong>SSAO</strong></td>
@@ -611,14 +617,14 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </thead>
 <tbody>
 <tr>
-<td><strong>No clearcoat / sheen / specular-glossiness</strong></td>
+<td><strong>No sheen / specular-glossiness</strong></td>
 <td>glTF extensions unsupported</td>
-<td>New BRDF lobes + parameters or second workflow enum.</td>
+<td>Sheen lobe or second workflow enum.</td>
 </tr>
 <tr>
-<td><strong>No subsurface / transmission</strong></td>
-<td>Skin, glass, water are approximate</td>
-<td>SSS blur pass or thin-surface approximations.</td>
+<td><strong>Transmission (advanced)</strong></td>
+<td>Screen-space single-layer refract only; no OIT / thick glass</td>
+<td>Multi-pass depth peel or stochastic transparency.</td>
 </tr>
 <tr>
 <td><strong>Single UV set</strong></td>
@@ -650,8 +656,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>IBL (basic)</strong></td>
-<td>Equirect + GGX importance sample; procedural hemisphere by default; HDR sky dome opt-in via <code>iblUseHdrSkyEnvironment</code>; float <code>.hdr</code> uploads via <code>sceneHdrTextures</code></td>
-<td>Offline prefiltered cubemap + 2D LUT for sharper metals at low sample count.</td>
+<td>Equirect + GGX importance sample + <strong>2D BRDF LUT</strong>; procedural hemisphere by default; HDR sky dome opt-in via <code>iblUseHdrSkyEnvironment</code>; float <code>.hdr</code> uploads via <code>sceneHdrTextures</code></td>
+<td>Offline prefiltered cubemap mips; irradiance volumes.</td>
 </tr>
 <tr>
 <td><strong>Punctual shadow quality</strong></td>
@@ -676,7 +682,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Managed / C ABI</strong> — only if you expose new <code>ComponentKind</code> or params through bindings.</li>
 </ol>
 <hr />
-<p><em>Last updated with HDR float texture uploads, world clear color, SSAO post pass, punctual shadows, clustered forward lights, emissive texture maps, and composited Vulkan passes. API gaps: <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a>.</em></p>
+<p><em>Last updated: 2026-08 — glTF KHR clearcoat/transmission/iridescence/variants, normal scale, BRDF LUT, screen-space transmission scratch, SSAO post pass, punctual shadows, clustered forward lights.</em></p>
       </article>
     </main>
 

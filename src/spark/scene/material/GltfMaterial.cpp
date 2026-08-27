@@ -258,6 +258,17 @@ void ReadTextureViewUv(const cgltf_texture_view& tv, MaterialUvMap& out) noexcep
     }
 }
 
+bool ApproximatelyEqualUv(const float a, const float b) noexcept {
+    return std::fabs(a - b) <= 1.0e-5F;
+}
+
+bool UvMapsMatch(const MaterialUvMap& a, const MaterialUvMap& b) noexcept {
+    return a.texCoordSet == b.texCoordSet &&
+           ApproximatelyEqualUv(a.uvScale.x, b.uvScale.x) && ApproximatelyEqualUv(a.uvScale.y, b.uvScale.y) &&
+           ApproximatelyEqualUv(a.uvOffset.x, b.uvOffset.x) && ApproximatelyEqualUv(a.uvOffset.y, b.uvOffset.y) &&
+           ApproximatelyEqualUv(a.uvRotation, b.uvRotation);
+}
+
 void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
     if (mat.has_pbr_metallic_roughness) {
         const cgltf_pbr_metallic_roughness& pbr = mat.pbr_metallic_roughness;
@@ -296,6 +307,27 @@ void ApplyScalarFactors(const cgltf_material& mat, GltfMaterial& out) {
     }
 }
 
+void ApplyGltfExtensions(const cgltf_material& mat, GltfMaterial& out) {
+    out.gltfExtensions = MaterialGltfExtensions{};
+    if (mat.has_clearcoat) {
+        out.gltfExtensions.clearcoatFactor = static_cast<float>(mat.clearcoat.clearcoat_factor);
+        out.gltfExtensions.clearcoatRoughnessFactor = static_cast<float>(mat.clearcoat.clearcoat_roughness_factor);
+    }
+    if (mat.has_transmission) {
+        out.gltfExtensions.transmissionFactor = static_cast<float>(mat.transmission.transmission_factor);
+    }
+    if (mat.has_emissive_strength) {
+        out.gltfExtensions.emissiveStrength = static_cast<float>(mat.emissive_strength.emissive_strength);
+    }
+    if (mat.has_iridescence) {
+        const cgltf_iridescence& ir = mat.iridescence;
+        out.gltfExtensions.iridescenceFactor = static_cast<float>(ir.iridescence_factor);
+        out.gltfExtensions.iridescenceIor = static_cast<float>(ir.iridescence_ior);
+        out.gltfExtensions.iridescenceThicknessMin = static_cast<float>(ir.iridescence_thickness_min);
+        out.gltfExtensions.iridescenceThicknessMax = static_cast<float>(ir.iridescence_thickness_max);
+    }
+}
+
 bool TryLoadTexturesFromMaterial(
         const cgltf_material& mat,
         const char* gltfPath,
@@ -303,6 +335,7 @@ bool TryLoadTexturesFromMaterial(
         GltfTextureLoadCaches& caches) {
     const Utf8String dir = ParentDirectory(gltfPath);
     ApplyScalarFactors(mat, out);
+    ApplyGltfExtensions(mat, out);
 
     const cgltf_image* mrImage = nullptr;
     const cgltf_image* occImage = nullptr;
@@ -325,6 +358,7 @@ bool TryLoadTexturesFromMaterial(
 
     if (mat.normal_texture.texture != nullptr) {
         const Utf8String name = MakeTextureName(gltfPath, mat.normal_texture.texture->image, "normal");
+        out.normalScale = static_cast<float>(mat.normal_texture.scale);
         ReadTextureViewUv(mat.normal_texture, out.normalUv);
         (void)TryGetOrDecodeTextureView(mat.normal_texture, dir, name, caches, out.normalMap);
     }
@@ -335,13 +369,33 @@ bool TryLoadTexturesFromMaterial(
         (void)TryGetOrDecodeTextureView(mat.emissive_texture, dir, name, caches, out.emissiveMap);
     }
 
-    if (mat.occlusion_texture.texture != nullptr) {
+    if (mat.has_iridescence && mat.iridescence.iridescence_thickness_texture.texture != nullptr) {
+        const Utf8String name =
+                MakeTextureName(gltfPath, mat.iridescence.iridescence_thickness_texture.texture->image, "iridescence");
+        ReadTextureViewUv(mat.iridescence.iridescence_thickness_texture, out.iridescenceThicknessUv);
+        (void)TryGetOrDecodeTextureView(
+                mat.iridescence.iridescence_thickness_texture, dir, name, caches, out.iridescenceThicknessMap);
+    }
+
+    const bool hasMetallicRoughnessTexture =
+            mat.has_pbr_metallic_roughness &&
+            mat.pbr_metallic_roughness.metallic_roughness_texture.texture != nullptr;
+    if (mat.occlusion_texture.texture != nullptr && out.occlusionStrength > 1.0e-6F) {
         occImage = mat.occlusion_texture.texture->image;
         const Utf8String name = MakeTextureName(gltfPath, occImage, "occlusion");
-        ReadTextureViewUv(mat.occlusion_texture, out.metallicRoughnessUv);
+        MaterialUvMap occlusionUv{};
+        ReadTextureViewUv(mat.occlusion_texture, occlusionUv);
         if (TryGetOrDecodeTextureView(mat.occlusion_texture, dir, name, caches, occlusion)) {
-            out.metallicRoughness = GetOrCreateMergedOrmTexture(
-                    caches, out.metallicRoughness, occlusion, mrImage, occImage, name);
+            if (hasMetallicRoughnessTexture) {
+                if (UvMapsMatch(occlusionUv, out.metallicRoughnessUv)) {
+                    out.metallicRoughness = GetOrCreateMergedOrmTexture(
+                            caches, out.metallicRoughness, occlusion, mrImage, occImage, name);
+                }
+            } else {
+                out.metallicRoughness = GetOrCreateMergedOrmTexture(
+                        caches, out.metallicRoughness, occlusion, mrImage, occImage, name);
+                out.metallicRoughnessUv = occlusionUv;
+            }
         }
     }
 
@@ -397,6 +451,10 @@ bool GltfMaterial::HasScalarPresentation() const noexcept {
     if (doubleSided || alphaCutoff > 1.0e-6F) {
         return true;
     }
+    if (gltfExtensions.HasClearcoat() || gltfExtensions.HasTransmission() || gltfExtensions.HasEmissiveStrength() ||
+        gltfExtensions.HasIridescence()) {
+        return true;
+    }
     return false;
 }
 
@@ -422,6 +480,9 @@ void GltfMaterial::ApplyTo(MaterialComponent& material) const {
     if (emissiveMap) {
         material.SetEmissiveTexture(emissiveMap);
     }
+    if (iridescenceThicknessMap) {
+        material.SetIridescenceThicknessTexture(iridescenceThicknessMap);
+    }
     material.SetTint(baseColorFactor);
     material.SetOcclusionStrength(occlusionStrength);
     material.SetEmissive(emissiveFactor, emissiveIntensity);
@@ -433,6 +494,9 @@ void GltfMaterial::ApplyTo(MaterialComponent& material) const {
     material.SetNormalUvMap(normalUv);
     material.SetMetallicRoughnessUvMap(metallicRoughnessUv);
     material.SetEmissiveUvMap(emissiveUv);
+    material.SetIridescenceThicknessUvMap(iridescenceThicknessUv);
+    material.SetNormalScale(normalScale);
+    material.SetGltfExtensions(gltfExtensions);
     if (unlit) {
         material.SetShadingModel(SceneShadingModel::Unlit);
     }
@@ -443,6 +507,7 @@ void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.normalMap = normalMap;
     slot.metallicRoughness = metallicRoughness;
     slot.emissiveMap = emissiveMap;
+    slot.iridescenceThicknessMap = iridescenceThicknessMap;
     slot.tint = baseColorFactor;
     if (metallicRoughness) {
         slot.metallic = 1.0F;
@@ -466,6 +531,9 @@ void GltfMaterial::ApplyTo(MultiMaterialComponent::Slot& slot) const {
     slot.normalUv = normalUv;
     slot.metallicRoughnessUv = metallicRoughnessUv;
     slot.emissiveUv = emissiveUv;
+    slot.iridescenceThicknessUv = iridescenceThicknessUv;
+    slot.normalScale = normalScale;
+    slot.gltfExtensions = gltfExtensions;
     if (unlit) {
         slot.shadingModel = SceneShadingModel::Unlit;
     }
@@ -526,6 +594,19 @@ void GltfMaterialLoader::LoadAll(
     for (cgltf_size mi = 0; mi < data->materials_count; ++mi) {
         (void)TryLoadTexturesFromMaterial(
                 data->materials[mi], gltfPath, outMaterials[static_cast<std::size_t>(mi)], caches);
+    }
+}
+
+void GltfMaterialLoader::LoadVariantNames(const cgltf_data* data, Array<Utf8String>& outVariantNames) {
+    outVariantNames.Clear();
+    if (data == nullptr) {
+        return;
+    }
+    outVariantNames.Resize(static_cast<std::size_t>(data->variants_count));
+    for (cgltf_size vi = 0; vi < data->variants_count; ++vi) {
+        const char* name = data->variants[vi].name;
+        outVariantNames[static_cast<std::size_t>(vi)] =
+                (name != nullptr && name[0] != '\0') ? Utf8String(name) : Utf8String{};
     }
 }
 

@@ -341,8 +341,8 @@ void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
 | Key | Action |
 |-----|--------|
 | TAB | Return to launcher menu |
-| H | Toggle demo help overlay |
-| F3 | Toggle FPS overlay |
+| H | Toggle demo help overlay (hidden by default) |
+| F3 | Toggle FPS overlay (hidden by default) |
 | F9 | Toggle video recording |
 | F12 | Save PNG screenshot |
 

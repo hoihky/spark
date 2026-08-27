@@ -334,7 +334,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
         fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
         DemoHud::Apply(*fpsText, false);
-        fpsText->SetText(Spark::Utf8String("Tiny Dungeon — gems — HingeJoint2D swing near spawn — WASD — ESC"));
+        fpsText->SetText(Spark::Utf8String("gems — WASD — ESC"));
         roots.PushBack(playerGo);
         roots.PushBack(fpsHudObject);
 
@@ -515,25 +515,10 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
         }
 
         if (fpsText != nullptr) {
-            const float tdt = timing.deltaTimeSeconds;
-            const float instant = (tdt > 1.0e-6F) ? (1.0F / tdt) : 0.0F;
-            if (timing.frameIndex < 2U) {
-                fpsSmoothed = instant;
-            } else {
-                fpsSmoothed = fpsSmoothed * 0.88F + instant * 0.12F;
-            }
             const std::string hud = std::format(
-                    "Maze {}×{} ({}×{} floor×{}) — {} walls — gems {}/{} — {:.0f} FPS — hash {} / narrow {} — "
-                    "HingeJoint2D — WASD — ESC",
-                    kMazeW,
-                    kMazeH,
-                    kMazeLogicalW,
-                    kMazeLogicalH,
-                    kCorridorFloorCells,
-                    wallCount,
+                    "gems {}/{} — hash {} / narrow {}",
                     gemsCollected,
                     gemsTotal,
-                    static_cast<double>(fpsSmoothed),
                     lastBroadCandidates,
                     lastNarrowHits);
             fpsText->SetText(Spark::Utf8String(hud.c_str()));

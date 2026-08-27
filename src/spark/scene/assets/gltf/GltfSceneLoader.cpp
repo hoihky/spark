@@ -18,6 +18,10 @@ void LoadAllMaterials(const cgltf_data* data, const char* path, Array<GltfMateri
     GltfMaterialLoader::LoadAll(data, path, outMaterials);
 }
 
+void LoadVariantNames(const cgltf_data* data, Array<Utf8String>& outVariantNames) {
+    GltfMaterialLoader::LoadVariantNames(data, outVariantNames);
+}
+
 class MeshTableBuilder {
 public:
     explicit MeshTableBuilder(const char* sourcePath) : sourcePath(sourcePath) {}
@@ -155,6 +159,7 @@ AssetLoadOutcome<GltfSceneDocument> GltfSceneLoader::TryLoadFromFile(const char*
     }
 
     LoadAllMaterials(data, path, document.materials);
+    LoadVariantNames(data, document.materialVariantNames);
     cgltf_free(data);
 
     if (!meshBuilder.GetLastError().IsEmpty()) {

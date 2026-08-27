@@ -41,6 +41,10 @@ void LoadAllMaterials(const cgltf_data* data, const char* path, Array<GltfMateri
     GltfMaterialLoader::LoadAll(data, path, outMaterials);
 }
 
+void LoadVariantNames(const cgltf_data* data, Array<Utf8String>& outVariantNames) {
+    GltfMaterialLoader::LoadVariantNames(data, outVariantNames);
+}
+
 }  // namespace
 
 bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) noexcept {
@@ -111,6 +115,7 @@ bool GltfRigidLoader::LoadFromFile(const char* path, GltfRigidLoadResult& out) n
     Mesh::RecomputeTangentSpace(*mesh);
 
     LoadAllMaterials(data, path, out.materials);
+    LoadVariantNames(data, out.materialVariantNames);
     cgltf_free(data);
 
     out.mesh = mesh;
