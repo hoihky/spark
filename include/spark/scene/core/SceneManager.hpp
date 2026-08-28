@@ -6,6 +6,8 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneSpawn.hpp"
+#include "spark/scene/prefab/PrefabInstantiator.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
 namespace Spark {
@@ -65,6 +67,21 @@ public:
 
     [[nodiscard]] std::size_t GetLoadedSceneCount() const noexcept { return instances.GetSize(); }
 
+    /**
+     * Loads a scene file and returns the pose of the named <c>SpawnPointComponent</c>.
+     * When <c>spawnPointName</c> is null or empty, the first spawn point in the scene is used.
+     */
+    [[nodiscard]] SceneInstanceId LoadSceneAtSpawnPoint(
+            const char* scenePath,
+            const char* spawnPointName,
+            SceneSpawnPose* outSpawnPose,
+            const SceneLoadOptions& options = {});
+
+    /** Convenience wrapper around <c>PrefabInstantiator::Instantiate</c>. */
+    [[nodiscard]] PrefabInstantiateResult InstantiatePrefab(
+            const char* prefabPath,
+            const PrefabInstantiateOptions& options = {});
+
 private:
     struct PendingComponentRestore {
         GameObject* object = nullptr;
@@ -99,6 +116,7 @@ private:
     static void OnDeferredComponentStatic(GameObject* object, const ComponentRecord& record, void* userData);
 
     GameWorld& world;
+    PrefabInstantiator prefabInstantiator;
     SceneInstanceId nextInstanceId = 1;
     Array<LoadedSceneInstance> instances;
 };

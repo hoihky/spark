@@ -32,6 +32,9 @@ public:
     void OnPointerUp(const UiFrameInput& input, UiCanvasComponent& canvas) override;
     void OnScroll(float deltaX, float deltaY) override;
 
+    [[nodiscard]] ScrollPanelDesc ExportDesc() const noexcept;
+    void ImportDesc(const ScrollPanelDesc& desc) noexcept;
+
 protected:
     void DoMeasure(const UiMeasureConstraints& constraints, UiSize& outDesired) override;
 

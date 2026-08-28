@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/core/HashMap.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/scene/core/SceneInstanceId.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
@@ -36,6 +37,8 @@ struct SceneApplyContext {
     /** Called when a component restore is deferred pending async assets. */
     void (*onDeferredComponent)(GameObject* object, const ComponentRecord& record, void* userData) = nullptr;
     void* deferredUserData = nullptr;
+    /** Entity id → object map for the scene currently being applied (joints, references). */
+    const HashMap<std::uint64_t, GameObject*>* entityLookup = nullptr;
 };
 
 /**

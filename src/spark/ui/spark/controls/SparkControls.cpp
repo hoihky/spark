@@ -229,6 +229,29 @@ void SparkPanel::SetTitle(Utf8String titleIn) {
     title = MoveTemp(titleIn);
 }
 
+PanelDesc SparkPanel::ExportDesc() const noexcept {
+    PanelDesc desc{};
+    desc.id = GetId();
+    desc.title = title;
+    desc.open = open;
+    desc.width = designWidth;
+    desc.height = designHeight;
+    desc.anchorRight = anchorRight;
+    desc.edgeMargin = edgeMargin;
+    desc.centerInParent = centerInParent;
+    return desc;
+}
+
+void SparkPanel::ImportDesc(const PanelDesc& desc) noexcept {
+    title = desc.title;
+    open = desc.open;
+    designWidth = desc.width;
+    designHeight = desc.height;
+    anchorRight = desc.anchorRight;
+    edgeMargin = desc.edgeMargin;
+    centerInParent = desc.centerInParent;
+}
+
 void SparkPanel::DoMeasure(const UiMeasureConstraints& constraints, UiSize& outDesired) {
     const UiLayoutMetrics& metrics = GetActiveUiLayoutMetrics();
     const float pad = metrics.Padding();

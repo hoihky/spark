@@ -1,0 +1,7 @@
+spark_scene_v4
+1
+H name "DamagedHelmet"
+H assets_root "assets"
+E 1 -1 "DamagedHelmet"
+C transform 1.100000 1.100000 1.100000 0.000000 1.011071 0.000000 0.000000 0.000000 0.000000 1.000000
+C gltf_scene "models/imported/DamagedHelmet.glb"

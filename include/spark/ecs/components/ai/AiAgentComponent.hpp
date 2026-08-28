@@ -60,6 +60,8 @@ public:
     void SetGoapEnabled(const bool e) noexcept { goapEnabled = e; }
     [[nodiscard]] std::uint64_t GetGoapWorldBits() const noexcept { return goapWorldBits; }
     void SetGoapWorldBits(const std::uint64_t w) noexcept { goapWorldBits = w; }
+    [[nodiscard]] std::uint64_t GetGoapGoalMask() const noexcept { return goapGoalMask; }
+    [[nodiscard]] std::uint64_t GetGoapGoalValue() const noexcept { return goapGoalValue; }
     void SetGoapGoal(const std::uint64_t mask, const std::uint64_t value) noexcept {
         goapGoalMask = mask;
         goapGoalValue = value;

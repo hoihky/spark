@@ -485,6 +485,17 @@ foreach (_spark_sprite_pack IN ITEMS kenney_simplified-platformer-pack kenney_ti
     endif ()
 endforeach ()
 
+file(MAKE_DIRECTORY "${SPARK_ASSETS_DIR}/scenes")
+file(MAKE_DIRECTORY "${SPARK_ASSETS_DIR}/prefabs")
+file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/scenes")
+file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/prefabs")
+if (EXISTS "${SPARK_ASSETS_DIR}/scenes")
+    file(COPY "${SPARK_ASSETS_DIR}/scenes/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/scenes")
+endif ()
+if (EXISTS "${SPARK_ASSETS_DIR}/prefabs")
+    file(COPY "${SPARK_ASSETS_DIR}/prefabs/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/prefabs")
+endif ()
+
 # Kenney CC0 — Simplified Platformer character (idle + walk frames), merged horizontally in Platformer2D demo.
 set(SPARK_KENNEY_PLATFORMER_DIR "${SPARK_ASSETS_DIR}/sprites/kenney")
 file(MAKE_DIRECTORY "${SPARK_KENNEY_PLATFORMER_DIR}")
@@ -766,7 +777,30 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/serialization/ComponentSnapshotHandlersExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersGameplay.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersTilemap.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersUi.cpp
+        src/spark/scene/serialization/ComponentSnapshotPayload.cpp
+        src/spark/scene/serialization/TilemapComponentSnapshot.cpp
+        src/spark/scene/serialization/UiWidgetSnapshot.cpp
         src/spark/scene/serialization/SceneSerializer.cpp
+        src/spark/scene/assets/GltfAssetPathResolver.cpp
+        src/spark/scene/assets/ScenePathResolver.cpp
+        src/spark/scene/core/SpawnPointService.cpp
+        src/spark/scene/core/SceneInstanceTracker.cpp
+        src/spark/scene/core/SceneEntityRole.cpp
+        src/spark/scene/core/SceneLoadSession.cpp
+        src/spark/scene/prefab/PrefabCatalog.cpp
+        src/spark/scene/prefab/GltfPrefabImporter.cpp
+        src/spark/scene/editor/SceneEditorContentModel.cpp
+        src/spark/scene/editor/ScenePlacementActions.cpp
+        src/spark/scene/editor/SceneEditorPlaySession.cpp
+        src/spark/scene/editor/SceneLevelLoader.cpp
+        src/spark/scene/editor/GltfImportService.cpp
+        src/spark/platform/NativeFilePicker.cpp
+        src/spark/scene/core/SceneSpawn.cpp
+        src/spark/scene/prefab/PrefabInstantiator.cpp
         src/spark/scene/assets/GameWorldAssetLoader.cpp
         src/spark/scene/core/SceneManager.cpp
         src/spark/physics/BroadPhase2D.cpp
@@ -845,6 +879,7 @@ set(SPARK_ENGINE_SOURCES
 if (APPLE)
     list(APPEND SPARK_ENGINE_SOURCES src/spark/audio/SoundOutputApple.cpp)
     list(APPEND SPARK_ENGINE_SOURCES src/spark/media/VideoRecorderMac.mm)
+    list(APPEND SPARK_ENGINE_SOURCES src/spark/platform/NativeFilePickerMac.mm)
 elseif (WIN32)
     list(APPEND SPARK_ENGINE_SOURCES src/spark/audio/SoundOutputWin32.cpp)
 else ()
@@ -919,7 +954,8 @@ if (APPLE)
             "-framework AVFoundation"
             "-framework CoreMedia"
             "-framework CoreVideo"
-            "-framework VideoToolbox")
+            "-framework VideoToolbox"
+            "-framework AppKit")
 endif ()
 
 if (WIN32)

@@ -1,0 +1,7 @@
+spark_scene_v4
+1
+H name "SunglassesKhronos"
+H assets_root "assets"
+E 1 -1 "SunglassesKhronos"
+C transform 13.625473 13.625473 13.625473 0.000000 0.020209 0.000000 0.000000 0.000000 0.000000 1.000000
+C gltf_scene "models/imported/SunglassesKhronos.glb"

@@ -82,6 +82,8 @@ enum class ComponentKind : std::uint32_t {
     TilemapObjectGizmo,
     TilemapMapSource,
     TimeOfDayDriver,
+    SpawnPoint,
+    GltfSceneSource,
 };
 
 /** Typical <c>GameComponent::UpdatePriority</c> values (lower runs first). */

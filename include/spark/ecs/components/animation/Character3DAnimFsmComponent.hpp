@@ -63,6 +63,16 @@ public:
      */
     void SetLocomotionInput(bool moving, bool sprint) noexcept;
 
+    [[nodiscard]] std::uint32_t GetIdleClipIndex() const noexcept { return idleClip; }
+    [[nodiscard]] std::uint32_t GetWalkClipIndex() const noexcept { return walkClip; }
+    [[nodiscard]] std::uint32_t GetRunClipIndex() const noexcept { return runClip; }
+    [[nodiscard]] std::uint32_t GetAttackClipIndex() const noexcept { return attackClip; }
+    [[nodiscard]] float GetWalkSpeedThreshold() const noexcept { return walkThresh; }
+    [[nodiscard]] float GetRunSpeedThreshold() const noexcept { return runThresh; }
+    [[nodiscard]] float GetCrossfadeDuration() const noexcept { return crossfadeDuration; }
+    [[nodiscard]] std::uint32_t GetManualClipIndex() const noexcept { return manualClip; }
+    [[nodiscard]] AnimLoopMode GetManualClipLoopMode() const noexcept { return manualLoop; }
+
 private:
     [[nodiscard]] bool ClipValid_(const AnimatorComponent& anim, std::uint32_t clip) const noexcept;
     void ApplyClip_(AnimatorComponent& anim, std::uint32_t want, AnimLoopMode loopMode) noexcept;

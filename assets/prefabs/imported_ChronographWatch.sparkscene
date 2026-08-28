@@ -1,0 +1,7 @@
+spark_scene_v4
+1
+H name "ChronographWatch"
+H assets_root "assets"
+E 1 -1 "ChronographWatch"
+C transform 0.355884 0.355884 0.355884 0.000000 1.070610 0.000000 0.000000 0.000000 0.000000 1.000000
+C gltf_scene "models/imported/ChronographWatch.glb"

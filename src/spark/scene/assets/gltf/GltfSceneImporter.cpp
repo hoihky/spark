@@ -25,8 +25,14 @@ GltfAsset MakeAssetView(const GltfSceneDocument& document, const GltfSceneNode& 
     }
     asset.materials = document.materials;
     asset.materialVariantNames = document.materialVariantNames;
+    std::uint32_t materialIndex = 0;
+    if (asset.mesh && !asset.mesh->GetSubmeshes().IsEmpty()) {
+        materialIndex = asset.mesh->GetSubmeshes()[0].materialIndex;
+    }
     if (!asset.materials.IsEmpty()) {
-        asset.material = asset.materials[0];
+        const std::size_t resolvedIndex =
+                materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
+        asset.material = asset.materials[resolvedIndex];
         asset.baseColorTexture = asset.material.baseColor;
     }
     return asset;
@@ -42,8 +48,14 @@ SkinnedGltfAsset MakeSkinnedAssetView(const GltfSceneDocument& document, const G
     }
     asset.materials = document.materials;
     asset.materialVariantNames = document.materialVariantNames;
+    std::uint32_t materialIndex = 0;
+    if (asset.mesh && !asset.mesh->GetSubmeshes().IsEmpty()) {
+        materialIndex = asset.mesh->GetSubmeshes()[0].materialIndex;
+    }
     if (!asset.materials.IsEmpty()) {
-        asset.material = asset.materials[0];
+        const std::size_t resolvedIndex =
+                materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
+        asset.material = asset.materials[resolvedIndex];
         asset.baseColorTexture = asset.material.baseColor;
     }
     return asset;

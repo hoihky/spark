@@ -2,15 +2,18 @@
 #include "spark/demo/SceneEditor3DDemo_detail.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
 
-#include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 #include "spark/ui/runtime/UiContextMenu.hpp"
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/scene/mesh/MeshRaycast.hpp"
 #include "spark/scene/query/SceneRaycast.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 #include "spark/scene/serialization/SceneSerializer.hpp"
 #include "spark/scene/material/MaterialAsset.hpp"
+#include "spark/scene/assets/ScenePathResolver.hpp"
+#include "spark/scene/core/SceneEntityRole.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
 #include "spark/scene/assets/AssetLoadEvents.hpp"
 #include "spark/config.hpp"
@@ -27,15 +30,16 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         selectionPulseTime = 0.0F;
         lightEditTarget = nullptr;
         statusMessage.Clear();
-        roots.Clear();
-        placed.Clear();
-        placedRel.Clear();
-        userLights.Clear();
+        contentModel.ClearLists();
+        instanceTracker.Clear();
+        placementActions.Clear();
+        prefabCatalog.Clear();
         unitCubeAsset.Reset();
         groundAsset.Reset();
         loadedSceneId = Spark::kInvalidSceneInstanceId;
         pendingLoadDocument = SceneDocument{};
         sceneLoadInProgress = false;
+        loadSession.Reset();
         sceneManager.Reset();
         Spark::Ui::GetUiContextMenu().Close();
 
@@ -52,7 +56,7 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         ground->AddComponent<Spark::TransformComponent>();
         ground->AddComponent<Spark::MeshComponent>(
                 groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.48F, 0.52F, 0.55F});
-        roots.PushBack(ground);
+        contentModel.TrackRoot(ground);
 
         Spark::GameObject* sun = w.CreateGameObject();
         sun->GetName() = Spark::Utf8String("SceneEditorSun");
@@ -61,14 +65,29 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         const Spark::Vector3 sunDir = Spark::Vector3{0.35F, 0.82F, 0.38F}.Normalized();
         str->SetRotation(Spark::Quaternion::FromShortestArc(Spark::Vector3::UnitZ, sunDir));
         sun->AddComponent<Spark::DirectionalLightComponent>(Spark::Vector3{1.0F, 0.97F, 0.92F}, 0.92F);
-        roots.PushBack(sun);
+        contentModel.TrackRoot(sun);
 
         SetupContextMenuCanvas(w);
 
         helpHud.Mount(w, "Scene editor");
-        helpHud.SetControlHints("RMB menu · drag RMB look · Alt+LMB orbit · F1 fly · LMB select");
+        helpHud.SetControlHints(
+                "RMB menu · I import glTF · P play · Esc stop · drag RMB look · Alt+LMB orbit · F1 fly · LMB select");
 
         sceneManager = Spark::MakeUnique<Spark::SceneManager>(w);
+        loadSession = Spark::MakeUnique<Spark::SceneLoadSession>(*sceneManager);
+
+        PrefabCatalog::RegisterDemoDefaults(prefabCatalog);
+        ScenePlacementActionRegistry::RegisterDemoDefaults(placementActions);
+        ScenePlacementActionRegistry::RegisterPrefabActions(placementActions, prefabCatalog);
+        gltfImportService.Bind(&prefabCatalog, &placementActions);
+        placementActions.Register(MakeLambdaPlacementAction(
+                Utf8String("Import GLTF model..."), &SceneEditor3DDemo::PlacementImportGltf));
+        placementActions.Register(MakeLambdaPlacementAction(
+                Utf8String("Delete selected"), &SceneEditor3DDemo::PlacementDeleteSelected, &SceneEditor3DDemo::PlacementDeleteAvailable));
+        placementActions.Register(
+                MakeLambdaPlacementAction(Utf8String("Save scene"), &SceneEditor3DDemo::PlacementSaveScene));
+        placementActions.Register(
+                MakeLambdaPlacementAction(Utf8String("Load scene"), &SceneEditor3DDemo::PlacementLoadScene));
 
         context.GetInput().SetCursorCaptured(false);
         camera.position = {8.0F, 6.5F, 14.0F};
@@ -81,29 +100,28 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
                     camera.position.z - cameraOrbitPivot.z};
             cameraOrbitDistance = std::max(3.0F, off.Length());
         }
+
+        const Utf8String arenaPath = ScenePathResolver::BuildRuntimePath("scenes", "arena.sparkscene");
+        if (ScenePathResolver::FileExists(arenaPath.CStr())) {
+            LoadSceneFromFile(w);
+        }
     }
 
 void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
 {
         helpHud.Unmount(w);
         Spark::Ui::GetUiContextMenu().Close();
-        if (sceneManager && loadedSceneId != Spark::kInvalidSceneInstanceId) {
-            sceneManager->UnloadScene(loadedSceneId);
-            loadedSceneId = Spark::kInvalidSceneInstanceId;
+        if (sceneManager) {
+            UnloadEditorSceneContent(w);
         }
-        sceneLoadInProgress = false;
-        pendingLoadDocument = SceneDocument{};
-        sceneManager.Reset();
-        ClearPlaced(w);
-        for (std::size_t i = 0; i < roots.GetSize(); ++i) {
-            if (roots[i] != nullptr) {
-                w.DestroyGameObject(roots[i]);
+        for (std::size_t i = 0; i < contentModel.GetRoots().GetSize(); ++i) {
+            if (contentModel.GetRoots()[i] != nullptr) {
+                w.DestroyGameObject(contentModel.GetRoots()[i]);
             }
         }
-        roots.Clear();
-        placed.Clear();
-        placedRel.Clear();
-        userLights.Clear();
+        contentModel.GetRoots().Clear();
+        loadSession.Reset();
+        sceneManager.Reset();
         lightEditTarget = nullptr;
         statusMessage.Clear();
         orbitDragActive = false;
@@ -148,6 +166,41 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
         }
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F10)) {
             TryLoadSelectedMaterial(world);
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_I) && !playSession.IsActive()) {
+            ScenePlacementContext placementCtx = MakePlacementContext(world, lastGroundHit, selectedObject);
+            const GltfImportService::ImportResult importResult =
+                    gltfImportService.ImportFromFilePickerAndPlace(world, placementCtx);
+            SetStatusMessage(importResult.message);
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_P) && !playSession.IsActive()) {
+            SceneEditorPlaySession::Dependencies deps{
+                    .loadSession = *loadSession,
+                    .content = contentModel,
+                    .instances = instanceTracker,
+                    .camera = camera,
+                    .orbitPivot = cameraOrbitPivot,
+                    .orbitDistance = cameraOrbitDistance,
+                    .reloadScene = &SceneEditor3DDemo::ReloadSceneForPlayModeStatic,
+                    .setStatus = &SceneEditor3DDemo::SetStatusFromPlacement,
+                    .userData = this,
+            };
+            SaveSceneToFile(world);
+            playSession.Enter(world, context, deps);
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_ESCAPE) && playSession.IsActive()) {
+            SceneEditorPlaySession::Dependencies deps{
+                    .loadSession = *loadSession,
+                    .content = contentModel,
+                    .instances = instanceTracker,
+                    .camera = camera,
+                    .orbitPivot = cameraOrbitPivot,
+                    .orbitDistance = cameraOrbitDistance,
+                    .reloadScene = &SceneEditor3DDemo::ReloadSceneForPlayModeStatic,
+                    .setStatus = &SceneEditor3DDemo::SetStatusFromPlacement,
+                    .userData = this,
+            };
+            playSession.Exit(world, context, deps);
         }
         if (in.IsCursorCaptured()) {
             if (timing.frameIndex > 0) {
@@ -216,9 +269,13 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
             }
 
             const bool haveGround = haveRay && RayIntersectPlaneY(ro, rd, 0.0F, groundHit);
+            if (haveGround) {
+                lastGroundHit = groundHit;
+            }
             const bool altHeld = in.IsKeyDown(GLFW_KEY_LEFT_ALT) || in.IsKeyDown(GLFW_KEY_RIGHT_ALT);
 
-            if (in.IsMouseButtonReleasedThisFrame(1) && inViewport && rmbDragDistSq < 64.0F && haveGround) {
+            if (in.IsMouseButtonReleasedThisFrame(1) && inViewport && rmbDragDistSq < 64.0F && haveGround &&
+                !playSession.IsActive()) {
                 OpenSceneContextMenu(mx, my, groundHit, selectedObject, world);
             }
 
@@ -229,7 +286,7 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
                         cameraOrbitDistance,
                         in.GetMouseDeltaX(),
                         in.GetMouseDeltaY());
-            } else if (haveRay && in.IsMouseButtonPressedThisFrame(0)) {
+            } else if (haveRay && in.IsMouseButtonPressedThisFrame(0) && !playSession.IsActive()) {
                 bool handledPress = false;
                 if (altHeld && inViewport) {
                     if (selectedObject != nullptr) {
@@ -320,8 +377,8 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
 
         std::string hud = std::format(
                 "{} meshes · {} lights",
-                static_cast<int>(placed.GetSize()),
-                static_cast<int>(userLights.GetSize()));
+                static_cast<int>(contentModel.GetPlacedObjects().GetSize()),
+                static_cast<int>(contentModel.GetUserLights().GetSize()));
         if (!statusMessage.IsEmpty()) {
             hud += " · ";
             hud += statusMessage.CStr();
@@ -396,55 +453,65 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
             params.pointLights.PushBack(gpu);
         });
 
-        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            if (!tex) {
-                return -1;
+        auto findOrAddTexture =
+                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* outUvScale, Spark::Vector2* outUvOffset)
+                -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(
+                    params, tex, outUvScale, outUvOffset, nullptr);
+        };
+
+        auto applySelectionHighlight = [&](Spark::SceneDrawItem& item, Spark::GameObject* obj) {
+            if (obj == nullptr || obj != selectedObject) {
+                return;
             }
-            for (std::size_t i = 0; i < params.sceneTextures.GetSize(); ++i) {
-                if (params.sceneTextures[i].Get() == tex.Get()) {
-                    return static_cast<std::int32_t>(i);
-                }
-            }
-            if (params.sceneTextures.GetSize() >= Spark::SceneRenderParams::MaxSceneTextures) {
-                return -1;
-            }
-            params.sceneTextures.PushBack(tex);
-            return static_cast<std::int32_t>(params.sceneTextures.GetSize() - 1U);
+            const float pulse = 0.82F + 0.18F * std::sin(selectionPulseTime * 6.8F);
+            const Spark::Vector3 rim{0.22F, 0.78F, 1.0F};
+            item.emissiveColor = {
+                    std::min(1.0F, item.emissiveColor.x + rim.x * 0.55F),
+                    std::min(1.0F, item.emissiveColor.y + rim.y * 0.55F),
+                    std::min(1.0F, item.emissiveColor.z + rim.z * 0.55F)};
+            item.emissiveIntensity = item.emissiveIntensity + 2.5F * pulse;
+            item.roughness = std::max(0.06F, item.roughness * 0.55F);
+            item.albedo = {
+                    std::min(1.0F, item.albedo.x * 1.06F + 0.03F),
+                    std::min(1.0F, item.albedo.y * 1.04F + 0.05F),
+                    std::min(1.0F, item.albedo.z * 1.12F + 0.06F)};
         };
 
         Spark::Array<Spark::SceneDrawItem> drawList;
         drawList.Reserve(32);
         scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
                                      const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
+            const Spark::MultiMaterialComponent* multiMat =
+                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+
+            Spark::SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = mc.GetSlot();
             if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
+                baseItem.customMesh = mc.GetMesh();
             }
-            Spark::Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
+            baseItem.albedo = mc.GetAlbedo();
+            baseItem.textureLayer = -1;
+
+            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+                !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                const std::size_t startCount = drawList.GetSize();
+                Spark::SceneSubmitDetail::PushRigidMeshDraws(
+                        drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
+                for (std::size_t i = startCount; i < drawList.GetSize(); ++i) {
+                    applySelectionHighlight(drawList[i], obj);
+                }
+                return;
+            }
+
+            Spark::SceneDrawItem item = baseItem;
             if (mat != nullptr) {
                 ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Spark::Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-                }
+                Spark::SceneSubmitDetail::ApplyAlbedoTexture(
+                        item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
             }
-            if (obj != nullptr && obj == selectedObject) {
-                const float pulse = 0.82F + 0.18F * std::sin(selectionPulseTime * 6.8F);
-                const Spark::Vector3 rim{0.22F, 0.78F, 1.0F};
-                item.emissiveColor = {
-                        std::min(1.0F, item.emissiveColor.x + rim.x * 0.55F),
-                        std::min(1.0F, item.emissiveColor.y + rim.y * 0.55F),
-                        std::min(1.0F, item.emissiveColor.z + rim.z * 0.55F)};
-                item.emissiveIntensity = item.emissiveIntensity + 2.5F * pulse;
-                item.roughness = std::max(0.06F, item.roughness * 0.55F);
-                alb = {std::min(1.0F, alb.x * 1.06F + 0.03F), std::min(1.0F, alb.y * 1.04F + 0.05F),
-                        std::min(1.0F, alb.z * 1.12F + 0.06F)};
-            }
-            item.albedo = alb;
+            applySelectionHighlight(item, obj);
             drawList.PushBack(item);
         });
 
@@ -484,11 +551,6 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
         context.SetSceneRenderParams(params);
     }
 
-void SceneEditor3DDemo::SceneFilePath(char* out, std::size_t outSz) noexcept
-{
-        std::snprintf(out, outSz, "%s/scene_editor/scene.txt", SPARK_BUILD_ASSETS_DIR);
-    }
-
 void SceneEditor3DDemo::SetStatusMessage(const Spark::Utf8String& msg)
 {
         statusMessage = msg;
@@ -507,39 +569,26 @@ void SceneEditor3DDemo::SetStatusMessage(const Spark::Utf8String& msg)
         return std::max({sc.x, sc.y, sc.z, 1.0F});
 }
 
-void SceneEditor3DDemo::ClearPlaced(Spark::GameWorld& w)
+void SceneEditor3DDemo::UnloadEditorSceneContent(Spark::GameWorld& w)
 {
-        if (sceneManager && loadedSceneId != Spark::kInvalidSceneInstanceId) {
-            sceneManager->UnloadScene(loadedSceneId);
-            loadedSceneId = Spark::kInvalidSceneInstanceId;
-            sceneLoadInProgress = false;
-            pendingLoadDocument = SceneDocument{};
-            selectedObject = nullptr;
-            dragPlaced = nullptr;
-            gizmoDragAxis = -1;
-            lightEditTarget = nullptr;
-            placed.Clear();
-            placedRel.Clear();
-            userLights.Clear();
-            return;
+        if (sceneManager) {
+            instanceTracker.UnloadAll(*sceneManager);
         }
-        if (selectedObject != nullptr) {
-            for (std::size_t i = 0; i < placed.GetSize(); ++i) {
-                if (placed[i] == selectedObject) {
-                    selectedObject = nullptr;
-                    break;
-                }
-            }
-        }
+        instanceTracker.Clear();
+        loadedSceneId = Spark::kInvalidSceneInstanceId;
+        sceneLoadInProgress = false;
+        pendingLoadDocument = SceneDocument{};
+        selectedObject = nullptr;
         dragPlaced = nullptr;
         gizmoDragAxis = -1;
-        for (std::size_t i = 0; i < placed.GetSize(); ++i) {
-            if (placed[i] != nullptr) {
-                w.DestroyGameObject(placed[i]);
-            }
-        }
-        placed.Clear();
-        placedRel.Clear();
+        lightEditTarget = nullptr;
+        contentModel.ClearManualObjects(w);
+        contentModel.ClearLists();
+    }
+
+void SceneEditor3DDemo::ClearPlaced(Spark::GameWorld& w)
+{
+        UnloadEditorSceneContent(w);
     }
 
 void SceneEditor3DDemo::RemoveEditorSelection(Spark::GameWorld& w, Spark::GameObject* go) noexcept
@@ -547,50 +596,24 @@ void SceneEditor3DDemo::RemoveEditorSelection(Spark::GameWorld& w, Spark::GameOb
         if (go == nullptr) {
             return;
         }
-        for (std::size_t i = 0; i < placed.GetSize(); ++i) {
-            if (placed[i] == go) {
-                w.DestroyGameObject(go);
-                placed.RemoveAt(i);
-                if (i < placedRel.GetSize()) {
-                    placedRel.RemoveAt(i);
-                }
-                if (selectedObject == go) {
-                    selectedObject = nullptr;
-                }
-                if (dragPlaced == go) {
-                    dragPlaced = nullptr;
-                }
-                if (lightEditTarget == go) {
-                    lightEditTarget = nullptr;
-                }
-                gizmoDragAxis = -1;
-                return;
-            }
+        contentModel.RemoveTracked(go, w);
+        if (selectedObject == go) {
+            selectedObject = nullptr;
         }
-        for (std::size_t j = 0; j < userLights.GetSize(); ++j) {
-            if (userLights[j] == go) {
-                w.DestroyGameObject(go);
-                userLights.RemoveAt(j);
-                if (selectedObject == go) {
-                    selectedObject = nullptr;
-                }
-                if (dragPlaced == go) {
-                    dragPlaced = nullptr;
-                }
-                if (lightEditTarget == go) {
-                    lightEditTarget = nullptr;
-                }
-                gizmoDragAxis = -1;
-                return;
-            }
+        if (dragPlaced == go) {
+            dragPlaced = nullptr;
         }
+        if (lightEditTarget == go) {
+            lightEditTarget = nullptr;
+        }
+        gizmoDragAxis = -1;
     }
 
 void SceneEditor3DDemo::ClearUserLights(Spark::GameWorld& w)
 {
         if (selectedObject != nullptr) {
-            for (std::size_t i = 0; i < userLights.GetSize(); ++i) {
-                if (userLights[i] == selectedObject) {
+            for (std::size_t i = 0; i < contentModel.GetUserLights().GetSize(); ++i) {
+                if (contentModel.GetUserLights()[i] == selectedObject) {
                     selectedObject = nullptr;
                     break;
                 }
@@ -599,12 +622,12 @@ void SceneEditor3DDemo::ClearUserLights(Spark::GameWorld& w)
         dragPlaced = nullptr;
         gizmoDragAxis = -1;
         lightEditTarget = nullptr;
-        for (std::size_t i = 0; i < userLights.GetSize(); ++i) {
-            if (userLights[i] != nullptr) {
-                w.DestroyGameObject(userLights[i]);
+        for (std::size_t i = 0; i < contentModel.GetUserLights().GetSize(); ++i) {
+            if (contentModel.GetUserLights()[i] != nullptr) {
+                w.DestroyGameObject(contentModel.GetUserLights()[i]);
             }
         }
-        userLights.Clear();
+        contentModel.GetUserLights().Clear();
     }
 
 [[nodiscard]] bool SceneEditor3DDemo::IsUserLight(Spark::GameObject* go) const noexcept
@@ -612,8 +635,8 @@ void SceneEditor3DDemo::ClearUserLights(Spark::GameWorld& w)
         if (go == nullptr) {
             return false;
         }
-        for (std::size_t i = 0; i < userLights.GetSize(); ++i) {
-            if (userLights[i] == go) {
+        for (std::size_t i = 0; i < contentModel.GetUserLights().GetSize(); ++i) {
+            if (contentModel.GetUserLights()[i] == go) {
                 return true;
             }
         }
@@ -641,28 +664,6 @@ void SceneEditor3DDemo::SyncLightGizmoEmissive(Spark::GameObject* go) noexcept
         mat->SetEmissive(pl->GetColor(), glow);
     }
 
-void SceneEditor3DDemo::LightPresetParams(
-        const int preset, Spark::Vector3& outColor, float& outIntensity, float& outRange) noexcept
-{
-        switch (preset) {
-        case 1:
-            outColor = {0.72F, 0.88F, 1.0F};
-            outIntensity = 3.6F;
-            outRange = 30.0F;
-            break;
-        case 2:
-            outColor = {0.95F, 0.55F, 1.0F};
-            outIntensity = 3.9F;
-            outRange = 20.0F;
-            break;
-        default:
-            outColor = {1.0F, 0.88F, 0.68F};
-            outIntensity = 4.4F;
-            outRange = 24.0F;
-            break;
-        }
-    }
-
 [[nodiscard]] Spark::GameObject* SceneEditor3DDemo::AddUserPointLightAt(
             Spark::GameWorld& w,
             const Spark::Vector3& pos,
@@ -685,27 +686,9 @@ void SceneEditor3DDemo::LightPresetParams(
             m->SetEmissive(color, 7.5F);
         }
         SyncLightGizmoEmissive(go);
-        roots.PushBack(go);
-        userLights.PushBack(go);
+        contentModel.TrackRoot(go);
+        contentModel.TrackUserLight(go);
         return go;
-    }
-
-[[nodiscard]] bool SceneEditor3DDemo::TrySpawnUserPointLight(
-        Spark::GameWorld& w, const Spark::Vector3& groundHit, const int presetIndex) noexcept
-{
-        static constexpr std::size_t kMaxUserLights = 7;
-        if (userLights.GetSize() >= kMaxUserLights) {
-            return false;
-        }
-        Spark::Vector3 color{};
-        float intensity = 4.0F;
-        float range = 22.0F;
-        LightPresetParams(presetIndex, color, intensity, range);
-        constexpr float kLiftY = 2.75F;
-        Spark::GameObject* spawned =
-                AddUserPointLightAt(w, {groundHit.x, kLiftY, groundHit.z}, color, intensity, range);
-        lightEditTarget = spawned;
-        return spawned != nullptr;
     }
 
 [[nodiscard]] bool SceneEditor3DDemo::TryPickEditorRay(
@@ -731,19 +714,17 @@ void SceneEditor3DDemo::LightPresetParams(
         Spark::SceneRaycastOptions opts{};
         opts.pickSkinnedMeshes = true;
         if (scene.RaycastPick(ray, hit, opts) && hit.object != nullptr) {
-            for (std::size_t i = placed.GetSize(); i > 0U; --i) {
-                if (placed[i - 1U] == hit.object) {
-                    bestT = hit.distance;
-                    bestGo = hit.object;
-                    bestHit = hit.pointWorld;
-                    break;
-                }
+            GameObject* placedOwner = contentModel.FindPlacedOwner(hit.object);
+            if (placedOwner != nullptr) {
+                bestT = hit.distance;
+                bestGo = placedOwner;
+                bestHit = hit.pointWorld;
             }
         }
     }
     if (pickLights) {
-        for (std::size_t j = userLights.GetSize(); j > 0U; --j) {
-            Spark::GameObject* go = userLights[j - 1U];
+        for (std::size_t j = contentModel.GetUserLights().GetSize(); j > 0U; --j) {
+            Spark::GameObject* go = contentModel.GetUserLights()[j - 1U];
             if (go == nullptr) {
                 continue;
             }
@@ -772,247 +753,36 @@ void SceneEditor3DDemo::LightPresetParams(
     return false;
 }
 
-[[nodiscard]] const char* SceneEditor3DDemo::PresetRelPath(int idx) noexcept
-{
-        static constexpr const char* kPaths[] = {
-                "models/DamagedHelmet.glb",
-                "models/SheenChair.glb",
-                "builtin:unit_cube",
-        };
-        if (idx < 0 || idx >= 3) {
-            return kPaths[0];
-        }
-        return kPaths[idx];
-    }
-
-[[nodiscard]] bool SceneEditor3DDemo::TryPlaceAtPreset(
-        Spark::GameWorld& w, const Spark::Vector3& hitXZ, const int presetIndex)
-{
-        const int idx = std::clamp(presetIndex, 0, 2);
-        const char* rel = PresetRelPath(idx);
-        Spark::GameObject* go = w.CreateGameObject();
-        go->GetName() = Spark::Utf8String("SceneEditorPlaced");
-        Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
-        Spark::Quaternion rot = Spark::Quaternion::Identity;
-        float uniformScale = 1.0F;
-
-        if (std::strcmp(rel, "builtin:unit_cube") == 0) {
-            uniformScale = 0.85F;
-            tr->SetTranslation({hitXZ.x, uniformScale, hitXZ.z});
-            tr->SetUniformScale(uniformScale);
-            go->AddComponent<Spark::MeshComponent>(
-                    unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{0.72F, 0.58F, 0.42F});
-            if (Spark::MaterialComponent* m = go->AddComponent<Spark::MaterialComponent>()) {
-                m->SetMetallic(0.04F);
-                m->SetRoughness(0.55F);
-            }
-        } else {
-            Spark::Utf8String full(SPARK_ASSETS_DIR);
-            full.AppendUtf8("/");
-            full.AppendUtf8(rel);
-            Spark::GltfAsset g{};
-            if (!w.AwaitGltf(full.CStr(), g) || !g.mesh) {
-                w.DestroyGameObject(go);
-                return false;
-            }
-            Spark::Vector3 bmin{};
-            Spark::Vector3 bmax{};
-            uniformScale = 1.8F;
-            if (g.mesh->TryComputeAxisAlignedBounds(bmin, bmax)) {
-                const float dx = bmax.x - bmin.x;
-                const float dy = bmax.y - bmin.y;
-                const float dz = bmax.z - bmin.z;
-                const float maxExt = std::max({dx, dy, dz});
-                if (maxExt > 1.0e-4F) {
-                    uniformScale = 2.2F / maxExt;
-                }
-            }
-            float faceCameraYaw = Spark::Pi;
-            if (std::strstr(rel, "DamagedHelmet") != nullptr) {
-                faceCameraYaw = 0.0F;
-            }
-            rot = Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, faceCameraYaw);
-            constexpr float kGroundClearance = 0.08F;
-            const float yOnGround = -bmin.y * uniformScale + kGroundClearance;
-            tr->SetUniformScale(uniformScale);
-            tr->SetTranslation({hitXZ.x, yOnGround, hitXZ.z});
-            tr->SetRotation(rot);
-            Spark::GltfAssetBinder::BindRigidMesh(
-                    *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F}, full.CStr());
-        }
-
-        roots.PushBack(go);
-        placed.PushBack(go);
-        placedRel.PushBack(Spark::Utf8String(rel));
-        return true;
-    }
-
 void SceneEditor3DDemo::SaveSceneToFile(Spark::GameWorld& w)
 {
-        char path[512]{};
-        SceneFilePath(path, sizeof(path));
-
-        struct CaptureCtx {
-            SceneEditor3DDemo* self;
-        } captureCtx{this};
-
-        SceneCaptureContext ctx{};
-        ctx.meshAssetUserData = &captureCtx;
-        ctx.textureUserData = &captureCtx;
-        ctx.resolveMeshAssetPath = [](const GameObject& owner, void* userData) -> Utf8String {
-            auto* c = static_cast<CaptureCtx*>(userData);
-            if (c == nullptr || c->self == nullptr) {
-                return Utf8String{};
-            }
-            SceneEditor3DDemo* self = c->self;
-            for (std::size_t i = 0; i < self->placed.GetSize(); ++i) {
-                if (self->placed[i] == &owner) {
-                    return self->placedRel[i];
-                }
-            }
-            return Utf8String{};
-        };
-        ctx.resolveTexturePath = [](const GameObject& owner, void* userData) -> Utf8String {
-            auto* c = static_cast<CaptureCtx*>(userData);
-            if (c == nullptr || c->self == nullptr) {
-                return Utf8String{};
-            }
-            const MaterialComponent* mat = owner.GetComponent<MaterialComponent>();
-            if (mat == nullptr || !mat->GetBaseColorTexture()) {
-                return Utf8String{};
-            }
-            SceneEditor3DDemo* self = c->self;
-            for (std::size_t i = 0; i < self->placed.GetSize(); ++i) {
-                if (self->placed[i] == &owner) {
-                    const Utf8String& rel = self->placedRel[i];
-                    if (rel.IsEmpty() || std::strcmp(rel.CStr(), "builtin:unit_cube") == 0) {
-                        return Utf8String{};
-                    }
-                    return rel;
-                }
-            }
-            return Utf8String{};
-        };
-
-        const auto includeEntity = [this](const GameObject* go) -> bool {
-            if (go == nullptr) {
-                return false;
-            }
-            for (std::size_t i = 0; i < placed.GetSize(); ++i) {
-                if (placed[i] == go) {
-                    return true;
-                }
-            }
-            for (std::size_t i = 0; i < userLights.GetSize(); ++i) {
-                if (userLights[i] == go) {
-                    return true;
-                }
-            }
-            return false;
-        };
+        const Utf8String path = ScenePathResolver::BuildRuntimePath("scenes", "arena.sparkscene");
+        SceneCaptureContext ctx = contentModel.BuildCaptureContext();
+        const auto includeEntity = [this](const GameObject* go) -> bool { return contentModel.ShouldCapture(go); };
 
         SceneSerializer serializer;
-        const SceneDocument document = serializer.Capture(w, ctx, includeEntity);
-        if (!serializer.WriteToFile(document, path)) {
+        SceneDocument document = serializer.Capture(w, ctx, includeEntity);
+        document.header.name = Spark::Utf8String("Arena");
+        document.header.assetsRoot = Spark::Utf8String(ScenePathResolver::AssetsRoot());
+        if (!serializer.WriteToFile(document, path.CStr())) {
             SetStatusMessage(Spark::Utf8String("Save failed (could not open file)."));
             return;
         }
         const std::string saved = std::format(
-                "Saved {} entities (spark_scene_v4) → scene_editor/scene.txt",
+                "Saved {} entities (spark_scene_v4) → scenes/arena.sparkscene",
                 document.entities.GetSize());
         SetStatusMessage(Spark::Utf8String(saved.c_str()));
     }
 
-void SceneEditor3DDemo::SortObjectsById(Spark::Array<Spark::GameObject*>& objects) noexcept
-{
-        for (std::size_t i = 1; i < objects.GetSize(); ++i) {
-            Spark::GameObject* key = objects[i];
-            const std::uint64_t keyId = key != nullptr ? key->GetId() : 0;
-            std::size_t j = i;
-            while (j > 0) {
-                Spark::GameObject* prev = objects[j - 1];
-                const std::uint64_t prevId = prev != nullptr ? prev->GetId() : 0;
-                if (prevId <= keyId) {
-                    break;
-                }
-                objects[j] = objects[j - 1];
-                --j;
-            }
-            objects[j] = key;
-        }
-}
-
 void SceneEditor3DDemo::FinalizeAsyncSceneLoad(Spark::GameWorld& w)
 {
-        (void)w;
         if (loadedSceneId == Spark::kInvalidSceneInstanceId) {
             return;
         }
-        Spark::Array<Spark::GameObject*> instanceObjects;
-        w.ForEachGameObject([&](Spark::GameObject* object) {
-            if (object != nullptr && object->GetSceneInstanceId() == loadedSceneId) {
-                instanceObjects.PushBack(object);
-            }
-        });
-        SortObjectsById(instanceObjects);
-
-        for (std::size_t ei = 0; ei < pendingLoadDocument.entities.GetSize() && ei < instanceObjects.GetSize(); ++ei) {
-            const EntityRecord& entity = pendingLoadDocument.entities[ei];
-            Spark::GameObject* object = instanceObjects[ei];
-            if (object == nullptr) {
-                continue;
-            }
-            bool hasMesh = false;
-            bool hasLight = false;
-            Spark::Utf8String meshAsset;
-            for (std::size_t ci = 0; ci < entity.components.GetSize(); ++ci) {
-                const ComponentRecord& component = entity.components[ci];
-                if (component.kind == Spark::Utf8String("mesh")) {
-                    hasMesh = true;
-                    char slotTag[32]{};
-                    char asset[384]{};
-                    float ar = 1.0F;
-                    float ag = 1.0F;
-                    float ab = 1.0F;
-                    if (std::sscanf(
-                                component.payload.CStr(),
-                                "%31s \"%383[^\"]\" %f %f %f",
-                                slotTag,
-                                asset,
-                                &ar,
-                                &ag,
-                                &ab)
-                        >= 2) {
-                        meshAsset = Spark::Utf8String(asset);
-                    }
-                } else if (component.kind == Spark::Utf8String("point_light")
-                           || component.kind == Spark::Utf8String("spot_light")) {
-                    hasLight = true;
-                }
-            }
-            if (hasLight) {
-                roots.PushBack(object);
-                userLights.PushBack(object);
-                if (object->GetComponent<Spark::MeshComponent>() == nullptr && unitCubeAsset) {
-                    object->AddComponent<Spark::MeshComponent>(
-                            unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{1.0F, 1.0F, 1.0F});
-                    if (Spark::MaterialComponent* m = object->AddComponent<Spark::MaterialComponent>()) {
-                        m->SetMetallic(0.12F);
-                        m->SetRoughness(0.35F);
-                        if (Spark::PointLightComponent* pl = object->GetComponent<Spark::PointLightComponent>()) {
-                            m->SetEmissive(pl->GetColor(), 7.5F);
-                        } else if (Spark::SpotLightComponent* sl = object->GetComponent<Spark::SpotLightComponent>()) {
-                            m->SetEmissive(sl->GetColor(), 7.5F);
-                        }
-                    }
-                    SyncLightGizmoEmissive(object);
-                }
-            } else if (hasMesh) {
-                roots.PushBack(object);
-                placed.PushBack(object);
-                placedRel.PushBack(meshAsset);
-            }
-        }
+        SceneEditorContentBindingHooks hooks{};
+        hooks.unitCubeAsset = &unitCubeAsset;
+        hooks.syncLightGizmoEmissive = &SceneEditor3DDemo::SyncLightGizmoEmissive;
+        contentModel.IntegrateLoadedInstance(w, loadedSceneId, pendingLoadDocument, hooks);
+        instanceTracker.Register(loadedSceneId);
         selectedObject = nullptr;
         lightEditTarget = nullptr;
         const std::string loaded = std::format(
@@ -1020,15 +790,18 @@ void SceneEditor3DDemo::FinalizeAsyncSceneLoad(Spark::GameWorld& w)
                 pendingLoadDocument.entities.GetSize());
         SetStatusMessage(Spark::Utf8String(loaded.c_str()));
         pendingLoadDocument = SceneDocument{};
-}
+    }
 
 void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
 {
-        char path[512]{};
-        SceneFilePath(path, sizeof(path));
-        std::FILE* peek = std::fopen(path, "r");
+        const Utf8String path = ScenePathResolver::BuildRuntimePath("scenes", "arena.sparkscene");
+        if (!ScenePathResolver::FileExists(path.CStr())) {
+            SetStatusMessage(Spark::Utf8String("No save file yet (scenes/arena.sparkscene)."));
+            return;
+        }
+        std::FILE* peek = std::fopen(path.CStr(), "r");
         if (peek == nullptr) {
-            SetStatusMessage(Spark::Utf8String("No save file yet (scene_editor/scene.txt)."));
+            SetStatusMessage(Spark::Utf8String("No save file yet (scenes/arena.sparkscene)."));
             return;
         }
         char magic[64]{};
@@ -1042,7 +815,7 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
         if (std::strcmp(magic, SceneDocument::kMagic) == 0 || std::strcmp(magic, SceneDocument::kMagicV3) == 0) {
             SceneDocument document;
             SceneDeserializer deserializer;
-            if (!deserializer.ReadFromFile(path, document)) {
+            if (!deserializer.ReadFromFile(path.CStr(), document)) {
                 SetStatusMessage(Spark::Utf8String("Invalid spark scene file."));
                 return;
             }
@@ -1054,9 +827,9 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
             ClearUserLights(w);
             pendingLoadDocument = document;
             Spark::SceneLoadOptions options{};
-            options.assetsRoot = SPARK_ASSETS_DIR;
+            options.assetsRoot = ScenePathResolver::AssetsRoot();
             options.additive = true;
-            loadedSceneId = sceneManager->BeginLoadSceneAsync(document, path, options);
+            loadedSceneId = sceneManager->BeginLoadSceneAsync(document, path.CStr(), options);
             if (loadedSceneId == Spark::kInvalidSceneInstanceId) {
                 pendingLoadDocument = SceneDocument{};
                 SetStatusMessage(Spark::Utf8String("Scene load failed to start."));
@@ -1080,7 +853,7 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
             SetStatusMessage(Spark::Utf8String("Invalid scene file header."));
             return;
         }
-        std::FILE* f = std::fopen(path, "r");
+        std::FILE* f = std::fopen(path.CStr(), "r");
         if (f == nullptr) {
             SetStatusMessage(Spark::Utf8String("Could not reopen scene file."));
             return;
@@ -1164,9 +937,8 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
                 Spark::GltfAssetBinder::BindRigidMesh(
                         *go, g, Spark::SceneMeshSlot::Custom, Spark::Vector3{1.0F, 1.0F, 1.0F}, full.CStr());
             }
-            roots.PushBack(go);
-            placed.PushBack(go);
-            placedRel.PushBack(Spark::Utf8String(key));
+            contentModel.TrackRoot(go);
+            contentModel.TrackPlaced(go, Spark::Utf8String(key));
         }
 
         if (isV2) {
@@ -1198,9 +970,28 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
         std::fclose(f);
         const std::string loaded = std::format(
                 "Loaded {} meshes, {} lights from scene_editor/scene.txt",
-                placed.GetSize(),
-                userLights.GetSize());
+                contentModel.GetPlacedObjects().GetSize(),
+                contentModel.GetUserLights().GetSize());
         SetStatusMessage(Spark::Utf8String(loaded.c_str()));
+    }
+
+void SceneEditor3DDemo::ReloadSceneForPlayMode(Spark::GameWorld& w)
+{
+        UnloadEditorSceneContent(w);
+        LoadSceneFromFile(w);
+        if (sceneLoadInProgress && loadSession) {
+            while (sceneLoadInProgress) {
+                loadSession->Pump();
+                if (loadedSceneId != Spark::kInvalidSceneInstanceId && loadSession->IsReady(loadedSceneId)) {
+                    FinalizeAsyncSceneLoad(w);
+                    sceneLoadInProgress = false;
+                } else if (loadedSceneId != Spark::kInvalidSceneInstanceId && loadSession->HasFailed(loadedSceneId)) {
+                    sceneLoadInProgress = false;
+                    SetStatusMessage(Spark::Utf8String("Play mode failed (scene load error)."));
+                    return;
+                }
+            }
+        }
     }
 
 void SceneEditor3DDemo::MaterialFilePath(char* out, const std::size_t outSz) noexcept
@@ -1318,92 +1109,106 @@ void SceneEditor3DDemo::OpenSceneContextMenu(
         Spark::GameObject* selection,
         Spark::GameWorld& world)
 {
+        ScenePlacementContext ctx = MakePlacementContext(world, groundHit, selection);
         Spark::Array<Spark::Utf8String> labels;
-        Spark::Array<SceneEditorMenuAction> actions;
-        auto pushItem = [&](const char* label, const SceneEditorMenuAction action) {
-            labels.PushBack(Spark::Utf8String(label));
-            actions.PushBack(action);
-        };
-        pushItem("Mesh — DamagedHelmet.glb", SceneEditorMenuAction::MeshDamagedHelmet);
-        pushItem("Mesh — SheenChair.glb", SceneEditorMenuAction::MeshSheenChair);
-        pushItem("Mesh — Unit cube (builtin)", SceneEditorMenuAction::MeshUnitCube);
-        pushItem("Light — Warm tungsten", SceneEditorMenuAction::LightWarm);
-        pushItem("Light — Cool daylight", SceneEditorMenuAction::LightCool);
-        pushItem("Light — Soft magenta accent", SceneEditorMenuAction::LightMagenta);
-        if (selection != nullptr) {
-            pushItem("Delete selected", SceneEditorMenuAction::DeleteSelected);
-        }
-        pushItem("Save scene", SceneEditorMenuAction::SaveScene);
-        pushItem("Load scene", SceneEditorMenuAction::LoadScene);
+        placementActions.BuildMenu(labels, ctx);
 
         SceneEditor3DDemo* self = this;
-        const Spark::Vector3 spawnPos = groundHit;
-        Spark::GameObject* pickTarget = selection;
+        const Spark::Vector3 hit = groundHit;
+        Spark::GameObject* selected = selection;
         Spark::Ui::GetUiContextMenu().Open(
                 menuX,
                 menuY,
                 Spark::MoveTemp(labels),
-                [self, spawnPos, pickTarget, actions = Spark::MoveTemp(actions), &world](const int idx) {
-                    if (idx < 0 || static_cast<std::size_t>(idx) >= actions.GetSize()) {
-                        return;
-                    }
-                    switch (actions[static_cast<std::size_t>(idx)]) {
-                    case SceneEditorMenuAction::MeshDamagedHelmet:
-                        if (self->TryPlaceAtPreset(world, spawnPos, 0)) {
-                            self->SetStatusMessage(Spark::Utf8String("Placed DamagedHelmet.glb."));
-                        } else {
-                            self->SetStatusMessage(Spark::Utf8String("Could not load DamagedHelmet.glb."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::MeshSheenChair:
-                        if (self->TryPlaceAtPreset(world, spawnPos, 1)) {
-                            self->SetStatusMessage(Spark::Utf8String("Placed SheenChair.glb."));
-                        } else {
-                            self->SetStatusMessage(Spark::Utf8String("Could not load SheenChair.glb."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::MeshUnitCube:
-                        if (self->TryPlaceAtPreset(world, spawnPos, 2)) {
-                            self->SetStatusMessage(Spark::Utf8String("Placed unit cube."));
-                        } else {
-                            self->SetStatusMessage(Spark::Utf8String("Could not place unit cube."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::LightWarm:
-                        if (self->TrySpawnUserPointLight(world, spawnPos, 0)) {
-                            self->SetStatusMessage(Spark::Utf8String("Placed warm tungsten light."));
-                        } else {
-                            self->SetStatusMessage(Spark::Utf8String("Too many lights (max 7 user lights)."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::LightCool:
-                        if (self->TrySpawnUserPointLight(world, spawnPos, 1)) {
-                            self->SetStatusMessage(Spark::Utf8String("Placed cool daylight light."));
-                        } else {
-                            self->SetStatusMessage(Spark::Utf8String("Too many lights (max 7 user lights)."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::LightMagenta:
-                        if (self->TrySpawnUserPointLight(world, spawnPos, 2)) {
-                            self->SetStatusMessage(Spark::Utf8String("Placed soft magenta light."));
-                        } else {
-                            self->SetStatusMessage(Spark::Utf8String("Too many lights (max 7 user lights)."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::DeleteSelected:
-                        if (pickTarget != nullptr) {
-                            self->RemoveEditorSelection(world, pickTarget);
-                            self->SetStatusMessage(Spark::Utf8String("Removed selection."));
-                        }
-                        break;
-                    case SceneEditorMenuAction::SaveScene:
-                        self->SaveSceneToFile(world);
-                        break;
-                    case SceneEditorMenuAction::LoadScene:
-                        self->LoadSceneFromFile(world);
-                        break;
-                    }
+                [self, hit, selected, &world](const int idx) {
+                    ScenePlacementContext placementCtx = self->MakePlacementContext(world, hit, selected);
+                    self->placementActions.Execute(static_cast<std::size_t>(idx), placementCtx);
                 });
+    }
+
+ScenePlacementContext SceneEditor3DDemo::MakePlacementContext(
+        Spark::GameWorld& world,
+        const Spark::Vector3& groundHit,
+        Spark::GameObject* selection) noexcept
+{
+        ScenePlacementContext ctx{
+                world,
+                *sceneManager,
+                contentModel,
+                instanceTracker,
+                prefabCatalog,
+                groundHit,
+                selection,
+                unitCubeAsset,
+                &SceneEditor3DDemo::SyncLightGizmoEmissive,
+                &SceneEditor3DDemo::SetStatusFromPlacement,
+                this,
+        };
+        return ctx;
+}
+
+void SceneEditor3DDemo::SetStatusFromPlacement(const char* message, void* userData) noexcept
+{
+        auto* self = static_cast<SceneEditor3DDemo*>(userData);
+        if (self != nullptr && message != nullptr) {
+            self->SetStatusMessage(Spark::Utf8String(message));
+        }
+}
+
+bool SceneEditor3DDemo::PlacementImportGltf(ScenePlacementContext& ctx)
+{
+        auto* self = static_cast<SceneEditor3DDemo*>(ctx.statusUserData);
+        if (self == nullptr) {
+            return false;
+        }
+        const GltfImportService::ImportResult importResult =
+                self->gltfImportService.ImportFromFilePickerAndPlace(ctx.world, ctx);
+        self->SetStatusMessage(importResult.message);
+        return importResult.ok;
+    }
+
+bool SceneEditor3DDemo::PlacementDeleteSelected(ScenePlacementContext& ctx)
+{
+        auto* self = static_cast<SceneEditor3DDemo*>(ctx.statusUserData);
+        if (self == nullptr || ctx.selected == nullptr) {
+            return false;
+        }
+        self->RemoveEditorSelection(ctx.world, ctx.selected);
+        self->SetStatusMessage(Spark::Utf8String("Removed selection."));
+        return true;
+    }
+
+bool SceneEditor3DDemo::PlacementDeleteAvailable(const ScenePlacementContext& ctx)
+{
+        return ctx.selected != nullptr;
+    }
+
+bool SceneEditor3DDemo::PlacementSaveScene(ScenePlacementContext& ctx)
+{
+        auto* self = static_cast<SceneEditor3DDemo*>(ctx.statusUserData);
+        if (self == nullptr) {
+            return false;
+        }
+        self->SaveSceneToFile(ctx.world);
+        return true;
+    }
+
+bool SceneEditor3DDemo::PlacementLoadScene(ScenePlacementContext& ctx)
+{
+        auto* self = static_cast<SceneEditor3DDemo*>(ctx.statusUserData);
+        if (self == nullptr) {
+            return false;
+        }
+        self->LoadSceneFromFile(ctx.world);
+        return true;
+    }
+
+void SceneEditor3DDemo::ReloadSceneForPlayModeStatic(Spark::GameWorld& world, void* userData) noexcept
+{
+        auto* self = static_cast<SceneEditor3DDemo*>(userData);
+        if (self != nullptr) {
+            self->ReloadSceneForPlayMode(world);
+        }
     }
 
 }  // namespace Spark

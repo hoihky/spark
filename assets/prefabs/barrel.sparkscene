@@ -1,0 +1,7 @@
+spark_scene_v4
+1
+H name "Barrel"
+H assets_root "assets"
+E 1 -1 "Barrel"
+C transform 0.700000 1.100000 0.700000 0.000000 0.550000 0.000000 0.000000 0.000000 0.000000 1.000000
+C mesh unit_cube "builtin:unit_cube" 0.550000 0.350000 0.220000

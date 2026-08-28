@@ -10,10 +10,16 @@
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneInstanceTracker.hpp"
+#include "spark/scene/core/SceneLoadSession.hpp"
 #include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/editor/SceneEditorContentModel.hpp"
+#include "spark/scene/editor/SceneEditorPlaySession.hpp"
+#include "spark/scene/editor/GltfImportService.hpp"
+#include "spark/scene/editor/ScenePlacementActions.hpp"
+#include "spark/scene/prefab/PrefabCatalog.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
-#include <array>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -21,59 +27,25 @@
 namespace Spark {
 
 /**
- * 3D scene editor: right-click the viewport for mesh/light placement; LMB to select and move;
- * save/load scene text (v4 ECS snapshot; v3 and legacy v1/v2 still load) under the build runtime assets directory.
+ * 3D scene editor demo wired through reusable scene-editor services:
+ * content model, placement command registry, load session, and play-mode state.
  */
 class SceneEditor3DDemo {
 public:
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
-
-
     void Unload(Spark::GameWorld& w);
-
-
     void Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world);
-
-
     void Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context);
 
-
 private:
-    enum class SceneEditorMenuAction : int {
-        MeshDamagedHelmet = 0,
-        MeshSheenChair,
-        MeshUnitCube,
-        LightWarm,
-        LightCool,
-        LightMagenta,
-        DeleteSelected,
-        SaveScene,
-        LoadScene,
-    };
-
-    static void SceneFilePath(char* out, std::size_t outSz) noexcept;
-
-
     void SetStatusMessage(const Spark::Utf8String& msg);
-
-
     void ClearPlaced(Spark::GameWorld& w);
-
-
     void ClearUserLights(Spark::GameWorld& w);
-
+    void UnloadEditorSceneContent(Spark::GameWorld& w);
 
     [[nodiscard]] bool IsUserLight(Spark::GameObject* go) const noexcept;
-
-
     void ValidateLightEditTarget() noexcept;
-
-
     static void SyncLightGizmoEmissive(Spark::GameObject* go) noexcept;
-
-
-    static void LightPresetParams(int preset, Spark::Vector3& outColor, float& outIntensity, float& outRange) noexcept;
-
 
     [[nodiscard]] Spark::GameObject* AddUserPointLightAt(
             Spark::GameWorld& w,
@@ -82,15 +54,6 @@ private:
             float intensity,
             float range);
 
-
-    [[nodiscard]] bool TrySpawnUserPointLight(
-            Spark::GameWorld& w, const Spark::Vector3& groundHit, int presetIndex) noexcept;
-
-
-    /**
-     * Screen-space pick: ray vs mesh triangles (world space) and light spheres.
-     * Sets <c>dragPlaced</c>, <c>dragPlaneY</c>, and optional <c>outHit</c>.
-     */
     [[nodiscard]] bool TryPickEditorRay(
             Spark::Scene& scene,
             const Spark::Vector3& rayOrigin,
@@ -99,32 +62,16 @@ private:
             bool pickLights,
             Spark::Vector3& outHit) noexcept;
 
-
-    [[nodiscard]] static const char* PresetRelPath(int idx) noexcept;
-
-
-    [[nodiscard]] bool TryPlaceAtPreset(Spark::GameWorld& w, const Spark::Vector3& hitXZ, int presetIndex);
-
-
-    void SaveSceneToFile(Spark::GameWorld& /*w*/);
-
-
+    void SaveSceneToFile(Spark::GameWorld& w);
     void LoadSceneFromFile(Spark::GameWorld& w);
+    void FinalizeAsyncSceneLoad(Spark::GameWorld& w);
+    void ReloadSceneForPlayMode(Spark::GameWorld& w);
 
     static void MaterialFilePath(char* out, std::size_t outSz) noexcept;
-
     void TrySaveSelectedMaterial(Spark::GameWorld& w);
-
     void TryLoadSelectedMaterial(Spark::GameWorld& w);
 
-    void FinalizeAsyncSceneLoad(Spark::GameWorld& w);
-
-    static void SortObjectsById(Spark::Array<Spark::GameObject*>& objects) noexcept;
-
-
     void SetupContextMenuCanvas(Spark::GameWorld& w);
-
-
     void OpenSceneContextMenu(
             float menuX,
             float menuY,
@@ -132,30 +79,34 @@ private:
             Spark::GameObject* selection,
             Spark::GameWorld& world);
 
-
     void RemoveEditorSelection(Spark::GameWorld& w, Spark::GameObject* go) noexcept;
-
-
     void FocusCameraOnSelection() noexcept;
-
-
     void ResetEditorCamera() noexcept;
-
-
     [[nodiscard]] bool IsPointerInEditorViewport(float cursorX, int framebufferWidth) const noexcept;
-
-
     [[nodiscard]] float SelectionGizmoExtent(Spark::GameObject* go) const noexcept;
+    [[nodiscard]] ScenePlacementContext MakePlacementContext(
+            Spark::GameWorld& world,
+            const Spark::Vector3& groundHit,
+            Spark::GameObject* selection) noexcept;
 
+    static void SetStatusFromPlacement(const char* message, void* userData) noexcept;
+    static bool PlacementDeleteSelected(Spark::ScenePlacementContext& ctx);
+    static bool PlacementSaveScene(Spark::ScenePlacementContext& ctx);
+    static bool PlacementLoadScene(Spark::ScenePlacementContext& ctx);
+    static bool PlacementDeleteAvailable(const Spark::ScenePlacementContext& ctx);
+    static bool PlacementImportGltf(Spark::ScenePlacementContext& ctx);
+    static void ReloadSceneForPlayModeStatic(Spark::GameWorld& world, void* userData) noexcept;
 
-    Spark::Array<Spark::GameObject*> roots{};
-    Spark::Array<Spark::GameObject*> placed{};
-    Spark::Array<Spark::Utf8String> placedRel{};
+    SceneEditorContentModel contentModel{};
+    SceneInstanceTracker instanceTracker{};
+    PrefabCatalog prefabCatalog{};
+    ScenePlacementActionRegistry placementActions{};
+    SceneEditorPlaySession playSession{};
+    GltfImportService gltfImportService{};
     Spark::FlyCamera camera{};
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset;
     Spark::SharedPtr<Spark::Mesh> groundAsset;
     Spark::GameObject* lightEditTarget = nullptr;
-    Spark::Array<Spark::GameObject*> userLights{};
     DemoHelpHud helpHud{};
     Spark::GameObject* selectedObject = nullptr;
     Spark::GameObject* dragPlaced = nullptr;
@@ -167,9 +118,11 @@ private:
     int gizmoDragAxis = -1;
     float gizmoDragStartLineS = 0.0F;
     Spark::Vector3 gizmoDragStartTranslation{};
+    Spark::Vector3 lastGroundHit{};
     float selectionPulseTime = 0.0F;
     Spark::Utf8String statusMessage{};
     Spark::UniquePtr<Spark::SceneManager> sceneManager;
+    Spark::UniquePtr<Spark::SceneLoadSession> loadSession;
     Spark::SceneInstanceId loadedSceneId = Spark::kInvalidSceneInstanceId;
     Spark::SceneDocument pendingLoadDocument{};
     bool sceneLoadInProgress = false;

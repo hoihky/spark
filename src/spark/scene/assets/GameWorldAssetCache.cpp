@@ -1,4 +1,5 @@
 #include "spark/scene/assets/GameWorldAssetCache.hpp"
+#include "spark/scene/assets/GltfAssetPathResolver.hpp"
 #include "spark/scene/assets/gltf/GltfContentClassifier.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/assets/gltf/GltfRigidLoader.hpp"
@@ -207,7 +208,12 @@ AssetLoadOutcome<GltfAsset> GameWorldAssetCache::TryLoadGltf(const char* path) {
     asset.materialVariantNames = loaded.materialVariantNames;
     SyncLegacyFields(asset);
     RegisterAllMaterialTextures(*this, asset);
-    RegisterGltfMaterialsInLibrary(path, asset.materials, &asset.material);
+    Utf8String libraryKey(path);
+    Utf8String relativeKey{};
+    if (GltfAssetPathResolver::TryMakeAssetsRelative(path, relativeKey)) {
+        libraryKey = MoveTemp(relativeKey);
+    }
+    RegisterGltfMaterialsInLibrary(libraryKey.CStr(), asset.materials, &asset.material);
     gltfCache.Add(key, asset);
     EnsureInitialRetainCount(CachedAssetKind::Gltf, key);
     outcome.ok = true;
@@ -254,7 +260,12 @@ AssetLoadOutcome<GltfSceneDocument> GameWorldAssetCache::TryLoadGltfScene(const 
     }
     GltfSceneDocument document = MoveTemp(loaded.value);
     RegisterAllMaterialTextures(*this, document);
-    RegisterGltfMaterialsInLibrary(path, document.materials, nullptr);
+    Utf8String libraryKey(path);
+    Utf8String relativeKey{};
+    if (GltfAssetPathResolver::TryMakeAssetsRelative(path, relativeKey)) {
+        libraryKey = MoveTemp(relativeKey);
+    }
+    RegisterGltfMaterialsInLibrary(libraryKey.CStr(), document.materials, nullptr);
     gltfSceneCache.Add(key, document);
     EnsureInitialRetainCount(CachedAssetKind::GltfScene, key);
     outcome.ok = true;

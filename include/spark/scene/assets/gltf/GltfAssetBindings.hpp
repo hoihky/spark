@@ -39,6 +39,15 @@ public:
             const char* gltfPath,
             SceneMeshSlot slot = SceneMeshSlot::Custom,
             const Vector3& albedo = Vector3::One);
+
+    /**
+     * Imports glTF under a new child of <c>owner</c> so the owner's transform (prefab pose / scale) is kept.
+     */
+    [[nodiscard]] static bool BindFromPathAsChild(
+            GameObject& owner,
+            const char* gltfPath,
+            SceneMeshSlot slot = SceneMeshSlot::Custom,
+            const Vector3& albedo = Vector3::One);
 };
 
 }  // namespace Spark

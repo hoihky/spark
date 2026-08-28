@@ -7,7 +7,10 @@
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/rendering/RenderLayerComponent.hpp"
 #include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
+#include "spark/ecs/components/rendering/GltfSceneSourceComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/scene/assets/ScenePathResolver.hpp"
+#include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
 #include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/RenderLayerRegistry.hpp"
@@ -51,6 +54,61 @@ bool ParseLeadingQuotedString(const char*& cursor, char* out, const std::size_t 
     out[n] = '\0';
     return true;
 }
+
+class GltfSceneSourceSnapshotHandler final : public IComponentSnapshotHandler {
+public:
+    [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::GltfSceneSource; }
+    [[nodiscard]] const char* GetKindTag() const noexcept override { return "gltf_scene"; }
+
+    [[nodiscard]] bool TryCapture(
+            const GameObject& owner,
+            const SceneCaptureContext& /*ctx*/,
+            ComponentRecord& out) const override {
+        const GltfSceneSourceComponent* source = owner.GetComponent<GltfSceneSourceComponent>();
+        if (source == nullptr || source->GetGltfAssetRel().IsEmpty()) {
+            return false;
+        }
+        char buf[512]{};
+        std::snprintf(buf, sizeof(buf), "\"%s\"", source->GetGltfAssetRel().CStr());
+        out.kind = Utf8String(GetKindTag());
+        out.payload = Utf8String(buf);
+        return true;
+    }
+
+    [[nodiscard]] bool TryRestore(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& /*world*/,
+            const SceneApplyContext& ctx) const override {
+        if (!KindTagEquals(record.kind, GetKindTag()) || ctx.assetsRoot == nullptr) {
+            return false;
+        }
+        const char* cursor = record.payload.CStr();
+        char assetRel[384]{};
+        if (!ParseLeadingQuotedString(cursor, assetRel, sizeof(assetRel)) || assetRel[0] == '\0') {
+            return false;
+        }
+
+        Utf8String fullPath = ScenePathResolver::ResolveReadablePath(assetRel);
+        if (fullPath.IsEmpty() && ctx.assetsRoot != nullptr) {
+            char joined[1024]{};
+            std::snprintf(joined, sizeof(joined), "%s/%s", ctx.assetsRoot, assetRel);
+            fullPath = ScenePathResolver::ResolveReadablePath(joined);
+        }
+        if (fullPath.IsEmpty()) {
+            return false;
+        }
+        if (!GltfAssetBinder::BindFromPathAsChild(owner, fullPath.CStr())) {
+            return false;
+        }
+        GltfSceneSourceComponent* source = owner.GetComponent<GltfSceneSourceComponent>();
+        if (source == nullptr) {
+            source = owner.AddComponent<GltfSceneSourceComponent>();
+        }
+        source->SetGltfAssetRel(assetRel);
+        return true;
+    }
+};
 
 class RenderLayerSnapshotHandler final : public IComponentSnapshotHandler {
 public:
@@ -502,6 +560,7 @@ void RegisterHandler(ComponentSnapshotRegistry& registry) {
 }  // namespace
 
 void RegisterRenderingSnapshotHandlers(ComponentSnapshotRegistry& registry) {
+    RegisterHandler<GltfSceneSourceSnapshotHandler>(registry);
     RegisterHandler<RenderLayerSnapshotHandler>(registry);
     RegisterHandler<SortingGroupSnapshotHandler>(registry);
     RegisterHandler<Camera2DSnapshotHandler>(registry);

@@ -1,0 +1,7 @@
+spark_scene_v4
+1
+H name "CarConcept"
+H assets_root "assets"
+E 1 -1 "CarConcept"
+C transform 0.504890 0.504890 0.504890 0.000000 0.100428 0.000000 0.000000 0.000000 0.000000 1.000000
+C gltf_scene "models/imported/CarConcept.glb"

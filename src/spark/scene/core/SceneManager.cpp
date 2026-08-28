@@ -2,6 +2,8 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
+#include "spark/ecs/components/world/SpawnPointComponent.hpp"
+#include "spark/scene/prefab/PrefabInstantiator.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/SceneSerializer.hpp"
 
@@ -9,7 +11,7 @@
 
 namespace Spark {
 
-SceneManager::SceneManager(GameWorld& inWorld) : world(inWorld) {}
+SceneManager::SceneManager(GameWorld& inWorld) : world(inWorld), prefabInstantiator(*this) {}
 
 void SceneManager::OnDeferredComponentStatic(
         GameObject* object, const ComponentRecord& record, void* userData) {
@@ -249,6 +251,31 @@ void SceneManager::UnloadAllScenes() {
         const SceneInstanceId id = instances.GetLast().id;
         UnloadScene(id);
     }
+}
+
+SceneInstanceId SceneManager::LoadSceneAtSpawnPoint(
+        const char* scenePath,
+        const char* spawnPointName,
+        SceneSpawnPose* outSpawnPose,
+        const SceneLoadOptions& options) {
+    const SceneInstanceId id = LoadSceneFromFile(scenePath, options);
+    if (id == kInvalidSceneInstanceId) {
+        if (outSpawnPose != nullptr) {
+            *outSpawnPose = SceneSpawnPose{};
+        }
+        return kInvalidSceneInstanceId;
+    }
+    const SceneSpawnPose pose = FindSpawnPoint(world, spawnPointName);
+    if (outSpawnPose != nullptr) {
+        *outSpawnPose = pose;
+    }
+    return id;
+}
+
+PrefabInstantiateResult SceneManager::InstantiatePrefab(
+        const char* prefabPath,
+        const PrefabInstantiateOptions& options) {
+    return prefabInstantiator.Instantiate(prefabPath, options);
 }
 
 }  // namespace Spark

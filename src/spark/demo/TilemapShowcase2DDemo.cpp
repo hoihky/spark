@@ -13,6 +13,11 @@
 #include "spark/scene/tilemap/TilemapFileResolve.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/scene/tilemap/Tileset.hpp"
+#include "spark/scene/editor/SceneLevelLoader.hpp"
+#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/assets/ScenePathResolver.hpp"
+#include "spark/ecs/components/rendering/TilemapComponent.hpp"
+#include "spark/config.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -270,11 +275,115 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
     }
     pathTarget = playerPos;
     context.GetInput().SetCursorCaptured(false);
+    sceneManager = Spark::MakeUnique<Spark::SceneManager>(w);
+    levelLoadSession = Spark::MakeUnique<Spark::SceneLoadSession>(*sceneManager);
+}
+
+namespace {
+
+Spark::GameObject* FindTilemapBoard(Spark::GameWorld& world, const Spark::SceneInstanceId instanceId) noexcept
+{
+    Spark::GameObject* found = nullptr;
+    world.ForEachGameObject([&](Spark::GameObject* object) {
+        if (found != nullptr || object == nullptr || object->GetSceneInstanceId() != instanceId) {
+            return;
+        }
+        if (object->GetComponent<Spark::TilemapComponent>() != nullptr) {
+            found = object;
+        }
+    });
+    return found;
+}
+
+}  // namespace
+
+void TilemapShowcase2DDemo::LoadLevelSceneFromFile(Spark::GameWorld& w)
+{
+    if (levelLoadSession == nullptr) {
+        tmxStatus = Utf8String("Scene load session not initialized.");
+        return;
+    }
+
+    const Utf8String path = ScenePathResolver::BuildRuntimePath("scenes", "platformer_level.sparkscene");
+    if (!ScenePathResolver::FileExists(path.CStr())) {
+        tmxStatus = Utf8String("platformer_level.sparkscene not found (build assets/scenes/).");
+        return;
+    }
+
+    if (boardGo != nullptr) {
+        for (std::size_t i = 0; i < roots.GetSize(); ++i) {
+            if (roots[i] == boardGo) {
+                roots.RemoveAt(i);
+                break;
+            }
+        }
+        w.DestroyGameObject(boardGo);
+        boardGo = nullptr;
+        tilemap = nullptr;
+        gameplayGrid = nullptr;
+    }
+
+    if (levelSceneId != Spark::kInvalidSceneInstanceId && sceneManager) {
+        sceneManager->UnloadScene(levelSceneId);
+        levelSceneId = Spark::kInvalidSceneInstanceId;
+    }
+
+    SceneLevelLoader loader(*levelLoadSession);
+    const SceneLevelLoadResult result = loader.Load(w, path.CStr(), &FindTilemapBoard, "Player");
+    if (!result.success || result.primaryEntity == nullptr) {
+        tmxStatus = result.message.IsEmpty() ? Utf8String("Failed to load platformer_level.sparkscene.") : result.message;
+        return;
+    }
+
+    levelSceneId = result.instanceId;
+    boardGo = result.primaryEntity;
+    roots.PushBack(boardGo);
+    tilemap = boardGo->GetComponent<Spark::TilemapComponent>();
+    gameplayGrid = boardGo->GetComponent<Spark::TilemapGameplayGridComponent>();
+    if (gameplayGrid == nullptr) {
+        gameplayGrid = boardGo->AddComponent<Spark::TilemapGameplayGridComponent>();
+        gameplayGrid->SetWalkRule(Spark::TilemapGameplayWalkRule::DefinitionAndFlags);
+        gameplayGrid->SetAutoRebake(true);
+    }
+    if (boardGo->GetComponent<Spark::TilemapCollider2DComponent>() == nullptr) {
+        boardGo->AddComponent<Spark::TilemapCollider2DComponent>();
+    }
+
+    if (result.spawnPose.found) {
+        playerPos = {result.spawnPose.position.x, result.spawnPose.position.y};
+    } else if (gameplayGrid != nullptr) {
+        gameplayGrid->RequestRebake();
+        gameplayGrid->RebakeIfNeeded(*boardGo);
+        Detail::PlacePlayerOnFirstWalkableCell(*gameplayGrid, playerPos);
+    }
+
+    const float cell = tilemap != nullptr ? tilemap->GetTileWorldSize() : kTileWorld;
+    const float mw = static_cast<float>(tilemap != nullptr ? tilemap->GetMapWidth() : kCols);
+    const float mh = static_cast<float>(tilemap != nullptr ? tilemap->GetMapHeight() : kRows);
+    camera.position = {mw * 0.5F * cell, mh * 0.5F * cell, 0.0F};
+    camera.halfExtentY = mh * 0.55F * cell;
+
+    if (playerGo != nullptr) {
+        if (Spark::TransformComponent* tr = playerGo->GetComponent<Spark::TransformComponent>()) {
+            tr->SetTranslation({playerPos.x, playerPos.y, 0.08F});
+        }
+    }
+    pathTarget = playerPos;
+    pathCells.Clear();
+    pathStep = 0;
+    ClearPathMarkers();
+    tmxStatus = Utf8String("Loaded scenes/platformer_level.sparkscene");
 }
 
 void TilemapShowcase2DDemo::Unload(Spark::GameWorld& w) {
     Detail::UnregisterShowcaseSpawnHandlers();
     Detail::g_showcaseSpawn.atlas.Reset();
+    if (sceneManager && levelSceneId != Spark::kInvalidSceneInstanceId) {
+        sceneManager->UnloadScene(levelSceneId);
+        levelSceneId = Spark::kInvalidSceneInstanceId;
+    }
+    sceneManager.Reset();
+    levelLoadSession.Reset();
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
         if (roots[i] != nullptr) {
             w.DestroyGameObject(roots[i]);
@@ -505,6 +614,10 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
     int fbH = 0;
     context.GetFramebufferSize(fbW, fbH);
 
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_O) && boardGo != nullptr) {
+        LoadLevelSceneFromFile(boardGo->GetWorld());
+    }
+
     if (in.IsKeyPressedThisFrame(GLFW_KEY_L)) {
         if (boardGo != nullptr) {
             const Utf8String tmxPath = Detail::ResolveSampleTmxPath();
@@ -637,7 +750,7 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
         if (hudText->IsVisible()) {
             Utf8String hud{};
             hud.AppendUtf8("Tilemap showcase — layers, animation, autotile, path grid, object markers\n");
-            hud.AppendUtf8("Left-click: pathfind   R: reset   L: load Kenney sampleMap.tmx\n");
+            hud.AppendUtf8("Left-click: pathfind   R: reset   L: load Kenney sampleMap.tmx   O: load platformer_level.sparkscene\n");
             if (!tmxStatus.IsEmpty()) {
                 hud.AppendUtf8(tmxStatus.CStr());
                 hud.AppendUtf8("\n");

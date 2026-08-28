@@ -17,6 +17,7 @@ namespace {
 
 constexpr ComponentKind kCaptureOrder[] = {
         ComponentKind::Transform,
+        ComponentKind::GltfSceneSource,
         ComponentKind::Mesh,
         ComponentKind::Material,
         ComponentKind::MultiMaterial,
@@ -53,6 +54,21 @@ constexpr ComponentKind kCaptureOrder[] = {
         ComponentKind::Health,
         ComponentKind::Damageable,
         ComponentKind::DecalProjector,
+        ComponentKind::SpawnPoint,
+        ComponentKind::BoxCollider2D,
+        ComponentKind::CircleCollider2D,
+        ComponentKind::Rigidbody2D,
+        ComponentKind::PhysicsMaterial2D,
+        ComponentKind::DistanceJoint2D,
+        ComponentKind::HingeJoint2D,
+        ComponentKind::Tilemap,
+        ComponentKind::TilemapMapSource,
+        ComponentKind::TilemapCollider2D,
+        ComponentKind::TilemapGameplayGrid,
+        ComponentKind::UiCanvas,
+        ComponentKind::PerceptionSensor,
+        ComponentKind::Character3DAnimFsm,
+        ComponentKind::AiAgent,
 };
 
 bool WriteEscapedName(std::FILE* f, const Utf8String& name) {
@@ -460,13 +476,15 @@ bool SceneDeserializer::Apply(
             return false;
         }
         GameObject* object = *found;
+        SceneApplyContext restoreCtx = ctx;
+        restoreCtx.entityLookup = &idToObject;
         for (std::size_t ci = 0; ci < record.components.GetSize(); ++ci) {
             const ComponentRecord& component = record.components[ci];
             const IComponentSnapshotHandler* handler = registry.FindByTag(component.kind.CStr());
             if (handler == nullptr) {
                 continue;
             }
-            if (!handler->TryRestore(*object, component, world, ctx)) {
+            if (!handler->TryRestore(*object, component, world, restoreCtx)) {
                 if (std::strcmp(component.kind.CStr(), "skinned_mesh") == 0) {
                     continue;
                 }

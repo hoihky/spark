@@ -42,6 +42,21 @@ float MaxVisibleSubtreeBottom(const IUiElement* element) {
 SparkScrollPanel::SparkScrollPanel(const ScrollPanelDesc& desc)
     : UiElementBase(desc.id), designHeight(desc.height), rowHeight(desc.rowHeight), vGap(desc.verticalGap) {}
 
+ScrollPanelDesc SparkScrollPanel::ExportDesc() const noexcept {
+    ScrollPanelDesc desc{};
+    desc.id = GetId();
+    desc.height = designHeight;
+    desc.rowHeight = rowHeight;
+    desc.verticalGap = vGap;
+    return desc;
+}
+
+void SparkScrollPanel::ImportDesc(const ScrollPanelDesc& desc) noexcept {
+    designHeight = desc.height;
+    rowHeight = desc.rowHeight;
+    vGap = desc.verticalGap;
+}
+
 void SparkScrollPanel::SetScrollY(const float y) noexcept {
     scrollY = y;
 }

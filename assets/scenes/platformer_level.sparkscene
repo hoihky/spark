@@ -1,0 +1,10 @@
+spark_scene_v4
+2
+H name "Platformer Level"
+H assets_root "assets"
+E 1 -1 "Level"
+C transform 1.000000 1.000000 1.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000
+C tilemap_map_source "sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx" "" 16.000000 1 0
+E 2 -1 "PlayerSpawn"
+C transform 1.000000 1.000000 1.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 1.000000
+C spawn_point "Player" ""

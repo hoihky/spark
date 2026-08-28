@@ -2,6 +2,9 @@
 
 #include "spark/animation/Skeleton.hpp"
 #include "spark/config.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
@@ -20,6 +23,78 @@ bool IsRegularFile(const char* path) {
 }
 
 }  // namespace
+
+TEST(GltfVisualParityTest, ChronographWatchSceneImportBindsMaterials) {
+    Spark::Utf8String watchPath(SPARK_ASSETS_DIR);
+    watchPath.AppendUtf8("/models/ChronographWatch.glb");
+    if (!IsRegularFile(watchPath.CStr())) {
+        GTEST_SKIP() << "ChronographWatch.glb not available";
+    }
+
+    Spark::GameWorld world{};
+    Spark::GameObject* owner = world.CreateGameObject();
+    ASSERT_NE(owner, nullptr);
+    ASSERT_TRUE(Spark::GltfAssetBinder::BindFromPathAsChild(*owner, watchPath.CStr()));
+
+    int meshCount = 0;
+    int materialCount = 0;
+    int multiMaterialCount = 0;
+    int texturedMaterialCount = 0;
+    world.ForEachGameObject([&](Spark::GameObject* object) {
+        if (object == nullptr) {
+            return;
+        }
+        if (object->GetComponent<Spark::MeshComponent>() != nullptr) {
+            ++meshCount;
+        }
+        if (const Spark::MaterialComponent* material = object->GetComponent<Spark::MaterialComponent>()) {
+            ++materialCount;
+            if (static_cast<bool>(material->GetBaseColorTexture())) {
+                ++texturedMaterialCount;
+            }
+        }
+        if (object->GetComponent<Spark::MultiMaterialComponent>() != nullptr) {
+            ++multiMaterialCount;
+        }
+    });
+
+    EXPECT_GT(meshCount, 0);
+    EXPECT_GT(materialCount + multiMaterialCount, 0);
+    EXPECT_GT(texturedMaterialCount, 0);
+
+    int meshesMissingMaterial = 0;
+    world.ForEachGameObject([&](Spark::GameObject* object) {
+        if (object == nullptr || object->GetComponent<Spark::MeshComponent>() == nullptr) {
+            return;
+        }
+        if (object->GetComponent<Spark::MaterialComponent>() == nullptr &&
+            object->GetComponent<Spark::MultiMaterialComponent>() == nullptr) {
+            ++meshesMissingMaterial;
+        }
+    });
+    EXPECT_EQ(meshesMissingMaterial, 0);
+}
+
+TEST(GltfVisualParityTest, ChronographWatchRigidLoaderBindsMaterials) {
+    Spark::Utf8String watchPath(SPARK_ASSETS_DIR);
+    watchPath.AppendUtf8("/models/ChronographWatch.glb");
+    if (!IsRegularFile(watchPath.CStr())) {
+        GTEST_SKIP() << "ChronographWatch.glb not available";
+    }
+
+    Spark::GameWorld world{};
+    const Spark::AssetLoadOutcome<Spark::GltfAsset> loaded = world.TryLoadGltf(watchPath.CStr());
+    ASSERT_TRUE(loaded.ok) << loaded.errorMessage.CStr();
+    ASSERT_TRUE(static_cast<bool>(loaded.value.mesh));
+
+    Spark::GameObject* owner = world.CreateGameObject();
+    Spark::GltfAssetBinder::BindRigidMesh(
+            *owner, loaded.value, Spark::SceneMeshSlot::Custom, Spark::Vector3::One, watchPath.CStr());
+
+    const Spark::MaterialComponent* material = owner->GetComponent<Spark::MaterialComponent>();
+    const Spark::MultiMaterialComponent* multi = owner->GetComponent<Spark::MultiMaterialComponent>();
+    EXPECT_TRUE(material != nullptr || multi != nullptr);
+}
 
 TEST(GltfVisualParityTest, SkeletonJointBudgetRaisedTo128) {
     EXPECT_EQ(Spark::Skeleton::MaxJoints, 128U);

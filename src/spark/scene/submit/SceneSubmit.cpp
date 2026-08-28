@@ -89,6 +89,10 @@ void PushRigidMeshDraws(
         if (mat != nullptr) {
             ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
             ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        } else if (multiMat != nullptr && multiMat->GetSlotCount() > 0U) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(0U);
+            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
+            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
         }
         drawList.PushBack(item);
         return;
@@ -126,6 +130,10 @@ void PushSkinnedMeshDraws(
         if (mat != nullptr) {
             ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
             ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+        } else if (multiMat != nullptr && multiMat->GetSlotCount() > 0U) {
+            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(0U);
+            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
+            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
         }
         drawList.PushBack(item);
         return;

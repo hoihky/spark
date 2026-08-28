@@ -1,5 +1,9 @@
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 
+#include "spark/scene/serialization/ComponentSnapshotHandlersGameplay.hpp"
+#include "spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.hpp"
+#include "spark/scene/serialization/ComponentSnapshotHandlersTilemap.hpp"
+#include "spark/scene/serialization/ComponentSnapshotHandlersUi.hpp"
 #include "spark/scene/serialization/ComponentSnapshotHandlersExtended.hpp"
 #include "spark/scene/serialization/ComponentSnapshotHandlersMore.hpp"
 #include "spark/scene/serialization/ComponentSnapshotHandlersRendering.hpp"
@@ -177,6 +181,47 @@ SceneMeshSlot TagToSlot(const char* tag) noexcept {
     return SceneMeshSlot::Custom;
 }
 
+constexpr const char* kBuiltinUnitCubeAsset = "builtin:unit_cube";
+
+bool PathEndsWith(const char* path, const char* suffix) noexcept {
+    if (path == nullptr || suffix == nullptr) {
+        return false;
+    }
+    const std::size_t pathLen = std::strlen(path);
+    const std::size_t suffixLen = std::strlen(suffix);
+    if (suffixLen > pathLen) {
+        return false;
+    }
+    return std::strcmp(path + pathLen - suffixLen, suffix) == 0;
+}
+
+/** Prefab placement hints may reference <c>.sparkscene</c> files; mesh restore expects mesh/gltf paths. */
+void NormalizeMeshAssetPath(char* asset, const std::size_t cap, const SceneMeshSlot slot) noexcept {
+    if (asset == nullptr || cap == 0) {
+        return;
+    }
+    if (asset[0] == '\0' && slot == SceneMeshSlot::UnitCube) {
+        std::snprintf(asset, cap, "%s", kBuiltinUnitCubeAsset);
+        return;
+    }
+    if (PathEndsWith(asset, ".sparkscene") && slot == SceneMeshSlot::UnitCube) {
+        std::snprintf(asset, cap, "%s", kBuiltinUnitCubeAsset);
+    }
+}
+
+SharedPtr<Mesh> ResolveBuiltinUnitCubeMesh(GameWorld& world) {
+    SharedPtr<Mesh> mesh = world.TryGetMeshByKeyOrPath("spark/scene_editor/unit_cube");
+    if (!mesh) {
+        mesh = world.TryGetMeshByKeyOrPath("spark/demo/unit_cube");
+    }
+    if (!mesh) {
+        auto created = MakeShared<Mesh>(Utf8String("UnitCube"));
+        *created = Mesh::CreateUnitCube();
+        mesh = world.RegisterMesh(created, "spark/scene/serialized_unit_cube");
+    }
+    return mesh;
+}
+
 class MeshSnapshotHandler final : public IComponentSnapshotHandler {
 public:
     [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::Mesh; }
@@ -197,6 +242,9 @@ public:
         if (ctx.resolveMeshAssetPath != nullptr) {
             asset = ctx.resolveMeshAssetPath(owner, ctx.meshAssetUserData);
         }
+        char assetBuf[384]{};
+        std::snprintf(assetBuf, sizeof(assetBuf), "%s", asset.CStr());
+        NormalizeMeshAssetPath(assetBuf, sizeof(assetBuf), mc->GetSlot());
         const Vector3& a = mc->GetAlbedo();
         char buf[512]{};
         std::snprintf(
@@ -204,7 +252,7 @@ public:
                 sizeof(buf),
                 "%s \"%s\" %.6f %.6f %.6f",
                 SlotToTag(mc->GetSlot()),
-                asset.CStr(),
+                assetBuf,
                 a.x,
                 a.y,
                 a.z);
@@ -241,17 +289,10 @@ public:
             return false;
         }
         const SceneMeshSlot slot = TagToSlot(slotTag);
+        NormalizeMeshAssetPath(asset, sizeof(asset), slot);
         SharedPtr<Mesh> mesh;
-        if (std::strcmp(asset, "builtin:unit_cube") == 0) {
-            mesh = world.TryGetMeshByKeyOrPath("spark/scene_editor/unit_cube");
-            if (!mesh) {
-                mesh = world.TryGetMeshByKeyOrPath("spark/demo/unit_cube");
-            }
-            if (!mesh) {
-                auto m = MakeShared<Mesh>(Utf8String("UnitCube"));
-                *m = Mesh::CreateUnitCube();
-                mesh = world.RegisterMesh(m, "spark/scene/serialized_unit_cube");
-            }
+        if (std::strcmp(asset, kBuiltinUnitCubeAsset) == 0) {
+            mesh = ResolveBuiltinUnitCubeMesh(world);
         } else if (asset[0] != '\0') {
             const Utf8String full = JoinAssetsRootPath(ctx.assetsRoot, asset);
             if (ctx.assetLoader != nullptr) {
@@ -919,6 +960,10 @@ void RegisterBuiltInHandlers(ComponentSnapshotRegistry& registry) {
     RegisterExtendedSnapshotHandlers(registry);
     RegisterMoreSnapshotHandlers(registry);
     RegisterRenderingSnapshotHandlers(registry);
+    RegisterGameplaySnapshotHandlers(registry);
+    RegisterTilemapSnapshotHandlers(registry);
+    RegisterPhysics2DExtendedSnapshotHandlers(registry);
+    RegisterUiSnapshotHandlers(registry);
 }
 
 }  // namespace

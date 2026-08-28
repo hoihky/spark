@@ -29,6 +29,9 @@ function(spark_add_physics_tests)
             tests/scene/GltfMeshoptTest.cpp
             tests/scene/GltfSkinnedCompressionTest.cpp
             tests/scene/GltfVisualParityTest.cpp
+            tests/scene/GameplayComponentRoundTripTest.cpp
+            tests/scene/SceneDocumentRoundTripTest.cpp
+            tests/scene/SceneEditorSmokeTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

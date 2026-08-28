@@ -41,6 +41,8 @@ public:
     [[nodiscard]] Ui::IUiElement* GetRoot() noexcept { return root.Get(); }
     [[nodiscard]] const Ui::IUiElement* GetRoot() const noexcept { return root.Get(); }
 
+    void AdoptRoot(UniquePtr<Ui::IUiElement> element) noexcept { root = MoveTemp(element); }
+
     void ClearTransientPointerState() noexcept;
     void ClearKeyboardFocus() noexcept;
     void ApplyFocus(Ui::IUiElement* nextFocus) noexcept;

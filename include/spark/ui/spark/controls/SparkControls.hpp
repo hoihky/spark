@@ -53,6 +53,9 @@ public:
     void SetTitle(Utf8String titleIn) override;
     [[nodiscard]] bool IsOpen() const noexcept override { return open; }
 
+    [[nodiscard]] PanelDesc ExportDesc() const noexcept;
+    void ImportDesc(const PanelDesc& desc) noexcept;
+
 protected:
     void DoMeasure(const UiMeasureConstraints& constraints, UiSize& outDesired) override;
     void Arrange(const Rect& finalBounds) override;
@@ -76,6 +79,8 @@ public:
 
     void SetText(Utf8String textIn) override;
     void SetMuted(bool mutedIn) override { muted = mutedIn; }
+    [[nodiscard]] Utf8StringView GetText() const noexcept { return text; }
+    [[nodiscard]] bool IsMuted() const noexcept { return muted; }
 
 protected:
     void DoMeasure(const UiMeasureConstraints& constraints, UiSize& outDesired) override;
@@ -102,7 +107,10 @@ public:
     void SetValue(float valueIn) override;
     [[nodiscard]] float GetValue() const noexcept override { return value; }
     void SetRange(float minValueIn, float maxValueIn) override;
+    [[nodiscard]] float GetMinValue() const noexcept { return minValue; }
+    [[nodiscard]] float GetMaxValue() const noexcept { return maxValue; }
     void SetOnChanged(UiFloatCallback handler) override { onChanged = handler; }
+    [[nodiscard]] Utf8StringView GetLabel() const noexcept { return label; }
 
     [[nodiscard]] bool WantsKeyboardFocus() const override { return true; }
     void ProcessKeyInput(IInput& input) override;
@@ -132,6 +140,7 @@ public:
     void SetValue(bool valueIn) override { value = valueIn; }
     [[nodiscard]] bool GetValue() const noexcept override { return value; }
     void SetOnChanged(UiBoolCallback handler) override { onChanged = handler; }
+    [[nodiscard]] Utf8StringView GetLabel() const noexcept { return label; }
 
     [[nodiscard]] bool WantsKeyboardFocus() const override { return true; }
     void ProcessKeyInput(IInput& input) override;

@@ -8,6 +8,9 @@
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp"
 #include "spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp"
+#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/core/SceneManager.hpp"
+#include "spark/memory/UniquePtr.hpp"
 
 #include <cstdint>
 
@@ -47,6 +50,8 @@ private:
     void ShowPath(const Array<GridPathfinder::Cell>& cells);
     [[nodiscard]] bool PickCell(Spark::IEngineContext& context, float mx, float my, int& outX, int& outY) const;
 
+    void LoadLevelSceneFromFile(Spark::GameWorld& w);
+
     Spark::Array<Spark::GameObject*> roots{};
     Spark::SharedPtr<Spark::Texture2D> atlasTex{};
     Spark::GameObject* boardGo = nullptr;
@@ -64,6 +69,9 @@ private:
     std::size_t pathStep = 0;
     float moveSpeed = 4.5F;
     Utf8String tmxStatus{};
+    Spark::UniquePtr<Spark::SceneManager> sceneManager;
+    Spark::UniquePtr<Spark::SceneLoadSession> levelLoadSession;
+    Spark::SceneInstanceId levelSceneId = Spark::kInvalidSceneInstanceId;
 };
 
 }  // namespace Spark
