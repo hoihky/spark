@@ -796,6 +796,10 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/editor/SceneEditorContentModel.cpp
         src/spark/scene/editor/ScenePlacementActions.cpp
         src/spark/scene/editor/SceneEditorPlaySession.cpp
+        src/spark/scene/editor/SceneEditorCameraController.cpp
+        src/spark/scene/editor/TransformGizmo.cpp
+        src/spark/scene/editor/SceneEditorAssetCatalog.cpp
+        src/spark/scene/editor/SceneEditorAssetBrowser.cpp
         src/spark/scene/editor/SceneLevelLoader.cpp
         src/spark/scene/editor/GltfImportService.cpp
         src/spark/platform/NativeFilePicker.cpp

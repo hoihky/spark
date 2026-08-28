@@ -4,6 +4,7 @@
 
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
+#include "spark/ui/runtime/EditorLayoutStore.hpp"
 #include "spark/ui/runtime/UiContextMenu.hpp"
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/scene/mesh/MeshRaycast.hpp"
@@ -16,6 +17,7 @@
 #include "spark/scene/core/SceneEntityRole.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
 #include "spark/scene/assets/AssetLoadEvents.hpp"
+#include "spark/scene/prefab/PrefabInstantiator.hpp"
 #include "spark/config.hpp"
 
 namespace Spark {
@@ -24,8 +26,8 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
 {
         selectedObject = nullptr;
         dragPlaced = nullptr;
-        gizmoDragAxis = -1;
-        orbitDragActive = false;
+        transformGizmo.EndDrag();
+        cameraController.EndOrbitDrag();
         rmbDragDistSq = 0.0F;
         selectionPulseTime = 0.0F;
         lightEditTarget = nullptr;
@@ -68,10 +70,12 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         contentModel.TrackRoot(sun);
 
         SetupContextMenuCanvas(w);
+        assetCatalog.Refresh();
+        assetBrowser.Mount(w, assetCatalog, *this);
 
         helpHud.Mount(w, "Scene editor");
         helpHud.SetControlHints(
-                "RMB menu · I import glTF · P play · Esc stop · drag RMB look · Alt+LMB orbit · F1 fly · LMB select");
+                "W/E/R gizmo · F focus · Home reset · asset panel left · RMB menu · I import · P play · Esc stop");
 
         sceneManager = Spark::MakeUnique<Spark::SceneManager>(w);
         loadSession = Spark::MakeUnique<Spark::SceneLoadSession>(*sceneManager);
@@ -90,16 +94,8 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
                 MakeLambdaPlacementAction(Utf8String("Load scene"), &SceneEditor3DDemo::PlacementLoadScene));
 
         context.GetInput().SetCursorCaptured(false);
-        camera.position = {8.0F, 6.5F, 14.0F};
-        cameraOrbitPivot = {0.0F, 0.0F, 0.0F};
-        camera.SnapLookAt(cameraOrbitPivot);
-        {
-            const Spark::Vector3 off{
-                    camera.position.x - cameraOrbitPivot.x,
-                    camera.position.y - cameraOrbitPivot.y,
-                    camera.position.z - cameraOrbitPivot.z};
-            cameraOrbitDistance = std::max(3.0F, off.Length());
-        }
+        cameraController.ResetToDefault();
+        transformGizmo.SetMode(TransformGizmoMode::Translate);
 
         const Utf8String arenaPath = ScenePathResolver::BuildRuntimePath("scenes", "arena.sparkscene");
         if (ScenePathResolver::FileExists(arenaPath.CStr())) {
@@ -110,6 +106,7 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
 void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
 {
         helpHud.Unmount(w);
+        assetBrowser.Unmount(w);
         Spark::Ui::GetUiContextMenu().Close();
         if (sceneManager) {
             UnloadEditorSceneContent(w);
@@ -124,15 +121,17 @@ void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
         sceneManager.Reset();
         lightEditTarget = nullptr;
         statusMessage.Clear();
-        orbitDragActive = false;
+        cameraController.EndOrbitDrag();
+        transformGizmo.EndDrag();
         selectedObject = nullptr;
-        gizmoDragAxis = -1;
         unitCubeAsset.Reset();
         groundAsset.Reset();
+        editorWorld_ = nullptr;
     }
 
 void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
 {
+        editorWorld_ = &world;
         if (sceneManager) {
             sceneManager->Pump();
             if (sceneLoadInProgress && loadedSceneId != Spark::kInvalidSceneInstanceId) {
@@ -158,8 +157,32 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
         in.GetCursorFramebufferPixels(mx, my, fbW, fbH);
         const bool inViewport = IsPointerInEditorViewport(mx, fbW);
 
+        Spark::ProcessUiCanvasesInput(world, in, fbW, fbH);
+
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
             in.SetCursorCaptured(!in.IsCursorCaptured());
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_W) && !playSession.IsActive()) {
+            transformGizmo.SetMode(TransformGizmoMode::Translate);
+            SetStatusMessage(Spark::Utf8String("Gizmo: Move (W/E/R to switch)."));
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_E) && !playSession.IsActive()) {
+            transformGizmo.SetMode(TransformGizmoMode::Rotate);
+            SetStatusMessage(Spark::Utf8String("Gizmo: Rotate (W/E/R to switch)."));
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_R) && !playSession.IsActive()) {
+            transformGizmo.SetMode(TransformGizmoMode::Scale);
+            SetStatusMessage(Spark::Utf8String("Gizmo: Scale (W/E/R to switch)."));
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_Q) && !playSession.IsActive()) {
+            transformGizmo.CycleMode();
+            SetStatusMessage(Spark::Utf8String(transformGizmo.GetInteractionHint()));
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_F) && !playSession.IsActive()) {
+            FocusCameraOnSelection();
+        }
+        if (in.IsKeyPressedThisFrame(GLFW_KEY_HOME) && !playSession.IsActive()) {
+            ResetEditorCamera();
         }
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F9)) {
             TrySaveSelectedMaterial(world);
@@ -178,9 +201,9 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
                     .loadSession = *loadSession,
                     .content = contentModel,
                     .instances = instanceTracker,
-                    .camera = camera,
-                    .orbitPivot = cameraOrbitPivot,
-                    .orbitDistance = cameraOrbitDistance,
+                    .camera = cameraController.camera,
+                    .orbitPivot = cameraController.orbitPivot,
+                    .orbitDistance = cameraController.orbitDistance,
                     .reloadScene = &SceneEditor3DDemo::ReloadSceneForPlayModeStatic,
                     .setStatus = &SceneEditor3DDemo::SetStatusFromPlacement,
                     .userData = this,
@@ -193,9 +216,9 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
                     .loadSession = *loadSession,
                     .content = contentModel,
                     .instances = instanceTracker,
-                    .camera = camera,
-                    .orbitPivot = cameraOrbitPivot,
-                    .orbitDistance = cameraOrbitDistance,
+                    .camera = cameraController.camera,
+                    .orbitPivot = cameraController.orbitPivot,
+                    .orbitDistance = cameraController.orbitDistance,
                     .reloadScene = &SceneEditor3DDemo::ReloadSceneForPlayModeStatic,
                     .setStatus = &SceneEditor3DDemo::SetStatusFromPlacement,
                     .userData = this,
@@ -203,49 +226,24 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
             playSession.Exit(world, context, deps);
         }
         if (in.IsCursorCaptured()) {
-            if (timing.frameIndex > 0) {
-                camera.AddLook(in.GetMouseDeltaX(), in.GetMouseDeltaY());
-            }
-            camera.ProcessMovement(in, timing.deltaTimeSeconds);
-            const float scroll = in.GetScrollDeltaY();
-            if (std::fabs(scroll) > 1.0e-4F) {
-                camera.position += camera.Forward() * (scroll * 0.65F);
-            }
-        } else if (!UiConsumesGamePointer()) {
-            const bool rmbDown = in.IsMouseButtonDown(1);
-            const bool mmbDown = in.IsMouseButtonDown(2);
-            const bool cameraNavActive = inViewport || rmbDown || mmbDown || orbitDragActive;
-
+            cameraController.UpdateFlyNavigation(in, timing);
+        } else {
             if (in.IsMouseButtonPressedThisFrame(1) && inViewport) {
                 rmbDragDistSq = 0.0F;
             }
-            if (rmbDown && inViewport && timing.frameIndex > 0) {
+            if (in.IsMouseButtonDown(1) && inViewport && timing.frameIndex > 0) {
                 const float mdx = in.GetMouseDeltaX();
                 const float mdy = in.GetMouseDeltaY();
                 rmbDragDistSq += mdx * mdx + mdy * mdy;
-                camera.AddLook(mdx, mdy);
             }
-
-            if (mmbDown && inViewport && timing.frameIndex > 0) {
-                const float panScale = 0.014F * std::max(1.0F, cameraOrbitDistance * 0.08F);
-                PanFlyCamera(camera, in.GetMouseDeltaX(), in.GetMouseDeltaY(), panScale);
-            }
-
-            if (inViewport && std::fabs(in.GetScrollDeltaY()) > 1.0e-4F) {
-                camera.position += camera.Forward() * (in.GetScrollDeltaY() * 0.65F);
-            }
-
-            if (cameraNavActive) {
-                camera.ProcessMovement(in, timing.deltaTimeSeconds);
-            }
-
+            cameraController.UpdateEditorNavigation(in, timing, inViewport, UiConsumesGamePointer());
             if (in.IsMouseButtonReleasedThisFrame(0)) {
-                orbitDragActive = false;
+                cameraController.EndOrbitDrag();
             }
         }
 
         if (!in.IsCursorCaptured() && !UiConsumesGamePointer()) {
-            const Spark::Matrix4 view = camera.ViewMatrix();
+            const Spark::Matrix4 view = cameraController.camera.ViewMatrix();
             const float aspect = (fbH > 0) ? static_cast<float>(fbW) / static_cast<float>(fbH) : 1.0F;
             const Spark::Matrix4 proj =
                     Spark::Matrix4::PerspectiveVulkan(Spark::DegreesToRadians(60.0F), aspect, 0.12F, 400.0F);
@@ -265,7 +263,7 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
 
             if (in.IsMouseButtonReleasedThisFrame(0)) {
                 dragPlaced = nullptr;
-                gizmoDragAxis = -1;
+                transformGizmo.EndDrag();
             }
 
             const bool haveGround = haveRay && RayIntersectPlaneY(ro, rd, 0.0F, groundHit);
@@ -279,44 +277,29 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
                 OpenSceneContextMenu(mx, my, groundHit, selectedObject, world);
             }
 
-            if (orbitDragActive && in.IsMouseButtonDown(0) && timing.frameIndex > 0) {
-                OrbitFlyCameraAroundPivot(
-                        camera,
-                        cameraOrbitPivot,
-                        cameraOrbitDistance,
-                        in.GetMouseDeltaX(),
-                        in.GetMouseDeltaY());
+            if (cameraController.IsOrbitDragging() && in.IsMouseButtonDown(0) && timing.frameIndex > 0) {
+                cameraController.UpdateOrbitDrag(in);
             } else if (haveRay && in.IsMouseButtonPressedThisFrame(0) && !playSession.IsActive()) {
                 bool handledPress = false;
                 if (altHeld && inViewport) {
+                    Spark::Vector3 pivot = cameraController.orbitPivot;
                     if (selectedObject != nullptr) {
                         Spark::TransformComponent* selTr = selectedObject->GetComponent<Spark::TransformComponent>();
                         if (selTr != nullptr) {
-                            cameraOrbitPivot = selTr->GetLocalTransform().translation;
+                            pivot = selTr->GetLocalTransform().translation;
                         }
                     }
-                    const Spark::Vector3 off{
-                            camera.position.x - cameraOrbitPivot.x,
-                            camera.position.y - cameraOrbitPivot.y,
-                            camera.position.z - cameraOrbitPivot.z};
-                    cameraOrbitDistance = std::max(1.5F, off.Length());
-                    orbitDragActive = true;
+                    cameraController.BeginOrbitDrag(pivot);
                     handledPress = true;
                 }
                 if (!handledPress && selectedObject != nullptr) {
                     Spark::TransformComponent* selTr = selectedObject->GetComponent<Spark::TransformComponent>();
                     if (selTr != nullptr) {
-                        const Spark::Vector3 pivot = selTr->GetLocalTransform().translation;
                         const float ext = SelectionGizmoExtent(selectedObject);
-                        int axis = -1;
-                        if (TryPickTranslateGizmo(ro, rd, pivot, ext, axis)) {
-                            gizmoDragAxis = axis;
-                            gizmoDragStartTranslation = pivot;
+                        if (transformGizmo.TryBeginDrag(ro, rd, *selTr, ext, *selectedObject)) {
                             dragPlaced = selectedObject;
-                            (void)ClosestRayLineParameter(
-                                    ro, rd, pivot, SceneEditorGizmoAxisDir(axis), gizmoDragStartLineS);
                             handledPress = true;
-                            SetStatusMessage(Spark::Utf8String("Drag the colored axis arrow to move along X, Y, or Z."));
+                            SetStatusMessage(Spark::Utf8String(transformGizmo.GetInteractionHint()));
                         }
                     }
                 }
@@ -341,21 +324,15 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
                 }
             }
 
-            if (!orbitDragActive && haveRay && in.IsMouseButtonDown(0) && dragPlaced != nullptr && gizmoDragAxis >= 0) {
-                float lineS = 0.0F;
-                const Spark::Vector3 axis = SceneEditorGizmoAxisDir(gizmoDragAxis);
-                if (ClosestRayLineParameter(ro, rd, gizmoDragStartTranslation, axis, lineS)) {
-                    const float ds = lineS - gizmoDragStartLineS;
-                    Spark::TransformComponent* dtr = dragPlaced->GetComponent<Spark::TransformComponent>();
-                    if (dtr != nullptr) {
-                        const Spark::Vector3 t{
-                                gizmoDragStartTranslation.x + axis.x * ds,
-                                gizmoDragStartTranslation.y + axis.y * ds,
-                                gizmoDragStartTranslation.z + axis.z * ds};
-                        dtr->SetTranslation(t);
-                    }
+            if (!cameraController.IsOrbitDragging() && haveRay && in.IsMouseButtonDown(0) && dragPlaced != nullptr &&
+                transformGizmo.IsDragging()) {
+                Spark::TransformComponent* dtr = dragPlaced->GetComponent<Spark::TransformComponent>();
+                if (dtr != nullptr) {
+                    (void)transformGizmo.UpdateDrag(ro, rd, *dtr);
                 }
-            } else if (!orbitDragActive && haveRay && in.IsMouseButtonDown(0) && dragPlaced != nullptr && gizmoDragAxis < 0) {
+            } else if (!cameraController.IsOrbitDragging() && haveRay && in.IsMouseButtonDown(0) &&
+                       dragPlaced != nullptr && !transformGizmo.IsDragging() &&
+                       transformGizmo.GetMode() == TransformGizmoMode::Translate) {
                 Spark::Vector3 dragHit{};
                 if (RayIntersectPlaneY(ro, rd, dragPlaneY, dragHit)) {
                     Spark::TransformComponent* dtr = dragPlaced->GetComponent<Spark::TransformComponent>();
@@ -385,6 +362,7 @@ void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngin
         }
         helpHud.SetDetail(hud.c_str());
         helpHud.Update(timing, context);
+        assetBrowser.SetEnabled(!playSession.IsActive());
     }
 
 void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -395,12 +373,12 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
         const float aspect = (fbH > 0) ? static_cast<float>(fbW) / static_cast<float>(fbH) : 1.0F;
         const Spark::Matrix4 proj =
                 Spark::Matrix4::PerspectiveVulkan(Spark::DegreesToRadians(60.0F), aspect, 0.12F, 400.0F);
-        const Spark::Matrix4 view = camera.ViewMatrix();
+        const Spark::Matrix4 view = cameraController.camera.ViewMatrix();
         const Spark::Matrix4 viewProj = proj * view;
 
         Spark::SceneRenderParams params{};
         params.viewProjection = viewProj;
-        params.cameraPositionWorld = camera.position;
+        params.cameraPositionWorld = cameraController.camera.position;
         params.lightDirectionWorld = Spark::Vector3{0.35F, 0.82F, 0.38F}.Normalized();
         params.lightColor = {1.0F, 0.97F, 0.92F};
         params.lightIntensity = 0.92F;
@@ -516,16 +494,15 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
         });
 
         StableSortDrawItems(drawList);
-        PartitionSortedDrawItemsIntoSceneParams(drawList, params, camera.position);
+        PartitionSortedDrawItemsIntoSceneParams(drawList, params, cameraController.camera.position);
 
         if (selectedObject != nullptr) {
             Spark::TransformComponent* selTr = selectedObject->GetComponent<Spark::TransformComponent>();
             if (selTr != nullptr) {
-                const Spark::Vector3 pivot = selTr->GetLocalTransform().translation;
                 const float ext = SelectionGizmoExtent(selectedObject);
                 Spark::Array<Spark::SceneDrawItem> gizmoDraws;
-                gizmoDraws.Reserve(6);
-                AppendTranslateGizmoDraws(pivot, ext, gizmoDragAxis, gizmoDraws);
+                gizmoDraws.Reserve(12);
+                transformGizmo.AppendDraws(*selTr, ext, gizmoDraws);
                 for (std::size_t gi = 0; gi < gizmoDraws.GetSize(); ++gi) {
                     params.draws.PushBack(gizmoDraws[gi]);
                 }
@@ -580,7 +557,7 @@ void SceneEditor3DDemo::UnloadEditorSceneContent(Spark::GameWorld& w)
         pendingLoadDocument = SceneDocument{};
         selectedObject = nullptr;
         dragPlaced = nullptr;
-        gizmoDragAxis = -1;
+        transformGizmo.EndDrag();
         lightEditTarget = nullptr;
         contentModel.ClearManualObjects(w);
         contentModel.ClearLists();
@@ -606,7 +583,7 @@ void SceneEditor3DDemo::RemoveEditorSelection(Spark::GameWorld& w, Spark::GameOb
         if (lightEditTarget == go) {
             lightEditTarget = nullptr;
         }
-        gizmoDragAxis = -1;
+        transformGizmo.EndDrag();
     }
 
 void SceneEditor3DDemo::ClearUserLights(Spark::GameWorld& w)
@@ -620,7 +597,7 @@ void SceneEditor3DDemo::ClearUserLights(Spark::GameWorld& w)
             }
         }
         dragPlaced = nullptr;
-        gizmoDragAxis = -1;
+        transformGizmo.EndDrag();
         lightEditTarget = nullptr;
         for (std::size_t i = 0; i < contentModel.GetUserLights().GetSize(); ++i) {
             if (contentModel.GetUserLights()[i] != nullptr) {
@@ -813,37 +790,7 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
         std::fclose(peek);
 
         if (std::strcmp(magic, SceneDocument::kMagic) == 0 || std::strcmp(magic, SceneDocument::kMagicV3) == 0) {
-            SceneDocument document;
-            SceneDeserializer deserializer;
-            if (!deserializer.ReadFromFile(path.CStr(), document)) {
-                SetStatusMessage(Spark::Utf8String("Invalid spark scene file."));
-                return;
-            }
-            if (!sceneManager) {
-                SetStatusMessage(Spark::Utf8String("Scene manager not initialized."));
-                return;
-            }
-            ClearPlaced(w);
-            ClearUserLights(w);
-            pendingLoadDocument = document;
-            Spark::SceneLoadOptions options{};
-            options.assetsRoot = ScenePathResolver::AssetsRoot();
-            options.additive = true;
-            loadedSceneId = sceneManager->BeginLoadSceneAsync(document, path.CStr(), options);
-            if (loadedSceneId == Spark::kInvalidSceneInstanceId) {
-                pendingLoadDocument = SceneDocument{};
-                SetStatusMessage(Spark::Utf8String("Scene load failed to start."));
-                return;
-            }
-            sceneLoadInProgress = true;
-            selectedObject = nullptr;
-            lightEditTarget = nullptr;
-            if (sceneManager->IsSceneReady(loadedSceneId)) {
-                FinalizeAsyncSceneLoad(w);
-                sceneLoadInProgress = false;
-            } else {
-                SetStatusMessage(Spark::Utf8String("Loading scene (async assets)…"));
-            }
+            LoadSceneFromPath(w, "scenes/arena.sparkscene");
             return;
         }
 
@@ -1068,33 +1015,20 @@ void SceneEditor3DDemo::FocusCameraOnSelection() noexcept
         if (tr == nullptr) {
             return;
         }
-        cameraOrbitPivot = tr->GetLocalTransform().translation;
-        const Spark::Vector3 off{
-                camera.position.x - cameraOrbitPivot.x,
-                camera.position.y - cameraOrbitPivot.y,
-                camera.position.z - cameraOrbitPivot.z};
-        cameraOrbitDistance = std::max(3.0F, off.Length());
-        camera.SnapLookAt(cameraOrbitPivot);
+        cameraController.FocusOn(tr->GetLocalTransform().translation);
         SetStatusMessage(Spark::Utf8String("Camera focused on selection."));
     }
 
 void SceneEditor3DDemo::ResetEditorCamera() noexcept
 {
-        camera.position = {8.0F, 6.5F, 14.0F};
-        cameraOrbitPivot = {0.0F, 0.0F, 0.0F};
-        camera.SnapLookAt(cameraOrbitPivot);
-        const Spark::Vector3 off{
-                camera.position.x - cameraOrbitPivot.x,
-                camera.position.y - cameraOrbitPivot.y,
-                camera.position.z - cameraOrbitPivot.z};
-        cameraOrbitDistance = std::max(3.0F, off.Length());
+        cameraController.ResetToDefault();
         SetStatusMessage(Spark::Utf8String("Camera reset to default view."));
     }
 
 
 bool SceneEditor3DDemo::IsPointerInEditorViewport(const float cursorX, const int framebufferWidth) const noexcept
 {
-        return cursorX >= 0.0F && cursorX < static_cast<float>(framebufferWidth);
+        return cursorX >= Spark::Ui::GetSceneEditorSidebarWidthPx() && cursorX < static_cast<float>(framebufferWidth);
     }
 
 void SceneEditor3DDemo::SetupContextMenuCanvas(Spark::GameWorld& /*w*/)
@@ -1209,6 +1143,143 @@ void SceneEditor3DDemo::ReloadSceneForPlayModeStatic(Spark::GameWorld& world, vo
         if (self != nullptr) {
             self->ReloadSceneForPlayMode(world);
         }
+    }
+
+void SceneEditor3DDemo::LoadSceneFromPath(Spark::GameWorld& w, const char* relativeScenePath)
+{
+        if (relativeScenePath == nullptr || relativeScenePath[0] == '\0') {
+            SetStatusMessage(Spark::Utf8String("Invalid scene path."));
+            return;
+        }
+        const Utf8String path = ScenePathResolver::ResolveReadablePath(relativeScenePath);
+        if (!ScenePathResolver::FileExists(path.CStr())) {
+            SetStatusMessage(Spark::Utf8String("Scene file not found."));
+            return;
+        }
+        std::FILE* peek = std::fopen(path.CStr(), "r");
+        if (peek == nullptr) {
+            SetStatusMessage(Spark::Utf8String("Could not open scene file."));
+            return;
+        }
+        char magic[64]{};
+        if (std::fscanf(peek, "%63s", magic) != 1) {
+            std::fclose(peek);
+            SetStatusMessage(Spark::Utf8String("Invalid scene file header."));
+            return;
+        }
+        std::fclose(peek);
+
+        if (std::strcmp(magic, SceneDocument::kMagic) == 0 || std::strcmp(magic, SceneDocument::kMagicV3) == 0) {
+            SceneDocument document;
+            SceneDeserializer deserializer;
+            if (!deserializer.ReadFromFile(path.CStr(), document)) {
+                SetStatusMessage(Spark::Utf8String("Invalid spark scene file."));
+                return;
+            }
+            if (!sceneManager) {
+                SetStatusMessage(Spark::Utf8String("Scene manager not initialized."));
+                return;
+            }
+            ClearPlaced(w);
+            ClearUserLights(w);
+            pendingLoadDocument = document;
+            SceneLoadOptions options{};
+            options.assetsRoot = ScenePathResolver::AssetsRoot();
+            options.additive = true;
+            loadedSceneId = sceneManager->BeginLoadSceneAsync(document, path.CStr(), options);
+            if (loadedSceneId == Spark::kInvalidSceneInstanceId) {
+                pendingLoadDocument = SceneDocument{};
+                SetStatusMessage(Spark::Utf8String("Scene load failed to start."));
+                return;
+            }
+            sceneLoadInProgress = true;
+            selectedObject = nullptr;
+            lightEditTarget = nullptr;
+            if (sceneManager->IsSceneReady(loadedSceneId)) {
+                FinalizeAsyncSceneLoad(w);
+                sceneLoadInProgress = false;
+            } else {
+                SetStatusMessage(Spark::Utf8String("Loading scene (async assets)…"));
+            }
+            return;
+        }
+
+        SetStatusMessage(Spark::Utf8String("Unsupported scene format (use spark_scene_v4)."));
+    }
+
+void SceneEditor3DDemo::PlacePrefabFromAsset(Spark::GameWorld& w, const SceneEditorAssetEntry& entry)
+{
+        if (entry.kind != SceneEditorAssetKind::Prefab || !sceneManager) {
+            SetStatusMessage(Spark::Utf8String("Select a prefab in the asset browser."));
+            return;
+        }
+        const Utf8String path = ScenePathResolver::ResolveReadablePath(entry.relativePath.CStr());
+        PrefabInstantiateOptions options{};
+        options.assetsRoot = ScenePathResolver::AssetsRoot();
+        options.position = {lastGroundHit.x, 0.0F, lastGroundHit.z};
+        options.additive = true;
+        options.pumpUntilReady = true;
+
+        const PrefabInstantiateResult result = sceneManager->InstantiatePrefab(path.CStr(), options);
+        if (!result.ready || result.rootObjects.IsEmpty()) {
+            SetStatusMessage(Spark::Utf8String("Could not instantiate prefab."));
+            return;
+        }
+
+        instanceTracker.Register(result.instanceId);
+        Utf8String captureHint = entry.relativePath;
+        for (std::size_t i = 0; i < result.rootObjects.GetSize(); ++i) {
+            GameObject* root = result.rootObjects[i];
+            if (root == nullptr) {
+                continue;
+            }
+            contentModel.TrackRoot(root);
+            contentModel.TrackPlaced(root, captureHint);
+            selectedObject = root;
+        }
+        SetStatusMessage(Spark::Utf8String("Placed prefab from asset browser."));
+    }
+
+void SceneEditor3DDemo::OnAssetBrowserPlacePrefab(const SceneEditorAssetEntry& entry)
+{
+        if (playSession.IsActive() || editorWorld_ == nullptr) {
+            return;
+        }
+        PlacePrefabFromAsset(*editorWorld_, entry);
+    }
+
+void SceneEditor3DDemo::OnAssetBrowserLoadScene(const SceneEditorAssetEntry& entry)
+{
+        if (playSession.IsActive() || editorWorld_ == nullptr) {
+            return;
+        }
+        if (entry.kind != SceneEditorAssetKind::Scene) {
+            SetStatusMessage(Spark::Utf8String("Select a scene in the asset browser."));
+            return;
+        }
+        LoadSceneFromPath(*editorWorld_, entry.relativePath.CStr());
+    }
+
+void SceneEditor3DDemo::OnAssetBrowserImportGltf()
+{
+        if (playSession.IsActive() || editorWorld_ == nullptr) {
+            return;
+        }
+        ScenePlacementContext placementCtx = MakePlacementContext(*editorWorld_, lastGroundHit, selectedObject);
+        const GltfImportService::ImportResult importResult =
+                gltfImportService.ImportFromFilePickerAndPlace(*editorWorld_, placementCtx);
+        SetStatusMessage(importResult.message);
+        if (importResult.ok) {
+            assetCatalog.Refresh();
+            assetBrowser.RefreshListFromCatalog();
+        }
+    }
+
+void SceneEditor3DDemo::OnAssetBrowserRefreshCatalog()
+{
+        assetCatalog.Refresh();
+        assetBrowser.RefreshListFromCatalog();
+        SetStatusMessage(Spark::Utf8String("Asset list refreshed."));
     }
 
 }  // namespace Spark

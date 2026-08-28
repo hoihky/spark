@@ -13,10 +13,14 @@
 #include "spark/scene/core/SceneInstanceTracker.hpp"
 #include "spark/scene/core/SceneLoadSession.hpp"
 #include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/editor/SceneEditorAssetBrowser.hpp"
+#include "spark/scene/editor/SceneEditorAssetCatalog.hpp"
+#include "spark/scene/editor/SceneEditorCameraController.hpp"
 #include "spark/scene/editor/SceneEditorContentModel.hpp"
 #include "spark/scene/editor/SceneEditorPlaySession.hpp"
 #include "spark/scene/editor/GltfImportService.hpp"
 #include "spark/scene/editor/ScenePlacementActions.hpp"
+#include "spark/scene/editor/TransformGizmo.hpp"
 #include "spark/scene/prefab/PrefabCatalog.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
@@ -30,7 +34,7 @@ namespace Spark {
  * 3D scene editor demo wired through reusable scene-editor services:
  * content model, placement command registry, load session, and play-mode state.
  */
-class SceneEditor3DDemo {
+class SceneEditor3DDemo : private ISceneEditorAssetBrowserHost {
 public:
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
     void Unload(Spark::GameWorld& w);
@@ -64,6 +68,13 @@ private:
 
     void SaveSceneToFile(Spark::GameWorld& w);
     void LoadSceneFromFile(Spark::GameWorld& w);
+    void LoadSceneFromPath(Spark::GameWorld& w, const char* relativeScenePath);
+    void PlacePrefabFromAsset(Spark::GameWorld& w, const SceneEditorAssetEntry& entry);
+
+    void OnAssetBrowserPlacePrefab(const SceneEditorAssetEntry& entry) override;
+    void OnAssetBrowserLoadScene(const SceneEditorAssetEntry& entry) override;
+    void OnAssetBrowserImportGltf() override;
+    void OnAssetBrowserRefreshCatalog() override;
     void FinalizeAsyncSceneLoad(Spark::GameWorld& w);
     void ReloadSceneForPlayMode(Spark::GameWorld& w);
 
@@ -103,7 +114,10 @@ private:
     ScenePlacementActionRegistry placementActions{};
     SceneEditorPlaySession playSession{};
     GltfImportService gltfImportService{};
-    Spark::FlyCamera camera{};
+    SceneEditorCameraController cameraController{};
+    TransformGizmo transformGizmo{};
+    SceneEditorAssetCatalog assetCatalog{};
+    SceneEditorAssetBrowser assetBrowser{};
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset;
     Spark::SharedPtr<Spark::Mesh> groundAsset;
     Spark::GameObject* lightEditTarget = nullptr;
@@ -111,13 +125,7 @@ private:
     Spark::GameObject* selectedObject = nullptr;
     Spark::GameObject* dragPlaced = nullptr;
     float dragPlaneY = 0.0F;
-    Spark::Vector3 cameraOrbitPivot{};
-    float cameraOrbitDistance = 18.0F;
-    bool orbitDragActive = false;
     float rmbDragDistSq = 0.0F;
-    int gizmoDragAxis = -1;
-    float gizmoDragStartLineS = 0.0F;
-    Spark::Vector3 gizmoDragStartTranslation{};
     Spark::Vector3 lastGroundHit{};
     float selectionPulseTime = 0.0F;
     Spark::Utf8String statusMessage{};
@@ -126,6 +134,7 @@ private:
     Spark::SceneInstanceId loadedSceneId = Spark::kInvalidSceneInstanceId;
     Spark::SceneDocument pendingLoadDocument{};
     bool sceneLoadInProgress = false;
+    Spark::GameWorld* editorWorld_ = nullptr;
 };
 
 }  // namespace Spark
