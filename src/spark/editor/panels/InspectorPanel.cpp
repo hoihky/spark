@@ -64,7 +64,7 @@ void InspectorPanel::EnsureBuilt() {
     commitCb.fn = OnObjectNameCommittedStatic;
     commitCb.userData = this;
     objectNameField->SetOnCommit(commitCb);
-    InspectorUiBuilder::SetVisible(objectNameField, false);
+    objectNameField->SetVisible(false);
     AdoptUiChild(*scrollPanel, MoveTemp(nameUp));
 
     const Array<UniquePtr<IInspectorWidget>>& widgets = widgetRegistry.GetWidgets();
@@ -123,9 +123,12 @@ void InspectorPanel::PrepareForFrame(EditorContext& ctx) {
         }
         nameEditTracker.Cancel();
         lastPreparedTarget = target;
-        UpdateWidgets(widgetCtx, false, true);
     }
+
     widgetRegistry.PrepareFrameContext(widgetCtx);
+
+    const bool anyPendingEdits = widgetRegistry.HasAnyPendingEdits();
+    UpdateWidgets(widgetCtx, false, !anyPendingEdits);
 }
 
 void InspectorPanel::OnPostPaint(EditorContext& ctx) {
@@ -146,7 +149,7 @@ void InspectorPanel::OnPostPaint(EditorContext& ctx) {
 #endif
     const bool anyPendingEdits = widgetRegistry.HasAnyPendingEdits();
     const bool commitPendingEdits = anyPendingEdits && !uiItemActive;
-    const bool syncFromTarget = !uiItemActive && !anyPendingEdits;
+    const bool syncFromTarget = !uiItemActive && (!anyPendingEdits || commitPendingEdits);
 
     UpdateWidgets(widgetCtx, commitPendingEdits, syncFromTarget);
 }
@@ -177,10 +180,10 @@ void InspectorPanel::UpdateWidgets(
     const bool hasSelection = target != nullptr;
 
     if (emptyLabel != nullptr) {
-        InspectorUiBuilder::SetVisible(emptyLabel, !hasSelection);
+        emptyLabel->SetVisible(!hasSelection);
     }
     if (objectNameField != nullptr) {
-        InspectorUiBuilder::SetVisible(objectNameField, hasSelection);
+        objectNameField->SetVisible(hasSelection);
         if (hasSelection && !objectNameField->IsEditing()) {
             objectNameField->SetText(target->GetName());
         }

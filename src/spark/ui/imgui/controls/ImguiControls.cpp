@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 
 #if SPARK_ENABLE_IMGUI
 #include <imgui.h>
@@ -343,6 +344,13 @@ void ImguiSlider::DoPaint(IUiRenderer& renderer) {
             onChanged.fn(onChanged.userData, value);
         }
     }
+#if SPARK_ENABLE_IMGUI
+    else if (ImGui::IsItemDeactivatedAfterEdit()) {
+        if (onChanged.fn != nullptr) {
+            onChanged.fn(onChanged.userData, value);
+        }
+    }
+#endif
 }
 
 ImguiCheckBox::ImguiCheckBox(const CheckBoxDesc& desc) : UiElementBase(desc.id), label(desc.label), value(desc.value) {
@@ -374,9 +382,41 @@ ImguiTextBox::ImguiTextBox(const TextFieldDesc& desc)
     SetEnabled(desc.enabled);
 }
 
-void ImguiTextBox::DoPaint(IUiRenderer& /*renderer*/) {}
+void ImguiTextBox::DoPaint(IUiRenderer& renderer) {
+    ImguiUiRenderer* imgui = AsImguiRenderer(renderer);
+    if (imgui == nullptr || !IsEnabled()) {
+        return;
+    }
+
+#if SPARK_ENABLE_IMGUI
+    ImGui::PushID(GetId().CStr());
+    if (!label.IsEmpty()) {
+        ImGui::TextUnformatted(label.CStr());
+    }
+
+    char buffer[256]{};
+    if (const char* current = text.CStr()) {
+        std::strncpy(buffer, current, sizeof(buffer) - 1U);
+    }
+
+    editing = ImGui::InputText("##value", buffer, sizeof(buffer));
+    text = Utf8String(buffer);
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        editing = false;
+        onCommit.Invoke();
+    } else {
+        editing = ImGui::IsItemActive();
+    }
+    ImGui::PopID();
+#else
+    (void)imgui;
+#endif
+}
 
 void ImguiTextBox::Paint(IUiRenderer& renderer) {
+    if (!visible) {
+        return;
+    }
     DoPaint(renderer);
 }
 

@@ -16,6 +16,8 @@ void PointLightInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsF
         return;
     }
 
+    bindings.Reserve(8U);
+
     Ui::PanelDesc sectionDesc{};
     sectionDesc.id = Utf8String("inspector_point_light_section");
     sectionDesc.title = Utf8String("Point Light");
@@ -57,7 +59,9 @@ void PointLightInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsF
 }
 
 void PointLightInspectorWidget::SetSectionVisible(const bool visible) {
-    InspectorUiBuilder::SetVisible(sectionPanel, visible);
+    if (sectionPanel != nullptr) {
+        sectionPanel->SetVisible(visible);
+    }
 }
 
 void PointLightInspectorWidget::SyncFromTarget(const InspectorWidgetContext& ctx) {

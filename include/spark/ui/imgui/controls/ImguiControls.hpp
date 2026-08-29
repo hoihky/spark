@@ -149,7 +149,7 @@ public:
     void SetText(Utf8String textIn) override { text = MoveTemp(textIn); }
     [[nodiscard]] Utf8StringView GetText() const noexcept override { return text; }
     void SetOnCommit(UiVoidCallback handler) override { onCommit = handler; }
-    [[nodiscard]] bool IsEditing() const noexcept override { return false; }
+    [[nodiscard]] bool IsEditing() const noexcept override { return editing; }
 
     void Paint(IUiRenderer& renderer) override;
 
@@ -160,6 +160,7 @@ private:
     Utf8String label{};
     Utf8String text{};
     UiVoidCallback onCommit{};
+    bool editing = false;
 };
 
 class ImguiDockWorkspace final : public IDockWorkspace, public UiElementBase {

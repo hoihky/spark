@@ -15,8 +15,6 @@ namespace Spark::Editor {
 
 struct InspectorSliderBinding {
     Ui::ISlider* slider = nullptr;
-    void (*apply)(void* userData, float value) = nullptr;
-    void* userData = nullptr;
 };
 
 /** Small helpers for consistent inspector rows. */

@@ -17,6 +17,8 @@ void TransformInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsFa
         return;
     }
 
+    bindings.Reserve(12U);
+
     Ui::PanelDesc sectionDesc{};
     sectionDesc.id = Utf8String("inspector_transform_section");
     sectionDesc.title = Utf8String("Transform");
@@ -57,7 +59,9 @@ void TransformInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsFa
 }
 
 void TransformInspectorWidget::SetSectionVisible(const bool visible) {
-    InspectorUiBuilder::SetVisible(sectionPanel, visible);
+    if (sectionPanel != nullptr) {
+        sectionPanel->SetVisible(visible);
+    }
 }
 
 void TransformInspectorWidget::SyncFromTarget(const InspectorWidgetContext& ctx) {

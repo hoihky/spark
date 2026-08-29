@@ -17,6 +17,8 @@ void MaterialInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsFac
         return;
     }
 
+    bindings.Reserve(8U);
+
     Ui::PanelDesc sectionDesc{};
     sectionDesc.id = Utf8String("inspector_material_section");
     sectionDesc.title = Utf8String("Material");
@@ -67,7 +69,9 @@ void MaterialInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsFac
 }
 
 void MaterialInspectorWidget::SetSectionVisible(const bool visible) {
-    InspectorUiBuilder::SetVisible(sectionPanel, visible);
+    if (sectionPanel != nullptr) {
+        sectionPanel->SetVisible(visible);
+    }
 }
 
 void MaterialInspectorWidget::RefreshTextureLists() {

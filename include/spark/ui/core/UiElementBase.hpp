@@ -24,13 +24,13 @@ public:
     [[nodiscard]] const IUiElement* HitTest(const float x, const float y) const override;
 
     [[nodiscard]] bool IsVisible() const noexcept override { return visible; }
+    void SetVisible(const bool v) noexcept override { visible = v; }
     [[nodiscard]] bool IsEnabled() const noexcept override { return enabled; }
     [[nodiscard]] bool WantsHitTest() const noexcept override { return hitTest && visible && enabled; }
 
     [[nodiscard]] IUiElement* GetParent() noexcept override { return parent; }
     [[nodiscard]] const IUiElement* GetParent() const noexcept override { return parent; }
 
-    void SetVisible(const bool v) noexcept { visible = v; }
     void SetEnabled(const bool e) noexcept { enabled = e; }
     void SetHitTest(const bool h) noexcept { hitTest = h; }
 

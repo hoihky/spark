@@ -444,6 +444,7 @@ void EditorApplication::TickPanels(const FrameTiming& timing, Scene& scene, IEng
     context.world = &scene.GetWorld();
     context.scene = &scene;
     context.engine = &engineContext;
+    context.selection = &selection;
     context.commandStack = &commandStack;
     context.viewport = &viewport;
     context.textureCatalog = &textureCatalog;
@@ -526,6 +527,7 @@ void EditorApplication::OnUpdate(const FrameTiming& timing, Scene& scene, IEngin
     context.world = &scene.GetWorld();
     context.scene = &scene;
     context.engine = &engineContext;
+    context.selection = &selection;
     context.commandStack = &commandStack;
     context.viewport = &viewport;
     context.textureCatalog = &textureCatalog;
@@ -575,6 +577,7 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& engineContext) {
     context.world = &scene.GetWorld();
     context.scene = &scene;
     context.engine = &engineContext;
+    context.selection = &selection;
     context.commandStack = &commandStack;
     context.viewport = &viewport;
     context.textureCatalog = &textureCatalog;

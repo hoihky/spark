@@ -5,17 +5,6 @@
 
 namespace Spark::Editor {
 
-namespace {
-
-void OnSliderChanged(void* userData, const float value) {
-    auto* binding = static_cast<InspectorSliderBinding*>(userData);
-    if (binding != nullptr && binding->apply != nullptr) {
-        binding->apply(binding->userData, value);
-    }
-}
-
-}  // namespace
-
 void InspectorUiBuilder::AddSectionHeader(
         Ui::IUiElement& parent,
         Ui::IUiControlsFactory& factory,
@@ -52,8 +41,6 @@ InspectorSliderBinding& InspectorUiBuilder::AddSlider(
         void* const userData) {
     bindings.PushBack({});
     InspectorSliderBinding& binding = bindings[bindings.GetSize() - 1U];
-    binding.apply = onChanged;
-    binding.userData = userData;
 
     Ui::SliderDesc desc{};
     desc.id = Utf8String(id);
@@ -66,8 +53,8 @@ InspectorSliderBinding& InspectorUiBuilder::AddSlider(
     binding.slider = sliderUp.Get();
 
     Ui::UiFloatCallback cb{};
-    cb.fn = OnSliderChanged;
-    cb.userData = &binding;
+    cb.fn = onChanged;
+    cb.userData = userData;
     binding.slider->SetOnChanged(cb);
 
     AdoptUiChild(parent, MoveTemp(sliderUp));
@@ -81,8 +68,8 @@ void InspectorUiBuilder::SetSliderValue(Ui::ISlider* const slider, const float v
 }
 
 void InspectorUiBuilder::SetVisible(Ui::IUiElement* const element, const bool visible) noexcept {
-    if (auto* base = dynamic_cast<Ui::UiElementBase*>(element)) {
-        base->SetVisible(visible);
+    if (element != nullptr) {
+        element->SetVisible(visible);
     }
 }
 

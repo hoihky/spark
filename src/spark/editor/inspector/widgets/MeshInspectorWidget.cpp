@@ -17,6 +17,8 @@ void MeshInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsFactory
         return;
     }
 
+    bindings.Reserve(4U);
+
     Ui::PanelDesc sectionDesc{};
     sectionDesc.id = Utf8String("inspector_mesh_section");
     sectionDesc.title = Utf8String("Mesh");
@@ -47,7 +49,9 @@ void MeshInspectorWidget::BuildUi(Ui::IUiElement& parent, Ui::IUiControlsFactory
 }
 
 void MeshInspectorWidget::SetSectionVisible(const bool visible) {
-    InspectorUiBuilder::SetVisible(sectionPanel, visible);
+    if (sectionPanel != nullptr) {
+        sectionPanel->SetVisible(visible);
+    }
 }
 
 void MeshInspectorWidget::SyncFromTarget(const InspectorWidgetContext& ctx) {

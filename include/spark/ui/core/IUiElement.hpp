@@ -46,6 +46,7 @@ public:
     virtual void OnFocusLost() {}
 
     [[nodiscard]] virtual bool IsVisible() const noexcept = 0;
+    virtual void SetVisible(bool visible) noexcept = 0;
     [[nodiscard]] virtual bool IsEnabled() const noexcept = 0;
     [[nodiscard]] virtual bool WantsHitTest() const noexcept = 0;
 
