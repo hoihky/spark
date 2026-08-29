@@ -97,6 +97,7 @@ private:
         Array<GameObject*> rootObjects;
         Array<PendingComponentRestore> pendingComponents;
         SceneLoadOptions options;
+        Utf8String ownedAssetsRoot;
     };
 
     [[nodiscard]] SceneInstanceId AllocateInstanceId() noexcept { return nextInstanceId++; }

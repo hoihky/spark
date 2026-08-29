@@ -35,6 +35,7 @@ public:
     /** Sync widget callback context before UI input; call at the start of each frame. */
     void PrepareForFrame(EditorContext& ctx);
     void OnPostPaint(EditorContext& ctx);
+    void CommitAllPendingEdits(EditorContext& ctx);
 
 private:
     void EnsureBuilt();

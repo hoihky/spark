@@ -72,6 +72,15 @@ void SparkList::ScrollToTop() noexcept {
 void SparkList::HandleRowClick(const int index) {
     SetSelectedIndex(index);
     onSelect.Invoke(index);
+    const double now = glfwGetTime();
+    if (index == lastClickIndex && (now - lastClickTimeSec) <= 0.35) {
+        onActivate.Invoke(index);
+        lastClickIndex = -1;
+        lastClickTimeSec = 0.0;
+        return;
+    }
+    lastClickIndex = index;
+    lastClickTimeSec = now;
 }
 
 void SparkList::RebuildRows() {

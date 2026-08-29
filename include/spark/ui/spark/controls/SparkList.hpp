@@ -26,6 +26,7 @@ public:
     [[nodiscard]] int GetSelectedIndex() const noexcept override { return selectedIndex; }
     void SetSelectedIndex(int index) override;
     void SetOnSelectionChanged(UiIntCallback handler) override { onSelect = handler; }
+    void SetOnItemActivated(UiIntCallback handler) override { onActivate = handler; }
     void SetScrollY(float y) override;
     [[nodiscard]] float GetScrollY() const noexcept override { return scrollY; }
     void ScrollToTop() noexcept override;
@@ -65,6 +66,7 @@ private:
     Array<Utf8String> items{};
     int selectedIndex = -1;
     UiIntCallback onSelect{};
+    UiIntCallback onActivate{};
     Array<RowBinding> rowBindings{};
 
     float scrollY = 0.0F;
@@ -72,6 +74,8 @@ private:
     float maxScroll = 0.0F;
     bool draggingThumb = false;
     float grabOffsetY = 0.0F;
+    int lastClickIndex = -1;
+    double lastClickTimeSec = 0.0;
     Rect trackRect{};
     Rect thumbRect{};
     Rect arrangeRect{};

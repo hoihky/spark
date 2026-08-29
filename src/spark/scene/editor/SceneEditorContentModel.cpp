@@ -4,6 +4,8 @@
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/GltfSceneSourceComponent.hpp"
+#include "spark/ecs/components/world/SpawnPointComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <cstring>
@@ -95,6 +97,7 @@ void SceneEditorContentModel::ClearManualObjects(GameWorld& world) noexcept {
 }
 
 void SceneEditorContentModel::ClearLists() noexcept {
+    roots.Clear();
     placed.Clear();
     placedRel.Clear();
     userLights.Clear();
@@ -104,13 +107,20 @@ bool SceneEditorContentModel::ShouldCapture(const GameObject* object) const noex
     if (object == nullptr) {
         return false;
     }
-    for (std::size_t i = 0; i < placed.GetSize(); ++i) {
-        if (placed[i] == object) {
-            return true;
-        }
+    const Utf8String& name = object->GetName();
+    if (name == Utf8String("EditorGui") || name == Utf8String("EditorStatusHud")) {
+        return false;
+    }
+    if (IsPlacedPrefabRoot(object)) {
+        return true;
     }
     for (std::size_t i = 0; i < userLights.GetSize(); ++i) {
         if (userLights[i] == object) {
+            return true;
+        }
+    }
+    for (std::size_t i = 0; i < roots.GetSize(); ++i) {
+        if (roots[i] == object) {
             return true;
         }
     }
@@ -149,6 +159,26 @@ GameObject* SceneEditorContentModel::FindPlacedOwner(GameObject* object) const n
         object = object->GetParent();
     }
     return nullptr;
+}
+
+bool SceneEditorContentModel::IsPlacedPrefabRoot(const GameObject* const object) const noexcept {
+    if (object == nullptr) {
+        return false;
+    }
+    for (std::size_t i = 0; i < placed.GetSize(); ++i) {
+        if (placed[i] == object) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool SceneEditorContentModel::IsInsidePlacedPrefab(const GameObject* const object) const noexcept {
+    if (object == nullptr) {
+        return false;
+    }
+    const GameObject* const placedOwner = FindPlacedOwner(const_cast<GameObject*>(object));
+    return placedOwner != nullptr && placedOwner != object;
 }
 
 Utf8String SceneEditorContentModel::LookupTextureAssetRel(const GameObject& owner) const noexcept {
@@ -210,9 +240,11 @@ void SceneEditorContentModel::IntegrateLoadedInstance(
         const SceneInstanceId instanceId,
         const SceneDocument& document,
         const SceneEditorContentBindingHooks& hooks) noexcept {
-    const Array<GameObject*> instanceObjects =
+    Array<GameObject*> instanceObjects =
             SceneEntityRoleClassifier::CollectInstanceObjects(world, instanceId);
 
+    // Scene apply creates objects in document order; runtime ids are assigned sequentially in that
+    // same order, so sorted instance ids align with document.entities indices.
     for (std::size_t ei = 0; ei < document.entities.GetSize() && ei < instanceObjects.GetSize(); ++ei) {
         GameObject* object = instanceObjects[ei];
         if (object == nullptr) {
@@ -247,12 +279,14 @@ void SceneEditorContentModel::IntegrateSubtree(GameObject& root) noexcept {
             continue;
         }
         TrackRoot(object);
-        if (object->GetComponent<MeshComponent>() != nullptr) {
-            TrackPlaced(object, LookupMeshAssetRel(*object));
-        }
         if (object->GetComponent<PointLightComponent>() != nullptr || object->GetComponent<SpotLightComponent>() != nullptr) {
             TrackUserLight(object);
         }
+    }
+
+    if (root.GetComponent<MeshComponent>() != nullptr || root.GetComponent<GltfSceneSourceComponent>() != nullptr
+            || root.GetComponent<SpawnPointComponent>() != nullptr) {
+        TrackPlaced(&root, LookupMeshAssetRel(root));
     }
 }
 

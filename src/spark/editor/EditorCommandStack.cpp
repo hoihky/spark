@@ -2,6 +2,17 @@
 
 namespace Spark::Editor {
 
+void EditorCommandStack::SetOnChanged(const ChangedCallback callback, void* const userDataIn) noexcept {
+    onChanged = callback;
+    onChangedUserData = userDataIn;
+}
+
+void EditorCommandStack::NotifyChanged() noexcept {
+    if (onChanged != nullptr) {
+        onChanged(onChangedUserData);
+    }
+}
+
 void EditorCommandStack::Execute(UniquePtr<IEditorCommand> command) {
     if (!command) {
         return;
@@ -10,6 +21,7 @@ void EditorCommandStack::Execute(UniquePtr<IEditorCommand> command) {
     undoStack.PushBack(MoveTemp(command));
     redoStack.Clear();
     TrimUndoStack();
+    NotifyChanged();
 }
 
 void EditorCommandStack::Record(UniquePtr<IEditorCommand> command) {
@@ -19,6 +31,7 @@ void EditorCommandStack::Record(UniquePtr<IEditorCommand> command) {
     undoStack.PushBack(MoveTemp(command));
     redoStack.Clear();
     TrimUndoStack();
+    NotifyChanged();
 }
 
 bool EditorCommandStack::TryUndo() {
@@ -29,6 +42,7 @@ bool EditorCommandStack::TryUndo() {
     undoStack.PopBack();
     command->Undo();
     redoStack.PushBack(MoveTemp(command));
+    NotifyChanged();
     return true;
 }
 
@@ -40,6 +54,7 @@ bool EditorCommandStack::TryRedo() {
     redoStack.PopBack();
     command->Redo();
     undoStack.PushBack(MoveTemp(command));
+    NotifyChanged();
     return true;
 }
 

@@ -28,6 +28,8 @@ class SceneEditorAssetCatalog final {
 public:
     void Refresh();
 
+    void SetAssetsRootOverride(const char* absoluteAssetsRootUtf8) noexcept;
+
     [[nodiscard]] const Array<SceneEditorAssetEntry>& GetEntries() const noexcept { return entries; }
     [[nodiscard]] Array<SceneEditorAssetEntry> GetEntriesByKind(const SceneEditorAssetKind kind) const;
 
@@ -39,6 +41,7 @@ private:
 
     Array<SceneEditorAssetEntry> entries{};
     Array<int> listIndexToEntry{};
+    Utf8String assetsRootOverride{};
 };
 
 }  // namespace Spark

@@ -269,10 +269,12 @@ void ImguiSeparator::DoPaint(IUiRenderer& renderer) {
     }
 }
 
-ImguiScrollPanel::ImguiScrollPanel(const ScrollPanelDesc& desc) : UiElementBase(desc.id), designHeight(desc.height) {}
+ImguiScrollPanel::ImguiScrollPanel(const ScrollPanelDesc& desc)
+    : UiElementBase(desc.id), designHeight(desc.height), fillRemainingHeight(desc.fillRemainingHeight) {}
 
 void ImguiScrollPanel::SetScrollY(const float y) noexcept {
     scrollY = y;
+    applyStoredScroll = true;
 }
 
 float ImguiScrollPanel::GetScrollY() const noexcept {
@@ -281,6 +283,7 @@ float ImguiScrollPanel::GetScrollY() const noexcept {
 
 void ImguiScrollPanel::ScrollToTop() noexcept {
     scrollY = 0.0F;
+    applyStoredScroll = true;
 }
 
 void ImguiScrollPanel::Paint(IUiRenderer& renderer) {
@@ -292,11 +295,14 @@ void ImguiScrollPanel::Paint(IUiRenderer& renderer) {
         return;
     }
     const UiLayoutMetrics& metrics = renderer.GetLayoutMetrics();
-    const float height = metrics.Scaled(designHeight);
+    const float height = fillRemainingHeight ? 0.0F : metrics.Scaled(designHeight);
     if (!imgui->BeginScrollRegion(GetId().CStr(), height)) {
         return;
     }
-    imgui->SetScrollY(scrollY);
+    if (applyStoredScroll) {
+        imgui->SetScrollY(scrollY);
+        applyStoredScroll = false;
+    }
     for (std::size_t i = 0; i < children.GetSize(); ++i) {
         if (children[i] != nullptr) {
             children[i]->Paint(renderer);

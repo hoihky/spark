@@ -26,6 +26,8 @@
 #include "spark/scene/prefab/PrefabCatalog.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
+#include <cstdint>
+
 namespace Spark {
 
 class GameObject;
@@ -33,6 +35,17 @@ class IEngineContext;
 struct FrameTiming;
 
 namespace Editor {
+
+enum class PendingFileDialog : std::uint8_t {
+    None = 0,
+    NewProject,
+    OpenProject,
+    OpenScene,
+    SaveProject,
+    SaveProjectAs,
+    SaveScene,
+    SaveSceneAs,
+};
 
 class HierarchyPanel;
 class InspectorPanel;
@@ -60,19 +73,40 @@ private:
     void TickPanels(const FrameTiming& timing, Scene& scene, IEngineContext& engineContext);
     void HighlightSelection(Scene& scene);
     void PumpSceneLoads(GameWorld& world);
-    void SaveSceneToFile(GameWorld& world);
+    void SaveSceneToFile(GameWorld& world, bool forcePicker = false);
     void LoadSceneFromPath(GameWorld& world, const char* relativeScenePath);
     void ReloadSceneForPlayMode(GameWorld& world);
     void FinalizeAsyncSceneLoad(GameWorld& world);
+    void UnloadEditorSceneContent(GameWorld& world);
+    void EnsureEditorBootstrapScene(GameWorld& world);
     void PlacePrefabFromAsset(const SceneEditorAssetEntry& entry);
     void HandlePlayModeInput(IEngineContext& context, GameWorld& world);
-    void HandleEditModeInput(IEngineContext& context);
+    void HandleEditModeInput(IEngineContext& context, GameWorld& world);
     void OnSelectionChanged();
+    void MarkSceneDirty() noexcept;
+    void ClearSceneDirty() noexcept;
+    void UpdateStatusHud() noexcept;
+    void SaveEditorLayout() noexcept;
+    void ApplyOpenProject(GameWorld& world);
+    void NewProject();
+    void OpenProject();
+    void SaveProject();
+    void SaveProjectAs();
+    void OpenScene();
+    void SaveScene(bool forcePicker);
+    void ProcessPendingFileDialogs();
+    void PaintFileMenuBar();
+    [[nodiscard]] Utf8String GetEditorAssetsRoot() const noexcept;
+    [[nodiscard]] Utf8String JoinProjectAssetPath(const char* relativePath) const noexcept;
+    [[nodiscard]] Utf8String ResolveEditorScenePath(const char* relativeOrAbsolutePath) const noexcept;
+    [[nodiscard]] bool ShouldCaptureSceneEntity(const GameObject* object) const noexcept;
+    [[nodiscard]] static bool EnsureParentDirectoryExists(const char* filePath) noexcept;
     [[nodiscard]] ScenePlacementContext MakePlacementContext(
             GameWorld& world,
             GameObject* selected) noexcept;
 
     static void OnSelectionChangedStatic(void* userData) noexcept;
+    static void OnCommandStackChangedStatic(void* userData) noexcept;
     static void ReloadSceneForPlayModeStatic(GameWorld& world, void* userData) noexcept;
     static void SetStatusFromPlaySession(const char* message, void* userData) noexcept;
 
@@ -113,12 +147,19 @@ private:
     UiCanvasComponent* guiCanvas = nullptr;
     GameObject* fpsHudObject = nullptr;
     class TextOverlayComponent* fpsText = nullptr;
+    GameObject* bootstrapGround = nullptr;
+    GameObject* bootstrapSun = nullptr;
     GameObject* highlightedObject = nullptr;
 
     SharedPtr<Mesh> groundMesh;
     SharedPtr<Mesh> unitCubeAsset;
-    Utf8String statusLine{"Spark Editor — W/E/R gizmo · Ctrl+Z undo · P play · Esc stop"};
+    Utf8String statusLine{"Spark Editor — Ctrl+S save · Ctrl+Z undo · P play · Esc stop"};
+    bool sceneDirty = false;
     bool uiBuilt = false;
+    bool projectLocationUserSet = false;
+    PendingFileDialog pendingFileDialog = PendingFileDialog::None;
+    Utf8String activeSceneRelativePath{};
+    Utf8String activeSceneAbsolutePath{};
 };
 
 }  // namespace Editor

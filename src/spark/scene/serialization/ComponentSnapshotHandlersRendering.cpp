@@ -11,7 +11,7 @@
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
-#include "spark/scene/serialization/MaterialSlotSnapshot.hpp"
+#include "spark/scene/serialization/GltfInstanceOverrides.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/RenderLayerRegistry.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
@@ -62,30 +62,39 @@ public:
 
     [[nodiscard]] bool TryCapture(
             const GameObject& owner,
-            const SceneCaptureContext& /*ctx*/,
+            const SceneCaptureContext& ctx,
             ComponentRecord& out) const override {
         const GltfSceneSourceComponent* source = owner.GetComponent<GltfSceneSourceComponent>();
         if (source == nullptr || source->GetGltfAssetRel().IsEmpty()) {
             return false;
         }
-        char buf[512]{};
-        std::snprintf(buf, sizeof(buf), "\"%s\"", source->GetGltfAssetRel().CStr());
+        Utf8String payload = Utf8String("v2 \"");
+        payload.AppendUtf8(source->GetGltfAssetRel().CStr());
+        payload.AppendUtf8("\"");
+        GltfInstanceOverrides::AppendCapturedOverrides(owner, ctx, payload);
         out.kind = Utf8String(GetKindTag());
-        out.payload = Utf8String(buf);
+        out.payload = MoveTemp(payload);
         return true;
     }
 
     [[nodiscard]] bool TryRestore(
             GameObject& owner,
             const ComponentRecord& record,
-            GameWorld& /*world*/,
+            GameWorld& world,
             const SceneApplyContext& ctx) const override {
         if (!KindTagEquals(record.kind, GetKindTag()) || ctx.assetsRoot == nullptr) {
             return false;
         }
         const char* cursor = record.payload.CStr();
         char assetRel[384]{};
-        if (!ParseLeadingQuotedString(cursor, assetRel, sizeof(assetRel)) || assetRel[0] == '\0') {
+        const char* overrideCursor = nullptr;
+        if (std::strncmp(cursor, "v2 ", 3) == 0) {
+            cursor += 3;
+            if (!ParseLeadingQuotedString(cursor, assetRel, sizeof(assetRel)) || assetRel[0] == '\0') {
+                return false;
+            }
+            overrideCursor = cursor;
+        } else if (!ParseLeadingQuotedString(cursor, assetRel, sizeof(assetRel)) || assetRel[0] == '\0') {
             return false;
         }
 
@@ -106,6 +115,9 @@ public:
             source = owner.AddComponent<GltfSceneSourceComponent>();
         }
         source->SetGltfAssetRel(assetRel);
+        if (overrideCursor != nullptr) {
+            GltfInstanceOverrides::ApplyFromPayloadCursor(owner, overrideCursor, world, ctx);
+        }
         return true;
     }
 };

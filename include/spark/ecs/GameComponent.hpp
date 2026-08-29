@@ -84,6 +84,7 @@ enum class ComponentKind : std::uint32_t {
     TimeOfDayDriver,
     SpawnPoint,
     GltfSceneSource,
+    GltfInstanceNode,
 };
 
 /** Typical <c>GameComponent::UpdatePriority</c> values (lower runs first). */

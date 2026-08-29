@@ -414,7 +414,8 @@ bool ImguiUiRenderer::BeginScrollRegion(const char* id, const float height) {
         return false;
     }
     const ImGuiWindowFlags flags = ImGuiWindowFlags_HorizontalScrollbar;
-    (void)ImGui::BeginChild(id, ImVec2(0.0F, height), ImGuiChildFlags_None, flags);
+    const float childHeight = height > 0.0F ? height : -1.0F;
+    (void)ImGui::BeginChild(id, ImVec2(0.0F, childHeight), ImGuiChildFlags_None, flags);
     ++scrollStack;
     return true;
 #else

@@ -21,6 +21,18 @@ struct EditorGizmoToolbarBinding {
     Utf8String* statusLine = nullptr;
 };
 
+/** File menu callbacks (Observer) for project workflow. */
+struct EditorFileMenuActions {
+    void (*onNewProject)(void* userData) noexcept = nullptr;
+    void (*onOpenProject)(void* userData) noexcept = nullptr;
+    void (*onOpenScene)(void* userData) noexcept = nullptr;
+    void (*onSaveScene)(void* userData) noexcept = nullptr;
+    void (*onSaveSceneAs)(void* userData) noexcept = nullptr;
+    void (*onSaveProject)(void* userData) noexcept = nullptr;
+    void (*onSaveProjectAs)(void* userData) noexcept = nullptr;
+    void* userData = nullptr;
+};
+
 /**
  * Top-level editor chrome: toolbar + <c>SparkDockWorkspace</c> (collapsible left/right panels).
  */
@@ -43,6 +55,8 @@ public:
 
     void ApplyLayout(const Ui::SceneEditorLayoutSettings& layout) noexcept;
     void SyncLayout(const Ui::Rect& viewport) noexcept;
+    void CaptureLayoutSettings(Ui::SceneEditorLayoutSettings& out) const noexcept;
+    void SetFileMenuActions(const EditorFileMenuActions& actions) noexcept;
 
     [[nodiscard]] Ui::IUiElement* GetRootElement() noexcept { return root.Get(); }
     [[nodiscard]] UniquePtr<Ui::IUiElement> ReleaseRootElement() { return MoveTemp(root); }
@@ -66,6 +80,7 @@ private:
     Ui::IButton* gizmoRotateButton = nullptr;
     Ui::IButton* gizmoScaleButton = nullptr;
     EditorGizmoToolbarBinding gizmoBinding{};
+    EditorFileMenuActions fileMenuActions{};
 };
 
 }  // namespace Editor

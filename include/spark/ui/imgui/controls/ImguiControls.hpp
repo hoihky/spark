@@ -97,7 +97,9 @@ protected:
 
 private:
     float designHeight = 240.0F;
+    bool fillRemainingHeight = false;
     float scrollY = 0.0F;
+    bool applyStoredScroll = false;
 };
 
 class ImguiSlider final : public ISlider, public UiElementBase {

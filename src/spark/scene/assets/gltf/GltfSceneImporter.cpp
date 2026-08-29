@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/GltfInstanceNodeComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
 #include "spark/scene/core/GameWorld.hpp"
@@ -77,6 +78,11 @@ void ImportNode(
         object.GetName() = sceneNode.name;
     }
     ApplyLocalTransform(object, sceneNode.localTransform);
+    if (GltfInstanceNodeComponent* tag = object.GetComponent<GltfInstanceNodeComponent>()) {
+        tag->SetNodeIndex(nodeIndex);
+    } else {
+        object.AddComponent<GltfInstanceNodeComponent>()->SetNodeIndex(nodeIndex);
+    }
 
     if (sceneNode.HasSkinnedMesh()) {
         const SkinnedGltfAsset assetView = MakeSkinnedAssetView(document, sceneNode);

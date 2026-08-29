@@ -41,7 +41,8 @@ void InspectorPanel::EnsureBuilt() {
 
     Ui::ScrollPanelDesc scrollDesc{};
     scrollDesc.id = Utf8String("inspector_scroll");
-    scrollDesc.height = 520.0F;
+    scrollDesc.fillRemainingHeight = true;
+    scrollDesc.height = 0.0F;
     auto scrollUp = factory.CreateScrollPanel(scrollDesc);
     scrollPanel = scrollUp.Get();
     AdoptUiChild(*shell, MoveTemp(scrollUp));
@@ -127,8 +128,7 @@ void InspectorPanel::PrepareForFrame(EditorContext& ctx) {
 
     widgetRegistry.PrepareFrameContext(widgetCtx);
 
-    const bool anyPendingEdits = widgetRegistry.HasAnyPendingEdits();
-    UpdateWidgets(widgetCtx, false, !anyPendingEdits);
+    UpdateWidgets(widgetCtx, false, false);
 }
 
 void InspectorPanel::OnPostPaint(EditorContext& ctx) {
@@ -152,6 +152,18 @@ void InspectorPanel::OnPostPaint(EditorContext& ctx) {
     const bool syncFromTarget = !uiItemActive && (!anyPendingEdits || commitPendingEdits);
 
     UpdateWidgets(widgetCtx, commitPendingEdits, syncFromTarget);
+}
+
+void InspectorPanel::CommitAllPendingEdits(EditorContext& ctx) {
+    if (!built) {
+        return;
+    }
+    mode = ctx.mode;
+    commandStack = ctx.commandStack;
+    engine = ctx.engine;
+    viewport = ctx.viewport;
+    const InspectorWidgetContext widgetCtx = BuildWidgetContext(ctx);
+    UpdateWidgets(widgetCtx, true, false);
 }
 
 void InspectorPanel::OnObjectNameCommitted() {

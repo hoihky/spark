@@ -105,11 +105,13 @@ void HierarchyPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& ctx) {
 
     const std::uint32_t revision = ComputeSceneRevision();
     if (!needsTreeRebuild && revision == sceneRevision) {
+        SyncToSelection();
         return;
     }
     RebuildTree();
     needsTreeRebuild = false;
     sceneRevision = revision;
+    lastSyncedSelection = nullptr;
 }
 
 std::uint32_t HierarchyPanel::ComputeSceneRevision() const noexcept {
@@ -191,6 +193,8 @@ void HierarchyPanel::RebuildTree() {
             }
         }
     }
+
+    SyncToSelection();
 }
 
 GameObject* HierarchyPanel::ResolveNodeObject(const int nodeId) const noexcept {
@@ -300,6 +304,10 @@ void HierarchyPanel::SyncToSelection() {
         return;
     }
     GameObject* primary = selection->GetPrimary();
+    if (primary == lastSyncedSelection) {
+        return;
+    }
+    lastSyncedSelection = primary;
     suppressSelectionCallback = true;
     if (primary == nullptr) {
         tree->SetSelectedNodeId(-1);
@@ -308,7 +316,9 @@ void HierarchyPanel::SyncToSelection() {
     }
     for (std::size_t i = 0; i < nodeObjects.GetSize(); ++i) {
         if (nodeObjects[i] == primary) {
-            tree->SetSelectedNodeId(static_cast<int>(i));
+            const int nodeId = static_cast<int>(i);
+            tree->RevealNode(nodeId);
+            tree->SetSelectedNodeId(nodeId);
             suppressSelectionCallback = false;
             return;
         }

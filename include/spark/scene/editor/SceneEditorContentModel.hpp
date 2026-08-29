@@ -53,6 +53,8 @@ public:
     void UntrackSubtree(const GameObject& root) noexcept;
 
     [[nodiscard]] GameObject* FindPlacedOwner(GameObject* object) const noexcept;
+    [[nodiscard]] bool IsPlacedPrefabRoot(const GameObject* object) const noexcept;
+    [[nodiscard]] bool IsInsidePlacedPrefab(const GameObject* object) const noexcept;
 
     [[nodiscard]] const Array<GameObject*>& GetRoots() const noexcept { return roots; }
     [[nodiscard]] Array<GameObject*>& GetRoots() noexcept { return roots; }

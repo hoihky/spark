@@ -65,8 +65,10 @@ struct SeparatorDesc {
 
 struct ScrollPanelDesc {
     UiElementId id{};
-    /** Design height before <c>uiScale</c>. */
+    /** Design height before <c>uiScale</c>; ignored when <c>fillRemainingHeight</c> is true. */
     float height = 240.0F;
+    /** When true, uses remaining ImGui content height (inspector panels). */
+    bool fillRemainingHeight = false;
     /** 0 uses <c>UiLayoutMetrics::FormRowHeight</c>. */
     float rowHeight = 0.0F;
     float verticalGap = 4.0F;

@@ -79,6 +79,11 @@ void ImguiList::Paint(IUiRenderer& renderer) {
                 selectedIndex = static_cast<int>(i);
                 onSelect.Invoke(selectedIndex);
             }
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                selectedIndex = static_cast<int>(i);
+                onSelect.Invoke(selectedIndex);
+                onActivate.Invoke(selectedIndex);
+            }
             ImGui::PopID();
         }
         scrollY = ImGui::GetScrollY();
@@ -212,6 +217,19 @@ void ImguiTreeView::SetSelectedNodeId(const int nodeId) {
     selectedNodeId = nodeId;
 }
 
+void ImguiTreeView::RevealNode(const int nodeId) {
+    if (nodeId < 0 || nodeId >= static_cast<int>(nodes.GetSize())) {
+        return;
+    }
+    int current = nodeId;
+    while (current >= 0) {
+        ImguiTreeNode& node = nodes[static_cast<std::size_t>(current)];
+        node.expanded = true;
+        node.revealPending = true;
+        current = node.parent;
+    }
+}
+
 void ImguiTreeView::DoMeasure(const UiMeasureConstraints& constraints, UiSize& outDesired) {
     const UiLayoutMetrics& metrics = GetActiveUiLayoutMetrics();
     outDesired.width = ClampMeasure(constraints, metrics.Scaled(220.0F));
@@ -238,10 +256,18 @@ void ImguiTreeView::PaintSubtree(const int nodeId) {
     if (nodeId == selectedNodeId) {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
+    if (hasChildren && node.revealPending) {
+        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+        node.revealPending = false;
+    }
+    ImGui::PushID(nodeId);
     const bool open = ImGui::TreeNodeEx(node.label.CStr(), flags);
-    if (ImGui::IsItemClicked()) {
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsItemToggledOpen()) {
         selectedNodeId = nodeId;
         onSelect.Invoke(nodeId);
+    }
+    if (hasChildren) {
+        node.expanded = open;
     }
     if (open && hasChildren) {
         for (std::size_t i = 0; i < nodes.GetSize(); ++i) {
@@ -251,6 +277,7 @@ void ImguiTreeView::PaintSubtree(const int nodeId) {
         }
         ImGui::TreePop();
     }
+    ImGui::PopID();
 #else
     (void)nodeId;
 #endif

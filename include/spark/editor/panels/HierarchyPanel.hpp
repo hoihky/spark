@@ -55,6 +55,7 @@ private:
     bool needsTreeRebuild = true;
     bool suppressSelectionCallback = false;
     bool built = false;
+    GameObject* lastSyncedSelection = nullptr;
 };
 
 }  // namespace Editor

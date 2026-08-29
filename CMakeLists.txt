@@ -492,6 +492,9 @@ file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/prefabs")
 if (EXISTS "${SPARK_ASSETS_DIR}/scenes")
     file(COPY "${SPARK_ASSETS_DIR}/scenes/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/scenes")
 endif ()
+if (EXISTS "${SPARK_ASSETS_DIR}/project.spark")
+    file(COPY "${SPARK_ASSETS_DIR}/project.spark" DESTINATION "${SPARK_BUILD_ASSETS_DIR}")
+endif ()
 if (EXISTS "${SPARK_ASSETS_DIR}/prefabs")
     file(COPY "${SPARK_ASSETS_DIR}/prefabs/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/prefabs")
 endif ()
@@ -799,6 +802,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/submit/SceneSubmitMaterial.cpp
         src/spark/scene/serialization/ComponentSnapshotRegistry.cpp
         src/spark/scene/serialization/MaterialSlotSnapshot.cpp
+        src/spark/scene/serialization/GltfInstanceOverrides.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp
@@ -991,7 +995,8 @@ if (APPLE)
             "-framework CoreMedia"
             "-framework CoreVideo"
             "-framework VideoToolbox"
-            "-framework AppKit")
+            "-framework AppKit"
+            "-framework UniformTypeIdentifiers")
 endif ()
 
 if (WIN32)

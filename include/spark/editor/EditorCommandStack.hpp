@@ -37,10 +37,17 @@ public:
     [[nodiscard]] bool CanUndo() const noexcept { return !undoStack.IsEmpty(); }
     [[nodiscard]] bool CanRedo() const noexcept { return !redoStack.IsEmpty(); }
 
+    using ChangedCallback = void (*)(void* userData);
+    void SetOnChanged(ChangedCallback callback, void* userDataIn) noexcept;
+
 private:
     static constexpr std::size_t kMaxDepth = 64;
 
     void TrimUndoStack() noexcept;
+    void NotifyChanged() noexcept;
+
+    ChangedCallback onChanged = nullptr;
+    void* onChangedUserData = nullptr;
 
     Array<UniquePtr<IEditorCommand>> undoStack{};
     Array<UniquePtr<IEditorCommand>> redoStack{};

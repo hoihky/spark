@@ -2,7 +2,9 @@
 
 #include "spark/config.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/world/SpawnPointComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Quaternion.hpp"
@@ -40,6 +42,48 @@ Spark::GameObject* FindByName(Spark::GameWorld& world, const char* name) {
         }
     });
     return found;
+}
+
+std::size_t CountRenderableComponentsInSubtree(const Spark::GameObject& root) {
+    std::size_t count = 0U;
+    if (root.GetComponent<Spark::MeshComponent>() != nullptr || root.GetComponent<Spark::SkinnedMeshComponent>() != nullptr) {
+        ++count;
+    }
+    const Spark::Array<Spark::GameObject*>& children = root.GetChildren();
+    for (std::size_t i = 0; i < children.GetSize(); ++i) {
+        if (children[i] != nullptr) {
+            count += CountRenderableComponentsInSubtree(*children[i]);
+        }
+    }
+    return count;
+}
+
+std::size_t CountSubtreeObjects(const Spark::GameObject& root) {
+    std::size_t count = 1U;
+    const Spark::Array<Spark::GameObject*>& children = root.GetChildren();
+    for (std::size_t i = 0; i < children.GetSize(); ++i) {
+        if (children[i] != nullptr) {
+            count += CountSubtreeObjects(*children[i]);
+        }
+    }
+    return count;
+}
+
+Spark::MaterialComponent* FindFirstMaterialDescendant(Spark::GameObject& root) {
+    Spark::MaterialComponent* found = root.GetComponent<Spark::MaterialComponent>();
+    if (found != nullptr) {
+        return found;
+    }
+    const Spark::Array<Spark::GameObject*>& children = root.GetChildren();
+    for (std::size_t i = 0; i < children.GetSize(); ++i) {
+        if (children[i] == nullptr) {
+            continue;
+        }
+        if (Spark::MaterialComponent* material = FindFirstMaterialDescendant(*children[i])) {
+            return material;
+        }
+    }
+    return nullptr;
 }
 
 /** Mirrors the editor's save/load/play scene pipeline without GLFW UI. */
@@ -160,6 +204,31 @@ public:
             }
             contentModel.TrackRoot(root);
             contentModel.TrackPlaced(root, Spark::Utf8String("prefabs/crate.sparkscene"));
+        }
+        return true;
+    }
+
+    bool PlaceGltfPrefab(const char* prefabFileName, const Spark::Vector3& position) {
+        const Spark::Utf8String path = Spark::ScenePathResolver::BuildRuntimePath("prefabs", prefabFileName);
+        Spark::PrefabInstantiateOptions options{};
+        options.assetsRoot = Spark::ScenePathResolver::AssetsRoot();
+        options.position = position;
+        options.additive = true;
+        options.pumpUntilReady = true;
+        const Spark::PrefabInstantiateResult result = sceneManager.InstantiatePrefab(path.CStr(), options);
+        if (!result.ready || result.rootObjects.IsEmpty()) {
+            return false;
+        }
+        instanceTracker.Register(result.instanceId);
+        Spark::Utf8String relativePath = Spark::Utf8String("prefabs/");
+        relativePath.AppendUtf8(prefabFileName);
+        for (std::size_t i = 0; i < result.rootObjects.GetSize(); ++i) {
+            Spark::GameObject* root = result.rootObjects[i];
+            if (root == nullptr) {
+                continue;
+            }
+            contentModel.TrackRoot(root);
+            contentModel.TrackPlaced(root, relativePath);
         }
         return true;
     }
@@ -314,6 +383,85 @@ TEST(SceneEditorSmokeTest, PrefabSaveReloadRoundTrip) {
     const Spark::MeshComponent* mesh = crate->GetComponent<Spark::MeshComponent>();
     ASSERT_NE(mesh, nullptr);
     EXPECT_FLOAT_EQ(mesh->GetAlbedo().x, 0.72F);
+
+    std::remove(SmokeScenePath().CStr());
+}
+
+TEST(SceneEditorSmokeTest, GltfPrefabSaveReloadDoesNotDuplicateMeshes) {
+    const Spark::Utf8String prefabPath =
+            Spark::ScenePathResolver::BuildRuntimePath("prefabs", "imported_DamagedHelmet.sparkscene");
+    struct stat prefabStat {};
+    if (stat(prefabPath.CStr(), &prefabStat) != 0 || !S_ISREG(prefabStat.st_mode)) {
+        GTEST_SKIP() << "imported_DamagedHelmet.sparkscene prefab not available";
+    }
+
+    std::remove(SmokeScenePath().CStr());
+
+    EditorSmokeHarness harness{};
+    harness.SetupUnitCube();
+    ASSERT_TRUE(harness.LoadSceneFile("arena.sparkscene"));
+    ASSERT_TRUE(harness.PlaceGltfPrefab("imported_DamagedHelmet.sparkscene", {0.0F, 0.0F, 4.0F}));
+
+    const Spark::GameObject* helmet = FindByName(harness.world, "DamagedHelmet");
+    ASSERT_NE(helmet, nullptr);
+    const std::size_t objectsBefore = CountSubtreeObjects(*helmet);
+    const std::size_t renderablesBefore = CountRenderableComponentsInSubtree(*helmet);
+    ASSERT_GT(objectsBefore, 1U);
+    ASSERT_GT(renderablesBefore, 0U);
+
+    const std::size_t savedEntities = harness.SaveTrackedScene(kSmokeSceneFile);
+    EXPECT_EQ(savedEntities, 6U);
+    EXPECT_TRUE(FileContains(SmokeScenePath().CStr(), "gltf_scene"));
+    EXPECT_TRUE(FileContains(SmokeScenePath().CStr(), "v2 \""));
+    EXPECT_FALSE(FileContains(SmokeScenePath().CStr(), "skinned_mesh"));
+
+    harness.ReloadLikePlayMode(kSmokeSceneFile);
+
+    const Spark::GameObject* helmetAfter = FindByName(harness.world, "DamagedHelmet");
+    ASSERT_NE(helmetAfter, nullptr);
+    EXPECT_EQ(CountSubtreeObjects(*helmetAfter), objectsBefore);
+    EXPECT_EQ(CountRenderableComponentsInSubtree(*helmetAfter), renderablesBefore);
+
+    std::remove(SmokeScenePath().CStr());
+}
+
+TEST(SceneEditorSmokeTest, GltfPrefabMaterialOverridesSurviveSaveReload) {
+    const Spark::Utf8String prefabPath =
+            Spark::ScenePathResolver::BuildRuntimePath("prefabs", "imported_DamagedHelmet.sparkscene");
+    struct stat prefabStat {};
+    if (stat(prefabPath.CStr(), &prefabStat) != 0 || !S_ISREG(prefabStat.st_mode)) {
+        GTEST_SKIP() << "imported_DamagedHelmet.sparkscene prefab not available";
+    }
+
+    std::remove(SmokeScenePath().CStr());
+
+    EditorSmokeHarness harness{};
+    harness.SetupUnitCube();
+    ASSERT_TRUE(harness.LoadSceneFile("arena.sparkscene"));
+    ASSERT_TRUE(harness.PlaceGltfPrefab("imported_DamagedHelmet.sparkscene", {1.0F, 0.0F, 4.0F}));
+
+    Spark::GameObject* helmet = FindByName(harness.world, "DamagedHelmet");
+    ASSERT_NE(helmet, nullptr);
+    Spark::MaterialComponent* editedMaterial = FindFirstMaterialDescendant(*helmet);
+    ASSERT_NE(editedMaterial, nullptr);
+    editedMaterial->SetMetallic(0.17F);
+    editedMaterial->SetRoughness(0.83F);
+    editedMaterial->SetEmissive({0.2F, 0.1F, 0.05F}, 2.5F);
+
+    const std::size_t savedEntities = harness.SaveTrackedScene(kSmokeSceneFile);
+    ASSERT_EQ(savedEntities, 6U);
+    EXPECT_TRUE(FileContains(SmokeScenePath().CStr(), " mat "));
+
+    harness.ReloadLikePlayMode(kSmokeSceneFile);
+
+    const Spark::GameObject* helmetAfter = FindByName(harness.world, "DamagedHelmet");
+    ASSERT_NE(helmetAfter, nullptr);
+    const Spark::MaterialComponent* restoredMaterial =
+            FindFirstMaterialDescendant(const_cast<Spark::GameObject&>(*helmetAfter));
+    ASSERT_NE(restoredMaterial, nullptr);
+    EXPECT_FLOAT_EQ(restoredMaterial->GetMetallic(), 0.17F);
+    EXPECT_FLOAT_EQ(restoredMaterial->GetRoughness(), 0.83F);
+    EXPECT_FLOAT_EQ(restoredMaterial->GetEmissiveIntensity(), 2.5F);
 
     std::remove(SmokeScenePath().CStr());
 }

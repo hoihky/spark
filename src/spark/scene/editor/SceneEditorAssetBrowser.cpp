@@ -16,7 +16,7 @@ struct SceneEditorAssetBrowser::Binding {
 void SceneEditorAssetBrowser::BuildControls(Ui::IUiElement& parent, Ui::IUiControlsFactory& factory) {
     Ui::LabelDesc hintDesc{};
     hintDesc.id = Utf8String("asset_hint");
-    hintDesc.text = Utf8String("Prefabs & scenes — select then Place or Load.");
+    hintDesc.text = Utf8String("Prefabs & scenes — double-click a scene to open.");
     hintDesc.muted = true;
     Ui::AdoptUiChild(parent, factory.CreateLabel(hintDesc));
 
@@ -34,6 +34,10 @@ void SceneEditorAssetBrowser::BuildControls(Ui::IUiElement& parent, Ui::IUiContr
     selectCb.fn = &SceneEditorAssetBrowser::OnListSelectionChanged;
     selectCb.userData = &listBinding;
     list->SetOnSelectionChanged(selectCb);
+    Ui::UiIntCallback activateCb{};
+    activateCb.fn = &SceneEditorAssetBrowser::OnListItemActivated;
+    activateCb.userData = &listBinding;
+    list->SetOnItemActivated(activateCb);
     Ui::AdoptUiChild(parent, MoveTemp(listUp));
 
     Ui::SeparatorDesc sepDesc{};
@@ -185,6 +189,23 @@ void SceneEditorAssetBrowser::OnListSelectionChanged(void* userData, const int i
         return;
     }
     binding->browser->selectedListIndex = index;
+}
+
+void SceneEditorAssetBrowser::OnListItemActivated(void* userData, const int index) noexcept {
+    auto* binding = static_cast<Binding*>(userData);
+    if (binding == nullptr || binding->browser == nullptr || binding->browser->host == nullptr) {
+        return;
+    }
+    binding->browser->selectedListIndex = index;
+    const SceneEditorAssetEntry* entry = binding->browser->GetSelectedEntry();
+    if (entry == nullptr) {
+        return;
+    }
+    if (entry->kind == SceneEditorAssetKind::Scene) {
+        binding->browser->host->OnAssetBrowserLoadScene(*entry);
+    } else if (entry->kind == SceneEditorAssetKind::Prefab) {
+        binding->browser->host->OnAssetBrowserPlacePrefab(*entry);
+    }
 }
 
 void SceneEditorAssetBrowser::OnPlaceClicked(void* userData) noexcept {

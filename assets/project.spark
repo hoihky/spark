@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "name": "Spark",
+  "workspace": "3d",
+  "assets": ".",
+  "scenes": "scenes",
+  "main_scene": "scenes/editor_session.sparkscene"
+}

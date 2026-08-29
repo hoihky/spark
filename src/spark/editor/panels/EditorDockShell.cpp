@@ -56,6 +56,8 @@ public:
         layoutBuilt = false;
     }
 
+    void SetFileMenuActions(const EditorFileMenuActions& actions) noexcept { fileMenuActions = actions; }
+
     [[nodiscard]] Ui::Rect GetCenterBounds() const noexcept { return centerBounds; }
     void InvalidateLayout() noexcept { layoutBuilt = false; }
     void RefreshWorldViewportBounds() noexcept { UpdateSceneViewportBounds(); }
@@ -169,6 +171,7 @@ private:
     Ui::Rect centerBounds{};
     bool layoutBuilt = false;
     Ui::EditorDockLayoutNodes layoutNodes{};
+    EditorFileMenuActions fileMenuActions{};
     char toolbarWindowName[192]{};
     char hierarchyWindowName[192]{};
     char projectWindowName[192]{};
@@ -180,6 +183,47 @@ public:
         FormatImGuiWindowName("hierarchy_shell", "Hierarchy", hierarchyWindowName, sizeof(hierarchyWindowName));
         FormatImGuiWindowName("project_shell", "Assets", projectWindowName, sizeof(projectWindowName));
         FormatImGuiWindowName("inspector_shell", "Inspector", inspectorWindowName, sizeof(inspectorWindowName));
+    }
+
+    void CaptureLayoutSettings(Ui::SceneEditorLayoutSettings& out) const noexcept {
+#if SPARK_ENABLE_IMGUI
+        ImGuiContext* imguiContext = ImGui::GetCurrentContext();
+        if (imguiContext == nullptr) {
+            return;
+        }
+        auto captureNode = [&](const unsigned int nodeId, ImRect& outRect) -> bool {
+            if (nodeId == 0U) {
+                return false;
+            }
+            ImGuiDockNode* node = ImGui::DockContextFindNodeByID(imguiContext, static_cast<ImGuiID>(nodeId));
+            if (node == nullptr || !node->IsVisible) {
+                return false;
+            }
+            outRect = node->Rect();
+            return true;
+        };
+        ImRect hierarchyRect{};
+        ImRect projectRect{};
+        ImRect inspectorRect{};
+        const bool hasHierarchy = captureNode(layoutNodes.hierarchy, hierarchyRect);
+        const bool hasProject = captureNode(layoutNodes.project, projectRect);
+        const bool hasInspector = captureNode(layoutNodes.inspector, inspectorRect);
+        if (hasHierarchy) {
+            out.leftDockWidthPx = hierarchyRect.GetWidth();
+            out.sidebarWidthPx = out.leftDockWidthPx;
+        }
+        if (hasInspector) {
+            out.rightDockWidthPx = inspectorRect.GetWidth();
+        }
+        if (hasHierarchy && hasProject) {
+            const float totalH = hierarchyRect.GetHeight() + projectRect.GetHeight();
+            if (totalH > 1.0F) {
+                out.leftStackSplit = hierarchyRect.GetHeight() / totalH;
+            }
+        }
+#else
+        (void)out;
+#endif
     }
 };
 
@@ -322,6 +366,19 @@ void EditorDockShell::SyncLayout(const Ui::Rect& viewport) noexcept {
     }
 }
 
+void EditorDockShell::CaptureLayoutSettings(Ui::SceneEditorLayoutSettings& out) const noexcept {
+    if (auto* host = static_cast<const EditorImGuiDockHost*>(dockHost)) {
+        host->CaptureLayoutSettings(out);
+    }
+}
+
+void EditorDockShell::SetFileMenuActions(const EditorFileMenuActions& actions) noexcept {
+    fileMenuActions = actions;
+    if (auto* host = static_cast<EditorImGuiDockHost*>(dockHost)) {
+        host->SetFileMenuActions(actions);
+    }
+}
+
 void EditorDockShell::SetPanels(
         UniquePtr<Ui::IUiElement> hierarchyRoot,
         UniquePtr<Ui::IUiElement> projectRoot,
@@ -340,6 +397,7 @@ void EditorDockShell::Rebuild(
     static_cast<EditorImGuiDockHost*>(dockHost)->Configure(
             EditorDefaultLayout::kToolbarHeightPx, sidebarWidthPx, rightPanelWidthPx, leftStackSplit);
     static_cast<EditorImGuiDockHost*>(dockHost)->SetWindowNames();
+    static_cast<EditorImGuiDockHost*>(dockHost)->SetFileMenuActions(fileMenuActions);
 
     Ui::PanelDesc toolbarDesc{};
     toolbarDesc.id = Utf8String("editor_toolbar");

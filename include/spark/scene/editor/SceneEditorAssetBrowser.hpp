@@ -50,6 +50,7 @@ private:
     struct Binding;
 
     static void OnListSelectionChanged(void* userData, int index) noexcept;
+    static void OnListItemActivated(void* userData, int index) noexcept;
     static void OnPlaceClicked(void* userData) noexcept;
     static void OnLoadClicked(void* userData) noexcept;
     static void OnImportClicked(void* userData) noexcept;

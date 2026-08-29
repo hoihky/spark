@@ -141,10 +141,17 @@ SceneInstanceId SceneManager::BeginLoadSceneInternal(
                                                   : (!document.header.name.IsEmpty() ? document.header.name
                                                                                      : instance.filePath);
     instance.options = options;
-    if (instance.options.assetsRoot == nullptr && !document.header.assetsRoot.IsEmpty()) {
-        instance.options.assetsRoot = document.header.assetsRoot.CStr();
+    if (options.assetsRoot != nullptr && options.assetsRoot[0] != '\0') {
+        instance.ownedAssetsRoot = Utf8String(options.assetsRoot);
+    } else if (!document.header.assetsRoot.IsEmpty()) {
+        instance.ownedAssetsRoot = document.header.assetsRoot;
     }
-    ApplyDocumentInstance(document, instance, options);
+    if (!instance.ownedAssetsRoot.IsEmpty()) {
+        instance.options.assetsRoot = instance.ownedAssetsRoot.CStr();
+    } else {
+        instance.options.assetsRoot = nullptr;
+    }
+    ApplyDocumentInstance(document, instance, instance.options);
     instances.PushBack(MoveTemp(instance));
     return instances.GetLast().id;
 }

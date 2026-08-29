@@ -48,13 +48,25 @@ Utf8String HumanizeStem(const std::string& stem) {
 
 }  // namespace
 
+void SceneEditorAssetCatalog::SetAssetsRootOverride(const char* const absoluteAssetsRootUtf8) noexcept {
+    assetsRootOverride.Clear();
+    if (absoluteAssetsRootUtf8 != nullptr && absoluteAssetsRootUtf8[0] != '\0') {
+        assetsRootOverride = Utf8String(absoluteAssetsRootUtf8);
+    }
+}
+
 void SceneEditorAssetCatalog::Refresh() {
     entries.Clear();
     listIndexToEntry.Clear();
-    ScanDirectory(SPARK_BUILD_ASSETS_DIR, "prefabs", SceneEditorAssetKind::Prefab);
-    ScanDirectory(SPARK_ASSETS_DIR, "prefabs", SceneEditorAssetKind::Prefab);
-    ScanDirectory(SPARK_BUILD_ASSETS_DIR, "scenes", SceneEditorAssetKind::Scene);
-    ScanDirectory(SPARK_ASSETS_DIR, "scenes", SceneEditorAssetKind::Scene);
+    if (!assetsRootOverride.IsEmpty()) {
+        ScanDirectory(assetsRootOverride.CStr(), "prefabs", SceneEditorAssetKind::Prefab);
+        ScanDirectory(assetsRootOverride.CStr(), "scenes", SceneEditorAssetKind::Scene);
+    } else {
+        ScanDirectory(SPARK_BUILD_ASSETS_DIR, "prefabs", SceneEditorAssetKind::Prefab);
+        ScanDirectory(SPARK_ASSETS_DIR, "prefabs", SceneEditorAssetKind::Prefab);
+        ScanDirectory(SPARK_BUILD_ASSETS_DIR, "scenes", SceneEditorAssetKind::Scene);
+        ScanDirectory(SPARK_ASSETS_DIR, "scenes", SceneEditorAssetKind::Scene);
+    }
 
     if (entries.GetSize() > 1) {
         std::sort(

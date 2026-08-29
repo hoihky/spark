@@ -80,6 +80,8 @@ public:
     [[nodiscard]] virtual int GetSelectedIndex() const = 0;
     virtual void SetSelectedIndex(int index) = 0;
     virtual void SetOnSelectionChanged(UiIntCallback handler) = 0;
+    /** Fired on double-click / activate (e.g. open scene). */
+    virtual void SetOnItemActivated(UiIntCallback handler) = 0;
     virtual void SetScrollY(float y) = 0;
     [[nodiscard]] virtual float GetScrollY() const = 0;
     virtual void ScrollToTop() = 0;
@@ -105,6 +107,8 @@ public:
     virtual void SetOnSelectionChanged(UiIntCallback handler) = 0;
     /** Fired on right-click over a row (node id). */
     virtual void SetOnNodeContextMenu(UiIntCallback handler) = 0;
+    /** Expands ancestors so <c>nodeId</c> is visible (no-op if invalid). */
+    virtual void RevealNode(int nodeId) { (void)nodeId; }
 };
 
 using IButton = IUiButton;

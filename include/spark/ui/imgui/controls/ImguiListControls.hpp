@@ -14,6 +14,7 @@ public:
     [[nodiscard]] int GetSelectedIndex() const noexcept override { return selectedIndex; }
     void SetSelectedIndex(int index) override;
     void SetOnSelectionChanged(UiIntCallback handler) override { onSelect = handler; }
+    void SetOnItemActivated(UiIntCallback handler) override { onActivate = handler; }
     void SetScrollY(float y) override { scrollY = y; }
     [[nodiscard]] float GetScrollY() const noexcept override { return scrollY; }
     void ScrollToTop() noexcept override { scrollY = 0.0F; }
@@ -29,6 +30,7 @@ private:
     Array<Utf8String> items{};
     int selectedIndex = -1;
     UiIntCallback onSelect{};
+    UiIntCallback onActivate{};
     float scrollY = 0.0F;
 };
 
@@ -62,6 +64,7 @@ struct ImguiTreeNode {
     Utf8String label{};
     int parent = -1;
     bool expanded = true;
+    bool revealPending = false;
 };
 
 class ImguiTreeView final : public ITreeView, public UiElementBase {
@@ -72,6 +75,7 @@ public:
     int AddItem(int parentIndex, Utf8String label) override;
     [[nodiscard]] int GetSelectedNodeId() const noexcept override { return selectedNodeId; }
     void SetSelectedNodeId(int nodeId) override;
+    void RevealNode(int nodeId) override;
     void SetOnSelectionChanged(UiIntCallback handler) override { onSelect = handler; }
     void SetOnNodeContextMenu(UiIntCallback handler) override { onContextMenu = handler; }
 
