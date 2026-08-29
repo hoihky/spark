@@ -18,6 +18,7 @@ public:
     virtual UniquePtr<ICheckBox> CreateCheckBox(const CheckBoxDesc& desc) = 0;
     virtual UniquePtr<IPanel> CreatePanel(const PanelDesc& desc) = 0;
     virtual UniquePtr<ILabel> CreateLabel(const LabelDesc& desc) = 0;
+    virtual UniquePtr<ITextBox> CreateTextBox(const TextFieldDesc& desc) = 0;
     virtual UniquePtr<ISeparator> CreateSeparator(const SeparatorDesc& desc) = 0;
     virtual UniquePtr<IScrollPanel> CreateScrollPanel(const ScrollPanelDesc& desc) = 0;
     virtual UniquePtr<IDockWorkspace> CreateDockWorkspace(const DockWorkspaceDesc& desc) = 0;

@@ -34,6 +34,9 @@ enum class DemoMode : std::uint8_t {
     ImGuiShowcase,
     GltfSamples3D,
     ModelViewer3D,
+#if SPARK_HAS_EDITOR
+    SparkEditor,
+#endif
 };
 
 }  // namespace Spark

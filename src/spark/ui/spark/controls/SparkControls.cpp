@@ -322,6 +322,30 @@ void SparkPanel::DoPaint(IUiRenderer& renderer) {
     const UiTheme& theme = renderer.GetTheme();
     const UiLayoutMetrics& metrics = renderer.GetLayoutMetrics();
     const Rect b = GetBounds();
+    if (viewportChrome) {
+        const float titleH = title.IsEmpty() ? 0.0F : metrics.FontLabel() + metrics.Scaled(8.0F);
+        if (!title.IsEmpty()) {
+            renderer.FillRectGradientVertical(
+                    b.x,
+                    b.y,
+                    b.width,
+                    titleH,
+                    theme.panelElevatedTop,
+                    theme.panelElevatedBottom,
+                    theme.panelElevatedAlpha * 0.92F);
+            renderer.DrawText(
+                    b.x + metrics.Scaled(10.0F),
+                    b.y + metrics.Scaled(4.0F),
+                    b.width - metrics.Scaled(20.0F),
+                    title,
+                    theme.labelPrimary,
+                    1.0F,
+                    metrics.FontLabel(),
+                    false);
+        }
+        renderer.StrokeRect(b.x, b.y, b.width, b.height, 1.0F, theme.borderRgb, 0.55F);
+        return;
+    }
     renderer.FillDropShadow(
             b.x, b.y, b.width, b.height, metrics.Scaled(5.0F), metrics.Scaled(6.0F), theme.shadowRgb, 1.0F);
     renderer.FillRectGradientVertical(
@@ -549,13 +573,13 @@ SparkDockWorkspace::SparkDockWorkspace(const DockWorkspaceDesc& desc)
     : UiElementBase(desc.id), leftWidth(desc.leftWidth), rightWidth(desc.rightWidth) {
     PanelDesc leftDesc{};
     leftDesc.id = Utf8String("dock.left");
-    leftDesc.title = Utf8String("Left");
+    leftDesc.title = desc.leftTitle.IsEmpty() ? Utf8String("Hierarchy") : desc.leftTitle;
     PanelDesc centerDesc{};
     centerDesc.id = Utf8String("dock.center");
-    centerDesc.title = Utf8String("Center");
+    centerDesc.title = desc.centerTitle.IsEmpty() ? Utf8String("Scene") : desc.centerTitle;
     PanelDesc rightDesc{};
     rightDesc.id = Utf8String("dock.right");
-    rightDesc.title = Utf8String("Right");
+    rightDesc.title = desc.rightTitle.IsEmpty() ? Utf8String("Inspector") : desc.rightTitle;
 
     auto left = MakeUnique<SparkPanel>(leftDesc);
     auto center = MakeUnique<SparkPanel>(centerDesc);
@@ -563,6 +587,9 @@ SparkDockWorkspace::SparkDockWorkspace(const DockWorkspaceDesc& desc)
     leftPane = left.Get();
     centerPane = center.Get();
     rightPane = right.Get();
+    if (desc.centerViewportChrome) {
+        centerPane->SetViewportChrome(true);
+    }
     centerPane->SetHitTest(false);
     AddChild(UniquePtr<IUiElement>(static_cast<IUiElement*>(left.Release())));
     AddChild(UniquePtr<IUiElement>(static_cast<IUiElement*>(center.Release())));

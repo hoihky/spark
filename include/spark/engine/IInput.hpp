@@ -1,6 +1,9 @@
 #pragma once
 
+#include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
+
+#include <cstdint>
 
 namespace Spark {
 
@@ -61,6 +64,11 @@ public:
     }
 
     virtual void SetClipboardUtf8(const Utf8String& text) const { (void)text; }
+
+    /** Drains UTF-32 codepoints typed this frame (GLFW char callback). Clears the internal queue. */
+    virtual void DrainTypedCodepoints(Array<std::uint32_t>& outCodepoints) {
+        outCodepoints.Clear();
+    }
 };
 
 }  // namespace Spark

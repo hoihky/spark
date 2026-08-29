@@ -11,6 +11,7 @@ public:
     UniquePtr<ICheckBox> CreateCheckBox(const CheckBoxDesc& desc) override;
     UniquePtr<IPanel> CreatePanel(const PanelDesc& desc) override;
     UniquePtr<ILabel> CreateLabel(const LabelDesc& desc) override;
+    UniquePtr<ITextBox> CreateTextBox(const TextFieldDesc& desc) override;
     UniquePtr<ISeparator> CreateSeparator(const SeparatorDesc& desc) override;
     UniquePtr<IScrollPanel> CreateScrollPanel(const ScrollPanelDesc& desc) override;
     UniquePtr<IDockWorkspace> CreateDockWorkspace(const DockWorkspaceDesc& desc) override;

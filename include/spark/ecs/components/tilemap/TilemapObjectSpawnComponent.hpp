@@ -28,7 +28,7 @@ public:
 
     void ClearSpawned(GameWorld& world) noexcept;
 
-    [[nodiscard]] const Array<GameObject*>& GetSpawnedObjects() const noexcept { return spawned_; }
+    [[nodiscard]] const Array<GameObject*>& GetSpawnedObjects() const noexcept { return spawned; }
 
     void OnAttach(GameObject& owner) override;
     void OnDetach(GameObject& owner) override;
@@ -37,7 +37,7 @@ private:
     void SpawnFromLayers(GameObject& owner, GameWorld& world) noexcept;
 
     bool spawnOnAttach = true;
-    Array<GameObject*> spawned_{};
+    Array<GameObject*> spawned{};
 };
 
 }  // namespace Spark

@@ -1,10 +1,8 @@
 #include "spark/editor/panels/ProjectBrowserPanel.hpp"
 
-#include "spark/editor/EditorProject.hpp"
 #include "spark/ui/Ui.hpp"
+#include "spark/ui/runtime/IUiBackend.hpp"
 #include "spark/ui/spark/UiChild.hpp"
-
-#include <cstdio>
 
 namespace Spark::Editor {
 
@@ -18,44 +16,28 @@ void ProjectBrowserPanel::EnsureBuilt() {
 
     Ui::PanelDesc shellDesc{};
     shellDesc.id = Utf8String("project_shell");
-    shellDesc.title = Utf8String("Project");
+    shellDesc.title = Utf8String("Assets");
     auto shell = factory.CreatePanel(shellDesc);
 
-    Ui::LabelDesc bodyDesc{};
-    bodyDesc.id = Utf8String("project_body");
-    bodyDesc.text = Utf8String("No project open.");
-    bodyDesc.muted = true;
-    auto bodyUp = factory.CreateLabel(bodyDesc);
-    body = bodyUp.Get();
-    AdoptUiChild(*shell, MoveTemp(bodyUp));
+    if (assetCatalog != nullptr && assetHost != nullptr) {
+        assetBrowser.BuildInto(*shell, factory, *assetCatalog, *assetHost);
+    } else {
+        Ui::LabelDesc bodyDesc{};
+        bodyDesc.id = Utf8String("project_body");
+        bodyDesc.text = Utf8String("Asset catalog not bound.");
+        bodyDesc.muted = true;
+        Ui::AdoptUiChild(*shell, factory.CreateLabel(bodyDesc));
+    }
 
     root.Reset(static_cast<Ui::IUiElement*>(shell.Release()));
     built = true;
 }
 
 void ProjectBrowserPanel::OnAttach(EditorContext& ctx) {
+    assetHost = ctx.assetHost;
     EnsureBuilt();
-    project = ctx.project;
 }
 
-void ProjectBrowserPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*/) {
-    if (body == nullptr || project == nullptr) {
-        return;
-    }
-    if (!project->IsOpen()) {
-        body->SetText(Utf8String("No project open."));
-        return;
-    }
-    const EditorProjectSettings& s = project->GetSettings();
-    char buf[384]{};
-    std::snprintf(
-            buf,
-            sizeof(buf),
-            "%s\n%s\nworkspace: %s",
-            s.projectName.CStr(),
-            s.rootDirectory.CStr(),
-            s.workspace == WorkspaceDimension::TwoD ? "2D" : "3D");
-    body->SetText(Utf8String(buf));
-}
+void ProjectBrowserPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& /*ctx*/) {}
 
 }  // namespace Spark::Editor

@@ -126,12 +126,12 @@ void SceneEditor3DDemo::Unload(Spark::GameWorld& w)
         selectedObject = nullptr;
         unitCubeAsset.Reset();
         groundAsset.Reset();
-        editorWorld_ = nullptr;
+        editorWorld = nullptr;
     }
 
 void SceneEditor3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
 {
-        editorWorld_ = &world;
+        editorWorld = &world;
         if (sceneManager) {
             sceneManager->Pump();
             if (sceneLoadInProgress && loadedSceneId != Spark::kInvalidSceneInstanceId) {
@@ -1242,32 +1242,32 @@ void SceneEditor3DDemo::PlacePrefabFromAsset(Spark::GameWorld& w, const SceneEdi
 
 void SceneEditor3DDemo::OnAssetBrowserPlacePrefab(const SceneEditorAssetEntry& entry)
 {
-        if (playSession.IsActive() || editorWorld_ == nullptr) {
+        if (playSession.IsActive() || editorWorld == nullptr) {
             return;
         }
-        PlacePrefabFromAsset(*editorWorld_, entry);
+        PlacePrefabFromAsset(*editorWorld, entry);
     }
 
 void SceneEditor3DDemo::OnAssetBrowserLoadScene(const SceneEditorAssetEntry& entry)
 {
-        if (playSession.IsActive() || editorWorld_ == nullptr) {
+        if (playSession.IsActive() || editorWorld == nullptr) {
             return;
         }
         if (entry.kind != SceneEditorAssetKind::Scene) {
             SetStatusMessage(Spark::Utf8String("Select a scene in the asset browser."));
             return;
         }
-        LoadSceneFromPath(*editorWorld_, entry.relativePath.CStr());
+        LoadSceneFromPath(*editorWorld, entry.relativePath.CStr());
     }
 
 void SceneEditor3DDemo::OnAssetBrowserImportGltf()
 {
-        if (playSession.IsActive() || editorWorld_ == nullptr) {
+        if (playSession.IsActive() || editorWorld == nullptr) {
             return;
         }
-        ScenePlacementContext placementCtx = MakePlacementContext(*editorWorld_, lastGroundHit, selectedObject);
+        ScenePlacementContext placementCtx = MakePlacementContext(*editorWorld, lastGroundHit, selectedObject);
         const GltfImportService::ImportResult importResult =
-                gltfImportService.ImportFromFilePickerAndPlace(*editorWorld_, placementCtx);
+                gltfImportService.ImportFromFilePickerAndPlace(*editorWorld, placementCtx);
         SetStatusMessage(importResult.message);
         if (importResult.ok) {
             assetCatalog.Refresh();

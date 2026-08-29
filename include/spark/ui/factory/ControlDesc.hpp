@@ -18,6 +18,8 @@ struct SliderDesc {
     float minValue = 0.0F;
     float maxValue = 1.0F;
     bool enabled = true;
+    /** When true, ImGui uses DragFloat (typed input + drag) instead of SliderFloat. */
+    bool dragInput = false;
 };
 
 struct CheckBoxDesc {
@@ -40,12 +42,21 @@ struct PanelDesc {
     float edgeMargin = 8.0F;
     /** When true, centers the panel within the parent's arranged bounds. */
     bool centerInParent = false;
+    /** When true, child controls are laid out on one horizontal row (ImGui SameLine). */
+    bool horizontalLayout = false;
 };
 
 struct LabelDesc {
     UiElementId id{};
     Utf8String text{};
     bool muted = false;
+};
+
+struct TextFieldDesc {
+    UiElementId id{};
+    Utf8String label{};
+    Utf8String text{};
+    bool enabled = true;
 };
 
 struct SeparatorDesc {
@@ -65,6 +76,13 @@ struct DockWorkspaceDesc {
     UiElementId id{};
     float leftWidth = 280.0F;
     float rightWidth = 320.0F;
+    Utf8String leftTitle{};
+    Utf8String centerTitle{};
+    Utf8String rightTitle{};
+    /** When true, the center pane draws only a title bar and border (3D scene shows through). */
+    bool centerViewportChrome = true;
+    /** When true, use ImGui DockBuilder (user can drag splits). When false, pin panes via layout rects. */
+    bool enableDockBuilder = false;
 };
 
 struct ListDesc {

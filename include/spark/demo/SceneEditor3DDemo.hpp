@@ -134,7 +134,7 @@ private:
     Spark::SceneInstanceId loadedSceneId = Spark::kInvalidSceneInstanceId;
     Spark::SceneDocument pendingLoadDocument{};
     bool sceneLoadInProgress = false;
-    Spark::GameWorld* editorWorld_ = nullptr;
+    Spark::GameWorld* editorWorld = nullptr;
 };
 
 }  // namespace Spark

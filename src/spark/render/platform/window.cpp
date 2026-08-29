@@ -92,6 +92,18 @@ void Window::SetScrollCallback(ScrollCallback callback) {
     glfwSetScrollCallback(glfwWindow, scrollCallback ? OnScrollForward : nullptr);
 }
 
+void Window::OnCharForward(GLFWwindow* window, const unsigned int codepoint) {
+    auto* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (self != nullptr && self->charCallback) {
+        self->charCallback(codepoint);
+    }
+}
+
+void Window::SetCharCallback(CharCallback callback) {
+    charCallback = std::move(callback);
+    glfwSetCharCallback(glfwWindow, charCallback ? OnCharForward : nullptr);
+}
+
 Array<const char*> Window::RequiredVulkanInstanceExtensions() const {
     std::uint32_t count = 0;
     const char** names = glfwGetRequiredInstanceExtensions(&count);

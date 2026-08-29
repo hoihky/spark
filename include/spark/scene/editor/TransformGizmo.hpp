@@ -23,12 +23,12 @@ enum class TransformGizmoMode {
  */
 class TransformGizmo final {
 public:
-    void SetMode(TransformGizmoMode mode) noexcept { mode_ = mode; }
-    [[nodiscard]] TransformGizmoMode GetMode() const noexcept { return mode_; }
+    void SetMode(TransformGizmoMode modeIn) noexcept { mode = modeIn; }
+    [[nodiscard]] TransformGizmoMode GetMode() const noexcept { return mode; }
     void CycleMode() noexcept;
 
-    [[nodiscard]] bool IsDragging() const noexcept { return drag_.active; }
-    [[nodiscard]] int GetActiveAxis() const noexcept { return drag_.activeAxis; }
+    [[nodiscard]] bool IsDragging() const noexcept { return drag.active; }
+    [[nodiscard]] int GetActiveAxis() const noexcept { return drag.activeAxis; }
 
     /** Returns true when a gizmo handle consumed the press. */
     [[nodiscard]] bool TryBeginDrag(
@@ -52,7 +52,7 @@ public:
             Array<SceneDrawItem>& out) const;
 
     [[nodiscard]] static const char* ModeName(TransformGizmoMode mode) noexcept;
-    [[nodiscard]] const char* GetModeName() const noexcept { return ModeName(mode_); }
+    [[nodiscard]] const char* GetModeName() const noexcept { return ModeName(mode); }
     [[nodiscard]] const char* GetInteractionHint() const noexcept;
 
 private:
@@ -68,8 +68,8 @@ private:
         float startPlaneAngle = 0.0F;
     };
 
-    TransformGizmoMode mode_ = TransformGizmoMode::Translate;
-    DragState drag_{};
+    TransformGizmoMode mode = TransformGizmoMode::Translate;
+    DragState drag{};
 };
 
 }  // namespace Spark

@@ -27,24 +27,24 @@ public:
     [[nodiscard]] bool GetDrawGizmos() const noexcept { return drawGizmos; }
     void SetDrawGizmos(const bool enabled) noexcept {
         drawGizmos = enabled;
-        visualsDirty_ = true;
+        visualsDirty = true;
     }
 
     /** When true, also draws non-gizmo markers (useful in editor-style views). */
     [[nodiscard]] bool GetDrawRuntimeMarkers() const noexcept { return drawRuntimeMarkers; }
     void SetDrawRuntimeMarkers(const bool enabled) noexcept {
         drawRuntimeMarkers = enabled;
-        visualsDirty_ = true;
+        visualsDirty = true;
     }
 
     void SetGizmoTexture(SharedPtr<Texture2D> texture) noexcept {
         gizmoTexture = MoveTemp(texture);
-        visualsDirty_ = true;
+        visualsDirty = true;
     }
 
     void SetGizmoUvRect(const Vector4& uv) noexcept {
         gizmoUv = uv;
-        visualsDirty_ = true;
+        visualsDirty = true;
     }
 
     void SetGizmoTint(const Vector4& rgba) noexcept { gizmoTint = rgba; }
@@ -66,8 +66,8 @@ private:
     std::int32_t gizmoSortOrder = 45;
     bool drawGizmos = true;
     bool drawRuntimeMarkers = false;
-    bool visualsDirty_ = true;
-    Array<GameObject*> gizmoObjects_{};
+    bool visualsDirty = true;
+    Array<GameObject*> gizmoObjects{};
 };
 
 }  // namespace Spark

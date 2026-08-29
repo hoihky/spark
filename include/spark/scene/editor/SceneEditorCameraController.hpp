@@ -34,11 +34,11 @@ public:
     void BeginOrbitDrag(const Vector3& pivot) noexcept;
     void UpdateOrbitDrag(IInput& input) noexcept;
     void EndOrbitDrag() noexcept;
-    [[nodiscard]] bool IsOrbitDragging() const noexcept { return orbitDragActive_; }
+    [[nodiscard]] bool IsOrbitDragging() const noexcept { return orbitDragActive; }
 
 private:
-    bool orbitDragActive_ = false;
-    float rmbDragDistSq_ = 0.0F;
+    bool orbitDragActive = false;
+    float rmbDragDistSq = 0.0F;
 };
 
 }  // namespace Spark

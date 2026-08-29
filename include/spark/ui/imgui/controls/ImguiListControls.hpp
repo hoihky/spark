@@ -71,7 +71,9 @@ public:
     void Clear() override;
     int AddItem(int parentIndex, Utf8String label) override;
     [[nodiscard]] int GetSelectedNodeId() const noexcept override { return selectedNodeId; }
+    void SetSelectedNodeId(int nodeId) override;
     void SetOnSelectionChanged(UiIntCallback handler) override { onSelect = handler; }
+    void SetOnNodeContextMenu(UiIntCallback handler) override { onContextMenu = handler; }
 
     void Paint(IUiRenderer& renderer) override;
 
@@ -84,6 +86,7 @@ private:
     Array<ImguiTreeNode> nodes{};
     int selectedNodeId = -1;
     UiIntCallback onSelect{};
+    UiIntCallback onContextMenu{};
 };
 
 }  // namespace Spark::Ui

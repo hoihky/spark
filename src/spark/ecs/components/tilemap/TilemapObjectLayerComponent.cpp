@@ -30,9 +30,9 @@ std::uint32_t TilemapObjectLayerComponent::AddMarker(
     if (layerIndex >= objectLayers.GetSize()) {
         return 0U;
     }
-    marker.id = nextMarkerId_++;
+    marker.id = nextMarkerId++;
     if (marker.id == 0U) {
-        marker.id = nextMarkerId_++;
+        marker.id = nextMarkerId++;
     }
     objectLayers[static_cast<std::size_t>(layerIndex)].markers.PushBack(marker);
     return marker.id;

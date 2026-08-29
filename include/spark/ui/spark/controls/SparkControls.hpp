@@ -51,6 +51,7 @@ public:
     explicit SparkPanel(const PanelDesc& desc);
 
     void SetTitle(Utf8String titleIn) override;
+    void SetViewportChrome(bool enabled) noexcept { viewportChrome = enabled; }
     [[nodiscard]] bool IsOpen() const noexcept override { return open; }
 
     [[nodiscard]] PanelDesc ExportDesc() const noexcept;
@@ -71,6 +72,7 @@ private:
     bool anchorRight = false;
     float edgeMargin = 8.0F;
     bool centerInParent = false;
+    bool viewportChrome = false;
 };
 
 class SparkLabel final : public ILabel, public UiElementBase {

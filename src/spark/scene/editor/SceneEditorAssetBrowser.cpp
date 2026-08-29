@@ -13,39 +13,12 @@ struct SceneEditorAssetBrowser::Binding {
     SceneEditorAssetBrowser* browser = nullptr;
 };
 
-void SceneEditorAssetBrowser::Mount(
-        GameWorld& world,
-        SceneEditorAssetCatalog& catalog,
-        ISceneEditorAssetBrowserHost& host) {
-    if (canvas_ != nullptr) {
-        return;
-    }
-    catalog_ = &catalog;
-    host_ = &host;
-    catalog.Refresh();
-
-    uiRoot_ = world.CreateGameObject();
-    uiRoot_->GetName() = Utf8String("SceneEditorAssetBrowser");
-    canvas_ = uiRoot_->AddComponent<UiCanvasComponent>();
-    canvas_->SetSortOrder(150);
-    canvas_->SetTheme(Ui::UiTheme::ClassicMint());
-
-    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
-
-    Ui::PanelDesc panelDesc{};
-    panelDesc.id = Utf8String("asset_browser");
-    panelDesc.title = Utf8String("Assets");
-    panelDesc.width = Ui::GetSceneEditorSidebarWidthPx() - 16.0F;
-    panelDesc.height = 0.0F;
-    panelDesc.anchorRight = false;
-    panelDesc.edgeMargin = 8.0F;
-    auto panel = factory.CreatePanel(panelDesc);
-
+void SceneEditorAssetBrowser::BuildControls(Ui::IUiElement& parent, Ui::IUiControlsFactory& factory) {
     Ui::LabelDesc hintDesc{};
     hintDesc.id = Utf8String("asset_hint");
-    hintDesc.text = Utf8String("Prefabs & scenes. Double-click or use buttons below.");
+    hintDesc.text = Utf8String("Prefabs & scenes — select then Place or Load.");
     hintDesc.muted = true;
-    Ui::AdoptUiChild(*panel, factory.CreateLabel(hintDesc));
+    Ui::AdoptUiChild(parent, factory.CreateLabel(hintDesc));
 
     Ui::ListDesc listDesc{};
     listDesc.id = Utf8String("asset_list");
@@ -53,19 +26,19 @@ void SceneEditorAssetBrowser::Mount(
     listDesc.itemFontSize = 14.0F;
     listDesc.verticalScrollingEnabled = true;
     listDesc.fillRemainingHeight = true;
-    auto list = factory.CreateList(listDesc);
-    list_ = list.Get();
-  static Binding listBinding{};
+    auto listUp = factory.CreateList(listDesc);
+    list = listUp.Get();
+    static Binding listBinding{};
     listBinding.browser = this;
     Ui::UiIntCallback selectCb{};
     selectCb.fn = &SceneEditorAssetBrowser::OnListSelectionChanged;
     selectCb.userData = &listBinding;
     list->SetOnSelectionChanged(selectCb);
-    Ui::AdoptUiChild(*panel, MoveTemp(list));
+    Ui::AdoptUiChild(parent, MoveTemp(listUp));
 
     Ui::SeparatorDesc sepDesc{};
     sepDesc.id = Utf8String("asset_sep");
-    Ui::AdoptUiChild(*panel, factory.CreateSeparator(sepDesc));
+    Ui::AdoptUiChild(parent, factory.CreateSeparator(sepDesc));
 
     static Binding placeBinding{};
     placeBinding.browser = this;
@@ -77,7 +50,7 @@ void SceneEditorAssetBrowser::Mount(
     placeCb.fn = &SceneEditorAssetBrowser::OnPlaceClicked;
     placeCb.userData = &placeBinding;
     placeBtn->SetOnClick(placeCb);
-    Ui::AdoptUiChild(*panel, MoveTemp(placeBtn));
+    Ui::AdoptUiChild(parent, MoveTemp(placeBtn));
 
     Ui::ButtonDesc loadDesc{};
     loadDesc.id = Utf8String("load_scene");
@@ -89,7 +62,7 @@ void SceneEditorAssetBrowser::Mount(
     loadCb.fn = &SceneEditorAssetBrowser::OnLoadClicked;
     loadCb.userData = &loadBinding;
     loadBtn->SetOnClick(loadCb);
-    Ui::AdoptUiChild(*panel, MoveTemp(loadBtn));
+    Ui::AdoptUiChild(parent, MoveTemp(loadBtn));
 
     Ui::ButtonDesc importDesc{};
     importDesc.id = Utf8String("import_gltf");
@@ -101,7 +74,7 @@ void SceneEditorAssetBrowser::Mount(
     importCb.fn = &SceneEditorAssetBrowser::OnImportClicked;
     importCb.userData = &importBinding;
     importBtn->SetOnClick(importCb);
-    Ui::AdoptUiChild(*panel, MoveTemp(importBtn));
+    Ui::AdoptUiChild(parent, MoveTemp(importBtn));
 
     Ui::ButtonDesc refreshDesc{};
     refreshDesc.id = Utf8String("refresh_assets");
@@ -113,27 +86,68 @@ void SceneEditorAssetBrowser::Mount(
     refreshCb.fn = &SceneEditorAssetBrowser::OnRefreshClicked;
     refreshCb.userData = &refreshBinding;
     refreshBtn->SetOnClick(refreshCb);
-    Ui::AdoptUiChild(*panel, MoveTemp(refreshBtn));
+    Ui::AdoptUiChild(parent, MoveTemp(refreshBtn));
+}
 
-    canvas_->SetRoot(MoveTemp(panel));
+void SceneEditorAssetBrowser::BuildInto(
+        Ui::IUiElement& parent,
+        Ui::IUiControlsFactory& factory,
+        SceneEditorAssetCatalog& catalog,
+        ISceneEditorAssetBrowserHost& host) {
+    this->catalog = &catalog;
+    this->host = &host;
+    catalog.Refresh();
+    BuildControls(parent, factory);
+    RebuildListItems();
+}
+
+void SceneEditorAssetBrowser::Mount(
+        GameWorld& world,
+        SceneEditorAssetCatalog& catalog,
+        ISceneEditorAssetBrowserHost& host) {
+    if (canvas != nullptr) {
+        return;
+    }
+    this->catalog = &catalog;
+    this->host = &host;
+    catalog.Refresh();
+
+    uiRoot = world.CreateGameObject();
+    uiRoot->GetName() = Utf8String("SceneEditorAssetBrowser");
+    canvas = uiRoot->AddComponent<UiCanvasComponent>();
+    canvas->SetSortOrder(150);
+    canvas->SetTheme(Ui::UiTheme::ClassicMint());
+
+    Ui::IUiControlsFactory& factory = Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
+
+    Ui::PanelDesc panelDesc{};
+    panelDesc.id = Utf8String("asset_browser");
+    panelDesc.title = Utf8String("Assets");
+    panelDesc.width = Ui::GetSceneEditorSidebarWidthPx() - 16.0F;
+    panelDesc.height = 0.0F;
+    panelDesc.anchorRight = false;
+    panelDesc.edgeMargin = 8.0F;
+    auto panel = factory.CreatePanel(panelDesc);
+    BuildControls(*panel, factory);
+    canvas->SetRoot(MoveTemp(panel));
     RebuildListItems();
 }
 
 void SceneEditorAssetBrowser::Unmount(GameWorld& world) noexcept {
-    if (uiRoot_ != nullptr) {
-        world.DestroyGameObject(uiRoot_);
-        uiRoot_ = nullptr;
+    if (uiRoot != nullptr) {
+        world.DestroyGameObject(uiRoot);
+        uiRoot = nullptr;
     }
-    canvas_ = nullptr;
-    list_ = nullptr;
-    catalog_ = nullptr;
-    host_ = nullptr;
-    selectedListIndex_ = -1;
+    canvas = nullptr;
+    list = nullptr;
+    catalog = nullptr;
+    host = nullptr;
+    selectedListIndex = -1;
 }
 
 void SceneEditorAssetBrowser::SetEnabled(const bool enabled) noexcept {
-    if (canvas_ != nullptr) {
-        canvas_->SetCanvasEnabled(enabled);
+    if (canvas != nullptr) {
+        canvas->SetCanvasEnabled(enabled);
     }
 }
 
@@ -142,27 +156,27 @@ void SceneEditorAssetBrowser::RefreshListFromCatalog() {
 }
 
 void SceneEditorAssetBrowser::RebuildListItems() {
-    if (list_ == nullptr || catalog_ == nullptr) {
+    if (list == nullptr || catalog == nullptr) {
         return;
     }
     Array<Utf8String> labels;
-    const Array<SceneEditorAssetEntry>& entries = catalog_->GetEntries();
+    const Array<SceneEditorAssetEntry>& entries = catalog->GetEntries();
     labels.Reserve(entries.GetSize());
     for (std::size_t i = 0; i < entries.GetSize(); ++i) {
         labels.PushBack(entries[i].displayName);
     }
-    list_->SetItems(MoveTemp(labels));
-    if (!labels.IsEmpty() && selectedListIndex_ < 0) {
-        list_->SetSelectedIndex(0);
-        selectedListIndex_ = 0;
+    list->SetItems(MoveTemp(labels));
+    if (!labels.IsEmpty() && selectedListIndex < 0) {
+        list->SetSelectedIndex(0);
+        selectedListIndex = 0;
     }
 }
 
 const SceneEditorAssetEntry* SceneEditorAssetBrowser::GetSelectedEntry() const noexcept {
-    if (catalog_ == nullptr || selectedListIndex_ < 0) {
+    if (catalog == nullptr || selectedListIndex < 0) {
         return nullptr;
     }
-    return catalog_->FindByListIndex(selectedListIndex_);
+    return catalog->FindByListIndex(selectedListIndex);
 }
 
 void SceneEditorAssetBrowser::OnListSelectionChanged(void* userData, const int index) noexcept {
@@ -170,12 +184,12 @@ void SceneEditorAssetBrowser::OnListSelectionChanged(void* userData, const int i
     if (binding == nullptr || binding->browser == nullptr) {
         return;
     }
-    binding->browser->selectedListIndex_ = index;
+    binding->browser->selectedListIndex = index;
 }
 
 void SceneEditorAssetBrowser::OnPlaceClicked(void* userData) noexcept {
     auto* binding = static_cast<Binding*>(userData);
-    if (binding == nullptr || binding->browser == nullptr || binding->browser->host_ == nullptr) {
+    if (binding == nullptr || binding->browser == nullptr || binding->browser->host == nullptr) {
         return;
     }
     const SceneEditorAssetEntry* entry = binding->browser->GetSelectedEntry();
@@ -185,12 +199,12 @@ void SceneEditorAssetBrowser::OnPlaceClicked(void* userData) noexcept {
     if (entry->kind != SceneEditorAssetKind::Prefab) {
         return;
     }
-    binding->browser->host_->OnAssetBrowserPlacePrefab(*entry);
+    binding->browser->host->OnAssetBrowserPlacePrefab(*entry);
 }
 
 void SceneEditorAssetBrowser::OnLoadClicked(void* userData) noexcept {
     auto* binding = static_cast<Binding*>(userData);
-    if (binding == nullptr || binding->browser == nullptr || binding->browser->host_ == nullptr) {
+    if (binding == nullptr || binding->browser == nullptr || binding->browser->host == nullptr) {
         return;
     }
     const SceneEditorAssetEntry* entry = binding->browser->GetSelectedEntry();
@@ -200,23 +214,23 @@ void SceneEditorAssetBrowser::OnLoadClicked(void* userData) noexcept {
     if (entry->kind != SceneEditorAssetKind::Scene) {
         return;
     }
-    binding->browser->host_->OnAssetBrowserLoadScene(*entry);
+    binding->browser->host->OnAssetBrowserLoadScene(*entry);
 }
 
 void SceneEditorAssetBrowser::OnImportClicked(void* userData) noexcept {
     auto* binding = static_cast<Binding*>(userData);
-    if (binding == nullptr || binding->browser == nullptr || binding->browser->host_ == nullptr) {
+    if (binding == nullptr || binding->browser == nullptr || binding->browser->host == nullptr) {
         return;
     }
-    binding->browser->host_->OnAssetBrowserImportGltf();
+    binding->browser->host->OnAssetBrowserImportGltf();
 }
 
 void SceneEditorAssetBrowser::OnRefreshClicked(void* userData) noexcept {
     auto* binding = static_cast<Binding*>(userData);
-    if (binding == nullptr || binding->browser == nullptr || binding->browser->host_ == nullptr) {
+    if (binding == nullptr || binding->browser == nullptr || binding->browser->host == nullptr) {
         return;
     }
-    binding->browser->host_->OnAssetBrowserRefreshCatalog();
+    binding->browser->host->OnAssetBrowserRefreshCatalog();
 }
 
 }  // namespace Spark

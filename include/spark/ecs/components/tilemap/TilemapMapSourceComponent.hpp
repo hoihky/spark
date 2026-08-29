@@ -38,7 +38,7 @@ public:
     /** Re-reads TMX (or sparkmap if set) and reapplies to the owner. */
     bool ImportNow(GameObject& owner, GameWorld& world);
 
-    [[nodiscard]] const Utf8String& GetLastError() const noexcept { return lastError_; }
+    [[nodiscard]] const Utf8String& GetLastError() const noexcept { return lastError; }
 
     void OnAttach(GameObject& owner) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
@@ -52,8 +52,8 @@ private:
     TilemapDocumentApplyOptions applyOptions{};
     bool importOnAttach = true;
     bool hotReload = false;
-    std::int64_t lastSourceTimestampNs_ = -1;
-    Utf8String lastError_{};
+    std::int64_t lastSourceTimestampNs = -1;
+    Utf8String lastError{};
 };
 
 }  // namespace Spark

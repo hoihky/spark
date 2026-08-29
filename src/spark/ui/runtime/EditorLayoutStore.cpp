@@ -50,6 +50,7 @@ bool TryLoadSceneEditorLayout(SceneEditorLayoutSettings& out) noexcept {
     std::FILE* f = std::fopen(path, "r");
     if (f == nullptr) {
         out.sidebarWidthPx = gSidebarWidthPx;
+        out.leftDockWidthPx = gSidebarWidthPx;
         out.inspectorScrollY = 0.0F;
         return false;
     }
@@ -62,7 +63,17 @@ bool TryLoadSceneEditorLayout(SceneEditorLayoutSettings& out) noexcept {
             SetSceneEditorSidebarSplit(v);
         } else if (std::strncmp(line, "sidebar_width=", 14) == 0 && std::sscanf(line + 14, "%f", &v) == 1) {
             out.sidebarWidthPx = v;
+            out.leftDockWidthPx = v;
             SetSceneEditorSidebarWidthPx(v);
+        } else if (std::strncmp(line, "left_dock_width=", 16) == 0 && std::sscanf(line + 16, "%f", &v) == 1) {
+            out.leftDockWidthPx = v;
+            out.sidebarWidthPx = v;
+            SetSceneEditorSidebarWidthPx(v);
+        } else if (std::strncmp(line, "right_dock_width=", 17) == 0 && std::sscanf(line + 17, "%f", &v) == 1) {
+            out.rightDockWidthPx = v;
+        } else if (std::strncmp(line, "left_stack_split=", 17) == 0 && std::sscanf(line + 17, "%f", &v) == 1) {
+            out.leftStackSplit = v;
+            SetSceneEditorSidebarSplit(v);
         } else if (std::strncmp(line, "inspector_scroll_y=", 19) == 0 && std::sscanf(line + 19, "%f", &v) == 1) {
             out.inspectorScrollY = v;
         } else if (std::strncmp(line, "ui_scale=", 9) == 0 && std::sscanf(line + 9, "%f", &v) == 1) {
@@ -91,6 +102,9 @@ bool SaveSceneEditorLayout(const SceneEditorLayoutSettings& in) noexcept {
     std::fprintf(f, "spark_editor_layout_v1\n");
     std::fprintf(f, "sidebar_split=%.4f\n", gSidebarSplit);
     std::fprintf(f, "sidebar_width=%.2f\n", gSidebarWidthPx);
+    std::fprintf(f, "left_dock_width=%.2f\n", in.leftDockWidthPx);
+    std::fprintf(f, "right_dock_width=%.2f\n", in.rightDockWidthPx);
+    std::fprintf(f, "left_stack_split=%.4f\n", in.leftStackSplit);
     std::fprintf(f, "inspector_scroll_y=%.2f\n", in.inspectorScrollY);
     std::fprintf(f, "ui_scale=%.3f\n", GetGlobalUiScale());
     std::fprintf(f, "gui_theme=%d\n", static_cast<int>(GetActiveUiThemePreset()));

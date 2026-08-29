@@ -74,6 +74,7 @@ void ImGuiShowcaseDemo::BuildRetainedUi(GameWorld& world) {
     dockDesc.id = Utf8String("imgui_showcase_dock");
     dockDesc.leftWidth = 260.0F;
     dockDesc.rightWidth = 300.0F;
+    dockDesc.enableDockBuilder = true;
     auto dock = factory.CreateDockWorkspace(dockDesc);
 
     if (Ui::IUiElement* leftPane = dock->GetLeftPane()) {

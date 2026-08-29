@@ -223,4 +223,70 @@ void SceneEditorContentModel::IntegrateLoadedInstance(
     }
 }
 
+namespace {
+
+void CollectSubtreeForContentModel(const GameObject& node, Array<const GameObject*>& out) {
+    out.PushBack(&node);
+    const Array<GameObject*>& children = node.GetChildren();
+    for (std::size_t i = 0; i < children.GetSize(); ++i) {
+        if (children[i] != nullptr) {
+            CollectSubtreeForContentModel(*children[i], out);
+        }
+    }
+}
+
+}  // namespace
+
+void SceneEditorContentModel::IntegrateSubtree(GameObject& root) noexcept {
+    Array<const GameObject*> subtree;
+    CollectSubtreeForContentModel(root, subtree);
+
+    for (std::size_t i = 0; i < subtree.GetSize(); ++i) {
+        GameObject* object = const_cast<GameObject*>(subtree[i]);
+        if (object == nullptr) {
+            continue;
+        }
+        TrackRoot(object);
+        if (object->GetComponent<MeshComponent>() != nullptr) {
+            TrackPlaced(object, LookupMeshAssetRel(*object));
+        }
+        if (object->GetComponent<PointLightComponent>() != nullptr || object->GetComponent<SpotLightComponent>() != nullptr) {
+            TrackUserLight(object);
+        }
+    }
+}
+
+void SceneEditorContentModel::UntrackSubtree(const GameObject& root) noexcept {
+    Array<const GameObject*> subtree;
+    CollectSubtreeForContentModel(root, subtree);
+
+    const auto contains = [&subtree](const GameObject* candidate) {
+        for (std::size_t i = 0; i < subtree.GetSize(); ++i) {
+            if (subtree[i] == candidate) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (std::size_t i = roots.GetSize(); i > 0; --i) {
+        if (contains(roots[i - 1U])) {
+            roots.RemoveAt(i - 1U);
+        }
+    }
+    for (std::size_t i = placed.GetSize(); i > 0; --i) {
+        if (contains(placed[i - 1U])) {
+            placed.RemoveAt(i - 1U);
+            if (i - 1U < placedRel.GetSize()) {
+                placedRel.RemoveAt(i - 1U);
+            }
+        }
+    }
+    for (std::size_t i = userLights.GetSize(); i > 0; --i) {
+        if (contains(userLights[i - 1U])) {
+            userLights.RemoveAt(i - 1U);
+        }
+    }
+}
+
 }  // namespace Spark

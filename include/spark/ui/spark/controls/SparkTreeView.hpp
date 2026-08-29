@@ -38,7 +38,9 @@ public:
     void Clear() override;
     int AddItem(int parentIndex, Utf8String label) override;
     [[nodiscard]] int GetSelectedNodeId() const noexcept override { return selectedNodeId; }
+    void SetSelectedNodeId(int nodeId) override;
     void SetOnSelectionChanged(UiIntCallback handler) override { onSelect = handler; }
+    void SetOnNodeContextMenu(UiIntCallback handler) override { onContextMenu = handler; }
 
     [[nodiscard]] bool WantsScrollInput() const override { return true; }
     [[nodiscard]] bool WantsKeyboardFocus() const override { return true; }
@@ -87,6 +89,7 @@ private:
 
     int selectedNodeId = -1;
     UiIntCallback onSelect{};
+    UiIntCallback onContextMenu{};
 
     float scrollY = 0.0F;
     float contentHeight = 0.0F;

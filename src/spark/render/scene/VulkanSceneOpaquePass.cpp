@@ -89,17 +89,9 @@ void VulkanSceneOpaquePass::Record(
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipelineLit);
 
-    VkViewport viewport{};
-    viewport.x = 0.0F;
-    viewport.y = 0.0F;
-    viewport.width = static_cast<float>(ctx.extent.width);
-    viewport.height = static_cast<float>(ctx.extent.height);
-    viewport.minDepth = 0.0F;
-    viewport.maxDepth = 1.0F;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
     VkRect2D fullScissor{};
     VulkanScreenUiClip::BindScenePassScissor(commandBuffer, ctx.scene, ctx.extent, fullScissor);
+    VulkanScreenUiClip::BindScenePassViewport(commandBuffer, ctx.scene, ctx.extent);
 
     const VkDeviceSize vbOffset = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &ctx.meshBindings.staticVertexBuffer, &vbOffset);
@@ -231,6 +223,10 @@ void VulkanSceneOpaquePass::RecordTransparent(
     if (ctx.meshBindings.staticVertexBuffer == VK_NULL_HANDLE || ctx.meshBindings.staticIndexBuffer == VK_NULL_HANDLE) {
         return;
     }
+
+    VkRect2D fullScissor{};
+    VulkanScreenUiClip::BindScenePassScissor(commandBuffer, ctx.scene, ctx.extent, fullScissor);
+    VulkanScreenUiClip::BindScenePassViewport(commandBuffer, ctx.scene, ctx.extent);
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipelineLitTransparent);
 

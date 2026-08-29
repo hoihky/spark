@@ -46,6 +46,12 @@ public:
             const SceneDocument& document,
             const SceneEditorContentBindingHooks& hooks) noexcept;
 
+    /** Re-registers tracking lists after hierarchy undo restores a subtree. */
+    void IntegrateSubtree(GameObject& root) noexcept;
+
+    /** Removes objects from tracking lists without destroying them. */
+    void UntrackSubtree(const GameObject& root) noexcept;
+
     [[nodiscard]] GameObject* FindPlacedOwner(GameObject* object) const noexcept;
 
     [[nodiscard]] const Array<GameObject*>& GetRoots() const noexcept { return roots; }

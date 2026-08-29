@@ -42,6 +42,14 @@ public:
     virtual void SetMuted(bool muted) = 0;
 };
 
+class ITextBox : public virtual IUiElement {
+public:
+    virtual void SetText(Utf8String text) = 0;
+    [[nodiscard]] virtual Utf8StringView GetText() const = 0;
+    virtual void SetOnCommit(UiVoidCallback handler) = 0;
+    [[nodiscard]] virtual bool IsEditing() const = 0;
+};
+
 class ISeparator : public virtual IUiElement {};
 
 class IScrollPanel : public virtual IUiElement {
@@ -93,7 +101,10 @@ public:
     /** Returns new node index, or -1 if parent is invalid. */
     virtual int AddItem(int parentIndex, Utf8String label) = 0;
     [[nodiscard]] virtual int GetSelectedNodeId() const = 0;
+    virtual void SetSelectedNodeId(int nodeId) = 0;
     virtual void SetOnSelectionChanged(UiIntCallback handler) = 0;
+    /** Fired on right-click over a row (node id). */
+    virtual void SetOnNodeContextMenu(UiIntCallback handler) = 0;
 };
 
 using IButton = IUiButton;

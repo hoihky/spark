@@ -207,6 +207,17 @@ constexpr DemoCatalogEntry kEntries[] = {
          "22",
          -1,
          'V'},
+#if SPARK_HAS_EDITOR
+        {DemoStorageId::SparkEditor,
+         DemoMode::SparkEditor,
+         DemoCategory::Tools,
+         true,
+         "Spark editor",
+         "Dock shell, hierarchy, inspector, undo",
+         "23",
+         -1,
+         'E'},
+#endif
 };
 
 static_assert(

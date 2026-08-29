@@ -48,6 +48,12 @@ public:
             VkExtent2D extent,
             VkRect2D& outFullFramebuffer) noexcept;
 
+    /** Matches <c>BindScenePassScissor</c> viewport to the active world-viewport scissor when enabled. */
+    static void BindScenePassViewport(
+            VkCommandBuffer commandBuffer,
+            const SceneRenderParams* scene,
+            VkExtent2D extent) noexcept;
+
     static void RestoreFramebufferScissor(VkCommandBuffer commandBuffer, const VkRect2D& fullFramebuffer) noexcept;
 };
 

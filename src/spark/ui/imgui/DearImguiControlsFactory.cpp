@@ -25,6 +25,10 @@ UniquePtr<ILabel> DearImguiControlsFactory::CreateLabel(const LabelDesc& desc) {
     return UniquePtr<ILabel>(new ImguiLabel(desc));
 }
 
+UniquePtr<ITextBox> DearImguiControlsFactory::CreateTextBox(const TextFieldDesc& desc) {
+    return UniquePtr<ITextBox>(new ImguiTextBox(desc));
+}
+
 UniquePtr<ISeparator> DearImguiControlsFactory::CreateSeparator(const SeparatorDesc& desc) {
     return UniquePtr<ISeparator>(new ImguiSeparator(desc));
 }

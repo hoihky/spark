@@ -59,6 +59,21 @@ void PrepareUiCanvasFrame() {
 
 }  // namespace
 
+Ui::Rect ComputeUiCanvasViewport(const int framebufferWidth, const int framebufferHeight) noexcept {
+    const float fbw = static_cast<float>(framebufferWidth > 0 ? framebufferWidth : 1);
+    const float fbh = static_cast<float>(framebufferHeight > 0 ? framebufferHeight : 1);
+    Ui::Rect viewport{0.0F, 0.0F, fbw, fbh};
+#if SPARK_ENABLE_IMGUI
+    if (!Ui::UiToolkitSettings::ShouldProcessSparkUiInput()) {
+        if (const ImGuiViewport* imguiViewport = ImGui::GetMainViewport()) {
+            viewport.width = imguiViewport->WorkSize.x > 0.0F ? imguiViewport->WorkSize.x : fbw;
+            viewport.height = imguiViewport->WorkSize.y > 0.0F ? imguiViewport->WorkSize.y : fbh;
+        }
+    }
+#endif
+    return viewport;
+}
+
 void ProcessUiCanvasesInput(
         GameWorld& world,
         IInput& input,
@@ -93,17 +108,7 @@ void PaintUiCanvases(
     CollectUiCanvases(world, list);
     SortCanvasesByOrder(list);
 
-    const float fbw = static_cast<float>(framebufferWidth > 0 ? framebufferWidth : 1);
-    const float fbh = static_cast<float>(framebufferHeight > 0 ? framebufferHeight : 1);
-    Ui::Rect viewport{0.0F, 0.0F, fbw, fbh};
-#if SPARK_ENABLE_IMGUI
-    if (!Ui::UiToolkitSettings::ShouldProcessSparkUiInput()) {
-        if (const ImGuiViewport* imguiViewport = ImGui::GetMainViewport()) {
-            viewport.width = imguiViewport->WorkSize.x > 0.0F ? imguiViewport->WorkSize.x : fbw;
-            viewport.height = imguiViewport->WorkSize.y > 0.0F ? imguiViewport->WorkSize.y : fbh;
-        }
-    }
-#endif
+    const Ui::Rect viewport = ComputeUiCanvasViewport(framebufferWidth, framebufferHeight);
 
     PrepareUiCanvasFrame();
 
@@ -112,7 +117,7 @@ void PaintUiCanvases(
         renderer.SetLayoutFont(uiFont.Get());
     }
     if (auto* sparkRenderer = dynamic_cast<Ui::SparkUiRenderer*>(&renderer)) {
-        sparkRenderer->GetPaintContext().SetFramebufferPixelSize(fbw, fbh);
+        sparkRenderer->GetPaintContext().SetFramebufferPixelSize(viewport.width, viewport.height);
     }
 
     for (std::size_t i = 0; i < list.GetSize(); ++i) {

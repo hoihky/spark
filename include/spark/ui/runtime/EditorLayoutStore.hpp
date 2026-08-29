@@ -8,6 +8,9 @@ namespace Spark::Ui {
 struct SceneEditorLayoutSettings {
     float sidebarSplit = 0.31F;
     float sidebarWidthPx = 600.0F;
+    float leftDockWidthPx = 280.0F;
+    float rightDockWidthPx = 340.0F;
+    float leftStackSplit = 0.55F;
     float inspectorScrollY = 0.0F;
     float uiScale = 1.0F;
     UiThemePreset guiTheme = UiThemePreset::ClassicMint;

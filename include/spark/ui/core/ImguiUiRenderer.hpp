@@ -14,6 +14,28 @@ namespace Ui {
 
 struct UiFrameContext;
 
+/** Window names for the five-pane Spark editor dock preset. */
+struct EditorDockLayoutDesc {
+    float toolbarHeightPx = 40.0F;
+    float leftWidthPx = 280.0F;
+    float rightWidthPx = 340.0F;
+    float leftStackSplit = 0.55F;
+    const char* toolbarWindow = nullptr;
+    const char* hierarchyWindow = nullptr;
+    const char* projectWindow = nullptr;
+    const char* sceneWindow = nullptr;
+    const char* inspectorWindow = nullptr;
+};
+
+/** Dock node ids produced by <c>BuildEditorDockLayout</c>. */
+struct EditorDockLayoutNodes {
+    unsigned int toolbar = 0;
+    unsigned int hierarchy = 0;
+    unsigned int project = 0;
+    unsigned int scene = 0;
+    unsigned int inspector = 0;
+};
+
 /** How an ImGui panel window is positioned each frame. */
 enum class ImguiPanelPlacement : std::uint8_t {
     /** Default: place once, user can drag and resize afterward. */
@@ -22,6 +44,12 @@ enum class ImguiPanelPlacement : std::uint8_t {
     CenterOnce = 1,
     /** Pin to layout bounds every frame (editor-style fixed panels). */
     LockedSide = 2,
+    /** Docked into an active <c>ImguiDockWorkspace</c> dock space. */
+    Docked = 3,
+    /** Docked center viewport: no background, input passes through to the scene. */
+    DockedPassthrough = 4,
+    /** Pinned layout rect with transparent background (editor scene view). */
+    LockedViewport = 5,
 };
 
 class ImguiUiRenderer final : public IUiRenderer {
@@ -147,6 +175,16 @@ public:
             float& value,
             float minValue,
             float maxValue);
+    [[nodiscard]] bool DragFloat(
+            const char* id,
+            Utf8StringView label,
+            float& value,
+            float speed,
+            float minValue,
+            float maxValue);
+
+    void SameLine(float offsetFromStartX = 0.0F, float spacing = -1.0F);
+    [[nodiscard]] bool IsAnyItemActive() const noexcept;
 
     /** Opens an ImGui window sized/positioned from <c>bounds</c>. Returns false only when Begin was not called. */
     [[nodiscard]] bool BeginPanel(
@@ -157,10 +195,21 @@ public:
             ImguiPanelPlacement placement = ImguiPanelPlacement::Movable);
     void EndPanel();
 
+    /** Assigns the dock node for the next <c>BeginPanel</c> with <c>Docked</c> placement. */
+    void SetNextPanelDockId(const unsigned int dockId) noexcept { nextPanelDockId = dockId; }
+
     [[nodiscard]] bool BeginScrollRegion(const char* id, float height);
     void EndScrollRegion();
     void SetScrollY(float y);
     [[nodiscard]] float GetScrollY() const noexcept;
+
+    [[nodiscard]] bool BeginDockHost(const char* id, const Rect& bounds, unsigned int& outDockSpaceId);
+    void BuildEditorDockLayout(
+            unsigned int dockSpaceId,
+            const Rect& bounds,
+            const EditorDockLayoutDesc& desc,
+            EditorDockLayoutNodes& outNodes);
+    void EndDockHost();
 
     /** Full-bleed dock host inside <c>bounds</c>. Child panels dock via matching window titles. */
     [[nodiscard]] bool BeginDockWorkspace(
@@ -183,6 +232,7 @@ private:
     int panelStack = 0;
     int scrollStack = 0;
     float activeScrollY = 0.0F;
+    unsigned int nextPanelDockId = 0;
 };
 
 }  // namespace Ui

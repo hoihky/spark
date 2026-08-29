@@ -54,7 +54,7 @@ public:
 
 private:
     Array<TilemapObjectLayer> objectLayers{};
-    std::uint32_t nextMarkerId_ = 1U;
+    std::uint32_t nextMarkerId = 1U;
 };
 
 }  // namespace Spark

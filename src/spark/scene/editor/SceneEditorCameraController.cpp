@@ -82,15 +82,15 @@ void SceneEditorCameraController::UpdateEditorNavigation(
 
     const bool rmbDown = input.IsMouseButtonDown(1);
     const bool mmbDown = input.IsMouseButtonDown(2);
-    const bool cameraNavActive = inViewport || rmbDown || mmbDown || orbitDragActive_;
+    const bool cameraNavActive = inViewport || rmbDown || mmbDown || orbitDragActive;
 
     if (input.IsMouseButtonPressedThisFrame(1) && inViewport) {
-        rmbDragDistSq_ = 0.0F;
+        rmbDragDistSq = 0.0F;
     }
     if (rmbDown && inViewport && timing.frameIndex > 0) {
         const float mdx = input.GetMouseDeltaX();
         const float mdy = input.GetMouseDeltaY();
-        rmbDragDistSq_ += mdx * mdx + mdy * mdy;
+        rmbDragDistSq += mdx * mdx + mdy * mdy;
         camera.AddLook(mdx, mdy);
     }
 
@@ -115,11 +115,11 @@ void SceneEditorCameraController::BeginOrbitDrag(const Vector3& pivot) noexcept 
             camera.position.y - orbitPivot.y,
             camera.position.z - orbitPivot.z};
     orbitDistance = std::max(1.5F, offset.Length());
-    orbitDragActive_ = true;
+    orbitDragActive = true;
 }
 
 void SceneEditorCameraController::UpdateOrbitDrag(IInput& input) noexcept {
-    if (!orbitDragActive_) {
+    if (!orbitDragActive) {
         return;
     }
     OrbitFlyCameraAroundPivot(
@@ -127,7 +127,7 @@ void SceneEditorCameraController::UpdateOrbitDrag(IInput& input) noexcept {
 }
 
 void SceneEditorCameraController::EndOrbitDrag() noexcept {
-    orbitDragActive_ = false;
+    orbitDragActive = false;
 }
 
 }  // namespace Spark

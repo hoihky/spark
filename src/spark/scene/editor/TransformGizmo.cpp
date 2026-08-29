@@ -298,16 +298,16 @@ void AppendRotateDraws(
 }  // namespace
 
 void TransformGizmo::CycleMode() noexcept {
-    switch (mode_) {
+    switch (mode) {
         case TransformGizmoMode::Translate:
-            mode_ = TransformGizmoMode::Rotate;
+            mode = TransformGizmoMode::Rotate;
             break;
         case TransformGizmoMode::Rotate:
-            mode_ = TransformGizmoMode::Scale;
+            mode = TransformGizmoMode::Scale;
             break;
         case TransformGizmoMode::Scale:
         default:
-            mode_ = TransformGizmoMode::Translate;
+            mode = TransformGizmoMode::Translate;
             break;
     }
 }
@@ -322,7 +322,7 @@ bool TransformGizmo::TryBeginDrag(
     const Vector3 pivot = local.translation;
     int axis = -1;
     bool picked = false;
-    switch (mode_) {
+    switch (mode) {
         case TransformGizmoMode::Translate:
         case TransformGizmoMode::Scale:
             picked = TryPickAxisHandles(rayOrigin, rayDir, pivot, objectExtent, axis);
@@ -335,22 +335,22 @@ bool TransformGizmo::TryBeginDrag(
         return false;
     }
 
-    drag_.active = true;
-    drag_.activeAxis = axis;
-    drag_.target = &target;
-    drag_.pivot = pivot;
-    drag_.startTranslation = local.translation;
-    drag_.startRotation = local.rotation;
-    drag_.startScale = local.scale;
-    drag_.startLineS = 0.0F;
-    drag_.startPlaneAngle = 0.0F;
+    drag.active = true;
+    drag.activeAxis = axis;
+    drag.target = &target;
+    drag.pivot = pivot;
+    drag.startTranslation = local.translation;
+    drag.startRotation = local.rotation;
+    drag.startScale = local.scale;
+    drag.startLineS = 0.0F;
+    drag.startPlaneAngle = 0.0F;
 
-    if (mode_ == TransformGizmoMode::Translate || mode_ == TransformGizmoMode::Scale) {
-        (void)ClosestRayLineParameter(rayOrigin, rayDir, pivot, GizmoAxisDir(axis), drag_.startLineS);
+    if (mode == TransformGizmoMode::Translate || mode == TransformGizmoMode::Scale) {
+        (void)ClosestRayLineParameter(rayOrigin, rayDir, pivot, GizmoAxisDir(axis), drag.startLineS);
     } else {
         Vector3 hit{};
         if (RayIntersectPlane(rayOrigin, rayDir, pivot, GizmoAxisDir(axis), hit)) {
-            drag_.startPlaneAngle = PlaneAngleAboutAxis(pivot, GizmoAxisDir(axis), hit);
+            drag.startPlaneAngle = PlaneAngleAboutAxis(pivot, GizmoAxisDir(axis), hit);
         }
     }
     return true;
@@ -360,51 +360,51 @@ bool TransformGizmo::UpdateDrag(
         const Vector3& rayOrigin,
         const Vector3& rayDir,
         TransformComponent& transform) noexcept {
-    if (!drag_.active || drag_.activeAxis < 0) {
+    if (!drag.active || drag.activeAxis < 0) {
         return false;
     }
 
-    const Vector3 axis = GizmoAxisDir(drag_.activeAxis);
-    switch (mode_) {
+    const Vector3 axis = GizmoAxisDir(drag.activeAxis);
+    switch (mode) {
         case TransformGizmoMode::Translate: {
             float lineS = 0.0F;
-            if (!ClosestRayLineParameter(rayOrigin, rayDir, drag_.pivot, axis, lineS)) {
+            if (!ClosestRayLineParameter(rayOrigin, rayDir, drag.pivot, axis, lineS)) {
                 return false;
             }
-            const float ds = lineS - drag_.startLineS;
+            const float ds = lineS - drag.startLineS;
             transform.SetTranslation({
-                    drag_.startTranslation.x + axis.x * ds,
-                    drag_.startTranslation.y + axis.y * ds,
-                    drag_.startTranslation.z + axis.z * ds});
+                    drag.startTranslation.x + axis.x * ds,
+                    drag.startTranslation.y + axis.y * ds,
+                    drag.startTranslation.z + axis.z * ds});
             return true;
         }
         case TransformGizmoMode::Scale: {
             float lineS = 0.0F;
-            if (!ClosestRayLineParameter(rayOrigin, rayDir, drag_.pivot, axis, lineS)) {
+            if (!ClosestRayLineParameter(rayOrigin, rayDir, drag.pivot, axis, lineS)) {
                 return false;
             }
-            const float ds = lineS - drag_.startLineS;
-            Vector3 scale = drag_.startScale;
+            const float ds = lineS - drag.startLineS;
+            Vector3 scale = drag.startScale;
             const float sensitivity = 0.65F;
-            if (drag_.activeAxis == 0) {
-                scale.x = std::max(0.05F, drag_.startScale.x + ds * sensitivity);
-            } else if (drag_.activeAxis == 1) {
-                scale.y = std::max(0.05F, drag_.startScale.y + ds * sensitivity);
+            if (drag.activeAxis == 0) {
+                scale.x = std::max(0.05F, drag.startScale.x + ds * sensitivity);
+            } else if (drag.activeAxis == 1) {
+                scale.y = std::max(0.05F, drag.startScale.y + ds * sensitivity);
             } else {
-                scale.z = std::max(0.05F, drag_.startScale.z + ds * sensitivity);
+                scale.z = std::max(0.05F, drag.startScale.z + ds * sensitivity);
             }
             transform.SetScale(scale);
             return true;
         }
         case TransformGizmoMode::Rotate: {
             Vector3 hit{};
-            if (!RayIntersectPlane(rayOrigin, rayDir, drag_.pivot, axis, hit)) {
+            if (!RayIntersectPlane(rayOrigin, rayDir, drag.pivot, axis, hit)) {
                 return false;
             }
-            const float angle = PlaneAngleAboutAxis(drag_.pivot, axis, hit);
-            const float delta = angle - drag_.startPlaneAngle;
+            const float angle = PlaneAngleAboutAxis(drag.pivot, axis, hit);
+            const float delta = angle - drag.startPlaneAngle;
             const Quaternion deltaQ = Quaternion::FromAxisAngle(axis, delta);
-            transform.SetRotation((deltaQ * drag_.startRotation).Normalized());
+            transform.SetRotation((deltaQ * drag.startRotation).Normalized());
             return true;
         }
     }
@@ -412,7 +412,7 @@ bool TransformGizmo::UpdateDrag(
 }
 
 void TransformGizmo::EndDrag() noexcept {
-    drag_ = DragState{};
+    drag = DragState{};
 }
 
 void TransformGizmo::AppendDraws(
@@ -420,15 +420,15 @@ void TransformGizmo::AppendDraws(
         const float objectExtent,
         Array<SceneDrawItem>& out) const {
     const Vector3 pivot = transform.GetLocalTransform().translation;
-    switch (mode_) {
+    switch (mode) {
         case TransformGizmoMode::Translate:
-            AppendTranslateDraws(pivot, objectExtent, drag_.activeAxis, out);
+            AppendTranslateDraws(pivot, objectExtent, drag.activeAxis, out);
             break;
         case TransformGizmoMode::Rotate:
-            AppendRotateDraws(pivot, objectExtent, drag_.activeAxis, out);
+            AppendRotateDraws(pivot, objectExtent, drag.activeAxis, out);
             break;
         case TransformGizmoMode::Scale:
-            AppendScaleDraws(pivot, objectExtent, drag_.activeAxis, out);
+            AppendScaleDraws(pivot, objectExtent, drag.activeAxis, out);
             break;
     }
 }
@@ -446,7 +446,7 @@ const char* TransformGizmo::ModeName(const TransformGizmoMode mode) noexcept {
 }
 
 const char* TransformGizmo::GetInteractionHint() const noexcept {
-    switch (mode_) {
+    switch (mode) {
         case TransformGizmoMode::Translate:
             return "Drag axis arrows to move. W/E/R switch gizmo mode.";
         case TransformGizmoMode::Rotate:

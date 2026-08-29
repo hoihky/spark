@@ -569,10 +569,34 @@ set(SPARK_ENGINE_EDITOR_SOURCES
         src/spark/editor/EditorProject.cpp
         src/spark/editor/EditorUiFont.cpp
         src/spark/editor/EditorApplication.cpp
+        src/spark/editor/EditorDefaultLayout.cpp
+        src/spark/editor/EditorViewport.cpp
+        src/spark/editor/EditorCommandStack.cpp
+        src/spark/editor/commands/SetTransformCommand.cpp
+        src/spark/editor/commands/SetPointLightCommand.cpp
+        src/spark/editor/commands/SetMeshAlbedoCommand.cpp
+        src/spark/editor/commands/SetMaterialInspectorCommand.cpp
+        src/spark/editor/commands/SetGameObjectNameCommand.cpp
+        src/spark/editor/commands/CreateGameObjectCommand.cpp
+        src/spark/editor/commands/DestroyGameObjectCommand.cpp
+        src/spark/editor/commands/DuplicateGameObjectCommand.cpp
+        src/spark/editor/commands/SetGameObjectParentCommand.cpp
+        src/spark/editor/hierarchy/HierarchySceneSnapshot.cpp
+        src/spark/editor/hierarchy/EditorHierarchyActions.cpp
+        src/spark/editor/EditorTextureCatalog.cpp
+        src/spark/editor/inspector/InspectorMath.cpp
+        src/spark/editor/inspector/InspectorUiBuilder.cpp
+        src/spark/editor/inspector/InspectorWidgetRegistry.cpp
+        src/spark/editor/inspector/widgets/TransformInspectorWidget.cpp
+        src/spark/editor/inspector/widgets/MeshInspectorWidget.cpp
+        src/spark/editor/inspector/widgets/PointLightInspectorWidget.cpp
+        src/spark/editor/inspector/widgets/MaterialInspectorWidget.cpp
         src/spark/editor/panels/HierarchyPanel.cpp
         src/spark/editor/panels/InspectorPanel.cpp
         src/spark/editor/panels/ProjectBrowserPanel.cpp
         src/spark/editor/panels/EditorDockShell.cpp
+        src/spark/demo/SparkEditorDemo.cpp
+        src/spark/editor/EditorGame.cpp
 )
 
 set(SPARK_ENGINE_SOURCES
@@ -701,6 +725,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ui/core/UiPointerState.cpp
         src/spark/ui/core/UiInputRouter.cpp
         src/spark/ui/spark/controls/SparkControls.cpp
+        src/spark/ui/spark/controls/SparkTextBox.cpp
         src/spark/ui/spark/controls/SparkList.cpp
         src/spark/ui/spark/controls/SparkMultiSelectList.cpp
         src/spark/ui/spark/controls/SparkScrollPanel.cpp
@@ -894,6 +919,7 @@ option(SPARK_BUILD_TESTS "Build Spark unit tests (GoogleTest)" OFF)
 option(SPARK_BUILD_ENGINE_SHARED "Build SparkEngine as a shared library (OFF = static)" OFF)
 option(SPARK_BUILD_ENGINE_DEMOS "Compile shell/demo sources into SparkEngine (OFF for slim editor/game DLL)" ON)
 option(SPARK_BUILD_EDITOR "Compile spark/editor authoring module into SparkEngine" OFF)
+option(SPARK_BUILD_SPARK_EDITOR "Build SparkEditor standalone executable (requires SPARK_BUILD_EDITOR)" OFF)
 option(SPARK_BUILD_DEMO "Build SparkDemo sample executable (shell + demos)" ON)
 option(SPARK_BUILD_INTEROP "Build SparkInterop shared library (C ABI for C# bindings)" OFF)
 
@@ -917,6 +943,12 @@ if (SPARK_BUILD_ENGINE_SHARED AND APPLE)
     set_target_properties(SparkEngine PROPERTIES MACOSX_RPATH ON)
 endif ()
 add_dependencies(SparkEngine SparkShaders)
+
+if (SPARK_BUILD_EDITOR)
+    target_compile_definitions(SparkEngine PUBLIC SPARK_HAS_EDITOR=1)
+else ()
+    target_compile_definitions(SparkEngine PUBLIC SPARK_HAS_EDITOR=0)
+endif ()
 
 target_include_directories(SparkEngine PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -971,6 +1003,14 @@ if (SPARK_BUILD_DEMO)
     target_link_libraries(SparkDemo PRIVATE SparkEngine)
 endif ()
 
+if (SPARK_BUILD_SPARK_EDITOR)
+    if (NOT SPARK_BUILD_EDITOR)
+        message(FATAL_ERROR "SPARK_BUILD_SPARK_EDITOR requires SPARK_BUILD_EDITOR=ON")
+    endif ()
+    add_executable(SparkEditor spark_editor/main.cpp)
+    target_link_libraries(SparkEditor PRIVATE SparkEngine)
+endif ()
+
 if (SPARK_BUILD_INTEROP)
     add_subdirectory(scripting)
 endif ()
@@ -984,6 +1024,9 @@ endif ()
 set(SPARK_WARNING_TARGETS SparkEngine)
 if (SPARK_BUILD_DEMO)
     list(APPEND SPARK_WARNING_TARGETS SparkDemo)
+endif ()
+if (SPARK_BUILD_SPARK_EDITOR)
+    list(APPEND SPARK_WARNING_TARGETS SparkEditor)
 endif ()
 if (SPARK_BUILD_INTEROP)
     list(APPEND SPARK_WARNING_TARGETS SparkInterop)

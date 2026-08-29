@@ -1,5 +1,6 @@
 #include "spark/ui/imgui/controls/ImguiControls.hpp"
 
+#include "spark/config.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/ui/core/ImguiUiRenderer.hpp"
 #include "spark/ui/core/IUiRenderer.hpp"
@@ -8,6 +9,11 @@
 
 #include <algorithm>
 #include <cstdio>
+
+#if SPARK_ENABLE_IMGUI
+#include <imgui.h>
+#include <imgui_internal.h>
+#endif
 
 namespace Spark::Ui {
 
@@ -35,6 +41,32 @@ float ClampHeightMeasure(const UiMeasureConstraints& constraints, const float de
 
 void FormatDockWindowName(const char* id, const char* title, char* out, const std::size_t outSize) {
     std::snprintf(out, outSize, "%s###%s", title, id);
+}
+
+[[nodiscard]] bool IsEditorDockRoot(const IUiElement* element) noexcept {
+    return element != nullptr && element->GetId() == Utf8String("editor_dock_root");
+}
+
+[[nodiscard]] const IUiElement* FindDockHostAncestor(const IUiElement* element) noexcept {
+    const IUiElement* current = element != nullptr ? element->GetParent() : nullptr;
+    while (current != nullptr) {
+        if (IsEditorDockRoot(current)) {
+            return current;
+        }
+        if (dynamic_cast<const IDockWorkspace*>(current) != nullptr) {
+            return current;
+        }
+        current = current->GetParent();
+    }
+    return nullptr;
+}
+
+[[nodiscard]] bool IsDirectDockHostChild(const IUiElement* element) noexcept {
+    const IUiElement* parent = element != nullptr ? element->GetParent() : nullptr;
+    if (parent == nullptr) {
+        return false;
+    }
+    return IsEditorDockRoot(parent) || dynamic_cast<const IDockWorkspace*>(parent) != nullptr;
 }
 
 }  // namespace
@@ -76,7 +108,8 @@ ImguiPanel::ImguiPanel(const PanelDesc& desc)
     , anchorRight(desc.anchorRight)
     , edgeMargin(desc.edgeMargin)
     , centerInParent(desc.centerInParent)
-    , collapsible(desc.collapsible) {}
+    , collapsible(desc.collapsible)
+    , horizontalLayout(desc.horizontalLayout) {}
 
 void ImguiPanel::SetTitle(Utf8String titleIn) {
     title = MoveTemp(titleIn);
@@ -92,6 +125,11 @@ void ImguiPanel::Measure(const UiMeasureConstraints& constraints, UiSize& outDes
 }
 
 void ImguiPanel::Arrange(const Rect& finalBounds) {
+    if (IsDirectDockHostChild(this)) {
+        bounds = finalBounds;
+        DoArrangeChildren();
+        return;
+    }
     const UiLayoutMetrics& metrics = GetActiveUiLayoutMetrics();
     const float margin = metrics.Scaled(edgeMargin);
     float w = designWidth > 0.0F ? metrics.Scaled(designWidth) : finalBounds.width;
@@ -125,6 +163,22 @@ void ImguiPanel::Arrange(const Rect& finalBounds) {
     } else {
         bounds = Rect{finalBounds.x, finalBounds.y, w, h};
     }
+    DoArrangeChildren();
+}
+
+void ImguiPanel::ArrangeChildrenToImGuiContent() {
+#if SPARK_ENABLE_IMGUI
+    const ImVec2 pos = ImGui::GetCursorScreenPos();
+    const ImVec2 avail = ImGui::GetContentRegionAvail();
+    const Rect content{pos.x, pos.y, avail.x, avail.y};
+    for (std::size_t i = 0; i < children.GetSize(); ++i) {
+        if (children[i] != nullptr) {
+            children[i]->Arrange(content);
+        }
+    }
+#else
+    DoArrangeChildren();
+#endif
 }
 
 void ImguiPanel::Paint(IUiRenderer& renderer) {
@@ -135,20 +189,33 @@ void ImguiPanel::Paint(IUiRenderer& renderer) {
     if (imgui == nullptr) {
         return;
     }
-    Rect panelBounds{};
-    if (dynamic_cast<const IDockWorkspace*>(GetParent()) == nullptr) {
-        panelBounds = GetBounds();
+
+    if (FindDockHostAncestor(this) != nullptr && !IsDirectDockHostChild(this)) {
+        UiElementBase::Paint(renderer);
+        return;
     }
+
+    Rect panelBounds = GetBounds();
     bool* openPtr = collapsible ? &open : nullptr;
     ImguiPanelPlacement placement = ImguiPanelPlacement::Movable;
-    if (centerInParent) {
+    if (IsDirectDockHostChild(this)) {
+        panelBounds = {};
+        placement = children.GetSize() == 0U ? ImguiPanelPlacement::DockedPassthrough : ImguiPanelPlacement::Docked;
+    } else if (centerInParent) {
         placement = ImguiPanelPlacement::CenterOnce;
+    } else if (panelBounds.width > 1.0F && panelBounds.height > 1.0F) {
+        placement = ImguiPanelPlacement::LockedSide;
     }
+
     if (!imgui->BeginPanel(GetId().CStr(), title, openPtr, panelBounds, placement)) {
         return;
     }
+    ArrangeChildrenToImGuiContent();
     for (std::size_t i = 0; i < children.GetSize(); ++i) {
         if (children[i] != nullptr) {
+            if (horizontalLayout && i > 0U) {
+                imgui->SameLine();
+            }
             children[i]->Paint(renderer);
         }
     }
@@ -241,7 +308,12 @@ void ImguiScrollPanel::Paint(IUiRenderer& renderer) {
 void ImguiScrollPanel::DoPaint(IUiRenderer& /*renderer*/) {}
 
 ImguiSlider::ImguiSlider(const SliderDesc& desc)
-    : UiElementBase(desc.id), label(desc.label), value(desc.value), minValue(desc.minValue), maxValue(desc.maxValue) {
+    : UiElementBase(desc.id)
+    , label(desc.label)
+    , value(desc.value)
+    , minValue(desc.minValue)
+    , maxValue(desc.maxValue)
+    , dragInput(desc.dragInput) {
     SetEnabled(desc.enabled);
 }
 
@@ -258,7 +330,15 @@ void ImguiSlider::DoPaint(IUiRenderer& renderer) {
         return;
     }
     const Utf8StringView drawLabel = label.IsEmpty() ? Utf8StringView(GetId().CStr()) : Utf8StringView(label);
-    if (imgui->SliderFloat(GetId().CStr(), drawLabel, value, minValue, maxValue)) {
+    bool changed = false;
+    if (dragInput) {
+        const float range = (std::max)(maxValue - minValue, 0.01F);
+        const float speed = range * 0.005F;
+        changed = imgui->DragFloat(GetId().CStr(), drawLabel, value, speed, minValue, maxValue);
+    } else {
+        changed = imgui->SliderFloat(GetId().CStr(), drawLabel, value, minValue, maxValue);
+    }
+    if (changed) {
         if (onChanged.fn != nullptr) {
             onChanged.fn(onChanged.userData, value);
         }
@@ -289,17 +369,31 @@ void ImguiCheckBox::DoPaint(IUiRenderer& renderer) {
     }
 }
 
+ImguiTextBox::ImguiTextBox(const TextFieldDesc& desc)
+    : UiElementBase(desc.id), label(desc.label), text(desc.text) {
+    SetEnabled(desc.enabled);
+}
+
+void ImguiTextBox::DoPaint(IUiRenderer& /*renderer*/) {}
+
+void ImguiTextBox::Paint(IUiRenderer& renderer) {
+    DoPaint(renderer);
+}
+
 ImguiDockWorkspace::ImguiDockWorkspace(const DockWorkspaceDesc& desc)
-    : UiElementBase(desc.id), leftWidth(desc.leftWidth), rightWidth(desc.rightWidth) {
+    : UiElementBase(desc.id)
+    , leftWidth(desc.leftWidth)
+    , rightWidth(desc.rightWidth)
+    , enableDockBuilder(desc.enableDockBuilder) {
     PanelDesc leftDesc{};
     leftDesc.id = Utf8String("dock.left");
-    leftDesc.title = Utf8String("Left");
+    leftDesc.title = desc.leftTitle.IsEmpty() ? Utf8String("Hierarchy") : desc.leftTitle;
     PanelDesc centerDesc{};
     centerDesc.id = Utf8String("dock.center");
-    centerDesc.title = Utf8String("Center");
+    centerDesc.title = desc.centerTitle.IsEmpty() ? Utf8String("Scene") : desc.centerTitle;
     PanelDesc rightDesc{};
     rightDesc.id = Utf8String("dock.right");
-    rightDesc.title = Utf8String("Right");
+    rightDesc.title = desc.rightTitle.IsEmpty() ? Utf8String("Inspector") : desc.rightTitle;
 
     FormatDockWindowName(leftDesc.id.CStr(), leftDesc.title.CStr(), leftWindowName, sizeof(leftWindowName));
     FormatDockWindowName(centerDesc.id.CStr(), centerDesc.title.CStr(), centerWindowName, sizeof(centerWindowName));
@@ -356,10 +450,30 @@ void ImguiDockWorkspace::Arrange(const Rect& finalBounds) {
     const float effRight = EffectiveRightWidth();
     const float centerWidth = std::max(0.0F, finalBounds.width - effLeft - effRight);
     centerBounds = Rect{finalBounds.x + effLeft, finalBounds.y, centerWidth, finalBounds.height};
+    if (children.GetSize() >= 3U) {
+        if (children[0] != nullptr) {
+            children[0]->Arrange(Rect{finalBounds.x, finalBounds.y, effLeft, finalBounds.height});
+        }
+        if (children[1] != nullptr) {
+            children[1]->Arrange(Rect{finalBounds.x + effLeft, finalBounds.y, centerWidth, finalBounds.height});
+        }
+        if (children[2] != nullptr) {
+            children[2]->Arrange(
+                    Rect{finalBounds.x + effLeft + centerWidth, finalBounds.y, effRight, finalBounds.height});
+        }
+    }
 }
 
 void ImguiDockWorkspace::Paint(IUiRenderer& renderer) {
     if (!visible) {
+        return;
+    }
+    if (!enableDockBuilder) {
+        for (std::size_t i = 0; i < children.GetSize(); ++i) {
+            if (children[i] != nullptr) {
+                children[i]->Paint(renderer);
+            }
+        }
         return;
     }
     ImguiUiRenderer* imgui = AsImguiRenderer(renderer);
@@ -382,6 +496,11 @@ void ImguiDockWorkspace::Paint(IUiRenderer& renderer) {
             children[i]->Paint(renderer);
         }
     }
+#if SPARK_ENABLE_IMGUI
+    if (ImGuiWindow* centerWindow = ImGui::FindWindowByName(centerWindowName)) {
+        centerBounds = Rect{centerWindow->Pos.x, centerWindow->Pos.y, centerWindow->Size.x, centerWindow->Size.y};
+    }
+#endif
     imgui->EndDockWorkspace();
 }
 

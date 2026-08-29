@@ -1,5 +1,6 @@
 #include "spark/engine/GlfwInput.hpp"
 
+#include "spark/core/Array.hpp"
 #include "spark/render/platform/Window.hpp"
 
 #include <cmath>
@@ -25,6 +26,7 @@ void GlfwInput::WireToWindow([[maybe_unused]] Window& win) {
     });
 #endif
     win.SetScrollCallback([this](double /*xoffset*/, double yoffset) { scrollAccumY += yoffset; });
+    win.SetCharCallback([this](const unsigned int codepoint) { typedCodepoints.PushBack(codepoint); });
     glfwGetCursorPos(window, &cursorXWin, &cursorYWin);
 }
 
@@ -211,6 +213,11 @@ bool GlfwInput::TryGetClipboardUtf8(Utf8String& out) const {
 
 void GlfwInput::SetClipboardUtf8(const Utf8String& text) const {
     glfwSetClipboardString(window, text.CStr());
+}
+
+void GlfwInput::DrainTypedCodepoints(Array<std::uint32_t>& outCodepoints) {
+    outCodepoints = MoveTemp(typedCodepoints);
+    typedCodepoints.Clear();
 }
 
 void GlfwInput::Clear() {

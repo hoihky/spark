@@ -117,6 +117,42 @@ void VulkanScreenUiClip::BindScenePassScissor(
     }
 }
 
+void VulkanScreenUiClip::BindScenePassViewport(
+        const VkCommandBuffer commandBuffer,
+        const SceneRenderParams* scene,
+        const VkExtent2D extent) noexcept {
+    VkViewport viewport{};
+    viewport.minDepth = 0.0F;
+    viewport.maxDepth = 1.0F;
+    if (scene != nullptr && scene->worldViewportScissorEnabled) {
+        VkRect2D worldScissor{};
+        if (ScreenRectToVkScissor(
+                    true,
+                    scene->worldViewportScissorX,
+                    scene->worldViewportScissorY,
+                    scene->worldViewportScissorW,
+                    scene->worldViewportScissorH,
+                    extent,
+                    worldScissor)) {
+            viewport.x = static_cast<float>(worldScissor.offset.x);
+            viewport.y = static_cast<float>(worldScissor.offset.y);
+            viewport.width = static_cast<float>(worldScissor.extent.width);
+            viewport.height = static_cast<float>(worldScissor.extent.height);
+        } else {
+            viewport.x = 0.0F;
+            viewport.y = 0.0F;
+            viewport.width = static_cast<float>(extent.width);
+            viewport.height = static_cast<float>(extent.height);
+        }
+    } else {
+        viewport.x = 0.0F;
+        viewport.y = 0.0F;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = static_cast<float>(extent.height);
+    }
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+}
+
 void VulkanScreenUiClip::RestoreFramebufferScissor(
         const VkCommandBuffer commandBuffer, const VkRect2D& fullFramebuffer) noexcept {
     vkCmdSetScissor(commandBuffer, 0, 1, &fullFramebuffer);

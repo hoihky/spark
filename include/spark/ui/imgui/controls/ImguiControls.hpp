@@ -44,6 +44,8 @@ protected:
     void DoPaint(IUiRenderer& renderer) override;
 
 private:
+    void ArrangeChildrenToImGuiContent();
+
     Utf8String title{};
     bool open = true;
     float designWidth = 0.0F;
@@ -52,6 +54,7 @@ private:
     float edgeMargin = 8.0F;
     bool centerInParent = false;
     bool collapsible = false;
+    bool horizontalLayout = false;
 };
 
 class ImguiLabel final : public ILabel, public UiElementBase {
@@ -118,6 +121,7 @@ private:
     float value = 0.0F;
     float minValue = 0.0F;
     float maxValue = 1.0F;
+    bool dragInput = false;
     UiFloatCallback onChanged{};
 };
 
@@ -137,6 +141,25 @@ private:
     Utf8String label{};
     bool value = false;
     UiBoolCallback onChanged{};
+};
+
+class ImguiTextBox final : public ITextBox, public UiElementBase {
+public:
+    explicit ImguiTextBox(const TextFieldDesc& desc);
+    void SetText(Utf8String textIn) override { text = MoveTemp(textIn); }
+    [[nodiscard]] Utf8StringView GetText() const noexcept override { return text; }
+    void SetOnCommit(UiVoidCallback handler) override { onCommit = handler; }
+    [[nodiscard]] bool IsEditing() const noexcept override { return false; }
+
+    void Paint(IUiRenderer& renderer) override;
+
+protected:
+    void DoPaint(IUiRenderer& renderer) override;
+
+private:
+    Utf8String label{};
+    Utf8String text{};
+    UiVoidCallback onCommit{};
 };
 
 class ImguiDockWorkspace final : public IDockWorkspace, public UiElementBase {
@@ -174,6 +197,7 @@ private:
     bool leftCollapsed = false;
     bool rightCollapsed = false;
     bool dockLayoutBuilt = false;
+    bool enableDockBuilder = false;
     char leftWindowName[192]{};
     char centerWindowName[192]{};
     char rightWindowName[192]{};

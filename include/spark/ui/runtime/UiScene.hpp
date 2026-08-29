@@ -10,6 +10,8 @@ namespace Spark {
 class IInput;
 struct SceneRenderParams;
 
+[[nodiscard]] Ui::Rect ComputeUiCanvasViewport(int framebufferWidth, int framebufferHeight) noexcept;
+
 void ProcessUiCanvasesInput(
         GameWorld& world,
         IInput& input,

@@ -4,6 +4,7 @@
 #include "spark/ui/spark/controls/SparkList.hpp"
 #include "spark/ui/spark/controls/SparkMultiSelectList.hpp"
 #include "spark/ui/spark/controls/SparkScrollPanel.hpp"
+#include "spark/ui/spark/controls/SparkTextBox.hpp"
 #include "spark/ui/spark/controls/SparkTreeView.hpp"
 
 namespace Spark::Ui {
@@ -26,6 +27,10 @@ UniquePtr<IPanel> SparkUiControlsFactory::CreatePanel(const PanelDesc& desc) {
 
 UniquePtr<ILabel> SparkUiControlsFactory::CreateLabel(const LabelDesc& desc) {
     return UniquePtr<ILabel>(new SparkLabel(desc));
+}
+
+UniquePtr<ITextBox> SparkUiControlsFactory::CreateTextBox(const TextFieldDesc& desc) {
+    return UniquePtr<ITextBox>(new SparkTextBox(desc));
 }
 
 UniquePtr<ISeparator> SparkUiControlsFactory::CreateSeparator(const SeparatorDesc& desc) {

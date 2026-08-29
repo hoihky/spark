@@ -21,12 +21,12 @@ void TilemapObjectSpawnComponent::OnDetach(GameObject& owner) {
 }
 
 void TilemapObjectSpawnComponent::ClearSpawned(GameWorld& world) noexcept {
-    for (std::size_t i = 0; i < spawned_.GetSize(); ++i) {
-        if (spawned_[i] != nullptr) {
-            world.DestroyGameObject(spawned_[i]);
+    for (std::size_t i = 0; i < spawned.GetSize(); ++i) {
+        if (spawned[i] != nullptr) {
+            world.DestroyGameObject(spawned[i]);
         }
     }
-    spawned_.Clear();
+    spawned.Clear();
 }
 
 void TilemapObjectSpawnComponent::RespawnAll(GameObject& owner, GameWorld& world) noexcept {
@@ -60,8 +60,8 @@ void TilemapObjectSpawnComponent::SpawnFromLayers(GameObject& owner, GameWorld& 
             if (spawnFn == nullptr) {
                 continue;
             }
-            if (GameObject* spawned = spawnFn(world, owner, marker, frame); spawned != nullptr) {
-                spawned_.PushBack(spawned);
+            if (GameObject* object = spawnFn(world, owner, marker, frame); object != nullptr) {
+                spawned.PushBack(object);
             }
         }
     }

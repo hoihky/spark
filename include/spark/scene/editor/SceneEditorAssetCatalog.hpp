@@ -28,7 +28,7 @@ class SceneEditorAssetCatalog final {
 public:
     void Refresh();
 
-    [[nodiscard]] const Array<SceneEditorAssetEntry>& GetEntries() const noexcept { return entries_; }
+    [[nodiscard]] const Array<SceneEditorAssetEntry>& GetEntries() const noexcept { return entries; }
     [[nodiscard]] Array<SceneEditorAssetEntry> GetEntriesByKind(const SceneEditorAssetKind kind) const;
 
     [[nodiscard]] const SceneEditorAssetEntry* FindByListIndex(int listIndex) const noexcept;
@@ -37,8 +37,8 @@ private:
     void ScanDirectory(const char* assetsRoot, const char* subdir, SceneEditorAssetKind kind);
     void AddEntry(SceneEditorAssetKind kind, Utf8String fileName, Utf8String relativePath);
 
-    Array<SceneEditorAssetEntry> entries_{};
-    Array<int> listIndexToEntry_{};
+    Array<SceneEditorAssetEntry> entries{};
+    Array<int> listIndexToEntry{};
 };
 
 }  // namespace Spark

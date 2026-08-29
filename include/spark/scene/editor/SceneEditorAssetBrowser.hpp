@@ -3,6 +3,8 @@
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/scene/editor/SceneEditorAssetCatalog.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
+#include "spark/ui/core/IUiElement.hpp"
+#include "spark/ui/factory/IUiControlsFactory.hpp"
 
 namespace Spark {
 
@@ -31,11 +33,18 @@ public:
     void Mount(GameWorld& world, SceneEditorAssetCatalog& catalog, ISceneEditorAssetBrowserHost& host);
     void Unmount(GameWorld& world) noexcept;
 
+    /** Builds list + action buttons into an existing panel (editor dock). */
+    void BuildInto(
+            Ui::IUiElement& parent,
+            Ui::IUiControlsFactory& factory,
+            SceneEditorAssetCatalog& catalog,
+            ISceneEditorAssetBrowserHost& host);
+
     void RefreshListFromCatalog();
     void SetEnabled(bool enabled) noexcept;
 
-    [[nodiscard]] UiCanvasComponent* GetCanvas() const noexcept { return canvas_; }
-    [[nodiscard]] bool IsMounted() const noexcept { return canvas_ != nullptr; }
+    [[nodiscard]] UiCanvasComponent* GetCanvas() const noexcept { return canvas; }
+    [[nodiscard]] bool IsMounted() const noexcept { return canvas != nullptr; }
 
 private:
     struct Binding;
@@ -47,14 +56,15 @@ private:
     static void OnRefreshClicked(void* userData) noexcept;
 
     void RebuildListItems();
+    void BuildControls(Ui::IUiElement& parent, Ui::IUiControlsFactory& factory);
     [[nodiscard]] const SceneEditorAssetEntry* GetSelectedEntry() const noexcept;
 
-    GameObject* uiRoot_ = nullptr;
-    UiCanvasComponent* canvas_ = nullptr;
-    SceneEditorAssetCatalog* catalog_ = nullptr;
-    ISceneEditorAssetBrowserHost* host_ = nullptr;
-    Ui::IList* list_ = nullptr;
-    int selectedListIndex_ = -1;
+    GameObject* uiRoot = nullptr;
+    UiCanvasComponent* canvas = nullptr;
+    SceneEditorAssetCatalog* catalog = nullptr;
+    ISceneEditorAssetBrowserHost* host = nullptr;
+    Ui::IList* list = nullptr;
+    int selectedListIndex = -1;
 };
 
 }  // namespace Spark

@@ -19,17 +19,17 @@ bool TilemapObjectGizmoComponent::ShouldDrawMarker(const TilemapObjectMarker& ma
 }
 
 void TilemapObjectGizmoComponent::ClearVisuals(GameWorld& world) noexcept {
-    for (std::size_t i = 0; i < gizmoObjects_.GetSize(); ++i) {
-        if (gizmoObjects_[i] != nullptr) {
-            world.DestroyGameObject(gizmoObjects_[i]);
+    for (std::size_t i = 0; i < gizmoObjects.GetSize(); ++i) {
+        if (gizmoObjects[i] != nullptr) {
+            world.DestroyGameObject(gizmoObjects[i]);
         }
     }
-    gizmoObjects_.Clear();
+    gizmoObjects.Clear();
 }
 
 void TilemapObjectGizmoComponent::RebuildVisuals(GameObject& owner, GameWorld& world) noexcept {
     ClearVisuals(world);
-    visualsDirty_ = false;
+    visualsDirty = false;
     if (!drawGizmos || !gizmoTexture) {
         return;
     }
@@ -64,13 +64,13 @@ void TilemapObjectGizmoComponent::RebuildVisuals(GameObject& owner, GameWorld& w
                 tr->SetUniformScale(cellSize * gizmoScale);
             }
             gizmoGo->AddComponent<SpriteComponent>(gizmoTexture, gizmoTint, gizmoUv, gizmoSortOrder);
-            gizmoObjects_.PushBack(gizmoGo);
+            gizmoObjects.PushBack(gizmoGo);
         }
     }
 }
 
 void TilemapObjectGizmoComponent::OnAttach(GameObject& owner) {
-    visualsDirty_ = true;
+    visualsDirty = true;
     if (drawGizmos) {
         RebuildVisuals(owner, owner.GetWorld());
     }
@@ -84,7 +84,7 @@ void TilemapObjectGizmoComponent::OnUpdate(
         const FrameTiming& /*timing*/,
         GameObject& owner,
         IEngineContext& /*context*/) {
-    if (!visualsDirty_) {
+    if (!visualsDirty) {
         return;
     }
     RebuildVisuals(owner, owner.GetWorld());

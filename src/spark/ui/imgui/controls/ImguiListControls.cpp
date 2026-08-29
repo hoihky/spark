@@ -208,6 +208,10 @@ int ImguiTreeView::AddItem(const int parentIndex, Utf8String label) {
     return static_cast<int>(nodes.GetSize()) - 1;
 }
 
+void ImguiTreeView::SetSelectedNodeId(const int nodeId) {
+    selectedNodeId = nodeId;
+}
+
 void ImguiTreeView::DoMeasure(const UiMeasureConstraints& constraints, UiSize& outDesired) {
     const UiLayoutMetrics& metrics = GetActiveUiLayoutMetrics();
     outDesired.width = ClampMeasure(constraints, metrics.Scaled(220.0F));

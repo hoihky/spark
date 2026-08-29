@@ -33,12 +33,12 @@ std::int64_t FileTimestampNs(const char* path) {
 
 void TilemapMapSourceComponent::SetTmxPath(const char* path) noexcept {
     tmxPath = Utf8String(path != nullptr ? path : "");
-    lastSourceTimestampNs_ = -1;
+    lastSourceTimestampNs = -1;
 }
 
 void TilemapMapSourceComponent::SetSparkMapPath(const char* path) noexcept {
     sparkMapPath = Utf8String(path != nullptr ? path : "");
-    lastSourceTimestampNs_ = -1;
+    lastSourceTimestampNs = -1;
 }
 
 bool TilemapMapSourceComponent::ImportFromSources(GameObject& owner, GameWorld& world, Utf8String& outError) {
@@ -83,13 +83,13 @@ bool TilemapMapSourceComponent::ImportFromSources(GameObject& owner, GameWorld& 
 
 void TilemapMapSourceComponent::TouchSourceTimestamp() {
   const char* path = !sparkMapPath.IsEmpty() ? sparkMapPath.CStr() : tmxPath.CStr();
-    lastSourceTimestampNs_ = FileTimestampNs(path);
+    lastSourceTimestampNs = FileTimestampNs(path);
 }
 
 bool TilemapMapSourceComponent::ImportNow(GameObject& owner, GameWorld& world) {
     Utf8String error{};
     const bool ok = ImportFromSources(owner, world, error);
-    lastError_ = ok ? Utf8String{} : error;
+    lastError = ok ? Utf8String{} : error;
     return ok;
 }
 
@@ -110,7 +110,7 @@ void TilemapMapSourceComponent::OnUpdate(
     }
     const char* path = !sparkMapPath.IsEmpty() ? sparkMapPath.CStr() : tmxPath.CStr();
     const std::int64_t stamp = FileTimestampNs(path);
-    if (stamp < 0 || stamp == lastSourceTimestampNs_) {
+    if (stamp < 0 || stamp == lastSourceTimestampNs) {
         return;
     }
     GameWorld& world = owner.GetWorld();

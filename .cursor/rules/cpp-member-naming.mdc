@@ -1,0 +1,30 @@
+---
+description: C++ data member naming — no trailing underscore suffix
+globs: "{include,src}/**/*.{hpp,cpp}"
+alwaysApply: false
+---
+
+# C++ data member naming
+
+Do **not** use a trailing underscore suffix on class/struct data members.
+
+```cpp
+// Bad
+class Foo {
+    int count_ = 0;
+    Array<Item> items_{};
+};
+
+// Good
+class Foo {
+    int count = 0;
+    Array<Item> items{};
+};
+```
+
+## Guidelines
+
+- Name members in plain camelCase (or match the surrounding type), without a `_` suffix.
+- When a constructor parameter has the same name as a member, qualify the member with `this->` in the initializer list and body.
+- When a local variable would shadow a member, rename the local (e.g. `listUp`, `object`) instead of suffixing the member.
+- Trailing underscores on **private helper methods** (e.g. `ClipValid_`) are acceptable if already used in that file; do not add new ones unless matching existing local style.

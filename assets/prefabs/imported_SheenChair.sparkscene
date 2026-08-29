@@ -1,0 +1,7 @@
+spark_scene_v4
+1
+H name "SheenChair"
+H assets_root "assets"
+E 1 -1 "SheenChair"
+C transform 2.661640 2.661640 2.661640 0.000000 0.020186 0.000000 0.000000 0.000000 0.000000 1.000000
+C gltf_scene "models/imported/SheenChair.glb"

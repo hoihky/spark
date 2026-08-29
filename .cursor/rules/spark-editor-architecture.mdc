@@ -1,0 +1,65 @@
+---
+description: Spark editor architecture — commands, facades, SOLID patterns
+globs: "{include,src}/spark/editor/**/*.{hpp,cpp}"
+alwaysApply: false
+---
+
+# Spark editor architecture
+
+Follow these patterns for all new editor features.
+
+## Layering
+
+```
+Panels (IEditorPanel)  →  Facades (EditorHierarchyActions, …)  →  Commands (IEditorCommand)  →  Engine (GameWorld, SceneSerializer)
+```
+
+- **Panels** render UI and read input; they do not mutate `GameWorld` directly.
+- **Facades** validate `EditorContext`, build commands, and update `statusLine`.
+- **Commands** own undo/redo semantics and snapshots.
+- **Engine services** (`SceneSerializer`, `SceneEditorContentModel`) stay unaware of UI.
+
+## Command pattern
+
+- Implement `IEditorCommand` with `Undo`, `Redo`, `GetDescription`.
+- Use `EditorCommandStack::Execute` when the mutation is not yet applied.
+- Use `EditorCommandStack::Record` when the mutation is already applied (gizmo drag end, inspector commit).
+- Store stable **`std::uint64_t` object ids**, not raw pointers, when objects may be destroyed and recreated.
+- Subtree delete/duplicate undo uses `HierarchySceneSnapshot` + `SceneDocument` (Memento).
+
+## EditorContext
+
+Pass `EditorContext` to panels each tick. Required services:
+
+- `world`, `selection`, `commandStack`, `contentModel`, `mode`
+
+Gate all mutations with `mode == EditorMode::Edit` and non-null services.
+
+## Content model
+
+When creating or restoring entities:
+
+- `SceneEditorContentModel::TrackRoot` / `IntegrateSubtree`
+- `UntrackSubtree` before destroy (never destroy via `RemoveTracked` for undo paths)
+
+## SOLID
+
+| Principle | Practice |
+|-----------|----------|
+| **S** | One command per user action; one panel per dock region |
+| **O** | Extend via new `IEditorCommand` / `IInspectorWidget` types, not panel switches |
+| **L** | Commands must fully restore prior state on `Undo` |
+| **I** | Panels depend on `EditorContext`, not `EditorApplication` |
+| **D** | Panels depend on abstractions (`IEditorPanel`, `ITreeView`, `IEditorCommand`) |
+
+## Naming
+
+- No trailing `_` on data members (see `cpp-member-naming.mdc`).
+- Commands: `{Verb}{Subject}Command` (e.g. `CreateGameObjectCommand`).
+- Facades: `Editor{Domain}Actions`.
+
+## UI conventions
+
+- Use `Ui::GetUiContextMenu()` for context menus.
+- After hierarchy mutations, set `needsTreeRebuild = true` on the panel.
+- Exclude editor chrome objects (`EditorGui`, `EditorStatusHud`) from hierarchy CRUD.

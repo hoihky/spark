@@ -38,6 +38,9 @@ public:
     using ScrollCallback = std::function<void(double xoffset, double yoffset)>;
     void SetScrollCallback(ScrollCallback callback);
 
+    using CharCallback = std::function<void(unsigned int codepoint)>;
+    void SetCharCallback(CharCallback callback);
+
     /** Called from GLFW framebuffer callback (invokes user callback if set). */
     void HandleFramebufferResize(int width, int height);
 
@@ -47,11 +50,13 @@ public:
 private:
     static void OnCursorPosForward(GLFWwindow* window, double x, double y);
     static void OnScrollForward(GLFWwindow* window, double xoffset, double yoffset);
+    static void OnCharForward(GLFWwindow* window, unsigned int codepoint);
 
     GLFWwindow* glfwWindow = nullptr;
     FramebufferResizeCallback resizeCallback;
     CursorPosCallback cursorPosCallback;
     ScrollCallback scrollCallback;
+    CharCallback charCallback;
 };
 
 }  // namespace Spark

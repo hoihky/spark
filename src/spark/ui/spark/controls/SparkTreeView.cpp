@@ -178,6 +178,11 @@ void SparkTreeView::HandleRowClick(
     if (row < 0 || static_cast<std::size_t>(row) >= visibleRows.GetSize()) {
         return;
     }
+    if (input.rightPressedThisFrame) {
+        selectedNodeId = nodeId;
+        onContextMenu.Invoke(nodeId);
+        return;
+    }
     float localX = input.mouseX;
     if (static_cast<std::size_t>(row) < children.GetSize() && children[static_cast<std::size_t>(row)] != nullptr) {
         localX = input.mouseX - children[static_cast<std::size_t>(row)]->GetBounds().x;
@@ -196,6 +201,17 @@ void SparkTreeView::HandleRowClick(
         }
     }
     onSelect.Invoke(selectedNodeId);
+}
+
+void SparkTreeView::SetSelectedNodeId(const int nodeId) {
+    selectedNodeId = nodeId;
+    for (std::size_t j = 0; j < children.GetSize(); ++j) {
+        if (auto* btn = dynamic_cast<SparkButton*>(children[j].Get())) {
+            const int rowNodeId =
+                    j < visibleRows.GetSize() ? visibleRows[j].nodeId : -1;
+            btn->SetAccentSelected(rowNodeId == selectedNodeId);
+        }
+    }
 }
 
 bool SparkTreeView::HitTrack(const float x, const float y) const noexcept {

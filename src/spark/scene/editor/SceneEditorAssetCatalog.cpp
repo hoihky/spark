@@ -49,17 +49,17 @@ Utf8String HumanizeStem(const std::string& stem) {
 }  // namespace
 
 void SceneEditorAssetCatalog::Refresh() {
-    entries_.Clear();
-    listIndexToEntry_.Clear();
+    entries.Clear();
+    listIndexToEntry.Clear();
     ScanDirectory(SPARK_BUILD_ASSETS_DIR, "prefabs", SceneEditorAssetKind::Prefab);
     ScanDirectory(SPARK_ASSETS_DIR, "prefabs", SceneEditorAssetKind::Prefab);
     ScanDirectory(SPARK_BUILD_ASSETS_DIR, "scenes", SceneEditorAssetKind::Scene);
     ScanDirectory(SPARK_ASSETS_DIR, "scenes", SceneEditorAssetKind::Scene);
 
-    if (entries_.GetSize() > 1) {
+    if (entries.GetSize() > 1) {
         std::sort(
-                entries_.GetData(),
-                entries_.GetData() + entries_.GetSize(),
+                entries.GetData(),
+                entries.GetData() + entries.GetSize(),
                 [](const SceneEditorAssetEntry& a, const SceneEditorAssetEntry& b) {
         if (a.kind != b.kind) {
             return static_cast<int>(a.kind) < static_cast<int>(b.kind);
@@ -68,31 +68,31 @@ void SceneEditorAssetCatalog::Refresh() {
                 });
     }
 
-    listIndexToEntry_.Resize(entries_.GetSize());
-    for (std::size_t i = 0; i < entries_.GetSize(); ++i) {
-        listIndexToEntry_[i] = static_cast<int>(i);
+    listIndexToEntry.Resize(entries.GetSize());
+    for (std::size_t i = 0; i < entries.GetSize(); ++i) {
+        listIndexToEntry[i] = static_cast<int>(i);
     }
 }
 
 Array<SceneEditorAssetEntry> SceneEditorAssetCatalog::GetEntriesByKind(const SceneEditorAssetKind kind) const {
     Array<SceneEditorAssetEntry> filtered;
-    for (std::size_t i = 0; i < entries_.GetSize(); ++i) {
-        if (entries_[i].kind == kind) {
-            filtered.PushBack(entries_[i]);
+    for (std::size_t i = 0; i < entries.GetSize(); ++i) {
+        if (entries[i].kind == kind) {
+            filtered.PushBack(entries[i]);
         }
     }
     return filtered;
 }
 
 const SceneEditorAssetEntry* SceneEditorAssetCatalog::FindByListIndex(const int listIndex) const noexcept {
-    if (listIndex < 0 || static_cast<std::size_t>(listIndex) >= listIndexToEntry_.GetSize()) {
+    if (listIndex < 0 || static_cast<std::size_t>(listIndex) >= listIndexToEntry.GetSize()) {
         return nullptr;
     }
-    const int entryIndex = listIndexToEntry_[static_cast<std::size_t>(listIndex)];
-    if (entryIndex < 0 || static_cast<std::size_t>(entryIndex) >= entries_.GetSize()) {
+    const int entryIndex = listIndexToEntry[static_cast<std::size_t>(listIndex)];
+    if (entryIndex < 0 || static_cast<std::size_t>(entryIndex) >= entries.GetSize()) {
         return nullptr;
     }
-    return &entries_[static_cast<std::size_t>(entryIndex)];
+    return &entries[static_cast<std::size_t>(entryIndex)];
 }
 
 void SceneEditorAssetCatalog::ScanDirectory(
@@ -119,8 +119,8 @@ void SceneEditorAssetCatalog::ScanDirectory(
         rel.AppendUtf8("/");
         rel.AppendUtf8(fileName.c_str());
         bool duplicate = false;
-        for (std::size_t i = 0; i < entries_.GetSize(); ++i) {
-            if (entries_[i].relativePath == rel) {
+        for (std::size_t i = 0; i < entries.GetSize(); ++i) {
+            if (entries[i].relativePath == rel) {
                 duplicate = true;
                 break;
             }
@@ -148,7 +148,7 @@ void SceneEditorAssetCatalog::AddEntry(
     Utf8String prefix = kind == SceneEditorAssetKind::Prefab ? Utf8String("[Prefab] ") : Utf8String("[Scene] ");
     prefix.AppendUtf8(entry.displayName.CStr());
     entry.displayName = MoveTemp(prefix);
-    entries_.PushBack(MoveTemp(entry));
+    entries.PushBack(MoveTemp(entry));
 }
 
 }  // namespace Spark

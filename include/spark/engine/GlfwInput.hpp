@@ -31,6 +31,7 @@ public:
     [[nodiscard]] float GetScrollDeltaY() const override;
     [[nodiscard]] bool TryGetClipboardUtf8(Utf8String& out) const override;
     void SetClipboardUtf8(const Utf8String& text) const override;
+    void DrainTypedCodepoints(Array<std::uint32_t>& outCodepoints) override;
 
 private:
     void Clear();
@@ -49,6 +50,7 @@ private:
     bool cursorCaptured = false;
     double scrollAccumY = 0.0;
     float scrollDeltaThisFrame = 0.0F;
+    Array<std::uint32_t> typedCodepoints{};
 };
 
 }  // namespace Spark

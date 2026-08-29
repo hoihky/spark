@@ -24,6 +24,9 @@
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 #include "spark/demo/SceneEditor3DDemo.hpp"
+#if SPARK_HAS_EDITOR
+#include "spark/demo/SparkEditorDemo.hpp"
+#endif
 #include "spark/demo/TimeOfDayDemo.hpp"
 #include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
@@ -138,6 +141,11 @@ public:
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_V) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_V, hotkeyId)) {
                 EnterDemoByStorageId(hotkeyId);
+#if SPARK_HAS_EDITOR
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_E) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_E, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+#endif
             }
         }
 
@@ -251,6 +259,13 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+#if SPARK_HAS_EDITOR
+        } else if (mode == DemoMode::SparkEditor) {
+            sparkEditorDemo.Simulate(timing, GetScene(), context);
+            if (!sparkEditorDemo.IsPlayActive() && context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
+#endif
         }
         Game::OnUpdate(timing, context);
     }
@@ -303,6 +318,10 @@ public:
             gltfSamples3DDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::ModelViewer3D) {
             modelViewer3DDemo.Render(GetScene(), GetWorld(), context);
+#if SPARK_HAS_EDITOR
+        } else if (mode == DemoMode::SparkEditor) {
+            sparkEditorDemo.Render(GetScene(), context);
+#endif
         } else {
             RenderUiOnly(context, fbW, fbH);
         }
@@ -622,6 +641,17 @@ public:
         context.GetInput().SetCursorCaptured(false);
     }
 
+#if SPARK_HAS_EDITOR
+    void EnterSparkEditorDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        GetScene().SetSpatialPartitionKind(ScenePartitionKind::BoundingVolumeHierarchy);
+        sparkEditorDemo.Load(GetScene(), context);
+        sparkEditorDemoLoaded = true;
+        mode = DemoMode::SparkEditor;
+        context.GetInput().SetCursorCaptured(false);
+    }
+#endif
+
     void ReturnToMenu(IEngineContext& context) {
         UnloadAllActiveDemos(context);
         mode = DemoMode::Menu;
@@ -734,6 +764,12 @@ private:
             modelViewer3DDemo.Unload(GetWorld());
             modelViewer3DLoaded = false;
         }
+#if SPARK_HAS_EDITOR
+        if (sparkEditorDemoLoaded) {
+            sparkEditorDemo.Unload(GetScene());
+            sparkEditorDemoLoaded = false;
+        }
+#endif
         GetScene().SetSpatialPartitionKind(Spark::ScenePartitionKind::None);
     }
 
@@ -780,9 +816,12 @@ private:
                 &ShellGame::EnterImGuiShowcase,
                 &ShellGame::EnterGltfSamples3DDemo,
                 &ShellGame::EnterModelViewer3DDemo,
+#if SPARK_HAS_EDITOR
+                &ShellGame::EnterSparkEditorDemo,
+#endif
         };
         static_assert(
-                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == 22,
+                sizeof(kDemoEnter) / sizeof(kDemoEnter[0]) == static_cast<std::size_t>(DemoStorageId::Count),
                 "kDemoEnter must match launcher demo list count");
         if (storageIndex < 0 ||
             storageIndex >= static_cast<int>(DemoCatalog::StorageCount())) {
@@ -978,6 +1017,10 @@ private:
     bool gltfSamplesLoaded = false;
     ModelViewer3DDemo modelViewer3DDemo{};
     bool modelViewer3DLoaded = false;
+#if SPARK_HAS_EDITOR
+    SparkEditorDemo sparkEditorDemo{};
+    bool sparkEditorDemoLoaded = false;
+#endif
     DemoFpsToggleOverlay fpsOverlay{};
 };
 
