@@ -104,7 +104,7 @@ C <kind> <payload>
 |-----|-------------|------------------------|
 | **Stable handles** | `GameObject*` only | `EntityId` or opaque handle surviving reorder; no dangling-pointer-safe lookup |
 | **Multi-scene** | `SceneManager` additive load/unload on one `GameWorld` | Named scene registry, cross-scene references, persistent “manager” world separate from gameplay |
-| **Prefab API** | Manual duplicate in code | `InstantiatePrefab(path, parent, overrides)` with component override map |
+| **Prefab API** | `PrefabInstantiator::Instantiate`, `SceneManager::InstantiatePrefab` | Component override map on load; editor persists glTF overrides via `gltf_scene` v2 |
 | **Tags / layers** | Name string on `GameObject` | `Tag`, `LayerMask`, query by tag/layer on `Scene` |
 | **Deferred destroy** | `DestroyGameObject` immediate | `DestroyAtEndOfFrame` to avoid iterator invalidation during `OnUpdate` |
 | **Component queries** | Per-object `GetComponent<T>` | World queries: `ForEach<MeshComponent>`, archetype-style iteration |
@@ -119,7 +119,9 @@ C <kind> <payload>
 | **Partial apply** | `Apply` creates full document | Merge into existing world, diff/patch documents |
 | **Runtime registration** | `ComponentSnapshotRegistry::Default()` fixed set | Public `RegisterHandler` for game-specific `GameComponent` subclasses |
 
-Registered today: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig.
+Registered today: Transform, Mesh, Material, **`GltfSceneSource`** (v2 instance overrides), DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, 3D/2D physics, tilemap, gameplay, UI canvas, and more — see `ComponentSnapshotRegistry` registration.
+
+**glTF prefab round-trip:** `GltfInstanceNodeComponent` tags expanded nodes; `GltfInstanceOverrides` captures/applies per-node mesh albedo and material slot state on the prefab root’s `gltf_scene` payload without duplicating child entities.
 
 **Runtime load flow:** `SceneManager::BeginLoadSceneAsync` → entities created immediately → asset-dependent components deferred → call `Pump()` each frame until `IsSceneReady`. Sync path: `LoadSceneFromFile` pumps until ready.
 

@@ -58,7 +58,7 @@ Plan for evolving Spark’s **retained-mode UI** (`spark/ui/`) into **in-engine 
 | **Shell menu** | `SparkShellDemo` — launcher list + theme picker on `UiCanvasComponent` |
 | **Scene editor (#10)** | `SceneEditor3DDemo` — left strip UI + 3D pick/place (prototype) |
 | **Dear ImGui (#20)** | `ImGuiShowcaseDemo` — docking tool panels, hotkey **G** |
-| **SparkEditor** | `spark_editor/SparkEditor` — dock shell, hierarchy/inspector stubs, fly viewport (`EditorApplication`) |
+| **SparkEditor** | `SparkEditor` — dock shell, hierarchy/inspector/project panels, ImGui file menu, scene save/load, play mode (`EditorApplication`) |
 
 ### 1.4 Scene editor prototype (not a general editor)
 
@@ -106,15 +106,15 @@ Plan for evolving Spark’s **retained-mode UI** (`spark/ui/`) into **in-engine 
 
 | Capability | Spark today |
 |------------|-------------|
-| **Project / asset database** | `GameWorld` path caches only; `EditorProject` stub |
-| **Scene hierarchy** | `HierarchyPanel` + `TreeView` stub bound to `GameWorld` |
-| **Inspector / property grid** | `InspectorPanel` text dump; no typed property editors |
-| **Viewport (Scene)** | `SparkEditor` fly camera + `worldViewportScissor`; no gizmo service |
-| **Transform gizmo** | Translate in `SceneEditor3DDemo` only |
-| **Play mode / edit mode** | `EditorMode::Edit` only; shell switches demos separately |
-| **Undo/redo** | None |
-| **Serialization** | `spark_scene_v4` (reads v3); **23 / 37** component kinds; `SceneManager` in scene editor demo |
-| **Material editor** | Runtime `MaterialComponent` only |
+| **Project / asset database** | `project.spark` JSON + `SceneEditorAssetCatalog`; no GUID DB yet |
+| **Scene hierarchy** | `HierarchyPanel` + `TreeView` bound to `GameWorld`; CRUD via command stack |
+| **Inspector / property grid** | Transform, Mesh, Material, PointLight widgets; scrollable inspector |
+| **Viewport (Scene)** | `EditorViewport` fly camera + scissor + translate gizmo + toolbar |
+| **Transform gizmo** | Translate in `EditorViewport`; rotate/scale pending |
+| **Play mode / edit mode** | `EditorMode::Play` with scene reload on exit |
+| **Undo/redo** | `EditorCommandStack` — transform, hierarchy, mesh/material/light properties |
+| **Serialization** | `spark_scene_v4`; **28+** component kinds; glTF prefab **v2** instance overrides |
+| **Material editor** | Runtime `MaterialComponent` inspector (tint, PBR, textures) |
 | **Animation editor** | See [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) |
 | **Script editor** | C# host exists; no in-engine IDE |
 | **Plugin / extension API** | None |
@@ -199,13 +199,13 @@ A single executable (or shell mode) with:
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| GUI-E1-01 | **`EditorApplication`** module — mode flag (Edit / Play), project path, active scene | P0 | [ ] |
-| GUI-E1-02 | **`DockWorkspace`** — N-pane dock with tabs (build on `Splitter` + `TabControl`) | P0 | [ ] |
-| GUI-E1-03 | **Layout persistence** — JSON: split fractions, tab selection, panel visibility | P0 | [~] |
-| GUI-E1-04 | **Menu bar** widget + command IDs (`EditorCommand::SaveScene`) | P0 | [~] |
-| GUI-E1-05 | **Toolbar** — icon buttons (texture atlas or glyph font) | P1 | [ ] |
-| GUI-E1-06 | **Status bar** — selection name, coords, FPS, save dirty flag | P1 | [ ] |
-| GUI-E1-07 | **Project browser** panel — folder tree (`TreeView`) + file list | P0 | [ ] |
+| GUI-E1-01 | **`EditorApplication`** module — mode flag (Edit / Play), project path, active scene | P0 | [x] |
+| GUI-E1-02 | **`DockWorkspace`** — N-pane dock with tabs (build on `Splitter` + `TabControl`) | P0 | [~] |
+| GUI-E1-03 | **Layout persistence** — JSON: split fractions, tab selection, panel visibility | P0 | [x] |
+| GUI-E1-04 | **Menu bar** widget + command IDs (`EditorCommand::SaveScene`) | P0 | [x] |
+| GUI-E1-05 | **Toolbar** — icon buttons (texture atlas or glyph font) | P1 | [~] |
+| GUI-E1-06 | **Status bar** — selection name, coords, FPS, save dirty flag | P1 | [~] |
+| GUI-E1-07 | **Project browser** panel — folder tree (`TreeView`) + file list | P0 | [x] |
 | GUI-E1-08 | **Preferences** dialog — UI scale, keybindings, default paths | P1 | [ ] |
 | GUI-E1-09 | **Replace shell demo #12** with thin launcher → `EditorApplication` | P1 | [ ] |
 
@@ -218,19 +218,20 @@ A single executable (or shell mode) with:
 | ID | Task | P | Status |
 |----|------|---|--------|
 | GUI-E2-01 | **Scene serialization v4** — extend handler coverage; hierarchy, parent links, component blobs | P0 | [~] |
-| GUI-E2-02 | **`EditorSelection`** service — selected `GameObject*`, multi-select policy | P0 | [ ] |
-| GUI-E2-03 | **Hierarchy panel** — `TreeView` ↔ `GameWorld` (create/rename/delete/parent) | P0 | [ ] |
-| GUI-E2-04 | **`EditorViewport` region** — rect + `hitTest=false`; central render target | P0 | [ ] |
-| GUI-E2-05 | **Pick pass** — ray vs AABB / mesh; respect viewport rect | P0 | [ ] |
-| GUI-E2-06 | **Transform gizmo** — translate on XZ/XYZ (later rotate/scale) | P0 | [ ] |
-| GUI-E2-07 | **Inspector framework** — reflect `ComponentKind` → property rows | P0 | [ ] |
-| GUI-E2-08 | **Built-in inspectors**: Transform, Mesh, Material, PointLight, Rigidbody3D | P0 | [ ] |
+| GUI-E2-02 | **`EditorSelection`** service — selected `GameObject*`, multi-select policy | P0 | [~] |
+| GUI-E2-03 | **Hierarchy panel** — `TreeView` ↔ `GameWorld` (create/rename/delete/parent) | P0 | [x] |
+| GUI-E2-04 | **`EditorViewport` region** — rect + `hitTest=false`; central render target | P0 | [x] |
+| GUI-E2-05 | **Pick pass** — ray vs AABB / mesh; respect viewport rect | P0 | [x] |
+| GUI-E2-06 | **Transform gizmo** — translate on XZ/XYZ (later rotate/scale) | P0 | [~] |
+| GUI-E2-07 | **Inspector framework** — reflect `ComponentKind` → property rows | P0 | [x] |
+| GUI-E2-08 | **Built-in inspectors**: Transform, Mesh, Material, PointLight, Rigidbody3D | P0 | [~] |
 | GUI-E2-09 | **Add component menu** — searchable list of component types | P1 | [ ] |
-| GUI-E2-10 | **Undo/redo** command stack (transform, create, delete, property) | P0 | [ ] |
+| GUI-E2-10 | **Undo/redo** command stack (transform, create, delete, property) | P0 | [x] |
 | GUI-E2-11 | **Snap grid** + optional angle snap | P1 | [ ] |
-| GUI-E2-12 | **Prefab / asset drag** from project browser into viewport | P1 | [ ] |
-| GUI-E2-13 | **Play mode** — duplicate world or snapshot; disable editor mutators | P1 | [ ] |
-| GUI-E2-14 | **Script sample**: minimal scene open/save via new C# host | P2 | [ ] |
+| GUI-E2-12 | **Prefab / asset drag** from project browser into viewport | P1 | [~] |
+| GUI-E2-13 | **Play mode** — duplicate world or snapshot; disable editor mutators | P1 | [x] |
+| GUI-E2-14 | **glTF prefab overrides** — save mesh/material edits without duplicating child entities | P0 | [x] |
+| GUI-E2-15 | **Script sample**: minimal scene open/save via new C# host | P2 | [ ] |
 
 ---
 
@@ -241,8 +242,8 @@ A single executable (or shell mode) with:
 | ID | Task | P | Status |
 |----|------|---|--------|
 | GUI-E3-01 | **Material asset** — `.sparkmat` or embedded in scene; reference by path | P0 | [ ] |
-| GUI-E3-02 | **Material inspector** — tint, metallic, roughness, emissive, shading model, toon params | P0 | [ ] |
-| GUI-E3-03 | **Texture slots** — base, normal, ORM, emissive (`TileSwatch` + picker) | P0 | [ ] |
+| GUI-E3-02 | **Material inspector** — tint, metallic, roughness, emissive, shading model, toon params | P0 | [~] |
+| GUI-E3-03 | **Texture slots** — base, normal, ORM, emissive (`TileSwatch` + picker) | P0 | [~] |
 | GUI-E3-04 | **Preview panel** — lit sphere + optional custom mesh | P0 | [ ] |
 | GUI-E3-05 | **UV preview** — 2D thumbnail of active texture | P1 | [ ] |
 | GUI-E3-06 | **Material library** — list + duplicate + assign to selection | P1 | [ ] |

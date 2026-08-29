@@ -101,7 +101,7 @@ canvas->SetTheme(Ui::UiTheme::SceneEditorDark());
 
 ### Editor docking
 
-Use **`factory.CreateDockWorkspace(DockWorkspaceDesc{})`** (`SparkDockWorkspace` or `ImguiDockWorkspace` depending on backend). **`EditorDockShell`** in `spark/editor/` hosts hierarchy / inspector / viewport panes on a **`UiCanvasComponent`**.
+Use **`factory.CreateDockWorkspace(DockWorkspaceDesc{})`** (`SparkDockWorkspace` or `ImguiDockWorkspace` depending on backend). **`EditorDockShell`** in `spark/editor/` hosts hierarchy / inspector / project / viewport panes. **`SparkEditor`** also uses Dear ImGui for the top **File** menu (project and scene open/save); native file pickers run outside the ImGui frame. See [`SPARK_EDITOR_PLAN.md`](../../../SPARK_EDITOR_PLAN.md).
 
 ### Context menus
 

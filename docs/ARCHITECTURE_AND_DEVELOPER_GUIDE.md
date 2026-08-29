@@ -266,7 +266,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Paint → params** | Screen rects/text into `SceneRenderParams` | `PaintUiCanvases`, `SparkUiRenderer`, `UiPaintContext` |
 | **Toolkit routing** | Spark native vs Dear ImGui backend | `UiSystem`, `UiToolkitSettings`, `UiBackendKind` |
 | **Context menu** | Global overlay RMB menu | `UiContextMenu` |
-| **Editor module** | `SparkEditor` dock shell, hierarchy/inspector | `spark/editor/` — see [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md) |
+| **Editor module** | `SparkEditor` — dock shell, hierarchy/inspector/project, scene save/load, play mode | `spark/editor/` — see [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md) |
 | **Architecture** | Migration complete (Phase 6) | [`GUI_TOOLKIT_ARCHITECTURE.md`](GUI_TOOLKIT_ARCHITECTURE.md) |
 
 ### 5.10 Dear ImGui (optional tool UI)
@@ -388,7 +388,11 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 
 `SceneLoadOptions::additive` defaults to `true`. Set `additive = false` to replace all loaded instances. `assetsRoot` resolves relative mesh/texture paths in the file; v4 `H assets_root` is used when options omit it.
 
-Registered snapshot kinds (28+): Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, RenderLayer, SortingGroup, and more — see `SceneSerializer.cpp` `kCaptureOrder`.
+Registered snapshot kinds (28+): Transform, Mesh, Material, `GltfSceneSource` (v1 path or **v2** with glTF instance overrides), lights, cameras, 3D physics, SpawnPoint, tilemap, gameplay, UI canvas, and more — see `SceneSerializer.cpp` `kCaptureOrder`.
+
+**glTF prefabs:** `.sparkscene` files with `gltf_scene` expand at load. Editor save captures only the prefab root plus **v2 override records** (`mesh` / `mat` per glTF node index) so child mesh/material edits persist without serializing the expanded subtree. See [`SPARK_EDITOR_PLAN.md`](SPARK_EDITOR_PLAN.md) §4.1.
+
+**Editor:** `SparkEditor` uses `EditorApplication::SaveSceneToFile` / `OpenScene` with native file pickers and `SceneEditorContentModel` capture predicates.
 
 **Demo:** `SceneEditor3DDemo` uses `SceneManager` for v3/v4 load (async asset decode + `Pump` each frame). Legacy v1/v2 editor format still loads synchronously.
 

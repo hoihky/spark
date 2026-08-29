@@ -627,7 +627,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>SparkEditor</strong></td>
-<td><code>spark_editor/SparkEditor</code> — dock shell, hierarchy/inspector stubs, fly viewport (<code>EditorApplication</code>)</td>
+<td><code>SparkEditor</code> — dock shell, hierarchy/inspector/project panels, ImGui file menu, scene save/load, play mode (<code>EditorApplication</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -750,39 +750,39 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tbody>
 <tr>
 <td><strong>Project / asset database</strong></td>
-<td><code>GameWorld</code> path caches only; <code>EditorProject</code> stub</td>
+<td><code>project.spark</code> JSON + <code>SceneEditorAssetCatalog</code>; no GUID DB yet</td>
 </tr>
 <tr>
 <td><strong>Scene hierarchy</strong></td>
-<td><code>HierarchyPanel</code> + <code>TreeView</code> stub bound to <code>GameWorld</code></td>
+<td><code>HierarchyPanel</code> + <code>TreeView</code> bound to <code>GameWorld</code>; CRUD via command stack</td>
 </tr>
 <tr>
 <td><strong>Inspector / property grid</strong></td>
-<td><code>InspectorPanel</code> text dump; no typed property editors</td>
+<td>Transform, Mesh, Material, PointLight widgets; scrollable inspector</td>
 </tr>
 <tr>
 <td><strong>Viewport (Scene)</strong></td>
-<td><code>SparkEditor</code> fly camera + <code>worldViewportScissor</code>; no gizmo service</td>
+<td><code>EditorViewport</code> fly camera + scissor + translate gizmo + toolbar</td>
 </tr>
 <tr>
 <td><strong>Transform gizmo</strong></td>
-<td>Translate in <code>SceneEditor3DDemo</code> only</td>
+<td>Translate in <code>EditorViewport</code>; rotate/scale pending</td>
 </tr>
 <tr>
 <td><strong>Play mode / edit mode</strong></td>
-<td><code>EditorMode::Edit</code> only; shell switches demos separately</td>
+<td><code>EditorMode::Play</code> with scene reload on exit</td>
 </tr>
 <tr>
 <td><strong>Undo/redo</strong></td>
-<td>None</td>
+<td><code>EditorCommandStack</code> — transform, hierarchy, mesh/material/light properties</td>
 </tr>
 <tr>
 <td><strong>Serialization</strong></td>
-<td><code>spark_scene_v4</code> (reads v3); <strong>23 / 37</strong> component kinds; <code>SceneManager</code> in scene editor demo</td>
+<td><code>spark_scene_v4</code>; <strong>28+</strong> component kinds; glTF prefab <strong>v2</strong> instance overrides</td>
 </tr>
 <tr>
 <td><strong>Material editor</strong></td>
-<td>Runtime <code>MaterialComponent</code> only</td>
+<td>Runtime <code>MaterialComponent</code> inspector (tint, PBR, textures)</td>
 </tr>
 <tr>
 <td><strong>Animation editor</strong></td>
@@ -1013,43 +1013,43 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>GUI-E1-01</td>
 <td><strong><code>EditorApplication</code></strong> module — mode flag (Edit / Play), project path, active scene</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E1-02</td>
 <td><strong><code>DockWorkspace</code></strong> — N-pane dock with tabs (build on <code>Splitter</code> + <code>TabControl</code>)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E1-03</td>
 <td><strong>Layout persistence</strong> — JSON: split fractions, tab selection, panel visibility</td>
 <td>P0</td>
-<td>[~]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E1-04</td>
 <td><strong>Menu bar</strong> widget + command IDs (<code>EditorCommand::SaveScene</code>)</td>
 <td>P0</td>
-<td>[~]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E1-05</td>
 <td><strong>Toolbar</strong> — icon buttons (texture atlas or glyph font)</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E1-06</td>
 <td><strong>Status bar</strong> — selection name, coords, FPS, save dirty flag</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E1-07</td>
 <td><strong>Project browser</strong> panel — folder tree (<code>TreeView</code>) + file list</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E1-08</td>
@@ -1088,43 +1088,43 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>GUI-E2-02</td>
 <td><strong><code>EditorSelection</code></strong> service — selected <code>GameObject*</code>, multi-select policy</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E2-03</td>
 <td><strong>Hierarchy panel</strong> — <code>TreeView</code> ↔ <code>GameWorld</code> (create/rename/delete/parent)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E2-04</td>
 <td><strong><code>EditorViewport</code> region</strong> — rect + <code>hitTest=false</code>; central render target</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E2-05</td>
 <td><strong>Pick pass</strong> — ray vs AABB / mesh; respect viewport rect</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E2-06</td>
 <td><strong>Transform gizmo</strong> — translate on XZ/XYZ (later rotate/scale)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E2-07</td>
 <td><strong>Inspector framework</strong> — reflect <code>ComponentKind</code> → property rows</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E2-08</td>
 <td><strong>Built-in inspectors</strong>: Transform, Mesh, Material, PointLight, Rigidbody3D</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E2-09</td>
@@ -1136,7 +1136,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>GUI-E2-10</td>
 <td><strong>Undo/redo</strong> command stack (transform, create, delete, property)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E2-11</td>
@@ -1148,16 +1148,22 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>GUI-E2-12</td>
 <td><strong>Prefab / asset drag</strong> from project browser into viewport</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E2-13</td>
 <td><strong>Play mode</strong> — duplicate world or snapshot; disable editor mutators</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>GUI-E2-14</td>
+<td><strong>glTF prefab overrides</strong> — save mesh/material edits without duplicating child entities</td>
+<td>P0</td>
+<td>[x]</td>
+</tr>
+<tr>
+<td>GUI-E2-15</td>
 <td><strong>Script sample</strong>: minimal scene open/save via new C# host</td>
 <td>P2</td>
 <td>[ ]</td>
@@ -1187,13 +1193,13 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>GUI-E3-02</td>
 <td><strong>Material inspector</strong> — tint, metallic, roughness, emissive, shading model, toon params</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E3-03</td>
 <td><strong>Texture slots</strong> — base, normal, ORM, emissive (<code>TileSwatch</code> + picker)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[~]</td>
 </tr>
 <tr>
 <td>GUI-E3-04</td>

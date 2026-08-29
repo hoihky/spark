@@ -29,7 +29,7 @@ Spark’s retained UI lives in **`spark/ui/`** — a retained tree with Abstract
 - **`UiConsumesGamePointer()` / `UiPointerOverUi()`** — replace `GuiConsumesGamePointer` in migrated apps
 - **`IDockWorkspace` layout API** — collapse toggles, `GetCenterBounds()`, width get/set
 - **`SparkDockWorkspace`** — collapsible left/right panes, passthrough center hit-test
-- **`SparkEditor` migration** — `EditorDockShell` + Hierarchy/Inspector/Project panels on `UiCanvasComponent` + `SparkDockWorkspace`
+- **`SparkEditor` migration** — `EditorDockShell` + Hierarchy/Inspector/Project panels; ImGui file menu; scene save/load with glTF prefab instance overrides (`gltf_scene` v2)
 - **`ImGuiShowcaseDemo` migration** — retained `ImguiDockWorkspace` via `UiSystem::Paint` (overlay demo/metrics windows remain raw ImGui)
 
 ## Phase 4

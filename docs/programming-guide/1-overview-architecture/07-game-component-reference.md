@@ -932,7 +932,9 @@ level->AddComponent<TilemapCollider2DComponent>();
 
 ## Serialization
 
-Scene format **`spark_scene_v4`** captures a subset of components via `ComponentSnapshotRegistry`. Registered kinds include Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, and more — see `SceneSerializer.cpp` `kCaptureOrder`.
+Scene format **`spark_scene_v4`** captures a subset of components via `ComponentSnapshotRegistry`. Registered kinds include Transform, Mesh, Material, **`GltfSceneSource`** (`gltf_scene` — v1 path or **v2** with per-node mesh/material overrides), lights, cameras, 3D/2D physics, tilemap, gameplay, UI canvas, and more — see `SceneSerializer.cpp` `kCaptureOrder`.
+
+**glTF prefabs:** A placed prefab with `gltf_scene` expands at load into child nodes tagged with `GltfInstanceNodeComponent`. The editor saves only the root entity plus override records (not the full expanded subtree) to avoid duplicate meshes on reload. See [`SPARK_EDITOR_PLAN.md`](../../../SPARK_EDITOR_PLAN.md) §4.1.
 
 Components without handlers still work at runtime; they are omitted from saved scenes until a handler is added.
 

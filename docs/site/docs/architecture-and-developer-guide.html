@@ -1087,7 +1087,7 @@ cmake --build cmake-build-debug -j
 </tr>
 <tr>
 <td><strong>Editor module</strong></td>
-<td><code>SparkEditor</code> dock shell, hierarchy/inspector</td>
+<td><code>SparkEditor</code> — dock shell, hierarchy/inspector/project, scene save/load, play mode</td>
 <td><code>spark/editor/</code> — see <a href="spark-editor-plan.html"><code>SPARK_EDITOR_PLAN.md</code></a></td>
 </tr>
 <tr>
@@ -1303,7 +1303,9 @@ sceneManager_.Pump();
 if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </code></pre>
 <p><code>SceneLoadOptions::additive</code> defaults to <code>true</code>. Set <code>additive = false</code> to replace all loaded instances. <code>assetsRoot</code> resolves relative mesh/texture paths in the file; v4 <code>H assets_root</code> is used when options omit it.</p>
-<p>Registered snapshot kinds (28+): Transform, Mesh, Material, lights, cameras, 3D physics, Health, PolygonCollider2D, RenderLayer, SortingGroup, and more — see <code>SceneSerializer.cpp</code> <code>kCaptureOrder</code>.</p>
+<p>Registered snapshot kinds (28+): Transform, Mesh, Material, <code>GltfSceneSource</code> (v1 path or <strong>v2</strong> with glTF instance overrides), lights, cameras, 3D physics, SpawnPoint, tilemap, gameplay, UI canvas, and more — see <code>SceneSerializer.cpp</code> <code>kCaptureOrder</code>.</p>
+<p><strong>glTF prefabs:</strong> <code>.sparkscene</code> files with <code>gltf_scene</code> expand at load. Editor save captures only the prefab root plus <strong>v2 override records</strong> (<code>mesh</code> / <code>mat</code> per glTF node index) so child mesh/material edits persist without serializing the expanded subtree. See <a href="spark-editor-plan.html"><code>SPARK_EDITOR_PLAN.md</code></a> §4.1.</p>
+<p><strong>Editor:</strong> <code>SparkEditor</code> uses <code>EditorApplication::SaveSceneToFile</code> / <code>OpenScene</code> with native file pickers and <code>SceneEditorContentModel</code> capture predicates.</p>
 <p><strong>Demo:</strong> <code>SceneEditor3DDemo</code> uses <code>SceneManager</code> for v3/v4 load (async asset decode + <code>Pump</code> each frame). Legacy v1/v2 editor format still loads synchronously.</p>
 <h3 id="76-simulation-vs-rendering-per-frame">7.6 Simulation vs rendering (per frame)</h3>
 <p>Simulation updates <strong>mutable world state</strong> (<code>GameWorld</code>, transforms, physics, components). Rendering <strong>samples</strong> that state (or cached matrices) into an immutable <strong>snapshot</strong> (<code>SceneRenderParams</code>) for the GPU. The two concerns meet only at <strong><code>IEngineContext::SetSceneRenderParams</code></strong>.</p>

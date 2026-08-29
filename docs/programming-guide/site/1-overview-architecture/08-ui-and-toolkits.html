@@ -895,7 +895,7 @@ if (!Spark::UiConsumesGamePointer()) {
 // or Ui::UiTheme::ClassicMint(), Ui::ResolveUiTheme(Ui::UiThemePreset::TwilightSlate), …
 </code></pre>
 <h3 id="editor-docking">Editor docking</h3>
-<p>Use <strong><code>factory.CreateDockWorkspace(DockWorkspaceDesc{})</code></strong> (<code>SparkDockWorkspace</code> or <code>ImguiDockWorkspace</code> depending on backend). <strong><code>EditorDockShell</code></strong> in <code>spark/editor/</code> hosts hierarchy / inspector / viewport panes on a <strong><code>UiCanvasComponent</code></strong>.</p>
+<p>Use <strong><code>factory.CreateDockWorkspace(DockWorkspaceDesc{})</code></strong> (<code>SparkDockWorkspace</code> or <code>ImguiDockWorkspace</code> depending on backend). <strong><code>EditorDockShell</code></strong> in <code>spark/editor/</code> hosts hierarchy / inspector / project / viewport panes. <strong><code>SparkEditor</code></strong> also uses Dear ImGui for the top <strong>File</strong> menu (project and scene open/save); native file pickers run outside the ImGui frame. See <a href="../../../SPARK_EDITOR_PLAN.html"><code>SPARK_EDITOR_PLAN.md</code></a>.</p>
 <h3 id="context-menus">Context menus</h3>
 <pre><code class="language-cpp">Ui::GetUiContextMenu().Open(
     screenX, screenY,

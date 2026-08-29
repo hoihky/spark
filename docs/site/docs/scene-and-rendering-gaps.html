@@ -748,8 +748,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>Prefab API</strong></td>
-<td>Manual duplicate in code</td>
-<td><code>InstantiatePrefab(path, parent, overrides)</code> with component override map</td>
+<td><code>PrefabInstantiator::Instantiate</code>, <code>SceneManager::InstantiatePrefab</code></td>
+<td>Component override map on load; editor persists glTF overrides via <code>gltf_scene</code> v2</td>
 </tr>
 <tr>
 <td><strong>Tags / layers</strong></td>
@@ -805,7 +805,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 </tbody>
 </table>
-<p>Registered today: Transform, Mesh, Material, DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, BoxCollider3D, SphereCollider3D, Rigidbody3D, PhysicsMaterial3D, RenderLayer, SortingGroup, Camera2D, Camera2DRig.</p>
+<p>Registered today: Transform, Mesh, Material, <strong><code>GltfSceneSource</code></strong> (v2 instance overrides), DirectionalLight, PointLight, SpotLight, Camera, SkinnedMesh, Animator, Sky, Sprite, SceneSpatialPolicy, TextOverlay, ParticleEmitter, Terrain, 3D/2D physics, tilemap, gameplay, UI canvas, and more — see <code>ComponentSnapshotRegistry</code> registration.</p>
+<p><strong>glTF prefab round-trip:</strong> <code>GltfInstanceNodeComponent</code> tags expanded nodes; <code>GltfInstanceOverrides</code> captures/applies per-node mesh albedo and material slot state on the prefab root’s <code>gltf_scene</code> payload without duplicating child entities.</p>
 <p><strong>Runtime load flow:</strong> <code>SceneManager::BeginLoadSceneAsync</code> → entities created immediately → asset-dependent components deferred → call <code>Pump()</code> each frame until <code>IsSceneReady</code>. Sync path: <code>LoadSceneFromFile</code> pumps until ready.</p>
 <h3 id="23-asset-loading-gameworld">2.3 Asset loading (<code>GameWorld</code>)</h3>
 <table>
