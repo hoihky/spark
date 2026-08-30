@@ -78,7 +78,7 @@ public:
     void Unload(Spark::GameWorld& w);
 
 
-    void Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context);
+    void Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world);
 
 
     void Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spark::IEngineContext& context);
@@ -110,10 +110,15 @@ private:
     void TryRotate(Spark::IEngineContext& context) noexcept;
 
 
-    void LockPiece(Spark::IEngineContext& context);
+    void LockPiece(Spark::IEngineContext& context, Spark::GameWorld& world);
 
 
-    [[nodiscard]] int ClearLines();
+    [[nodiscard]] int ClearLines(Spark::GameWorld& world);
+
+    void SpawnLockVfx(Spark::GameWorld& world) const noexcept;
+    void SpawnLineClearVfx(Spark::GameWorld& world, int rowY, int clearedCount) const noexcept;
+
+    [[nodiscard]] static Spark::Vector3 GridCellCenter(int gx, int gy) noexcept;
 
 
     void PushBoardToTilemap();
@@ -136,6 +141,9 @@ private:
     Spark::Array<Spark::GameObject*> ghostCells{};
     Spark::GameObject* lineFlashGo = nullptr;
     float lineFlashT = 0.0F;
+    float lockPulseT = 0.0F;
+    float cameraShakeT = 0.0F;
+    float cameraShakeMag = 0.0F;
     float fpsSmoothed = 0.0F;
 
     Spark::Array<std::uint8_t> grid{};

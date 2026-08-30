@@ -6,6 +6,9 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
+#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
+
+#include <cmath>
 
 namespace Spark {
 namespace Detail {
@@ -38,9 +41,10 @@ namespace Detail {
                     const std::uint32_t gx = tx * tw + px0;
                     const std::uint32_t gy = ty * tw + py;
                     const std::size_t di = (static_cast<std::size_t>(gy) * w + gx) * 4U;
-                    px[di] = static_cast<std::uint8_t>(std::min(255.0F, c.x * 255.0F));
-                    px[di + 1U] = static_cast<std::uint8_t>(std::min(255.0F, c.y * 255.0F));
-                    px[di + 2U] = static_cast<std::uint8_t>(std::min(255.0F, c.z * 255.0F));
+                    const float edge = (px0 < 2U || py < 2U) ? 1.18F : (px0 >= tw - 2U || py >= tw - 2U) ? 0.72F : 1.0F;
+                    px[di] = static_cast<std::uint8_t>(std::min(255.0F, c.x * edge * 255.0F));
+                    px[di + 1U] = static_cast<std::uint8_t>(std::min(255.0F, c.y * edge * 255.0F));
+                    px[di + 2U] = static_cast<std::uint8_t>(std::min(255.0F, c.z * edge * 255.0F));
                     px[di + 3U] = 255;
                 }
             }
@@ -168,7 +172,7 @@ void Tetris2DDemo::Unload(Spark::GameWorld& w)
         fpsText = nullptr;
     }
 
-void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context)
+void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
 {
         Spark::IInput& in = context.GetInput();
         const float dt = timing.deltaTimeSeconds;
@@ -180,6 +184,12 @@ void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
                     flash->SetTint({0.35F, 0.95F, 1.0F, 0.85F * pulse * pulse});
                 }
             }
+        }
+        if (lockPulseT > 0.0F) {
+            lockPulseT = std::max(0.0F, lockPulseT - dt);
+        }
+        if (cameraShakeT > 0.0F) {
+            cameraShakeT = std::max(0.0F, cameraShakeT - dt);
         }
 
         if (gameOver) {
@@ -215,7 +225,7 @@ void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
             while (TryMove(0, -1)) {
                 score += 2;
             }
-            LockPiece(context);
+            LockPiece(context, world);
         }
 
         fallAccum += dt;
@@ -223,13 +233,14 @@ void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
         while (fallAccum >= period) {
             fallAccum -= period;
             if (!TryMove(0, -1)) {
-                LockPiece(context);
+                LockPiece(context, world);
                 break;
             }
         }
 
         UpdateGhostSprites();
         UpdateBoardPad();
+        Spark::ProcessVfx(world);
 
         if (fpsText != nullptr) {
             fpsText->SetText(Spark::Utf8String(
@@ -253,21 +264,30 @@ void Tetris2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spar
         if (fbH <= 0) {
             fbH = 1;
         }
+        Spark::Vector3 camPos = camera.position;
+        if (cameraShakeT > 0.0F) {
+            const float n = cameraShakeT / 0.14F;
+            const float wobble = n * n;
+            camPos.x += std::sin(cameraShakeT * 92.0F) * cameraShakeMag * wobble;
+            camPos.y += std::cos(cameraShakeT * 78.0F) * cameraShakeMag * wobble;
+        }
+        Spark::Camera2D renderCam = camera;
+        renderCam.position = camPos;
         const Spark::Matrix4 viewProj =
-                camera.ViewProjection(static_cast<float>(fbW), static_cast<float>(fbH));
+                renderCam.ViewProjection(static_cast<float>(fbW), static_cast<float>(fbH));
         Spark::Vector3 pr{};
         Spark::Vector3 pu{};
-        camera.BillboardBasisWorld(pr, pu);
+        renderCam.BillboardBasisWorld(pr, pu);
         Spark::SubmitStandardLitSceneFromWorld(
                 world,
                 context,
                 viewProj,
-                camera.position,
+                camPos,
                 Spark::Vector3{0.35F, 0.88F, 0.42F}.Normalized(),
                 Spark::Vector3{0.95F, 0.97F, 1.0F},
                 0.75F,
                 Spark::Vector3{0.08F, 0.09F, 0.12F},
-                false,
+                true,
                 pr,
                 pu,
                 0.0F);
@@ -380,8 +400,13 @@ void Tetris2DDemo::TryRotate(Spark::IEngineContext& context) noexcept
         }
     }
 
-void Tetris2DDemo::LockPiece(Spark::IEngineContext& context)
+void Tetris2DDemo::LockPiece(Spark::IEngineContext& context, Spark::GameWorld& world)
 {
+        SpawnLockVfx(world);
+        lockPulseT = 0.18F;
+        cameraShakeT = 0.14F;
+        cameraShakeMag = 0.055F;
+
         for (int i = 0; i < 4; ++i) {
             const int ox = Detail::kPieceCells[static_cast<std::size_t>(curKind)][static_cast<std::size_t>(curRot & 3)][static_cast<std::size_t>(i)][0];
             const int oy = Detail::kPieceCells[static_cast<std::size_t>(curKind)][static_cast<std::size_t>(curRot & 3)][static_cast<std::size_t>(i)][1];
@@ -392,9 +417,10 @@ void Tetris2DDemo::LockPiece(Spark::IEngineContext& context)
                         static_cast<std::uint8_t>(curKind + 1U);
             }
         }
-        const int cleared = ClearLines();
+        const int cleared = ClearLines(world);
         if (cleared > 0) {
             lineFlashT = 0.42F;
+            cameraShakeMag = 0.09F + static_cast<float>(cleared) * 0.02F;
             if (lineFlashGo != nullptr) {
                 if (Spark::TransformComponent* flashTr = lineFlashGo->GetComponent<Spark::TransformComponent>()) {
                     const Spark::Vector3 t = flashTr->GetLocalTransform().translation;
@@ -404,6 +430,13 @@ void Tetris2DDemo::LockPiece(Spark::IEngineContext& context)
             const float hz = 340.0F + static_cast<float>(cleared) * 95.0F;
             const float dur = 0.078F + 0.012F * static_cast<float>(cleared);
             DemoPlayProceduralClip(context, SoundClip::CreateToneBlip(hz, dur, 0.26F), 1.0F);
+            if (cleared >= 4) {
+                world.GetVfxSubsystem().Queue(
+                        "confetti",
+                        {static_cast<float>(kCols) * 0.5F * kTileWorld,
+                         static_cast<float>(kRows) * 0.55F * kTileWorld,
+                         0.12F});
+            }
         } else {
             DemoPlayProceduralClip(context, DemoSfx::ClipTetrisLock(), 0.72F);
         }
@@ -411,9 +444,77 @@ void Tetris2DDemo::LockPiece(Spark::IEngineContext& context)
         PushBoardToTilemap();
     }
 
-[[nodiscard]] int Tetris2DDemo::ClearLines()
+Spark::Vector3 Tetris2DDemo::GridCellCenter(const int gx, const int gy) noexcept
 {
-        int cleared = 0;
+        return {
+                (static_cast<float>(gx) + 0.5F) * kTileWorld,
+                (static_cast<float>(gy) + 0.5F) * kTileWorld,
+                0.08F};
+}
+
+void Tetris2DDemo::SpawnLockVfx(Spark::GameWorld& world) const noexcept
+{
+        Spark::Vector3 centroid{0.0F, 0.0F, 0.0F};
+        int count = 0;
+        for (int i = 0; i < 4; ++i) {
+            const int ox = Detail::kPieceCells[static_cast<std::size_t>(curKind)][static_cast<std::size_t>(curRot & 3)]
+                                                 [static_cast<std::size_t>(i)][0];
+            const int oy = Detail::kPieceCells[static_cast<std::size_t>(curKind)][static_cast<std::size_t>(curRot & 3)]
+                                                 [static_cast<std::size_t>(i)][1];
+            const int gx = anchorX + ox;
+            const int gy = anchorY + oy;
+            if (gx < 0 || gx >= kCols || gy < 0 || gy >= kRows) {
+                continue;
+            }
+            const Spark::Vector3 cell = GridCellCenter(gx, gy);
+            world.GetVfxSubsystem().Queue("impact", cell);
+            if (gy == 0 || grid[static_cast<std::size_t>(gy - 1) * static_cast<std::size_t>(kCols) + static_cast<std::size_t>(gx)] != 0) {
+                world.GetVfxSubsystem().Queue("dust", {cell.x, cell.y, 0.06F});
+            }
+            centroid += cell;
+            ++count;
+        }
+        if (count > 0) {
+            centroid.x /= static_cast<float>(count);
+            centroid.y /= static_cast<float>(count);
+            centroid.z = 0.1F;
+            world.GetVfxSubsystem().Queue("vfx/tetris_hit", centroid);
+        }
+    }
+
+void Tetris2DDemo::SpawnLineClearVfx(Spark::GameWorld& world, const int rowY, const int clearedCount) const noexcept
+{
+        if (clearedCount < 3) {
+            return;
+        }
+        for (int x = 0; x < kCols; ++x) {
+            const Spark::Vector3 pos = GridCellCenter(x, rowY);
+            world.GetVfxSubsystem().Queue("electric", {pos.x, pos.y, 0.11F});
+        }
+    }
+
+[[nodiscard]] int Tetris2DDemo::ClearLines(Spark::GameWorld& world)
+{
+        Spark::Array<int> fullRows{};
+        fullRows.Reserve(4);
+        for (int y = 0; y < kRows; ++y) {
+            bool full = true;
+            for (int x = 0; x < kCols; ++x) {
+                if (grid[static_cast<std::size_t>(y) * static_cast<std::size_t>(kCols) + static_cast<std::size_t>(x)] == 0) {
+                    full = false;
+                    break;
+                }
+            }
+            if (full) {
+                fullRows.PushBack(y);
+            }
+        }
+        const int cleared = static_cast<int>(fullRows.GetSize());
+        for (std::size_t ri = 0; ri < fullRows.GetSize(); ++ri) {
+            SpawnLineClearVfx(world, fullRows[ri], cleared);
+        }
+
+        int removed = 0;
         for (int y = 0; y < kRows; ++y) {
             bool full = true;
             for (int x = 0; x < kCols; ++x) {
@@ -425,7 +526,7 @@ void Tetris2DDemo::LockPiece(Spark::IEngineContext& context)
             if (!full) {
                 continue;
             }
-            ++cleared;
+            ++removed;
             for (int yy = y; yy < kRows - 1; ++yy) {
                 for (int x = 0; x < kCols; ++x) {
                     grid[static_cast<std::size_t>(yy) * static_cast<std::size_t>(kCols) + static_cast<std::size_t>(x)] =
@@ -437,13 +538,13 @@ void Tetris2DDemo::LockPiece(Spark::IEngineContext& context)
             }
             --y;
         }
-        if (cleared > 0) {
-            linesCleared += cleared;
+        if (removed > 0) {
+            linesCleared += removed;
             static constexpr int kLineScore[] = {0, 100, 300, 500, 800};
-            score += kLineScore[std::min(cleared, 4)];
+            score += kLineScore[std::min(removed, 4)];
             level = 1 + linesCleared / 10;
         }
-        return cleared;
+        return removed;
     }
 
 void Tetris2DDemo::PushBoardToTilemap()
@@ -499,6 +600,20 @@ void Tetris2DDemo::UpdateBoardPad()
                 {static_cast<float>(kCols) * 0.5F * kTileWorld,
                  static_cast<float>(kRows) * 0.5F * kTileWorld,
                  -0.02F});
+        const float padW = static_cast<float>(kCols) * kTileWorld + 0.35F;
+        const float padH = static_cast<float>(kRows) * kTileWorld + 0.35F;
+        float pulse = 1.0F;
+        if (lockPulseT > 0.0F) {
+            const float t = lockPulseT / 0.18F;
+            pulse = 1.0F + 0.028F * std::sin(t * 3.14159265F);
+        }
+        tr->SetScale({padW * pulse, padH * pulse, 1.0F});
+        if (boardPadGo != nullptr) {
+            if (Spark::SpriteComponent* pad = boardPadGo->GetComponent<Spark::SpriteComponent>()) {
+                const float brighten = lockPulseT > 0.0F ? 0.06F * (lockPulseT / 0.18F) : 0.0F;
+                pad->SetTint({0.22F + brighten, 0.24F + brighten, 0.30F + brighten, 0.88F});
+            }
+        }
     }
 
 void Tetris2DDemo::UpdateGhostSprites()

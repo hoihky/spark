@@ -26,6 +26,7 @@ void VfxAsset::Activate(
     ApplyTo(emitterOut);
     if (mode == VfxPlaybackMode::Once && burstCount > 0) {
         emitterOut.Burst(owner, burstCount);
+        emitterOut.SetEmissionRate(0.0F);
     }
 }
 

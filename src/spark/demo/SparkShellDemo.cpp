@@ -175,17 +175,17 @@ public:
                 ReturnToMenu(context);
             }
         } else if (mode == DemoMode::Tetris2D) {
-            tetris2DDemo.Simulate(timing, context);
+            tetris2DDemo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
         } else if (mode == DemoMode::Connect3) {
-            connect3Demo.Simulate(timing, context);
+            connect3Demo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
         } else if (mode == DemoMode::SpaceInvaders2D) {
-            spaceInvaders2DDemo.Simulate(timing, context);
+            spaceInvaders2DDemo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }

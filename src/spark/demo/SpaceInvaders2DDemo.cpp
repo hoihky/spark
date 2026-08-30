@@ -7,6 +7,9 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
+#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
+
+#include <cmath>
 
 namespace Spark {
 
@@ -202,11 +205,14 @@ void SpaceInvaders2DDemo::Unload(Spark::GameWorld& w)
         explosions.Clear();
     }
 
-void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context)
+void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
 {
         Spark::IInput& in = context.GetInput();
         const float dt = timing.deltaTimeSeconds;
         TickExplosions(dt);
+        if (cameraShakeT > 0.0F) {
+            cameraShakeT = std::max(0.0F, cameraShakeT - dt);
+        }
 
         if (in.IsKeyPressedThisFrame(GLFW_KEY_R)) {
             ResetRound();
@@ -224,6 +230,7 @@ void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             if ((in.IsKeyDown(GLFW_KEY_SPACE) || in.IsKeyDown(GLFW_KEY_UP)) && fireCooldown <= 0.0F) {
                 if (TrySpawnPlayerBullet()) {
                     fireCooldown = 0.32F;
+                    SpawnPlayerShootVfx(world);
                     DemoPlayProceduralClip(context, DemoSfx::ClipInvadersShoot(), 1.0F);
                 }
             }
@@ -243,6 +250,7 @@ void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                 fleetVelX = -fleetVelX;
                 fleetX += fleetVelX * dt * 1.5F;
                 fleetY -= 0.45F;
+                SpawnFleetDropVfx(world);
             }
 
             enemyFireTimer -= dt;
@@ -280,7 +288,7 @@ void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                 }
             }
 
-            ResolveCollisions(context);
+            ResolveCollisions(context, world);
 
             int alive = 0;
             for (std::size_t i = 0; i < aliens.GetSize(); ++i) {
@@ -292,10 +300,13 @@ void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                     }
                 }
             }
-            if (alive == 0) {
+            if (alive == 0 && gamePhase == 0) {
                 gamePhase = 1;
+                SpawnWinVfx(world);
             }
         }
+
+        Spark::ProcessVfx(world);
 
         if (hudText != nullptr) {
             const char* phase = (gamePhase == 0) ? "PLAY" : (gamePhase == 1) ? "YOU WIN" : "GAME OVER";
@@ -322,21 +333,30 @@ void SpaceInvaders2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& worl
         if (fbH <= 0) {
             fbH = 1;
         }
+        Spark::Vector3 camPos = camera.position;
+        if (cameraShakeT > 0.0F) {
+            const float n = cameraShakeT / 0.16F;
+            const float wobble = n * n;
+            camPos.x += std::sin(cameraShakeT * 88.0F) * cameraShakeMag * wobble;
+            camPos.y += std::cos(cameraShakeT * 74.0F) * cameraShakeMag * wobble;
+        }
+        Spark::Camera2D renderCam = camera;
+        renderCam.position = camPos;
         const Spark::Matrix4 viewProj =
-                camera.ViewProjection(static_cast<float>(fbW), static_cast<float>(fbH));
+                renderCam.ViewProjection(static_cast<float>(fbW), static_cast<float>(fbH));
         Spark::Vector3 pr{};
         Spark::Vector3 pu{};
-        camera.BillboardBasisWorld(pr, pu);
+        renderCam.BillboardBasisWorld(pr, pu);
         Spark::SubmitStandardLitSceneFromWorld(
                 world,
                 context,
                 viewProj,
-                camera.position,
+                camPos,
                 Spark::Vector3{0.28F, 0.55F, 0.92F}.Normalized(),
                 Spark::Vector3{0.9F, 0.95F, 1.0F},
                 0.55F,
                 Spark::Vector3{0.04F, 0.05F, 0.09F},
-                false,
+                true,
                 pr,
                 pu,
                 0.0F);
@@ -366,6 +386,9 @@ void SpaceInvaders2DDemo::ResetRound() noexcept
         score = 0;
         lives = 3;
         gamePhase = 0;
+        winVfxPlayed = false;
+        cameraShakeT = 0.0F;
+        cameraShakeMag = 0.0F;
         fleetX = 3.5F;
         fleetY = 19.0F;
         fleetVelX = 4.2F;
@@ -494,7 +517,7 @@ bool SpaceInvaders2DDemo::BoxOverlap(float ax, float ay, float ahx, float ahy, f
         return fleetYVal - static_cast<float>(gj) * kStepY;
     }
 
-void SpaceInvaders2DDemo::ResolveCollisions(Spark::IEngineContext& context) noexcept
+void SpaceInvaders2DDemo::ResolveCollisions(Spark::IEngineContext& context, Spark::GameWorld& world) noexcept
 {
         constexpr float ahx = 0.48F;
         constexpr float ahy = 0.34F;
@@ -520,8 +543,11 @@ void SpaceInvaders2DDemo::ResolveCollisions(Spark::IEngineContext& context) noex
                 if (BoxOverlap(px, py, bhx, bhy, ax, ay, ahx, ahy)) {
                     al.alive = false;
                     DeactivateBullet(pb);
-                    SpawnExplosion(ax, ay);
-                    score += 10;
+                    SpawnExplosion(ax, ay, al.gj);
+                    SpawnHitVfx(world, ax, ay, al.gj);
+                    cameraShakeT = 0.12F;
+                    cameraShakeMag = 0.04F + static_cast<float>(al.gj) * 0.012F;
+                    score += 10 + al.gj * 5;
                     DemoPlayProceduralClip(context, DemoSfx::ClipInvadersHit(), 0.95F);
                     break;
                 }
@@ -535,9 +561,15 @@ void SpaceInvaders2DDemo::ResolveCollisions(Spark::IEngineContext& context) noex
             }
             if (BoxOverlap(eb.cx, eb.cy, bhx, bhy, playerX, playerY, phx, phy)) {
                 DeactivateBullet(eb);
+                SpawnPlayerDamageVfx(world);
+                cameraShakeT = 0.18F;
+                cameraShakeMag = 0.09F;
                 --lives;
                 if (lives <= 0) {
                     gamePhase = 2;
+                    world.GetVfxSubsystem().Queue(
+                            "explosion",
+                            Spark::Vector3{playerX, playerY, 0.12F});
                 }
             }
         }
@@ -553,27 +585,100 @@ void SpaceInvaders2DDemo::UpdatePlayerShadow() noexcept
         }
     }
 
-void SpaceInvaders2DDemo::SpawnExplosion(float worldX, float worldY) noexcept
+Spark::Vector4 SpaceInvaders2DDemo::ExplosionTintForRow(const int alienRow) noexcept
 {
+        switch (alienRow) {
+        case 0:
+            return {0.45F, 0.98F, 1.0F, 0.95F};
+        case 1:
+            return {0.82F, 0.42F, 1.0F, 0.95F};
+        case 2:
+            return {0.42F, 0.98F, 0.55F, 0.95F};
+        default:
+            return {1.0F, 0.72F, 0.28F, 0.95F};
+        }
+    }
+
+void SpaceInvaders2DDemo::SpawnHitVfx(Spark::GameWorld& world, const float worldX, const float worldY, const int alienRow) noexcept
+{
+        const Spark::Vector3 pos{worldX, worldY, 0.08F};
+        world.GetVfxSubsystem().Queue("vfx/invaders_hit", pos);
+        world.GetVfxSubsystem().Queue("impact", pos);
+        switch (alienRow) {
+        case 0:
+            world.GetVfxSubsystem().Queue("laser_hit", pos);
+            world.GetVfxSubsystem().Queue("ice_shatter", pos);
+            break;
+        case 1:
+            world.GetVfxSubsystem().Queue("shockwave", pos);
+            world.GetVfxSubsystem().Queue("laser_hit", pos);
+            break;
+        case 2:
+            world.GetVfxSubsystem().Queue("explosion", pos);
+            break;
+        default:
+            world.GetVfxSubsystem().Queue("dust", {worldX, worldY, 0.07F});
+            break;
+        }
+    }
+
+void SpaceInvaders2DDemo::SpawnPlayerShootVfx(Spark::GameWorld& world) noexcept
+{
+        world.GetVfxSubsystem().Queue(
+                "muzzle_flash",
+                Spark::Vector3{playerX, playerY + 0.55F, 0.09F});
+    }
+
+void SpaceInvaders2DDemo::SpawnPlayerDamageVfx(Spark::GameWorld& world) noexcept
+{
+        const Spark::Vector3 pos{playerX, playerY, 0.1F};
+        world.GetVfxSubsystem().Queue("shockwave", pos);
+        world.GetVfxSubsystem().Queue("impact", pos);
+    }
+
+void SpaceInvaders2DDemo::SpawnWinVfx(Spark::GameWorld& world) noexcept
+{
+        if (winVfxPlayed) {
+            return;
+        }
+        winVfxPlayed = true;
+        const Spark::Vector3 center{kWorldW * 0.5F, kWorldH * 0.58F, 0.14F};
+        world.GetVfxSubsystem().Queue("fireworks", center);
+        world.GetVfxSubsystem().Queue("confetti", {center.x, center.y - 1.5F, 0.12F});
+        world.GetVfxSubsystem().Queue("level_up", {playerX, playerY + 0.8F, 0.11F});
+    }
+
+void SpaceInvaders2DDemo::SpawnFleetDropVfx(Spark::GameWorld& world) noexcept
+{
+        float centerX = fleetX + static_cast<float>(kAlienCols - 1) * kStepX * 0.5F;
+        float centerY = AlienWorldY(fleetY, kAlienRows / 2);
+        world.GetVfxSubsystem().Queue("dust", Spark::Vector3{centerX, centerY, 0.05F});
+    }
+
+void SpaceInvaders2DDemo::SpawnExplosion(const float worldX, const float worldY, const int alienRow) noexcept
+{
+        const Spark::Vector4 tint = ExplosionTintForRow(alienRow);
         for (std::size_t e = 0; e < explosions.GetSize(); ++e) {
             ExplosionSlot& ex = explosions[e];
             if (ex.active) {
                 continue;
             }
             ex.active = true;
-            ex.timeLeft = 0.42F;
+            ex.duration = 0.38F + static_cast<float>(alienRow) * 0.04F;
+            ex.timeLeft = ex.duration;
+            ex.startScale = 1.2F + static_cast<float>(alienRow) * 0.18F;
             if (ex.tr != nullptr) {
                 ex.tr->SetTranslation({worldX, worldY, 0.05F});
-                ex.tr->SetUniformScale(1.4F);
+                ex.tr->SetUniformScale(ex.startScale);
             }
             if (ex.spr != nullptr) {
-                ex.spr->SetTint({1.0F, 0.72F, 0.28F, 0.95F});
+                ex.spr->SetTint(tint);
             }
             return;
         }
     }
 
-void SpaceInvaders2DDemo::TickExplosions(float dt) noexcept
+void SpaceInvaders2DDemo::TickExplosions(const float dt) noexcept
 {
         for (std::size_t e = 0; e < explosions.GetSize(); ++e) {
             ExplosionSlot& ex = explosions[e];
@@ -581,12 +686,13 @@ void SpaceInvaders2DDemo::TickExplosions(float dt) noexcept
                 continue;
             }
             ex.timeLeft -= dt;
-            const float pulse = std::max(0.0F, ex.timeLeft / 0.42F);
+            const float pulse = ex.duration > 0.0F ? std::max(0.0F, ex.timeLeft / ex.duration) : 0.0F;
             if (ex.tr != nullptr) {
-                ex.tr->SetUniformScale(1.4F + (1.0F - pulse) * 1.6F);
+                ex.tr->SetUniformScale(ex.startScale + (1.0F - pulse) * 1.4F);
             }
             if (ex.spr != nullptr) {
-                ex.spr->SetTint({1.0F, 0.72F, 0.28F, 0.95F * pulse * pulse});
+                const Spark::Vector4 base = ex.spr->GetTint();
+                ex.spr->SetTint({base.x, base.y, base.z, base.w * pulse * pulse});
             }
             if (ex.timeLeft <= 0.0F) {
                 ex.active = false;
@@ -594,7 +700,8 @@ void SpaceInvaders2DDemo::TickExplosions(float dt) noexcept
                     ex.tr->SetTranslation({-120.0F, -120.0F, 0.05F});
                 }
                 if (ex.spr != nullptr) {
-                    ex.spr->SetTint({1.0F, 0.72F, 0.28F, 0.0F});
+                    const Spark::Vector4 t = ex.spr->GetTint();
+                    ex.spr->SetTint({t.x, t.y, t.z, 0.0F});
                 }
             }
         }

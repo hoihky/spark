@@ -65,6 +65,26 @@ namespace DemoSfx {
     return c;
 }
 
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipMatch3Swap() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(740.0F, 0.028F, 0.14F);
+    return c;
+}
+
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipMatch3Clear() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(520.0F, 0.055F, 0.2F);
+    return c;
+}
+
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipMatch3Combo() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(880.0F, 0.07F, 0.24F);
+    return c;
+}
+
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipMatch3Invalid() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(180.0F, 0.05F, 0.12F);
+    return c;
+}
+
 }  // namespace DemoSfx
 
 }  // namespace Spark

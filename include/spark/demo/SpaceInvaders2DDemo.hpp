@@ -141,7 +141,7 @@ public:
     void Unload(Spark::GameWorld& w);
 
 
-    void Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context);
+    void Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world);
 
 
     void Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spark::IEngineContext& context);
@@ -174,6 +174,8 @@ private:
         Spark::TransformComponent* tr = nullptr;
         Spark::SpriteComponent* spr = nullptr;
         float timeLeft = 0.0F;
+        float duration = 0.42F;
+        float startScale = 1.4F;
     };
 
     static std::uint32_t timingHackU32(Spark::IEngineContext& context);
@@ -205,11 +207,19 @@ private:
     [[nodiscard]] static float AlienWorldY(float fleetYVal, int gj) noexcept;
 
 
-    void ResolveCollisions(Spark::IEngineContext& context) noexcept;
+    void ResolveCollisions(Spark::IEngineContext& context, Spark::GameWorld& world) noexcept;
+
+    void SpawnHitVfx(Spark::GameWorld& world, float worldX, float worldY, int alienRow) noexcept;
+    void SpawnPlayerShootVfx(Spark::GameWorld& world) noexcept;
+    void SpawnPlayerDamageVfx(Spark::GameWorld& world) noexcept;
+    void SpawnWinVfx(Spark::GameWorld& world) noexcept;
+    void SpawnFleetDropVfx(Spark::GameWorld& world) noexcept;
+
+    void SpawnExplosion(float worldX, float worldY, int alienRow) noexcept;
 
     void UpdatePlayerShadow() noexcept;
 
-    void SpawnExplosion(float worldX, float worldY) noexcept;
+    [[nodiscard]] static Spark::Vector4 ExplosionTintForRow(int alienRow) noexcept;
 
     void TickExplosions(float dt) noexcept;
 
@@ -249,6 +259,9 @@ private:
     int score = 0;
     int lives = 3;
     int gamePhase = 0;
+    float cameraShakeT = 0.0F;
+    float cameraShakeMag = 0.0F;
+    bool winVfxPlayed = false;
     float fpsSmoothed = 0.0F;
     std::uint32_t rng = 1;
 
