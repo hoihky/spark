@@ -4,7 +4,10 @@
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
+#include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 
 namespace Spark {
 namespace {
@@ -140,9 +143,13 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
         roots.Clear();
         gemObjects.Clear();
+        gemBasePositions.Clear();
+        wallTorches.Clear();
         wallCount = 0;
         gemsCollected = 0;
         gemsTotal = 0;
+        emissiveTorchCount = 0;
+        sceneTime = 0.0F;
         playerAnimator = nullptr;
         playerCharAnimFsm = nullptr;
         patrolPathGo = nullptr;
@@ -222,11 +229,30 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             groundTr->SetUniformScale(gScale);
         }
         ground->AddComponent<Spark::MeshComponent>(
-                groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.52F, 0.55F, 0.58F});
+                groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.48F, 0.52F, 0.46F});
+        if (Spark::MaterialComponent* gm = ground->AddComponent<Spark::MaterialComponent>()) {
+            Spark::Texture2D soilTex(Spark::Utf8String("Maze3DGroundSoilProbe"));
+            if (DemoAssets::TryLoadSoilGroundTexture(soilTex)) {
+                gm->SetBaseColorTexture(Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(soilTex)));
+                Spark::MaterialUvMap uv{};
+                uv.uvScale = {
+                        DemoAssets::ProceduralTextureSpanWorldUnits(
+                                0.5F * static_cast<float>(std::max(kMazeW, kMazeH)) * kCellWorld + 10.0F)
+                        / DemoAssets::kKenneyTileWorldUnitsPerRepeat,
+                        DemoAssets::ProceduralTextureSpanWorldUnits(
+                                0.5F * static_cast<float>(std::max(kMazeW, kMazeH)) * kCellWorld + 10.0F)
+                        / DemoAssets::kKenneyTileWorldUnitsPerRepeat};
+                gm->SetBaseColorUvMap(uv);
+            }
+            gm->SetRoughness(0.92F);
+            gm->SetMetallic(0.0F);
+        }
         roots.PushBack(ground);
 
-        const float originX = -0.5F * static_cast<float>(kMazeW) * kCellWorld;
-        const float originZ = -0.5F * static_cast<float>(kMazeH) * kCellWorld;
+        mazeOriginX = -0.5F * static_cast<float>(kMazeW) * kCellWorld;
+        mazeOriginZ = -0.5F * static_cast<float>(kMazeH) * kCellWorld;
+        const float originX = mazeOriginX;
+        const float originZ = mazeOriginZ;
         const float wallScale = 0.5F * kCellWorld;
         const Spark::Vector3 wallHalf{1.0F, 1.0F, 1.0F};
 
@@ -246,12 +272,108 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                         unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{1.0F, 1.0F, 1.0F});
                 if (Spark::MaterialComponent* m = g->AddComponent<Spark::MaterialComponent>(
                             wallBrickTex, Spark::Vector3::One)) {
-                    m->SetMetallic(0.0F);
-                    m->SetRoughness(0.88F);
+                    const float shade = 0.84F + 0.12F * std::sin(static_cast<float>(i) * 0.29F + static_cast<float>(j) * 0.23F);
+                    m->SetTint({shade, shade * 0.97F, shade * 0.93F});
+                    m->SetMetallic(0.04F + 0.03F * static_cast<float>((i + j) % 3));
+                    m->SetRoughness(0.78F + 0.10F * static_cast<float>((i * 3 + j) % 5));
+                    Spark::MaterialUvMap uv{};
+                    uv.uvScale = {2.2F, 2.2F};
+                    uv.uvOffset = {
+                            0.08F * static_cast<float>((i + j) % 4),
+                            0.06F * static_cast<float>((i * 2 + j) % 4)};
+                    m->SetBaseColorUvMap(uv);
                 }
                 g->AddComponent<Spark::BoxCollider3DComponent>(wallHalf);
                 roots.PushBack(g);
                 ++wallCount;
+            }
+        }
+
+        auto cellIsWall = [&](const int ci, const int cj) noexcept {
+            if (ci < 0 || cj < 0 || ci >= kMazeW || cj >= kMazeH) {
+                return true;
+            }
+            return cells[static_cast<std::size_t>(cj * kMazeW + ci)] != 0;
+        };
+
+        unsigned torchSeed = 0xC41A70E1U;
+        /** First-trial look: ~72 sconces on a 1-in-5 floor grid; real lights capped for FPS. */
+        constexpr std::size_t kMaxWallTorches = 72U;
+        constexpr std::size_t kMaxLitTorches = 24U;
+        std::size_t litTorchCount = 0U;
+        emissiveTorchCount = 0;
+        struct TorchDir {
+            int di;
+            int dj;
+            float ox;
+            float oz;
+        };
+        static constexpr TorchDir kTorchDirs[] = {
+                {1, 0, 0.46F, 0.0F},
+                {-1, 0, -0.46F, 0.0F},
+                {0, 1, 0.0F, 0.46F},
+                {0, -1, 0.0F, -0.46F},
+        };
+        for (int j = 0; j < kMazeH; ++j) {
+            for (int i = 0; i < kMazeW; ++i) {
+                if (cells[static_cast<std::size_t>(j * kMazeW + i)] != 0) {
+                    continue;
+                }
+                torchSeed = torchSeed * 1664525U + 1013904223U;
+                if ((torchSeed % 5U) != 0U) {
+                    continue;
+                }
+                const std::size_t sconceCount = litTorchCount + static_cast<std::size_t>(emissiveTorchCount);
+                if (sconceCount >= kMaxWallTorches) {
+                    break;
+                }
+                for (const TorchDir& dir : kTorchDirs) {
+                    if (!cellIsWall(i + dir.di, j + dir.dj)) {
+                        continue;
+                    }
+                    const bool useRealLight = litTorchCount < kMaxLitTorches;
+                    const float fx = originX + (static_cast<float>(i) + 0.5F) * kCellWorld + dir.ox * kCellWorld;
+                    const float fz = originZ + (static_cast<float>(j) + 0.5F) * kCellWorld + dir.oz * kCellWorld;
+                    const float phase = static_cast<float>(sconceCount) * 1.73F;
+                    const float hue = 0.55F + 0.12F * std::sin(phase * 0.7F);
+
+                    Spark::GameObject* torchGo = w.CreateGameObject();
+                    torchGo->GetName() = useRealLight ? Spark::Utf8String("Maze3DTorchLit")
+                                                      : Spark::Utf8String("Maze3DTorchEmissive");
+                    Spark::TransformComponent* torchTr = torchGo->AddComponent<Spark::TransformComponent>();
+                    torchTr->SetTranslation({fx, 1.38F, fz});
+                    torchTr->SetUniformScale(0.16F);
+                    torchGo->AddComponent<Spark::MeshComponent>(
+                            unitCubeAsset,
+                            Spark::SceneMeshSlot::UnitCube,
+                            Spark::Vector3{0.95F, 0.58F + hue * 0.2F, 0.22F});
+                    if (Spark::MaterialComponent* tm = torchGo->AddComponent<Spark::MaterialComponent>()) {
+                        const float emissiveStrength = useRealLight ? 5.5F : 7.4F;
+                        tm->SetEmissive({1.0F, 0.62F + hue * 0.15F, 0.24F}, emissiveStrength);
+                        tm->SetRoughness(0.28F);
+                        tm->SetMetallic(0.12F);
+                    }
+                    if (useRealLight) {
+                        Spark::PointLightComponent* torchLight = torchGo->AddComponent<Spark::PointLightComponent>(
+                                Spark::Vector3{1.0F, 0.68F + hue * 0.12F, 0.32F},
+                                2.9F,
+                                kCellWorld * 2.1F);
+                        torchLight->SetCastsShadow(false);
+                        WallTorch entry{};
+                        entry.light = torchLight;
+                        entry.phase = phase;
+                        entry.baseIntensity = 2.9F;
+                        wallTorches.PushBack(entry);
+                        ++litTorchCount;
+                    } else {
+                        ++emissiveTorchCount;
+                    }
+                    roots.PushBack(torchGo);
+                    break;
+                }
+            }
+            if (litTorchCount + static_cast<std::size_t>(emissiveTorchCount) >= kMaxWallTorches) {
+                break;
             }
         }
 
@@ -268,6 +390,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 kTorsoSphereRadius, Spark::Vector3{0.0F, kTorsoSphereCenterY, 0.0F});
         playerRb = playerGo->AddComponent<Spark::Rigidbody3DComponent>(Spark::RigidbodyBodyType3D::Dynamic, 1.0F);
         playerRb->SetVelocity(Spark::Vector3::Zero);
+        playerGo->AddComponent<Spark::SoundCueComponent>();
 
         Spark::Utf8String cesiumPath(SPARK_ASSETS_DIR);
         cesiumPath.AppendUtf8("/models/CesiumMan.glb");
@@ -416,7 +539,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             }
         }
         ShuffleMazeCells3(floorCells, static_cast<unsigned>(kMazeW * 49999 + kMazeH * 131U + 29U));
-        constexpr int kMaxGems = 14;
+        constexpr int kMaxGems = 28;
         gemsTotal = static_cast<int>(floorCells.GetSize());
         if (gemsTotal > kMaxGems) {
             gemsTotal = kMaxGems;
@@ -442,8 +565,8 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 gm->SetRoughness(0.35F);
             }
             if (Spark::ParticleEmitterComponent* pe = gem->AddComponent<Spark::ParticleEmitterComponent>()) {
-                pe->SetMaxParticles(200);
-                pe->SetEmissionRate(32.0F);
+                pe->SetMaxParticles(180);
+                pe->SetEmissionRate(36.0F);
                 pe->SetLifetime(0.4F, 1.05F);
                 pe->SetStartEndSize(0.11F, 0.018F);
                 const Spark::Vector4 c0{
@@ -459,22 +582,26 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 pe->SetSpeedRange(0.25F, 1.05F);
             }
             gemObjects.PushBack(gem);
+            gemBasePositions.PushBack({gx, 0.28F, gz});
         }
+
+        const float mazeCenterX = originX + 0.5F * static_cast<float>(kMazeW) * kCellWorld;
+        const float mazeCenterZ = originZ + 0.5F * static_cast<float>(kMazeH) * kCellWorld;
 
         Spark::GameObject* lightA = w.CreateGameObject();
         lightA->GetName() = Spark::Utf8String("Maze3DLightA");
         Spark::TransformComponent* lta = lightA->AddComponent<Spark::TransformComponent>();
-        lta->SetTranslation({originX + 8.0F, 9.0F, originZ + 6.0F});
-        lightA->AddComponent<Spark::PointLightComponent>(Spark::Vector3{0.4F, 0.75F, 1.0F}, 5.0F, 28.0F)
-                ->SetCastsShadow(true);
+        lta->SetTranslation({mazeCenterX - kCellWorld * 4.0F, 14.0F, mazeCenterZ - kCellWorld * 3.0F});
+        lightA->AddComponent<Spark::PointLightComponent>(Spark::Vector3{0.38F, 0.72F, 1.0F}, 3.2F, kCellWorld * 9.0F)
+                ->SetCastsShadow(false);
         roots.PushBack(lightA);
 
         Spark::GameObject* lightB = w.CreateGameObject();
         lightB->GetName() = Spark::Utf8String("Maze3DLightB");
         Spark::TransformComponent* ltb = lightB->AddComponent<Spark::TransformComponent>();
-        ltb->SetTranslation({originX + 22.0F, 6.0F, originZ + 18.0F});
-        lightB->AddComponent<Spark::PointLightComponent>(Spark::Vector3{1.0F, 0.45F, 0.28F}, 4.0F, 22.0F)
-                ->SetCastsShadow(true);
+        ltb->SetTranslation({mazeCenterX + kCellWorld * 5.0F, 10.0F, mazeCenterZ + kCellWorld * 4.0F});
+        lightB->AddComponent<Spark::PointLightComponent>(Spark::Vector3{1.0F, 0.42F, 0.26F}, 2.6F, kCellWorld * 7.5F)
+                ->SetCastsShadow(false);
         roots.PushBack(lightB);
 
         helpHud.Mount(w, "3D maze");
@@ -527,6 +654,8 @@ void Maze3DDemo::Unload(Spark::GameWorld& w)
             }
         }
         gemObjects.Clear();
+        gemBasePositions.Clear();
+        wallTorches.Clear();
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);
@@ -552,12 +681,27 @@ void Maze3DDemo::Unload(Spark::GameWorld& w)
         guardGo = nullptr;
         guardPerception = nullptr;
         useHumanAvatar = false;
+        wallTorches.Clear();
+        gemBasePositions.Clear();
+        sceneTime = 0.0F;
     }
 
 void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
 {
+        sceneTime += timing.totalTimeSeconds;
+        Spark::ProcessVfx(world);
         Spark::IInput& in = context.GetInput();
         const float dt = timing.deltaTimeSeconds;
+
+        for (std::size_t ti = 0; ti < wallTorches.GetSize(); ++ti) {
+            WallTorch& torch = wallTorches[ti];
+            if (torch.light == nullptr) {
+                continue;
+            }
+            const float flicker = 0.86F + 0.10F * std::sin(sceneTime * 7.8F + torch.phase)
+                    + 0.06F * std::sin(sceneTime * 13.5F + torch.phase * 1.7F);
+            torch.light->SetIntensity(torch.baseIntensity * flicker);
+        }
 
         if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
             in.SetCursorCaptured(!in.IsCursorCaptured());
@@ -630,27 +774,49 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             rig.characterPosition.y = rig.groundY;
             rig.characterPosition.z = p.z;
 
-            constexpr float kCollectRadius = 0.65F * (kCellWorld / 2.25F);
+            constexpr float kCollectRadius = 0.72F * (kCellWorld / 2.25F);
+            const float magnetRadius = kCollectRadius * 1.35F;
             const float cr2 = kCollectRadius * kCollectRadius;
+            const float mr2 = magnetRadius * magnetRadius;
             for (std::size_t gi = 0; gi < gemObjects.GetSize();) {
                 Spark::GameObject* gem = gemObjects[gi];
                 if (gem == nullptr) {
                     gemObjects.RemoveAt(gi);
+                    gemBasePositions.RemoveAt(gi);
                     continue;
                 }
-                const Spark::TransformComponent* gtr = gem->GetComponent<Spark::TransformComponent>();
+                Spark::TransformComponent* gtr = gem->GetComponent<Spark::TransformComponent>();
                 if (gtr == nullptr) {
                     world.DestroyGameObject(gem);
                     gemObjects.RemoveAt(gi);
+                    gemBasePositions.RemoveAt(gi);
                     continue;
                 }
-                const Spark::Vector3 gpos = gtr->GetLocalTransform().translation;
+                const Spark::Vector3 base = gemBasePositions[gi];
+                const float bob = std::sin(sceneTime * 3.8F + static_cast<float>(gi) * 0.61F) * 0.08F;
+                const float spin = sceneTime * 1.6F + static_cast<float>(gi) * 0.42F;
+                Spark::Vector3 gpos = base;
+                gpos.y += bob;
+                const float dx0 = gpos.x - p.x;
+                const float dz0 = gpos.z - p.z;
+                const float d2xz = dx0 * dx0 + dz0 * dz0;
+                if (d2xz < mr2 && d2xz > 1.0e-4F) {
+                    const float pull = std::min(1.0F, (mr2 - d2xz) / mr2) * 7.5F * dt;
+                    gpos.x -= dx0 * pull;
+                    gpos.z -= dz0 * pull;
+                }
+                gtr->SetTranslation(gpos);
+                gtr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, spin));
+
                 const float dx = gpos.x - p.x;
                 const float dy = gpos.y - p.y;
                 const float dz = gpos.z - p.z;
                 if (dx * dx + dy * dy + dz * dz <= cr2) {
+                    world.GetVfxSubsystem().Queue("loot_sparkle", gpos);
+                    world.GetVfxSubsystem().Queue("impact", {gpos.x, gpos.y + 0.15F, gpos.z});
                     world.DestroyGameObject(gem);
                     gemObjects.RemoveAt(gi);
+                    gemBasePositions.RemoveAt(gi);
                     ++gemsCollected;
                     DemoAudio::QueueCue(*playerGo, DemoSfx::ClipGemCollect(), 0.95F);
                     continue;
@@ -671,11 +837,13 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
                 }
             }
             const std::string hud = std::format(
-                    "{}×{} — {} — {} walls — gems {}/{} — guard {}",
+                    "{}×{} — {} — {} walls — {} torches ({} lit) — gems {}/{} — guard {}",
                     kMazeW,
                     kMazeH,
                     characterAvatarHudName.CStr(),
                     wallCount,
+                    wallTorches.GetSize() + static_cast<std::size_t>(emissiveTorchCount),
+                    wallTorches.GetSize(),
                     gemsCollected,
                     gemsTotal,
                     guardSeesPlayer ? "ALERT" : "patrol");
@@ -695,20 +863,24 @@ void Maze3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         const float aspect = (fbH > 0) ? static_cast<float>(fbW) / static_cast<float>(fbH) : 1.0F;
 
         const Spark::Matrix4 proj =
-                Spark::Matrix4::PerspectiveVulkan(Spark::DegreesToRadians(60.0F), aspect, 0.12F, 400.0F);
+                Spark::Matrix4::PerspectiveVulkan(Spark::DegreesToRadians(60.0F), aspect, 0.12F, 720.0F);
         const Spark::Matrix4 view = rig.ViewMatrix();
         const Spark::Matrix4 viewProj = proj * view;
 
         Spark::SceneRenderParams params{};
         params.viewProjection = viewProj;
         params.cameraPositionWorld = rig.CameraWorldPosition();
-        params.lightDirectionWorld = Spark::Vector3{0.32F, 0.86F, 0.38F}.Normalized();
-        params.lightColor = {1.0F, 0.96F, 0.9F};
-        params.lightIntensity = 0.92F;
-        params.ambientColor = {0.09F, 0.10F, 0.12F};
+        params.lightDirectionWorld = Spark::Vector3{0.28F, 0.82F, 0.42F}.Normalized();
+        params.lightColor = {0.92F, 0.94F, 1.0F};
+        params.lightIntensity = 0.72F;
+        params.ambientColor = {0.11F, 0.10F, 0.13F};
         params.lightingProfile = Spark::SceneLightingProfile::NightInterior;
         params.useTimeOfDay = true;
-        params.timeOfDay = 0.06F;
+        params.timeOfDay = 0.035F;
+        /** Moonlight CSM only — punctual shadows off for FPS on this large maze. */
+        params.directionalShadowsEnabled = true;
+        params.punctualShadowsEnabled = false;
+        params.ssaoEnabled = false;
 
         params.draws.Clear();
         params.sceneTextures.Clear();

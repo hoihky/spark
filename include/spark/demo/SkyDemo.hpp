@@ -4,13 +4,14 @@
 #include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/DemoMode.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/ecs/components/rendering/PostProcessVolumeComponent.hpp"
 
 namespace Spark {
 
 /** Vertical FOV (degrees) for sky demo projection — must match PerspectiveVulkan in Render(). */
 constexpr float kSkyDemoFovYDeg = 60.0F;
 
-    /** Vertical FOV (degrees) for sky demo projection — must match PerspectiveVulkan in Render(). */
+/** Fly-camera HDR sky showcase (box / dome / plane) with lit ground and directional shadows. */
 class SkyDemo {
 public:
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
@@ -41,18 +42,22 @@ private:
     Spark::SharedPtr<Spark::Mesh> groundAsset;
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset;
     Spark::SharedPtr<Spark::Texture2D> skyEquirectTex;
+    Spark::SharedPtr<Spark::Texture2D> groundDiffTex;
     bool skyHasEquirect = false;
+    Spark::Utf8String skySourceLabel{};
 
     Spark::GameObject* groundObject = nullptr;
-    Spark::GameObject* cubeObject = nullptr;
     Spark::GameObject* skyObject = nullptr;
     Spark::TransformComponent* skyTransform = nullptr;
     Spark::MeshComponent* skyMesh = nullptr;
     Spark::SkyComponent* sky = nullptr;
     Spark::MaterialComponent* skyMat = nullptr;
+    Spark::PostProcessVolumeComponent* postVolume = nullptr;
     DemoHelpHud helpHud{};
     int skyLastFbW = 0;
     int skyLastFbH = 0;
+    float sceneTime = 0.0F;
+    bool ssaoEnabled = true;
 };
 
 

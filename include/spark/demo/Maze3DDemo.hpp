@@ -36,8 +36,8 @@ namespace Spark {
  */
 class Maze3DDemo {
 public:
-    static constexpr int kMazeW = 39;
-    static constexpr int kMazeH = 27;
+    static constexpr int kMazeW = 55;
+    static constexpr int kMazeH = 39;
     /** One grid step in world meters; empty cell width ≈ this (walkable corridor span). */
     static constexpr float kCellWorld = 6.0F;
 
@@ -59,9 +59,16 @@ private:
 
     void UpdateMazeSkyTransform();
 
+    struct WallTorch {
+        Spark::PointLightComponent* light = nullptr;
+        float phase = 0.0F;
+        float baseIntensity = 2.8F;
+    };
 
     Spark::Array<Spark::GameObject*> roots{};
     Spark::Array<Spark::GameObject*> gemObjects{};
+    Spark::Array<Spark::Vector3> gemBasePositions{};
+    Spark::Array<WallTorch> wallTorches{};
     Spark::SharedPtr<Spark::Mesh> unitCubeAsset{};
     Spark::SharedPtr<Spark::Mesh> groundAsset{};
     Spark::SharedPtr<Spark::Texture2D> wallBrickTex{};
@@ -91,6 +98,10 @@ private:
     DemoHelpHud helpHud{};
     int gemsCollected = 0;
     int gemsTotal = 0;
+    int emissiveTorchCount = 0;
+    float sceneTime = 0.0F;
+    float mazeOriginX = 0.0F;
+    float mazeOriginZ = 0.0F;
     Spark::CharacterCameraRig rig{};
     PhysicsSubsystem physics{};
 
