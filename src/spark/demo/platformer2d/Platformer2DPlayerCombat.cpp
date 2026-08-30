@@ -12,7 +12,7 @@ void PlayerCombat::TickCooldown(const float deltaSeconds) noexcept
     }
 }
 
-void PlayerCombat::TryFireOnAttackPressed(
+bool PlayerCombat::TryFireOnAttackPressed(
         const bool attackPressedThisFrame,
         const float playerX,
         const float playerY,
@@ -21,11 +21,11 @@ void PlayerCombat::TryFireOnAttackPressed(
         const BulletProfile& playerBulletProfile) noexcept
 {
     if (!attackPressedThisFrame) {
-        return;
+        return false;
     }
     const float dirX = facingLeft ? -1.0F : 1.0F;
     constexpr float dirY = 0.0F;
-    (void)playerBullets.TrySpawn(
+    return playerBullets.TrySpawn(
             playerX + dirX * (Config::kPlayerHalfW * 0.75F),
             playerY + Config::kPlayerHalfH * 0.08F,
             dirX,

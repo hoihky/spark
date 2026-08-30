@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] bool CanTakeHit() const noexcept { return hurtCooldown <= 0.0F; }
 
-    void TryFireOnAttackPressed(
+    [[nodiscard]] bool TryFireOnAttackPressed(
             bool attackPressedThisFrame,
             float playerX,
             float playerY,

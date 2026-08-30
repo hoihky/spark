@@ -185,7 +185,7 @@ int EnemySquad::ResolvePlayerBulletHits(
             }
             BulletPool::DeactivateSlot(bullet);
 
-            explosions.SpawnBurst(epos.x, epos.y, Config::kExplosionBurstCount);
+            explosions.SpawnEnemyDefeat(epos.x, epos.y);
             enemy.alive = false;
             world.DestroyGameObject(enemy.go);
             enemy.go = nullptr;

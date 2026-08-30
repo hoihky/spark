@@ -229,6 +229,20 @@ Vector4 KenneyTinyDungeonTileUv(const std::uint32_t linearTileIndex) noexcept {
             kKenneyTinyDungeonAtlasPixelHeight);
 }
 
+bool TryLoadKenneyTinyDungeonTileTexture(Texture2D& out, const std::uint32_t linearTileIndex) noexcept {
+    Utf8String path;
+    path.AppendUtf8("/sprites/kenney_tiny-dungeon/Tiles/tile_");
+    char digits[8];
+    std::snprintf(digits, sizeof(digits), "%04u", linearTileIndex);
+    path.AppendUtf8(digits);
+    path.AppendUtf8(".png");
+    if (!TryLoadRelativeAsset(out, path.CStr(), "KenneyTinyDungeonTile")) {
+        return false;
+    }
+    out.SetSceneUploadNearest(true);
+    return true;
+}
+
 bool TryLoadSpaceShooterShips(Texture2D& out) noexcept {
     return TryLoadRelativeAsset(out, "/sprites/SpaceShooterAssets/Ships.png", "SpaceShooterShips");
 }
@@ -281,25 +295,42 @@ bool TryLoadGroundDirtTexture(Texture2D& out) noexcept {
 }
 
 Texture2D MakeGemTextureFallback() {
-    constexpr std::uint32_t kN = 24;
+    constexpr std::uint32_t kN = 32;
     Texture2D t(Utf8String("PlatGemFallback"));
     Array<std::uint8_t> bytes;
     bytes.Resize(static_cast<std::size_t>(kN) * static_cast<std::size_t>(kN) * 4U);
+    const Vector3 base{0.18F, 0.82F, 0.95F};
+    const Vector3 deep{0.04F, 0.18F, 0.42F};
     for (std::uint32_t y = 0; y < kN; ++y) {
         for (std::uint32_t x = 0; x < kN; ++x) {
-            const float cx = static_cast<float>(kN - 1U) * 0.5F;
-            const float cy = static_cast<float>(kN - 1U) * 0.5F;
-            const float dx = static_cast<float>(x) - cx;
-            const float dy = static_cast<float>(y) - cy;
-            const bool inside = std::fabs(dx) + std::fabs(dy) < cx * 0.92F;
-            const std::uint8_t g = inside ? static_cast<std::uint8_t>(230) : static_cast<std::uint8_t>(40);
-            const std::uint8_t r = inside ? static_cast<std::uint8_t>(90) : static_cast<std::uint8_t>(20);
-            const std::uint8_t b = inside ? static_cast<std::uint8_t>(120) : static_cast<std::uint8_t>(30);
+            const float fx = (static_cast<float>(x) + 0.5F) / static_cast<float>(kN) - 0.5F;
+            const float fy = (static_cast<float>(y) + 0.5F) / static_cast<float>(kN) - 0.5F;
+            const float diamond = std::fabs(fx) + std::fabs(fy);
+            Vector3 rgb = deep;
+            float alpha = 0.0F;
+            if (diamond <= 0.46F) {
+                alpha = 1.0F;
+                const float facetA = std::fabs(fx * 0.92F + fy * 0.38F);
+                const float facetB = std::fabs(fx * -0.35F + fy * 0.94F);
+                const float shade =
+                        std::clamp(0.55F + 0.22F * std::sin(facetA * 14.0F) + 0.18F * std::cos(facetB * 11.0F), 0.35F, 1.35F);
+                rgb = {
+                        deep.x + (base.x - deep.x) * shade,
+                        deep.y + (base.y - deep.y) * shade,
+                        deep.z + (base.z - deep.z) * shade};
+                if (diamond > 0.38F) {
+                    rgb = rgb * 0.78F + Vector3{1.0F, 1.0F, 1.0F} * 0.22F;
+                }
+                const float hx = fx + 0.14F;
+                const float hy = fy - 0.16F;
+                const float spec = std::exp(-(hx * hx + hy * hy) * 95.0F);
+                rgb = rgb + Vector3{spec * 0.85F, spec * 0.9F, spec};
+            }
             const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(kN) + x) * 4U;
-            bytes[i] = r;
-            bytes[i + 1] = g;
-            bytes[i + 2] = b;
-            bytes[i + 3] = 255;
+            bytes[i] = static_cast<std::uint8_t>(std::clamp(rgb.x * 255.0F, 0.0F, 255.0F));
+            bytes[i + 1] = static_cast<std::uint8_t>(std::clamp(rgb.y * 255.0F, 0.0F, 255.0F));
+            bytes[i + 2] = static_cast<std::uint8_t>(std::clamp(rgb.z * 255.0F, 0.0F, 255.0F));
+            bytes[i + 3] = static_cast<std::uint8_t>(std::clamp(alpha * 255.0F, 0.0F, 255.0F));
         }
     }
     t.SetPixels(kN, kN, MoveTemp(bytes));
@@ -315,24 +346,49 @@ Texture2D MakePlayerRunAtlasFallback() {
     Texture2D t(Utf8String("PlatPlayerAtlasFallback"));
     Array<std::uint8_t> bytes;
     bytes.Resize(static_cast<std::size_t>(kW) * static_cast<std::size_t>(kH) * 4U);
+    auto sampleCharacter = [](const std::uint32_t cell, const float nx, const float ny) -> bool {
+        const float headR = 0.17F;
+        const float headY = 0.72F;
+        const float headX = 0.5F;
+        const float hdx = nx - headX;
+        const float hdy = ny - headY;
+        const bool head = (hdx * hdx + hdy * hdy) <= headR * headR;
+        const bool torso = nx >= 0.34F && nx <= 0.66F && ny >= 0.28F && ny <= 0.62F;
+        const float legSwing = (cell == 1U) ? 0.08F : (cell == 2U ? -0.08F : 0.0F);
+        const bool legL = nx >= 0.34F && nx <= 0.48F && ny >= 0.04F && ny <= 0.30F + legSwing;
+        const bool legR = nx >= 0.52F && nx <= 0.66F && ny >= 0.04F && ny <= 0.30F - legSwing;
+        const bool armL = nx >= 0.18F && nx <= 0.36F && ny >= 0.40F && ny <= 0.58F;
+        const bool armR = nx >= 0.64F && nx <= 0.82F && ny >= 0.40F && ny <= 0.58F;
+        const bool scarf = cell == 3U && nx >= 0.30F && nx <= 0.70F && ny >= 0.58F && ny <= 0.66F;
+        const bool sword = cell == 4U && nx >= 0.70F && nx <= 0.92F && ny >= 0.34F && ny <= 0.78F;
+        return head || torso || legL || legR || armL || armR || scarf || sword;
+    };
     for (std::uint32_t y = 0; y < kH; ++y) {
         for (std::uint32_t x = 0; x < kW; ++x) {
             const std::uint32_t cell = x / kCellW;
-            const float stripe = static_cast<float>(((x / 4) + (y / 6) + cell) % 5);
-            Vector3 rgb{
-                    0.78F + 0.06F * stripe,
-                    0.32F + 0.14F * static_cast<float>(cell) / static_cast<float>(kCols - 1U),
-                    0.18F + 0.04F * std::sin(static_cast<float>(x + cell * 7) * 0.11F)};
-            if (cell == 3U) {
-                rgb = {0.92F, 0.42F, 0.22F};
-            } else if (cell == 4U) {
-                rgb = {0.35F, 0.45F, 0.88F};
+            const float nx = (static_cast<float>(x % kCellW) + 0.5F) / static_cast<float>(kCellW);
+            const float ny = (static_cast<float>(y) + 0.5F) / static_cast<float>(kCellH);
+            const bool inside = sampleCharacter(cell, nx, ny);
+            Vector3 rgb{0.08F, 0.10F, 0.14F};
+            if (inside) {
+                const Vector3 skin{0.96F, 0.78F, 0.62F};
+                const Vector3 cloth{0.22F, 0.58F, 0.95F};
+                const Vector3 accent{0.98F, 0.42F, 0.28F};
+                const Vector3 boot{0.18F, 0.16F, 0.22F};
+                const bool head = (nx - 0.5F) * (nx - 0.5F) + (ny - 0.72F) * (ny - 0.72F) <= 0.17F * 0.17F;
+                const bool sword = cell == 4U && nx >= 0.70F && nx <= 0.92F && ny >= 0.34F && ny <= 0.78F;
+                rgb = head ? skin : (sword ? Vector3{0.82F, 0.86F, 0.92F} : (ny < 0.30F ? boot : cloth));
+                if (cell == 3U && ny >= 0.58F && ny <= 0.66F) {
+                    rgb = accent;
+                }
+                const float rim = std::clamp(0.55F + 0.45F * std::sin(nx * 9.0F + ny * 7.0F + static_cast<float>(cell)), 0.0F, 1.0F);
+                rgb = rgb * (0.72F + 0.28F * rim);
             }
             const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(kW) + x) * 4U;
             bytes[i] = static_cast<std::uint8_t>(std::clamp(rgb.x * 255.0F, 0.0F, 255.0F));
             bytes[i + 1] = static_cast<std::uint8_t>(std::clamp(rgb.y * 255.0F, 0.0F, 255.0F));
             bytes[i + 2] = static_cast<std::uint8_t>(std::clamp(rgb.z * 255.0F, 0.0F, 255.0F));
-            bytes[i + 3] = 255;
+            bytes[i + 3] = inside ? static_cast<std::uint8_t>(255) : static_cast<std::uint8_t>(0);
         }
     }
     t.SetPixels(kW, kH, MoveTemp(bytes));

@@ -3,6 +3,7 @@
 #include "spark/core/Utility.hpp"
 #include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/DemoFoundation.hpp"
+#include "spark/demo/DemoProceduralSound.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/demo/platformer2d/Platformer2DBulletPool.hpp"
@@ -51,7 +52,7 @@ public:
             {16.1F, 3.82F, 20.9F, 4.32F},
             {22.35F, 4.68F, 27.85F, 5.22F},
             {30.2F, 5.82F, 36.25F, 6.38F},
-            {39.35F, 6.92F, 47.25F, 7.48F},
+            {38.8F, 6.92F, 48.5F, 7.55F},
             {17.85F, 0.52F, 24.15F, 1.08F},
             {26.4F, 0.82F, 32.1F, 1.38F},
             {7.85F, 0.18F, 11.15F, 0.62F},
@@ -81,7 +82,11 @@ public:
     };
     static constexpr float kPlayerSpawnX = -8.5F;
     static constexpr float kFallRespawnY = -8.0F;
-    static constexpr float kGemDrawScale = 0.68F;
+    static constexpr float kGemDrawScale = 0.72F;
+    static constexpr float kGoalCenterX = Platformer2D::Config::kGoalCenterX;
+    static constexpr float kGoalCenterY = Platformer2D::Config::kGoalCenterY;
+    static constexpr float kGoalHalfW = Platformer2D::Config::kGoalHalfW;
+    static constexpr float kGoalHalfH = Platformer2D::Config::kGoalHalfH;
     static constexpr float kGemCollectRadius = 0.62F;
     static constexpr std::uint16_t kGemHurtboxCategoryBits = Platformer2D::Config::kGemHurtboxCategoryBits;
 
@@ -93,9 +98,14 @@ public:
 private:
     [[nodiscard]] Platformer2D::BulletProfile MakePlayerBulletProfile() const noexcept;
     [[nodiscard]] Platformer2D::BulletProfile MakeEnemyBulletProfile() const noexcept;
+    void SpawnBackgroundLayers(Spark::GameWorld& world);
+    void UpdateBackgroundParallax(float cameraX) noexcept;
+    void UpdateGoalPresentation(float deltaSeconds) noexcept;
+    void RefreshStatusHud() noexcept;
 
     DemoRootCollection roots{};
     Spark::Array<Spark::GameObject*> gemObjects{};
+    Spark::Array<Spark::Vector2> gemBasePositions{};
     Spark::SharedPtr<Spark::Texture2D> gemTex{};
     Spark::SharedPtr<Spark::Texture2D> platformTilesTex{};
     Spark::SharedPtr<Spark::Texture2D> playerAtlasTex{};
@@ -103,6 +113,11 @@ private:
     Spark::SharedPtr<Spark::Texture2D> playerBulletTex{};
     Spark::SharedPtr<Spark::Texture2D> enemyBulletTex{};
     Spark::SharedPtr<Spark::Texture2D> hudWhiteTex{};
+    Spark::SharedPtr<Spark::Texture2D> bgSkyTex{};
+    Spark::SharedPtr<Spark::Texture2D> bgHillsTex{};
+    Spark::SharedPtr<Spark::Texture2D> bgMountainsTex{};
+    Spark::SharedPtr<Spark::Texture2D> bgCloudTex{};
+    Spark::SharedPtr<Spark::Texture2D> goalFlagTex{};
     bool platformUsingKenneyTilesheet = false;
     std::uint32_t playerAtlasColumns = 5U;
     std::uint32_t enemyAtlasColumns = 1U;
@@ -126,6 +141,22 @@ private:
     Spark::SharedPtr<Spark::SoundClip> sfxCoin{};
     Spark::SharedPtr<Spark::SoundClip> sfxExplosion{};
     Spark::SharedPtr<Spark::SoundClip> sfxHurt{};
+    Spark::SharedPtr<Spark::SoundClip> sfxPowerUp{};
+
+    Spark::GameObject* bgSkyGo = nullptr;
+    Spark::TransformComponent* bgSkyTr = nullptr;
+    Spark::GameObject* bgMountainsGo = nullptr;
+    Spark::TransformComponent* bgMountainsTr = nullptr;
+    Spark::GameObject* bgHillsGo = nullptr;
+    Spark::TransformComponent* bgHillsTr = nullptr;
+    Spark::GameObject* bgCloudGoA = nullptr;
+    Spark::TransformComponent* bgCloudTrA = nullptr;
+    Spark::GameObject* bgCloudGoB = nullptr;
+    Spark::TransformComponent* bgCloudTrB = nullptr;
+    Spark::GameObject* goalFlagGo = nullptr;
+    Spark::TransformComponent* goalFlagTr = nullptr;
+    Spark::GameObject* goalGlowGo = nullptr;
+    Spark::TransformComponent* goalGlowTr = nullptr;
 
     Spark::SoundEngine* audioEngine = nullptr;
 
@@ -142,7 +173,10 @@ private:
     int gemsCollected = 0;
     int gemsTotal = 0;
     bool goalReached = false;
+    bool wasGrounded = true;
     float sceneTime = 0.0F;
+    float goalPulse = 0.0F;
+    char statusHudBuffer[160]{};
 };
 
 }  // namespace Spark

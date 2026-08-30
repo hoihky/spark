@@ -85,6 +85,21 @@ namespace DemoSfx {
     return c;
 }
 
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipPlatformerShoot() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(1040.0F, 0.024F, 0.15F);
+    return c;
+}
+
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipPlatformerLand() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(240.0F, 0.032F, 0.11F);
+    return c;
+}
+
+[[nodiscard]] inline SharedPtr<SoundClip>& ClipPlatformerGoal() noexcept {
+    static SharedPtr<SoundClip> c = SoundClip::CreateToneBlip(660.0F, 0.12F, 0.28F);
+    return c;
+}
+
 }  // namespace DemoSfx
 
 }  // namespace Spark

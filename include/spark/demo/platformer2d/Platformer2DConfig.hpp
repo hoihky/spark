@@ -43,11 +43,16 @@ struct Config {
     static constexpr std::uint16_t kEnemyHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(3);
 
     /** World XY plus patrol span (x, y, patrolMinX, patrolMaxX). */
+    static constexpr float kGoalCenterX = 43.2F;
+    static constexpr float kGoalCenterY = 7.55F;
+    static constexpr float kGoalHalfW = 4.8F;
+    static constexpr float kGoalHalfH = 1.1F;
+
     static constexpr float kEnemySpawns[kEnemyCount][4] = {
             {-4.5F, 1.35F, -6.8F, -1.5F},
             {7.4F, 2.82F, 6.2F, 8.8F},
             {21.0F, 1.48F, 18.5F, 23.5F},
-            {25.0F, 5.62F, 23.2F, 26.8F},
+            {32.8F, 3.55F, 30.8F, 34.8F},
     };
 };
 

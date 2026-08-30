@@ -46,6 +46,9 @@ constexpr std::uint32_t kKenneyTinyDungeonAtlasPixelHeight = 176U;
 
 [[nodiscard]] Vector4 KenneyTinyDungeonTileUv(std::uint32_t linearTileIndex) noexcept;
 
+/** Loads a single Kenney Tiny Dungeon tile PNG (e.g. linear index 121 → <c>tile_0121.png</c>). */
+[[nodiscard]] bool TryLoadKenneyTinyDungeonTileTexture(Texture2D& out, std::uint32_t linearTileIndex) noexcept;
+
 [[nodiscard]] bool TryLoadBrickTexture(Texture2D& out) noexcept;
 
 [[nodiscard]] bool TryLoadWallBrickStoneTexture(Texture2D& out) noexcept;
