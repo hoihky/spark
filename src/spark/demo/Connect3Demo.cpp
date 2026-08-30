@@ -1,5 +1,6 @@
 #include "spark/demo/Connect3Demo.hpp"
 
+#include "spark/audio/SoundFileLoader.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
@@ -114,10 +115,26 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         FillBoardNoMatches();
         PushBoardToTilemap();
         context.GetInput().SetCursorCaptured(false);
+
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
+        audioEngine = context.TryGetSoundEngine();
+        if (audioEngine != nullptr && audioEngine->IsRunning()) {
+            if (Spark::SharedPtr<Spark::SoundClip> bgm =
+                        TryLoadSoundClipFromBundledAsset("assets/audio/LivelyCity.wav")) {
+                audioEngine->SetBackgroundMusic(bgm, 0.30F, true);
+            }
+        }
     }
 
 void Connect3Demo::Unload(Spark::GameWorld& w)
 {
+        if (audioEngine != nullptr) {
+            audioEngine->ClearBackgroundMusic();
+            audioEngine = nullptr;
+        }
         for (std::size_t i = 0; i < roots.GetSize(); ++i) {
             if (roots[i] != nullptr) {
                 w.DestroyGameObject(roots[i]);

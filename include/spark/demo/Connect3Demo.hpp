@@ -3,6 +3,7 @@
 #include "spark/demo/DemoProceduralSound.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
@@ -18,16 +19,16 @@ namespace Spark {
 
 namespace Detail {
 
-[[nodiscard]] inline float GemFacetShade(const float fx, const float fy, const float diamond) noexcept {
+[[nodiscard]] inline float GemFacetShade(const float fx, const float fy, const float r) noexcept {
     const float facetA = std::fabs(fx * 0.92F + fy * 0.38F);
     const float facetB = std::fabs(fx * -0.35F + fy * 0.94F);
     const float facet = 0.55F + 0.22F * std::sin(facetA * 14.0F) + 0.18F * std::cos(facetB * 11.0F);
-    const float rim = std::clamp((0.44F - diamond) / 0.08F, 0.0F, 1.0F);
-    return std::clamp(facet * (0.72F + 0.28F * rim), 0.35F, 1.35F);
+    const float rim = std::clamp((0.48F - r) / 0.10F, 0.0F, 1.0F);
+    return std::clamp(facet * (0.80F + 0.20F * rim), 0.35F, 1.35F);
 }
 
 [[nodiscard]] inline Spark::SharedPtr<Spark::Texture2D> MakeGemAtlas() {
-    constexpr std::uint32_t tw = 28;
+    constexpr std::uint32_t tw = 64;
     constexpr std::uint32_t au = 3;
     constexpr std::uint32_t av = 2;
     constexpr std::uint32_t w = au * tw;
@@ -60,15 +61,22 @@ namespace Detail {
                 for (std::uint32_t px0 = 0; px0 < tw; ++px0) {
                     const float fx = (static_cast<float>(px0) + 0.5F) / static_cast<float>(tw) - 0.5F;
                     const float fy = (static_cast<float>(py) + 0.5F) / static_cast<float>(tw) - 0.5F;
-                    const float diamond = std::fabs(fx) + std::fabs(fy);
+                    const float r = std::sqrt(fx * fx + fy * fy);
+                    constexpr float kGemRadius = 0.475F;
+                    constexpr float kEdgeSoft = 0.014F;
                     Spark::Vector3 out = d;
                     float alpha = 0.0F;
-                    if (diamond <= 0.46F) {
+                    if (r <= kGemRadius + kEdgeSoft) {
                         alpha = 1.0F;
-                        const float shade = GemFacetShade(fx, fy, diamond);
+                        if (r > kGemRadius - kEdgeSoft) {
+                            alpha = std::clamp((kGemRadius + kEdgeSoft - r) / (2.0F * kEdgeSoft), 0.0F, 1.0F);
+                        }
+                        const float shade = GemFacetShade(fx, fy, r);
                         out = {d.x + (c.x - d.x) * shade, d.y + (c.y - d.y) * shade, d.z + (c.z - d.z) * shade};
-                        if (diamond > 0.38F) {
-                            out = out * 0.78F + Spark::Vector3{1.0F, 1.0F, 1.0F} * 0.22F;
+                        if (r > kGemRadius * 0.76F) {
+                            const float rimT =
+                                    std::clamp((r - kGemRadius * 0.76F) / (kGemRadius * 0.24F), 0.0F, 1.0F);
+                            out = out * (1.0F - rimT * 0.18F) + Spark::Vector3{1.0F, 1.0F, 1.0F} * (rimT * 0.18F);
                         }
                         const float hx = fx + 0.14F;
                         const float hy = fy - 0.16F;
@@ -91,6 +99,7 @@ namespace Detail {
         }
     }
     tex.SetPixels(w, h, Spark::MoveTemp(px));
+    tex.SetSceneUploadNearest(true);
     return Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(tex));
 }
 
@@ -186,6 +195,7 @@ private:
     int score = 0;
     int moves = 0;
     std::uint32_t rng = 1;
+    Spark::SoundEngine* audioEngine = nullptr;
 };
 
 }  // namespace Spark
