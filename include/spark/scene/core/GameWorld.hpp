@@ -11,7 +11,9 @@
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/assets/AssetLoadEvents.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
-#include "spark/scene/material/MaterialAssetLoader.hpp"
+#include "spark/scene/vfx/VfxAsset.hpp"
+#include "spark/scene/vfx/VfxAssetLoader.hpp"
+#include "spark/scene/vfx/VfxSubsystem.hpp"
 
 namespace Spark {
 
@@ -126,6 +128,14 @@ public:
     [[nodiscard]] const MaterialAsset* TryGetMaterialByKeyOrPath(const char* keyOrPath) const {
         return assetCache.TryGetMaterialByKeyOrPath(keyOrPath);
     }
+    [[nodiscard]] VfxAsset LoadVfx(const char* path) { return assetCache.LoadVfx(path); }
+    [[nodiscard]] AssetLoadOutcome<VfxAsset> TryLoadVfx(const char* path) { return assetCache.TryLoadVfx(path); }
+    void RegisterVfx(const VfxAsset& asset, const char* cacheKey) { assetCache.RegisterVfx(asset, cacheKey); }
+    [[nodiscard]] const VfxAsset* TryGetVfxByKeyOrPath(const char* keyOrPath) const {
+        return assetCache.TryGetVfxByKeyOrPath(keyOrPath);
+    }
+    [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return vfxSubsystem; }
+    [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return vfxSubsystem; }
     void RequestMaterial(const char* path) { assetLoader.RequestMaterial(path); }
     void InvalidateAssetLoadState(const char* path, AssetLoadJobKind kind) {
         assetLoader.InvalidateAssetLoadState(path, kind);
@@ -293,6 +303,7 @@ private:
     Array<UniquePtr<GameObject>> objects;
     GameWorldAssetCache assetCache;
     GameWorldAssetLoader assetLoader;
+    VfxSubsystem vfxSubsystem{};
     SharedPtr<Font> uiFont{};
     SharedPtr<Font> uiBoldFont{};
     std::uint64_t nextObjectId = 1;

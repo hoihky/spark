@@ -10,6 +10,7 @@
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 
 namespace Spark {
 
@@ -87,7 +88,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     enemySquad.Unload(w);
     playerBullets.Shutdown(w);
     enemyBullets.Shutdown(w);
-    explosions.Shutdown(w);
+    explosions.Shutdown();
     healthHud.Shutdown(w);
 
     gemsCollected = 0;
@@ -279,7 +280,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             760,
             Spark::Utf8String("PlatEnemyBullet"),
             roots);
-    explosions.Initialize(w, enemyBulletTex, Platformer2D::Config::kExplosionMaxParticles, 9000, roots);
+    explosions.Initialize(w);
 
     const float spawnY = kGroundSurfaceY + kPlayerHalfH;
     playerTr->SetTranslation({kPlayerSpawnX, spawnY, 0.04F});
@@ -329,7 +330,7 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     enemySquad.Unload(w);
     playerBullets.Shutdown(w);
     enemyBullets.Shutdown(w);
-    explosions.Shutdown(w);
+    explosions.Shutdown();
     healthHud.Shutdown(w);
     roots.DestroyAll(w);
 
@@ -374,7 +375,7 @@ void Platformer2DDemo::Simulate(
     const Platformer2D::BulletProfile enemyBulletProfile = MakeEnemyBulletProfile();
 
     playerCombat.TickCooldown(dt);
-    explosions.Tick(dt);
+    Spark::ProcessVfx(world);
 
     if (playerRb != nullptr && playerTr != nullptr) {
         float run = 0.0F;
@@ -515,7 +516,7 @@ void Platformer2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, 
             Spark::Vector3{1.0F, 1.0F, 1.0F},
             0.9F,
             Spark::Vector3{0.18F, 0.20F, 0.26F},
-            false,
+            true,
             sceneTime);
 
     Spark::SceneRenderParams* sceneParams = nullptr;

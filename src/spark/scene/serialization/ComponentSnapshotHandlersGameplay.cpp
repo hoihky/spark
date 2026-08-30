@@ -5,6 +5,7 @@
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
 #include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/AnimationEventVfxComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/audio/AudioListenerComponent.hpp"
@@ -600,6 +601,80 @@ public:
     }
 };
 
+class AnimationEventVfxSnapshotHandler final : public IComponentSnapshotHandler {
+public:
+    [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::AnimationEventVfx; }
+    [[nodiscard]] const char* GetKindTag() const noexcept override { return "animation_event_vfx"; }
+
+    [[nodiscard]] bool TryCapture(
+            const GameObject& owner,
+            const SceneCaptureContext& /*ctx*/,
+            ComponentRecord& out) const override {
+        const AnimationEventVfxComponent* vfx = owner.GetComponent<AnimationEventVfxComponent>();
+        if (vfx == nullptr) {
+            return false;
+        }
+        const Array<AnimationEventVfxBinding>& bindings = vfx->GetBindings();
+        const Vector3& offset = vfx->GetWorldOffset();
+        Utf8String payload;
+        char countBuf[16]{};
+        std::snprintf(countBuf, sizeof(countBuf), "%zu ", bindings.GetSize());
+        payload.AppendUtf8(countBuf);
+        char offsetBuf[64]{};
+        std::snprintf(offsetBuf, sizeof(offsetBuf), "%.6f %.6f %.6f ", offset.x, offset.y, offset.z);
+        payload.AppendUtf8(offsetBuf);
+        for (std::size_t i = 0; i < bindings.GetSize(); ++i) {
+            char buf[384]{};
+            std::snprintf(
+                    buf,
+                    sizeof(buf),
+                    "\"%s\" \"%s\" ",
+                    bindings[i].eventName.CStr(),
+                    bindings[i].vfxAssetKey.CStr());
+            payload.AppendUtf8(buf);
+        }
+        out.kind = Utf8String(GetKindTag());
+        out.payload = MoveTemp(payload);
+        return true;
+    }
+
+    [[nodiscard]] bool TryRestore(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& /*world*/,
+            const SceneApplyContext& /*ctx*/) const override {
+        if (!KindTagEquals(record.kind, GetKindTag())) {
+            return false;
+        }
+        AnimationEventVfxComponent* vfx = owner.GetComponent<AnimationEventVfxComponent>();
+        if (vfx == nullptr) {
+            vfx = owner.AddComponent<AnimationEventVfxComponent>();
+        }
+        vfx->ClearBindings();
+        std::size_t count = 0;
+        Vector3 offset{};
+        const char* cursor = record.payload.CStr();
+        int consumed = 0;
+        if (std::sscanf(cursor, "%zu %f %f %f %n", &count, &offset.x, &offset.y, &offset.z, &consumed) < 4) {
+            return true;
+        }
+        vfx->SetWorldOffset(offset);
+        cursor += consumed;
+        for (std::size_t i = 0; i < count; ++i) {
+            char eventName[128]{};
+            char assetKey[128]{};
+            if (!ParseLeadingQuotedString(cursor, eventName, sizeof(eventName))) {
+                break;
+            }
+            if (!ParseLeadingQuotedString(cursor, assetKey, sizeof(assetKey))) {
+                break;
+            }
+            vfx->AddBinding(eventName, assetKey);
+        }
+        return true;
+    }
+};
+
 class DamageableSnapshotHandler final : public IComponentSnapshotHandler {
 public:
     [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::Damageable; }
@@ -1152,6 +1227,7 @@ void RegisterGameplaySnapshotHandlers(ComponentSnapshotRegistry& registry) {
     RegisterHandler<Character3DAnimFsmSnapshotHandler>(registry);
     RegisterHandler<AttachmentSocketSnapshotHandler>(registry);
     RegisterHandler<AnimationEventReceiverSnapshotHandler>(registry);
+    RegisterHandler<AnimationEventVfxSnapshotHandler>(registry);
     RegisterHandler<DamageableSnapshotHandler>(registry);
     RegisterHandler<BillboardSnapshotHandler>(registry);
     RegisterHandler<AudioListenerSnapshotHandler>(registry);

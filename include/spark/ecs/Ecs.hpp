@@ -17,6 +17,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
+#include "spark/ecs/components/rendering/VfxPlayerComponent.hpp"
 #include "spark/ecs/components/rendering/RenderLayerComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
@@ -69,6 +70,7 @@
 
 // Animation
 #include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/AnimationEventVfxComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"

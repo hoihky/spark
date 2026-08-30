@@ -9,7 +9,7 @@
 #include "spark/demo/GltfSamples3DDemo.hpp"
 #include "spark/demo/ModelViewer3DDemo.hpp"
 #include "spark/demo/SkyDemo.hpp"
-#include "spark/demo/ParticleDemo.hpp"
+#include "spark/demo/VfxShowcaseDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
 #include "spark/demo/CharacterCameraDemo.hpp"
 #include "spark/demo/Tetris2DDemo.hpp"
@@ -160,7 +160,7 @@ public:
                 ReturnToMenu(context);
             }
         } else if (mode == DemoMode::Particles) {
-            particleDemo.Simulate(timing, context);
+            vfxShowcaseDemo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
@@ -279,7 +279,7 @@ public:
         } else if (mode == DemoMode::Sky) {
             skyDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::Particles) {
-            particleDemo.Render(GetScene(), GetWorld(), context);
+            vfxShowcaseDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::Terrain) {
             terrainDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::Character) {
@@ -381,9 +381,9 @@ public:
     void EnterParticleDemo(IEngineContext& context) {
         DemoGui::ActivateDearImGuiDemoUi(context);
         UnloadAllActiveDemos(context);
-        if (!particleDemoLoaded) {
-            particleDemo.Load(GetWorld(), context);
-            particleDemoLoaded = true;
+        if (!vfxShowcaseDemoLoaded) {
+            vfxShowcaseDemo.Load(GetWorld(), context);
+            vfxShowcaseDemoLoaded = true;
         }
         mode = DemoMode::Particles;
         context.GetInput().SetCursorCaptured(false);
@@ -518,9 +518,9 @@ public:
             timeOfDayDemo.Unload(GetWorld());
             timeOfDayDemoLoaded = false;
         }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
+        if (vfxShowcaseDemoLoaded) {
+            vfxShowcaseDemo.Unload(GetWorld());
+            vfxShowcaseDemoLoaded = false;
         }
         if (terrainDemoLoaded) {
             terrainDemo.Unload(GetWorld());
@@ -582,9 +582,9 @@ public:
             timeOfDayDemo.Unload(GetWorld());
             timeOfDayDemoLoaded = false;
         }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
+        if (vfxShowcaseDemoLoaded) {
+            vfxShowcaseDemo.Unload(GetWorld());
+            vfxShowcaseDemoLoaded = false;
         }
         if (terrainDemoLoaded) {
             terrainDemo.Unload(GetWorld());
@@ -692,9 +692,9 @@ private:
             timeOfDayDemo.Unload(GetWorld());
             timeOfDayDemoLoaded = false;
         }
-        if (particleDemoLoaded) {
-            particleDemo.Unload(GetWorld());
-            particleDemoLoaded = false;
+        if (vfxShowcaseDemoLoaded) {
+            vfxShowcaseDemo.Unload(GetWorld());
+            vfxShowcaseDemoLoaded = false;
         }
         if (terrainDemoLoaded) {
             terrainDemo.Unload(GetWorld());
@@ -978,8 +978,8 @@ private:
     bool threeDLoaded = false;
     SkyDemo skyDemo{};
     bool skyDemoLoaded = false;
-    ParticleDemo particleDemo{};
-    bool particleDemoLoaded = false;
+    VfxShowcaseDemo vfxShowcaseDemo{};
+    bool vfxShowcaseDemoLoaded = false;
     TerrainDemo terrainDemo{};
     bool terrainDemoLoaded = false;
     CharacterCameraDemo characterDemo{};

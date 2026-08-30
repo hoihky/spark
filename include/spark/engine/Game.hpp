@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/audio/SoundSubsystem.hpp"
+#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 #include "spark/engine/IGame.hpp"
 #include "spark/engine/ISceneProvider.hpp"
 #include "spark/scene/core/Scene.hpp"
@@ -23,6 +24,7 @@ public:
     void OnDetach() override {}
     void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
         GetWorld().UpdateGameObjects(timing, context);
+        ProcessVfx(GetWorld());
         ProcessSoundCues(GetWorld(), context);
     }
     void OnRender(IRenderFrame& /*frame*/, IEngineContext& /*context*/) override {}

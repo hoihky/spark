@@ -46,6 +46,7 @@ public abstract class Game : IGame
     {
         var scene = context.TryGetScene();
         scene?.GetWorld().UpdateGameObjects(timing, context);
+        scene?.GetWorld().ProcessVfx();
         scene?.GetWorld().ProcessSoundCues(context);
     }
 
@@ -188,6 +189,25 @@ public sealed class GameWorld
         unsafe
         {
             Native.spark_world_process_sound_cues(InteropPtr.World(Handle), InteropPtr.Context(context.Handle));
+        }
+    }
+
+    public void ProcessVfx()
+    {
+        unsafe
+        {
+            Native.spark_world_process_vfx(InteropPtr.World(Handle));
+        }
+    }
+
+    public void VfxPlay(string assetKeyOrBuiltin, float worldX, float worldY, float worldZ)
+    {
+        unsafe
+        {
+            InteropUtf8.WithUtf8(assetKeyOrBuiltin, ptr =>
+            {
+                Native.spark_vfx_play(InteropPtr.World(Handle), (sbyte*)ptr, worldX, worldY, worldZ);
+            });
         }
     }
 

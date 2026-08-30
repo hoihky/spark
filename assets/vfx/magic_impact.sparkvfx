@@ -1,0 +1,5 @@
+sparkvfx_v1
+composite
+phase 0.000 builtin magic_bolt duration 0.120
+phase 0.100 builtin sparkle burst 56
+phase 0.140 builtin electric burst 32

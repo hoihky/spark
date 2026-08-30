@@ -125,7 +125,7 @@ void VulkanRenderer::RecreateSwapchain() {
     scenePipeline.CreateGraphicsPipeline(
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
     screenUi.CreatePipelines(device(), presentRenderPass.vkPass);
-    particlePass.CreateGraphicsPipeline(device(), hdrTonemapPass.HdrRenderPass());
+    particlePass.CreateGraphicsPipeline(device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout());
     tilemapPass.CreateGraphicsPipeline(
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
     spritePass.CreateGraphicsPipeline(
@@ -360,7 +360,14 @@ void VulkanRenderer::RecordSceneCommandBuffer(
         };
         composite2DPass.Record(commandBuffer, tilemapPass, spritePass, tilemapCtx, spriteCtx);
     }
-    particlePass.Record(commandBuffer, frameIndex, presentSwapchain().extent, pendingScene, sceneParamsValid);
+    particlePass.Record(
+            commandBuffer,
+            frameIndex,
+            presentSwapchain().extent,
+            pendingScene,
+            sceneParamsValid,
+            frameIndex < sceneDescriptors.DescriptorSetCount() ? sceneDescriptors.DescriptorSet(frameIndex)
+                                                               : VK_NULL_HANDLE);
 
     vkCmdEndRenderPass(commandBuffer);
 

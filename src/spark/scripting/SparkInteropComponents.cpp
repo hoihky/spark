@@ -16,6 +16,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
+#include "spark/ecs/components/rendering/VfxPlayerComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
@@ -252,6 +253,13 @@ SparkGameComponent* spark_object_add_particle_emitter(SparkGameObject* object) {
         return nullptr;
     }
     return reinterpret_cast<SparkGameComponent*>(ToObject(object)->AddComponent<Spark::ParticleEmitterComponent>());
+}
+
+SparkGameComponent* spark_object_add_vfx_player(SparkGameObject* object) {
+    if (object == nullptr) {
+        return nullptr;
+    }
+    return reinterpret_cast<SparkGameComponent*>(ToObject(object)->AddComponent<Spark::VfxPlayerComponent>());
 }
 
 SparkGameComponent* spark_object_add_box_collider_2d(
@@ -1339,6 +1347,37 @@ void spark_particle_emitter_set_max_particles(SparkGameComponent* emitter, const
     auto* pe = AsComponent<Spark::ParticleEmitterComponent>(emitter, Spark::ComponentKind::ParticleEmitter);
     if (pe != nullptr && maxParticles >= 0) {
         pe->SetMaxParticles(static_cast<std::uint32_t>(maxParticles));
+    }
+}
+
+void spark_vfx_player_set_asset_key(SparkGameComponent* player, const char* assetKey) {
+    auto* vfx = AsComponent<Spark::VfxPlayerComponent>(player, Spark::ComponentKind::VfxPlayer);
+    if (vfx != nullptr) {
+        vfx->SetVfxAssetKey(assetKey);
+    }
+}
+
+void spark_vfx_player_play(SparkGameObject* object, SparkGameComponent* player) {
+    auto* go = ToObject(object);
+    auto* vfx = AsComponent<Spark::VfxPlayerComponent>(player, Spark::ComponentKind::VfxPlayer);
+    if (go != nullptr && vfx != nullptr) {
+        vfx->Play(*go);
+    }
+}
+
+void spark_vfx_player_play_once(SparkGameObject* object, SparkGameComponent* player) {
+    auto* go = ToObject(object);
+    auto* vfx = AsComponent<Spark::VfxPlayerComponent>(player, Spark::ComponentKind::VfxPlayer);
+    if (go != nullptr && vfx != nullptr) {
+        vfx->PlayOnce(*go);
+    }
+}
+
+void spark_vfx_player_stop(SparkGameObject* object, SparkGameComponent* player) {
+    auto* go = ToObject(object);
+    auto* vfx = AsComponent<Spark::VfxPlayerComponent>(player, Spark::ComponentKind::VfxPlayer);
+    if (go != nullptr && vfx != nullptr) {
+        vfx->Stop(*go);
     }
 }
 

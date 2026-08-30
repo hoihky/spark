@@ -55,6 +55,7 @@ private:
     bool centerInParent = false;
     bool collapsible = false;
     bool horizontalLayout = false;
+    bool movable = false;
 };
 
 class ImguiLabel final : public ILabel, public UiElementBase {

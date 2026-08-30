@@ -525,7 +525,7 @@ void FillStandardLitSceneFromWorld(
     if (enableParticles) {
         params.particleCameraRight = particleCameraRight.Normalized();
         params.particleCameraUp = particleCameraUp.Normalized();
-        world.ForEachActiveGameObject([&params](GameObject* o) {
+        world.ForEachActiveGameObject([&params, &findOrAddTexture](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -538,10 +538,15 @@ void FillStandardLitSceneFromWorld(
             }
             Array<SceneParticleInstance> chunk;
             pe->CollectInstances(chunk);
+            std::int32_t textureLayer = -1;
+            if (pe->GetTexture()) {
+                textureLayer = findOrAddTexture(pe->GetTexture(), nullptr, nullptr);
+            }
             for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
                 if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
                     return;
                 }
+                chunk[ci].textureLayer = textureLayer;
                 params.particles.PushBack(chunk[ci]);
             }
         });

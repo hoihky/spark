@@ -44,6 +44,8 @@ struct PanelDesc {
     bool centerInParent = false;
     /** When true, child controls are laid out on one horizontal row (ImGui SameLine). */
     bool horizontalLayout = false;
+    /** When true (ImGui), user can drag and resize after the initial anchored placement. */
+    bool movable = false;
 };
 
 struct LabelDesc {

@@ -142,6 +142,7 @@ SPARK_SCRIPT_API void spark_world_update_game_objects(
         const SparkFrameTiming* timing,
         SparkEngineContext* context);
 SPARK_SCRIPT_API void spark_world_process_sound_cues(SparkGameWorld* world, SparkEngineContext* context);
+SPARK_SCRIPT_API void spark_world_process_vfx(SparkGameWorld* world);
 SPARK_SCRIPT_API void spark_world_simulate_game_ai(
         SparkGameWorld* world,
         const SparkFrameTiming* timing,
@@ -308,6 +309,7 @@ SPARK_SCRIPT_API SparkGameComponent* spark_object_add_sky(SparkGameObject* objec
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_text_overlay(SparkGameObject* object);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_ui_canvas(SparkGameObject* object, int sortOrder);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_particle_emitter(SparkGameObject* object);
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_vfx_player(SparkGameObject* object);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_box_collider_2d(
         SparkGameObject* object,
         const SparkVector2* halfExtents,
@@ -593,6 +595,17 @@ SPARK_SCRIPT_API void spark_char_3d_fsm_request_attack(SparkGameComponent* fsm);
 SPARK_SCRIPT_API void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, int enabled);
 SPARK_SCRIPT_API void spark_particle_emitter_set_rate(SparkGameComponent* emitter, float particlesPerSecond);
 SPARK_SCRIPT_API void spark_particle_emitter_set_max_particles(SparkGameComponent* emitter, int maxParticles);
+
+SPARK_SCRIPT_API void spark_vfx_play(
+        SparkGameWorld* world,
+        const char* assetKeyOrBuiltin,
+        float worldX,
+        float worldY,
+        float worldZ);
+SPARK_SCRIPT_API void spark_vfx_player_set_asset_key(SparkGameComponent* player, const char* assetKey);
+SPARK_SCRIPT_API void spark_vfx_player_play(SparkGameObject* object, SparkGameComponent* player);
+SPARK_SCRIPT_API void spark_vfx_player_play_once(SparkGameObject* object, SparkGameComponent* player);
+SPARK_SCRIPT_API void spark_vfx_player_stop(SparkGameObject* object, SparkGameComponent* player);
 
 #ifdef __cplusplus
 }

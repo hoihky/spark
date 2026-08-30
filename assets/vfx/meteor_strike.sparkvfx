@@ -1,0 +1,5 @@
+sparkvfx_v1
+composite
+phase 0.000 builtin meteor_trail duration 0.380
+phase 0.360 builtin explosion burst 88
+phase 0.420 builtin smoke duration 0.950

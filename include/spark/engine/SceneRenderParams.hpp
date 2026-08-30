@@ -91,6 +91,8 @@ struct SceneParticleInstance {
     Vector3 position{};
     float size = 0.1F;
     Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
+    Vector4 uvRect{0.0F, 0.0F, 1.0F, 1.0F};
+    std::int32_t textureLayer = -1;
 };
 
 /** One oriented decal projector instance (world pose + half-extents). */

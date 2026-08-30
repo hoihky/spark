@@ -9,6 +9,7 @@
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/TriggerVolume3DComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
+#include "spark/ecs/components/rendering/VfxPlayerComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsMaterial3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
@@ -18,9 +19,15 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
+#include "spark/scene/assets/GameWorldAssetLoader.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/serialization/ComponentSnapshotPayload.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
+#include "spark/scene/vfx/ParticleCurves.hpp"
 
 #include <algorithm>
 #include <cstdio>
@@ -72,6 +79,257 @@ void RegisterHandler(ComponentSnapshotRegistry& registry) {
     UniquePtr<HandlerT> concrete = MakeUnique<HandlerT>();
     registry.Register(UniquePtr<IComponentSnapshotHandler>(
             static_cast<IComponentSnapshotHandler*>(concrete.Release())));
+}
+
+Utf8String JoinAssetsRootPath(const char* assetsRoot, const char* relativePath) {
+    Utf8String full(assetsRoot != nullptr ? assetsRoot : "");
+    if (!full.IsEmpty()) {
+        const std::size_t n = full.ByteLength();
+        if (full.CStr()[n - 1] != '/') {
+            full.AppendUtf8("/");
+        }
+    }
+    if (relativePath != nullptr) {
+        full.AppendUtf8(relativePath);
+    }
+    return full;
+}
+
+void DeferComponentRestore(GameObject& owner, const ComponentRecord& record, const SceneApplyContext& ctx) {
+    if (ctx.onDeferredComponent != nullptr) {
+        ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
+    }
+}
+
+template<typename RequestFn>
+bool TryDeferAsset(
+        GameObject& owner,
+        const ComponentRecord& record,
+        GameWorld& world,
+        const SceneApplyContext& ctx,
+        const char* fullPath,
+        AssetLoadJobKind kind,
+        RequestFn&& request) {
+    if (ctx.assetLoader == nullptr || fullPath == nullptr || fullPath[0] == '\0') {
+        return false;
+    }
+    request();
+    switch (kind) {
+        case AssetLoadJobKind::Gltf:
+            if (world.TryGetMeshByKeyOrPath(fullPath)) {
+                return false;
+            }
+            break;
+        case AssetLoadJobKind::SkinnedGltf:
+            if (SkinnedGltfAsset tmp{}; world.TryGetCachedSkinnedGltf(fullPath, tmp)) {
+                return false;
+            }
+            break;
+        case AssetLoadJobKind::Texture:
+            if (world.TryGetTextureByKeyOrPath(fullPath)) {
+                return false;
+            }
+            break;
+        case AssetLoadJobKind::MeshObj:
+            if (world.TryGetMeshByKeyOrPath(fullPath)) {
+                return false;
+            }
+            break;
+        case AssetLoadJobKind::Material:
+            if (world.TryGetMaterialByKeyOrPath(fullPath) != nullptr) {
+                return false;
+            }
+            break;
+    }
+    const AssetLoadState st = ctx.assetLoader->GetState(fullPath, kind);
+    if (st == AssetLoadState::Failed) {
+        return false;
+    }
+    DeferComponentRestore(owner, record, ctx);
+    return ctx.onDeferredComponent != nullptr;
+}
+
+void AppendParticleEmitterP4Extension(
+        Utf8String& out,
+        const ParticleEmitterComponent& pe,
+        const GameObject& owner,
+        const SceneCaptureContext& ctx) {
+    out.AppendUtf8(" p4 ");
+    char num[96]{};
+    std::snprintf(num, sizeof(num), "%.6f ", pe.GetRingRadius());
+    out.AppendUtf8(num);
+    ComponentSnapshotPayload::AppendQuotedString(out, pe.GetEmissionModuleId());
+    out.AppendUtf8(" ");
+    Utf8String texPath;
+    if (const SharedPtr<Texture2D>& tex = pe.GetTexture()) {
+        if (tex) {
+            texPath = tex->GetName();
+        }
+    }
+    if (texPath.IsEmpty() && ctx.resolveTexturePath != nullptr) {
+        texPath = ctx.resolveTexturePath(owner, ctx.textureUserData);
+    }
+    ComponentSnapshotPayload::AppendQuotedString(out, texPath.CStr());
+    out.AppendUtf8(" ");
+    const Vector4& uv = pe.GetUvRect();
+    std::snprintf(num, sizeof(num), "%.6f %.6f %.6f %.6f ", uv.x, uv.y, uv.z, uv.w);
+    out.AppendUtf8(num);
+
+    const ParticleFloatCurve& sizeCurve = pe.GetSizeCurve();
+    std::snprintf(num, sizeof(num), "%u", static_cast<unsigned>(sizeCurve.keyframeCount));
+    out.AppendUtf8(num);
+    for (std::uint8_t i = 0; i < sizeCurve.keyframeCount; ++i) {
+        std::snprintf(
+                num,
+                sizeof(num),
+                " %.6f %.6f",
+                sizeCurve.keyframes[i].time,
+                sizeCurve.keyframes[i].value);
+        out.AppendUtf8(num);
+    }
+    out.AppendUtf8(" ");
+
+    const ParticleColorCurve& colorCurve = pe.GetColorCurve();
+    std::snprintf(num, sizeof(num), "%u", static_cast<unsigned>(colorCurve.keyframeCount));
+    out.AppendUtf8(num);
+    for (std::uint8_t i = 0; i < colorCurve.keyframeCount; ++i) {
+        const Vector4& c = colorCurve.keyframes[i].color;
+        std::snprintf(
+                num,
+                sizeof(num),
+                " %.6f %.6f %.6f %.6f %.6f",
+                colorCurve.keyframes[i].time,
+                c.x,
+                c.y,
+                c.z,
+                c.w);
+        out.AppendUtf8(num);
+    }
+}
+
+bool TryRestoreParticleEmitterP4Extension(
+        const char*& cursor,
+        ParticleEmitterComponent& pe,
+        GameObject& owner,
+        const ComponentRecord& record,
+        GameWorld& world,
+        const SceneApplyContext& ctx) {
+    while (*cursor == ' ' || *cursor == '\t') {
+        ++cursor;
+    }
+    if (*cursor == '\0') {
+        return true;
+    }
+    if (std::strncmp(cursor, "p4", 2) != 0) {
+        return true;
+    }
+    cursor += 2;
+    while (*cursor == ' ' || *cursor == '\t') {
+        ++cursor;
+    }
+
+    float ringRadius = pe.GetRingRadius();
+    int consumed = 0;
+    if (std::sscanf(cursor, "%f%n", &ringRadius, &consumed) != 1 || consumed <= 0) {
+        return false;
+    }
+    cursor += consumed;
+
+    char moduleId[64]{};
+    if (!ComponentSnapshotPayload::ParseLeadingQuotedString(cursor, moduleId, sizeof(moduleId))) {
+        return false;
+    }
+
+    char texPath[384]{};
+    if (!ComponentSnapshotPayload::ParseLeadingQuotedString(cursor, texPath, sizeof(texPath))) {
+        return false;
+    }
+
+    Vector4 uv = pe.GetUvRect();
+    consumed = 0;
+    if (std::sscanf(cursor, "%f %f %f %f%n", &uv.x, &uv.y, &uv.z, &uv.w, &consumed) != 4 || consumed <= 0) {
+        return false;
+    }
+    cursor += consumed;
+
+    unsigned sizeKeyframeCount = 0U;
+    consumed = 0;
+    if (std::sscanf(cursor, "%u%n", &sizeKeyframeCount, &consumed) != 1 || consumed <= 0) {
+        return false;
+    }
+    cursor += consumed;
+    if (sizeKeyframeCount > ParticleFloatCurve::kMaxKeyframes) {
+        return false;
+    }
+
+    ParticleFloatCurve sizeCurve{};
+    for (unsigned i = 0; i < sizeKeyframeCount; ++i) {
+        float time = 0.0F;
+        float value = 0.0F;
+        consumed = 0;
+        if (std::sscanf(cursor, "%f %f%n", &time, &value, &consumed) != 2 || consumed <= 0) {
+            return false;
+        }
+        cursor += consumed;
+        sizeCurve.keyframes[i].time = time;
+        sizeCurve.keyframes[i].value = value;
+    }
+    sizeCurve.keyframeCount = static_cast<std::uint8_t>(sizeKeyframeCount);
+
+    unsigned colorKeyframeCount = 0U;
+    consumed = 0;
+    if (std::sscanf(cursor, "%u%n", &colorKeyframeCount, &consumed) != 1 || consumed <= 0) {
+        return false;
+    }
+    cursor += consumed;
+    if (colorKeyframeCount > ParticleColorCurve::kMaxKeyframes) {
+        return false;
+    }
+
+    ParticleColorCurve colorCurve{};
+    for (unsigned i = 0; i < colorKeyframeCount; ++i) {
+        float time = 0.0F;
+        Vector4 color{1.0F, 1.0F, 1.0F, 1.0F};
+        consumed = 0;
+        if (std::sscanf(cursor, "%f %f %f %f %f%n", &time, &color.x, &color.y, &color.z, &color.w, &consumed) != 5
+            || consumed <= 0) {
+            return false;
+        }
+        cursor += consumed;
+        colorCurve.keyframes[i].time = time;
+        colorCurve.keyframes[i].color = color;
+    }
+    colorCurve.keyframeCount = static_cast<std::uint8_t>(colorKeyframeCount);
+
+    pe.SetRingRadius(ringRadius);
+    pe.SetEmissionModuleId(moduleId);
+    pe.SetUvRect(uv);
+    if (sizeKeyframeCount > 0U) {
+        pe.SetSizeCurve(sizeCurve);
+    }
+    if (colorKeyframeCount > 0U) {
+        pe.SetColorCurve(colorCurve);
+    }
+
+    if (texPath[0] != '\0' && ctx.assetsRoot != nullptr) {
+        const Utf8String full = JoinAssetsRootPath(ctx.assetsRoot, texPath);
+        if (TryDeferAsset(
+                    owner,
+                    record,
+                    world,
+                    ctx,
+                    full.CStr(),
+                    AssetLoadJobKind::Texture,
+                    [&]() { ctx.assetLoader->RequestTexture(full.CStr()); })) {
+            return true;
+        }
+        if (SharedPtr<Texture2D> texture = world.TryGetTextureByKeyOrPath(full.CStr())) {
+            pe.SetTexture(texture);
+        } else if (SharedPtr<Texture2D> loaded = world.LoadTexture(full.CStr())) {
+            pe.SetTexture(loaded);
+        }
+    }
+    return true;
 }
 
 class TextOverlaySnapshotHandler final : public IComponentSnapshotHandler {
@@ -161,7 +419,7 @@ public:
 
     [[nodiscard]] bool TryCapture(
             const GameObject& owner,
-            const SceneCaptureContext& /*ctx*/,
+            const SceneCaptureContext& ctx,
             ComponentRecord& out) const override {
         const ParticleEmitterComponent* pe = owner.GetComponent<ParticleEmitterComponent>();
         if (pe == nullptr) {
@@ -171,11 +429,11 @@ public:
         const Vector4& ce = pe->GetColorEnd();
         const Vector3& grav = pe->GetGravity();
         const Vector3& dir = pe->GetEmissionDirection();
-        char buf[768]{};
+        char baseBuf[512]{};
         std::snprintf(
-                buf,
-                sizeof(buf),
-                "%d %u %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f",
+                baseBuf,
+                sizeof(baseBuf),
+                "%d %u %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %d",
                 pe->IsEmitterEnabled() ? 1 : 0,
                 pe->GetMaxParticles(),
                 pe->GetEmissionRate(),
@@ -199,17 +457,20 @@ public:
                 dir.z,
                 pe->GetSpreadAngleRadians(),
                 pe->GetSpeedMin(),
-                pe->GetSpeedMax());
+                pe->GetSpeedMax(),
+                pe->GetUseLocalEmission() ? 1 : 0);
+        Utf8String payload(baseBuf);
+        AppendParticleEmitterP4Extension(payload, *pe, owner, ctx);
         out.kind = Utf8String(GetKindTag());
-        out.payload = Utf8String(buf);
+        out.payload = MoveTemp(payload);
         return true;
     }
 
     [[nodiscard]] bool TryRestore(
             GameObject& owner,
             const ComponentRecord& record,
-            GameWorld& /*world*/,
-            const SceneApplyContext& /*ctx*/) const override {
+            GameWorld& world,
+            const SceneApplyContext& ctx) const override {
         if (!KindTagEquals(record.kind, GetKindTag())) {
             return false;
         }
@@ -227,34 +488,36 @@ public:
         float spread = 0.55F;
         float speedMin = 1.2F;
         float speedMax = 2.8F;
-        if (std::sscanf(
-                    record.payload.CStr(),
-                    "%d %u %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f",
-                    &enabled,
-                    &maxParticles,
-                    &emissionRate,
-                    &lifeMin,
-                    &lifeMax,
-                    &sizeStart,
-                    &sizeEnd,
-                    &colorStart.x,
-                    &colorStart.y,
-                    &colorStart.z,
-                    &colorStart.w,
-                    &colorEnd.x,
-                    &colorEnd.y,
-                    &colorEnd.z,
-                    &colorEnd.w,
-                    &gravity.x,
-                    &gravity.y,
-                    &gravity.z,
-                    &emissionDir.x,
-                    &emissionDir.y,
-                    &emissionDir.z,
-                    &spread,
-                    &speedMin,
-                    &speedMax)
-            < 22) {
+        int useLocalEmission = 0;
+        const int parsed = std::sscanf(
+                record.payload.CStr(),
+                "%d %u %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d",
+                &enabled,
+                &maxParticles,
+                &emissionRate,
+                &lifeMin,
+                &lifeMax,
+                &sizeStart,
+                &sizeEnd,
+                &colorStart.x,
+                &colorStart.y,
+                &colorStart.z,
+                &colorStart.w,
+                &colorEnd.x,
+                &colorEnd.y,
+                &colorEnd.z,
+                &colorEnd.w,
+                &gravity.x,
+                &gravity.y,
+                &gravity.z,
+                &emissionDir.x,
+                &emissionDir.y,
+                &emissionDir.z,
+                &spread,
+                &speedMin,
+                &speedMax,
+                &useLocalEmission);
+        if (parsed < 22) {
             return false;
         }
         ParticleEmitterComponent* pe = owner.GetComponent<ParticleEmitterComponent>();
@@ -271,6 +534,65 @@ public:
         pe->SetEmissionDirection(emissionDir);
         pe->SetSpreadAngleRadians(spread);
         pe->SetSpeedRange(speedMin, speedMax);
+        if (parsed >= 25) {
+            pe->SetUseLocalEmission(useLocalEmission != 0);
+        }
+        const char* cursor = record.payload.CStr();
+        ComponentSnapshotPayload::SkipTokens(cursor, parsed);
+        if (!TryRestoreParticleEmitterP4Extension(cursor, *pe, owner, record, world, ctx)) {
+            return false;
+        }
+        return true;
+    }
+};
+
+class VfxPlayerSnapshotHandler final : public IComponentSnapshotHandler {
+public:
+    [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::VfxPlayer; }
+    [[nodiscard]] const char* GetKindTag() const noexcept override { return "vfx_player"; }
+
+    [[nodiscard]] bool TryCapture(
+            const GameObject& owner,
+            const SceneCaptureContext& /*ctx*/,
+            ComponentRecord& out) const override {
+        const VfxPlayerComponent* player = owner.GetComponent<VfxPlayerComponent>();
+        if (player == nullptr) {
+            return false;
+        }
+        char buf[512]{};
+        std::snprintf(
+                buf,
+                sizeof(buf),
+                "%s %d %d",
+                player->GetVfxAssetKey().CStr(),
+                player->GetPlayOnStart() ? 1 : 0,
+                player->GetPlayOnStartOnce() ? 1 : 0);
+        out.kind = Utf8String(GetKindTag());
+        out.payload = Utf8String(buf);
+        return true;
+    }
+
+    [[nodiscard]] bool TryRestore(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& /*world*/,
+            const SceneApplyContext& /*ctx*/) const override {
+        if (!KindTagEquals(record.kind, GetKindTag())) {
+            return false;
+        }
+        char assetKey[384]{};
+        int playOnStart = 0;
+        int playOnStartOnce = 0;
+        if (std::sscanf(record.payload.CStr(), "%383s %d %d", assetKey, &playOnStart, &playOnStartOnce) < 1) {
+            return false;
+        }
+        VfxPlayerComponent* player = owner.GetComponent<VfxPlayerComponent>();
+        if (player == nullptr) {
+            player = owner.AddComponent<VfxPlayerComponent>();
+        }
+        player->SetVfxAssetKey(assetKey);
+        player->SetPlayOnStart(playOnStart != 0);
+        player->SetPlayOnStartOnce(playOnStartOnce != 0);
         return true;
     }
 };
@@ -970,6 +1292,7 @@ public:
 void RegisterMoreSnapshotHandlers(ComponentSnapshotRegistry& registry) {
     RegisterHandler<TextOverlaySnapshotHandler>(registry);
     RegisterHandler<ParticleEmitterSnapshotHandler>(registry);
+    RegisterHandler<VfxPlayerSnapshotHandler>(registry);
     RegisterHandler<TerrainSnapshotHandler>(registry);
     RegisterHandler<BoxCollider3DSnapshotHandler>(registry);
     RegisterHandler<SphereCollider3DSnapshotHandler>(registry);

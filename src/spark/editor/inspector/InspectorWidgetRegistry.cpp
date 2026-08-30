@@ -2,8 +2,10 @@
 
 #include "spark/editor/inspector/widgets/MaterialInspectorWidget.hpp"
 #include "spark/editor/inspector/widgets/MeshInspectorWidget.hpp"
+#include "spark/editor/inspector/widgets/ParticleEmitterInspectorWidget.hpp"
 #include "spark/editor/inspector/widgets/PointLightInspectorWidget.hpp"
 #include "spark/editor/inspector/widgets/TransformInspectorWidget.hpp"
+#include "spark/editor/inspector/widgets/VfxPlayerInspectorWidget.hpp"
 
 namespace Spark::Editor {
 
@@ -26,6 +28,8 @@ InspectorWidgetRegistry::InspectorWidgetRegistry() {
     RegisterWidgetType<MeshInspectorWidget>(widgets);
     RegisterWidgetType<PointLightInspectorWidget>(widgets);
     RegisterWidgetType<MaterialInspectorWidget>(widgets);
+    RegisterWidgetType<ParticleEmitterInspectorWidget>(widgets);
+    RegisterWidgetType<VfxPlayerInspectorWidget>(widgets);
 }
 
 void InspectorWidgetRegistry::PrepareFrameContext(const InspectorWidgetContext& ctx) noexcept {

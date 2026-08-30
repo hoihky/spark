@@ -1,0 +1,5 @@
+sparkvfx_v1
+composite
+phase 0.000 builtin rocket_trail duration 0.280
+phase 0.280 builtin explosion burst 96
+phase 0.420 builtin sparkle burst 48

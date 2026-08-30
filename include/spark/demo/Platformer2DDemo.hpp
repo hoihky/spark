@@ -29,7 +29,7 @@ namespace Spark {
  *
  * Patterns demonstrated:
  * - **Facade** — this class wires subsystems without embedding every detail.
- * - **Object pool** — <c>Platformer2D::BulletPool</c>, <c>Platformer2D::ExplosionFx</c>.
+ * - **Object pool** — <c>Platformer2D::BulletPool</c>; defeat bursts via <c>VfxSubsystem</c> (<c>ExplosionFx</c> facade).
  * - **Strategy** — <c>Platformer2D::BulletProfile</c> for player vs enemy shots.
  * - **Observer / presentation** — <c>Platformer2D::HealthHud</c> mirrors <c>HealthComponent</c>.
  */

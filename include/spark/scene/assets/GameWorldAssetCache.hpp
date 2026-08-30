@@ -9,7 +9,8 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
-#include "spark/scene/material/MaterialAsset.hpp"
+#include "spark/scene/vfx/VfxAsset.hpp"
+#include "spark/scene/vfx/VfxAssetLoader.hpp"
 #include "spark/scene/assets/gltf/GltfSceneDocument.hpp"
 #include "spark/scene/texture/SceneTextureAtlas.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
@@ -103,6 +104,11 @@ public:
     void RegisterMaterial(const MaterialAsset& material, const char* cacheKey);
     [[nodiscard]] const MaterialAsset* TryGetMaterialByKeyOrPath(const char* keyOrPath) const;
 
+    [[nodiscard]] VfxAsset LoadVfx(const char* path);
+    [[nodiscard]] AssetLoadOutcome<VfxAsset> TryLoadVfx(const char* path);
+    void RegisterVfx(const VfxAsset& asset, const char* cacheKey);
+    [[nodiscard]] const VfxAsset* TryGetVfxByKeyOrPath(const char* keyOrPath) const;
+
     void RetainAsset(CachedAssetKind kind, const char* key);
     /** Decrements retain count; evicts the cache entry when it reaches zero. Returns true when evicted. */
     bool ReleaseAsset(CachedAssetKind kind, const char* key);
@@ -136,6 +142,7 @@ private:
     HashMap<Utf8String, SharedPtr<Texture2D>, Detail::Utf8StringHasher> textureCache;
     HashMap<const Texture2D*, Utf8String, Detail::TexturePointerHasher> textureKeyByPointer;
     HashMap<Utf8String, MaterialAsset, Detail::Utf8StringHasher> materialCache;
+    HashMap<Utf8String, VfxAsset, Detail::Utf8StringHasher> vfxCache;
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> meshRetainCounts;
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> textureRetainCounts;
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher> materialRetainCounts;

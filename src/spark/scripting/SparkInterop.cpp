@@ -1,6 +1,7 @@
 #include "spark/scripting/SparkInterop.h"
 
 #include "spark/audio/SoundSubsystem.hpp"
+#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/FrameTiming.hpp"
@@ -186,6 +187,27 @@ void spark_world_process_sound_cues(SparkGameWorld* world, SparkEngineContext* c
     Spark::ProcessSoundCues(
             *reinterpret_cast<Spark::GameWorld*>(world),
             *reinterpret_cast<Spark::IEngineContext*>(context));
+}
+
+void spark_world_process_vfx(SparkGameWorld* world) {
+    if (world == nullptr) {
+        return;
+    }
+    Spark::ProcessVfx(*reinterpret_cast<Spark::GameWorld*>(world));
+}
+
+void spark_vfx_play(
+        SparkGameWorld* world,
+        const char* assetKeyOrBuiltin,
+        const float worldX,
+        const float worldY,
+        const float worldZ) {
+    if (world == nullptr || assetKeyOrBuiltin == nullptr || assetKeyOrBuiltin[0] == '\0') {
+        return;
+    }
+    reinterpret_cast<Spark::GameWorld*>(world)->GetVfxSubsystem().Queue(
+            assetKeyOrBuiltin,
+            Spark::Vector3{worldX, worldY, worldZ});
 }
 
 SparkGameObject* spark_world_create_game_object(SparkGameWorld* world, const char* utf8Name) {

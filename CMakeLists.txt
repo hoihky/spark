@@ -489,6 +489,7 @@ file(MAKE_DIRECTORY "${SPARK_ASSETS_DIR}/scenes")
 file(MAKE_DIRECTORY "${SPARK_ASSETS_DIR}/prefabs")
 file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/scenes")
 file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/prefabs")
+file(MAKE_DIRECTORY "${SPARK_BUILD_ASSETS_DIR}/vfx")
 if (EXISTS "${SPARK_ASSETS_DIR}/scenes")
     file(COPY "${SPARK_ASSETS_DIR}/scenes/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/scenes")
 endif ()
@@ -497,6 +498,9 @@ if (EXISTS "${SPARK_ASSETS_DIR}/project.spark")
 endif ()
 if (EXISTS "${SPARK_ASSETS_DIR}/prefabs")
     file(COPY "${SPARK_ASSETS_DIR}/prefabs/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/prefabs")
+endif ()
+if (EXISTS "${SPARK_ASSETS_DIR}/vfx")
+    file(COPY "${SPARK_ASSETS_DIR}/vfx/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/vfx")
 endif ()
 
 # Kenney CC0 — Simplified Platformer character (idle + walk frames), merged horizontally in Platformer2D demo.
@@ -544,7 +548,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/TimeOfDayDemo.cpp
         src/spark/demo/SkyDemo.cpp
         src/spark/demo/TerrainDemo.cpp
-        src/spark/demo/ParticleDemo.cpp
+        src/spark/demo/VfxShowcaseDemo.cpp
         src/spark/demo/CharacterCameraDemo.cpp
         src/spark/demo/BroadPhase2DDemo.cpp
         src/spark/demo/Platformer2DDemo.cpp
@@ -577,6 +581,8 @@ set(SPARK_ENGINE_EDITOR_SOURCES
         src/spark/editor/EditorCommandStack.cpp
         src/spark/editor/commands/SetTransformCommand.cpp
         src/spark/editor/commands/SetPointLightCommand.cpp
+        src/spark/editor/commands/SetParticleEmitterCommand.cpp
+        src/spark/editor/commands/SetVfxPlayerCommand.cpp
         src/spark/editor/commands/SetMeshAlbedoCommand.cpp
         src/spark/editor/commands/SetMaterialInspectorCommand.cpp
         src/spark/editor/commands/SetGameObjectNameCommand.cpp
@@ -593,6 +599,8 @@ set(SPARK_ENGINE_EDITOR_SOURCES
         src/spark/editor/inspector/widgets/TransformInspectorWidget.cpp
         src/spark/editor/inspector/widgets/MeshInspectorWidget.cpp
         src/spark/editor/inspector/widgets/PointLightInspectorWidget.cpp
+        src/spark/editor/inspector/widgets/ParticleEmitterInspectorWidget.cpp
+        src/spark/editor/inspector/widgets/VfxPlayerInspectorWidget.cpp
         src/spark/editor/inspector/widgets/MaterialInspectorWidget.cpp
         src/spark/editor/panels/HierarchyPanel.cpp
         src/spark/editor/panels/InspectorPanel.cpp
@@ -648,6 +656,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/camera/SpringArm3DComponent.cpp
         src/spark/ecs/components/rendering/SkinnedMeshComponent.cpp
         src/spark/ecs/components/animation/AnimationEventReceiverComponent.cpp
+        src/spark/ecs/components/animation/AnimationEventVfxComponent.cpp
         src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
         src/spark/ecs/components/animation/AnimatorComponent.cpp
         src/spark/ecs/components/physics/CollisionComponent.cpp
@@ -715,6 +724,15 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/rendering/SkyComponent.cpp
         src/spark/ecs/components/rendering/BillboardComponent.cpp
         src/spark/ecs/components/rendering/ParticleEmitterComponent.cpp
+        src/spark/scene/vfx/VfxLibrary.cpp
+        src/spark/scene/vfx/ParticleCurves.cpp
+        src/spark/scene/vfx/modules/ParticleModuleRegistry.cpp
+        src/spark/scene/vfx/VfxEmitterParams.cpp
+        src/spark/scene/vfx/VfxEffectDefinition.cpp
+        src/spark/scene/vfx/VfxAsset.cpp
+        src/spark/scene/vfx/VfxAssetLoader.cpp
+        src/spark/scene/vfx/VfxSubsystem.cpp
+        src/spark/ecs/components/rendering/VfxPlayerComponent.cpp
         src/spark/ecs/components/rendering/TerrainComponent.cpp
         src/spark/ui/core/UiElementBase.cpp
         src/spark/ui/core/UiTheme.cpp

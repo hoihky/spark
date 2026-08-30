@@ -110,7 +110,8 @@ ImguiPanel::ImguiPanel(const PanelDesc& desc)
     , edgeMargin(desc.edgeMargin)
     , centerInParent(desc.centerInParent)
     , collapsible(desc.collapsible)
-    , horizontalLayout(desc.horizontalLayout) {}
+    , horizontalLayout(desc.horizontalLayout)
+    , movable(desc.movable) {}
 
 void ImguiPanel::SetTitle(Utf8String titleIn) {
     title = MoveTemp(titleIn);
@@ -204,7 +205,7 @@ void ImguiPanel::Paint(IUiRenderer& renderer) {
         placement = children.GetSize() == 0U ? ImguiPanelPlacement::DockedPassthrough : ImguiPanelPlacement::Docked;
     } else if (centerInParent) {
         placement = ImguiPanelPlacement::CenterOnce;
-    } else if (panelBounds.width > 1.0F && panelBounds.height > 1.0F) {
+    } else if (!movable && panelBounds.width > 1.0F && panelBounds.height > 1.0F) {
         placement = ImguiPanelPlacement::LockedSide;
     }
 

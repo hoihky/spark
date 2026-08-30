@@ -11,8 +11,8 @@ namespace Spark {
 namespace {
 
 constexpr VkDeviceSize kParticleUboBytes = 256;
-constexpr VkDeviceSize kParticleVertexBytes = 10 * 1024 * 1024;
-constexpr std::uint32_t kParticleFloatsPerVertex = 10;
+constexpr VkDeviceSize kParticleVertexBytes = 13 * 1024 * 1024;
+constexpr std::uint32_t kParticleFloatsPerVertex = 13;
 
 }  // namespace
 
@@ -190,7 +190,10 @@ void VulkanParticlePass::DestroyGraphicsPipeline(const VkDevice device) {
     }
 }
 
-void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkRenderPass hdrRenderPass) {
+void VulkanParticlePass::CreateGraphicsPipeline(
+        const VkDevice device,
+        const VkRenderPass hdrRenderPass,
+        const VkDescriptorSetLayout sceneDescriptorSetLayout) {
     if (device == VK_NULL_HANDLE || hdrRenderPass == VK_NULL_HANDLE || vertModule == VK_NULL_HANDLE ||
         fragModule == VK_NULL_HANDLE || descriptorSetLayout == VK_NULL_HANDLE) {
         return;
@@ -217,7 +220,7 @@ void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkR
     bind.stride = kStride;
     bind.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-    VkVertexInputAttributeDescription attrs[4]{};
+    VkVertexInputAttributeDescription attrs[6]{};
     attrs[0].binding = 0;
     attrs[0].location = 0;
     attrs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -234,12 +237,20 @@ void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkR
     attrs[3].location = 3;
     attrs[3].format = VK_FORMAT_R32G32_SFLOAT;
     attrs[3].offset = sizeof(float) * 8;
+    attrs[4].binding = 0;
+    attrs[4].location = 4;
+    attrs[4].format = VK_FORMAT_R32G32_SFLOAT;
+    attrs[4].offset = sizeof(float) * 10;
+    attrs[5].binding = 0;
+    attrs[5].location = 5;
+    attrs[5].format = VK_FORMAT_R32_SFLOAT;
+    attrs[5].offset = sizeof(float) * 12;
 
     VkPipelineVertexInputStateCreateInfo vtxIn{};
     vtxIn.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vtxIn.vertexBindingDescriptionCount = 1;
     vtxIn.pVertexBindingDescriptions = &bind;
-    vtxIn.vertexAttributeDescriptionCount = 4;
+    vtxIn.vertexAttributeDescriptionCount = 6;
     vtxIn.pVertexAttributeDescriptions = attrs;
 
     VkPipelineInputAssemblyStateCreateInfo ia{};
@@ -289,10 +300,12 @@ void VulkanParticlePass::CreateGraphicsPipeline(const VkDevice device, const VkR
     dyn.dynamicStateCount = 2u;
     dyn.pDynamicStates = dynStates;
 
+    VkDescriptorSetLayout setLayouts[2] = {descriptorSetLayout, sceneDescriptorSetLayout};
+    descriptorSetLayoutCount = sceneDescriptorSetLayout != VK_NULL_HANDLE ? 2U : 1U;
     VkPipelineLayoutCreateInfo pl{};
     pl.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pl.setLayoutCount = 1;
-    pl.pSetLayouts = &descriptorSetLayout;
+    pl.setLayoutCount = descriptorSetLayoutCount;
+    pl.pSetLayouts = setLayouts;
     pl.pushConstantRangeCount = 0;
     if (vkCreatePipelineLayout(device, &pl, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreatePipelineLayout (particle) failed");
@@ -324,9 +337,13 @@ void VulkanParticlePass::Record(
         const std::uint32_t frameIndex,
         const VkExtent2D extent,
         const SceneRenderParams& scene,
-        const bool sceneParamsValid) const {
+        const bool sceneParamsValid,
+        const VkDescriptorSet sceneDescriptorSet) const {
     if (!sceneParamsValid || pipeline == VK_NULL_HANDLE || vertexMapped == nullptr ||
         frameIndex >= descriptorSets.GetSize() || scene.particles.IsEmpty()) {
+        return;
+    }
+    if (descriptorSetLayoutCount > 1U && sceneDescriptorSet == VK_NULL_HANDLE) {
         return;
     }
 
@@ -362,10 +379,14 @@ void VulkanParticlePass::Record(
     scratchVertices.Clear();
     const float corners[4][2] = {{-1.0F, -1.0F}, {1.0F, -1.0F}, {1.0F, 1.0F}, {-1.0F, 1.0F}};
     const std::uint32_t idx0[] = {0, 1, 2, 0, 2, 3};
-    for (std::size_t pi = 0; pi < nPart; ++pi) {
-        const SceneParticleInstance& p = scene.particles[pi];
+
+    auto appendParticleVerts = [&](const SceneParticleInstance& p) {
         for (int t = 0; t < 6; ++t) {
             const int k = static_cast<int>(idx0[t]);
+            const float cornerX = corners[k][0];
+            const float cornerY = corners[k][1];
+            const float u = p.uvRect.x + (p.uvRect.z - p.uvRect.x) * (cornerX + 1.0F) * 0.5F;
+            const float v = p.uvRect.y + (p.uvRect.w - p.uvRect.y) * (cornerY + 1.0F) * 0.5F;
             scratchVertices.PushBack(p.position.x);
             scratchVertices.PushBack(p.position.y);
             scratchVertices.PushBack(p.position.z);
@@ -374,44 +395,82 @@ void VulkanParticlePass::Record(
             scratchVertices.PushBack(p.color.z);
             scratchVertices.PushBack(p.color.w);
             scratchVertices.PushBack(p.size);
-            scratchVertices.PushBack(corners[k][0]);
-            scratchVertices.PushBack(corners[k][1]);
+            scratchVertices.PushBack(cornerX);
+            scratchVertices.PushBack(cornerY);
+            scratchVertices.PushBack(u);
+            scratchVertices.PushBack(v);
+            scratchVertices.PushBack(static_cast<float>(p.textureLayer));
         }
+    };
+
+    auto drawVertices = [&](const std::uint32_t vertCount) {
+        const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(scratchVertices.GetSize());
+        std::memcpy(vertexMapped, scratchVertices.GetData(), static_cast<std::size_t>(vbBytes));
+
+        VkViewport viewport{};
+        viewport.x = 0.0F;
+        viewport.y = 0.0F;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = static_cast<float>(extent.height);
+        viewport.minDepth = 0.0F;
+        viewport.maxDepth = 1.0F;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D fullScissor{};
+        VulkanScreenUiClip::BindScenePassScissor(commandBuffer, &scene, extent, fullScissor);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+        const VkDescriptorSet particleSet = descriptorSets[frameIndex];
+        if (descriptorSetLayoutCount > 1U) {
+            const VkDescriptorSet sets[2] = {particleSet, sceneDescriptorSet};
+            vkCmdBindDescriptorSets(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    0,
+                    descriptorSetLayoutCount,
+                    sets,
+                    0,
+                    nullptr);
+        } else {
+            vkCmdBindDescriptorSets(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    0,
+                    1,
+                    &particleSet,
+                    0,
+                    nullptr);
+        }
+
+        const VkDeviceSize vbOff = 0;
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &vbOff);
+        vkCmdDraw(commandBuffer, vertCount, 1, 0, 0);
+
+        VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullScissor);
+    };
+
+    std::int32_t batchLayer = scene.particles[0].textureLayer;
+    for (std::size_t pi = 0; pi < nPart; ++pi) {
+        const SceneParticleInstance& p = scene.particles[pi];
+        if (p.textureLayer != batchLayer) {
+            const std::uint32_t batchVertCount =
+                    static_cast<std::uint32_t>(scratchVertices.GetSize() / kParticleFloatsPerVertex);
+            if (batchVertCount > 0) {
+                drawVertices(batchVertCount);
+                scratchVertices.Clear();
+            }
+            batchLayer = p.textureLayer;
+        }
+        appendParticleVerts(p);
     }
 
-    const VkDeviceSize vbBytes = sizeof(float) * static_cast<VkDeviceSize>(scratchVertices.GetSize());
-    std::memcpy(vertexMapped, scratchVertices.GetData(), static_cast<std::size_t>(vbBytes));
-
-    VkViewport viewport{};
-    viewport.x = 0.0F;
-    viewport.y = 0.0F;
-    viewport.width = static_cast<float>(extent.width);
-    viewport.height = static_cast<float>(extent.height);
-    viewport.minDepth = 0.0F;
-    viewport.maxDepth = 1.0F;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-    VkRect2D fullScissor{};
-    VulkanScreenUiClip::BindScenePassScissor(commandBuffer, &scene, extent, fullScissor);
-
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-    vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            0,
-            1,
-            &descriptorSets[frameIndex],
-            0,
-            nullptr);
-
-    const VkDeviceSize vbOff = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, &vbOff);
-
     const std::uint32_t vertCount = static_cast<std::uint32_t>(scratchVertices.GetSize() / kParticleFloatsPerVertex);
-    vkCmdDraw(commandBuffer, vertCount, 1, 0, 0);
-
-    VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullScissor);
+    if (vertCount > 0) {
+        drawVertices(vertCount);
+    }
 }
 
 }  // namespace Spark

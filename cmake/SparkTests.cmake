@@ -32,6 +32,11 @@ function(spark_add_physics_tests)
             tests/scene/GameplayComponentRoundTripTest.cpp
             tests/scene/SceneDocumentRoundTripTest.cpp
             tests/scene/SceneEditorSmokeTest.cpp
+            tests/scene/ParticleEmitterBurstTest.cpp
+            tests/scene/VfxAssetP2Test.cpp
+            tests/scene/VfxCompositeP3Test.cpp
+            tests/scene/VfxParticleModuleP4Test.cpp
+            tests/scene/VfxIntegrationP5Test.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

@@ -590,6 +590,56 @@ const MaterialAsset* GameWorldAssetCache::TryGetMaterialByKeyOrPath(const char* 
     return materialCache.Find(Utf8String(keyOrPath));
 }
 
+VfxAsset GameWorldAssetCache::LoadVfx(const char* path) {
+    return TryLoadVfx(path).value;
+}
+
+AssetLoadOutcome<VfxAsset> GameWorldAssetCache::TryLoadVfx(const char* path) {
+    AssetLoadOutcome<VfxAsset> outcome{};
+    if (path != nullptr) {
+        outcome.path = Utf8String(path);
+    }
+    if (path == nullptr || path[0] == '\0') {
+        outcome.errorMessage = Utf8String("Empty VFX path");
+        return outcome;
+    }
+    const Utf8String key(path);
+    if (const VfxAsset* cached = vfxCache.Find(key)) {
+        outcome.ok = true;
+        outcome.value = *cached;
+        return outcome;
+    }
+    outcome = VfxAssetLoader::TryLoadFromFile(path, *this);
+    if (outcome.ok) {
+        vfxCache.Add(key, outcome.value);
+    } else if (outcome.errorMessage.IsEmpty()) {
+        outcome.errorMessage = Utf8String("Failed to load VFX asset");
+        std::fprintf(stderr, "Spark: LoadVfx failed: %s\n", path);
+    }
+    return outcome;
+}
+
+void GameWorldAssetCache::RegisterVfx(const VfxAsset& asset, const char* cacheKey) {
+    if (cacheKey == nullptr || cacheKey[0] == '\0') {
+        return;
+    }
+    vfxCache.Add(Utf8String(cacheKey), asset);
+}
+
+const VfxAsset* GameWorldAssetCache::TryGetVfxByKeyOrPath(const char* keyOrPath) const {
+    if (keyOrPath == nullptr || keyOrPath[0] == '\0') {
+        return nullptr;
+    }
+    if (const VfxAsset* cached = vfxCache.Find(Utf8String(keyOrPath))) {
+        return cached;
+    }
+    const Utf8String resolved = VfxAssetLoader::ResolveReadablePath(keyOrPath);
+    if (resolved.IsEmpty()) {
+        return nullptr;
+    }
+    return vfxCache.Find(resolved);
+}
+
 void GameWorldAssetCache::BumpRetainCount(const CachedAssetKind kind, const Utf8String& key) {
     HashMap<Utf8String, std::uint32_t, Detail::Utf8StringHasher>* map = nullptr;
     switch (kind) {

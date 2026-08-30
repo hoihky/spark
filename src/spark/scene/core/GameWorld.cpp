@@ -15,6 +15,7 @@ GameWorld::GameWorld() {
 }
 
 GameWorld::~GameWorld() {
+    vfxSubsystem.Shutdown(*this);
     assetLoader.Shutdown();
     Array<GameObject*> roots;
     roots.Reserve(objects.GetSize());

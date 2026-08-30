@@ -277,6 +277,9 @@ namespace Spark.Bindings
         public static extern void spark_world_process_sound_cues(SparkGameWorld* world, SparkEngineContext* context);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_world_process_vfx(SparkGameWorld* world);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_world_simulate_game_ai(SparkGameWorld* world, SparkFrameTiming* timing, SparkEngineContext* context);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -404,6 +407,9 @@ namespace Spark.Bindings
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern SparkGameComponent* spark_object_add_particle_emitter(SparkGameObject* @object);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_vfx_player(SparkGameObject* @object);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern SparkGameComponent* spark_object_add_box_collider_2d(SparkGameObject* @object, SparkVector2* halfExtents, SparkVector2* offset);
@@ -800,5 +806,20 @@ namespace Spark.Bindings
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_particle_emitter_set_max_particles(SparkGameComponent* emitter, int maxParticles);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_vfx_play(SparkGameWorld* world, sbyte* assetKeyOrBuiltin, float worldX, float worldY, float worldZ);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_vfx_player_set_asset_key(SparkGameComponent* player, sbyte* assetKey);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_vfx_player_play(SparkGameObject* @object, SparkGameComponent* player);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_vfx_player_play_once(SparkGameObject* @object, SparkGameComponent* player);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_vfx_player_stop(SparkGameObject* @object, SparkGameComponent* player);
     }
 }

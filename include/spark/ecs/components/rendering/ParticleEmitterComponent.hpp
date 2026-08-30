@@ -1,12 +1,18 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
+#include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
+#include "spark/scene/vfx/ParticleCurves.hpp"
 
 namespace Spark {
 
+class GameObject;
+class Texture2D;
 struct SceneParticleInstance;  // SceneRenderParams.hpp
 
 /**
@@ -35,9 +41,12 @@ public:
     void SetStartEndSize(float start, float end) noexcept;
     void SetStartEndColor(const Vector4& start, const Vector4& end) noexcept;
     void SetGravity(const Vector3& g) noexcept { gravity = g; }
-    /** Average emission direction in world space (normalized internally). */
+    /** Emission direction in local or world space (see SetUseLocalEmission). */
     void SetEmissionDirection(const Vector3& dir) noexcept;
     [[nodiscard]] const Vector3& GetEmissionDirection() const noexcept { return emissionDir; }
+    /** When true, emission direction is rotated by the owner's TransformComponent. */
+    void SetUseLocalEmission(bool local) noexcept { useLocalEmission = local; }
+    [[nodiscard]] bool GetUseLocalEmission() const noexcept { return useLocalEmission; }
     /** Half-angle cone around emission direction (radians). */
     void SetSpreadAngleRadians(float rad) noexcept { spreadRadians = rad; }
     void SetSpeedRange(float minS, float maxS) noexcept;
@@ -53,8 +62,36 @@ public:
     [[nodiscard]] float GetSpeedMin() const noexcept { return speedMin; }
     [[nodiscard]] float GetSpeedMax() const noexcept { return speedMax; }
 
+    [[nodiscard]] const ParticleFloatCurve& GetSizeCurve() const noexcept { return sizeCurve; }
+    [[nodiscard]] const ParticleColorCurve& GetColorCurve() const noexcept { return colorCurve; }
+    void SetSizeCurve(const ParticleFloatCurve& curve) noexcept;
+    void SetColorCurve(const ParticleColorCurve& curve) noexcept;
+
+    void SetEmissionModuleId(const char* moduleId) noexcept;
+    [[nodiscard]] const char* GetEmissionModuleId() const noexcept { return emissionModuleId.CStr(); }
+
+    void SetRingRadius(float radius) noexcept { ringRadius = radius < 0.0F ? 0.0F : radius; }
+    [[nodiscard]] float GetRingRadius() const noexcept { return ringRadius; }
+
+    void SetTexture(SharedPtr<Texture2D> texture) noexcept { particleTexture = MoveTemp(texture); }
+    [[nodiscard]] const SharedPtr<Texture2D>& GetTexture() const noexcept { return particleTexture; }
+    void SetUvRect(const Vector4& rect) noexcept { uvRect = rect; }
+    [[nodiscard]] const Vector4& GetUvRect() const noexcept { return uvRect; }
+
     /** Append living particles for the renderer (respects global cap via caller). */
     void CollectInstances(Array<SceneParticleInstance>& out) const;
+
+    /** Spawn up to count particles immediately at the owner's world origin. */
+    void Burst(GameObject& owner, std::uint32_t count);
+
+    /** Clears all living particles and spawn debt (for pooled reuse). */
+    void ClearParticles() noexcept;
+
+    [[nodiscard]] std::uint32_t GetAliveParticleCount() const noexcept;
+
+    /** Used by built-in emission modules. */
+    void EmitContinuous(const Vector3& origin, const Vector3& worldEmissionDir, float deltaTimeSeconds);
+    void EmitRing(const Vector3& origin, const Vector3& worldEmissionDir, float deltaTimeSeconds);
 
 private:
     struct SimParticle {
@@ -70,7 +107,8 @@ private:
     };
 
     void EnsureSlotCapacity();
-    void SpawnOne(const Vector3& origin);
+    void SpawnOne(const Vector3& origin, const Vector3& worldEmissionDir);
+    [[nodiscard]] Vector3 ResolveEmissionDirection(const GameObject& owner) const;
     [[nodiscard]] float Random01() noexcept;
     [[nodiscard]] Vector3 RandomUnitSphere() noexcept;
 
@@ -84,11 +122,18 @@ private:
     float sizeEnd = 0.02F;
     Vector4 colorStart{0.95F, 0.85F, 0.35F, 1.0F};
     Vector4 colorEnd{0.9F, 0.2F, 0.05F, 0.0F};
+    ParticleFloatCurve sizeCurve{};
+    ParticleColorCurve colorCurve{};
     Vector3 gravity{0.0F, -1.8F, 0.0F};
     Vector3 emissionDir{0.0F, 1.0F, 0.0F};
+    bool useLocalEmission = false;
     float spreadRadians = 0.55F;
     float speedMin = 1.2F;
     float speedMax = 2.8F;
+    Utf8String emissionModuleId{"continuous"};
+    float ringRadius = 0.35F;
+    SharedPtr<Texture2D> particleTexture{};
+    Vector4 uvRect{0.0F, 0.0F, 1.0F, 1.0F};
 
     Array<SimParticle> slots{};
     std::uint32_t rng = 0xC0FFEEu;

@@ -20,7 +20,7 @@ public:
             const VulkanSpvShaderLoader& shaders);
     void DestroyGpuResources(VkDevice device);
 
-    void CreateGraphicsPipeline(VkDevice device, VkRenderPass hdrRenderPass);
+    void CreateGraphicsPipeline(VkDevice device, VkRenderPass hdrRenderPass, VkDescriptorSetLayout sceneDescriptorSetLayout);
     void DestroyGraphicsPipeline(VkDevice device);
 
     void Record(
@@ -28,7 +28,8 @@ public:
             std::uint32_t frameIndex,
             VkExtent2D extent,
             const SceneRenderParams& scene,
-            bool sceneParamsValid) const;
+            bool sceneParamsValid,
+            VkDescriptorSet sceneDescriptorSet = VK_NULL_HANDLE) const;
 
 private:
     struct ParticleUniformGpu {
@@ -53,6 +54,7 @@ private:
     void* vertexMapped = nullptr;
     VkDeviceSize vertexCapacityBytes = 0;
     mutable Array<float> scratchVertices;
+    std::uint32_t descriptorSetLayoutCount = 1U;
 };
 
 }  // namespace Spark
