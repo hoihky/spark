@@ -57,9 +57,14 @@ socket->SetLocalOffset({0.05F, 0.0F, 0.1F});
 
 ```cpp
 auto* events = go->AddComponent<AnimationEventReceiverComponent>();
-events->AddMarker(0, 0.35F, "Footstep");
-// Listen via SignalId::AnimationEvent on a sibling GameComponent
+events->ImportFromSkeleton(*skeleton);  // from .spark-anim-events.json or future glTF extras
+
+auto* melee = go->AddComponent<AnimationMeleeHitComponent>();
+melee->SetFacingObject(characterRoot);
+melee->AddTarget(enemy);
 ```
+
+Sidecar format and export notes: [`docs/BLENDER_GLTF_ANIMATION_EXPORT.md`](../../../BLENDER_GLTF_ANIMATION_EXPORT.md).
 
 See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#animation).
 

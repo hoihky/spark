@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/animation/AnimationClipEvent.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/math/Matrix4.hpp"
@@ -65,6 +66,11 @@ public:
      * Replaces any clips already on this skeleton.
      */
     void AdoptAnimationClipsFrom(const Skeleton& source);
+
+    /** Per-clip authored events (from glTF extras or sidecar). Parallel to clip indices. */
+    [[nodiscard]] const Array<AnimationClipEvent>& GetClipEvents(std::uint32_t clipIndex) const noexcept;
+    void SetClipEvents(std::uint32_t clipIndex, Array<AnimationClipEvent>&& events);
+    void ClearAllClipEvents() noexcept;
 
     /**
      * Blends two clip poses (blendB: 0 = clipA, 1 = clipB) then builds the skin palette.
@@ -138,6 +144,7 @@ private:
     Array<Transform> restLocal;
     Array<AnimationClip> clips;
     Array<Utf8String> clipNames;
+    Array<Array<AnimationClipEvent>> clipEvents;
 };
 
 bool TryLoadSkinnedCharacterFromGltf(

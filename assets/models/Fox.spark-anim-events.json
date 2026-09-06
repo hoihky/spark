@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "clips": [
+    {
+      "name": "Run",
+      "events": [
+        { "time": 0.10, "name": "footstep" },
+        { "time": 0.18, "name": "active_start" },
+        { "time": 0.42, "name": "active_end" }
+      ]
+    }
+  ]
+}

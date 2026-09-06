@@ -250,10 +250,12 @@ TEST(GameplayComponentRoundTripTest, AiAndAnimationRoundTrip) {
 
     Spark::Character3DAnimFsmComponent* fsm = source->AddComponent<Spark::Character3DAnimFsmComponent>();
     fsm->SetLocomotionClips(0, 1, 2);
-    fsm->SetAttackClip(4);
+    fsm->SetCombatClips(4, 5, 6, 7);
     fsm->SetWalkSpeedThreshold(0.5F);
     fsm->SetRunSpeedThreshold(2.8F);
     fsm->SetCrossfadeDuration(0.25F);
+    fsm->SetLocomotionBlendEnabled(true);
+    fsm->SetCombatBlackboardIntSlot(13);
     fsm->SetManualClip(3, Spark::AnimLoopMode::Once);
 
     Spark::AttachmentSocketComponent* socket = source->AddComponent<Spark::AttachmentSocketComponent>();
@@ -285,6 +287,11 @@ TEST(GameplayComponentRoundTripTest, AiAndAnimationRoundTrip) {
     ASSERT_NE(restoredFsm, nullptr);
     EXPECT_EQ(restoredFsm->GetRunClipIndex(), 2U);
     EXPECT_EQ(restoredFsm->GetAttackClipIndex(), 4U);
+    EXPECT_EQ(restoredFsm->GetHurtClipIndex(), 5U);
+    EXPECT_EQ(restoredFsm->GetStaggerClipIndex(), 6U);
+    EXPECT_EQ(restoredFsm->GetDeathClipIndex(), 7U);
+    EXPECT_TRUE(restoredFsm->IsLocomotionBlendEnabled());
+    EXPECT_EQ(restoredFsm->GetCombatBlackboardIntSlot(), 13U);
     EXPECT_TRUE(restoredFsm->IsManualClipActive());
     EXPECT_EQ(restoredFsm->GetManualClipIndex(), 3U);
 

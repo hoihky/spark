@@ -646,9 +646,17 @@ go->AddComponent<CollisionComponent>(0.5F, Vector3::Zero);
 go->AddComponent<Character3DAnimFsmComponent>();
 go->AddComponent<AnimatorComponent>(skeleton, walkClip, 1.0F);
 auto* fsm = go->GetComponent<Character3DAnimFsmComponent>();
-fsm->SetLocomotionInput({0.0F, 0.0F, 1.0F});
+fsm->ConfigureLocomotionFromSkeleton(*skeleton, walkClip);
+fsm->SetLocomotionInput(moving, sprint);
+fsm->SetCombatClips(attackClip, hurtClip, staggerClip, deathClip);
+fsm->SetCombatBlackboardIntSlot(kAiBlackboardIntCharacter3DCombatCommand);
 fsm->RequestAttack();
+fsm->RequestHurt();
+fsm->RequestStagger();
+fsm->RequestDeath();
 ```
+
+Locomotion uses a **1D speed blend tree** (idle / walk / run) by default. Disable with `SetLocomotionBlendEnabled(false)` for discrete clip switches.
 
 ### `AnimationEventReceiverComponent`
 

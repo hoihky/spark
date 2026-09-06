@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "clips": [
+    {
+      "name": "Walk",
+      "events": [
+        { "time": 0.25, "name": "active_start" },
+        { "time": 0.55, "name": "active_end" }
+      ]
+    }
+  ]
+}

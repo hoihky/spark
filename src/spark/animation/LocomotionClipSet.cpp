@@ -48,6 +48,21 @@ LocomotionClipSet ResolveLocomotionClipsFromSkeleton(
         out.attack = static_cast<std::uint32_t>(attackIdx);
     }
 
+    static constexpr const char* kHurtNames[] = {"hurt", "hit", "damage", "pain"};
+    if (const std::int32_t hurtIdx = FindFirstLocomotionClip(skeleton, kHurtNames, 4); hurtIdx >= 0) {
+        out.hurt = static_cast<std::uint32_t>(hurtIdx);
+    }
+
+    static constexpr const char* kStaggerNames[] = {"stagger", "stunned", "knockback"};
+    if (const std::int32_t staggerIdx = FindFirstLocomotionClip(skeleton, kStaggerNames, 3); staggerIdx >= 0) {
+        out.stagger = static_cast<std::uint32_t>(staggerIdx);
+    }
+
+    static constexpr const char* kDeathNames[] = {"death", "die", "dead"};
+    if (const std::int32_t deathIdx = FindFirstLocomotionClip(skeleton, kDeathNames, 3); deathIdx >= 0) {
+        out.death = static_cast<std::uint32_t>(deathIdx);
+    }
+
     return out;
 }
 

@@ -5,6 +5,10 @@
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
+#include "spark/ecs/components/gameplay/DamageableComponent.hpp"
+#include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 
@@ -47,6 +51,10 @@ private:
 
     void SpawnForestTrees(Spark::GameWorld& w);
 
+    void SpawnMeleeTrainingDummies(Spark::GameWorld& w);
+
+    void SetupMeleeCombatComponents(const Spark::SkinnedGltfAsset& asset, bool isFox);
+
     [[nodiscard]] const Spark::SkinnedGltfAsset& CachedAvatarAsset(CharAvatarModel model) const noexcept;
 
     [[nodiscard]] bool IsAvatarAssetReady(CharAvatarModel model) const noexcept;
@@ -69,6 +77,9 @@ private:
     Spark::TransformComponent* characterVisualTr = nullptr;
     Spark::AnimatorComponent* playerAnimator = nullptr;
     Spark::Character3DAnimFsmComponent* charAnimFsm = nullptr;
+    Spark::AnimationEventReceiverComponent* animEventReceiver = nullptr;
+    Spark::AnimationMeleeHitComponent* meleeHit = nullptr;
+    Spark::Array<Spark::GameObject*> meleeTargets{};
     Spark::SkinnedMeshComponent* characterSkinnedMesh = nullptr;
     Spark::MaterialComponent* characterMaterial = nullptr;
     CharAvatarModel activeAvatarModel = CharAvatarModel::Fox;

@@ -5,7 +5,11 @@
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
 
+#include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/gameplay/DamageableComponent.hpp"
+#include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/camera/SpringArm3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
@@ -270,6 +274,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         if (foxAssetReady || cesiumAssetReady) {
             const CharAvatarModel initialModel = foxAssetReady ? CharAvatarModel::Fox : CharAvatarModel::CesiumMan;
             ApplyAvatarModel(initialModel);
+            SpawnMeleeTrainingDummies(w);
         } else {
             useSkinnedAvatar = false;
             rig.characterFacingYawOffset = 0.0F;
@@ -301,7 +306,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         AddPointLight(w, {-14.0F, 9.0F, -8.0F}, {0.45F, 0.65F, 1.0F}, 2.4F, 38.0F);
 
         helpHud.Mount(w, "Character camera");
-        helpHud.SetControlHints("WASD walk · Shift+WASD run · M model · 1/2/3 clips · V FP · F1");
+        helpHud.SetControlHints("WASD walk · Shift sprint · F melee (anim events) · H hurt · M model · V FP · F1");
 
         Spark::GameObject* springArmRig = w.CreateGameObject();
         springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
@@ -350,6 +355,9 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         characterController = nullptr;
         playerAnimator = nullptr;
         charAnimFsm = nullptr;
+        animEventReceiver = nullptr;
+        meleeHit = nullptr;
+        meleeTargets.Clear();
         characterSkinnedMesh = nullptr;
         characterMaterial = nullptr;
         foxAssetReady = false;
@@ -469,6 +477,9 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             if (in.IsKeyPressedThisFrame(GLFW_KEY_F)) {
                 charAnimFsm->RequestAttack();
             }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_H)) {
+                charAnimFsm->RequestHurt();
+            }
         }
         if (characterRootTr != nullptr) {
             characterRootTr->SetTranslation(rig.characterPosition);
@@ -497,22 +508,43 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                 }
                 const char* driveLabel = "auto";
                 if (charAnimFsm != nullptr) {
-                    if (charAnimFsm->IsManualClipActive()) {
+                    if (charAnimFsm->IsDead()) {
+                        driveLabel = "dead";
+                    } else if (charAnimFsm->IsManualClipActive()) {
                         driveLabel = "manual";
                     } else if (moving) {
                         driveLabel = sprint ? "run" : "walk";
                     }
                 }
+                Spark::Utf8String blendHud;
+                if (playerAnimator->IsLocomotionBlending()) {
+                    blendHud = Spark::Utf8String(
+                            std::format(
+                                    " blend {:.0f}%",
+                                    playerAnimator->GetLocomotionBlend01() * 100.0F)
+                                    .c_str());
+                }
+                Spark::Utf8String meleeHud;
+                if (meleeHit != nullptr) {
+                    meleeHud = Spark::Utf8String(
+                            std::format(
+                                    " melee:{} hits:{}",
+                                    meleeHit->IsHitWindowActive() ? "ON" : "off",
+                                    meleeHit->GetTotalHits())
+                                    .c_str());
+                }
                 animHud = Spark::Utf8String(
                         std::format(
-                                " — {}/{} clip {} ({}) {} {} [{}]",
+                                " — {}/{} clip {} ({}) {} {} [{}]{}{}",
                                 playerAnimator->GetClipIndex() + 1,
                                 playerAnimator->GetClipCount(),
                                 playerAnimator->GetClipIndex(),
                                 clipName.CStr(),
                                 loopLabel,
                                 playerAnimator->IsClipFinished() ? "[finished]" : "",
-                                driveLabel)
+                                driveLabel,
+                                blendHud.CStr(),
+                                meleeHud.CStr())
                                 .c_str());
             }
             helpHud.SetDetail(
@@ -935,6 +967,77 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         charAnimFsm->ConfigureLocomotionFromSkeleton(*asset.skeleton, asset.walkClipIndex);
         charAnimFsm->SetWalkSpeedThreshold(0.35F);
         charAnimFsm->SetRunSpeedThreshold(2.5F);
+        if (asset.skeleton) {
+            const char* attackHint = isFox ? "run" : "walk";
+            if (const std::int32_t attackIdx = asset.skeleton->FindClipIndexIfNameContains(attackHint); attackIdx >= 0) {
+                charAnimFsm->SetAttackClip(static_cast<std::uint32_t>(attackIdx));
+            }
+        }
+    }
+
+    SetupMeleeCombatComponents(asset, isFox);
+}
+
+void CharacterCameraDemo::SpawnMeleeTrainingDummies(Spark::GameWorld& w) {
+    if (meleeTargets.GetSize() > 0 || !unitCubeAsset) {
+        return;
+    }
+    const Spark::Vector3 positions[] = {
+            Spark::Vector3{2.2F, 0.0F, -2.0F},
+            Spark::Vector3{-2.2F, 0.0F, -3.5F},
+    };
+    for (std::size_t i = 0; i < 2; ++i) {
+        Spark::GameObject* dummy = w.CreateGameObject();
+        dummy->GetName() = Spark::Utf8String(i == 0 ? "MeleeDummyA" : "MeleeDummyB");
+        Spark::TransformComponent* tr = dummy->AddComponent<Spark::TransformComponent>();
+        tr->SetTranslation(positions[i]);
+        tr->SetUniformScale(1.0F);
+        dummy->AddComponent<Spark::MeshComponent>(
+                unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{0.85F, 1.75F, 0.85F});
+        if (Spark::MaterialComponent* mat = dummy->AddComponent<Spark::MaterialComponent>()) {
+            mat->SetTint(Spark::Vector3(0.82F, 0.28F, 0.24F));
+            mat->SetRoughness(0.62F);
+        }
+        Spark::HealthComponent* hp = dummy->AddComponent<Spark::HealthComponent>(100.0F);
+        dummy->AddComponent<Spark::DamageableComponent>();
+        hp->SetOnDeath([](Spark::GameObject& self, Spark::GameObject* /*instigator*/) {
+            if (Spark::TransformComponent* t = self.GetComponent<Spark::TransformComponent>()) {
+                t->SetUniformScale(0.65F);
+            }
+            if (Spark::MaterialComponent* m = self.GetComponent<Spark::MaterialComponent>()) {
+                m->SetTint(Spark::Vector3(0.25F, 0.25F, 0.28F));
+            }
+        });
+        roots.PushBack(dummy);
+        meleeTargets.PushBack(dummy);
+    }
+    if (meleeHit != nullptr) {
+        meleeHit->ClearTargets();
+        for (std::size_t i = 0; i < meleeTargets.GetSize(); ++i) {
+            meleeHit->AddTarget(meleeTargets[i]);
+        }
+    }
+}
+
+void CharacterCameraDemo::SetupMeleeCombatComponents(const Spark::SkinnedGltfAsset& asset, const bool isFox) {
+    if (characterVisual == nullptr || !asset.skeleton) {
+        return;
+    }
+    if (animEventReceiver == nullptr) {
+        animEventReceiver = characterVisual->AddComponent<Spark::AnimationEventReceiverComponent>();
+    }
+    animEventReceiver->ImportFromSkeleton(*asset.skeleton);
+
+    if (meleeHit == nullptr) {
+        meleeHit = characterVisual->AddComponent<Spark::AnimationMeleeHitComponent>();
+        meleeHit->SetFacingObject(characterRoot);
+        meleeHit->SetOriginLocalOffset({0.0F, 1.1F, 0.15F});
+        meleeHit->SetTraceDistance(isFox ? 2.0F : 2.4F);
+        meleeHit->SetDamagePerHit(34.0F);
+    }
+    meleeHit->ClearTargets();
+    for (std::size_t i = 0; i < meleeTargets.GetSize(); ++i) {
+        meleeHit->AddTarget(meleeTargets[i]);
     }
 }
 

@@ -8,6 +8,7 @@
 
 #include "spark/scripting/SparkInteropTypes.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 /* ClangSharp does not model GCC visibility attributes — strip export macros when generating C#. */
@@ -526,6 +527,14 @@ SPARK_SCRIPT_API void spark_animator_set_clip_index_with_crossfade(
         SparkGameComponent* animator,
         uint32_t clipIndex,
         float crossfadeDurationSec);
+SPARK_SCRIPT_API void spark_animator_set_locomotion_blend(
+        SparkGameComponent* animator,
+        uint32_t clipA,
+        uint32_t clipB,
+        float blend01);
+SPARK_SCRIPT_API void spark_animator_clear_locomotion_blend(SparkGameComponent* animator);
+SPARK_SCRIPT_API int spark_animator_is_locomotion_blending(const SparkGameComponent* animator);
+SPARK_SCRIPT_API float spark_animator_get_locomotion_blend01(const SparkGameComponent* animator);
 SPARK_SCRIPT_API int32_t spark_animator_find_clip_index_by_name(const SparkGameComponent* animator, const char* name);
 SPARK_SCRIPT_API int spark_animator_get_clip_name(
         const SparkGameComponent* animator,
@@ -579,6 +588,15 @@ SPARK_SCRIPT_API void spark_char_3d_fsm_configure_locomotion_from_skeleton(
         const SparkGameComponent* animator,
         uint32_t walkClipFallback);
 SPARK_SCRIPT_API void spark_char_3d_fsm_set_attack_clip(SparkGameComponent* fsm, uint32_t attackClipIndex);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_combat_clips(
+        SparkGameComponent* fsm,
+        uint32_t attackClipIndex,
+        uint32_t hurtClipIndex,
+        uint32_t staggerClipIndex,
+        uint32_t deathClipIndex);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_hurt_clip(SparkGameComponent* fsm, uint32_t hurtClipIndex);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_stagger_clip(SparkGameComponent* fsm, uint32_t staggerClipIndex);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_death_clip(SparkGameComponent* fsm, uint32_t deathClipIndex);
 SPARK_SCRIPT_API void spark_char_3d_fsm_set_walk_speed_threshold(SparkGameComponent* fsm, float metersPerSecond);
 SPARK_SCRIPT_API void spark_char_3d_fsm_set_run_speed_threshold(SparkGameComponent* fsm, float metersPerSecond);
 SPARK_SCRIPT_API void spark_char_3d_fsm_set_crossfade_duration(SparkGameComponent* fsm, float seconds);
@@ -589,7 +607,13 @@ SPARK_SCRIPT_API void spark_char_3d_fsm_set_manual_clip(
         uint32_t clipIndex,
         uint32_t loopMode);
 SPARK_SCRIPT_API void spark_char_3d_fsm_clear_manual_clip(SparkGameComponent* fsm);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_locomotion_blend_enabled(SparkGameComponent* fsm, int enabled);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_combat_blackboard_int_slot(SparkGameComponent* fsm, size_t slotOrMax);
+SPARK_SCRIPT_API void spark_char_3d_fsm_request_hurt(SparkGameComponent* fsm);
 SPARK_SCRIPT_API void spark_char_3d_fsm_request_attack(SparkGameComponent* fsm);
+SPARK_SCRIPT_API void spark_char_3d_fsm_request_stagger(SparkGameComponent* fsm);
+SPARK_SCRIPT_API void spark_char_3d_fsm_request_death(SparkGameComponent* fsm);
+SPARK_SCRIPT_API int spark_char_3d_fsm_is_dead(const SparkGameComponent* fsm);
 
 /* --- Particle emitter (subset) --- */
 SPARK_SCRIPT_API void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, int enabled);

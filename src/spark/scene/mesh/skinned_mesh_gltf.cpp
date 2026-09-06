@@ -9,6 +9,7 @@
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/assets/gltf/GltfAnimationEvents.hpp"
 #include "spark/scene/assets/gltf/GltfDataLoader.hpp"
 #include "spark/scene/assets/gltf/GltfSkinNodeLoader.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -330,6 +331,8 @@ bool TryLoadSkinnedCharacterFromGltf(
             }
         }
     }
+
+    LoadGltfAnimationEvents(data, path, outSkeleton);
 
     cgltf_free(data);
     return true;

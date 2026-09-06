@@ -372,22 +372,27 @@ public:
         if (fsm == nullptr) {
             return false;
         }
-        char buf[256]{};
+        char buf[512]{};
         std::snprintf(
                 buf,
                 sizeof(buf),
-                "v1 %u %u %u %u %.6f %.6f %.6f %u %u %u %u",
+                "v2 %u %u %u %u %u %u %u %.6f %.6f %.6f %u %u %u %u %u %zu",
                 fsm->GetIdleClipIndex(),
                 fsm->GetWalkClipIndex(),
                 fsm->GetRunClipIndex(),
                 fsm->GetAttackClipIndex(),
+                fsm->GetHurtClipIndex(),
+                fsm->GetStaggerClipIndex(),
+                fsm->GetDeathClipIndex(),
                 fsm->GetWalkSpeedThreshold(),
                 fsm->GetRunSpeedThreshold(),
                 fsm->GetCrossfadeDuration(),
                 fsm->IsLocomotionDrivingEnabled() ? 1u : 0u,
                 fsm->IsManualClipActive() ? 1u : 0u,
                 fsm->GetManualClipIndex(),
-                static_cast<unsigned>(fsm->GetManualClipLoopMode()));
+                static_cast<unsigned>(fsm->GetManualClipLoopMode()),
+                fsm->IsLocomotionBlendEnabled() ? 1u : 0u,
+                fsm->GetCombatBlackboardIntSlot());
         out.kind = Utf8String(GetKindTag());
         out.payload = Utf8String(buf);
         return true;
@@ -401,6 +406,66 @@ public:
         if (!ComponentSnapshotPayload::KindTagEquals(record.kind, GetKindTag())) {
             return false;
         }
+
+        Character3DAnimFsmComponent* fsm = owner.GetComponent<Character3DAnimFsmComponent>();
+        if (fsm == nullptr) {
+            fsm = owner.AddComponent<Character3DAnimFsmComponent>();
+        }
+
+        if (std::strncmp(record.payload.CStr(), "v2 ", 3) == 0) {
+            unsigned idle = 0;
+            unsigned walk = 1;
+            unsigned run = 0xFFFFFFFFu;
+            unsigned attack = 0xFFFFFFFFu;
+            unsigned hurt = 0xFFFFFFFFu;
+            unsigned stagger = 0xFFFFFFFFu;
+            unsigned death = 0xFFFFFFFFu;
+            float walkThresh = 0.35F;
+            float runThresh = 2.2F;
+            float crossfade = 0.18F;
+            unsigned locomotionDrive = 1;
+            unsigned manualActive = 0;
+            unsigned manualClip = 0;
+            unsigned manualLoop = 0;
+            unsigned blendEnabled = 1;
+            std::size_t combatBbSlot = static_cast<std::size_t>(-1);
+            if (std::sscanf(
+                        record.payload.CStr() + 3,
+                        "%u %u %u %u %u %u %u %f %f %f %u %u %u %u %u %zu",
+                        &idle,
+                        &walk,
+                        &run,
+                        &attack,
+                        &hurt,
+                        &stagger,
+                        &death,
+                        &walkThresh,
+                        &runThresh,
+                        &crossfade,
+                        &locomotionDrive,
+                        &manualActive,
+                        &manualClip,
+                        &manualLoop,
+                        &blendEnabled,
+                        &combatBbSlot) < 16) {
+                return false;
+            }
+            fsm->SetLocomotionClips(idle, walk, run);
+            fsm->SetCombatClips(attack, hurt, stagger, death);
+            fsm->SetWalkSpeedThreshold(walkThresh);
+            fsm->SetRunSpeedThreshold(runThresh);
+            fsm->SetCrossfadeDuration(crossfade);
+            fsm->SetLocomotionDrivingEnabled(locomotionDrive != 0u);
+            fsm->SetLocomotionBlendEnabled(blendEnabled != 0u);
+            fsm->SetCombatBlackboardIntSlot(combatBbSlot);
+            if (manualActive != 0u) {
+                fsm->SetManualClip(manualClip, static_cast<AnimLoopMode>(manualLoop));
+            } else {
+                fsm->ClearManualClip();
+            }
+            return true;
+        }
+
         if (std::strncmp(record.payload.CStr(), "v1 ", 3) != 0) {
             return false;
         }
@@ -430,10 +495,6 @@ public:
                     &manualClip,
                     &manualLoop) < 11) {
             return false;
-        }
-        Character3DAnimFsmComponent* fsm = owner.GetComponent<Character3DAnimFsmComponent>();
-        if (fsm == nullptr) {
-            fsm = owner.AddComponent<Character3DAnimFsmComponent>();
         }
         fsm->SetLocomotionClips(idle, walk, run);
         fsm->SetAttackClip(attack);

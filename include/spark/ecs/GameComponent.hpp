@@ -57,6 +57,7 @@ enum class ComponentKind : std::uint32_t {
     Billboard,
     AnimationEventReceiver,
     AnimationEventVfx,
+    AnimationMeleeHit,
     AttachmentSocket,
     CameraFollow3D,
     SpringArm3D,

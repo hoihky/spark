@@ -282,10 +282,39 @@ void Skeleton::AdoptAnimationClipsFrom(const Skeleton& source) {
     }
     clips.Clear();
     clipNames.Clear();
+    clipEvents.Clear();
     for (std::size_t i = 0; i < source.clips.GetSize(); ++i) {
         clips.PushBack(source.clips[i]);
         clipNames.PushBack(source.clipNames[i]);
+        clipEvents.PushBack(source.clipEvents[i]);
     }
+}
+
+namespace {
+
+const Array<AnimationClipEvent> kEmptyClipEvents{};
+
+}  // namespace
+
+const Array<AnimationClipEvent>& Skeleton::GetClipEvents(const std::uint32_t clipIndex) const noexcept {
+    if (clipIndex >= clipEvents.GetSize()) {
+        return kEmptyClipEvents;
+    }
+    return clipEvents[clipIndex];
+}
+
+void Skeleton::SetClipEvents(const std::uint32_t clipIndex, Array<AnimationClipEvent>&& events) {
+    if (clipIndex >= clips.GetSize()) {
+        return;
+    }
+    while (clipEvents.GetSize() <= clipIndex) {
+        clipEvents.PushBack(Array<AnimationClipEvent>{});
+    }
+    clipEvents[clipIndex] = MoveTemp(events);
+}
+
+void Skeleton::ClearAllClipEvents() noexcept {
+    clipEvents.Clear();
 }
 
 void Skeleton::ComputeBlendedPalette(

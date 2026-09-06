@@ -36,6 +36,10 @@ public:
     [[nodiscard]] AnimLoopMode GetLoopMode() const noexcept { return loopMode; }
     [[nodiscard]] bool IsClipFinished() const noexcept { return clipFinished; }
     [[nodiscard]] bool IsCrossfading() const noexcept { return crossfade.active; }
+    [[nodiscard]] bool IsLocomotionBlending() const noexcept { return locomotionBlend.active; }
+    [[nodiscard]] std::uint32_t GetLocomotionBlendClipA() const noexcept { return locomotionBlend.clipA; }
+    [[nodiscard]] std::uint32_t GetLocomotionBlendClipB() const noexcept { return locomotionBlend.clipB; }
+    [[nodiscard]] float GetLocomotionBlend01() const noexcept { return locomotionBlend.blend01; }
 
     [[nodiscard]] std::uint32_t GetClipCount() const noexcept;
     [[nodiscard]] const Utf8String& GetClipName(std::uint32_t clipIndex) const;
@@ -51,7 +55,14 @@ public:
     /** Swaps skeleton/clip (e.g. character model switch); resets playback state. */
     void RetargetSkeleton(SharedPtr<Skeleton> newSkeleton, std::uint32_t clipIndex, float newSpeed = 1.0F);
 
-    /** Fills skin joint palette using loop mode, optional crossfade, and evaluated sample times. */
+    /**
+     * Dual-clip locomotion blend (walk↔run). Takes precedence over single-clip playback when active.
+     * Both clips advance with the same playback time. Clears crossfade.
+     */
+    void SetLocomotionBlend(std::uint32_t clipA, std::uint32_t clipB, float blend01);
+    void ClearLocomotionBlend() noexcept;
+
+    /** Fills skin joint palette using loop mode, optional crossfade/blend, and evaluated sample times. */
     void ComputeJointPalette(Matrix4* outPalette, std::uint32_t paletteMax) const;
 
 private:
@@ -73,6 +84,14 @@ private:
         float elapsed = 0.0F;
     };
     CrossfadeState crossfade{};
+
+    struct LocomotionBlendState {
+        bool active = false;
+        std::uint32_t clipA = 0;
+        std::uint32_t clipB = 0;
+        float blend01 = 0.0F;
+    };
+    LocomotionBlendState locomotionBlend{};
 };
 
 }  // namespace Spark

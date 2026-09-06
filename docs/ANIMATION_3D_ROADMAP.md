@@ -35,8 +35,8 @@ Copy the **Issue body** block under each task when filing issues (or use the bul
 | Walk clip heuristic | Done — name contains `"walk"` |
 | Bind-up / facing yaw helpers | Done — `SkinnedGltfAsset` |
 | Loop modes / crossfade / clip API (M1) | Done — `AnimLoopMode`, `SetClipIndexWithCrossfade`, C/C# bindings |
-| 3D animation state machine (M2) | Partial — `Character3DAnimFsmComponent` (locomotion + attack) |
-| Clip blending / crossfade | Done (M1 two-clip crossfade); blend tree (M3) not started |
+| 3D animation state machine (M2) | Partial — combat overlays + blackboard; death/stagger |
+| Clip blending / crossfade | Crossfade done (M1); **1D speed blend tree wired to FSM** (M3 partial) |
 | Animation events / root motion / IK | **Not started** |
 | C# / C API clip control | Done (M1) — loop mode, finished, crossfade, clip names |
 
@@ -144,14 +144,14 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| AN3D-M4-01 | **Event schema:** clip name + time + event name (+ optional float/int payload) — JSON sidecar or glTF extras | P0 | [ ] |
-| AN3D-M4-02 | **Runtime:** fire `SignalId::AnimationEvent` (or dedicated callback) when playback crosses event time (once per crossing) | P0 | [ ] |
+| AN3D-M4-01 | **Event schema:** clip name + time + event name (+ optional float/int payload) — JSON sidecar or glTF extras | P0 | [x] |
+| AN3D-M4-02 | **Runtime:** fire `SignalId::AnimationEvent` (or dedicated callback) when playback crosses event time (once per crossing) | P0 | [x] |
 | AN3D-M4-03 | **Editor/export note:** document Blender → glTF event naming convention | P1 | [ ] |
 | AN3D-M4-04 | **Root motion extraction:** per-frame delta from chosen root/hips joint in clip space | P1 | [ ] |
 | AN3D-M4-05 | **`RootMotionComponent`:** apply delta to owner transform or motor; `inPlace` flag disables translation | P1 | [ ] |
 | AN3D-M4-06 | **Attachment component:** bind child `GameObject` to joint index/name; update local/world each frame | P1 | [ ] |
-| AN3D-M4-07 | **Hit windows:** sample doc + demo sphere/capsule enabled between event `active_start` / `active_end` | P1 | [ ] |
-| AN3D-M4-08 | **Combat demo slice:** minimal attack clip + event-driven hit trace (ties to OPEN_WORLD G1) | P2 | [ ] |
+| AN3D-M4-07 | **Hit windows:** sample doc + demo sphere/capsule enabled between event `active_start` / `active_end` | P1 | [x] |
+| AN3D-M4-08 | **Combat demo slice:** minimal attack clip + event-driven hit trace (ties to OPEN_WORLD G1) | P2 | [x] |
 | AN3D-M4-09 | **C# events:** subscribe from gameplay module | P1 | [ ] |
 
 ---

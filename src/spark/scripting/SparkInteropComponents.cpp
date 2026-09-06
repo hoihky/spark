@@ -1072,6 +1072,34 @@ void spark_animator_set_clip_index_with_crossfade(
     }
 }
 
+void spark_animator_set_locomotion_blend(
+        SparkGameComponent* animator,
+        const std::uint32_t clipA,
+        const std::uint32_t clipB,
+        const float blend01) {
+    auto* anim = AsComponent<Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    if (anim != nullptr) {
+        anim->SetLocomotionBlend(clipA, clipB, blend01);
+    }
+}
+
+void spark_animator_clear_locomotion_blend(SparkGameComponent* animator) {
+    auto* anim = AsComponent<Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    if (anim != nullptr) {
+        anim->ClearLocomotionBlend();
+    }
+}
+
+int spark_animator_is_locomotion_blending(const SparkGameComponent* animator) {
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    return (anim != nullptr && anim->IsLocomotionBlending()) ? 1 : 0;
+}
+
+float spark_animator_get_locomotion_blend01(const SparkGameComponent* animator) {
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    return anim != nullptr ? anim->GetLocomotionBlend01() : 0.0F;
+}
+
 std::int32_t spark_animator_find_clip_index_by_name(const SparkGameComponent* animator, const char* name) {
     const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
     return anim != nullptr ? anim->FindClipIndexByName(name) : -1;
@@ -1259,6 +1287,43 @@ void spark_char_3d_fsm_set_attack_clip(SparkGameComponent* fsm, const std::uint3
     }
 }
 
+void spark_char_3d_fsm_set_combat_clips(
+        SparkGameComponent* fsm,
+        const std::uint32_t attackClipIndex,
+        const std::uint32_t hurtClipIndex,
+        const std::uint32_t staggerClipIndex,
+        const std::uint32_t deathClipIndex) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetCombatClips(attackClipIndex, hurtClipIndex, staggerClipIndex, deathClipIndex);
+    }
+}
+
+void spark_char_3d_fsm_set_hurt_clip(SparkGameComponent* fsm, const std::uint32_t hurtClipIndex) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetHurtClip(hurtClipIndex);
+    }
+}
+
+void spark_char_3d_fsm_set_stagger_clip(SparkGameComponent* fsm, const std::uint32_t staggerClipIndex) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetStaggerClip(staggerClipIndex);
+    }
+}
+
+void spark_char_3d_fsm_set_death_clip(SparkGameComponent* fsm, const std::uint32_t deathClipIndex) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetDeathClip(deathClipIndex);
+    }
+}
+
 void spark_char_3d_fsm_set_walk_speed_threshold(SparkGameComponent* fsm, const float metersPerSecond) {
     auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
             fsm, Spark::ComponentKind::Character3DAnimFsm);
@@ -1321,12 +1386,58 @@ void spark_char_3d_fsm_clear_manual_clip(SparkGameComponent* fsm) {
     }
 }
 
+void spark_char_3d_fsm_set_locomotion_blend_enabled(SparkGameComponent* fsm, const int enabled) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetLocomotionBlendEnabled(enabled != 0);
+    }
+}
+
+void spark_char_3d_fsm_set_combat_blackboard_int_slot(SparkGameComponent* fsm, const std::size_t slotOrMax) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetCombatBlackboardIntSlot(slotOrMax);
+    }
+}
+
+void spark_char_3d_fsm_request_hurt(SparkGameComponent* fsm) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->RequestHurt();
+    }
+}
+
 void spark_char_3d_fsm_request_attack(SparkGameComponent* fsm) {
     auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
             fsm, Spark::ComponentKind::Character3DAnimFsm);
     if (driver != nullptr) {
         driver->RequestAttack();
     }
+}
+
+void spark_char_3d_fsm_request_stagger(SparkGameComponent* fsm) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->RequestStagger();
+    }
+}
+
+void spark_char_3d_fsm_request_death(SparkGameComponent* fsm) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->RequestDeath();
+    }
+}
+
+int spark_char_3d_fsm_is_dead(const SparkGameComponent* fsm) {
+    const auto* driver = AsComponent<const Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    return (driver != nullptr && driver->IsDead()) ? 1 : 0;
 }
 
 void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, const int enabled) {

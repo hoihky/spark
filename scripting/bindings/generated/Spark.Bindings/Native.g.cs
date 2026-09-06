@@ -718,6 +718,18 @@ namespace Spark.Bindings
         public static extern void spark_animator_set_clip_index_with_crossfade(SparkGameComponent* animator, uint clipIndex, float crossfadeDurationSec);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_animator_set_locomotion_blend(SparkGameComponent* animator, uint clipA, uint clipB, float blend01);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_animator_clear_locomotion_blend(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_animator_is_locomotion_blending(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float spark_animator_get_locomotion_blend01(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int spark_animator_find_clip_index_by_name( SparkGameComponent* animator, sbyte* name);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -774,6 +786,23 @@ namespace Spark.Bindings
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_char_3d_fsm_set_attack_clip(SparkGameComponent* fsm, uint attackClipIndex);
 
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void spark_char_3d_fsm_set_combat_clips(
+            SparkGameComponent* fsm,
+            uint attackClipIndex,
+            uint hurtClipIndex,
+            uint staggerClipIndex,
+            uint deathClipIndex);
+
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void spark_char_3d_fsm_set_hurt_clip(SparkGameComponent* fsm, uint hurtClipIndex);
+
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void spark_char_3d_fsm_set_stagger_clip(SparkGameComponent* fsm, uint staggerClipIndex);
+
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void spark_char_3d_fsm_set_death_clip(SparkGameComponent* fsm, uint deathClipIndex);
+
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_char_3d_fsm_set_walk_speed_threshold(SparkGameComponent* fsm, float metersPerSecond);
 
@@ -796,7 +825,25 @@ namespace Spark.Bindings
         public static extern void spark_char_3d_fsm_clear_manual_clip(SparkGameComponent* fsm);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_char_3d_fsm_set_locomotion_blend_enabled(SparkGameComponent* fsm, int enabled);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_char_3d_fsm_set_combat_blackboard_int_slot(SparkGameComponent* fsm, nuint slotOrMax);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_char_3d_fsm_request_hurt(SparkGameComponent* fsm);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_char_3d_fsm_request_attack(SparkGameComponent* fsm);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_char_3d_fsm_request_stagger(SparkGameComponent* fsm);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_char_3d_fsm_request_death(SparkGameComponent* fsm);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_char_3d_fsm_is_dead(SparkGameComponent* fsm);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, int enabled);

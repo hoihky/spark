@@ -171,6 +171,44 @@ public sealed class AnimatorComponent
         }
     }
 
+    public void SetLocomotionBlend(uint clipA, uint clipB, float blend01)
+    {
+        unsafe
+        {
+            Native.spark_animator_set_locomotion_blend(InteropPtr.Component(_handle), clipA, clipB, blend01);
+        }
+    }
+
+    public void ClearLocomotionBlend()
+    {
+        unsafe
+        {
+            Native.spark_animator_clear_locomotion_blend(InteropPtr.Component(_handle));
+        }
+    }
+
+    public bool IsLocomotionBlending
+    {
+        get
+        {
+            unsafe
+            {
+                return Native.spark_animator_is_locomotion_blending(InteropPtr.Component(_handle)) != 0;
+            }
+        }
+    }
+
+    public float LocomotionBlend01
+    {
+        get
+        {
+            unsafe
+            {
+                return Native.spark_animator_get_locomotion_blend01(InteropPtr.Component(_handle));
+            }
+        }
+    }
+
     public int FindClipIndexByName(string name)
     {
         unsafe
@@ -538,6 +576,39 @@ public sealed class Character3DAnimFsmComponent
         }
     }
 
+    public void SetCombatClips(uint attackClipIndex, uint hurtClipIndex, uint staggerClipIndex = uint.MaxValue, uint deathClipIndex = uint.MaxValue)
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_set_combat_clips(
+                InteropPtr.Component(_handle), attackClipIndex, hurtClipIndex, staggerClipIndex, deathClipIndex);
+        }
+    }
+
+    public void SetHurtClip(uint hurtClipIndex)
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_set_hurt_clip(InteropPtr.Component(_handle), hurtClipIndex);
+        }
+    }
+
+    public void SetStaggerClip(uint staggerClipIndex)
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_set_stagger_clip(InteropPtr.Component(_handle), staggerClipIndex);
+        }
+    }
+
+    public void SetDeathClip(uint deathClipIndex)
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_set_death_clip(InteropPtr.Component(_handle), deathClipIndex);
+        }
+    }
+
     public void SetWalkSpeedThreshold(float metersPerSecond)
     {
         unsafe
@@ -595,11 +666,62 @@ public sealed class Character3DAnimFsmComponent
         }
     }
 
+    public void SetLocomotionBlendEnabled(bool enabled)
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_set_locomotion_blend_enabled(InteropPtr.Component(_handle), enabled ? 1 : 0);
+        }
+    }
+
+    public void SetCombatBlackboardIntSlot(nuint slotOrMax)
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_set_combat_blackboard_int_slot(InteropPtr.Component(_handle), slotOrMax);
+        }
+    }
+
+    public void RequestHurt()
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_request_hurt(InteropPtr.Component(_handle));
+        }
+    }
+
     public void RequestAttack()
     {
         unsafe
         {
             Native.spark_char_3d_fsm_request_attack(InteropPtr.Component(_handle));
+        }
+    }
+
+    public void RequestStagger()
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_request_stagger(InteropPtr.Component(_handle));
+        }
+    }
+
+    public void RequestDeath()
+    {
+        unsafe
+        {
+            Native.spark_char_3d_fsm_request_death(InteropPtr.Component(_handle));
+        }
+    }
+
+    public bool IsDead
+    {
+        get
+        {
+            unsafe
+            {
+                return Native.spark_char_3d_fsm_is_dead(InteropPtr.Component(_handle)) != 0;
+            }
         }
     }
 }

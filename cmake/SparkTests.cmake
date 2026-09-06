@@ -37,6 +37,8 @@ function(spark_add_physics_tests)
             tests/scene/VfxCompositeP3Test.cpp
             tests/scene/VfxParticleModuleP4Test.cpp
             tests/scene/VfxIntegrationP5Test.cpp
+            tests/animation/AnimBlend1DTest.cpp
+            tests/scene/GltfAnimationEventsTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

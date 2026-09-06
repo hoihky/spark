@@ -9,12 +9,15 @@ class Skeleton;
 /** Sentinel clip index — pass to <c>SetAttackClip</c> / locomotion run slot to disable that state. */
 constexpr std::uint32_t kInvalidAnimClipIndex = 0xFFFFFFFFu;
 
-/** Resolved idle / walk / run / attack clip indices from a <c>Skeleton</c> clip name table. */
+/** Resolved locomotion and combat clip indices from a <c>Skeleton</c> clip name table. */
 struct LocomotionClipSet {
     std::uint32_t idle = 0;
     std::uint32_t walk = 0;
     std::uint32_t run = kInvalidAnimClipIndex;
     std::uint32_t attack = kInvalidAnimClipIndex;
+    std::uint32_t hurt = kInvalidAnimClipIndex;
+    std::uint32_t stagger = kInvalidAnimClipIndex;
+    std::uint32_t death = kInvalidAnimClipIndex;
 };
 
 /**

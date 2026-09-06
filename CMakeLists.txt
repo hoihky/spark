@@ -657,6 +657,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/rendering/SkinnedMeshComponent.cpp
         src/spark/ecs/components/animation/AnimationEventReceiverComponent.cpp
         src/spark/ecs/components/animation/AnimationEventVfxComponent.cpp
+        src/spark/ecs/components/animation/AnimationMeleeHitComponent.cpp
         src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
         src/spark/ecs/components/animation/AnimatorComponent.cpp
         src/spark/ecs/components/physics/CollisionComponent.cpp
@@ -667,6 +668,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/LocomotionClipSet.cpp
+        src/spark/animation/AnimBlend1D.cpp
         src/spark/scene/camera/FlyCamera.cpp
         src/spark/scene/camera/Camera2D.cpp
         src/spark/scene/camera/Camera.cpp
@@ -693,6 +695,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/assets/gltf/GltfMeshoptBuffers.cpp
         src/spark/scene/assets/gltf/GltfDataLoader.cpp
         src/spark/scene/assets/gltf/GltfSkinnedMeshBuilder.cpp
+        src/spark/scene/assets/gltf/GltfAnimationEvents.cpp
         src/spark/scene/assets/gltf/GltfSkinNodeLoader.cpp
         src/spark/scene/assets/gltf/GltfNodeTransforms.cpp
         src/spark/scene/assets/gltf/GltfRigidLoader.cpp

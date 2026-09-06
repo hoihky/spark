@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/core/Array.hpp"
+#include "spark/animation/Skeleton.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
 
@@ -32,6 +32,8 @@ public:
 
     void ClearMarkers() noexcept { markers.Clear(); firedMask.Clear(); }
     void AddMarker(std::uint32_t clipIndex, float normalizedTime, const char* eventName);
+    /** Replaces markers with absolute-time events from <c>skeleton</c>, converted to normalized times. */
+    void ImportFromSkeleton(const Skeleton& skeleton);
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
