@@ -71,6 +71,7 @@
 // Animation
 #include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
+#include "spark/ecs/components/animation/RootMotionComponent.hpp"
 #include "spark/ecs/components/animation/AnimationEventVfxComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"

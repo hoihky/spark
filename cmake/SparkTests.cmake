@@ -38,6 +38,8 @@ function(spark_add_physics_tests)
             tests/scene/VfxParticleModuleP4Test.cpp
             tests/scene/VfxIntegrationP5Test.cpp
             tests/animation/AnimBlend1DTest.cpp
+            tests/animation/RootMotionSamplerTest.cpp
+            tests/animation/SkeletonPaletteBlendTest.cpp
             tests/scene/GltfAnimationEventsTest.cpp
     )
 

@@ -41,6 +41,13 @@ namespace Spark.Bindings
         public float w;
     }
 
+    public unsafe partial struct SparkAnimationEventPayload
+    {
+        public sbyte* eventName;
+        public uint clipIndex;
+        public float timeSeconds;
+    }
+
     public unsafe partial struct SparkMatrix4
     {
         public fixed float m[16];
@@ -730,6 +737,18 @@ namespace Spark.Bindings
         public static extern float spark_animator_get_locomotion_blend01(SparkGameComponent* animator);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern uint spark_animator_get_locomotion_blend_clip_a(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern uint spark_animator_get_locomotion_blend_clip_b(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_animator_is_crossfading(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern float spark_animator_get_crossfade_blend01(SparkGameComponent* animator);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int spark_animator_find_clip_index_by_name( SparkGameComponent* animator, sbyte* name);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -844,6 +863,61 @@ namespace Spark.Bindings
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int spark_char_3d_fsm_is_dead(SparkGameComponent* fsm);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_char_3d_fsm_set_locomotion_analog_speed(SparkGameComponent* fsm, float speedMetersPerSecond);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_animation_event_receiver(SparkGameObject* object);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_anim_event_receiver_clear_markers(SparkGameComponent* receiver);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_anim_event_receiver_import_from_skeleton(
+            SparkGameComponent* receiver,
+            SparkGameComponent* animator);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public unsafe delegate void SparkAnimationEventCallbackFn(
+            void* userData,
+            SparkGameObject* owner,
+            SparkAnimationEventPayload* payload);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_anim_event_receiver_set_callback(
+            SparkGameComponent* receiver,
+            SparkAnimationEventCallbackFn callback,
+            void* userData);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameComponent* spark_object_add_attachment_socket(SparkGameObject* object);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_attachment_socket_set_source_object(
+            SparkGameComponent* socket,
+            SparkGameObject* sourceObject);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_attachment_socket_set_attached_object(
+            SparkGameComponent* socket,
+            SparkGameObject* attachedObject);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_attachment_socket_set_joint_index(SparkGameComponent* socket, uint jointIndex);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_attachment_socket_set_joint_by_name_pattern(
+            SparkGameComponent* socket,
+            sbyte* substring);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_attachment_socket_set_local_offset(
+            SparkGameComponent* socket,
+            SparkVector3* offset);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_attachment_socket_set_enabled(SparkGameComponent* socket, int enabled);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, int enabled);

@@ -114,6 +114,11 @@ void Character3DAnimFsmComponent::SetLocomotionInput(const bool moving, const bo
     inputSprint = sprint && moving;
 }
 
+void Character3DAnimFsmComponent::SetLocomotionAnalogSpeed(const float speedMetersPerSecond) noexcept {
+    hasLocomotionAnalog = true;
+    locomotionAnalogSpeed = (speedMetersPerSecond > 0.0F) ? speedMetersPerSecond : 0.0F;
+}
+
 bool Character3DAnimFsmComponent::ClipValid_(const AnimatorComponent& anim, const std::uint32_t clip) const noexcept {
     return clip < anim.GetClipCount();
 }
@@ -444,6 +449,12 @@ void Character3DAnimFsmComponent::OnUpdate(
     }
 
     const bool runOk = ClipValid_(*anim, runClip);
+    if (hasLocomotionAnalog) {
+        ApplyLocomotionBlend_(*anim, locomotionAnalogSpeed);
+        hasLocomotionAnalog = false;
+        return;
+    }
+
     bool moving = false;
     bool wantSprint = false;
     const bool usedLocomotionInput = hasLocomotionInput;

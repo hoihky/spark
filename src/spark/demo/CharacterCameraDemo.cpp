@@ -7,12 +7,15 @@
 
 #include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
+#include "spark/ecs/components/animation/RootMotionComponent.hpp"
+#include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/camera/SpringArm3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
+#include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
@@ -306,7 +309,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         AddPointLight(w, {-14.0F, 9.0F, -8.0F}, {0.45F, 0.65F, 1.0F}, 2.4F, 38.0F);
 
         helpHud.Mount(w, "Character camera");
-        helpHud.SetControlHints("WASD walk · Shift sprint · F melee (anim events) · H hurt · M model · V FP · F1");
+        helpHud.SetControlHints("WASD walk · Shift sprint · F melee · H hurt · R root motion · M model · V FP · F1");
 
         Spark::GameObject* springArmRig = w.CreateGameObject();
         springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
@@ -357,6 +360,7 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         charAnimFsm = nullptr;
         animEventReceiver = nullptr;
         meleeHit = nullptr;
+        rootMotion = nullptr;
         meleeTargets.Clear();
         characterSkinnedMesh = nullptr;
         characterMaterial = nullptr;
@@ -437,7 +441,35 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             if (moving) {
                 charAnimFsm->ClearManualClip();
             }
-            charAnimFsm->SetLocomotionInput(moving, sprint);
+            float moveX = 0.0F;
+            float moveZ = 0.0F;
+            if (in.IsKeyDown(GLFW_KEY_W)) {
+                moveZ += 1.0F;
+            }
+            if (in.IsKeyDown(GLFW_KEY_S)) {
+                moveZ -= 1.0F;
+            }
+            if (in.IsKeyDown(GLFW_KEY_D)) {
+                moveX += 1.0F;
+            }
+            if (in.IsKeyDown(GLFW_KEY_A)) {
+                moveX -= 1.0F;
+            }
+            const float mag = std::sqrt(moveX * moveX + moveZ * moveZ);
+            float speedParam = 0.0F;
+            if (mag > 1.0e-3F) {
+                const float normalized = std::min(mag, 1.0F);
+                const float walk = charAnimFsm->GetWalkSpeedThreshold();
+                const float run = charAnimFsm->GetRunSpeedThreshold();
+                if (sprint) {
+                    speedParam = run;
+                } else {
+                    // Keyboard axes are digital (mag=1 for W alone); keep walk unless sprinting.
+                    speedParam = walk * normalized;
+                }
+            }
+            charAnimFsm->SetLocomotionBlendEnabled(true);
+            charAnimFsm->SetLocomotionAnalogSpeed(speedParam);
         }
         if (useSkinnedAvatar && playerAnimator != nullptr && charAnimFsm != nullptr) {
             const std::uint32_t clipCount = playerAnimator->GetClipCount();
@@ -480,6 +512,9 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             if (in.IsKeyPressedThisFrame(GLFW_KEY_H)) {
                 charAnimFsm->RequestHurt();
             }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_R) && rootMotion != nullptr) {
+                rootMotion->SetInPlace(!rootMotion->IsInPlace());
+            }
         }
         if (characterRootTr != nullptr) {
             characterRootTr->SetTranslation(rig.characterPosition);
@@ -514,14 +549,30 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                         driveLabel = "manual";
                     } else if (moving) {
                         driveLabel = sprint ? "run" : "walk";
+                    } else {
+                        driveLabel = "idle";
                     }
                 }
                 Spark::Utf8String blendHud;
                 if (playerAnimator->IsLocomotionBlending()) {
+                    const Spark::Utf8String& clipAName =
+                            playerAnimator->GetClipName(playerAnimator->GetLocomotionBlendClipA());
+                    const Spark::Utf8String& clipBName =
+                            playerAnimator->GetClipName(playerAnimator->GetLocomotionBlendClipB());
                     blendHud = Spark::Utf8String(
                             std::format(
-                                    " blend {:.0f}%",
+                                    " blend {}↔{} {:.0f}%",
+                                    clipAName.CStr(),
+                                    clipBName.CStr(),
                                     playerAnimator->GetLocomotionBlend01() * 100.0F)
+                                    .c_str());
+                }
+                Spark::Utf8String crossfadeHud;
+                if (playerAnimator->IsCrossfading()) {
+                    crossfadeHud = Spark::Utf8String(
+                            std::format(
+                                    " xf {:.0f}%",
+                                    playerAnimator->GetCrossfadeBlend01() * 100.0F)
                                     .c_str());
                 }
                 Spark::Utf8String meleeHud;
@@ -533,9 +584,17 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                                     meleeHit->GetTotalHits())
                                     .c_str());
                 }
+                Spark::Utf8String rootMotionHud;
+                if (rootMotion != nullptr) {
+                    rootMotionHud = Spark::Utf8String(
+                            std::format(
+                                    " root:{}",
+                                    rootMotion->IsInPlace() ? "off" : "on")
+                                    .c_str());
+                }
                 animHud = Spark::Utf8String(
                         std::format(
-                                " — {}/{} clip {} ({}) {} {} [{}]{}{}",
+                                " — {}/{} clip {} ({}) {} {} [{}]{}{}{}{}",
                                 playerAnimator->GetClipIndex() + 1,
                                 playerAnimator->GetClipCount(),
                                 playerAnimator->GetClipIndex(),
@@ -544,7 +603,9 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                                 playerAnimator->IsClipFinished() ? "[finished]" : "",
                                 driveLabel,
                                 blendHud.CStr(),
-                                meleeHud.CStr())
+                                crossfadeHud.CStr(),
+                                meleeHud.CStr(),
+                                rootMotionHud.CStr())
                                 .c_str());
             }
             helpHud.SetDetail(
@@ -967,6 +1028,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         charAnimFsm->ConfigureLocomotionFromSkeleton(*asset.skeleton, asset.walkClipIndex);
         charAnimFsm->SetWalkSpeedThreshold(0.35F);
         charAnimFsm->SetRunSpeedThreshold(2.5F);
+        charAnimFsm->SetLocomotionBlendEnabled(true);
         if (asset.skeleton) {
             const char* attackHint = isFox ? "run" : "walk";
             if (const std::int32_t attackIdx = asset.skeleton->FindClipIndexIfNameContains(attackHint); attackIdx >= 0) {
@@ -976,6 +1038,57 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
     }
 
     SetupMeleeCombatComponents(asset, isFox);
+    SetupRootMotionComponent();
+    SetupAttackSocketMarker();
+}
+
+void CharacterCameraDemo::SetupAttackSocketMarker() {
+    if (characterVisual == nullptr || !unitCubeAsset) {
+        return;
+    }
+    if (attackSocketMarker == nullptr) {
+        attackSocketMarker = characterVisual->GetWorld().CreateGameObject();
+        attackSocketMarker->GetName() = Spark::Utf8String("AttackSocketMarker");
+        attackSocketMarker->SetParent(characterVisual);
+        Spark::TransformComponent* markerTr = attackSocketMarker->AddComponent<Spark::TransformComponent>();
+        markerTr->SetUniformScale(0.12F);
+        attackSocketMarker->AddComponent<Spark::MeshComponent>(
+                unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{1.0F, 1.0F, 1.0F});
+        if (Spark::MaterialComponent* markerMat = attackSocketMarker->AddComponent<Spark::MaterialComponent>()) {
+            markerMat->SetTint(Spark::Vector3{1.0F, 0.82F, 0.18F});
+            markerMat->SetEmissive(Spark::Vector3{1.0F, 0.7F, 0.12F}, 2.2F);
+        }
+        roots.PushBack(attackSocketMarker);
+    }
+    if (attackSocket == nullptr) {
+        attackSocket = characterVisual->AddComponent<Spark::AttachmentSocketComponent>();
+    }
+    attackSocket->SetSourceObject(characterVisual);
+    attackSocket->SetAttachedObject(attackSocketMarker);
+    if (!attackSocket->SetJointByNamePattern("head")) {
+        attackSocket->SetJointByNamePattern("hip");
+    }
+    attackSocket->SetLocalOffset({0.0F, 0.12F, 0.42F});
+    attackSocket->SetEnabled(true);
+}
+
+void CharacterCameraDemo::SetupRootMotionComponent() {
+    if (characterRoot == nullptr || characterVisual == nullptr) {
+        return;
+    }
+    if (rootMotion == nullptr) {
+        rootMotion = characterRoot->AddComponent<Spark::RootMotionComponent>();
+    }
+    rootMotion->SetAnimatorObject(characterVisual);
+    rootMotion->SetApplyTarget(characterRoot);
+    rootMotion->SetFacingObject(characterRoot);
+    rootMotion->UsePatternMotionJointResolver();
+    rootMotion->SetTranslationMask(Spark::RootMotionTranslationMask::XZ);
+    rootMotion->SetInPlace(true);
+    rootMotion->SetEnabled(true);
+    if (characterVisualTr != nullptr) {
+        rootMotion->SetSkeletonSpaceScale(characterVisualTr->GetLocalTransform().scale.x);
+    }
 }
 
 void CharacterCameraDemo::SpawnMeleeTrainingDummies(Spark::GameWorld& w) {

@@ -535,6 +535,10 @@ SPARK_SCRIPT_API void spark_animator_set_locomotion_blend(
 SPARK_SCRIPT_API void spark_animator_clear_locomotion_blend(SparkGameComponent* animator);
 SPARK_SCRIPT_API int spark_animator_is_locomotion_blending(const SparkGameComponent* animator);
 SPARK_SCRIPT_API float spark_animator_get_locomotion_blend01(const SparkGameComponent* animator);
+SPARK_SCRIPT_API uint32_t spark_animator_get_locomotion_blend_clip_a(const SparkGameComponent* animator);
+SPARK_SCRIPT_API uint32_t spark_animator_get_locomotion_blend_clip_b(const SparkGameComponent* animator);
+SPARK_SCRIPT_API int spark_animator_is_crossfading(const SparkGameComponent* animator);
+SPARK_SCRIPT_API float spark_animator_get_crossfade_blend01(const SparkGameComponent* animator);
 SPARK_SCRIPT_API int32_t spark_animator_find_clip_index_by_name(const SparkGameComponent* animator, const char* name);
 SPARK_SCRIPT_API int spark_animator_get_clip_name(
         const SparkGameComponent* animator,
@@ -614,6 +618,46 @@ SPARK_SCRIPT_API void spark_char_3d_fsm_request_attack(SparkGameComponent* fsm);
 SPARK_SCRIPT_API void spark_char_3d_fsm_request_stagger(SparkGameComponent* fsm);
 SPARK_SCRIPT_API void spark_char_3d_fsm_request_death(SparkGameComponent* fsm);
 SPARK_SCRIPT_API int spark_char_3d_fsm_is_dead(const SparkGameComponent* fsm);
+SPARK_SCRIPT_API void spark_char_3d_fsm_set_locomotion_analog_speed(SparkGameComponent* fsm, float speedMetersPerSecond);
+
+/* --- Animation events (3D) --- */
+typedef struct SparkAnimationEventPayload {
+    const char* eventName;
+    uint32_t clipIndex;
+    float timeSeconds;
+} SparkAnimationEventPayload;
+
+typedef void (*SparkAnimationEventCallbackFn)(
+        void* userData,
+        SparkGameObject* owner,
+        const SparkAnimationEventPayload* payload);
+
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_animation_event_receiver(SparkGameObject* object);
+SPARK_SCRIPT_API void spark_anim_event_receiver_clear_markers(SparkGameComponent* receiver);
+SPARK_SCRIPT_API void spark_anim_event_receiver_import_from_skeleton(
+        SparkGameComponent* receiver,
+        const SparkGameComponent* animator);
+SPARK_SCRIPT_API void spark_anim_event_receiver_set_callback(
+        SparkGameComponent* receiver,
+        SparkAnimationEventCallbackFn callback,
+        void* userData);
+
+/* --- Attachment socket (3D) --- */
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_attachment_socket(SparkGameObject* object);
+SPARK_SCRIPT_API void spark_attachment_socket_set_source_object(
+        SparkGameComponent* socket,
+        SparkGameObject* sourceObject);
+SPARK_SCRIPT_API void spark_attachment_socket_set_attached_object(
+        SparkGameComponent* socket,
+        SparkGameObject* attachedObject);
+SPARK_SCRIPT_API void spark_attachment_socket_set_joint_index(SparkGameComponent* socket, uint32_t jointIndex);
+SPARK_SCRIPT_API int spark_attachment_socket_set_joint_by_name_pattern(
+        SparkGameComponent* socket,
+        const char* substring);
+SPARK_SCRIPT_API void spark_attachment_socket_set_local_offset(
+        SparkGameComponent* socket,
+        const SparkVector3* offset);
+SPARK_SCRIPT_API void spark_attachment_socket_set_enabled(SparkGameComponent* socket, int enabled);
 
 /* --- Particle emitter (subset) --- */
 SPARK_SCRIPT_API void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, int enabled);

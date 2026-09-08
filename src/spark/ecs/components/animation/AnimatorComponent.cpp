@@ -73,9 +73,14 @@ void AnimatorComponent::SetClipIndexWithCrossfade(const std::uint32_t c, const f
         return;
     }
     crossfade.active = true;
-    crossfade.fromClip = clipIndex < skeleton->GetClipCount() ? clipIndex : 0;
+    crossfade.fromLocomotionBlend = locomotionBlend.active;
     if (locomotionBlend.active) {
+        crossfade.fromBlendClipA = locomotionBlend.clipA;
+        crossfade.fromBlendClipB = locomotionBlend.clipB;
+        crossfade.fromBlend01 = locomotionBlend.blend01;
         crossfade.fromClip = locomotionBlend.blend01 >= 0.5F ? locomotionBlend.clipB : locomotionBlend.clipA;
+    } else {
+        crossfade.fromClip = clipIndex < skeleton->GetClipCount() ? clipIndex : 0;
     }
     crossfade.fromTime = timeSeconds;
     crossfade.duration = (crossfadeDurationSec > 1.0e-4F) ? crossfadeDurationSec : 0.2F;
@@ -150,9 +155,9 @@ void AnimatorComponent::ClearLocomotionBlend() noexcept {
     locomotionBlend.active = false;
 }
 
-void AnimatorComponent::ComputeJointPalette(Matrix4* outPalette, const std::uint32_t paletteMax) const {
-    if (outPalette == nullptr || !skeleton || skeleton->GetJointCount() == 0) {
-        return;
+bool AnimatorComponent::TryComputeEvaluatedPose(Array<Transform>& outPose) const {
+    if (!skeleton || skeleton->GetJointCount() == 0) {
+        return false;
     }
 
     if (crossfade.active && crossfade.duration > 1.0e-4F) {
@@ -160,17 +165,35 @@ void AnimatorComponent::ComputeJointPalette(Matrix4* outPalette, const std::uint
         const float dur = skeleton->GetClipDuration(c);
         const float sampleT = EvaluateAnimSampleTime(timeSeconds, dur, loopMode);
         const float blend = crossfade.elapsed / crossfade.duration;
-        const float fromDur = skeleton->GetClipDuration(crossfade.fromClip);
-        const float fromSampleT = EvaluateAnimSampleTime(crossfade.fromTime, fromDur, AnimLoopMode::Hold);
-        skeleton->ComputeBlendedPalette(
-                crossfade.fromClip,
-                fromSampleT,
-                c,
-                sampleT,
-                blend,
-                outPalette,
-                paletteMax);
-        return;
+        const float crossBlend = (blend < 0.0F) ? 0.0F : (blend > 1.0F ? 1.0F : blend);
+
+        Array<Transform> poseFrom;
+        if (crossfade.fromLocomotionBlend) {
+            const float fromSampleA = EvaluateAnimSampleTime(
+                    crossfade.fromTime,
+                    skeleton->GetClipDuration(crossfade.fromBlendClipA),
+                    AnimLoopMode::Loop);
+            const float fromSampleB = EvaluateAnimSampleTime(
+                    crossfade.fromTime,
+                    skeleton->GetClipDuration(crossfade.fromBlendClipB),
+                    AnimLoopMode::Loop);
+            skeleton->SampleBlendedClipPose(
+                    crossfade.fromBlendClipA,
+                    fromSampleA,
+                    crossfade.fromBlendClipB,
+                    fromSampleB,
+                    crossfade.fromBlend01,
+                    poseFrom);
+        } else {
+            const float fromDur = skeleton->GetClipDuration(crossfade.fromClip);
+            const float fromSampleT = EvaluateAnimSampleTime(crossfade.fromTime, fromDur, AnimLoopMode::Hold);
+            skeleton->SampleClipPose(crossfade.fromClip, fromSampleT, poseFrom);
+        }
+
+        Array<Transform> poseTo;
+        skeleton->SampleClipPose(c, sampleT, poseTo);
+        skeleton->LerpClipPoses(poseFrom, poseTo, crossBlend, outPose);
+        return outPose.GetSize() >= skeleton->GetJointCount();
     }
 
     if (locomotionBlend.active) {
@@ -182,23 +205,44 @@ void AnimatorComponent::ComputeJointPalette(Matrix4* outPalette, const std::uint
                 timeSeconds,
                 skeleton->GetClipDuration(locomotionBlend.clipB),
                 AnimLoopMode::Loop);
-        skeleton->ComputeBlendedPalette(
+        skeleton->SampleBlendedClipPose(
                 locomotionBlend.clipA,
                 sampleA,
                 locomotionBlend.clipB,
                 sampleB,
                 locomotionBlend.blend01,
-                outPalette,
-                paletteMax);
-        return;
+                outPose);
+        return outPose.GetSize() >= skeleton->GetJointCount();
     }
 
     const std::uint32_t c = clipIndex < skeleton->GetClipCount() ? clipIndex : 0;
     const float dur = skeleton->GetClipDuration(c);
     const float sampleT = EvaluateAnimSampleTime(timeSeconds, dur, loopMode);
+    skeleton->SampleClipPose(c, sampleT, outPose);
+    return outPose.GetSize() >= skeleton->GetJointCount();
+}
 
+bool AnimatorComponent::TryComputeJointWorldMatrix(
+        const std::uint32_t jointIndex,
+        Matrix4& outJointWorld) const {
+    if (!skeleton) {
+        return false;
+    }
     Array<Transform> pose;
-    skeleton->SampleClipPose(c, sampleT, pose);
+    if (!TryComputeEvaluatedPose(pose)) {
+        return false;
+    }
+    return skeleton->TryComputeJointWorldFromPose(pose, jointIndex, outJointWorld);
+}
+
+void AnimatorComponent::ComputeJointPalette(Matrix4* outPalette, const std::uint32_t paletteMax) const {
+    if (outPalette == nullptr || !skeleton || skeleton->GetJointCount() == 0) {
+        return;
+    }
+    Array<Transform> pose;
+    if (!TryComputeEvaluatedPose(pose)) {
+        return;
+    }
     skeleton->BuildPaletteFromPose(pose, outPalette, paletteMax);
 }
 

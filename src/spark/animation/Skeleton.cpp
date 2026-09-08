@@ -111,6 +111,26 @@ std::int32_t Skeleton::FindClipIndexIfNameContains(const char* substring) const 
     return -1;
 }
 
+const Utf8String& Skeleton::GetJointName(const std::uint32_t jointIndex) const {
+    static const Utf8String kEmpty{};
+    if (jointIndex >= jointNames.GetSize()) {
+        return kEmpty;
+    }
+    return jointNames[jointIndex];
+}
+
+std::int32_t Skeleton::FindJointIndexIfNameContains(const char* substring) const {
+    if (substring == nullptr || substring[0] == '\0') {
+        return -1;
+    }
+    for (std::size_t i = 0; i < jointNames.GetSize(); ++i) {
+        if (Utf8ContainsCaseInsensitive(jointNames[i].CStr(), substring)) {
+            return static_cast<std::int32_t>(i);
+        }
+    }
+    return -1;
+}
+
 namespace {
 
 std::size_t FindSegment(const Array<float>& times, float t) {
@@ -317,6 +337,56 @@ void Skeleton::ClearAllClipEvents() noexcept {
     clipEvents.Clear();
 }
 
+void Skeleton::SampleBlendedClipPose(
+        const std::uint32_t clipA,
+        const float timeA,
+        const std::uint32_t clipB,
+        const float timeB,
+        const float blendB,
+        Array<Transform>& outPose) const {
+    const float w = (blendB < 0.0F) ? 0.0F : (blendB > 1.0F ? 1.0F : blendB);
+    if (w <= 1.0e-6F) {
+        SampleClipPose(clipA, timeA, outPose);
+        return;
+    }
+    if (w >= 1.0F - 1.0e-6F) {
+        SampleClipPose(clipB, timeB, outPose);
+        return;
+    }
+    Array<Transform> poseA;
+    Array<Transform> poseB;
+    SampleClipPose(clipA, timeA, poseA);
+    SampleClipPose(clipB, timeB, poseB);
+    LerpClipPoses(poseA, poseB, w, outPose);
+}
+
+void Skeleton::LerpClipPoses(
+        const Array<Transform>& poseA,
+        const Array<Transform>& poseB,
+        const float blendB,
+        Array<Transform>& outPose) const {
+    if (jointCount == 0 || poseA.GetSize() < jointCount || poseB.GetSize() < jointCount) {
+        outPose.Clear();
+        return;
+    }
+    const float w = (blendB < 0.0F) ? 0.0F : (blendB > 1.0F ? 1.0F : blendB);
+    const float wA = 1.0F - w;
+    outPose.Resize(jointCount);
+    for (std::uint32_t j = 0; j < jointCount; ++j) {
+        const Transform& a = poseA[j];
+        const Transform& b = poseB[j];
+        outPose[j].translation = {
+                a.translation.x * wA + b.translation.x * w,
+                a.translation.y * wA + b.translation.y * w,
+                a.translation.z * wA + b.translation.z * w};
+        outPose[j].scale = {
+                a.scale.x * wA + b.scale.x * w,
+                a.scale.y * wA + b.scale.y * w,
+                a.scale.z * wA + b.scale.z * w};
+        outPose[j].rotation = Quaternion::Slerp(a.rotation, b.rotation, w);
+    }
+}
+
 void Skeleton::ComputeBlendedPalette(
         std::uint32_t clipA,
         float timeA,
@@ -328,41 +398,10 @@ void Skeleton::ComputeBlendedPalette(
     if (outPalette == nullptr || jointCount == 0 || paletteMax < jointCount) {
         return;
     }
-    const float w = (blendB < 0.0F) ? 0.0F : (blendB > 1.0F ? 1.0F : blendB);
-    if (w <= 1.0e-6F) {
-        Array<Transform> poseA;
-        SampleClipPose(clipA, timeA, poseA);
-        BuildPaletteFromPose(poseA, outPalette, paletteMax);
-        return;
-    }
-    if (w >= 1.0F - 1.0e-6F) {
-        Array<Transform> poseB;
-        SampleClipPose(clipB, timeB, poseB);
-        BuildPaletteFromPose(poseB, outPalette, paletteMax);
-        return;
-    }
-    const float wA = 1.0F - w;
-    Array<Transform> poseA;
-    Array<Transform> poseB;
-    SampleClipPose(clipA, timeA, poseA);
-    SampleClipPose(clipB, timeB, poseB);
-    if (poseA.GetSize() < jointCount || poseB.GetSize() < jointCount) {
-        return;
-    }
     Array<Transform> blended;
-    blended.Resize(jointCount);
-    for (std::uint32_t j = 0; j < jointCount; ++j) {
-        const Transform& a = poseA[j];
-        const Transform& b = poseB[j];
-        blended[j].translation = {
-                a.translation.x * wA + b.translation.x * w,
-                a.translation.y * wA + b.translation.y * w,
-                a.translation.z * wA + b.translation.z * w};
-        blended[j].scale = {
-                a.scale.x * wA + b.scale.x * w,
-                a.scale.y * wA + b.scale.y * w,
-                a.scale.z * wA + b.scale.z * w};
-        blended[j].rotation = Quaternion::Slerp(a.rotation, b.rotation, w);
+    SampleBlendedClipPose(clipA, timeA, clipB, timeB, blendB, blended);
+    if (blended.GetSize() < jointCount) {
+        return;
     }
     BuildPaletteFromPose(blended, outPalette, paletteMax);
 }
@@ -405,7 +444,14 @@ bool Skeleton::TryComputeJointWorldMatrix(
     }
     Array<Transform> pose;
     SampleClipPose(clipIndex, timeSec, pose);
-    if (pose.GetSize() < jointCount) {
+    return TryComputeJointWorldFromPose(pose, jointIndex, outJointWorld);
+}
+
+bool Skeleton::TryComputeJointWorldFromPose(
+        const Array<Transform>& pose,
+        const std::uint32_t jointIndex,
+        Matrix4& outJointWorld) const {
+    if (jointIndex >= jointCount || pose.GetSize() < jointCount) {
         return false;
     }
     Array<Matrix4> locals;

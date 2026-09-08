@@ -58,6 +58,7 @@ enum class ComponentKind : std::uint32_t {
     AnimationEventReceiver,
     AnimationEventVfx,
     AnimationMeleeHit,
+    RootMotion,
     AttachmentSocket,
     CameraFollow3D,
     SpringArm3D,

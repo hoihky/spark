@@ -36,6 +36,15 @@ public:
     [[nodiscard]] AnimLoopMode GetLoopMode() const noexcept { return loopMode; }
     [[nodiscard]] bool IsClipFinished() const noexcept { return clipFinished; }
     [[nodiscard]] bool IsCrossfading() const noexcept { return crossfade.active; }
+    [[nodiscard]] float GetCrossfadeBlend01() const noexcept {
+        if (!crossfade.active || crossfade.duration <= 1.0e-4F) {
+            return 1.0F;
+        }
+        const float blend = crossfade.elapsed / crossfade.duration;
+        return (blend < 0.0F) ? 0.0F : (blend > 1.0F ? 1.0F : blend);
+    }
+    [[nodiscard]] std::uint32_t GetCrossfadeFromClip() const noexcept { return crossfade.fromClip; }
+    [[nodiscard]] float GetCrossfadeFromTime() const noexcept { return crossfade.fromTime; }
     [[nodiscard]] bool IsLocomotionBlending() const noexcept { return locomotionBlend.active; }
     [[nodiscard]] std::uint32_t GetLocomotionBlendClipA() const noexcept { return locomotionBlend.clipA; }
     [[nodiscard]] std::uint32_t GetLocomotionBlendClipB() const noexcept { return locomotionBlend.clipB; }
@@ -65,9 +74,16 @@ public:
     /** Fills skin joint palette using loop mode, optional crossfade/blend, and evaluated sample times. */
     void ComputeJointPalette(Matrix4* outPalette, std::uint32_t paletteMax) const;
 
+    /**
+     * Joint world matrix in skeleton space using the same crossfade / locomotion-blend rules as
+     * <c>ComputeJointPalette</c>.
+     */
+    [[nodiscard]] bool TryComputeJointWorldMatrix(std::uint32_t jointIndex, Matrix4& outJointWorld) const;
+
 private:
     void AdvancePrimaryTime_(float deltaSeconds);
     void AdvanceCrossfade_(float deltaSeconds);
+    [[nodiscard]] bool TryComputeEvaluatedPose(Array<Transform>& outPose) const;
 
     SharedPtr<Skeleton> skeleton;
     std::uint32_t clipIndex = 0;
@@ -78,8 +94,12 @@ private:
 
     struct CrossfadeState {
         bool active = false;
+        bool fromLocomotionBlend = false;
         std::uint32_t fromClip = 0;
         float fromTime = 0.0F;
+        std::uint32_t fromBlendClipA = 0;
+        std::uint32_t fromBlendClipB = 0;
+        float fromBlend01 = 0.0F;
         float duration = 0.2F;
         float elapsed = 0.0F;
     };

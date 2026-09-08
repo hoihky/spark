@@ -566,6 +566,24 @@ public sealed class GameObject
         }
     }
 
+    public AnimationEventReceiverComponent AddAnimationEventReceiver()
+    {
+        unsafe
+        {
+            return new AnimationEventReceiverComponent(InteropPtr.From(
+                Native.spark_object_add_animation_event_receiver(InteropPtr.Object(Handle))));
+        }
+    }
+
+    public AttachmentSocketComponent AddAttachmentSocket()
+    {
+        unsafe
+        {
+            return new AttachmentSocketComponent(InteropPtr.From(
+                Native.spark_object_add_attachment_socket(InteropPtr.Object(Handle))));
+        }
+    }
+
     public TextOverlayComponent AddTextOverlay()
     {
         unsafe

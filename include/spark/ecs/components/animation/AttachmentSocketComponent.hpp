@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/core/Utf8String.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector3.hpp"
 
@@ -25,6 +26,7 @@ public:
     [[nodiscard]] GameObject* GetSourceObject() const noexcept { return sourceObject; }
     [[nodiscard]] GameObject* GetAttachedObject() const noexcept { return attachedObject; }
     [[nodiscard]] std::uint32_t GetJointIndex() const noexcept { return jointIndex; }
+    [[nodiscard]] const char* GetJointNamePattern() const noexcept { return jointNamePattern.CStr(); }
     [[nodiscard]] const Vector3& GetLocalOffset() const noexcept { return localOffset; }
     [[nodiscard]] const Quaternion& GetLocalRotation() const noexcept { return localRotation; }
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
@@ -32,6 +34,8 @@ public:
     void SetSourceObject(GameObject* o) noexcept { sourceObject = o; }
     void SetAttachedObject(GameObject* o) noexcept { attachedObject = o; }
     void SetJointIndex(std::uint32_t index) noexcept { jointIndex = index; }
+    /** Resolves joint index from the source animator skeleton (case-insensitive substring). */
+    bool SetJointByNamePattern(const char* substring) noexcept;
     void SetLocalOffset(const Vector3& o) noexcept { localOffset = o; }
     void SetLocalRotation(const Quaternion& q) noexcept { localRotation = q; }
     void SetEnabled(bool e) noexcept { enabled = e; }
@@ -42,6 +46,7 @@ private:
     GameObject* sourceObject = nullptr;
     GameObject* attachedObject = nullptr;
     std::uint32_t jointIndex = 0;
+    Utf8String jointNamePattern{};
     Vector3 localOffset{0.0F, 0.0F, 0.0F};
     Quaternion localRotation = Quaternion::Identity;
     bool enabled = true;

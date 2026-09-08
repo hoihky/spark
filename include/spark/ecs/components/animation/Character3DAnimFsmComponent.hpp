@@ -87,6 +87,12 @@ public:
      */
     void SetLocomotionInput(bool moving, bool sprint) noexcept;
 
+    /**
+     * Analog locomotion speed in meters/second (0 = idle). Feeds the 1D blend tree when
+     * <c>SetLocomotionBlendEnabled(true)</c>.
+     */
+    void SetLocomotionAnalogSpeed(float speedMetersPerSecond) noexcept;
+
     [[nodiscard]] std::uint32_t GetIdleClipIndex() const noexcept { return idleClip; }
     [[nodiscard]] std::uint32_t GetWalkClipIndex() const noexcept { return walkClip; }
     [[nodiscard]] std::uint32_t GetRunClipIndex() const noexcept { return runClip; }
@@ -147,6 +153,8 @@ private:
     bool hasLocomotionInput = false;
     bool inputMoving = false;
     bool inputSprint = false;
+    bool hasLocomotionAnalog = false;
+    float locomotionAnalogSpeed = 0.0F;
     bool hasLastWorldPos = false;
     Vector3 lastWorldPos{Vector3::Zero};
     std::size_t combatBbSlot = static_cast<std::size_t>(-1);

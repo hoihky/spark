@@ -45,6 +45,10 @@ public:
     /** First clip whose name contains <c>substring</c> (case-insensitive); returns -1 when none match. */
     [[nodiscard]] std::int32_t FindClipIndexIfNameContains(const char* substring) const;
 
+    [[nodiscard]] const Utf8String& GetJointName(std::uint32_t jointIndex) const;
+    /** First joint whose name contains <c>substring</c> (case-insensitive); returns -1 when none match. */
+    [[nodiscard]] std::int32_t FindJointIndexIfNameContains(const char* substring) const;
+
     /**
      * Fills the first jointCount entries: skinMatrix[j] = worldJoint[j] * inverseBind[j].
      * clipIndex must be < GetClipCount(); timeSec wraps with fmod (legacy sampling).
@@ -85,6 +89,22 @@ public:
             Matrix4* outPalette,
             std::uint32_t paletteMax) const;
 
+    /** Blends two clip poses (blendB: 0 = clipA, 1 = clipB). */
+    void SampleBlendedClipPose(
+            std::uint32_t clipA,
+            float timeA,
+            std::uint32_t clipB,
+            float timeB,
+            float blendB,
+            Array<Transform>& outPose) const;
+
+    /** Per-joint TRS lerp between two poses of equal joint count. */
+    void LerpClipPoses(
+            const Array<Transform>& poseA,
+            const Array<Transform>& poseB,
+            float blendB,
+            Array<Transform>& outPose) const;
+
     /**
      * Joint world matrix in skeleton space (before owner world transform).
      * Returns false when clip/joint indices are out of range.
@@ -92,6 +112,12 @@ public:
     [[nodiscard]] bool TryComputeJointWorldMatrix(
             std::uint32_t clipIndex,
             float timeSec,
+            std::uint32_t jointIndex,
+            Matrix4& outJointWorld) const;
+
+    /** Joint world matrix from an evaluated local pose. */
+    [[nodiscard]] bool TryComputeJointWorldFromPose(
+            const Array<Transform>& pose,
             std::uint32_t jointIndex,
             Matrix4& outJointWorld) const;
 
@@ -145,6 +171,7 @@ private:
     Array<AnimationClip> clips;
     Array<Utf8String> clipNames;
     Array<Array<AnimationClipEvent>> clipEvents;
+    Array<Utf8String> jointNames;
 };
 
 bool TryLoadSkinnedCharacterFromGltf(

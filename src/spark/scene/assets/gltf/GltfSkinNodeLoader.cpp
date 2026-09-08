@@ -109,9 +109,11 @@ GltfSkinNodeBuildResult TryBuildSkinNode(
     skeleton->jointParents.Resize(jointCount);
     skeleton->inverseBind.Resize(jointCount);
     skeleton->restLocal.Resize(jointCount);
+    skeleton->jointNames.Resize(jointCount);
 
     for (std::uint32_t i = 0; i < jointCount; ++i) {
         cgltf_node* ni = skin->joints[i];
+        skeleton->jointNames[i] = Utf8String(ni->name != nullptr ? ni->name : "");
         std::int32_t parentIdx = -1;
         for (cgltf_node* p = ni->parent; p != nullptr; p = p->parent) {
             const std::uint32_t pj = JointIndexForNode(skin, p);

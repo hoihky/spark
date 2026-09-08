@@ -36,8 +36,8 @@ Copy the **Issue body** block under each task when filing issues (or use the bul
 | Bind-up / facing yaw helpers | Done — `SkinnedGltfAsset` |
 | Loop modes / crossfade / clip API (M1) | Done — `AnimLoopMode`, `SetClipIndexWithCrossfade`, C/C# bindings |
 | 3D animation state machine (M2) | Partial — combat overlays + blackboard; death/stagger |
-| Clip blending / crossfade | Crossfade done (M1); **1D speed blend tree wired to FSM** (M3 partial) |
-| Animation events / root motion / IK | **Not started** |
+| Clip blending / crossfade | **1D speed blend tree + crossfade-from-blend precedence** (M3 done) |
+| Animation events / root motion / IK | **M4 complete** (events, root motion, attachments, C#); IK not started |
 | C# / C API clip control | Done (M1) — loop mode, finished, crossfade, clip names |
 
 ---
@@ -127,14 +127,14 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| AN3D-M3-01 | **`Skeleton::ComputeBlendedPalette(clipA, clipB, t)`** — blend local TRS per joint, then hierarchy + bind | P0 | [ ] |
-| AN3D-M3-02 | **Animator blend state:** `SetBlend(clips, weight)` or dual-clip + `blend01` updated each frame | P0 | [ ] |
-| AN3D-M3-03 | **1D blend tree data:** ordered `{threshold, clipIndex}` pairs; evaluator returns clip pair + local t | P0 | [ ] |
-| AN3D-M3-04 | **FSM integration:** `CharacterAnim3DComponent` feeds speed01 into blend tree instead of discrete switches | P0 | [ ] |
-| AN3D-M3-05 | **Crossfade interaction:** blend tree output composes with M1 crossfade (define precedence) | P1 | [ ] |
-| AN3D-M3-06 | **Debug:** log/display active clips + blend weight (dev overlay or HUD line) | P2 | [ ] |
-| AN3D-M3-07 | **Demo:** CharacterCamera — analog walk/run from stick magnitude | P1 | [ ] |
-| AN3D-M3-08 | **Unit tests:** blend at t=0, 1, 0.5 matches single-clip palettes | P2 | [ ] |
+| AN3D-M3-01 | **`Skeleton::ComputeBlendedPalette(clipA, clipB, t)`** — blend local TRS per joint, then hierarchy + bind | P0 | [x] |
+| AN3D-M3-02 | **Animator blend state:** `SetBlend(clips, weight)` or dual-clip + `blend01` updated each frame | P0 | [x] |
+| AN3D-M3-03 | **1D blend tree data:** ordered `{threshold, clipIndex}` pairs; evaluator returns clip pair + local t | P0 | [x] |
+| AN3D-M3-04 | **FSM integration:** `CharacterAnim3DComponent` feeds speed01 into blend tree instead of discrete switches | P0 | [x] |
+| AN3D-M3-05 | **Crossfade interaction:** blend tree output composes with M1 crossfade (define precedence) | P1 | [x] |
+| AN3D-M3-06 | **Debug:** log/display active clips + blend weight (dev overlay or HUD line) | P2 | [x] |
+| AN3D-M3-07 | **Demo:** CharacterCamera — analog walk/run from stick magnitude | P1 | [x] |
+| AN3D-M3-08 | **Unit tests:** blend at t=0, 1, 0.5 matches single-clip palettes | P2 | [x] |
 
 ---
 
@@ -146,13 +146,13 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 |----|------|---|--------|
 | AN3D-M4-01 | **Event schema:** clip name + time + event name (+ optional float/int payload) — JSON sidecar or glTF extras | P0 | [x] |
 | AN3D-M4-02 | **Runtime:** fire `SignalId::AnimationEvent` (or dedicated callback) when playback crosses event time (once per crossing) | P0 | [x] |
-| AN3D-M4-03 | **Editor/export note:** document Blender → glTF event naming convention | P1 | [ ] |
-| AN3D-M4-04 | **Root motion extraction:** per-frame delta from chosen root/hips joint in clip space | P1 | [ ] |
-| AN3D-M4-05 | **`RootMotionComponent`:** apply delta to owner transform or motor; `inPlace` flag disables translation | P1 | [ ] |
-| AN3D-M4-06 | **Attachment component:** bind child `GameObject` to joint index/name; update local/world each frame | P1 | [ ] |
+| AN3D-M4-03 | **Editor/export note:** document Blender → glTF event naming convention | P1 | [x] |
+| AN3D-M4-04 | **Root motion extraction:** per-frame delta from chosen root/hips joint in clip space | P1 | [x] |
+| AN3D-M4-05 | **`RootMotionComponent`:** apply delta to owner transform or motor; `inPlace` flag disables translation | P1 | [x] |
+| AN3D-M4-06 | **Attachment component:** bind child `GameObject` to joint index/name; update local/world each frame | P1 | [x] |
 | AN3D-M4-07 | **Hit windows:** sample doc + demo sphere/capsule enabled between event `active_start` / `active_end` | P1 | [x] |
 | AN3D-M4-08 | **Combat demo slice:** minimal attack clip + event-driven hit trace (ties to OPEN_WORLD G1) | P2 | [x] |
-| AN3D-M4-09 | **C# events:** subscribe from gameplay module | P1 | [ ] |
+| AN3D-M4-09 | **C# events:** subscribe from gameplay module | P1 | [x] |
 
 ---
 

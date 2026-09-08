@@ -8,6 +8,17 @@
 
 namespace Spark {
 
+class GameObject;
+
+/** Payload delivered to managed animation-event callbacks (C ABI stable). */
+struct AnimationEventScriptPayload {
+    const char* eventName = nullptr;
+    std::uint32_t clipIndex = 0;
+    float timeSeconds = 0.0F;
+};
+
+using AnimationEventScriptCallback = void (*)(void* userData, GameObject* owner, const AnimationEventScriptPayload& payload);
+
 /** One normalized-time marker on a clip (0..1 relative to clip duration). */
 struct AnimationEventMarker {
     std::uint32_t clipIndex = 0;
@@ -35,12 +46,17 @@ public:
     /** Replaces markers with absolute-time events from <c>skeleton</c>, converted to normalized times. */
     void ImportFromSkeleton(const Skeleton& skeleton);
 
+    /** Optional managed/script callback (invoked after sibling <c>OnSignal</c> dispatch). */
+    void SetScriptCallback(AnimationEventScriptCallback callback, void* userData) noexcept;
+
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
 private:
     Array<AnimationEventMarker> markers{};
     /** Per-marker latch: bit i set after marker i fired for the current clip lap. */
     Array<std::uint8_t> firedMask{};
+    AnimationEventScriptCallback scriptCallback = nullptr;
+    void* scriptUserData = nullptr;
 };
 
 }  // namespace Spark

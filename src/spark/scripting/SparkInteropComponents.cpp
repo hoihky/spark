@@ -25,6 +25,8 @@
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
@@ -1100,6 +1102,26 @@ float spark_animator_get_locomotion_blend01(const SparkGameComponent* animator) 
     return anim != nullptr ? anim->GetLocomotionBlend01() : 0.0F;
 }
 
+std::uint32_t spark_animator_get_locomotion_blend_clip_a(const SparkGameComponent* animator) {
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    return anim != nullptr ? anim->GetLocomotionBlendClipA() : 0U;
+}
+
+std::uint32_t spark_animator_get_locomotion_blend_clip_b(const SparkGameComponent* animator) {
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    return anim != nullptr ? anim->GetLocomotionBlendClipB() : 0U;
+}
+
+int spark_animator_is_crossfading(const SparkGameComponent* animator) {
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    return (anim != nullptr && anim->IsCrossfading()) ? 1 : 0;
+}
+
+float spark_animator_get_crossfade_blend01(const SparkGameComponent* animator) {
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    return anim != nullptr ? anim->GetCrossfadeBlend01() : 1.0F;
+}
+
 std::int32_t spark_animator_find_clip_index_by_name(const SparkGameComponent* animator, const char* name) {
     const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
     return anim != nullptr ? anim->FindClipIndexByName(name) : -1;
@@ -1438,6 +1460,118 @@ int spark_char_3d_fsm_is_dead(const SparkGameComponent* fsm) {
     const auto* driver = AsComponent<const Spark::Character3DAnimFsmComponent>(
             fsm, Spark::ComponentKind::Character3DAnimFsm);
     return (driver != nullptr && driver->IsDead()) ? 1 : 0;
+}
+
+void spark_char_3d_fsm_set_locomotion_analog_speed(SparkGameComponent* fsm, const float speedMetersPerSecond) {
+    auto* driver = AsComponent<Spark::Character3DAnimFsmComponent>(
+            fsm, Spark::ComponentKind::Character3DAnimFsm);
+    if (driver != nullptr) {
+        driver->SetLocomotionAnalogSpeed(speedMetersPerSecond);
+    }
+}
+
+SparkGameComponent* spark_object_add_animation_event_receiver(SparkGameObject* object) {
+    if (object == nullptr) {
+        return nullptr;
+    }
+    return reinterpret_cast<SparkGameComponent*>(
+            ToObject(object)->AddComponent<Spark::AnimationEventReceiverComponent>());
+}
+
+void spark_anim_event_receiver_clear_markers(SparkGameComponent* receiver) {
+    auto* recv = AsComponent<Spark::AnimationEventReceiverComponent>(
+            receiver, Spark::ComponentKind::AnimationEventReceiver);
+    if (recv != nullptr) {
+        recv->ClearMarkers();
+    }
+}
+
+void spark_anim_event_receiver_import_from_skeleton(
+        SparkGameComponent* receiver,
+        const SparkGameComponent* animator) {
+    auto* recv = AsComponent<Spark::AnimationEventReceiverComponent>(
+            receiver, Spark::ComponentKind::AnimationEventReceiver);
+    const auto* anim = AsComponent<const Spark::AnimatorComponent>(animator, Spark::ComponentKind::Animator);
+    if (recv == nullptr || anim == nullptr || !anim->GetSkeleton()) {
+        return;
+    }
+    recv->ImportFromSkeleton(*anim->GetSkeleton());
+}
+
+void spark_anim_event_receiver_set_callback(
+        SparkGameComponent* receiver,
+        const SparkAnimationEventCallbackFn callback,
+        void* userData) {
+    auto* recv = AsComponent<Spark::AnimationEventReceiverComponent>(
+            receiver, Spark::ComponentKind::AnimationEventReceiver);
+    if (recv != nullptr) {
+        recv->SetScriptCallback(
+                reinterpret_cast<Spark::AnimationEventScriptCallback>(callback),
+                userData);
+    }
+}
+
+SparkGameComponent* spark_object_add_attachment_socket(SparkGameObject* object) {
+    if (object == nullptr) {
+        return nullptr;
+    }
+    return reinterpret_cast<SparkGameComponent*>(
+            ToObject(object)->AddComponent<Spark::AttachmentSocketComponent>());
+}
+
+void spark_attachment_socket_set_source_object(
+        SparkGameComponent* socket,
+        SparkGameObject* sourceObject) {
+    auto* attach = AsComponent<Spark::AttachmentSocketComponent>(
+            socket, Spark::ComponentKind::AttachmentSocket);
+    if (attach != nullptr) {
+        attach->SetSourceObject(ToObject(sourceObject));
+    }
+}
+
+void spark_attachment_socket_set_attached_object(
+        SparkGameComponent* socket,
+        SparkGameObject* attachedObject) {
+    auto* attach = AsComponent<Spark::AttachmentSocketComponent>(
+            socket, Spark::ComponentKind::AttachmentSocket);
+    if (attach != nullptr) {
+        attach->SetAttachedObject(ToObject(attachedObject));
+    }
+}
+
+void spark_attachment_socket_set_joint_index(SparkGameComponent* socket, const std::uint32_t jointIndex) {
+    auto* attach = AsComponent<Spark::AttachmentSocketComponent>(
+            socket, Spark::ComponentKind::AttachmentSocket);
+    if (attach != nullptr) {
+        attach->SetJointIndex(jointIndex);
+    }
+}
+
+int spark_attachment_socket_set_joint_by_name_pattern(SparkGameComponent* socket, const char* substring) {
+    auto* attach = AsComponent<Spark::AttachmentSocketComponent>(
+            socket, Spark::ComponentKind::AttachmentSocket);
+    if (attach == nullptr) {
+        return 0;
+    }
+    return attach->SetJointByNamePattern(substring) ? 1 : 0;
+}
+
+void spark_attachment_socket_set_local_offset(
+        SparkGameComponent* socket,
+        const SparkVector3* offset) {
+    auto* attach = AsComponent<Spark::AttachmentSocketComponent>(
+            socket, Spark::ComponentKind::AttachmentSocket);
+    if (attach != nullptr && offset != nullptr) {
+        attach->SetLocalOffset(ToVector3(*offset));
+    }
+}
+
+void spark_attachment_socket_set_enabled(SparkGameComponent* socket, const int enabled) {
+    auto* attach = AsComponent<Spark::AttachmentSocketComponent>(
+            socket, Spark::ComponentKind::AttachmentSocket);
+    if (attach != nullptr) {
+        attach->SetEnabled(enabled != 0);
+    }
 }
 
 void spark_particle_emitter_set_enabled(SparkGameComponent* emitter, const int enabled) {

@@ -22,4 +22,23 @@ internal static class InteropUtf8
             action((IntPtr)p);
         }
     }
+
+    public static unsafe string? PtrToString(sbyte* ptr)
+    {
+        if (ptr is null)
+        {
+            return null;
+        }
+        return Encoding.UTF8.GetString((byte*)ptr, GetNullTerminatedLength(ptr));
+    }
+
+    private static unsafe int GetNullTerminatedLength(sbyte* ptr)
+    {
+        var length = 0;
+        while (ptr[length] != 0)
+        {
+            length++;
+        }
+        return length;
+    }
 }

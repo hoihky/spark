@@ -60,6 +60,13 @@ void AnimationEventReceiverComponent::ImportFromSkeleton(const Skeleton& skeleto
     }
 }
 
+void AnimationEventReceiverComponent::SetScriptCallback(
+        const AnimationEventScriptCallback callback,
+        void* const userData) noexcept {
+    scriptCallback = callback;
+    scriptUserData = userData;
+}
+
 void AnimationEventReceiverComponent::OnUpdate(
         const FrameTiming& timing,
         GameObject& owner,
@@ -108,6 +115,13 @@ void AnimationEventReceiverComponent::OnUpdate(
         payload.a = markers[i].clipIndex;
         payload.b = FloatBits(markerTime);
         owner.EmitSignal(SignalId::AnimationEvent, payload, this);
+        if (scriptCallback != nullptr) {
+            AnimationEventScriptPayload scriptPayload{};
+            scriptPayload.eventName = markers[i].eventName.CStr();
+            scriptPayload.clipIndex = markers[i].clipIndex;
+            scriptPayload.timeSeconds = markerTime;
+            scriptCallback(scriptUserData, &owner, scriptPayload);
+        }
     }
 }
 

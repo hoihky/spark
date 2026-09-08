@@ -658,6 +658,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/AnimationEventReceiverComponent.cpp
         src/spark/ecs/components/animation/AnimationEventVfxComponent.cpp
         src/spark/ecs/components/animation/AnimationMeleeHitComponent.cpp
+        src/spark/ecs/components/animation/RootMotionComponent.cpp
         src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
         src/spark/ecs/components/animation/AnimatorComponent.cpp
         src/spark/ecs/components/physics/CollisionComponent.cpp
@@ -669,6 +670,9 @@ set(SPARK_ENGINE_SOURCES
         src/spark/animation/Skeleton.cpp
         src/spark/animation/LocomotionClipSet.cpp
         src/spark/animation/AnimBlend1D.cpp
+        src/spark/animation/RootMotionJointResolver.cpp
+        src/spark/animation/RootMotionApplicator.cpp
+        src/spark/animation/RootMotionSampler.cpp
         src/spark/scene/camera/FlyCamera.cpp
         src/spark/scene/camera/Camera2D.cpp
         src/spark/scene/camera/Camera.cpp

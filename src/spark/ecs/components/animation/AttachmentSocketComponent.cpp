@@ -20,6 +20,28 @@ namespace {
 
 }  // namespace
 
+bool AttachmentSocketComponent::SetJointByNamePattern(const char* const substring) noexcept {
+    jointNamePattern = Utf8String(substring != nullptr ? substring : "");
+    if (jointNamePattern.IsEmpty()) {
+        return false;
+    }
+    GameObject* source = sourceObject;
+    if (source == nullptr) {
+        return false;
+    }
+    const AnimatorComponent* animator = source->GetComponent<AnimatorComponent>();
+    if (animator == nullptr || !animator->GetSkeleton()) {
+        return false;
+    }
+    const std::int32_t resolved =
+            animator->GetSkeleton()->FindJointIndexIfNameContains(jointNamePattern.CStr());
+    if (resolved < 0) {
+        return false;
+    }
+    jointIndex = static_cast<std::uint32_t>(resolved);
+    return true;
+}
+
 void AttachmentSocketComponent::OnUpdate(
         const FrameTiming& /*timing*/,
         GameObject& owner,
@@ -36,12 +58,15 @@ void AttachmentSocketComponent::OnUpdate(
     if (animator == nullptr || !animator->GetSkeleton() || attachedTr == nullptr) {
         return;
     }
+    if (!jointNamePattern.IsEmpty()) {
+        const std::int32_t resolved =
+                animator->GetSkeleton()->FindJointIndexIfNameContains(jointNamePattern.CStr());
+        if (resolved >= 0) {
+            jointIndex = static_cast<std::uint32_t>(resolved);
+        }
+    }
     Matrix4 jointWorld{};
-    if (!animator->GetSkeleton()->TryComputeJointWorldMatrix(
-                animator->GetClipIndex(),
-                animator->GetTimeSeconds(),
-                jointIndex,
-                jointWorld)) {
+    if (!animator->TryComputeJointWorldMatrix(jointIndex, jointWorld)) {
         return;
     }
     const Matrix4 socketWorld =
