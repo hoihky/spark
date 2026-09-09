@@ -13,6 +13,7 @@
 #include "spark/scene/assets/CachedAssetKind.hpp"
 #include "spark/scene/vfx/VfxAsset.hpp"
 #include "spark/scene/vfx/VfxAssetLoader.hpp"
+#include "spark/scene/submit/SkinnedAnimationService.hpp"
 #include "spark/scene/vfx/VfxSubsystem.hpp"
 
 namespace Spark {
@@ -136,6 +137,10 @@ public:
     }
     [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return vfxSubsystem; }
     [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return vfxSubsystem; }
+    [[nodiscard]] SkinnedAnimationService& GetSkinnedAnimationService() noexcept { return skinnedAnimationService; }
+    [[nodiscard]] const SkinnedAnimationService& GetSkinnedAnimationService() const noexcept {
+        return skinnedAnimationService;
+    }
     void RequestMaterial(const char* path) { assetLoader.RequestMaterial(path); }
     void InvalidateAssetLoadState(const char* path, AssetLoadJobKind kind) {
         assetLoader.InvalidateAssetLoadState(path, kind);
@@ -304,6 +309,7 @@ private:
     GameWorldAssetCache assetCache;
     GameWorldAssetLoader assetLoader;
     VfxSubsystem vfxSubsystem{};
+    SkinnedAnimationService skinnedAnimationService{};
     SharedPtr<Font> uiFont{};
     SharedPtr<Font> uiBoldFont{};
     std::uint64_t nextObjectId = 1;

@@ -669,6 +669,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
+        src/spark/animation/SkeletonPaletteCacheKey.cpp
+        src/spark/animation/SkeletonPaletteCache.cpp
         src/spark/animation/LocomotionClipSet.cpp
         src/spark/animation/AnimBlend1D.cpp
         src/spark/animation/RootMotionJointResolver.cpp
@@ -823,7 +825,9 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/volume/RenderVolumes.cpp
         src/spark/scene/volume/VolumeRegions.cpp
         src/spark/scene/submit/SceneSubmit.cpp
-        src/spark/scene/submit/detail/SkinnedMeshPalette.cpp
+        src/spark/scene/submit/SkinnedAnimationBudget.cpp
+        src/spark/scene/submit/SkinnedPaletteResolver.cpp
+        src/spark/scene/submit/SkinnedAnimationService.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitLighting.cpp
         src/spark/scene/submit/SceneSubmitMaterial.cpp

@@ -29,6 +29,7 @@ function(spark_add_physics_tests)
             tests/scene/GltfMeshoptTest.cpp
             tests/scene/GltfSkinnedCompressionTest.cpp
             tests/scene/GltfSkinnedLoadValidationTest.cpp
+            tests/scene/SampleAssetCatalogTest.cpp
             tests/scene/GltfVisualParityTest.cpp
             tests/scene/GameplayComponentRoundTripTest.cpp
             tests/scene/SceneDocumentRoundTripTest.cpp
@@ -41,6 +42,8 @@ function(spark_add_physics_tests)
             tests/animation/AnimBlend1DTest.cpp
             tests/animation/RootMotionSamplerTest.cpp
             tests/animation/SkeletonPaletteBlendTest.cpp
+            tests/animation/SkeletonPaletteCacheTest.cpp
+            tests/scene/SkinnedAnimationBudgetTest.cpp
             tests/scene/GltfAnimationEventsTest.cpp
     )
 

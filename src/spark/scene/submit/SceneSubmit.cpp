@@ -8,8 +8,8 @@
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/camera/Camera.hpp"
-#include "spark/scene/submit/detail/SkinnedMeshPalette.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
+#include "spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp"
 #include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
@@ -30,6 +30,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/submit/SkinnedAnimationService.hpp"
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
@@ -402,16 +403,19 @@ void FillStandardLitSceneFromWorld(
         Array<SceneDrawItem>& draws;
         SceneRenderParams& params;
         const SceneSubmitDetail::FindSceneTextureFn& findTex;
+        SkinnedAnimationService& skinnedService;
         std::int32_t defaultShadowFlags = 0;
 
         SkinnedSubmitSink(
                 Array<SceneDrawItem>& inDraws,
                 SceneRenderParams& inParams,
                 const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
+                SkinnedAnimationService& inSkinnedService,
                 const std::int32_t inDefaultShadowFlags) noexcept
             : draws(inDraws),
               params(inParams),
               findTex(inFindTex),
+              skinnedService(inSkinnedService),
               defaultShadowFlags(inDefaultShadowFlags) {}
 
         void OnSkinnedDrawable(GameObject* object,
@@ -439,8 +443,7 @@ void FillStandardLitSceneFromWorld(
             baseItem.textureLayer = -1;
             baseItem.metallic = 0.0F;
             baseItem.roughness = 0.5F;
-            baseItem.jointPalette.Resize(jc);
-            if (!SkinnedMeshPalette::TryFill(smc, anim, baseItem.jointPalette.GetData(), Skeleton::MaxJoints)) {
+            if (!skinnedService.TryResolvePalette(smc, anim, baseItem.jointPalette, Skeleton::MaxJoints)) {
                 return;
             }
             baseItem.shadowFlags = defaultShadowFlags;
@@ -460,7 +463,22 @@ void FillStandardLitSceneFromWorld(
         }
     };
 
-    SkinnedSubmitSink skinnedSink{drawList, params, findOrAddTexture, defaultShadowFlags};
+    SkinnedAnimationService& skinnedService = world.GetSkinnedAnimationService();
+    skinnedService.ResetPolicyToDefaults();
+    bool skinnedBudgetApplied = false;
+    world.ForEachActiveGameObject([&](GameObject* o) {
+        if (skinnedBudgetApplied || o == nullptr) {
+            return;
+        }
+        if (const SkinnedAnimationBudgetComponent* policy = o->GetComponent<SkinnedAnimationBudgetComponent>()) {
+            skinnedService.ApplyBudgetPolicy(*policy);
+            skinnedBudgetApplied = true;
+        }
+    });
+    static std::uint32_t skinnedSubmitFrameSerial = 0;
+    skinnedService.BeginSubmitFrame(++skinnedSubmitFrameSerial);
+
+    SkinnedSubmitSink skinnedSink{drawList, params, findOrAddTexture, skinnedService, defaultShadowFlags};
     DispatchSkinnedDrawableFrustumCull(world, viewProjection, skinnedPartition, skinnedSink);
 
     SceneSubmitDetail::StableSortDrawItems(drawList);

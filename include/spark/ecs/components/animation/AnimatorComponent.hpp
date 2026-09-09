@@ -10,6 +10,8 @@
 
 namespace Spark {
 
+class SkeletonPaletteCacheKey;
+
 /**
  * Samples a shared Skeleton clip into joint palettes each frame (OnUpdate advances time).
  * Supports loop modes, clip crossfade, and clip lookup by name.
@@ -79,6 +81,8 @@ public:
      * <c>ComputeJointPalette</c>.
      */
     [[nodiscard]] bool TryComputeJointWorldMatrix(std::uint32_t jointIndex, Matrix4& outJointWorld) const;
+
+    friend class SkeletonPaletteCacheKey;
 
 private:
     void AdvancePrimaryTime_(float deltaSeconds);

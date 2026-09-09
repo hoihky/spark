@@ -132,4 +132,6 @@ Fix these in Blender before shipping; the load still succeeds so you can inspect
 - **B** — toggle skeleton debug draw (bone segments + joint markers)
 - Yellow cube on head/hip socket shows attachment follow
 
-Sample sidecars: `assets/models/Fox.spark-anim-events.json`, `CesiumMan.spark-anim-events.json`.
+Sample sidecars: `assets/models/Fox.spark-anim-events.json`, `CesiumMan.spark-anim-events.json`, `SparkHumanoid.spark-anim-events.json`.
+
+**Sample asset catalog:** see [`ANIMATION_SAMPLE_ASSETS.md`](ANIMATION_SAMPLE_ASSETS.md) for Fox / CesiumMan / SparkHumanoid clip tables and FSM resolve behavior.

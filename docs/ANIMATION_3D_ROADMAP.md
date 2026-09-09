@@ -2,7 +2,7 @@
 
 Living plan for **skeletal mesh playback**, **gameplay-driven clip control**, **blending**, **events**, and **scale**. It complements the high-level traversal/combat items in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) (Phase F) with concrete engine work items, and the cross-system gap summary in [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md).
 
-**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/animation/AnimatorComponent.hpp`, `include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit*.cpp`, `shaders/scene.vert`.
+**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.8, [`ANIMATION_SAMPLE_ASSETS.md`](ANIMATION_SAMPLE_ASSETS.md), `include/spark/animation/Skeleton.hpp`, `include/spark/ecs/components/animation/AnimatorComponent.hpp`, `include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp`, `src/spark/scene/skinned_mesh_gltf.cpp`, `src/spark/scene/SceneSubmit*.cpp`, `shaders/scene.vert`.
 
 **2D reference (target parity for gameplay drivers):** `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` — see [`2D_ARPG_FEATURES.md`](2D_ARPG_FEATURES.md).
 
@@ -163,8 +163,8 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 | ID | Task | P | Status |
 |----|------|---|--------|
 | AN3D-M5-01 | **Joint limit strategy:** raise `MaxJoints` to 128 *or* split palette across two SSBO binds (design doc + pick one) | P1 | [ ] |
-| AN3D-M5-02 | **Palette cache:** keyed by `(skeleton*, clip, quantizedTime)` for identical instances | P1 | [ ] |
-| AN3D-M5-03 | **Budget enforcement:** max skinned draws / palette updates per frame (OPEN_WORLD A2) | P1 | [ ] |
+| AN3D-M5-02 | **Palette cache:** keyed by `(skeleton*, clip, quantizedTime)` for identical instances | P1 | [x] |
+| AN3D-M5-03 | **Budget enforcement:** max skinned draws / palette updates per frame (OPEN_WORLD A2) | P1 | [x] |
 | AN3D-M5-04 | **glTF interpolation:** STEP path type for stepped keys | P2 | [ ] |
 | AN3D-M5-05 | **glTF interpolation:** CUBICSPLINE (or document unsupported + exporter preset) | P2 | [ ] |
 | AN3D-M5-06 | **Multi-primitive skinned mesh:** all primitives of skin node merged (material slots later) | P1 | [ ] |
@@ -186,7 +186,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 | AN3D-M6-02 | **Load validation:** warnings for joint count, zero duration, missing inverse bind, no animations | P0 | [x] |
 | AN3D-M6-03 | **Debug draw:** skeleton lines in world (dev key / demo flag) | P1 | [x] |
 | AN3D-M6-04 | **Debug HUD:** clip name, time, loop mode, blend weight | P1 | [x] |
-| AN3D-M6-05 | **Sample assets:** document CesiumMan / Fox expected clips; add minimal humanoid with idle/walk/run/attack | P1 | [ ] |
+| AN3D-M6-05 | **Sample assets:** document CesiumMan / Fox expected clips; add minimal humanoid with idle/walk/run/attack | P1 | [x] |
 | AN3D-M6-06 | **CI smoke:** load skinned glTF headless; assert joint count & one palette sample | P2 | [x] |
 
 ---

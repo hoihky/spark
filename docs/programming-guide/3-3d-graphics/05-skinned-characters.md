@@ -15,6 +15,16 @@ struct SkinnedGltfAsset {
 
 Load via `world.LoadSkinnedGltf("assets/models/Fox.glb")`.
 
+## Sample assets (M6)
+
+| Asset | Clips | Notes |
+|-------|-------|-------|
+| `assets/models/Fox.glb` | Survey, Walk, Run | Quadruped; default Character camera avatar |
+| `assets/models/CesiumMan.glb` | *(single unnamed walk)* | Khronos humanoid baseline |
+| `assets/models/SparkHumanoid.glb` | Idle, Walk, Run, Attack | Minimal biped for tests (`tools/generate_spark_humanoid.py`) |
+
+Full clip tables, joint counts, and FSM resolve rules: [`docs/ANIMATION_SAMPLE_ASSETS.md`](../../../ANIMATION_SAMPLE_ASSETS.md).
+
 ## Components
 
 ```cpp
@@ -66,6 +76,30 @@ fsm->RequestHurt();
 ```
 
 **Parent / child layout** (Character Camera demo): put `Rigidbody3D` or `CharacterController3D` on the **root**; put `SkinnedMesh`, `Character3DAnimFsm`, and `Animator` on a **visual child**. The FSM walks the parent chain for motor velocity.
+
+## Performance: palette cache + submit budget (M5)
+
+`SceneSubmit` routes skinned palette solves through `GameWorld::GetSkinnedAnimationService()`:
+
+| Class | Role |
+|-------|------|
+| `SkeletonPaletteCacheKey` | Captures skeleton + quantized playback signature |
+| `SkeletonPaletteCache` | Shares palette arrays for identical signatures in one frame |
+| `SkinnedAnimationBudget` | Caps palette CPU solves and skinned draw submissions |
+| `SkinnedPaletteResolver` | Cache → compute → bind-pose fallback strategy |
+| `SkinnedAnimationService` | Per-world coordinator used by `FillStandardLitSceneFromWorld` |
+
+Optional ECS policy (first active instance per submit):
+
+```cpp
+auto* budget = sceneRoot->AddComponent<SkinnedAnimationBudgetComponent>();
+budget->SetMaxPaletteUpdatesPerFrame(48);   // 0 = unlimited
+budget->SetMaxSkinnedDrawsPerFrame(96);     // 0 = unlimited
+budget->SetPaletteCacheEnabled(true);
+budget->SetPaletteQuantizationHz(30.0F);
+```
+
+When the palette update cap is exceeded, extra characters fall back to **bind pose** for that frame. When the skinned draw cap is exceeded, additional skinned draws are skipped.
 
 ## Attachment Points
 

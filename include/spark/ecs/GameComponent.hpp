@@ -61,6 +61,7 @@ enum class ComponentKind : std::uint32_t {
     RootMotion,
     AttachmentSocket,
     SkeletonDebugDraw,
+    SkinnedAnimationBudget,
     CameraFollow3D,
     SpringArm3D,
     PolygonCollider2D,

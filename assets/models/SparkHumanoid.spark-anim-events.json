@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "clips": [
+    {
+      "name": "Attack",
+      "events": [
+        { "time": 0.20, "name": "active_start" },
+        { "time": 0.50, "name": "active_end" }
+      ]
+    }
+  ]
+}
