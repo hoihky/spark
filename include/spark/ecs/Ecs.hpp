@@ -74,6 +74,8 @@
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"
 #include "spark/ecs/components/animation/AnimationEventVfxComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
+#include "spark/ecs/components/animation/FootIkComponent.hpp"
+#include "spark/ecs/components/animation/AimIkComponent.hpp"
 #include "spark/ecs/components/animation/SkeletonDebugDrawComponent.hpp"
 #include "spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"

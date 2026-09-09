@@ -442,6 +442,10 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                 || in.IsKeyDown(GLFW_KEY_D);
         const bool sprint = moving
                 && (in.IsKeyDown(GLFW_KEY_LEFT_SHIFT) || in.IsKeyDown(GLFW_KEY_RIGHT_SHIFT));
+        if (useSkinnedAvatar && aimIk != nullptr && aimIk->IsEnabled()) {
+            aimIk->SetUseMainCamera(false);
+            aimIk->SetWorldTarget(rig.CameraWorldPosition());
+        }
         if (useSkinnedAvatar && charAnimFsm != nullptr) {
             if (moving) {
                 charAnimFsm->ClearManualClip();
@@ -522,6 +526,12 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             }
             if (in.IsKeyPressedThisFrame(GLFW_KEY_B) && skeletonDebugDraw != nullptr) {
                 skeletonDebugDraw->ToggleEnabled();
+            }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_K) && footIk != nullptr) {
+                footIk->SetEnabled(!footIk->IsEnabled());
+            }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_L) && aimIk != nullptr) {
+                aimIk->SetEnabled(!aimIk->IsEnabled());
             }
         }
         if (characterRootTr != nullptr) {
@@ -691,7 +701,11 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
                           Spark::Vector2* uvOffset) -> std::int32_t {
             return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
         };
+        world.GetSkinnedIkService().SetFallbackGroundHeight(rig.groundY);
         Spark::SkinnedAnimationService& skinnedAnimation = world.GetSkinnedAnimationService();
+        skinnedAnimation.ResetPolicyToDefaults();
+        static std::uint32_t skinnedSubmitFrameSerial = 0;
+        skinnedAnimation.BeginSubmitFrame(++skinnedSubmitFrameSerial);
         Spark::SkinnedSceneDrawMaterialApplicator skinnedMaterialApplicator(params, findSceneTexture);
 
         Spark::Array<Spark::SceneDrawItem> drawList;
@@ -736,7 +750,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
                                                                      const Spark::SkinnedMeshComponent& smc,
                                                                      const Spark::MaterialComponent* mat,
                                                                      const Spark::AnimatorComponent* anim,
-                                                                     const Spark::Matrix4& world) {
+                                                                     const Spark::Matrix4& worldMatrix) {
             if (rig.mode == Spark::CharacterCameraMode::FirstPerson && characterRoot != nullptr && obj != nullptr
                     && (obj == characterRoot || obj->GetParent() == characterRoot)) {
                 return;
@@ -750,16 +764,16 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             const Spark::MultiMaterialComponent* multiMat =
                     obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
             Spark::SceneDrawItem baseItem{};
-            baseItem.model = world;
+            baseItem.model = worldMatrix;
             baseItem.mesh = Spark::SceneMeshSlot::Custom;
             baseItem.skinnedMesh = smc.GetMesh();
             baseItem.albedo = {0.9F, 0.88F, 0.82F};
             baseItem.textureLayer = -1;
             baseItem.metallic = 0.0F;
             baseItem.roughness = 0.5F;
-            if (!skinnedAnimation.TryResolvePalette(smc, anim, baseItem.jointPalette, Spark::Skeleton::MaxJoints)) {
-                return;
-            }
+            const std::uint32_t jointCount = anim->GetSkeleton()->GetJointCount();
+            baseItem.jointPalette.Resize(jointCount);
+            anim->ComputeJointPalette(baseItem.jointPalette.GetData(), Spark::Skeleton::MaxJoints);
             skinnedMaterialApplicator.AppendSkinnedDraws(drawList, baseItem, *smc.GetMesh(), mat, multiMat);
         });
 
@@ -1020,6 +1034,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         characterVisual->SetParent(characterRoot);
         characterVisualTr = characterVisual->AddComponent<Spark::TransformComponent>();
         characterSkinnedMesh = characterVisual->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
+        characterSkinnedMesh->SetSkeleton(asset.skeleton);
         charAnimFsm = characterVisual->AddComponent<Spark::Character3DAnimFsmComponent>();
         playerAnimator = characterVisual->AddComponent<Spark::AnimatorComponent>(
                 asset.skeleton, asset.walkClipIndex, 1.0F);
@@ -1031,8 +1046,10 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         }
     } else {
         characterSkinnedMesh->SetMesh(asset.mesh);
+        characterSkinnedMesh->SetSkeleton(asset.skeleton);
         if (playerAnimator != nullptr) {
             playerAnimator->RetargetSkeleton(asset.skeleton, asset.walkClipIndex, 1.0F);
+            playerAnimator->RestartCurrentClip();
         }
         if (characterMaterial != nullptr) {
             Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.material);
@@ -1063,6 +1080,40 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
     SetupRootMotionComponent();
     SetupAttackSocketMarker();
     SetupSkeletonDebugDraw();
+    SetupIkComponents(asset, isFox);
+}
+
+void CharacterCameraDemo::SetupIkComponents(const Spark::SkinnedGltfAsset& asset, const bool isFox) {
+    if (characterVisual == nullptr || !asset.skeleton) {
+        return;
+    }
+    if (footIk == nullptr) {
+        footIk = characterVisual->AddComponent<Spark::FootIkComponent>();
+    }
+    if (aimIk == nullptr) {
+        aimIk = characterVisual->AddComponent<Spark::AimIkComponent>();
+    }
+    if (isFox) {
+        footIk->SetLeftFootPatterns("leftleg01", "leftleg02", "leftfoot");
+        footIk->SetRightFootPatterns("rightleg01", "rightleg02", "rightfoot");
+        footIk->SetRayOriginLift(0.12F);
+        footIk->SetRayMaxDistance(0.85F);
+    } else {
+        footIk->SetLeftFootPatterns("hips", "", "leg_l");
+        footIk->SetRightFootPatterns("hips", "", "leg_r");
+        footIk->SetRayOriginLift(0.35F);
+        footIk->SetRayMaxDistance(1.25F);
+    }
+    footIk->ConfigureFromSkeleton(*asset.skeleton);
+    footIk->SetEnabled(false);
+    footIk->SetWeight(0.85F);
+
+    const char* spinePatterns[] = {"spine", "head"};
+    aimIk->SetSpineJointPatterns(spinePatterns, 2);
+    aimIk->ConfigureFromSkeleton(*asset.skeleton);
+    aimIk->SetUseMainCamera(true);
+    aimIk->SetWeight(0.55F);
+    aimIk->SetEnabled(false);
 }
 
 void CharacterCameraDemo::SetupSkeletonDebugDraw() {

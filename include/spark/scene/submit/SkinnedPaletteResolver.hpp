@@ -9,6 +9,8 @@
 namespace Spark {
 
 class AnimatorComponent;
+class GameObject;
+class GameWorld;
 class SkinnedAnimationBudget;
 class SkinnedMeshComponent;
 class SkeletonPaletteCache;
@@ -26,7 +28,22 @@ public:
             Array<Matrix4>& outPalette,
             std::uint32_t paletteMax);
 
+    [[nodiscard]] bool TryResolve(
+            GameObject* owner,
+            const Matrix4& ownerWorld,
+            GameWorld& world,
+            const SkinnedMeshComponent& mesh,
+            const AnimatorComponent* animator,
+            Array<Matrix4>& outPalette,
+            std::uint32_t paletteMax);
+
 private:
+    [[nodiscard]] bool TryResolveAnimatedPalette(
+            const SkinnedMeshComponent& mesh,
+            const AnimatorComponent* animator,
+            Array<Matrix4>& outPalette,
+            std::uint32_t paletteMax);
+
     void FillBindPose(
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,

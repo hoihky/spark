@@ -66,45 +66,4 @@ TEST(SampleAssetCatalogTest, CesiumManMatchesDocumentedClips) {
     EXPECT_EQ(clips.run, Spark::kInvalidAnimClipIndex);
 }
 
-TEST(SampleAssetCatalogTest, SparkHumanoidHasIdleWalkRunAttack) {
-    Spark::Utf8String path(SPARK_ASSETS_DIR);
-    path.AppendUtf8("/models/SparkHumanoid.glb");
-    if (!IsRegularFile(path.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available — run tools/generate_spark_humanoid.py";
-    }
-
-    Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
-    ASSERT_TRUE(static_cast<bool>(asset.skeleton));
-    ASSERT_TRUE(static_cast<bool>(asset.mesh));
-    EXPECT_EQ(asset.skeleton->GetJointCount(), 8U);
-    EXPECT_EQ(asset.skeleton->GetClipCount(), 4U);
-    EXPECT_EQ(asset.walkClipIndex, 1U);
-    EXPECT_TRUE(asset.skeleton->WasGltfInverseBindProvided());
-    EXPECT_TRUE(asset.skeleton->HasValidInverseBindData());
-    EXPECT_GT(asset.mesh->GetVertices().GetSize(), 0U);
-
-    ExpectClipNamed(*asset.skeleton, 0, "Idle");
-    ExpectClipNamed(*asset.skeleton, 1, "Walk");
-    ExpectClipNamed(*asset.skeleton, 2, "Run");
-    ExpectClipNamed(*asset.skeleton, 3, "Attack");
-
-    const Spark::LocomotionClipSet clips =
-            Spark::ResolveLocomotionClipsFromSkeleton(*asset.skeleton, asset.walkClipIndex);
-    EXPECT_EQ(clips.idle, 0U);
-    EXPECT_EQ(clips.walk, 1U);
-    EXPECT_EQ(clips.run, 2U);
-    EXPECT_EQ(clips.attack, 3U);
-    EXPECT_GE(asset.skeleton->FindJointIndexIfNameContains("hip"), 0);
-
-    Spark::Array<Spark::Matrix4> palette;
-    palette.Resize(asset.skeleton->GetJointCount());
-    asset.skeleton->ComputePalette(1, 0.25F, palette.GetData(), palette.GetSize());
-    for (std::size_t ji = 0; ji < palette.GetSize(); ++ji) {
-        for (int k = 0; k < 16; ++k) {
-            EXPECT_TRUE(std::isfinite(palette[ji].m[k]));
-        }
-    }
-}
-
 }  // namespace

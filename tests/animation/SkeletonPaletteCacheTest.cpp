@@ -36,9 +36,9 @@ bool IsRegularFile(const char* path) {
 
 TEST(SkeletonPaletteCacheTest, IdenticalPlaybackSharesPalette) {
     Spark::Utf8String path(SPARK_ASSETS_DIR);
-    path.AppendUtf8("/models/SparkHumanoid.glb");
+    path.AppendUtf8("/models/Fox.glb");
     if (!IsRegularFile(path.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
+        GTEST_SKIP() << "Fox.glb not available";
     }
 
     Spark::GameWorld world{};
@@ -71,9 +71,9 @@ TEST(SkeletonPaletteCacheTest, IdenticalPlaybackSharesPalette) {
 
 TEST(SkeletonPaletteCacheTest, DifferentQuantizedTimeMissesCache) {
     Spark::Utf8String path(SPARK_ASSETS_DIR);
-    path.AppendUtf8("/models/SparkHumanoid.glb");
+    path.AppendUtf8("/models/Fox.glb");
     if (!IsRegularFile(path.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
+        GTEST_SKIP() << "Fox.glb not available";
     }
 
     Spark::GameWorld world{};

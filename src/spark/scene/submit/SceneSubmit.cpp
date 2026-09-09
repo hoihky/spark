@@ -31,6 +31,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/SkinnedAnimationService.hpp"
+#include "spark/scene/submit/SkinnedIkService.hpp"
 #include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
@@ -199,6 +200,41 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
         drawList.PushBack(item);
     }
 };
+
+void FillJointPaletteForSkinnedDraw(
+        GameObject* owner,
+        const Matrix4& ownerWorld,
+        GameWorld& gameWorld,
+        const SkinnedMeshComponent& mesh,
+        const AnimatorComponent* animator,
+        Array<Matrix4>& outPalette) {
+    const std::uint32_t jointCount = animator != nullptr && animator->GetSkeleton()
+            ? animator->GetSkeleton()->GetJointCount()
+            : (mesh.GetSkeleton() ? mesh.GetSkeleton()->GetJointCount() : 0U);
+    if (jointCount == 0) {
+        outPalette.Clear();
+        return;
+    }
+    outPalette.Resize(jointCount);
+
+    if (animator == nullptr || !animator->GetSkeleton()) {
+        if (const SharedPtr<Skeleton>& skeleton = mesh.GetSkeleton()) {
+            skeleton->BuildBindPosePalette(outPalette.GetData(), Skeleton::MaxJoints);
+        }
+        return;
+    }
+
+    if (owner != nullptr && SkinnedIkService::ObjectUsesIk(*owner)) {
+        Array<Transform> pose;
+        if (animator->TrySampleEvaluatedPose(pose)) {
+            gameWorld.GetSkinnedIkService().ApplyToPose(*owner, ownerWorld, *animator, pose);
+            animator->GetSkeleton()->BuildPaletteFromPose(pose, outPalette.GetData(), Skeleton::MaxJoints);
+            return;
+        }
+    }
+
+    animator->ComputeJointPalette(outPalette.GetData(), Skeleton::MaxJoints);
+}
 
 }  // namespace
 
@@ -372,6 +408,7 @@ void FillStandardLitSceneFromWorld(
     });
 
     struct SkinnedSubmitSink final : SkinnedDrawableFrustumSink {
+        GameWorld& gameWorld;
         Array<SceneDrawItem>& draws;
         SceneRenderParams& params;
         const SceneSubmitDetail::FindSceneTextureFn& findTex;
@@ -380,12 +417,14 @@ void FillStandardLitSceneFromWorld(
         std::int32_t defaultShadowFlags = 0;
 
         SkinnedSubmitSink(
+                GameWorld& inGameWorld,
                 Array<SceneDrawItem>& inDraws,
                 SceneRenderParams& inParams,
                 const SceneSubmitDetail::FindSceneTextureFn& inFindTex,
                 SkinnedAnimationService& inSkinnedService,
                 const std::int32_t inDefaultShadowFlags) noexcept
-            : draws(inDraws),
+            : gameWorld(inGameWorld),
+              draws(inDraws),
               params(inParams),
               findTex(inFindTex),
               skinnedService(inSkinnedService),
@@ -417,7 +456,8 @@ void FillStandardLitSceneFromWorld(
             baseItem.textureLayer = -1;
             baseItem.metallic = 0.0F;
             baseItem.roughness = 0.5F;
-            if (!skinnedService.TryResolvePalette(smc, anim, baseItem.jointPalette, Skeleton::MaxJoints)) {
+            FillJointPaletteForSkinnedDraw(object, world, gameWorld, smc, anim, baseItem.jointPalette);
+            if (baseItem.jointPalette.IsEmpty()) {
                 return;
             }
             baseItem.shadowFlags = defaultShadowFlags;
@@ -441,7 +481,7 @@ void FillStandardLitSceneFromWorld(
     static std::uint32_t skinnedSubmitFrameSerial = 0;
     skinnedService.BeginSubmitFrame(++skinnedSubmitFrameSerial);
 
-    SkinnedSubmitSink skinnedSink{drawList, params, findOrAddTexture, skinnedService, defaultShadowFlags};
+    SkinnedSubmitSink skinnedSink{world, drawList, params, findOrAddTexture, skinnedService, defaultShadowFlags};
     DispatchSkinnedDrawableFrustumCull(world, viewProjection, skinnedPartition, skinnedSink);
 
     SceneSubmitDetail::StableSortDrawItems(drawList);

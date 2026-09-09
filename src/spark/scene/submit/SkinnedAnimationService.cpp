@@ -4,7 +4,9 @@
 #include "spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
 
@@ -24,7 +26,7 @@ void SkinnedAnimationService::ApplyBudgetPolicy(const SkinnedAnimationBudgetComp
 void SkinnedAnimationService::ResetPolicyToDefaults() noexcept {
     budget.SetMaxPaletteUpdatesPerFrame(0);
     budget.SetMaxSkinnedDrawsPerFrame(0);
-    paletteCache.SetEnabled(true);
+    paletteCache.SetEnabled(false);
     paletteCache.SetQuantizationHz(30.0F);
 }
 
@@ -34,6 +36,17 @@ bool SkinnedAnimationService::TryResolvePalette(
         Array<Matrix4>& outPalette,
         const std::uint32_t paletteMax) {
     return resolver.TryResolve(mesh, animator, outPalette, paletteMax);
+}
+
+bool SkinnedAnimationService::TryResolvePalette(
+        GameObject* owner,
+        const Matrix4& ownerWorld,
+        GameWorld& world,
+        const SkinnedMeshComponent& mesh,
+        const AnimatorComponent* animator,
+        Array<Matrix4>& outPalette,
+        const std::uint32_t paletteMax) {
+    return resolver.TryResolve(owner, ownerWorld, world, mesh, animator, outPalette, paletteMax);
 }
 
 }  // namespace Spark

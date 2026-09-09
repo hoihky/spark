@@ -170,8 +170,8 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 | AN3D-M5-06 | **Multi-primitive skinned mesh:** all primitives of skin node merged (material slots later) | P1 | [ ] |
 | AN3D-M5-07 | **Skinned glTF PBR:** normal + ORM textures from materials (align with `MaterialComponent`) | P1 | [x] |
 | AN3D-M5-08 | **Morph targets:** load + CPU blend 1–4 shapes (or GPU attribute stream) | P2 | [ ] |
-| AN3D-M5-09 | **Foot IK (v1):** raycast down; adjust ankle/knee with simple two-bone IK | P2 | [ ] |
-| AN3D-M5-10 | **Aim / look-at IK (v1):** spine chain partial blend toward target | P2 | [ ] |
+| AN3D-M5-09 | **Foot IK (v1):** raycast down; adjust ankle/knee with simple two-bone IK | P2 | [x] |
+| AN3D-M5-10 | **Aim / look-at IK (v1):** spine chain partial blend toward target | P2 | [x] |
 | AN3D-M5-11 | **Retargeting:** *spike only* — document defer; optional later milestone | P2 | [ ] |
 
 ---

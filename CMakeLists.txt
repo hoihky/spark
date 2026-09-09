@@ -829,6 +829,15 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/submit/SkinnedAnimationBudget.cpp
         src/spark/scene/submit/SkinnedPaletteResolver.cpp
         src/spark/scene/submit/SkinnedAnimationService.cpp
+        src/spark/scene/submit/SkinnedIkService.cpp
+        src/spark/animation/ik/TwoBoneIkSolver.cpp
+        src/spark/animation/ik/FootIkLimbSolver.cpp
+        src/spark/animation/ik/SpineAimIkSolver.cpp
+        src/spark/animation/ik/IkGroundProbe.cpp
+        src/spark/animation/ik/SkinnedIkPipeline.cpp
+        src/spark/ecs/components/animation/FootIkComponent.cpp
+        src/spark/ecs/components/animation/AimIkComponent.cpp
+        src/spark/physics/PhysicsQueries3D.cpp
         src/spark/scene/submit/SkinnedSceneDrawMaterialApplicator.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitLighting.cpp

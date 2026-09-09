@@ -76,6 +76,9 @@ public:
     /** Fills skin joint palette using loop mode, optional crossfade/blend, and evaluated sample times. */
     void ComputeJointPalette(Matrix4* outPalette, std::uint32_t paletteMax) const;
 
+    /** Samples the current animated pose (crossfade / locomotion blend aware). */
+    [[nodiscard]] bool TrySampleEvaluatedPose(Array<Transform>& outPose) const;
+
     /**
      * Joint world matrix in skeleton space using the same crossfade / locomotion-blend rules as
      * <c>ComputeJointPalette</c>.

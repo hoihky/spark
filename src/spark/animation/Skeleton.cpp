@@ -151,6 +151,19 @@ std::int32_t Skeleton::FindJointIndexIfNameContains(const char* substring) const
     return -1;
 }
 
+std::int32_t Skeleton::FindLastJointIndexIfNameContains(const char* substring) const {
+    if (substring == nullptr || substring[0] == '\0') {
+        return -1;
+    }
+    std::int32_t lastMatch = -1;
+    for (std::size_t i = 0; i < jointNames.GetSize(); ++i) {
+        if (Utf8ContainsCaseInsensitive(jointNames[i].CStr(), substring)) {
+            lastMatch = static_cast<std::int32_t>(i);
+        }
+    }
+    return lastMatch;
+}
+
 namespace {
 
 std::size_t FindSegment(const Array<float>& times, float t) {

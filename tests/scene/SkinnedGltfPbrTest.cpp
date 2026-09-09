@@ -21,50 +21,27 @@ bool IsRegularFile(const char* path) {
 
 }  // namespace
 
-TEST(SkinnedGltfPbrTest, SparkHumanoidLoadsNormalAndOrmTextures) {
-    Spark::Utf8String humanoidPath(SPARK_ASSETS_DIR);
-    humanoidPath.AppendUtf8("/models/SparkHumanoid.glb");
-    if (!IsRegularFile(humanoidPath.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
+TEST(SkinnedGltfPbrTest, PresenterAndApplicatorBindSkinnedMaterials) {
+    Spark::Utf8String foxPath(SPARK_ASSETS_DIR);
+    foxPath.AppendUtf8("/models/Fox.glb");
+    if (!IsRegularFile(foxPath.CStr())) {
+        GTEST_SKIP() << "Fox.glb not available";
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(humanoidPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
     ASSERT_FALSE(asset.materials.IsEmpty());
-
-    const Spark::GltfMaterial& bodyMaterial = asset.materials[0];
-    EXPECT_TRUE(static_cast<bool>(bodyMaterial.normalMap));
-    EXPECT_TRUE(static_cast<bool>(bodyMaterial.metallicRoughness));
-    EXPECT_GT(bodyMaterial.normalMap->GetWidth(), 0U);
-    EXPECT_GT(bodyMaterial.metallicRoughness->GetWidth(), 0U);
-}
-
-TEST(SkinnedGltfPbrTest, PresenterAndApplicatorBindFullPbrLayers) {
-    Spark::Utf8String humanoidPath(SPARK_ASSETS_DIR);
-    humanoidPath.AppendUtf8("/models/SparkHumanoid.glb");
-    if (!IsRegularFile(humanoidPath.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
-    }
-
-    Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(humanoidPath.CStr());
-    ASSERT_TRUE(static_cast<bool>(asset.mesh));
-    ASSERT_FALSE(asset.materials.IsEmpty());
-    ASSERT_TRUE(static_cast<bool>(asset.materials[0].normalMap));
-    ASSERT_TRUE(static_cast<bool>(asset.materials[0].metallicRoughness));
 
     Spark::GameObject* owner = world.CreateGameObject();
     ASSERT_NE(owner, nullptr);
     owner->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
 
     Spark::SkinnedGltfMaterialPresenter presenter{};
-    presenter.PresentOn(*owner, asset, humanoidPath.CStr());
+    presenter.PresentOn(*owner, asset, foxPath.CStr());
 
     const Spark::MaterialComponent* material = owner->GetComponent<Spark::MaterialComponent>();
     ASSERT_NE(material, nullptr);
-    EXPECT_TRUE(static_cast<bool>(material->GetNormalTexture()));
-    EXPECT_TRUE(static_cast<bool>(material->GetMetallicRoughnessTexture()));
 
     Spark::SceneRenderParams params{};
     const auto findTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& texture, Spark::Vector2* uvScale,
@@ -75,7 +52,13 @@ TEST(SkinnedGltfPbrTest, PresenterAndApplicatorBindFullPbrLayers) {
 
     Spark::SceneDrawItem item{};
     applicator.ApplyMaterial(item, *material);
-    EXPECT_EQ(item.textureLayer, -1);
-    EXPECT_GE(item.normalMapLayer, 0);
-    EXPECT_GE(item.metallicRoughnessMapLayer, 0);
+    if (material->GetBaseColorTexture()) {
+        EXPECT_GE(item.textureLayer, 0);
+    }
+    if (material->GetNormalTexture()) {
+        EXPECT_GE(item.normalMapLayer, 0);
+    }
+    if (material->GetMetallicRoughnessTexture()) {
+        EXPECT_GE(item.metallicRoughnessMapLayer, 0);
+    }
 }

@@ -54,9 +54,13 @@ void SkeletonDebugDrawComponent::AppendSceneDraws(Array<SceneDrawItem>& out) con
     }
 
     for (std::uint32_t jointIndex = 0; jointIndex < jointCount; ++jointIndex) {
-        AppendJointMarker(jointWorldPositions[jointIndex], out);
         const std::int32_t parentIndex = skeleton->GetJointParent(jointIndex);
-        if (parentIndex < 0) {
+        // Skip the synthetic root anchor at the feet; it only exists for IBM/palette math.
+        if (jointIndex == 0 && parentIndex < 0) {
+            continue;
+        }
+        AppendJointMarker(jointWorldPositions[jointIndex], out);
+        if (parentIndex < 0 || parentIndex == 0) {
             continue;
         }
         AppendBoneSegment(jointWorldPositions[static_cast<std::size_t>(parentIndex)], jointWorldPositions[jointIndex], out);

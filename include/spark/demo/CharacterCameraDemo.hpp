@@ -7,7 +7,9 @@
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
+#include "spark/ecs/components/animation/AimIkComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
+#include "spark/ecs/components/animation/FootIkComponent.hpp"
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"
 #include "spark/ecs/components/animation/SkeletonDebugDrawComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
@@ -64,6 +66,8 @@ private:
 
     void SetupSkeletonDebugDraw();
 
+    void SetupIkComponents(const Spark::SkinnedGltfAsset& asset, bool isFox);
+
     [[nodiscard]] const Spark::SkinnedGltfAsset& CachedAvatarAsset(CharAvatarModel model) const noexcept;
 
     [[nodiscard]] bool IsAvatarAssetReady(CharAvatarModel model) const noexcept;
@@ -91,6 +95,8 @@ private:
     Spark::RootMotionComponent* rootMotion = nullptr;
     Spark::AttachmentSocketComponent* attackSocket = nullptr;
     Spark::SkeletonDebugDrawComponent* skeletonDebugDraw = nullptr;
+    Spark::FootIkComponent* footIk = nullptr;
+    Spark::AimIkComponent* aimIk = nullptr;
     Spark::GameObject* attackSocketMarker = nullptr;
     Spark::Array<Spark::GameObject*> meleeTargets{};
     Spark::SkinnedMeshComponent* characterSkinnedMesh = nullptr;

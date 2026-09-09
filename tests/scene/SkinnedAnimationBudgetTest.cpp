@@ -19,9 +19,9 @@ bool IsRegularFile(const char* path) {
 
 TEST(SkinnedAnimationBudgetTest, PaletteUpdateCapFallsBackToBindPose) {
     Spark::Utf8String path(SPARK_ASSETS_DIR);
-    path.AppendUtf8("/models/SparkHumanoid.glb");
+    path.AppendUtf8("/models/Fox.glb");
     if (!IsRegularFile(path.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
+        GTEST_SKIP() << "Fox.glb not available";
     }
 
     Spark::GameWorld world{};
@@ -55,9 +55,9 @@ TEST(SkinnedAnimationBudgetTest, PaletteUpdateCapFallsBackToBindPose) {
 
 TEST(SkinnedAnimationBudgetTest, SkinnedDrawCapSkipsExtraCharacters) {
     Spark::Utf8String path(SPARK_ASSETS_DIR);
-    path.AppendUtf8("/models/SparkHumanoid.glb");
+    path.AppendUtf8("/models/Fox.glb");
     if (!IsRegularFile(path.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
+        GTEST_SKIP() << "Fox.glb not available";
     }
 
     Spark::GameWorld world{};
@@ -88,9 +88,9 @@ TEST(SkinnedAnimationBudgetTest, SkinnedDrawCapSkipsExtraCharacters) {
 
 TEST(SkinnedAnimationBudgetTest, SharedSkeletonUsesPaletteCacheHit) {
     Spark::Utf8String path(SPARK_ASSETS_DIR);
-    path.AppendUtf8("/models/SparkHumanoid.glb");
+    path.AppendUtf8("/models/Fox.glb");
     if (!IsRegularFile(path.CStr())) {
-        GTEST_SKIP() << "SparkHumanoid.glb not available";
+        GTEST_SKIP() << "Fox.glb not available";
     }
 
     Spark::GameWorld world{};

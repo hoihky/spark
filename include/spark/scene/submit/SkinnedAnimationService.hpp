@@ -3,6 +3,7 @@
 #include "spark/animation/SkeletonPaletteCache.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/math/Transform.hpp"
 #include "spark/scene/submit/SkinnedAnimationBudget.hpp"
 #include "spark/scene/submit/SkinnedPaletteResolver.hpp"
 
@@ -11,6 +12,8 @@
 namespace Spark {
 
 class AnimatorComponent;
+class GameObject;
+class GameWorld;
 class SkinnedAnimationBudgetComponent;
 class SkinnedMeshComponent;
 
@@ -24,6 +27,15 @@ public:
     void ResetPolicyToDefaults() noexcept;
 
     [[nodiscard]] bool TryResolvePalette(
+            const SkinnedMeshComponent& mesh,
+            const AnimatorComponent* animator,
+            Array<Matrix4>& outPalette,
+            std::uint32_t paletteMax);
+
+    [[nodiscard]] bool TryResolvePalette(
+            GameObject* owner,
+            const Matrix4& ownerWorld,
+            GameWorld& world,
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
             Array<Matrix4>& outPalette,

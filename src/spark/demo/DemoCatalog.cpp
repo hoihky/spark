@@ -214,7 +214,7 @@ constexpr DemoCatalogEntry kEntries[] = {
          true,
          "Spark editor",
          "Dock shell, hierarchy, inspector, undo",
-         "23",
+         "24",
          -1,
          'E'},
 #endif

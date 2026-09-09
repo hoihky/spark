@@ -235,12 +235,17 @@ bool AnimatorComponent::TryComputeJointWorldMatrix(
     return skeleton->TryComputeJointWorldFromPose(pose, jointIndex, outJointWorld);
 }
 
+bool AnimatorComponent::TrySampleEvaluatedPose(Array<Transform>& outPose) const {
+    return TryComputeEvaluatedPose(outPose);
+}
+
 void AnimatorComponent::ComputeJointPalette(Matrix4* outPalette, const std::uint32_t paletteMax) const {
     if (outPalette == nullptr || !skeleton || skeleton->GetJointCount() == 0) {
         return;
     }
     Array<Transform> pose;
     if (!TryComputeEvaluatedPose(pose)) {
+        skeleton->BuildBindPosePalette(outPalette, paletteMax);
         return;
     }
     skeleton->BuildPaletteFromPose(pose, outPalette, paletteMax);

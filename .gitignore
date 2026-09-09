@@ -122,3 +122,4 @@ coverage/
 # --- Optional: large third-party drops (uncomment if you vendor binaries locally) ---
 # assets/**/*.zip
 # third_party/
+/build-test

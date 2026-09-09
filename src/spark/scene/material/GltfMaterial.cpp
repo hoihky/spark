@@ -481,12 +481,8 @@ bool GltfMaterial::HasScalarPresentation() const noexcept {
 }
 
 void GltfMaterial::ApplyTo(MaterialComponent& material) const {
-    if (baseColor) {
-        material.SetBaseColorTexture(baseColor);
-    }
-    if (normalMap) {
-        material.SetNormalTexture(normalMap);
-    }
+    material.SetBaseColorTexture(baseColor);
+    material.SetNormalTexture(normalMap);
     if (metallicRoughness) {
         material.SetMetallicRoughnessTexture(metallicRoughness);
         material.SetMetallic(1.0F);
@@ -494,17 +490,14 @@ void GltfMaterial::ApplyTo(MaterialComponent& material) const {
         material.SetMetallicFactor(metallicFactor);
         material.SetRoughnessFactor(roughnessFactor);
     } else {
+        material.SetMetallicRoughnessTexture(SharedPtr<Texture2D>{});
         material.SetMetallic(metallicFactor);
         material.SetRoughness(roughnessFactor);
         material.SetMetallicFactor(1.0F);
         material.SetRoughnessFactor(1.0F);
     }
-    if (emissiveMap) {
-        material.SetEmissiveTexture(emissiveMap);
-    }
-    if (iridescenceThicknessMap) {
-        material.SetIridescenceThicknessTexture(iridescenceThicknessMap);
-    }
+    material.SetEmissiveTexture(emissiveMap);
+    material.SetIridescenceThicknessTexture(iridescenceThicknessMap);
     material.SetTint(baseColorFactor);
     material.SetOcclusionStrength(occlusionStrength);
     material.SetEmissive(emissiveFactor, emissiveIntensity);

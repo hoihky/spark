@@ -114,6 +114,31 @@ Skinned imports carry the same full PBR material table as rigid glTF (`GltfMater
 
 `assets/models/SparkHumanoid.glb` embeds normal + ORM maps for CI (`tools/generate_spark_humanoid.py`).
 
+## Foot IK + aim IK (M5-09 / M5-10)
+
+| Class | Role |
+|-------|------|
+| `FootIkComponent` | Per-limb ground raycasts + two-bone foot placement |
+| `AimIkComponent` | Partial spine-chain blend toward camera or target object |
+| `IkGroundProbe` | Physics raycast with Y-plane fallback |
+| `SkinnedIkPipeline` | Applies foot + aim solvers to a sampled pose |
+| `SkinnedIkService` | Per-world IK coordinator used during palette resolve |
+
+```cpp
+auto* footIk = visual->AddComponent<FootIkComponent>();
+footIk->SetLeftFootPatterns("hips", "", "leg_l");
+footIk->SetRightFootPatterns("hips", "", "leg_r");
+footIk->ConfigureFromSkeleton(*skeleton);
+footIk->SetEnabled(true);
+
+auto* aimIk = visual->AddComponent<AimIkComponent>();
+aimIk->ConfigureFromSkeleton(*skeleton);
+aimIk->SetWorldTarget(cameraPosition);
+aimIk->SetWeight(0.55F);
+```
+
+`SceneSubmit` and `SkinnedAnimationService::TryResolvePalette` automatically run IK when either component is enabled on the skinned object. Character Camera demo: **K** toggles foot IK, **L** toggles aim IK.
+
 ## Attachment Points
 
 Use `AttachmentSocketComponent` for bone-accurate weapon / VFX anchors (priority 250, after animator):

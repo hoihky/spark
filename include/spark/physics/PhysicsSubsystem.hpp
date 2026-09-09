@@ -2,6 +2,7 @@
 
 #include "spark/physics/CharacterController3D.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/PhysicsQueries3D.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
 #include "spark/physics/TriggerVolume3D.hpp"
@@ -46,6 +47,9 @@ public:
     [[nodiscard]] PhysicsQueryWorld2D& GetQueries2D() noexcept { return queries2D; }
     [[nodiscard]] const PhysicsQueryWorld2D& GetQueries2D() const noexcept { return queries2D; }
 
+    [[nodiscard]] PhysicsQueryWorld3D& GetQueries3D() noexcept { return queries3D; }
+    [[nodiscard]] const PhysicsQueryWorld3D& GetQueries3D() const noexcept { return queries3D; }
+
     [[nodiscard]] CharacterControllerWorld3D& GetCharacterController3D() noexcept { return characterController3D; }
     [[nodiscard]] const CharacterControllerWorld3D& GetCharacterController3D() const noexcept {
         return characterController3D;
@@ -58,6 +62,7 @@ private:
     PhysicsWorld2D world2D{};
     PhysicsWorld3D world3D{};
     PhysicsQueryWorld2D queries2D{};
+    PhysicsQueryWorld3D queries3D{};
     CharacterControllerWorld3D characterController3D{};
     TriggerVolumeWorld3D triggerVolumes3D{};
 };

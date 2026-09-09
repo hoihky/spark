@@ -54,6 +54,8 @@ public:
     [[nodiscard]] bool HasValidInverseBindData() const noexcept;
     /** First joint whose name contains <c>substring</c> (case-insensitive); returns -1 when none match. */
     [[nodiscard]] std::int32_t FindJointIndexIfNameContains(const char* substring) const;
+    /** Last joint whose name contains <c>substring</c> (case-insensitive); returns -1 when none match. */
+    [[nodiscard]] std::int32_t FindLastJointIndexIfNameContains(const char* substring) const;
 
     /**
      * Fills the first jointCount entries: skinMatrix[j] = worldJoint[j] * inverseBind[j].
