@@ -9,6 +9,7 @@
 #include "spark/scene/material/MaterialAssetLoader.hpp"
 
 #include "spark/animation/Skeleton.hpp"
+#include "spark/scene/assets/gltf/GltfSkinnedLoadValidator.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
@@ -326,6 +327,9 @@ AssetLoadOutcome<SkinnedGltfAsset> GameWorldAssetCache::TryLoadSkinnedGltf(const
         std::fprintf(stderr, "Spark: LoadSkinnedGltf failed: %s\n", outcome.errorMessage.CStr());
         return outcome;
     }
+    GltfSkinnedLoadValidator loadValidator;
+    loadValidator.ValidateSkinnedLoad(skeleton, mesh, path);
+
     SkinnedGltfAsset asset{};
     asset.mesh = SharedPtr<SkinnedMesh>(new SkinnedMesh(MoveTemp(mesh)));
     asset.skeleton = SharedPtr<Skeleton>(new Skeleton(MoveTemp(skeleton)));

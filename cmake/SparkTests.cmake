@@ -28,6 +28,7 @@ function(spark_add_physics_tests)
             tests/scene/GltfDracoTest.cpp
             tests/scene/GltfMeshoptTest.cpp
             tests/scene/GltfSkinnedCompressionTest.cpp
+            tests/scene/GltfSkinnedLoadValidationTest.cpp
             tests/scene/GltfVisualParityTest.cpp
             tests/scene/GameplayComponentRoundTripTest.cpp
             tests/scene/SceneDocumentRoundTripTest.cpp

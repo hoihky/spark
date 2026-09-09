@@ -104,6 +104,22 @@ See `AnimationEventReceiverComponent` in `Spark.Bindings`.
 - Joint index or `SetJointByNamePattern("head")` (case-insensitive substring).
 - Socket follows locomotion blend and crossfade poses automatically.
 
+## Load-time validation (M6)
+
+`GameWorld::LoadSkinnedGltf` runs `GltfSkinnedLoadValidator` after a successful parse. Non-fatal issues are logged to **stderr** with the asset path:
+
+| Check | Warning |
+|-------|---------|
+| Joint count > 64 | Exceeds recommended GPU skinning budget |
+| Joint count = `Skeleton::MaxJoints` (128) | At engine hard limit |
+| No animation clips | Skinned mesh has no clips |
+| Clip duration ≈ 0 | Clip name + duration in message |
+| Missing `inverse_bind_matrices` | Skinning may be incorrect |
+| Non-invertible inverse bind | One or more joint matrices invalid |
+| Vertex joint index ≥ joint count | Bad skin weights |
+
+Fix these in Blender before shipping; the load still succeeds so you can inspect in-engine.
+
 ## Demo
 
 **Character camera demo**
@@ -113,6 +129,7 @@ See `AnimationEventReceiverComponent` in `Spark.Bindings`.
 - **F** — attack (`active_start` / `active_end` on Fox `Run` clip)
 - **H** — hurt
 - **R** — toggle root motion
+- **B** — toggle skeleton debug draw (bone segments + joint markers)
 - Yellow cube on head/hip socket shows attachment follow
 
 Sample sidecars: `assets/models/Fox.spark-anim-events.json`, `CesiumMan.spark-anim-events.json`.

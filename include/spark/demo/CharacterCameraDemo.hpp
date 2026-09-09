@@ -9,6 +9,7 @@
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"
+#include "spark/ecs/components/animation/SkeletonDebugDrawComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
@@ -61,6 +62,8 @@ private:
 
     void SetupAttackSocketMarker();
 
+    void SetupSkeletonDebugDraw();
+
     [[nodiscard]] const Spark::SkinnedGltfAsset& CachedAvatarAsset(CharAvatarModel model) const noexcept;
 
     [[nodiscard]] bool IsAvatarAssetReady(CharAvatarModel model) const noexcept;
@@ -87,6 +90,7 @@ private:
     Spark::AnimationMeleeHitComponent* meleeHit = nullptr;
     Spark::RootMotionComponent* rootMotion = nullptr;
     Spark::AttachmentSocketComponent* attackSocket = nullptr;
+    Spark::SkeletonDebugDrawComponent* skeletonDebugDraw = nullptr;
     Spark::GameObject* attackSocketMarker = nullptr;
     Spark::Array<Spark::GameObject*> meleeTargets{};
     Spark::SkinnedMeshComponent* characterSkinnedMesh = nullptr;

@@ -46,6 +46,12 @@ public:
     [[nodiscard]] std::int32_t FindClipIndexIfNameContains(const char* substring) const;
 
     [[nodiscard]] const Utf8String& GetJointName(std::uint32_t jointIndex) const;
+    /** Parent joint index, or -1 for roots / out-of-range. */
+    [[nodiscard]] std::int32_t GetJointParent(std::uint32_t jointIndex) const noexcept;
+    /** True when the source glTF skin provided an <c>inverse_bind_matrices</c> accessor. */
+    [[nodiscard]] bool WasGltfInverseBindProvided() const noexcept { return gltfInverseBindProvided; }
+    /** False when inverse bind was missing or any joint matrix is not invertible. */
+    [[nodiscard]] bool HasValidInverseBindData() const noexcept;
     /** First joint whose name contains <c>substring</c> (case-insensitive); returns -1 when none match. */
     [[nodiscard]] std::int32_t FindJointIndexIfNameContains(const char* substring) const;
 
@@ -163,6 +169,7 @@ private:
     };
 
     std::uint32_t jointCount = 0;
+    bool gltfInverseBindProvided = false;
     Array<std::int32_t> jointParents;
     /** fullBindWorld * inv(partialBindWorld); maps joint-only hierarchy world to glTF scene global. */
     Array<Matrix4> jointGlobalPrefix;

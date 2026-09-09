@@ -119,6 +119,26 @@ const Utf8String& Skeleton::GetJointName(const std::uint32_t jointIndex) const {
     return jointNames[jointIndex];
 }
 
+std::int32_t Skeleton::GetJointParent(const std::uint32_t jointIndex) const noexcept {
+    if (jointIndex >= jointParents.GetSize()) {
+        return -1;
+    }
+    return jointParents[jointIndex];
+}
+
+bool Skeleton::HasValidInverseBindData() const noexcept {
+    if (!gltfInverseBindProvided || inverseBind.GetSize() != jointCount) {
+        return false;
+    }
+    Matrix4 unused{};
+    for (std::uint32_t ji = 0; ji < jointCount; ++ji) {
+        if (!inverseBind[ji].TryInvert(unused)) {
+            return false;
+        }
+    }
+    return jointCount > 0;
+}
+
 std::int32_t Skeleton::FindJointIndexIfNameContains(const char* substring) const {
     if (substring == nullptr || substring[0] == '\0') {
         return -1;

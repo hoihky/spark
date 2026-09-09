@@ -9,6 +9,7 @@
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
+#include "spark/ecs/components/animation/SkeletonDebugDrawComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
@@ -309,7 +310,8 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         AddPointLight(w, {-14.0F, 9.0F, -8.0F}, {0.45F, 0.65F, 1.0F}, 2.4F, 38.0F);
 
         helpHud.Mount(w, "Character camera");
-        helpHud.SetControlHints("WASD walk · Shift sprint · F melee · H hurt · R root motion · M model · V FP · F1");
+        helpHud.SetControlHints(
+                "WASD walk · Shift sprint · F melee · H hurt · R root motion · B skeleton · M model · V FP · F1");
 
         Spark::GameObject* springArmRig = w.CreateGameObject();
         springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
@@ -515,6 +517,9 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             if (in.IsKeyPressedThisFrame(GLFW_KEY_R) && rootMotion != nullptr) {
                 rootMotion->SetInPlace(!rootMotion->IsInPlace());
             }
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_B) && skeletonDebugDraw != nullptr) {
+                skeletonDebugDraw->ToggleEnabled();
+            }
         }
         if (characterRootTr != nullptr) {
             characterRootTr->SetTranslation(rig.characterPosition);
@@ -592,9 +597,17 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                                     rootMotion->IsInPlace() ? "off" : "on")
                                     .c_str());
                 }
+                Spark::Utf8String skeletonHud;
+                if (skeletonDebugDraw != nullptr) {
+                    skeletonHud = Spark::Utf8String(
+                            std::format(
+                                    " bones:{}",
+                                    skeletonDebugDraw->IsEnabled() ? "on" : "off")
+                                    .c_str());
+                }
                 animHud = Spark::Utf8String(
                         std::format(
-                                " — {}/{} clip {} ({}) {} {} [{}]{}{}{}{}",
+                                " — {}/{} clip {} ({}) {} {} [{}]{}{}{}{}{}",
                                 playerAnimator->GetClipIndex() + 1,
                                 playerAnimator->GetClipCount(),
                                 playerAnimator->GetClipIndex(),
@@ -605,7 +618,8 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
                                 blendHud.CStr(),
                                 crossfadeHud.CStr(),
                                 meleeHud.CStr(),
-                                rootMotionHud.CStr())
+                                rootMotionHud.CStr(),
+                                skeletonHud.CStr())
                                 .c_str());
             }
             helpHud.SetDetail(
@@ -744,6 +758,10 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             anim->ComputeJointPalette(item.jointPalette.GetData(), Spark::Skeleton::MaxJoints);
             drawList.PushBack(item);
         });
+
+        if (skeletonDebugDraw != nullptr && skeletonDebugDraw->IsEnabled()) {
+            skeletonDebugDraw->AppendSceneDraws(drawList);
+        }
 
         StableSortDrawItems(drawList);
         for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
@@ -1040,6 +1058,21 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
     SetupMeleeCombatComponents(asset, isFox);
     SetupRootMotionComponent();
     SetupAttackSocketMarker();
+    SetupSkeletonDebugDraw();
+}
+
+void CharacterCameraDemo::SetupSkeletonDebugDraw() {
+    if (characterVisual == nullptr) {
+        return;
+    }
+    if (skeletonDebugDraw == nullptr) {
+        skeletonDebugDraw = characterVisual->AddComponent<Spark::SkeletonDebugDrawComponent>();
+    }
+    skeletonDebugDraw->SetSourceObject(characterVisual);
+    skeletonDebugDraw->SetLineColor({0.18F, 0.95F, 0.42F});
+    skeletonDebugDraw->SetBoneThickness(0.007F);
+    skeletonDebugDraw->SetJointMarkerScale(0.02F);
+    skeletonDebugDraw->SetEnabled(false);
 }
 
 void CharacterCameraDemo::SetupAttackSocketMarker() {

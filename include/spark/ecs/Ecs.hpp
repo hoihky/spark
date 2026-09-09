@@ -74,6 +74,7 @@
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"
 #include "spark/ecs/components/animation/AnimationEventVfxComponent.hpp"
 #include "spark/ecs/components/animation/AttachmentSocketComponent.hpp"
+#include "spark/ecs/components/animation/SkeletonDebugDrawComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"

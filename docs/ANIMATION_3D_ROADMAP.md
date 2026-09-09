@@ -182,12 +182,12 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| AN3D-M6-01 | **`docs/BLENDER_GLTF_ANIMATION_EXPORT.md`** — joints ≤64, naming, clip names, no unsupported interpolators | P0 | [ ] |
-| AN3D-M6-02 | **Load validation:** warnings for joint count, zero duration, missing inverse bind, no animations | P0 | [ ] |
-| AN3D-M6-03 | **Debug draw:** skeleton lines in world (dev key / demo flag) | P1 | [ ] |
-| AN3D-M6-04 | **Debug HUD:** clip name, time, loop mode, blend weight | P1 | [ ] |
+| AN3D-M6-01 | **`docs/BLENDER_GLTF_ANIMATION_EXPORT.md`** — joints ≤64, naming, clip names, no unsupported interpolators | P0 | [x] |
+| AN3D-M6-02 | **Load validation:** warnings for joint count, zero duration, missing inverse bind, no animations | P0 | [x] |
+| AN3D-M6-03 | **Debug draw:** skeleton lines in world (dev key / demo flag) | P1 | [x] |
+| AN3D-M6-04 | **Debug HUD:** clip name, time, loop mode, blend weight | P1 | [x] |
 | AN3D-M6-05 | **Sample assets:** document CesiumMan / Fox expected clips; add minimal humanoid with idle/walk/run/attack | P1 | [ ] |
-| AN3D-M6-06 | **CI smoke:** load skinned glTF headless; assert joint count & one palette sample | P2 | [ ] |
+| AN3D-M6-06 | **CI smoke:** load skinned glTF headless; assert joint count & one palette sample | P2 | [x] |
 
 ---
 

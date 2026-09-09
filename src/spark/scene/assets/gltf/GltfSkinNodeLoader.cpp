@@ -106,6 +106,7 @@ GltfSkinNodeBuildResult TryBuildSkinNode(
 
     auto skeleton = MakeShared<Skeleton>();
     skeleton->jointCount = jointCount;
+    skeleton->gltfInverseBindProvided = skin->inverse_bind_matrices != nullptr;
     skeleton->jointParents.Resize(jointCount);
     skeleton->inverseBind.Resize(jointCount);
     skeleton->restLocal.Resize(jointCount);

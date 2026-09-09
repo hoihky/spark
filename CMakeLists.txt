@@ -660,6 +660,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/AnimationMeleeHitComponent.cpp
         src/spark/ecs/components/animation/RootMotionComponent.cpp
         src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
+        src/spark/ecs/components/animation/SkeletonDebugDrawComponent.cpp
         src/spark/ecs/components/animation/AnimatorComponent.cpp
         src/spark/ecs/components/physics/CollisionComponent.cpp
         src/spark/ecs/components/ai/NavMeshAgentComponent.cpp
@@ -701,6 +702,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/assets/gltf/GltfSkinnedMeshBuilder.cpp
         src/spark/scene/assets/gltf/GltfAnimationEvents.cpp
         src/spark/scene/assets/gltf/GltfSkinNodeLoader.cpp
+        src/spark/scene/assets/gltf/GltfSkinnedLoadValidator.cpp
         src/spark/scene/assets/gltf/GltfNodeTransforms.cpp
         src/spark/scene/assets/gltf/GltfRigidLoader.cpp
         src/spark/scene/assets/gltf/GltfSceneLoader.cpp
