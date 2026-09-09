@@ -101,6 +101,19 @@ budget->SetPaletteQuantizationHz(30.0F);
 
 When the palette update cap is exceeded, extra characters fall back to **bind pose** for that frame. When the skinned draw cap is exceeded, additional skinned draws are skipped.
 
+## Skinned glTF PBR (M5-07)
+
+Skinned imports carry the same full PBR material table as rigid glTF (`GltfMaterial` / `MaterialComponent` slots: base color, normal, metallic-roughness, emissive).
+
+| Class | Role |
+|-------|------|
+| `SkinnedGltfMaterialPresenter` | Binds `SkinnedGltfAsset` materials onto `MaterialComponent` or `MultiMaterialComponent` at load time |
+| `SkinnedSceneDrawMaterialApplicator` | Applies those component textures to skinned `SceneDrawItem` layers at submit time |
+
+`GltfAssetBinder::BindSkinnedMesh` uses the presenter automatically. Custom render loops should use `SkinnedSceneDrawMaterialApplicator` (same path as `SceneSubmit`) instead of binding only the albedo texture.
+
+`assets/models/SparkHumanoid.glb` embeds normal + ORM maps for CI (`tools/generate_spark_humanoid.py`).
+
 ## Attachment Points
 
 Use `AttachmentSocketComponent` for bone-accurate weapon / VFX anchors (priority 250, after animator):

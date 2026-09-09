@@ -15,6 +15,7 @@ namespace Spark {
 class Texture2D;
 class GameWorld;
 struct GltfAsset;
+struct SkinnedGltfAsset;
 
 /**
  * Per-submesh material slots for multi-material glTF meshes.
@@ -93,6 +94,8 @@ public:
      * otherwise falls back to <c>PopulateFromGltfAsset</c>.
      */
     void BindFromGltfAsset(GameWorld& world, const char* gltfPath, const GltfAsset& asset);
+    void PopulateFromSkinnedGltfAsset(const SkinnedGltfAsset& asset);
+    void BindFromSkinnedGltfAsset(GameWorld& world, const char* gltfPath, const SkinnedGltfAsset& asset);
 
 private:
     void NotifyMaterialChanged();

@@ -114,6 +114,50 @@ void MultiMaterialComponent::PopulateFromGltfAsset(const GltfAsset& asset) {
     }
 }
 
+void MultiMaterialComponent::PopulateFromSkinnedGltfAsset(const SkinnedGltfAsset& asset) {
+    slots.Clear();
+    slotBindings.Clear();
+    if (asset.materials.IsEmpty()) {
+        if (asset.material.HasPresentationContent()) {
+            slots.Resize(1);
+            asset.material.ApplyTo(slots[0]);
+        }
+        return;
+    }
+    slots.Resize(asset.materials.GetSize());
+    for (std::size_t i = 0; i < asset.materials.GetSize(); ++i) {
+        asset.materials[i].ApplyTo(slots[i]);
+    }
+}
+
+void MultiMaterialComponent::BindFromSkinnedGltfAsset(
+        GameWorld& world,
+        const char* gltfPath,
+        const SkinnedGltfAsset& asset) {
+    Clear();
+    if (asset.materials.IsEmpty()) {
+        if (asset.material.HasPresentationContent()) {
+            slots.Resize(1);
+            asset.material.ApplyTo(slots[0]);
+        }
+        return;
+    }
+
+    PopulateFromSkinnedGltfAsset(asset);
+    SetVariantNames(asset.materialVariantNames);
+
+    if (gltfPath == nullptr || gltfPath[0] == '\0') {
+        return;
+    }
+
+    EnsureSlotAuxSize(slots.GetSize());
+    for (std::size_t i = 0; i < slots.GetSize(); ++i) {
+        const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfPath, i);
+        slotBindings[i].Retain(world, key.CStr());
+        slots[i].materialAssetKey = key;
+    }
+}
+
 void MultiMaterialComponent::BindFromGltfAsset(
         GameWorld& world,
         const char* gltfPath,

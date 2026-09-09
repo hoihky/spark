@@ -710,6 +710,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/assets/gltf/GltfSceneLoader.cpp
         src/spark/scene/assets/gltf/GltfSceneImporter.cpp
         src/spark/scene/assets/gltf/GltfAssetBindings.cpp
+        src/spark/scene/assets/gltf/SkinnedGltfMaterialPresenter.cpp
         src/spark/scene/material/GltfMaterial.cpp
         src/spark/scene/material/MaterialAsset.cpp
         src/spark/scene/material/MaterialLibraryBinding.cpp
@@ -828,6 +829,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/submit/SkinnedAnimationBudget.cpp
         src/spark/scene/submit/SkinnedPaletteResolver.cpp
         src/spark/scene/submit/SkinnedAnimationService.cpp
+        src/spark/scene/submit/SkinnedSceneDrawMaterialApplicator.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitLighting.cpp
         src/spark/scene/submit/SceneSubmitMaterial.cpp

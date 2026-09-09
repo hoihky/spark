@@ -17,7 +17,10 @@
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/scene/submit/SkinnedAnimationService.hpp"
+#include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/physics/CharacterController3D.hpp"
@@ -683,6 +686,13 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
                 [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
             return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, nullptr, nullptr);
         };
+        const auto findSceneTexture =
+                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* uvScale,
+                          Spark::Vector2* uvOffset) -> std::int32_t {
+            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
+        };
+        Spark::SkinnedAnimationService& skinnedAnimation = world.GetSkinnedAnimationService();
+        Spark::SkinnedSceneDrawMaterialApplicator skinnedMaterialApplicator(params, findSceneTexture);
 
         Spark::Array<Spark::SceneDrawItem> drawList;
         drawList.Reserve(128);
@@ -734,29 +744,23 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             if (!smc.GetMesh() || anim == nullptr || !anim->GetSkeleton()) {
                 return;
             }
-            const std::uint32_t jc = anim->GetSkeleton()->GetJointCount();
-            if (jc == 0) {
+            if (anim->GetSkeleton()->GetJointCount() == 0) {
                 return;
             }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skinnedMesh = smc.GetMesh();
-            item.albedo = {0.9F, 0.88F, 0.82F};
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 0.5F;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Spark::Vector3& t = mat->GetTint();
-                    item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-                }
+            const Spark::MultiMaterialComponent* multiMat =
+                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+            Spark::SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = Spark::SceneMeshSlot::Custom;
+            baseItem.skinnedMesh = smc.GetMesh();
+            baseItem.albedo = {0.9F, 0.88F, 0.82F};
+            baseItem.textureLayer = -1;
+            baseItem.metallic = 0.0F;
+            baseItem.roughness = 0.5F;
+            if (!skinnedAnimation.TryResolvePalette(smc, anim, baseItem.jointPalette, Spark::Skeleton::MaxJoints)) {
+                return;
             }
-            item.jointPalette.Resize(jc);
-            anim->ComputeJointPalette(item.jointPalette.GetData(), Spark::Skeleton::MaxJoints);
-            drawList.PushBack(item);
+            skinnedMaterialApplicator.AppendSkinnedDraws(drawList, baseItem, *smc.GetMesh(), mat, multiMat);
         });
 
         if (skeletonDebugDraw != nullptr && skeletonDebugDraw->IsEnabled()) {

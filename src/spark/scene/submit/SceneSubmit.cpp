@@ -31,6 +31,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/SkinnedAnimationService.hpp"
+#include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
@@ -124,37 +125,8 @@ void PushSkinnedMeshDraws(
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
         const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
-    const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
-    if (submeshes.IsEmpty() || multiMat == nullptr) {
-        SceneDrawItem item = baseItem;
-        item.submeshIndex = kSceneDrawFullSubmesh;
-        if (mat != nullptr) {
-            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
-        } else if (multiMat != nullptr && multiMat->GetSlotCount() > 0U) {
-            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(0U);
-            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
-            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
-        }
-        drawList.PushBack(item);
-        return;
-    }
-
-    for (std::size_t si = 0; si < submeshes.GetSize(); ++si) {
-        SceneDrawItem item = baseItem;
-        item.submeshIndex = static_cast<std::uint32_t>(si);
-        const MeshSubmesh& sm = submeshes[si];
-        const std::uint32_t materialIndex = sm.ResolveMaterialIndex(multiMat->GetActiveVariantIndex());
-        if (materialIndex < multiMat->GetSlotCount()) {
-            const MultiMaterialComponent::Slot& slot = multiMat->GetSlot(materialIndex);
-            ApplyMultiMaterialSlotToSceneDrawItem(item, slot, &params);
-            ApplyAlbedoTexture(item, slot.baseColor, slot.tint, findOrAddTexture);
-        } else if (mat != nullptr) {
-            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-            ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
-        }
-        drawList.PushBack(item);
-    }
+    SkinnedSceneDrawMaterialApplicator applicator(params, findOrAddTexture);
+    applicator.AppendSkinnedDraws(drawList, baseItem, mesh, mat, multiMat);
 }
 
 }  // namespace SceneSubmitDetail
@@ -404,6 +376,7 @@ void FillStandardLitSceneFromWorld(
         SceneRenderParams& params;
         const SceneSubmitDetail::FindSceneTextureFn& findTex;
         SkinnedAnimationService& skinnedService;
+        SkinnedSceneDrawMaterialApplicator materialApplicator;
         std::int32_t defaultShadowFlags = 0;
 
         SkinnedSubmitSink(
@@ -416,6 +389,7 @@ void FillStandardLitSceneFromWorld(
               params(inParams),
               findTex(inFindTex),
               skinnedService(inSkinnedService),
+              materialApplicator(inParams, inFindTex),
               defaultShadowFlags(inDefaultShadowFlags) {}
 
         void OnSkinnedDrawable(GameObject* object,
@@ -448,18 +422,7 @@ void FillStandardLitSceneFromWorld(
             }
             baseItem.shadowFlags = defaultShadowFlags;
 
-            if (multiMat != nullptr && !smc.GetMesh()->GetSubmeshes().IsEmpty()) {
-                SceneSubmitDetail::PushSkinnedMeshDraws(
-                        draws, baseItem, *smc.GetMesh(), mat, multiMat, params, findTex);
-                return;
-            }
-
-            SceneDrawItem item = baseItem;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                SceneSubmitDetail::ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findTex);
-            }
-            draws.PushBack(item);
+            materialApplicator.AppendSkinnedDraws(draws, baseItem, *smc.GetMesh(), mat, multiMat);
         }
     };
 

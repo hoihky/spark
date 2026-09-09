@@ -44,6 +44,7 @@ function(spark_add_physics_tests)
             tests/animation/SkeletonPaletteBlendTest.cpp
             tests/animation/SkeletonPaletteCacheTest.cpp
             tests/scene/SkinnedAnimationBudgetTest.cpp
+            tests/scene/SkinnedGltfPbrTest.cpp
             tests/scene/GltfAnimationEventsTest.cpp
     )
 

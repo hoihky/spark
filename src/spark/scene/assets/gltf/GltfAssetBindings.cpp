@@ -9,6 +9,7 @@
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/scene/assets/gltf/GltfSceneImporter.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/assets/gltf/SkinnedGltfMaterialPresenter.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/material/MaterialAssetLoader.hpp"
 
@@ -42,34 +43,12 @@ bool ShouldBindGltfMaterials(const SkinnedGltfAsset& asset) noexcept {
     return 0U;
 }
 
-[[nodiscard]] std::uint32_t ResolvePrimaryMaterialIndex(const SkinnedGltfAsset& asset) noexcept {
-    if (asset.mesh && !asset.mesh->GetSubmeshes().IsEmpty()) {
-        return asset.mesh->GetSubmeshes()[0].materialIndex;
-    }
-    return 0U;
-}
-
 [[nodiscard]] bool ShouldUseMultiMaterialComponent(const GltfAsset& asset) noexcept {
-    return static_cast<bool>(asset.mesh) && asset.mesh->GetSubmeshes().GetSize() > 1U;
-}
-
-[[nodiscard]] bool ShouldUseMultiMaterialComponent(const SkinnedGltfAsset& asset) noexcept {
     return static_cast<bool>(asset.mesh) && asset.mesh->GetSubmeshes().GetSize() > 1U;
 }
 
 [[nodiscard]] const GltfMaterial& ResolvePrimaryMaterial(
         const GltfAsset& asset,
-        const std::uint32_t materialIndex) noexcept {
-    if (!asset.materials.IsEmpty()) {
-        const std::size_t resolvedIndex =
-                materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
-        return asset.materials[resolvedIndex];
-    }
-    return asset.material;
-}
-
-[[nodiscard]] const GltfMaterial& ResolvePrimaryMaterial(
-        const SkinnedGltfAsset& asset,
         const std::uint32_t materialIndex) noexcept {
     if (!asset.materials.IsEmpty()) {
         const std::size_t resolvedIndex =
@@ -107,34 +86,8 @@ void BindMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLi
 }
 
 void BindMaterials(GameObject& owner, const SkinnedGltfAsset& asset, const char* gltfLibraryKey) {
-    if (!ShouldBindGltfMaterials(asset)) {
-        return;
-    }
-    GameWorld& world = owner.GetWorld();
-    const Utf8String libraryKey = ResolveGltfLibraryKey(gltfLibraryKey);
-    if (ShouldUseMultiMaterialComponent(asset)) {
-        GltfAsset rigidView{};
-        rigidView.material = asset.material;
-        rigidView.materials = asset.materials;
-        rigidView.materialVariantNames = asset.materialVariantNames;
-        if (MultiMaterialComponent* multi = owner.AddComponent<MultiMaterialComponent>()) {
-            multi->BindFromGltfAsset(world, libraryKey.CStr(), rigidView);
-        }
-        return;
-    }
-
-    const std::uint32_t materialIndex = ResolvePrimaryMaterialIndex(asset);
-    const GltfMaterial& primaryMaterial = ResolvePrimaryMaterial(asset, materialIndex);
-    if (!primaryMaterial.HasPresentationContent()) {
-        return;
-    }
-    if (MaterialComponent* mat = owner.AddComponent<MaterialComponent>()) {
-        ApplyGltfMaterialDesc(*mat, primaryMaterial);
-        if (!libraryKey.IsEmpty()) {
-            const Utf8String key = MaterialAssetLoader::MakeGltfMaterialLibraryKey(libraryKey.CStr(), materialIndex);
-            mat->SetMaterialAsset(world, key.CStr());
-        }
-    }
+    SkinnedGltfMaterialPresenter presenter{};
+    presenter.PresentOn(owner, asset, gltfLibraryKey);
 }
 
 }  // namespace

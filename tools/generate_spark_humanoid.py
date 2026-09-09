@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import math
 import struct
+import zlib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -117,22 +118,57 @@ def mat4_try_invert(m: list[float]) -> list[float]:
     return out
 
 
+def png_from_rgba(width: int, height: int, rgba: bytes) -> bytes:
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data))
+            + tag
+            + data
+            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+        )
+
+    raw = bytearray()
+    stride = width * 4
+    for row in range(height):
+        raw.append(0)
+        raw.extend(rgba[row * stride : (row + 1) * stride])
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + chunk(b"IEND", b"")
+    )
+
+
+def flat_normal_png() -> bytes:
+    return png_from_rgba(2, 2, bytes([128, 128, 255, 255] * 4))
+
+
+def orm_png(roughness: float, metallic: float) -> bytes:
+    g = max(0, min(255, int(round(roughness * 255.0))))
+    b = max(0, min(255, int(round(metallic * 255.0))))
+    pixel = bytes([0, g, b, 255])
+    return png_from_rgba(2, 2, pixel * 4)
+
+
 def box_vertices(cx: float, cy: float, cz: float, hx: float, hy: float, hz: float, joint: int):
     corners = [
-        (cx - hx, cy - hy, cz - hz),
-        (cx + hx, cy - hy, cz - hz),
-        (cx + hx, cy + hy, cz - hz),
-        (cx - hx, cy + hy, cz - hz),
-        (cx - hx, cy - hy, cz + hz),
-        (cx + hx, cy - hy, cz + hz),
-        (cx + hx, cy + hy, cz + hz),
-        (cx - hx, cy + hy, cz + hz),
+        ((cx - hx, cy - hy, cz - hz), (0.0, 0.0), (0.0, -1.0, 0.0)),
+        ((cx + hx, cy - hy, cz - hz), (1.0, 0.0), (0.0, -1.0, 0.0)),
+        ((cx + hx, cy + hy, cz - hz), (1.0, 1.0), (0.0, 1.0, 0.0)),
+        ((cx - hx, cy + hy, cz - hz), (0.0, 1.0), (0.0, 1.0, 0.0)),
+        ((cx - hx, cy - hy, cz + hz), (0.0, 0.0), (0.0, 0.0, 1.0)),
+        ((cx + hx, cy - hy, cz + hz), (1.0, 0.0), (0.0, 0.0, 1.0)),
+        ((cx + hx, cy + hy, cz + hz), (1.0, 1.0), (0.0, 0.0, 1.0)),
+        ((cx - hx, cy + hy, cz + hz), (0.0, 1.0), (0.0, 0.0, 1.0)),
     ]
     verts = []
-    for px, py, pz in corners:
+    for (px, py, pz), (u, v), normal in corners:
         verts.append(
             {
                 "pos": (px, py, pz),
+                "uv": (u, v),
+                "normal": normal,
                 "joints": (joint, 0, 0, 0),
                 "weights": (1.0, 0.0, 0.0, 0.0),
             }
@@ -333,10 +369,14 @@ def build_animation(name: str, tracks: list[tuple[int, list[float], list[float]]
 def build_gltf() -> tuple[dict, bytes]:
     verts = build_mesh_vertices()
     positions: list[float] = []
+    normals: list[float] = []
+    uvs: list[float] = []
     joints: list[int] = []
     weights: list[float] = []
     for v in verts:
         positions.extend(v["pos"])
+        normals.extend(v["normal"])
+        uvs.extend(v["uv"])
         joints.extend(v["joints"])
         weights.extend(v["weights"])
 
@@ -354,6 +394,8 @@ def build_gltf() -> tuple[dict, bytes]:
     pos_accessor = append_accessor(
         blob, accessors, buffer_views, pack_floats(positions), 5126, "VEC3", len(verts), pos_max, pos_min
     )
+    normal_accessor = append_accessor(blob, accessors, buffer_views, pack_floats(normals), 5126, "VEC3", len(verts))
+    uv_accessor = append_accessor(blob, accessors, buffer_views, pack_floats(uvs), 5126, "VEC2", len(verts))
     joints_accessor = append_accessor(blob, accessors, buffer_views, pack_u16(joints), 5123, "VEC4", len(verts))
     weights_accessor = append_accessor(blob, accessors, buffer_views, pack_floats(weights), 5126, "VEC4", len(verts))
     index_accessor = append_accessor(blob, accessors, buffer_views, pack_u16(indices), 5123, "SCALAR", len(indices), [max(indices)], [0])
@@ -364,6 +406,21 @@ def build_gltf() -> tuple[dict, bytes]:
         ibm_values.extend(mat4_try_invert(world[joint]))
     ibm_accessor = append_accessor(
         blob, accessors, buffer_views, pack_floats(ibm_values), 5126, "MAT4", len(JOINT_NODE_INDICES)
+    )
+
+    normal_png = flat_normal_png()
+    orm_png_bytes = orm_png(0.65, 0.0)
+    normal_image_offset = len(blob)
+    blob.extend(normal_png)
+    orm_image_offset = len(blob)
+    blob.extend(orm_png_bytes)
+    normal_image_view = len(buffer_views)
+    buffer_views.append(
+        {"buffer": 0, "byteOffset": normal_image_offset, "byteLength": len(normal_png)}
+    )
+    orm_image_view = len(buffer_views)
+    buffer_views.append(
+        {"buffer": 0, "byteOffset": orm_image_offset, "byteLength": len(orm_png_bytes)}
     )
 
     animations = [
@@ -396,6 +453,8 @@ def build_gltf() -> tuple[dict, bytes]:
                     {
                         "attributes": {
                             "POSITION": pos_accessor,
+                            "NORMAL": normal_accessor,
+                            "TEXCOORD_0": uv_accessor,
                             "JOINTS_0": joints_accessor,
                             "WEIGHTS_0": weights_accessor,
                         },
@@ -413,13 +472,21 @@ def build_gltf() -> tuple[dict, bytes]:
                 "skeleton": JOINT_ROOT,
             }
         ],
+        "images": [
+            {"mimeType": "image/png", "bufferView": normal_image_view},
+            {"mimeType": "image/png", "bufferView": orm_image_view},
+        ],
+        "textures": [{"source": 0}, {"source": 1}],
+        "samplers": [{"magFilter": 9729, "minFilter": 9729}],
         "materials": [
             {
                 "name": "Body",
+                "normalTexture": {"index": 0, "scale": 1.0},
                 "pbrMetallicRoughness": {
                     "baseColorFactor": [0.42, 0.62, 0.92, 1.0],
                     "metallicFactor": 0.0,
                     "roughnessFactor": 0.65,
+                    "metallicRoughnessTexture": {"index": 1},
                 },
             }
         ],
