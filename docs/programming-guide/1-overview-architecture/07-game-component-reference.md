@@ -640,14 +640,18 @@ go->AddComponent<CollisionComponent>(0.5F, Vector3::Zero);
 
 ### `Character3DAnimFsmComponent`
 
-**Priority:** 100 · Add **before** `AnimatorComponent` on same object.
+**Priority:** 100 (`ComponentUpdatePriority::AnimationDriver`) · **Sibling:** `AnimatorComponent` (200) on the same object.
+
+Tick order is enforced by `GameObject` stable-sort on `UpdatePriority` — component add order does not matter.
 
 ```cpp
-go->AddComponent<Character3DAnimFsmComponent>();
+auto* fsm = go->AddComponent<Character3DAnimFsmComponent>();
 go->AddComponent<AnimatorComponent>(skeleton, walkClip, 1.0F);
-auto* fsm = go->GetComponent<Character3DAnimFsmComponent>();
 fsm->ConfigureLocomotionFromSkeleton(*skeleton, walkClip);
-fsm->SetLocomotionInput(moving, sprint);
+fsm->SetWalkSpeedThreshold(0.35F);
+fsm->SetRunSpeedThreshold(2.5F);
+fsm->SetLocomotionBlendEnabled(true);
+fsm->SetLocomotionAnalogSpeed(speedMetersPerSecond);  // or SetLocomotionInput(moving, sprint)
 fsm->SetCombatClips(attackClip, hurtClip, staggerClip, deathClip);
 fsm->SetCombatBlackboardIntSlot(kAiBlackboardIntCharacter3DCombatCommand);
 fsm->RequestAttack();
@@ -656,7 +660,9 @@ fsm->RequestStagger();
 fsm->RequestDeath();
 ```
 
-Locomotion uses a **1D speed blend tree** (idle / walk / run) by default. Disable with `SetLocomotionBlendEnabled(false)` for discrete clip switches.
+**Locomotion sources** (first match wins each frame): `SetLocomotionAnalogSpeed` → `SetLocomotionInput` → parent-chain `Rigidbody3D` / `CharacterController3D` velocity → world-position delta.
+
+Default locomotion uses a **1D speed blend tree** (idle / walk / run). Disable with `SetLocomotionBlendEnabled(false)` for discrete clip switches.
 
 ### `AnimationEventReceiverComponent`
 

@@ -250,8 +250,8 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 |--------|------|------------------------|
 | **Skinned mesh** | GPU skinned draws | `SkinnedMeshComponent`, joint palette on `SceneDrawItem` |
 | **Skeletal animation** | Clip playback, loop modes, crossfade | `AnimatorComponent` (`AnimLoopMode`, `SetClipIndexWithCrossfade`, `ComputeJointPalette`), `Skeleton` under `spark/animation/` |
-| **3D character FSM (M2)** | Locomotion + optional attack overlay | `Character3DAnimFsmComponent` drives `AnimatorComponent` from speed |
-| **3D animation roadmap** | Milestones M1–M6 (API, FSM, blend, events, scale, tooling) | [`docs/ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) — **M1 complete** |
+| **3D character FSM (M2)** | Locomotion blend tree + combat overlays + AI blackboard | `Character3DAnimFsmComponent` → `AnimatorComponent` (`UpdatePriority` 100 → 200) |
+| **3D animation roadmap** | Milestones M1–M6 (API, FSM, blend, events, scale, tooling) | [`docs/ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) — **M1–M4 complete** |
 | **Character camera** | Third-person style rig (demos) | `CharacterCameraRig` (`spark/scene/camera/CharacterCameraRig.hpp`) |
 
 ### 5.9 UI (retained mode, `spark/ui/`)

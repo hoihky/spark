@@ -35,7 +35,7 @@ Copy the **Issue body** block under each task when filing issues (or use the bul
 | Walk clip heuristic | Done — name contains `"walk"` |
 | Bind-up / facing yaw helpers | Done — `SkinnedGltfAsset` |
 | Loop modes / crossfade / clip API (M1) | Done — `AnimLoopMode`, `SetClipIndexWithCrossfade`, C/C# bindings |
-| 3D animation state machine (M2) | Partial — combat overlays + blackboard; death/stagger |
+| 3D animation state machine (M2) | Done — `Character3DAnimFsmComponent` (locomotion, blend, combat, AI blackboard) |
 | Clip blending / crossfade | **1D speed blend tree + crossfade-from-blend precedence** (M3 done) |
 | Animation events / root motion / IK | **M4 complete** (events, root motion, attachments, C#); IK not started |
 | C# / C API clip control | Done (M1) — loop mode, finished, crossfade, clip names |
@@ -108,16 +108,16 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| AN3D-M2-01 | **New component:** `CharacterAnim3DComponent` (or `SkeletalAnimFsmComponent`) — drives `AnimatorComponent` on same or child object | P0 | [ ] |
-| AN3D-M2-02 | **Locomotion input:** speed from `Rigidbody3DComponent` velocity and/or character motor; thresholds for idle / move / sprint | P0 | [ ] |
-| AN3D-M2-03 | **Clip resolution:** by explicit indices or name patterns (`idle`, `walk`, `run`, `sprint`) | P0 | [ ] |
-| AN3D-M2-04 | **Combat overlay:** optional attack/hurt clips (non-loop); priority over locomotion; clear when finished | P1 | [ ] |
-| AN3D-M2-05 | **Blackboard hook:** optional `AiAgentComponent` int slot for combat command (parity with `kAiBlackboardIntSprite2DCombatCommand`) | P1 | [ ] |
-| AN3D-M2-06 | **`RequestAttack` / `RequestHurt`** public API on FSM component | P1 | [ ] |
-| AN3D-M2-07 | **Component order:** document “FSM before Animator” update order; enforce or sort in `GameWorld::UpdateGameObjects` if needed | P1 | [ ] |
-| AN3D-M2-08 | **Refactor demos:** `Maze3DDemo`, `CharacterCameraDemo` use FSM; remove ad-hoc walk-only setup | P0 | [ ] |
-| AN3D-M2-09 | **C# + C API:** add component from gameplay; configure clip indices or name table | P1 | [ ] |
-| AN3D-M2-10 | **Docs:** `docs/ANIMATION_3D_ROADMAP.md` + short “Character animation” section in developer guide | P1 | [ ] |
+| AN3D-M2-01 | **New component:** `Character3DAnimFsmComponent` — drives `AnimatorComponent` on same object | P0 | [x] |
+| AN3D-M2-02 | **Locomotion input:** speed from `Rigidbody3DComponent` / `CharacterController3D` (parent chain) or gameplay APIs | P0 | [x] |
+| AN3D-M2-03 | **Clip resolution:** by explicit indices or name patterns (`idle`, `walk`, `run`, `sprint`) | P0 | [x] |
+| AN3D-M2-04 | **Combat overlay:** optional attack/hurt/stagger/death clips (non-loop); priority over locomotion | P1 | [x] |
+| AN3D-M2-05 | **Blackboard hook:** `kAiBlackboardIntCharacter3DCombatCommand` slot on `AiAgentComponent` | P1 | [x] |
+| AN3D-M2-06 | **`RequestAttack` / `RequestHurt` / `RequestStagger` / `RequestDeath`** public API | P1 | [x] |
+| AN3D-M2-07 | **Component order:** `UpdatePriority` + `GameObject` stable-sort documented | P1 | [x] |
+| AN3D-M2-08 | **Refactor demos:** `Maze3DDemo`, `CharacterCameraDemo`, `ThreeDDemo` use FSM + skeleton clip resolve | P0 | [x] |
+| AN3D-M2-09 | **C# + C API:** `spark_char_3d_fsm_*`, `AddCharacter3DAnimFsm()` | P1 | [x] |
+| AN3D-M2-10 | **Docs:** programming guide skinned-characters + component reference | P1 | [x] |
 
 ---
 

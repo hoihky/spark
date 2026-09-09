@@ -20,7 +20,7 @@ class IEngineContext;
  * 1D speed blend tree (idle / walk / run). Supports combat overlays (hurt / attack / stagger / death)
  * triggered from gameplay or <c>AiAgentComponent</c> blackboard (see <c>kAiBlackboardIntCharacter3DCombatCommand</c>).
  *
- * Add **before** <c>AnimatorComponent</c> on the same <c>GameObject</c> so <c>OnUpdate</c> runs first.
+ * Pair with <c>AnimatorComponent</c> on the same <c>GameObject</c> (runs first via <c>UpdatePriority</c> 100 vs 200).
  */
 class Character3DAnimFsmComponent final : public GameComponent {
 public:

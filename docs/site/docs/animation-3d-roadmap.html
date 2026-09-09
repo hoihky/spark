@@ -565,15 +565,15 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>3D animation state machine (M2)</td>
-<td>Partial — <code>Character3DAnimFsmComponent</code> (locomotion + attack)</td>
+<td>Done — <code>Character3DAnimFsmComponent</code> (locomotion, blend, combat, AI blackboard)</td>
 </tr>
 <tr>
 <td>Clip blending / crossfade</td>
-<td>Done (M1 two-clip crossfade); blend tree (M3) not started</td>
+<td><strong>1D speed blend tree + crossfade-from-blend precedence</strong> (M3 done)</td>
 </tr>
 <tr>
 <td>Animation events / root motion / IK</td>
-<td><strong>Not started</strong></td>
+<td><strong>M4 complete</strong> (events, root motion, attachments, C#); IK not started</td>
 </tr>
 <tr>
 <td>C# / C API clip control</td>
@@ -749,63 +749,63 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 <tbody>
 <tr>
 <td>AN3D-M2-01</td>
-<td><strong>New component:</strong> <code>CharacterAnim3DComponent</code> (or <code>SkeletalAnimFsmComponent</code>) — drives <code>AnimatorComponent</code> on same or child object</td>
+<td><strong>New component:</strong> <code>Character3DAnimFsmComponent</code> — drives <code>AnimatorComponent</code> on same object</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-02</td>
-<td><strong>Locomotion input:</strong> speed from <code>Rigidbody3DComponent</code> velocity and/or character motor; thresholds for idle / move / sprint</td>
+<td><strong>Locomotion input:</strong> speed from <code>Rigidbody3DComponent</code> / <code>CharacterController3D</code> (parent chain) or gameplay APIs</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-03</td>
 <td><strong>Clip resolution:</strong> by explicit indices or name patterns (<code>idle</code>, <code>walk</code>, <code>run</code>, <code>sprint</code>)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-04</td>
-<td><strong>Combat overlay:</strong> optional attack/hurt clips (non-loop); priority over locomotion; clear when finished</td>
+<td><strong>Combat overlay:</strong> optional attack/hurt/stagger/death clips (non-loop); priority over locomotion</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-05</td>
-<td><strong>Blackboard hook:</strong> optional <code>AiAgentComponent</code> int slot for combat command (parity with <code>kAiBlackboardIntSprite2DCombatCommand</code>)</td>
+<td><strong>Blackboard hook:</strong> <code>kAiBlackboardIntCharacter3DCombatCommand</code> slot on <code>AiAgentComponent</code></td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-06</td>
-<td><strong><code>RequestAttack</code> / <code>RequestHurt</code></strong> public API on FSM component</td>
+<td><strong><code>RequestAttack</code> / <code>RequestHurt</code> / <code>RequestStagger</code> / <code>RequestDeath</code></strong> public API</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-07</td>
-<td><strong>Component order:</strong> document “FSM before Animator” update order; enforce or sort in <code>GameWorld::UpdateGameObjects</code> if needed</td>
+<td><strong>Component order:</strong> <code>UpdatePriority</code> + <code>GameObject</code> stable-sort documented</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-08</td>
-<td><strong>Refactor demos:</strong> <code>Maze3DDemo</code>, <code>CharacterCameraDemo</code> use FSM; remove ad-hoc walk-only setup</td>
+<td><strong>Refactor demos:</strong> <code>Maze3DDemo</code>, <code>CharacterCameraDemo</code>, <code>ThreeDDemo</code> use FSM + skeleton clip resolve</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-09</td>
-<td><strong>C# + C API:</strong> add component from gameplay; configure clip indices or name table</td>
+<td><strong>C# + C API:</strong> <code>spark_char_3d_fsm_*</code>, <code>AddCharacter3DAnimFsm()</code></td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M2-10</td>
-<td><strong>Docs:</strong> <code>docs/ANIMATION_3D_ROADMAP.md</code> + short “Character animation” section in developer guide</td>
+<td><strong>Docs:</strong> programming guide skinned-characters + component reference</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 </tbody>
 </table>
@@ -826,49 +826,49 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 <td>AN3D-M3-01</td>
 <td><strong><code>Skeleton::ComputeBlendedPalette(clipA, clipB, t)</code></strong> — blend local TRS per joint, then hierarchy + bind</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-02</td>
 <td><strong>Animator blend state:</strong> <code>SetBlend(clips, weight)</code> or dual-clip + <code>blend01</code> updated each frame</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-03</td>
 <td><strong>1D blend tree data:</strong> ordered <code>{threshold, clipIndex}</code> pairs; evaluator returns clip pair + local t</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-04</td>
 <td><strong>FSM integration:</strong> <code>CharacterAnim3DComponent</code> feeds speed01 into blend tree instead of discrete switches</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-05</td>
 <td><strong>Crossfade interaction:</strong> blend tree output composes with M1 crossfade (define precedence)</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-06</td>
 <td><strong>Debug:</strong> log/display active clips + blend weight (dev overlay or HUD line)</td>
 <td>P2</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-07</td>
 <td><strong>Demo:</strong> CharacterCamera — analog walk/run from stick magnitude</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M3-08</td>
 <td><strong>Unit tests:</strong> blend at t=0, 1, 0.5 matches single-clip palettes</td>
 <td>P2</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 </tbody>
 </table>
@@ -889,55 +889,55 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 <td>AN3D-M4-01</td>
 <td><strong>Event schema:</strong> clip name + time + event name (+ optional float/int payload) — JSON sidecar or glTF extras</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-02</td>
 <td><strong>Runtime:</strong> fire <code>SignalId::AnimationEvent</code> (or dedicated callback) when playback crosses event time (once per crossing)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-03</td>
 <td><strong>Editor/export note:</strong> document Blender → glTF event naming convention</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-04</td>
 <td><strong>Root motion extraction:</strong> per-frame delta from chosen root/hips joint in clip space</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-05</td>
 <td><strong><code>RootMotionComponent</code>:</strong> apply delta to owner transform or motor; <code>inPlace</code> flag disables translation</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-06</td>
 <td><strong>Attachment component:</strong> bind child <code>GameObject</code> to joint index/name; update local/world each frame</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-07</td>
 <td><strong>Hit windows:</strong> sample doc + demo sphere/capsule enabled between event <code>active_start</code> / <code>active_end</code></td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-08</td>
 <td><strong>Combat demo slice:</strong> minimal attack clip + event-driven hit trace (ties to OPEN_WORLD G1)</td>
 <td>P2</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>AN3D-M4-09</td>
 <td><strong>C# events:</strong> subscribe from gameplay module</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 </tbody>
 </table>

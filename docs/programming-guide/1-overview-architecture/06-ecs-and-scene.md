@@ -41,7 +41,7 @@ public:
 };
 ```
 
-Built-in priorities (`ComponentUpdatePriority`):
+Built-in priorities (`ComponentUpdatePriority`). Each `GameObject` **stable-sorts** its components by `UpdatePriority()` before `OnUpdate` — lower values run first:
 
 | Priority | Value | Examples |
 |----------|-------|----------|

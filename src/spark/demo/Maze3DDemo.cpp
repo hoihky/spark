@@ -458,6 +458,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             playerCharAnimFsm->ConfigureLocomotionFromSkeleton(*humanAsset.skeleton, humanAsset.walkClipIndex);
             playerCharAnimFsm->SetWalkSpeedThreshold(0.35F);
             playerCharAnimFsm->SetRunSpeedThreshold(2.5F);
+            playerCharAnimFsm->SetLocomotionBlendEnabled(true);
             if (humanAsset.baseColorTexture) {
                 if (Spark::MaterialComponent* fm = vis->AddComponent<Spark::MaterialComponent>(
                             humanAsset.baseColorTexture, Spark::Vector3::One)) {
@@ -756,7 +757,12 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             }
 
             if (playerCharAnimFsm != nullptr) {
-                playerCharAnimFsm->SetLocomotionInput(moving, sprint);
+                float speedParam = 0.0F;
+                if (moving) {
+                    speedParam = sprint ? playerCharAnimFsm->GetRunSpeedThreshold()
+                                        : playerCharAnimFsm->GetWalkSpeedThreshold();
+                }
+                playerCharAnimFsm->SetLocomotionAnalogSpeed(speedParam);
             }
 
             {

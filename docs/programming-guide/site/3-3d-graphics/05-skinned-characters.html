@@ -748,12 +748,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       </aside>
 
       <main class="content">
-        <article class="doc">
-          <header class="doc-header">
-            <h1>05 skinned characters</h1>
-          </header>
-          <div class="doc-body"><h1 id="skinned-characters">Skinned Characters</h1>
-<h2 id="class-design-skinnedgltfasset">Class Design: <code>SkinnedGltfAsset</code></h2>
+        <article class="doc"><h1>Skinned Characters</h1>
+<h2>Class Design: <code>SkinnedGltfAsset</code></h2>
 <pre><code class="language-cpp">struct SkinnedGltfAsset {
     SharedPtr&lt;SkinnedMesh&gt; mesh;
     SharedPtr&lt;Skeleton&gt; skeleton;
@@ -764,7 +760,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 };
 </code></pre>
 <p>Load via <code>world.LoadSkinnedGltf("assets/models/Fox.glb")</code>.</p>
-<h2 id="components">Components</h2>
+<h2>Components</h2>
 <pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/models/Fox.glb&quot;);
 
 auto* go = world.CreateGameObject();
@@ -774,38 +770,92 @@ auto* skin = go-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(fox.mesh);
 auto* mat = go-&gt;AddComponent&lt;MaterialComponent&gt;(fox.baseColorTexture);
 mat-&gt;SetRoughness(0.6F);
 
+auto* fsm = go-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
 auto* anim = go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, fox.walkClipIndex);
 anim-&gt;SetLoopMode(AnimLoopMode::Loop);
+fsm-&gt;ConfigureLocomotionFromSkeleton(*fox.skeleton, fox.walkClipIndex);
 </code></pre>
-<h2 id="class-design-animatorcomponent">Class Design: <code>AnimatorComponent</code></h2>
+<p><code>GameObject</code> stable-sorts components by <code>UpdatePriority</code> each frame — add the FSM and animator in any order; the FSM (priority <strong>100</strong>) always runs before the animator (<strong>200</strong>).</p>
+<h2>Class Design: <code>AnimatorComponent</code></h2>
 <ul>
 <li>Samples animation clips into joint palette</li>
-<li><code>UpdatePriority</code> = <code>AnimatorPlayback</code> (runs after <code>AnimationDriver</code>)</li>
+<li><code>UpdatePriority</code> = <code>AnimatorPlayback</code> (200)</li>
+<li>Loop modes, crossfade, dual-clip locomotion blend</li>
 <li>Emits skinned draws with <code>jointPalette</code> in <code>SceneDrawItem</code></li>
 </ul>
-<h2 id="attachment-points">Attachment Points</h2>
+<h2>Class Design: <code>Character3DAnimFsmComponent</code> (M2)</h2>
+<p>Higher-level <strong>locomotion + combat</strong> driver for <code>AnimatorComponent</code> on the same object.</p>
+<table>
+<thead>
+<tr>
+<th>Input source</th>
+<th>API</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Physics velocity</td>
+<td><em>(automatic)</em></td>
+<td>Reads <code>Rigidbody3DComponent</code> on self or parent</td>
+</tr>
+<tr>
+<td>Character motor</td>
+<td><em>(automatic)</em></td>
+<td>Reads <code>CharacterController3DComponent</code> move input / velocity on self or parent</td>
+</tr>
+<tr>
+<td>Gameplay gait</td>
+<td><code>SetLocomotionInput(moving, sprint)</code></td>
+<td>Discrete idle / walk / run</td>
+</tr>
+<tr>
+<td>Analog speed</td>
+<td><code>SetLocomotionAnalogSpeed(m/s)</code></td>
+<td>1D blend tree when <code>SetLocomotionBlendEnabled(true)</code></td>
+</tr>
+<tr>
+<td>AI combat</td>
+<td><code>SetCombatBlackboardIntSlot(kAiBlackboardIntCharacter3DCombatCommand)</code></td>
+<td>Blackboard ints 1–4 → hurt / attack / stagger / death</td>
+</tr>
+</tbody>
+</table>
+<p>Clip names are resolved via <code>ConfigureLocomotionFromSkeleton</code> (<code>idle</code>, <code>walk</code>, <code>run</code>, <code>attack</code>, <code>hurt</code>, … — case-insensitive substring match). See <a href="../../../BLENDER_GLTF_ANIMATION_EXPORT.md"><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></a>.</p>
+<pre><code class="language-cpp">fsm-&gt;SetWalkSpeedThreshold(0.35F);
+fsm-&gt;SetRunSpeedThreshold(2.5F);
+fsm-&gt;SetLocomotionBlendEnabled(true);
+fsm-&gt;SetLocomotionAnalogSpeed(walkSpeedMetersPerSecond);
+fsm-&gt;RequestAttack();
+fsm-&gt;RequestHurt();
+</code></pre>
+<p><strong>Parent / child layout</strong> (Character Camera demo): put <code>Rigidbody3D</code> or <code>CharacterController3D</code> on the <strong>root</strong>; put <code>SkinnedMesh</code>, <code>Character3DAnimFsm</code>, and <code>Animator</code> on a <strong>visual child</strong>. The FSM walks the parent chain for motor velocity.</p>
+<h2>Attachment Points</h2>
 <p>Use <code>AttachmentSocketComponent</code> for bone-accurate weapon / VFX anchors (priority 250, after animator):</p>
-<pre><code class="language-cpp">// Character
-go-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
-go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, fox.walkClipIndex);
-
-// Weapon (child or separate object)
-auto* socket = character-&gt;AddComponent&lt;AttachmentSocketComponent&gt;();
+<pre><code class="language-cpp">auto* socket = characterVisual-&gt;AddComponent&lt;AttachmentSocketComponent&gt;();
+socket-&gt;SetSourceObject(characterVisual);
 socket-&gt;SetAttachedObject(swordObject);
-socket-&gt;SetJointIndex(handJointIndex);
+socket-&gt;SetJointByNamePattern(&quot;hand&quot;);
 socket-&gt;SetLocalOffset({0.05F, 0.0F, 0.1F});
 </code></pre>
-<h2 id="animation-events">Animation Events</h2>
+<h2>Animation Events</h2>
 <pre><code class="language-cpp">auto* events = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
-events-&gt;AddMarker(0, 0.35F, &quot;Footstep&quot;);
-// Listen via SignalId::AnimationEvent on a sibling GameComponent
+events-&gt;ImportFromSkeleton(*skeleton);  // from .spark-anim-events.json or future glTF extras
+
+auto* melee = go-&gt;AddComponent&lt;AnimationMeleeHitComponent&gt;();
+melee-&gt;SetFacingObject(characterRoot);
+melee-&gt;AddTarget(enemy);
 </code></pre>
-<p>See <a href="../1-overview-architecture/07-game-component-reference.html#animation">Game Component Reference</a>.</p>
-<p>Next: <a href="06-terrain-and-sky.html">Terrain and Sky</a>.</p></div>
-          <footer class="doc-footer">
-            <p>Generated by <strong>MDWeb</strong></p>
-          </footer>
-        </article>
+<p>Sidecar format and export notes: <a href="../../../BLENDER_GLTF_ANIMATION_EXPORT.md"><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></a>.</p>
+<h2>Root Motion</h2>
+<pre><code class="language-cpp">auto* rootMotion = characterRoot-&gt;AddComponent&lt;RootMotionComponent&gt;();
+rootMotion-&gt;SetAnimatorObject(characterVisual);
+rootMotion-&gt;SetApplyTarget(characterRoot);
+rootMotion-&gt;UsePatternMotionJointResolver();
+rootMotion-&gt;SetInPlace(true);  // toggle false to drive transform from clip
+</code></pre>
+<p>See <a href="../1-overview-architecture/07-game-component-reference.md#animation">Game Component Reference</a>.</p>
+<p>Next: <a href="06-terrain-and-sky.md">Terrain and Sky</a>.</p></article>
 
         
                 <aside class="toc" aria-label="On this page">

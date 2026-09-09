@@ -748,11 +748,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       </aside>
 
       <main class="content">
-        <article class="doc">
-          <header class="doc-header">
-            <h1>07 game component reference</h1>
-          </header>
-          <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
+        <article class="doc"><h1>Game Component Reference</h1>
 <p>Complete reference for all <strong>70</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
 <p><strong>Includes:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
 <p><strong>Subsystem tick order (typical frame):</strong></p>
@@ -764,7 +760,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
 </ol>
 <hr />
-<h2 id="quick-index">Quick index</h2>
+<h2>Quick index</h2>
 <table>
 <thead>
 <tr>
@@ -828,7 +824,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <hr />
-<h2 id="update-priorities">Update priorities</h2>
+<h2>Update priorities</h2>
 <table>
 <thead>
 <tr>
@@ -882,7 +878,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </table>
 <p><strong>Rule of thumb:</strong> add animation <strong>drivers</strong> (FSM) before <strong>playback</strong> (<code>Animator</code> / <code>SpriteAnimator</code>) on the same <code>GameObject</code>.</p>
 <hr />
-<h2 id="signals-sparkecssignalhpp">Signals (<code>spark/ecs/Signal.hpp</code>)</h2>
+<h2>Signals (<code>spark/ecs/Signal.hpp</code>)</h2>
 <table>
 <thead>
 <tr>
@@ -955,8 +951,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 }
 </code></pre>
 <hr />
-<h2 id="core">Core</h2>
-<h3 id="transformcomponent"><code>TransformComponent</code></h3>
+<h2>Core</h2>
+<h3><code>TransformComponent</code></h3>
 <p><strong>Header:</strong> <code>spark/ecs/components/core/TransformComponent.hpp</code><br />
 <strong>Kind:</strong> <code>ComponentKind::Transform</code><br />
 <strong>Consumed by:</strong> Everything that needs pose (render, physics, audio, cameras).</p>
@@ -968,15 +964,15 @@ tr-&gt;SetUniformScale(1.5F);
 tr-&gt;SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
 </code></pre>
 <hr />
-<h2 id="rendering">Rendering</h2>
-<h3 id="meshcomponent"><code>MeshComponent</code></h3>
+<h2>Rendering</h2>
+<h3><code>MeshComponent</code></h3>
 <p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
 <p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
 <pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh(&quot;assets/models/cube.obj&quot;);
 auto* mesh = go-&gt;AddComponent&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
 mesh-&gt;SetAlbedo({0.8F, 0.2F, 0.2F});
 </code></pre>
-<h3 id="materialcomponent"><code>MaterialComponent</code></h3>
+<h3><code>MaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Material</code> · <strong>Consumed by:</strong> Scene submit (PBR / toon, transparency partition)</p>
 <pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture(&quot;assets/brick.png&quot;);
 go-&gt;AddComponent&lt;MaterialComponent&gt;(albedo, Vector3::One);
@@ -987,7 +983,7 @@ mat-&gt;SetNormalTexture(normalMap);
 mat-&gt;SetMetallicRoughnessTexture(ormMap);
 mat-&gt;SetOpacity(0.85F);  // → transparent pass
 </code></pre>
-<h3 id="multimaterialcomponent"><code>MultiMaterialComponent</code></h3>
+<h3><code>MultiMaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Unknown</code> (serialization pending) · <strong>Sibling:</strong> <code>MeshComponent</code> on multi-material glTF meshes</p>
 <p>Per-submesh material slots indexed by <code>MeshSubmesh::materialIndex</code>. Populated from a loaded glTF asset:</p>
 <pre><code class="language-cpp">GltfAsset asset = world.LoadGltf(&quot;assets/models/Building.glb&quot;);
@@ -996,7 +992,7 @@ auto* multi = go-&gt;AddComponent&lt;MultiMaterialComponent&gt;();
 multi-&gt;PopulateFromGltfAsset(asset);
 // Scene submit reads slots when partitioning draws per submesh.
 </code></pre>
-<h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
+<h3><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
 <pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/Fox.glb&quot;);
 go-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(fox.mesh);
@@ -1005,17 +1001,17 @@ auto* anim = go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, 0, 1.0F)
 anim-&gt;SetLoopMode(AnimLoopMode::Loop);
 anim-&gt;SetClipIndexWithCrossfade(1, 0.25F);
 </code></pre>
-<h3 id="spritecomponent"><code>SpriteComponent</code></h3>
+<h3><code>SpriteComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sprite</code> · <strong>Consumed by:</strong> Sprite pass in <code>SceneRenderParams</code></p>
 <pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture(&quot;assets/hero.png&quot;);
 auto* sprite = go-&gt;AddComponent&lt;SpriteComponent&gt;(sheet, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 10);
 sprite-&gt;SetSortOrder(5);  // higher draws on top within layer
 </code></pre>
-<h3 id="spritelighting2dcomponent"><code>SpriteLighting2DComponent</code></h3>
+<h3><code>SpriteLighting2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpriteLighting2D</code> · <strong>Sibling:</strong> <code>SpriteComponent</code></p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(SpriteLighting2DMode::NormalMapped, 1.0F, 0.0F);
 </code></pre>
-<h3 id="spriteanimatorcomponent"><code>SpriteAnimatorComponent</code></h3>
+<h3><code>SpriteAnimatorComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpriteAnimator</code> · <strong>Priority:</strong> 200 · <strong>Sibling:</strong> <code>SpriteComponent</code></p>
 <pre><code class="language-cpp">auto* sa = go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
 sa-&gt;SetUniformGrid(4, 4);
@@ -1026,8 +1022,8 @@ idle.framesPerSecond = 8.0F;
 sa-&gt;AddClip(idle);
 sa-&gt;SetClipIndex(0);
 </code></pre>
-<h3 id="tilemapcomponent"><code>TilemapComponent</code></h3>
-<p><strong>Kind:</strong> <code>Tilemap</code> · <strong>Consumed by:</strong> Tilemap pass · <strong>Guide:</strong> <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a></p>
+<h3><code>TilemapComponent</code></h3>
+<p><strong>Kind:</strong> <code>Tilemap</code> · <strong>Consumed by:</strong> Tilemap pass · <strong>Guide:</strong> <a href="../2-2d-graphics/03-tilemaps.md">Tilemaps</a></p>
 <p>Multi-layer grid; each <code>TilemapLayer</code> holds <code>TileCell</code> data. Rendering uses <code>Tileset</code> atlas layout (including Tiled margin/spacing when set).</p>
 <pre><code class="language-cpp">SharedPtr&lt;Tileset&gt; set = CreateTilesetFromAtlas(atlas, 12, 11);
 auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(set, 32, 20, 1.0F, 0);
@@ -1035,7 +1031,7 @@ static_cast&lt;void&gt;(tm-&gt;AddLayer(&quot;Dungeon&quot;));
 tm-&gt;SetPaintTile(0, x, y, floorPaintId);
 tm-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 </code></pre>
-<h3 id="tilemapcollider2dcomponent"><code>TilemapCollider2DComponent</code></h3>
+<h3><code>TilemapCollider2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapCollider2D</code> · <strong>Sibling:</strong> <code>TilemapComponent</code> · <strong>Consumed by:</strong> <code>PhysicsWorld2D</code></p>
 <p>Bakes static colliders from <code>TileDefinition</code> on layers with <code>contributeCollision</code>.</p>
 <pre><code class="language-cpp">auto* tc = go-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
@@ -1043,8 +1039,8 @@ tc-&gt;SetCategoryBits(1u &lt;&lt; 1);
 tc-&gt;SetMaskBits(0xFFFF);
 </code></pre>
 <hr />
-<h2 id="tilemap">Tilemap</h2>
-<h3 id="tilemapgameplaygridcomponent"><code>TilemapGameplayGridComponent</code></h3>
+<h2>Tilemap</h2>
+<h3><code>TilemapGameplayGridComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapGameplayGrid</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
 <p>Caches a walkability grid and <code>TilemapGridFrame</code> for pathfinding / gameplay queries.</p>
 <pre><code class="language-cpp">auto* grid = go-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
@@ -1052,7 +1048,7 @@ grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
 grid-&gt;SetAutoRebake(true);
 grid-&gt;RebakeIfNeeded(*go);
 </code></pre>
-<h3 id="tilemapmapsourcecomponent"><code>TilemapMapSourceComponent</code></h3>
+<h3><code>TilemapMapSourceComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapMapSource</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
 <p>Imports <code>.tmx</code> or <code>.sparkmap</code> via <code>ImportNow</code>, optional hot reload. Sets <code>pixelsPerWorldUnit</code> on <code>TilemapDocumentApplyOptions</code>.</p>
 <pre><code class="language-cpp">auto* source = go-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
@@ -1060,19 +1056,19 @@ source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot
 source-&gt;SetPixelsPerWorldUnit(16.0F);
 source-&gt;ImportNow(*go, world);
 </code></pre>
-<h3 id="tilemapautotilecomponent-tilemaptileanimatorcomponent"><code>TilemapAutotileComponent</code> / <code>TilemapTileAnimatorComponent</code></h3>
+<h3><code>TilemapAutotileComponent</code> / <code>TilemapTileAnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>TilemapAutotile</code>, <code>TilemapTileAnimator</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
 <p>Autotile rebuild from painted terrain groups; global time for tile animation clips on the tileset.</p>
-<h3 id="tilemapobjectlayercomponent-tilemapobjectspawncomponent-tilemapobjectgizmocomponent"><code>TilemapObjectLayerComponent</code> / <code>TilemapObjectSpawnComponent</code> / <code>TilemapObjectGizmoComponent</code></h3>
+<h3><code>TilemapObjectLayerComponent</code> / <code>TilemapObjectSpawnComponent</code> / <code>TilemapObjectGizmoComponent</code></h3>
 <p><strong>Kinds:</strong> <code>TilemapObjectLayer</code>, <code>TilemapObjectSpawn</code>, <code>TilemapObjectGizmo</code></p>
 <p>Tiled-style markers (cell + offset), registry-based spawning (<code>TilemapObjectSpawnRegistry</code>), and debug gizmo sprites.</p>
 <hr />
-<h3 id="skycomponent"><code>SkyComponent</code></h3>
+<h3><code>SkyComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sky</code> · <strong>Siblings:</strong> <code>MeshComponent</code> (sky mesh), <code>TransformComponent</code></p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;MeshComponent&gt;(skyBoxMesh, SceneMeshSlot::Custom);
 go-&gt;AddComponent&lt;SkyComponent&gt;(SceneSkyMode::Box);
 </code></pre>
-<h3 id="terraincomponent"><code>TerrainComponent</code></h3>
+<h3><code>TerrainComponent</code></h3>
 <p><strong>Kind:</strong> <code>Terrain</code> · <strong>Consumed by:</strong> Mesh rebuild + raycast</p>
 <pre><code class="language-cpp">TerrainGeneratorSettings settings{};
 settings.subdivX = 128;
@@ -1084,7 +1080,7 @@ settings.noiseScale = 0.055F;
 go-&gt;AddComponent&lt;TerrainComponent&gt;(settings, Vector3{0.4F, 0.55F, 0.35F});
 go-&gt;AddComponent&lt;MaterialComponent&gt;(grassTex);
 </code></pre>
-<h3 id="particleemittercomponent"><code>ParticleEmitterComponent</code></h3>
+<h3><code>ParticleEmitterComponent</code></h3>
 <p><strong>Kind:</strong> <code>ParticleEmitter</code> · <strong>Consumed by:</strong> <code>OnUpdate</code> + <code>SceneRenderParams::particles</code></p>
 <pre><code class="language-cpp">auto* pe = go-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
 pe-&gt;SetEmitterEnabled(true);
@@ -1093,7 +1089,7 @@ pe-&gt;SetEmissionRate(40.0F);
 pe-&gt;SetStartEndColor({1.0F, 0.6F, 0.1F, 1.0F}, {0.85F, 0.05F, 0.0F, 0.0F});
 pe-&gt;SetGravity({0.0F, -4.0F, 0.0F});
 </code></pre>
-<h3 id="billboardcomponent"><code>BillboardComponent</code></h3>
+<h3><code>BillboardComponent</code></h3>
 <p><strong>Kind:</strong> <code>Billboard</code> · <strong>Priority:</strong> 50 · <strong>Consumed by:</strong> <code>OnUpdate</code> (rotates transform)</p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteComponent&gt;(iconTex);
 go-&gt;AddComponent&lt;BillboardComponent&gt;();  // default: full camera facing
@@ -1101,14 +1097,14 @@ go-&gt;AddComponent&lt;BillboardComponent&gt;();  // default: full camera facing
 auto* bb = go-&gt;AddComponent&lt;BillboardComponent&gt;();
 bb-&gt;SetMode(BillboardMode::YAxisLocked);
 </code></pre>
-<h3 id="decalprojectorcomponent"><code>DecalProjectorComponent</code></h3>
+<h3><code>DecalProjectorComponent</code></h3>
 <p><strong>Kind:</strong> <code>DecalProjector</code> · <strong>Consumed by:</strong> <code>SceneRenderParams::decals</code> (data path; GPU decal pass optional)</p>
 <pre><code class="language-cpp">auto* decal = go-&gt;AddComponent&lt;DecalProjectorComponent&gt;();
 decal-&gt;SetTexture(bulletHoleTex);
 decal-&gt;SetSize({0.4F, 0.4F, 0.2F});
 decal-&gt;SetOpacity(0.9F);
 </code></pre>
-<h3 id="fogvolumecomponent"><code>FogVolumeComponent</code></h3>
+<h3><code>FogVolumeComponent</code></h3>
 <p><strong>Kind:</strong> <code>FogVolume</code> · <strong>Consumed by:</strong> <code>ApplyRegionalRenderVolumes</code> → <code>SceneRenderParams</code> (data path; GPU fog optional)</p>
 <p>Oriented box or sphere volume. When the camera is inside, overrides <code>fogEnabled</code>, <code>fogColor</code>, <code>fogDensity</code>, <code>fogStart</code>, <code>fogEnd</code>. Higher <code>priority</code> wins overlaps.</p>
 <pre><code class="language-cpp">auto* fog = cave-&gt;AddComponent&lt;FogVolumeComponent&gt;();
@@ -1118,7 +1114,7 @@ fog-&gt;SetFogColor({0.55F, 0.58F, 0.62F});
 fog-&gt;SetFogDensity(0.035F);
 fog-&gt;SetPriority(5);
 </code></pre>
-<h3 id="postprocessvolumecomponent"><code>PostProcessVolumeComponent</code></h3>
+<h3><code>PostProcessVolumeComponent</code></h3>
 <p><strong>Kind:</strong> <code>PostProcessVolume</code> · <strong>Consumed by:</strong> <code>ApplyRegionalRenderVolumes</code></p>
 <p>Regional overrides for SSAO, exposure, and ambient scale when the camera is inside the volume.</p>
 <pre><code class="language-cpp">auto* pp = interior-&gt;AddComponent&lt;PostProcessVolumeComponent&gt;();
@@ -1127,7 +1123,7 @@ pp-&gt;SetExposure(1.15F);
 pp-&gt;SetAmbientScale(0.85F);
 pp-&gt;SetPriority(2);
 </code></pre>
-<h3 id="textoverlaycomponent"><code>TextOverlayComponent</code></h3>
+<h3><code>TextOverlayComponent</code></h3>
 <p><strong>Kind:</strong> <code>TextOverlay</code> · <strong>Consumed by:</strong> Screen UI pass</p>
 <pre><code class="language-cpp">world.SetUiFont(font);
 auto* hud = hudGo-&gt;AddComponent&lt;TextOverlayComponent&gt;();
@@ -1135,7 +1131,7 @@ hud-&gt;SetText(&quot;HP: 100&quot;);
 hud-&gt;SetScreenPosition({24.0F, 24.0F});
 hud-&gt;SetFontSizePixels(18.0F);
 </code></pre>
-<h3 id="blendmodecomponent-renderlayercomponent-sortinggroupcomponent"><code>BlendModeComponent</code> / <code>RenderLayerComponent</code> / <code>SortingGroupComponent</code></h3>
+<h3><code>BlendModeComponent</code> / <code>RenderLayerComponent</code> / <code>SortingGroupComponent</code></h3>
 <pre><code class="language-cpp">// Per-sprite blend (sprite or tilemap sibling required)
 go-&gt;AddComponent&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
 
@@ -1146,23 +1142,23 @@ go-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
 parent-&gt;AddComponent&lt;SortingGroupComponent&gt;(100);
 </code></pre>
 <hr />
-<h2 id="lighting">Lighting</h2>
-<h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
+<h2>Lighting</h2>
+<h3><code>DirectionalLightComponent</code></h3>
 <p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>FillStandardLitSceneFromWorld</code></p>
 <p>Light direction = owner transform <strong>local +Z</strong> in world space.</p>
 <pre><code class="language-cpp">auto* sun = sunGo-&gt;AddComponent&lt;DirectionalLightComponent&gt;(Vector3{1,0.97,0.9}, 1.2F);
 sunGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetRotation(
     Quaternion::FromAxisAngle(Vector3::UnitX, -0.6F));
 </code></pre>
-<h3 id="pointlightcomponent-spotlightcomponent"><code>PointLightComponent</code> / <code>SpotLightComponent</code></h3>
+<h3><code>PointLightComponent</code> / <code>SpotLightComponent</code></h3>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;PointLightComponent&gt;(Vector3::One, 4.0F, 12.0F);
 
 auto* spot = go-&gt;AddComponent&lt;SpotLightComponent&gt;(Vector3::One, 6.0F, 15.0F, 25.0F, 40.0F);
 // Cone axis = local −Z in world space
 </code></pre>
 <hr />
-<h2 id="camera">Camera</h2>
-<h3 id="cameracomponent-3d"><code>CameraComponent</code> (3D)</h3>
+<h2>Camera</h2>
+<h3><code>CameraComponent</code> (3D)</h3>
 <p><strong>Kind:</strong> <code>Camera</code> · <strong>Consumed by:</strong> <code>TryResolveMainCamera</code>, scene submit</p>
 <pre><code class="language-cpp">auto* cam = cameraGo-&gt;AddComponent&lt;CameraComponent&gt;();
 cam-&gt;SetProjectionMode(CameraProjectionMode::Perspective);
@@ -1171,7 +1167,7 @@ cam-&gt;SetNearPlane(0.1F);
 cam-&gt;SetFarPlane(500.0F);
 cam-&gt;SetPriority(10);  // higher wins as &quot;main&quot; camera
 </code></pre>
-<h3 id="camera2dcomponent-camera2drigcomponent"><code>Camera2DComponent</code> + <code>Camera2DRigComponent</code></h3>
+<h3><code>Camera2DComponent</code> + <code>Camera2DRigComponent</code></h3>
 <pre><code class="language-cpp">auto* cam2d = cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;();
 cam2d-&gt;SetHalfExtentY(6.0F);
 
@@ -1181,7 +1177,7 @@ rig-&gt;SetTarget(player);
 rig-&gt;SetFollowSmoothRate(7.5F);
 rig-&gt;SetLookAheadScale(0.15F);
 </code></pre>
-<h3 id="springarm3dcomponent-camerafollow3dcomponent"><code>SpringArm3DComponent</code> + <code>CameraFollow3DComponent</code></h3>
+<h3><code>SpringArm3DComponent</code> + <code>CameraFollow3DComponent</code></h3>
 <p>Third-person orbit (runs at priorities 295 / 300).</p>
 <pre><code class="language-cpp">GameObject* rig = world.CreateGameObject();
 GameObject* camObj = world.CreateGameObject();
@@ -1202,18 +1198,18 @@ follow-&gt;SetTargetOffset({0.0F, 1.6F, 0.0F});
 follow-&gt;SetLookAtTarget(true);
 </code></pre>
 <hr />
-<h2 id="physics-2d">Physics 2D</h2>
+<h2>Physics 2D</h2>
 <p>Call each frame from <code>OnUpdate</code> (after gameplay input, before render):</p>
 <pre><code class="language-cpp">#include &quot;spark/physics/PhysicsSubsystem.hpp&quot;
 
 PhysicsSubsystem physics;  // member on your Game class
 physics.Simulate2D(world, timing);
 </code></pre>
-<h3 id="rigidbody2dcomponent"><code>Rigidbody2DComponent</code></h3>
+<h3><code>Rigidbody2DComponent</code></h3>
 <pre><code class="language-cpp">auto* rb = go-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
 rb-&gt;SetVelocity({3.0F, 0.0F});
 </code></pre>
-<h3 id="boxcollider2dcomponent-circlecollider2dcomponent"><code>BoxCollider2DComponent</code> / <code>CircleCollider2DComponent</code></h3>
+<h3><code>BoxCollider2DComponent</code> / <code>CircleCollider2DComponent</code></h3>
 <pre><code class="language-cpp">auto* box = go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{0.5F, 0.5F});
 box-&gt;SetCategoryBits(1u &lt;&lt; 0);
 box-&gt;SetMaskBits(0xFFFF);
@@ -1222,7 +1218,7 @@ box-&gt;SetIsTrigger(false);
 // On same dynamic body, circle wins over box if both exist:
 go-&gt;AddComponent&lt;CircleCollider2DComponent&gt;(0.45F);
 </code></pre>
-<h3 id="polygoncollider2dcomponent"><code>PolygonCollider2DComponent</code></h3>
+<h3><code>PolygonCollider2DComponent</code></h3>
 <p><strong>Static only</strong> (no dynamic rigidbody, or static/kinematic body). Convex, max <strong>16</strong> vertices.</p>
 <pre><code class="language-cpp">Array&lt;Vector2&gt; verts;
 verts.PushBack({-1.0F, 0.0F});
@@ -1232,12 +1228,12 @@ auto* poly = ramp-&gt;AddComponent&lt;PolygonCollider2DComponent&gt;();
 poly-&gt;SetVertices(verts);
 poly-&gt;SetCategoryBits(1u &lt;&lt; 1);
 </code></pre>
-<h3 id="physicsmaterial2dcomponent"><code>PhysicsMaterial2DComponent</code></h3>
+<h3><code>PhysicsMaterial2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>PhysicsMaterial2D</code> · <strong>Sibling:</strong> static 2D collider on same object · <strong>Consumed by:</strong> static broad-phase bake + contact restitution</p>
 <pre><code class="language-cpp">ice-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{4.0F, 0.1F});
 ice-&gt;AddComponent&lt;PhysicsMaterial2DComponent&gt;(0.15F, 0.35F);  // friction, restitution
 </code></pre>
-<h3 id="distancejoint2dcomponent-hingejoint2dcomponent"><code>DistanceJoint2DComponent</code> / <code>HingeJoint2DComponent</code></h3>
+<h3><code>DistanceJoint2DComponent</code> / <code>HingeJoint2DComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>PhysicsWorld2D</code> when <code>PhysicsWorld2DSettings::jointIterations &gt; 0</code> (default <strong>4</strong>)</p>
 <pre><code class="language-cpp">PhysicsWorld2DSettings settings{};
 settings.jointIterations = 6;
@@ -1252,46 +1248,46 @@ auto* hj = hingeA-&gt;GetComponent&lt;HingeJoint2DComponent&gt;();
 hj-&gt;SetLocalAnchorA({0.0F, 0.5F});
 hj-&gt;SetLocalAnchorB({0.0F, -0.5F});
 </code></pre>
-<h3 id="layer-filter">Layer filter</h3>
+<h3>Layer filter</h3>
 <pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
 </code></pre>
 <hr />
-<h2 id="physics-3d">Physics 3D</h2>
+<h2>Physics 3D</h2>
 <pre><code class="language-cpp">physics.SimulateAll3D(world, timing);
 // or step individually:
 physics.Simulate3D(world, timing);
 physics.SimulateCharacterControllers3D(world, timing);
 physics.SimulateTriggerVolumes3D(world, timing);
 </code></pre>
-<h3 id="rigidbody3dcomponent-spherecollider3dcomponent"><code>Rigidbody3DComponent</code> + <code>SphereCollider3DComponent</code></h3>
+<h3><code>Rigidbody3DComponent</code> + <code>SphereCollider3DComponent</code></h3>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;Rigidbody3DComponent&gt;(RigidbodyBodyType3D::Dynamic, 1.0F);
 go-&gt;AddComponent&lt;SphereCollider3DComponent&gt;(0.5F);
 go-&gt;AddComponent&lt;PhysicsMaterial3DComponent&gt;(0.5F, 0.4F, 0.3F);
 </code></pre>
-<h3 id="capsulecollider3dcomponent"><code>CapsuleCollider3DComponent</code></h3>
+<h3><code>CapsuleCollider3DComponent</code></h3>
 <p>Static when body is not dynamic; dynamic with <code>Rigidbody3DComponent</code>.</p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;CapsuleCollider3DComponent&gt;(0.35F, 1.8F, CapsuleCollider3DComponent::Axis::Y);
 </code></pre>
-<h3 id="meshcollider3dcomponent"><code>MeshCollider3DComponent</code></h3>
+<h3><code>MeshCollider3DComponent</code></h3>
 <p><strong>Kind:</strong> <code>MeshCollider3D</code> · <strong>Sibling:</strong> <code>MeshComponent</code> · <strong>Static only</strong> (non-dynamic rigidbody)</p>
 <p>World AABB baked from mesh vertices each broad-phase rebuild — useful for imported glTF level geometry.</p>
 <pre><code class="language-cpp">level-&gt;AddComponent&lt;MeshComponent&gt;(levelMesh, SceneMeshSlot::Custom, Vector3::One);
 level-&gt;AddComponent&lt;MeshCollider3DComponent&gt;();
 </code></pre>
-<h3 id="charactercontroller3dcomponent"><code>CharacterController3DComponent</code></h3>
+<h3><code>CharacterController3DComponent</code></h3>
 <p>Kinematic motor — <strong>do not</strong> add <code>Rigidbody3DComponent</code> on the same object.</p>
 <pre><code class="language-cpp">auto* cc = player-&gt;AddComponent&lt;CharacterController3DComponent&gt;(0.4F, Vector3{0,0.9F,0});
 cc-&gt;SetMoveInput({inputX, 0.0F, inputZ});
 // After SimulateCharacterControllers3D:
 const bool grounded = cc-&gt;IsGrounded();
 </code></pre>
-<h3 id="triggervolume3dcomponent"><code>TriggerVolume3DComponent</code></h3>
+<h3><code>TriggerVolume3DComponent</code></h3>
 <pre><code class="language-cpp">auto* trig = zone-&gt;AddComponent&lt;TriggerVolume3DComponent&gt;(
     TriggerVolume3DShape::Box, Vector3{2,2,2});
 trig-&gt;SetOnEnter([](GameObject&amp; other) { (void)other; });
 trig-&gt;SetOnExit([](GameObject&amp; other) { (void)other; });
 </code></pre>
-<h3 id="distancejoint3dcomponent"><code>DistanceJoint3DComponent</code></h3>
+<h3><code>DistanceJoint3DComponent</code></h3>
 <p>Requires <code>jointIterations &gt; 0</code> in <code>PhysicsWorld3DSettings</code>. Both ends need <code>SphereCollider3DComponent</code>.</p>
 <pre><code class="language-cpp">PhysicsWorld3DSettings settings{};
 settings.jointIterations = 8;
@@ -1300,7 +1296,7 @@ ballA-&gt;AddComponent&lt;DistanceJoint3DComponent&gt;(ballB, 2.5F);
 auto* joint = ballA-&gt;GetComponent&lt;DistanceJoint3DComponent&gt;();
 joint-&gt;SetStiffness(0.9F);
 </code></pre>
-<h3 id="hingejoint3dcomponent-springjoint3dcomponent"><code>HingeJoint3DComponent</code> / <code>SpringJoint3DComponent</code></h3>
+<h3><code>HingeJoint3DComponent</code> / <code>SpringJoint3DComponent</code></h3>
 <p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br />
 <strong>Spring:</strong> velocity spring-damper along the line between sphere centers.</p>
 <pre><code class="language-cpp">doorA-&gt;AddComponent&lt;HingeJoint3DComponent&gt;(doorB);
@@ -1313,21 +1309,32 @@ auto* spring = pendulum-&gt;GetComponent&lt;SpringJoint3DComponent&gt;();
 spring-&gt;SetSpringStiffness(55.0F);
 spring-&gt;SetDamping(5.0F);
 </code></pre>
-<h3 id="collisioncomponent-legacy-sphere"><code>CollisionComponent</code> (legacy sphere)</h3>
+<h3><code>CollisionComponent</code> (legacy sphere)</h3>
 <p>Simple world-space sphere bounds; used by some probe paths.</p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;CollisionComponent&gt;(0.5F, Vector3::Zero);
 </code></pre>
 <hr />
-<h2 id="animation">Animation</h2>
-<h3 id="character3danimfsmcomponent"><code>Character3DAnimFsmComponent</code></h3>
-<p><strong>Priority:</strong> 100 · Add <strong>before</strong> <code>AnimatorComponent</code> on same object.</p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
+<h2>Animation</h2>
+<h3><code>Character3DAnimFsmComponent</code></h3>
+<p><strong>Priority:</strong> 100 (<code>ComponentUpdatePriority::AnimationDriver</code>) · <strong>Sibling:</strong> <code>AnimatorComponent</code> (200) on the same object.</p>
+<p>Tick order is enforced by <code>GameObject</code> stable-sort on <code>UpdatePriority</code> — component add order does not matter.</p>
+<pre><code class="language-cpp">auto* fsm = go-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
 go-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, walkClip, 1.0F);
-auto* fsm = go-&gt;GetComponent&lt;Character3DAnimFsmComponent&gt;();
-fsm-&gt;SetLocomotionInput({0.0F, 0.0F, 1.0F});
+fsm-&gt;ConfigureLocomotionFromSkeleton(*skeleton, walkClip);
+fsm-&gt;SetWalkSpeedThreshold(0.35F);
+fsm-&gt;SetRunSpeedThreshold(2.5F);
+fsm-&gt;SetLocomotionBlendEnabled(true);
+fsm-&gt;SetLocomotionAnalogSpeed(speedMetersPerSecond);  // or SetLocomotionInput(moving, sprint)
+fsm-&gt;SetCombatClips(attackClip, hurtClip, staggerClip, deathClip);
+fsm-&gt;SetCombatBlackboardIntSlot(kAiBlackboardIntCharacter3DCombatCommand);
 fsm-&gt;RequestAttack();
+fsm-&gt;RequestHurt();
+fsm-&gt;RequestStagger();
+fsm-&gt;RequestDeath();
 </code></pre>
-<h3 id="animationeventreceivercomponent"><code>AnimationEventReceiverComponent</code></h3>
+<p><strong>Locomotion sources</strong> (first match wins each frame): <code>SetLocomotionAnalogSpeed</code> → <code>SetLocomotionInput</code> → parent-chain <code>Rigidbody3D</code> / <code>CharacterController3D</code> velocity → world-position delta.</p>
+<p>Default locomotion uses a <strong>1D speed blend tree</strong> (idle / walk / run). Disable with <code>SetLocomotionBlendEnabled(false)</code> for discrete clip switches.</p>
+<h3><code>AnimationEventReceiverComponent</code></h3>
 <p><strong>Priority:</strong> 210 · <strong>Sibling:</strong> <code>AnimatorComponent</code></p>
 <pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
 recv-&gt;AddMarker(0, 0.35F, &quot;Footstep&quot;);
@@ -1343,7 +1350,7 @@ public:
 };
 go-&gt;AddComponent&lt;FootstepHandler&gt;();
 </code></pre>
-<h3 id="attachmentsocketcomponent"><code>AttachmentSocketComponent</code></h3>
+<h3><code>AttachmentSocketComponent</code></h3>
 <p><strong>Priority:</strong> 250 · Source needs <code>AnimatorComponent</code>.</p>
 <pre><code class="language-cpp">// On character:
 go-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, 0);
@@ -1355,7 +1362,7 @@ socket-&gt;SetAttachedObject(swordObject);
 socket-&gt;SetJointIndex(12);  // hand bone
 socket-&gt;SetLocalOffset({0.05F, 0.0F, 0.1F});
 </code></pre>
-<h3 id="sprite2dcharacteranimfsmcomponent"><code>Sprite2DCharacterAnimFsmComponent</code></h3>
+<h3><code>Sprite2DCharacterAnimFsmComponent</code></h3>
 <p><strong>Priority:</strong> 100 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code></p>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
 go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
@@ -1364,9 +1371,9 @@ fsm-&gt;RequestAttack();
 fsm-&gt;RequestHurt();
 </code></pre>
 <hr />
-<h2 id="ai">AI</h2>
+<h2>AI</h2>
 <p><code>SimulateGameAi</code> runs, in order: <code>ProcessNavMeshAgents</code> → <code>ProcessPerceptionSensors</code> → each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
-<h3 id="aiagentcomponent"><code>AiAgentComponent</code></h3>
+<h3><code>AiAgentComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>SimulateGameAi</code> (not <code>OnUpdate</code> on the component)</p>
 <pre><code class="language-cpp">auto* agent = enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
 AiBlackboard&amp; bb = agent-&gt;GetBlackboard();
@@ -1376,7 +1383,7 @@ agent-&gt;SetMaxSpeed(4.5F);
 agent-&gt;SetSteeringPlane(AiSteeringPlane::XzWorld);
 agent-&gt;SetFsmEnabled(true);
 </code></pre>
-<h3 id="patrolpathcomponent-navmeshagentcomponent"><code>PatrolPathComponent</code> + <code>NavMeshAgentComponent</code></h3>
+<h3><code>PatrolPathComponent</code> + <code>NavMeshAgentComponent</code></h3>
 <p><strong>PatrolPath</strong> stores local waypoints; <strong>NavMeshAgent</strong> copies them into <code>AiAgentComponent::pathWorldPolylineXZ</code> each AI tick (or runs grid A* when <code>UseGridPathfinding()</code> is true).</p>
 <pre><code class="language-cpp">// Waypoint object (or same object as agent):
 auto* path = pathObj-&gt;AddComponent&lt;PatrolPathComponent&gt;();
@@ -1394,7 +1401,7 @@ nav-&gt;SetUseGridPathfinding(true);
 nav-&gt;SetGridOriginXZ({-32.0F, -32.0F});
 nav-&gt;SetGridCellSize(1.0F);
 </code></pre>
-<h3 id="perceptionsensorcomponent"><code>PerceptionSensorComponent</code></h3>
+<h3><code>PerceptionSensorComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessPerceptionSensors</code> — fills <code>GetDetectedObjects()</code> each frame (sight cone + hearing radius).</p>
 <pre><code class="language-cpp">auto* sense = guard-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
 sense-&gt;SetSightRadius(18.0F);
@@ -1407,13 +1414,13 @@ for (GameObject* target : sense-&gt;GetDetectedObjects()) {
 }
 </code></pre>
 <hr />
-<h2 id="audio">Audio</h2>
+<h2>Audio</h2>
 <p><code>Game::OnUpdate</code> calls <code>ProcessSoundCues</code>, which runs <code>ProcessAudioListeners</code>, then <code>ProcessAmbientZones</code>, then flushes cues.</p>
-<h3 id="audiolistenercomponent"><code>AudioListenerComponent</code></h3>
+<h3><code>AudioListenerComponent</code></h3>
 <pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;AudioListenerComponent&gt;()-&gt;SetPriority(10);
 </code></pre>
 <p>Without an explicit listener, spatial audio falls back to the main 3D camera pose.</p>
-<h3 id="soundcuecomponent"><code>SoundCueComponent</code></h3>
+<h3><code>SoundCueComponent</code></h3>
 <pre><code class="language-cpp">auto* cue = player-&gt;AddComponent&lt;SoundCueComponent&gt;();
 cue-&gt;Queue(jumpClip, 0.9F);
 
@@ -1423,7 +1430,7 @@ const Vector3 pos{wm.m[12], wm.m[13], wm.m[14]};
 cue-&gt;QueueAtWorld(landClip, 0.7F, pos, 1.0F, 1.0F, 48.0F);
 </code></pre>
 <p>Background music: <code>context.TryGetSoundEngine()-&gt;SetBackgroundMusic(bgm, 0.3F, true)</code>.</p>
-<h3 id="ambientzonecomponent"><code>AmbientZoneComponent</code></h3>
+<h3><code>AmbientZoneComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessAmbientZones</code> — when the listener is inside, scales master one-shot volume (<code>volumeScale</code>). Higher <code>priority</code> wins.</p>
 <pre><code class="language-cpp">auto* zone = cave-&gt;AddComponent&lt;AmbientZoneComponent&gt;();
 zone-&gt;SetShape(VolumeShape::Sphere);
@@ -1432,8 +1439,8 @@ zone-&gt;SetVolumeScale(0.7F);
 zone-&gt;SetPriority(3);
 </code></pre>
 <hr />
-<h2 id="ui">UI</h2>
-<h3 id="uicanvascomponent"><code>UiCanvasComponent</code></h3>
+<h2>UI</h2>
+<h3><code>UiCanvasComponent</code></h3>
 <pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
 
 auto canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
@@ -1453,12 +1460,12 @@ ProcessUiCanvasesInput(world, input, fbW, fbH);
 PaintUiCanvases(world, params, fbW, fbH);
 </code></pre>
 <hr />
-<h2 id="world">World</h2>
-<h3 id="scenespatialpolicycomponent"><code>SceneSpatialPolicyComponent</code></h3>
+<h2>World</h2>
+<h3><code>SceneSpatialPolicyComponent</code></h3>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::BoundingVolumeHierarchy);
 </code></pre>
 <p>Affects <code>Scene::ForEachDrawableInViewFrustum</code> partition strategy.</p>
-<h3 id="timeofdaydrivercomponent"><code>TimeOfDayDriverComponent</code></h3>
+<h3><code>TimeOfDayDriverComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessTimeOfDayDrivers</code> before scene lighting resolve</p>
 <p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> is <strong>true</strong> and <code>dayLengthSeconds &gt; 0</code>, <code>ProcessTimeOfDayDrivers</code> advances time each <code>FillStandardLitSceneFromWorld</code> call. Set <code>loop = false</code> when your gameplay code owns the clock (see <code>TimeOfDayDemo</code>).</p>
 <pre><code class="language-cpp">auto* tod = worldRoot-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;();
@@ -1468,8 +1475,8 @@ tod-&gt;SetLooping(true);
 tod-&gt;SetPriority(1);
 </code></pre>
 <hr />
-<h2 id="gameplay">Gameplay</h2>
-<h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
+<h2>Gameplay</h2>
+<h3><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
 <pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
 auto* dmg = enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
 dmg-&gt;SetDamageMultiplier(1.5F);  // vulnerable to fire, etc.
@@ -1489,8 +1496,8 @@ hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
 }
 </code></pre>
 <hr />
-<h2 id="typical-object-recipes">Typical object recipes</h2>
-<h3 id="2d-platformer-player">2D platformer player</h3>
+<h2>Typical object recipes</h2>
+<h3>2D platformer player</h3>
 <pre><code class="language-cpp">player-&gt;AddComponent&lt;TransformComponent&gt;();
 player-&gt;AddComponent&lt;SpriteComponent&gt;(heroTex);
 player-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
@@ -1501,7 +1508,7 @@ player-&gt;AddComponent&lt;SoundCueComponent&gt;();
 player-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
 player-&gt;AddComponent&lt;DamageableComponent&gt;();
 </code></pre>
-<h3 id="3d-skinned-enemy">3D skinned enemy</h3>
+<h3>3D skinned enemy</h3>
 <pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
 enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
 enemy-&gt;AddComponent&lt;MaterialComponent&gt;(tex);
@@ -1512,7 +1519,7 @@ enemy-&gt;AddComponent&lt;Rigidbody3DComponent&gt;();
 enemy-&gt;AddComponent&lt;HealthComponent&gt;(50.0F);
 enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
 </code></pre>
-<h3 id="3d-patrolling-guard">3D patrolling guard</h3>
+<h3>3D patrolling guard</h3>
 <pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
 enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
 enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
@@ -1520,29 +1527,25 @@ enemy-&gt;AddComponent&lt;NavMeshAgentComponent&gt;()-&gt;SetPatrolPathObject(pa
 enemy-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
 enemy-&gt;AddComponent&lt;HealthComponent&gt;(80.0F);
 </code></pre>
-<h3 id="static-2d-level-chunk">Static 2D level chunk</h3>
+<h3>Static 2D level chunk</h3>
 <pre><code class="language-cpp">level-&gt;AddComponent&lt;TransformComponent&gt;();
 level-&gt;AddComponent&lt;TilemapComponent&gt;(...);
 level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
 </code></pre>
 <hr />
-<h2 id="serialization">Serialization</h2>
+<h2>Serialization</h2>
 <p>Scene format <strong><code>spark_scene_v4</code></strong> captures a subset of components via <code>ComponentSnapshotRegistry</code>. Registered kinds include Transform, Mesh, Material, <strong><code>GltfSceneSource</code></strong> (<code>gltf_scene</code> — v1 path or <strong>v2</strong> with per-node mesh/material overrides), lights, cameras, 3D/2D physics, tilemap, gameplay, UI canvas, and more — see <code>SceneSerializer.cpp</code> <code>kCaptureOrder</code>.</p>
-<p><strong>glTF prefabs:</strong> A placed prefab with <code>gltf_scene</code> expands at load into child nodes tagged with <code>GltfInstanceNodeComponent</code>. The editor saves only the root entity plus override records (not the full expanded subtree) to avoid duplicate meshes on reload. See <a href="../../../SPARK_EDITOR_PLAN.html"><code>SPARK_EDITOR_PLAN.md</code></a> §4.1.</p>
+<p><strong>glTF prefabs:</strong> A placed prefab with <code>gltf_scene</code> expands at load into child nodes tagged with <code>GltfInstanceNodeComponent</code>. The editor saves only the root entity plus override records (not the full expanded subtree) to avoid duplicate meshes on reload. See <a href="../../../SPARK_EDITOR_PLAN.md"><code>SPARK_EDITOR_PLAN.md</code></a> §4.1.</p>
 <p>Components without handlers still work at runtime; they are omitted from saved scenes until a handler is added.</p>
 <hr />
-<h2 id="related-chapters">Related chapters</h2>
+<h2>Related chapters</h2>
 <ul>
-<li><a href="06-ecs-and-scene.html">ECS and Scene</a> — <code>GameObject</code>, signals, submit hand-off</li>
-<li><a href="../5-physics/03-colliders.html">Colliders</a> — layer masks, triggers</li>
-<li><a href="../6-sound/03-cues.html">Sound Cues</a> — mixer and spatial audio</li>
-<li><a href="../3-3d-graphics/02-cameras-3d.html">Cameras in 3D</a> — fly camera vs ECS rigs</li>
-<li><a href="../../ARCHITECTURE_AND_DEVELOPER_GUIDE.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> — contributor deep-dive</li>
-</ul></div>
-          <footer class="doc-footer">
-            <p>Generated by <strong>MDWeb</strong></p>
-          </footer>
-        </article>
+<li><a href="06-ecs-and-scene.md">ECS and Scene</a> — <code>GameObject</code>, signals, submit hand-off</li>
+<li><a href="../5-physics/03-colliders.md">Colliders</a> — layer masks, triggers</li>
+<li><a href="../6-sound/03-cues.md">Sound Cues</a> — mixer and spatial audio</li>
+<li><a href="../3-3d-graphics/02-cameras-3d.md">Cameras in 3D</a> — fly camera vs ECS rigs</li>
+<li><a href="../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> — contributor deep-dive</li>
+</ul></article>
 
         
                 <aside class="toc" aria-label="On this page">

@@ -566,7 +566,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>P1 (done):</strong> <code>Burst()</code>, local-space emission direction, <code>VfxLibrary</code> built-ins</li>
 <li><strong>P2:</strong> <code>VfxAsset</code> loader, <code>VfxPlayerComponent</code>, pooled one-shots</li>
 <li><strong>P3:</strong> Composite multi-emitter effects (fireworks)</li>
-<li><strong>P4:</strong> <code>IParticleModule</code> registry, curves, editor inspector</li>
+<li><strong>P4 (done):</strong> <code>IParticleModule</code> registry, curves, editor inspector, textured billboards</li>
 </ul>
 <h3 id="layer-2-vfx-definitions-composite-factory">Layer 2 — VFX definitions (Composite + Factory)</h3>
 <p><strong><code>VfxEffectDefinition</code></strong> — ordered <code>EmitterSpec</code> list with start time, duration, module params.</p>
@@ -701,18 +701,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li>[x] Confetti composite preset</li>
 <li>[x] Optional <code>.sparkscene</code> prefab path on asset (<code>prefab</code> line + <code>VfxPlayerComponent</code> spawn)</li>
 </ul>
-<h3 id="p4-modules-editor">P4 — Modules + editor</h3>
+<h3 id="p4-modules-editor">P4 — Modules + editor ✓</h3>
 <ul>
-<li>[ ] <code>IParticleModule</code> registry</li>
-<li>[ ] Size/color curves over life</li>
-<li>[ ] Inspector for <code>particle_emitter</code> / <code>vfx_player</code></li>
-<li>[ ] Texture atlas on <code>SceneParticleInstance</code></li>
+<li>[x] <code>IParticleModule</code> registry (<code>continuous</code>, <code>burst_only</code>, <code>ring</code>)</li>
+<li>[x] Size/color curves over life (<code>ParticleFloatCurve</code>, <code>ParticleColorCurve</code>)</li>
+<li>[x] Inspector for <code>particle_emitter</code> / <code>vfx_player</code></li>
+<li>[x] Texture atlas on <code>SceneParticleInstance</code> (<code>uvRect</code>, <code>textureLayer</code>)</li>
 </ul>
-<h3 id="p5-integration">P5 — Integration</h3>
+<h3 id="p5-integration">P5 — Integration ✓</h3>
 <ul>
-<li>[ ] Animation event → <code>VfxPlayRequest</code></li>
-<li>[ ] C# bindings <code>spark_vfx_play</code></li>
-<li>[ ] Unify 2D <code>ExplosionFx</code> sprite pool with <code>VfxSubsystem</code> where appropriate</li>
+<li>[x] Animation event → <code>VfxPlayRequest</code> (<code>AnimationEventVfxComponent</code>)</li>
+<li>[x] C# bindings <code>spark_vfx_play</code>, <code>spark_world_process_vfx</code>, <code>spark_vfx_player_*</code></li>
+<li>[x] Platformer <code>ExplosionFx</code> delegates to <code>VfxSubsystem</code></li>
 </ul>
 <hr />
 <h2 id="6-ecs-usage-target">6. ECS usage (target)</h2>
@@ -753,7 +753,7 @@ assets/vfx/
 </code></pre>
 <hr />
 <h2 id="8-render-notes">8. Render notes</h2>
-<p>P1–P3 use existing <strong>additive disc</strong> pass. Texture support (<code>SceneParticleInstance::uvRect</code>) is planned for P4 without changing the gameplay API.</p>
+<p>P1–P3 use the <strong>additive disc</strong> pass. P4 adds optional <strong>textured billboards</strong> via <code>SceneParticleInstance::uvRect</code> and <code>textureLayer</code> (sampled from the scene texture array when <code>textureLayer &gt;= 0</code>).</p>
 <hr />
 <p>Update this document at each phase completion.</p>
       </article>

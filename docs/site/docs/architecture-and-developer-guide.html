@@ -1020,13 +1020,13 @@ cmake --build cmake-build-debug -j
 </tr>
 <tr>
 <td><strong>3D character FSM (M2)</strong></td>
-<td>Locomotion + optional attack overlay</td>
-<td><code>Character3DAnimFsmComponent</code> drives <code>AnimatorComponent</code> from speed</td>
+<td>Locomotion blend tree + combat overlays + AI blackboard</td>
+<td><code>Character3DAnimFsmComponent</code> → <code>AnimatorComponent</code> (<code>UpdatePriority</code> 100 → 200)</td>
 </tr>
 <tr>
 <td><strong>3D animation roadmap</strong></td>
 <td>Milestones M1–M6 (API, FSM, blend, events, scale, tooling)</td>
-<td><a href="animation-3d-roadmap.html"><code>docs/ANIMATION_3D_ROADMAP.md</code></a> — <strong>M1 complete</strong></td>
+<td><a href="animation-3d-roadmap.html"><code>docs/ANIMATION_3D_ROADMAP.md</code></a> — <strong>M1–M4 complete</strong></td>
 </tr>
 <tr>
 <td><strong>Character camera</strong></td>

@@ -5,6 +5,7 @@
 #include "spark/animation/LocomotionClipSet.hpp"
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
+#include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
@@ -21,6 +22,44 @@ constexpr int kCombatCmdHurt = 1;
 constexpr int kCombatCmdAttack = 2;
 constexpr int kCombatCmdStagger = 3;
 constexpr int kCombatCmdDeath = 4;
+
+[[nodiscard]] float HorizontalSpeedXZ(const Vector3& velocity) noexcept {
+    return std::sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+}
+
+[[nodiscard]] float MeasureLocomotionSpeedInHierarchy(
+        const GameObject& owner,
+        const FrameTiming& timing,
+        Vector3& lastWorldPos,
+        bool& hasLastWorldPos) noexcept {
+    for (const GameObject* node = &owner; node != nullptr; node = node->GetParent()) {
+        if (const Rigidbody3DComponent* rb = node->GetComponent<Rigidbody3DComponent>()) {
+            return HorizontalSpeedXZ(rb->GetVelocity());
+        }
+        if (const CharacterController3DComponent* controller =
+                    node->GetComponent<CharacterController3DComponent>()) {
+            const Vector3& moveInput = controller->GetMoveInput();
+            const float inputSpeed = HorizontalSpeedXZ(moveInput);
+            if (inputSpeed > 1.0e-4F) {
+                return inputSpeed;
+            }
+            return HorizontalSpeedXZ(controller->GetVelocity());
+        }
+    }
+
+    const Matrix4 world = owner.GetWorldMatrix();
+    const Vector3 pos{world.m[12], world.m[13], world.m[14]};
+    if (!hasLastWorldPos || timing.deltaTimeSeconds <= 1.0e-6F) {
+        lastWorldPos = pos;
+        hasLastWorldPos = true;
+        return 0.0F;
+    }
+    const float invDt = 1.0F / timing.deltaTimeSeconds;
+    const float dx = pos.x - lastWorldPos.x;
+    const float dz = pos.z - lastWorldPos.z;
+    lastWorldPos = pos;
+    return std::sqrt(dx * dx + dz * dz) * invDt;
+}
 
 }  // namespace
 
@@ -367,22 +406,7 @@ Character3DAnimFsmComponent::CombatSelection Character3DAnimFsmComponent::Resolv
 float Character3DAnimFsmComponent::MeasureLocomotionSpeed_(
         const GameObject& owner,
         const FrameTiming& timing) noexcept {
-    if (const Rigidbody3DComponent* rb = owner.GetComponent<Rigidbody3DComponent>()) {
-        const Vector3 v = rb->GetVelocity();
-        return std::sqrt(v.x * v.x + v.z * v.z);
-    }
-    const Matrix4 world = owner.GetWorldMatrix();
-    const Vector3 pos{world.m[12], world.m[13], world.m[14]};
-    if (!hasLastWorldPos || timing.deltaTimeSeconds <= 1.0e-6F) {
-        lastWorldPos = pos;
-        hasLastWorldPos = true;
-        return 0.0F;
-    }
-    const float invDt = 1.0F / timing.deltaTimeSeconds;
-    const float dx = pos.x - lastWorldPos.x;
-    const float dz = pos.z - lastWorldPos.z;
-    lastWorldPos = pos;
-    return std::sqrt(dx * dx + dz * dz) * invDt;
+    return MeasureLocomotionSpeedInHierarchy(owner, timing, lastWorldPos, hasLastWorldPos);
 }
 
 float Character3DAnimFsmComponent::ResolveLocomotionSpeedParam_(

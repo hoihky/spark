@@ -91,7 +91,12 @@ enum class ComponentKind : std::uint32_t {
     GltfInstanceNode,
 };
 
-/** Typical <c>GameComponent::UpdatePriority</c> values (lower runs first). */
+/**
+ * Typical <c>GameComponent::UpdatePriority</c> values (lower runs first).
+ * <c>GameObject::UpdateComponents</c> stable-sorts siblings by priority each frame — add order on the
+ * object does not affect tick order (e.g. <c>Character3DAnimFsmComponent</c> at 100 before
+ * <c>AnimatorComponent</c> at 200).
+ */
 namespace ComponentUpdatePriority {
 constexpr int AnimationDriver = 100;
 constexpr int AnimatorPlayback = 200;
