@@ -697,6 +697,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>P2</td>
 <td>Only if profiling proves need</td>
 </tr>
+<tr>
+<td>C6</td>
+<td><strong>Foliage (grass + trees)</strong> — GPU instancing, wind, LOD/impostors</td>
+<td>P1</td>
+<td>See <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a></td>
+</tr>
 </tbody>
 </table>
 <p><strong>Exit criteria:</strong> Same route shows <strong>~2× fewer draws</strong> at mid-distance vs naive submit, without unacceptable visual regression.</p>
@@ -751,9 +757,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>D6</td>
-<td><strong>Weather</strong> — rain/snow particles + surface wetness/roughness</td>
+<td><strong>Weather</strong> — rain/snow particles + surface wetness/roughness + <strong>wind field</strong></td>
 <td>P1</td>
-<td>Start cheap, not full fluid sim</td>
+<td>Wind drives <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F6 + <a href="water-roadmap.html"><code>WATER_ROADMAP.md</code></a> W6-06</td>
 </tr>
 <tr>
 <td>D7</td>
@@ -1135,6 +1141,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <h2 id="7-references-in-this-repo">7. References in this repo</h2>
 <ul>
 <li><code>docs/ANIMATION_3D_ROADMAP.md</code> — tracked 3D animation milestones (M1–M6); maps to Phase F/G items below.</li>
+<li><code>docs/FOLIAGE_ROADMAP.md</code> — grass, trees, wind, instancing, LOD (Phase C6 / D6 wind).</li>
+<li><code>docs/WATER_ROADMAP.md</code> — water surfaces, waves, buoyancy; shares wind field with foliage.</li>
 <li><code>docs/GUI_EDITOR_ROADMAP.md</code> — retained GUI inventory + Spark Editor milestones (E0–E6).</li>
 <li><code>docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code> — ECS, rendering, physics summary, <code>SceneRenderParams</code>, Vulkan overview.</li>
 <li><code>include/spark/engine/SceneRenderParams.hpp</code> — GPU snapshot contract.</li>

@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foliage Roadmap · Spark Game Engine</title>
+  <meta name="description" content="Foliage — Engine Roadmap & Tracked Tasks">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="../../programming-guide/site/assets/vendor/atom-one-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+  <script src="../../programming-guide/site/assets/vendor/highlight.min.js"></script>
+  <style id="spark-inline-theme">
+:root {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-hover: #4f46e5;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --topbar-height: 56px;
+  --toc-width: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.site { min-height: 100vh; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-height);
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand:hover { color: var(--accent); text-decoration: none; }
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.topbar-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.topbar-nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.portfolio-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--toc-width);
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.portfolio-main { min-width: 0; }
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.hero-text h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero-tagline {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.92rem;
+}
+
+.hero-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.section-title {
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.section-lead {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+}
+
+.subsection-title {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.doc-body p,
+.doc-body ul,
+.doc-body ol {
+  margin: 1rem 0;
+}
+
+.doc-body h3 {
+  font-size: 1.05rem;
+  margin-top: 1.5rem;
+}
+
+.doc-body blockquote {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  color: #be185d;
+}
+
+.doc-body pre {
+  margin: 1rem 0;
+  padding: 1rem 1.15rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  box-shadow: var(--shadow);
+}
+
+.doc-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.doc-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.doc-body tr:nth-child(even) td { background: #fafbfc; }
+
+.doc-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.doc-page-footer {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+
+.doc-body h1 {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.doc-body h2 {
+  margin: 2.25rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.35rem;
+  font-weight: 700;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.doc-body h3 {
+  font-size: 1.1rem;
+  margin-top: 1.75rem;
+}
+
+.doc-body h4 {
+  font-size: 1rem;
+  margin-top: 1.25rem;
+}
+
+.doc-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.doc-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.pillar-grid,
+.feature-grid,
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.pillar-card,
+.feature-card,
+.career-card {
+  padding: 1.15rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.pillar-card h3,
+.feature-card h3,
+.career-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.pillar-card p,
+.feature-card p,
+.career-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-list li {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.showcase-item {
+  margin: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.showcase-item:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
+}
+
+.showcase-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.showcase-item figcaption {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.mermaid-wrap {
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #1e293b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.mermaid-wrap .mermaid {
+  display: flex;
+  justify-content: center;
+}
+
+.demo-list {
+  columns: 2;
+  column-gap: 2rem;
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.demo-list li {
+  margin-bottom: 0.35rem;
+  break-inside: avoid;
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1.5rem);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-height) - 3rem);
+  overflow-y: auto;
+  padding-left: 0.5rem;
+}
+
+.toc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li { margin: 0.35rem 0; }
+
+.toc a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+}
+
+.toc a:hover { color: var(--accent); }
+
+.toc-h3 { padding-left: 0.75rem; }
+
+.site-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .portfolio-layout { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+@media (max-width: 600px) {
+  .hero { flex-direction: column; align-items: center; text-align: center; }
+  .hero-links { justify-content: center; }
+  .portfolio-layout { padding: 1.5rem 1rem 3rem; }
+  .hero-text h1 { font-size: 1.75rem; }
+  .topbar-nav { display: none; }
+  .demo-list { columns: 1; }
+}
+
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#abb2bf;background:#282c34}.hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}.hljs-doctag,.hljs-formula,.hljs-keyword{color:#c678dd}.hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#e06c75}.hljs-literal{color:#56b6c2}.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#98c379}.hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#d19a66}.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#61aeee}.hljs-built_in,.hljs-class .hljs-title,.hljs-title.class_{color:#e6c07b}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}.hljs-link{text-decoration:underline}
+</style>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="foliage-engine-roadmap-tracked-tasks">Foliage — Engine Roadmap &amp; Tracked Tasks</h1>
+<p>Living plan for <strong>grass fields</strong>, <strong>wind-reactive tree foliage</strong>, <strong>GPU instancing</strong>, and <strong>LOD/impostors</strong> at open-world scale without melting the forward renderer. Complements <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> Phase C (LOD/visibility) and Phase D (weather/wind), and shares a global <strong>wind field</strong> with <a href="water-roadmap.html"><code>WATER_ROADMAP.md</code></a>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.7 (terrain/sky), <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a> (instancing gap), <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>, <code>include/spark/engine/SceneRenderParams.hpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>src/spark/scene/submit/SceneSpatialCull.cpp</code>, <code>src/spark/render/sprites2d/VulkanTilemapPass.cpp</code> (2D instancing reference), <code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code>, <code>shaders/scene.vert</code>, <code>shaders/scene.frag</code>.</p>
+<p><strong>Related content:</strong> Khronos sample trees <code>assets/models/Tree_1_C_Color1.gltf</code>, <code>Tree_3_A_Color1.gltf</code> (placed per-entity in <code>CharacterCameraDemo</code> today); <code>TerrainComponent</code> for height/slope masks; <code>BillboardComponent</code> for impostor direction.</p>
+<p><strong>Non-goals (defer):</strong> per-blade rigid-body physics, skeletal animation on leaves, Nanite-style virtualized geometry, full procedural tree generation in-engine.</p>
+<hr />
+<h2 id="how-to-track-work">How to track work</h2>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Task ID</strong></td>
+<td><code>FOLIAGE-F{milestone}-{nn}</code> — stable across PRs and issues</td>
+</tr>
+<tr>
+<td><strong>Priority</strong></td>
+<td><strong>P0</strong> must for milestone exit · <strong>P1</strong> should · <strong>P2</strong> nice</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Use GitHub issue state, or check boxes in this file when merging</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Suggested GitHub labels:</strong> <code>foliage</code>, <code>rendering</code>, <code>milestone-F0</code> … <code>milestone-F7</code></p>
+<p><strong>Issue title format:</strong> <code>[FOLIAGE-F2-04] Grass chunk scatter from terrain height + slope mask</code></p>
+<p>Copy the <strong>Issue body</strong> block under each task when filing issues (see <a href="#9-bulk-github-issue-creation-optional">§9</a>).</p>
+<hr />
+<h2 id="current-baseline-as-of-this-doc">Current baseline (as of this doc)</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Heightfield terrain + brush / raycast</td>
+<td>Done — <code>TerrainComponent</code>, <code>TerrainDemo</code></td>
+</tr>
+<tr>
+<td>Frustum culling (optional spatial partition)</td>
+<td>Done — <code>Scene::ForEachDrawableInViewFrustum</code>, quadtree/octree</td>
+</tr>
+<tr>
+<td>Alpha-tested / double-sided opaque draws</td>
+<td>Done — <code>alphaCutoff</code>, <code>doubleSided</code> on <code>SceneDrawItem</code></td>
+</tr>
+<tr>
+<td>Transparent pass + transmission</td>
+<td>Done — not the primary foliage path (use alpha test in opaque pass)</td>
+</tr>
+<tr>
+<td>Directional CSM + punctual lights</td>
+<td>Done — foliage shadow cost must be budgeted</td>
+</tr>
+<tr>
+<td>2D GPU instancing (sprites / tilemaps)</td>
+<td>Done — <code>VulkanSpritePass</code>, <code>VulkanTilemapPass</code></td>
+</tr>
+<tr>
+<td>glTF tree props (single entity each)</td>
+<td>Done — <code>CharacterCameraDemo</code>, <code>GltfSceneGraphTest</code></td>
+</tr>
+<tr>
+<td><code>BillboardComponent</code></td>
+<td>Done — camera-facing quads (impostor precursor)</td>
+</tr>
+<tr>
+<td><strong>Global wind / gust system</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>3D mesh GPU instancing</strong></td>
+<td><strong>Not started</strong> — <code>vkCmdDrawIndexed</code> uses <code>instanceCount = 1</code> today</td>
+</tr>
+<tr>
+<td><strong>Grass field / chunked scatter</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Tree instancing + LOD</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Foliage wind vertex shader</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Mesh LOD metadata in submit</strong></td>
+<td><strong>Not started</strong> — gap in <code>SCENE_AND_RENDERING_GAPS.md</code></td>
+</tr>
+<tr>
+<td><strong>Impostor / baked tree cards</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="visual-target-tiers">Visual target tiers</h2>
+<p>Milestones below target <strong>Tier B</strong> (action-game realistic) with optional <strong>Tier C</strong> in F6.</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Grass</th>
+<th>Trees</th>
+<th>Wind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — Stylized</strong></td>
+<td>Crossed cards, uniform color, simple sin wave</td>
+<td>Repeated glTF instances, no LOD</td>
+<td>Global sin(time)</td>
+</tr>
+<tr>
+<td><strong>B — Realistic (default exit)</strong></td>
+<td>Chunked instancing, density map, distance dither, blade bend</td>
+<td>Instanced LOD0/1 + billboard far, trunk/foliage split, alpha foliage</td>
+<td>Layered noise + gusts + per-instance phase</td>
+</tr>
+<tr>
+<td><strong>C — High-end</strong></td>
+<td>GPU cull + interaction flatten radius</td>
+<td>Octahedral impostor atlas, GPU LOD select</td>
+<td>Weather-driven wind field texture</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="milestone-overview">Milestone overview</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Goal</th>
+<th>Depends on</th>
+<th>Maps to open-world</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F0</strong></td>
+<td>Wind subsystem + foliage UBO on <code>SceneRenderParams</code></td>
+<td>—</td>
+<td>D6 weather/wind</td>
+</tr>
+<tr>
+<td><strong>F1</strong></td>
+<td>3D GPU instancing + foliage shading model</td>
+<td>F0</td>
+<td>A2 budgets, C4 culling</td>
+</tr>
+<tr>
+<td><strong>F2</strong></td>
+<td>Grass fields — chunks, scatter, vertex wind, fade</td>
+<td>F0, F1</td>
+<td>C4, biome content</td>
+</tr>
+<tr>
+<td><strong>F3</strong></td>
+<td>Tree instancing — trunk/foliage split, wind leaves</td>
+<td>F0, F1</td>
+<td>C1 mesh LOD precursor</td>
+</tr>
+<tr>
+<td><strong>F4</strong></td>
+<td>Mesh LOD + impostors / billboards</td>
+<td>F3</td>
+<td>C1, C2, C3</td>
+</tr>
+<tr>
+<td><strong>F5</strong></td>
+<td>Culling budgets, shadow LOD, optional GPU compact</td>
+<td>F2, F3</td>
+<td>A2, C4, C5</td>
+</tr>
+<tr>
+<td><strong>F6</strong></td>
+<td>Interaction + weather coupling + shared wind with water</td>
+<td>F0, F2</td>
+<td>D6, WATER W6-06</td>
+</tr>
+<tr>
+<td><strong>F7</strong></td>
+<td>Tooling, presets, docs, CI smoke, demo</td>
+<td>F2, F3</td>
+<td>§0 content pipeline</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended order:</strong> F0 → F1 → F2 and F3 in parallel → F4 → F5; F6/F7 when core visuals land.</p>
+<p><strong>First vertical slice:</strong> windy grass on <code>TerrainDemo</code> + a ring of instanced <code>Tree_1_C</code> — proves F0–F3 without impostors.</p>
+<hr />
+<h2 id="f0-wind-subsystem">F0 — Wind subsystem</h2>
+<p><strong>Exit criteria:</strong> One global wind vector + gust parameters uploaded each frame; grass and tree foliage shaders read the same UBO; optional <code>WindVolumeComponent</code> data path (GPU may use global only in v1).</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F0-01</td>
+<td><strong><code>WindSettings</code> struct</strong> — direction (XZ), base speed, gust amplitude, gust frequency, turbulence</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F0-02</td>
+<td><strong><code>WindSubsystem</code> per <code>GameWorld</code></strong> — advances time, combines volumes, writes frame state</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F0-03</td>
+<td><strong><code>SceneRenderParams::wind</code></strong> + GPU UBO slot in scene descriptor set (document binding)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F0-04</td>
+<td><strong><code>WindVolumeComponent</code></strong> — box/sphere override: local direction, strength multiplier (data path)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F0-05</td>
+<td><strong>CPU <code>WindSampleAt(worldPos)</code></strong> — for gameplay VFX/audio (leaves rustle trigger)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F0-06</td>
+<td><strong>Unit test</strong> — gust envelope periodicity; volume blend at boundary</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Issue template — FOLIAGE-F0-03 (example)</summary>
+
+**Title:** `[FOLIAGE-F0-03] Wind UBO on SceneRenderParams + scene descriptor`
+
+**Body:**
+
+<pre><code>Milestone: F0 — Wind subsystem
+Priority: P0
+
+## Summary
+Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
+
+## Acceptance
+- [ ] VulkanSceneUniformWriter fills wind block
+- [ ] GLSL struct matches std140 layout
+- [ ] Default wind disabled = zero displacement
+
+## Files (expected)
+- include/spark/engine/SceneRenderParams.hpp
+- include/spark/scene/foliage/WindSettings.hpp
+- src/spark/render/scene/VulkanSceneUniformWriter.cpp
+- shaders/foliage_common.glsl
+</code></pre>
+
+</details>
+
+<hr />
+<h2 id="f1-3d-gpu-instancing-foliage-material">F1 — 3D GPU instancing &amp; foliage material</h2>
+<p><strong>Exit criteria:</strong> One grass blade mesh drawn <strong>N</strong> times via instanced indexed draw; per-instance transform + tint in SSBO; new <code>SceneShadingModel::Foliage</code> or dedicated pass.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F1-01</td>
+<td><strong><code>FoliageInstanceGpu</code></strong> — model matrix or pos/rotY/scale, tint, random phase (std430 SSBO)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-02</td>
+<td><strong><code>SceneRenderParams::foliageBatches</code></strong> — <code>{mesh, material, instances[]}</code> or chunked ranges</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-03</td>
+<td><strong><code>VulkanFoliageInstancedPass</code></strong> — <code>vkCmdDrawIndexed</code> with <code>instanceCount &gt; 1</code>; mirror tilemap instance reserve pattern</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-04</td>
+<td><strong><code>shaders/foliage.vert</code> / <code>foliage.frag</code></strong> — alpha test, double-sided, wind include, lit PBR simplified</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-05</td>
+<td><strong>Submit collection</strong> — <code>FillFoliageBatchesFromWorld</code> or extend <code>SceneSubmit</code></td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-06</td>
+<td><strong>Shadow pass instancing</strong> — foliage casts shadows optional; default grass <strong>no cast</strong></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-07</td>
+<td><strong>Frame order</strong> — instanced foliage after opaque rigid, before water/transparent; document in LIGHTING_AND_SHADOWS</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F1-08</td>
+<td><strong>Headless test</strong> — build batch with 100 instances, submit without validation error</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f2-grass-fields">F2 — Grass fields</h2>
+<p><strong>Exit criteria:</strong> Camera-centered grass chunks on terrain; blades bend in wind; density respects slope; instances fade at distance; frame budget cap enforced.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F2-01</td>
+<td><strong><code>GrassFieldComponent</code></strong> — bounds, blade mesh ref, density, max distance, terrain object link</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-02</td>
+<td><strong>Chunk grid</strong> (e.g. 32 m) — activate 3×3 or 5×5 neighborhood around camera</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-03</td>
+<td><strong>Scatter algorithm</strong> — jitter XZ in chunk; sample terrain height + normal; reject slope &gt; threshold</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-04</td>
+<td><strong>Density / exclusion mask</strong> — optional R8 texture (paint or procedural); zero = no blades</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-05</td>
+<td><strong>Blade mesh</strong> — crossed quads or 3-triangle strip; single albedo + optional alpha</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-06</td>
+<td><strong>Vertex wind</strong> — bend tip along wind; stiffness by height; per-instance phase offset</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-07</td>
+<td><strong>Distance fade</strong> — dither or alpha at far radius; hard cull beyond <code>maxDistance</code></td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-08</td>
+<td><strong><code>maxGrassInstancesPerFrame</code> budget</strong> — drop farthest chunks first (A2 alignment)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-09</td>
+<td><strong>Fake subsurface</strong> — wrap diffuse / back-light tint for sunset readability</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F2-10</td>
+<td><strong>Demo</strong> — extend <code>TerrainDemo</code> or <code>FoliageMeadowDemo</code> with grass + wind hotkeys</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f3-tree-instancing-foliage-materials">F3 — Tree instancing &amp; foliage materials</h2>
+<p><strong>Exit criteria:</strong> Many copies of <code>Tree_1_C</code> / <code>Tree_3_A</code> via instancing (not one <code>GameObject</code> per tree); foliage submesh uses wind shader; trunk remains static lit opaque.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F3-01</td>
+<td><strong><code>TreeSpeciesAsset</code></strong> — glTF path, trunk vs foliage material indices, bounds radius</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-02</td>
+<td><strong><code>TreeInstanceComponent</code> or batch</strong> — species id + transform; optional non-uniform scale</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-03</td>
+<td><strong>glTF import tag</strong> — materials matching <code>leaves</code> / <code>foliage</code> / <code>canopy</code> → foliage shader path</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-04</td>
+<td><strong>Draw split</strong> — trunk submesh: standard <code>LitPbr</code>, casts shadow; foliage: <code>Foliage</code> alpha test, wind vert</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-05</td>
+<td><strong>Procedural scatter</strong> — Poisson disk on terrain XZ with min separation; biome mask</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-06</td>
+<td><strong>Grounding</strong> — snap instance Y to terrain height; align yaw only (keep vertical trunk)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-07</td>
+<td><strong>Per-instance variation</strong> — scale 0.85–1.15, hue shift, wind phase from instance id</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-08</td>
+<td><strong>Replace <code>CharacterCameraDemo</code> tree loop</strong> — use <code>TreeInstance</code> batch API</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F3-09</td>
+<td><strong>Tests</strong> — load Tree glTF, assert trunk/foliage material split count</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f4-lod-impostors">F4 — LOD &amp; impostors</h2>
+<p><strong>Exit criteria:</strong> Trees beyond LOD1 distance switch to simplified mesh or camera-facing impostor; hysteresis reduces popping.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F4-01</td>
+<td><strong><code>TreeLodSettings</code></strong> — distances for LOD0 / LOD1 / impostor; hysteresis meters</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F4-02</td>
+<td><strong>LOD mesh assets</strong> — optional simplified glTF per species or auto decimate doc</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F4-03</td>
+<td><strong>CPU LOD select per instance</strong> — during batch build, bucket instances by LOD</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F4-04</td>
+<td><strong><code>TreeImpostorAsset</code></strong> — atlas or single billboard texture + depth-friendly alpha</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F4-05</td>
+<td><strong>Impostor pass</strong> — <code>BillboardComponent</code> pattern or instanced camera-facing quad in foliage pass</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F4-06</td>
+<td><strong>Light wind on impostor</strong> — UV scroll or normal sway (cheap)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F4-07</td>
+<td><strong>Debug viz</strong> — color instances by LOD bucket</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f5-culling-shadows-budgets">F5 — Culling, shadows &amp; budgets</h2>
+<p><strong>Exit criteria:</strong> Documented perf profile: 100k grass instances + 2k trees within agreed ms budget on reference hardware; shadow cost bounded.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F5-01</td>
+<td><strong>Chunk frustum cull</strong> — reject grass chunks outside view frustum before instance generation</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F5-02</td>
+<td><strong>Tree instance frustum cull</strong> — use spatial partition or batch AABB test</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F5-03</td>
+<td><strong><code>FoliageBudgetComponent</code></strong> — max instances / max tree draws per frame (mirror <code>SkinnedAnimationBudgetComponent</code>)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F5-04</td>
+<td><strong>Shadow LOD</strong> — foliage stops casting beyond N m; grass never casts in v1</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F5-05</td>
+<td><strong>Receive-only grass</strong> — <code>kSceneShadowReceive</code> without cast</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F5-06</td>
+<td><strong>GPU compact (optional)</strong> — compute frustum cull + write indirect draw count</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F5-07</td>
+<td><strong>Profiling hooks</strong> — log instance counts, batch count, cull stats per frame (dev overlay)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f6-interaction-weather-coupling">F6 — Interaction &amp; weather coupling</h2>
+<p><strong>Exit criteria:</strong> Player proximity flattens grass in shader radius; global wind can be driven by weather preset; shared wind struct documented for water waves.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F6-01</td>
+<td><strong>Interaction buffer</strong> — camera or player XZ + radius pushed to grass UBO</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F6-02</td>
+<td><strong>Grass flatten in vert shader</strong> — radial bend toward ground in interaction disc</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F6-03</td>
+<td><strong><code>WeatherPreset</code> wind hook</strong> — rain/storm increases <code>WindSettings</code> (OPEN_WORLD D6)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F6-04</td>
+<td><strong>Shared <code>WindSettings</code> with water</strong> — single subsystem; WATER roadmap W6-06 alignment</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F6-05</td>
+<td><strong>Rustle audio trigger</strong> — wind speed threshold → <code>SoundCue</code> on enter bush (optional)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f7-tooling-content-docs">F7 — Tooling, content &amp; docs</h2>
+<p><strong>Exit criteria:</strong> Artist-facing preset doc; programming guide section; CI smoke; sample meadow scene.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F7-01</td>
+<td><strong><code>docs/FOLIAGE_ARTIST_GUIDE.md</code></strong> — glTF tree export, material naming, LOD distances</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F7-02</td>
+<td><strong>Programming guide</strong> — extend <a href="../../programming-guide/site/3-3d-graphics/06-terrain-and-sky.html">Terrain and Sky</a> with grass/trees section</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F7-03</td>
+<td><strong><code>.sparkfoliage</code> preset</strong> — JSON: wind, grass density, LOD distances, species list</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F7-04</td>
+<td><strong>Editor paint</strong> — grass density / tree exclusion on terrain (scene editor prototype)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F7-05</td>
+<td><strong>Debug draw</strong> — wind arrow, chunk bounds, instance count HUD</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F7-06</td>
+<td><strong>CI smoke</strong> — scatter 1 chunk, build 1 foliage batch, no GPU required</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>FOLIAGE-F7-07</td>
+<td><strong>Sample scene</strong> — <code>assets/scenes/meadow.sparkscene</code> + launcher demo entry</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="dependency-graph">Dependency graph</h2>
+<div class="mermaid-wrap"><div class="mermaid">flowchart TB
+  F0[F0 Wind]
+  F1[F1 3D instancing]
+  F2[F2 Grass]
+  F3[F3 Trees]
+  F4[F4 LOD / impostors]
+  F5[F5 Budgets / cull]
+  F6[F6 Interaction / weather]
+  F7[F7 Tooling]
+  F0 --> F1
+  F1 --> F2
+  F1 --> F3
+  F3 --> F4
+  F2 --> F5
+  F3 --> F5
+  F0 --> F6
+  F2 --> F6
+  F2 --> F7
+  F3 --> F7</div></div>
+<hr />
+<h2 id="mapping-to-open_world_action_roadmap">Mapping to OPEN_WORLD_ACTION_ROADMAP</h2>
+<table>
+<thead>
+<tr>
+<th>Open-world ID</th>
+<th>Foliage milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1 Mesh LOD</td>
+<td>F4</td>
+</tr>
+<tr>
+<td>C2 LOD hysteresis</td>
+<td>F4-01</td>
+</tr>
+<tr>
+<td>C3 Impostors / billboards</td>
+<td>F4-04, F4-05</td>
+</tr>
+<tr>
+<td>C4 Frustum culling</td>
+<td>F5-01, F5-02; existing <code>Scene</code> spatial policy</td>
+</tr>
+<tr>
+<td>C5 GPU occlusion</td>
+<td>F5-06 (optional)</td>
+</tr>
+<tr>
+<td>A2 Frame budgets</td>
+<td>F2-08, F5-03</td>
+</tr>
+<tr>
+<td>D6 Weather</td>
+<td>F6-03, F6-04</td>
+</tr>
+<tr>
+<td>§0 Content pipeline</td>
+<td>F7</td>
+</tr>
+<tr>
+<td>“E3 vertical” biome polish</td>
+<td>F2 + F3 + F4 at sunset</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mapping-to-water_roadmap">Mapping to WATER_ROADMAP</h2>
+<table>
+<thead>
+<tr>
+<th>Water ID</th>
+<th>Foliage link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W4-01 <code>WaterSubsystem</code> wind fetch</td>
+<td>Share <strong><code>WindSubsystem</code></strong> (F0)</td>
+</tr>
+<tr>
+<td>WATER-W6-06 weather wind</td>
+<td>F6-04 single global wind field</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="renderer-frame-order-target">Renderer frame order (target)</h2>
+<p>After F1–F2, insert foliage before water/transparent:</p>
+<ol>
+<li>Shadow maps (foliage cast optional per budget)</li>
+<li>HDR opaque + sky</li>
+<li><strong>Instanced foliage</strong> — grass + tree trunks + tree foliage (<code>VulkanFoliageInstancedPass</code>)</li>
+<li>Copy depth/color if needed for water</li>
+<li>Water pass (<a href="water-roadmap.html"><code>WATER_ROADMAP.md</code></a>)</li>
+<li>Other transparent meshes</li>
+<li>SSAO → tonemap → UI</li>
+</ol>
+<hr />
+<h2 id="key-types-proposed">Key types (proposed)</h2>
+<pre><code class="language-cpp">struct WindSettings {
+    Vector3 direction{1.0F, 0.0F, 0.0F};  // world XZ dominant
+    float baseSpeed = 2.0F;
+    float gustAmplitude = 0.6F;
+    float gustFrequency = 0.25F;
+    float turbulence = 0.35F;
+};
+
+struct FoliageInstanceGpu {
+    Vector3 position;
+    float rotationY;
+    float uniformScale;
+    Vector3 tint{1.0F, 1.0F, 1.0F};
+    float windPhase;
+};
+
+class GrassFieldComponent final : public GameComponent {
+    float densityPerM2 = 12.0F;
+    float maxSlopeDegrees = 45.0F;
+    float maxViewDistance = 64.0F;
+    float chunkSizeMeters = 32.0F;
+    // terrain link, blade mesh, mask texture ...
+};
+
+class TreeInstanceBatchComponent final : public GameComponent {
+    TreeSpeciesId species;
+    // instances stored in SOA or external buffer ...
+};
+</code></pre>
+<hr />
+<h2 id="9-bulk-github-issue-creation-optional">9. Bulk GitHub issue creation (optional)</h2>
+<pre><code class="language-bash">gh issue create \
+  --title &quot;[FOLIAGE-F1-03] VulkanFoliageInstancedPass indexed instancing&quot; \
+  --label &quot;foliage,rendering,milestone-F1&quot; \
+  --body &quot;$(cat &lt;&lt;'EOF'
+Milestone: F1 — 3D GPU instancing
+Priority: P0
+
+## Summary
+Add instanced indexed draws for foliage with per-instance SSBO, following VulkanTilemapPass patterns.
+
+## Acceptance
+- [ ] instanceCount &gt; 1 for grass blade mesh
+- [ ] Instance data survives frame-in-flight ring
+- [ ] Integrates with VulkanRenderer after opaque pass
+
+## Files (expected)
+- include/spark/render/foliage/VulkanFoliageInstancedPass.hpp
+- src/spark/render/foliage/VulkanFoliageInstancedPass.cpp
+- shaders/foliage.vert
+EOF
+)&quot;
+</code></pre>
+<p>Create labels once:</p>
+<pre><code class="language-bash">gh label create &quot;foliage&quot; --description &quot;Grass, trees, wind-reactive vegetation&quot; --color &quot;2da44e&quot; 2&gt;/dev/null || true
+for m in 0 1 2 3 4 5 6 7; do
+  gh label create &quot;milestone-F${m}&quot; --description &quot;FOLIAGE_ROADMAP F${m}&quot; --color &quot;0e8a16&quot; 2&gt;/dev/null || true
+done
+</code></pre>
+<hr />
+<h2 id="10-references-in-this-repo">10. References in this repo</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>include/spark/ecs/components/rendering/TerrainComponent.hpp</code></td>
+<td>Height/slope for scatter</td>
+</tr>
+<tr>
+<td><code>include/spark/scene/core/Scene.hpp</code></td>
+<td>Frustum iteration</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/submit/SceneSpatialCull.cpp</code></td>
+<td>Spatial partition</td>
+</tr>
+<tr>
+<td><code>src/spark/render/sprites2d/VulkanTilemapPass.cpp</code></td>
+<td>2D instancing reference</td>
+</tr>
+<tr>
+<td><code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code></td>
+<td>Opaque draw path</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/rendering/BillboardComponent.hpp</code></td>
+<td>Impostor precursor</td>
+</tr>
+<tr>
+<td><code>src/spark/demo/CharacterCameraDemo.cpp</code></td>
+<td>Per-entity tree placement (to replace)</td>
+</tr>
+<tr>
+<td><code>assets/models/Tree_1_C_Color1.gltf</code></td>
+<td>Sample tree asset</td>
+</tr>
+<tr>
+<td><code>tests/scene/GltfSceneGraphTest.cpp</code></td>
+<td>Tree load validation</td>
+</tr>
+<tr>
+<td><code>docs/WATER_ROADMAP.md</code></td>
+<td>Shared wind field</td>
+</tr>
+<tr>
+<td><code>docs/SCENE_AND_RENDERING_GAPS.md</code></td>
+<td>Instancing + LOD gaps</td>
+</tr>
+<tr>
+<td><code>docs/programming-guide/3-3d-graphics/06-terrain-and-sky.md</code></td>
+<td>Guide home (F7)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: Foliage roadmap — milestones F0–F7. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+  <script>
+    document.querySelectorAll('pre code').forEach((block) => {
+      if (block.classList.contains('language-mermaid')) return;
+      if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+    });
+  </script>
+</body>
+</html>

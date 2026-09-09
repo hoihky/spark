@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Water Roadmap · Spark Game Engine</title>
+  <meta name="description" content="Water — Engine Roadmap & Tracked Tasks">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="../../programming-guide/site/assets/vendor/atom-one-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+  <script src="../../programming-guide/site/assets/vendor/highlight.min.js"></script>
+  <style id="spark-inline-theme">
+:root {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-hover: #4f46e5;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --topbar-height: 56px;
+  --toc-width: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.site { min-height: 100vh; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-height);
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand:hover { color: var(--accent); text-decoration: none; }
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.topbar-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.topbar-nav a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.portfolio-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--toc-width);
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+.portfolio-main { min-width: 0; }
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.hero-text h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero-tagline {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  font-size: 0.92rem;
+}
+
+.hero-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+}
+
+.section-title {
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.section-lead {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+}
+
+.subsection-title {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.doc-body p,
+.doc-body ul,
+.doc-body ol {
+  margin: 1rem 0;
+}
+
+.doc-body h3 {
+  font-size: 1.05rem;
+  margin-top: 1.5rem;
+}
+
+.doc-body blockquote {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  color: #be185d;
+}
+
+.doc-body pre {
+  margin: 1rem 0;
+  padding: 1rem 1.15rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  box-shadow: var(--shadow);
+}
+
+.doc-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.doc-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.doc-body tr:nth-child(even) td { background: #fafbfc; }
+
+.doc-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.doc-page-footer {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+
+.doc-body h1 {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.doc-body h2 {
+  margin: 2.25rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.35rem;
+  font-weight: 700;
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+}
+
+.doc-body h3 {
+  font-size: 1.1rem;
+  margin-top: 1.75rem;
+}
+
+.doc-body h4 {
+  font-size: 1rem;
+  margin-top: 1.25rem;
+}
+
+.doc-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.doc-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+.pillar-grid,
+.feature-grid,
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.pillar-card,
+.feature-card,
+.career-card {
+  padding: 1.15rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.pillar-card h3,
+.feature-card h3,
+.career-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.pillar-card p,
+.feature-card p,
+.career-card p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-list li {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.showcase-item {
+  margin: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.showcase-item:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12);
+}
+
+.showcase-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.showcase-item figcaption {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.mermaid-wrap {
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #1e293b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.mermaid-wrap .mermaid {
+  display: flex;
+  justify-content: center;
+}
+
+.demo-list {
+  columns: 2;
+  column-gap: 2rem;
+  margin: 1rem 0;
+  padding-left: 1.25rem;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.demo-list li {
+  margin-bottom: 0.35rem;
+  break-inside: avoid;
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1.5rem);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-height) - 3rem);
+  overflow-y: auto;
+  padding-left: 0.5rem;
+}
+
+.toc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li { margin: 0.35rem 0; }
+
+.toc a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+}
+
+.toc a:hover { color: var(--accent); }
+
+.toc-h3 { padding-left: 0.75rem; }
+
+.site-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .portfolio-layout { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+@media (max-width: 600px) {
+  .hero { flex-direction: column; align-items: center; text-align: center; }
+  .hero-links { justify-content: center; }
+  .portfolio-layout { padding: 1.5rem 1rem 3rem; }
+  .hero-text h1 { font-size: 1.75rem; }
+  .topbar-nav { display: none; }
+  .demo-list { columns: 1; }
+}
+
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#abb2bf;background:#282c34}.hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}.hljs-doctag,.hljs-formula,.hljs-keyword{color:#c678dd}.hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#e06c75}.hljs-literal{color:#56b6c2}.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#98c379}.hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#d19a66}.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#61aeee}.hljs-built_in,.hljs-class .hljs-title,.hljs-title.class_{color:#e6c07b}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}.hljs-link{text-decoration:underline}
+</style>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="water-engine-roadmap-tracked-tasks">Water — Engine Roadmap &amp; Tracked Tasks</h1>
+<p>Living plan for <strong>realistic water surfaces</strong>, <strong>wave simulation</strong>, <strong>shoreline integration</strong>, and <strong>gameplay coupling</strong> (buoyancy, swimming, splashes). It complements atmosphere/weather items in <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase D) and rendering gaps in <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.7 (terrain/sky), <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> (HDR frame flow, transparent pass), <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a> (PBR / IBL), <code>include/spark/engine/SceneRenderParams.hpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>src/spark/render/core/VulkanRenderer.cpp</code>, <code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code>, <code>shaders/scene.frag</code>.</p>
+<p><strong>Related gameplay systems:</strong> <code>TerrainComponent</code> (shore height), <code>VfxLibrary::WaterSplash</code>, <code>PhysicsQueryWorld3D</code>, <code>CharacterController3DComponent</code>, <code>FogVolumeComponent</code>, <code>PostProcessVolumeComponent</code>.</p>
+<p><strong>Non-goals (defer):</strong> full Navier–Stokes fluid simulation, large-scale ocean CFD, city-scale fluid coupling.</p>
+<hr />
+<h2 id="how-to-track-work">How to track work</h2>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Task ID</strong></td>
+<td><code>WATER-M{milestone}-{nn}</code> — stable across PRs and issues</td>
+</tr>
+<tr>
+<td><strong>Priority</strong></td>
+<td><strong>P0</strong> must for milestone exit · <strong>P1</strong> should · <strong>P2</strong> nice</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Use GitHub issue state, or check boxes in this file when merging</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Suggested GitHub labels:</strong> <code>water</code>, <code>rendering</code>, <code>milestone-W0</code> … <code>milestone-W7</code></p>
+<p><strong>Issue title format:</strong> <code>[WATER-M1-03] Water shader: Gerstner displacement + analytic normals</code></p>
+<p>Copy the <strong>Issue body</strong> block under each task when filing issues (see <a href="#9-bulk-github-issue-creation-optional">§9</a>).</p>
+<hr />
+<h2 id="current-baseline-as-of-this-doc">Current baseline (as of this doc)</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HDR forward lit meshes + depth buffer</td>
+<td>Done — <code>VulkanSceneOpaquePass</code>, <code>R16G16B16A16</code> color</td>
+</tr>
+<tr>
+<td>Transparent / transmission pass</td>
+<td>Done — <code>transparentDraws</code>; opaque color copied to scratch (binding <strong>13</strong>) for screen-space refraction sampling</td>
+</tr>
+<tr>
+<td>Sky dome + equirect IBL</td>
+<td>Done — <code>SkyComponent</code>, <code>ibl.glsl</code>, BRDF LUT</td>
+</tr>
+<tr>
+<td>Directional CSM + punctual lights</td>
+<td>Done — sun glints feasible on water normals</td>
+</tr>
+<tr>
+<td>Terrain heightfield + raycast</td>
+<td>Done — <code>TerrainComponent::TryRaycastWorld</code></td>
+</tr>
+<tr>
+<td>Fog / time-of-day data path</td>
+<td>Done — <code>FogVolumeComponent</code>, <code>TimeOfDayDriverComponent</code></td>
+</tr>
+<tr>
+<td>2D tilemap animated water tiles</td>
+<td>Done — cosmetic only (<code>TilemapShowcase2DDemo</code>)</td>
+</tr>
+<tr>
+<td><code>VfxLibrary::WaterSplash</code></td>
+<td>Done — particle burst preset; not wired to a water surface</td>
+</tr>
+<tr>
+<td><strong>Water body component / submit path</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Water material / shader</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Wave height gameplay API</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Buoyancy / swim controller</strong></td>
+<td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Offscreen render targets (planar reflection)</strong></td>
+<td><strong>Not started</strong> — documented gap in <code>SCENE_AND_RENDERING_GAPS.md</code></td>
+</tr>
+<tr>
+<td><strong>Reflection probes</strong></td>
+<td><strong>Not started</strong> — documented gap</td>
+</tr>
+<tr>
+<td><strong>SSR</strong></td>
+<td><strong>Not started</strong> — depth buffer exists (SSAO path)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="visual-target-tiers">Visual target tiers</h2>
+<p>Pick a tier per project; milestones below build toward <strong>Tier B</strong> (action-game realistic) with optional <strong>Tier C</strong> tasks in M6.</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Technique</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — Stylized</strong></td>
+<td>Flat plane + scrolling normal map + depth tint</td>
+<td>Prototype, mobile min-spec</td>
+</tr>
+<tr>
+<td><strong>B — Realistic (default exit)</strong></td>
+<td>Gerstner waves + refraction + depth absorption + Fresnel + sky IBL + shoreline foam + SSR or planar reflection</td>
+<td>Lakes, coasts, action games</td>
+</tr>
+<tr>
+<td><strong>C — High-end</strong></td>
+<td>FFT ocean spectrum + flow maps + wake ripple texture + caustics</td>
+<td>Open ocean showcase</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="milestone-overview">Milestone overview</h2>
+<table>
+<thead>
+<tr>
+<th>Milestone</th>
+<th>Goal</th>
+<th>Depends on</th>
+<th>Maps to open-world</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>W0</strong></td>
+<td>Scene integration — water bodies, draw slot, depth/color hooks</td>
+<td>—</td>
+<td>D6 (weather/wetness precursor)</td>
+</tr>
+<tr>
+<td><strong>W1</strong></td>
+<td>Gerstner water shader v1 — displacement, Fresnel, sun specular</td>
+<td>W0</td>
+<td>C1 (LOD content)</td>
+</tr>
+<tr>
+<td><strong>W2</strong></td>
+<td>Refraction, depth absorption, shoreline foam</td>
+<td>W0, W1</td>
+<td>D6 surface wetness adjacency</td>
+</tr>
+<tr>
+<td><strong>W3</strong></td>
+<td>Reflections — sky IBL + SSR and/or planar RT</td>
+<td>W1, W2</td>
+<td>Rendering scale (Phase C)</td>
+</tr>
+<tr>
+<td><strong>W4</strong></td>
+<td>Simulation API + buoyancy gameplay</td>
+<td>W1</td>
+<td>Traversal / vehicles</td>
+</tr>
+<tr>
+<td><strong>W5</strong></td>
+<td>Underwater post, audio hooks, swim controller</td>
+<td>W2, W4</td>
+<td>Weather / biomes</td>
+</tr>
+<tr>
+<td><strong>W6</strong></td>
+<td>Advanced sim — flow maps, FFT, wakes, caustics</td>
+<td>W1–W3</td>
+<td>“E3 vertical” polish</td>
+</tr>
+<tr>
+<td><strong>W7</strong></td>
+<td>Tooling, presets, docs, CI smoke</td>
+<td>W1</td>
+<td>§0 content pipeline</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommended order:</strong> W0 → W1 → W2 → W3 (rendering spine); W4 after W1 (gameplay height); W5 after W2+W4; W6/W7 parallel where possible.</p>
+<hr />
+<h2 id="w0-scene-integration-render-hooks">W0 — Scene integration &amp; render hooks</h2>
+<p><strong>Exit criteria:</strong> A <code>WaterBodyComponent</code> on a scene object produces a dedicated water draw in <code>SceneRenderParams</code>; renderer exposes <strong>scene color + linear depth</strong> textures usable by a water pass without breaking the existing transparent/transmission path.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W0-01</td>
+<td><strong><code>WaterBodyComponent</code></strong> — mode enum: <code>InfiniteOcean</code>, <code>FiniteLake</code>, <code>RiverSpline</code> (data only for v1); <code>waterLevelY</code>, extent, wave preset id</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-02</td>
+<td><strong><code>WaterSurfaceMesh</code></strong> — camera-centered clipmap or subdivided plane; rebuild when camera moves beyond threshold</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-03</td>
+<td><strong><code>SceneRenderParams::waterDraws</code></strong> (or <code>waterSurfaces</code>) — separate array from <code>transparentDraws</code>; max count + sort key (distance)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-04</td>
+<td><strong><code>SceneSubmit</code> collection</strong> — <code>ForEachWaterBodyInViewFrustum</code> (or tag query); fill <code>waterDraws</code> after opaque partition, before generic transparent</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-05</td>
+<td><strong>Depth/color export for water</strong> — per-flight <code>VulkanSceneOpaqueBackground</code>-style images: <strong>linear depth</strong> + <strong>HDR color</strong> after opaque (and optionally after sky); document binding indices</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-06</td>
+<td><strong><code>VulkanWaterPass</code> skeleton</strong> — dedicated render pass slot in <code>VulkanRenderer</code> after opaque (+ sky), before generic transparent; no-op clear initially</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-07</td>
+<td><strong>Shadow flags</strong> — water receives shadows (<code>kSceneShadowReceive</code>); does not cast (or optional cast for very shallow ponds)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-08</td>
+<td><strong>Component reference + programming guide</strong> stub under terrain/sky chapter</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W0-09</td>
+<td><strong>Scene serialization handler</strong> — <code>water_body</code> snapshot in <code>spark_scene_v4</code> (level, extent, preset id)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<details>
+<summary>Issue template — WATER-W0-05 (example)</summary>
+
+**Title:** `[WATER-W0-05] Export scene color + linear depth for water refraction`
+
+**Body:**
+
+<pre><code>Milestone: W0 — Scene integration
+Priority: P0
+
+## Summary
+After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to per-flight sampled images for the water shader.
+
+## Acceptance
+- [ ] Depth is linear eye-space or reconstructable from stored depth
+- [ ] Color is HDR (R16G16B16A16) matching scene pass
+- [ ] Existing transmission pass (binding 13) unchanged or unified
+- [ ] Documented in LIGHTING_AND_SHADOWS.md frame flow
+
+## Files (expected)
+- src/spark/render/scene/VulkanSceneOpaquePass.cpp
+- include/spark/render/scene/VulkanSceneOpaqueBackground.hpp (extend or sibling)
+- src/spark/render/core/VulkanRenderer.cpp
+</code></pre>
+
+</details>
+
+<hr />
+<h2 id="w1-gerstner-water-shader-v1">W1 — Gerstner water shader v1</h2>
+<p><strong>Exit criteria:</strong> A calm-to-moderate ocean/lake reads as water from orbit and ground camera: animated waves, Fresnel sky reflection, sun specular highlight. Demo: flat terrain + infinite ocean at Y=0.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W1-01</td>
+<td><strong><code>WaterWaveSettings</code></strong> — up to 4 Gerstner waves: amplitude, wavelength, speed, direction, steepness (Q)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-02</td>
+<td><strong>CPU <code>GerstnerWaveMath</code></strong> — <code>SampleHeight</code>, <code>SampleNormal</code>, <code>SampleHorizontalDisplacement</code> at <code>(x,z,t)</code>; shared by shader and gameplay</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-03</td>
+<td><strong><code>shaders/water.vert</code></strong> — displace vertices; pass world position, wave normal, screen UV</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-04</td>
+<td><strong><code>shaders/water.frag</code> v1</strong> — Fresnel (Schlick), sky IBL sample (<code>ibl.glsl</code>), directional sun specular (GGX), base water color</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-05</td>
+<td><strong>Pipeline + descriptors</strong> — <code>VulkanWaterPass</code> binds scene UBO, IBL, shadow maps, water push constants (wave array)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-06</td>
+<td><strong><code>WaterPreset</code> assets</strong> — <code>CalmLake</code>, <code>OceanModerate</code>, <code>StormySea</code> default parameter sets</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-07</td>
+<td><strong>Demo: <code>WaterLakeDemo</code></strong> — terrain island + infinite ocean; fly camera; time scale hotkey</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W1-08</td>
+<td><strong>Unit tests</strong> — Gerstner height/normal at t=0 matches analytic reference; symmetry on flat sea state</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="w2-refraction-absorption-shoreline-foam">W2 — Refraction, absorption, shoreline foam</h2>
+<p><strong>Exit criteria:</strong> Underwater objects visible with distortion; shallow water tint at shore; white foam where water meets terrain or steep wave crests.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W2-01</td>
+<td><strong>Refraction</strong> — sample W0 color buffer with normal-based UV offset; chromatic aberration optional (P2)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-02</td>
+<td><strong>Depth-based absorption</strong> — <code>waterDepth = waterY - sceneDepth</code>; Beer–Lambert or artist <code>shallowColor</code> / <code>deepColor</code> lerp</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-03</td>
+<td><strong>Shoreline foam mask</strong> — compare water surface Y vs terrain height (heightmap sample or depth intersection); foam noise texture</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-04</td>
+<td><strong>Crest foam</strong> — Jacobian or steepness threshold on Gerstner sum</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-05</td>
+<td><strong>Detail normals</strong> — layered scrolling normal map (2–3 scales) added to Gerstner normal</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-06</td>
+<td><strong>Terrain integration</strong> — <code>TerrainComponent</code> height query at foam generation (CPU debug + GPU approximate)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-07</td>
+<td><strong>Transparency sort</strong> — water draws after opaque, before other <code>transparentDraws</code>; document sort mode</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W2-08</td>
+<td><strong>Demo polish</strong> — beach slope on terrain demo island; foam visible at shoreline</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="w3-reflections-local-sky">W3 — Reflections (local + sky)</h2>
+<p><strong>Exit criteria:</strong> Shore objects reflect in calm water; grazing angles fall back to sky IBL when SSR misses.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W3-01</td>
+<td><strong><code>IRenderTarget</code> / <code>RenderTexture</code> handle</strong> — offscreen color+depth (prerequisite for planar reflection)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W3-02</td>
+<td><strong>SSR pass</strong> — ray march in screen space using scene depth; roughness-aware fade; reuse SSAO depth copy path</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W3-03</td>
+<td><strong>SSR + IBL composite</strong> — Fresnel blends SSR hit vs <code>iblSpecular</code>; horizon fade</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W3-04</td>
+<td><strong>Planar reflection (optional v1)</strong> — reflect camera below plane Y; render opaque+skinned subset to RT; sample in water.frag</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W3-05</td>
+<td><strong>Reflection probe stub</strong> — single box probe component (deferred); water uses probe if SSR miss</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W3-06</td>
+<td><strong>Perf budget</strong> — SSR half-res option; max ray steps; disable on min-spec profile</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W3-07</td>
+<td><strong>Tests / capture</strong> — golden screenshot harness or headless pixel sample at fixed camera</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="w4-simulation-api-gameplay-physics">W4 — Simulation API &amp; gameplay physics</h2>
+<p><strong>Exit criteria:</strong> A <code>Rigidbody3D</code> sphere floats with plausible bobbing; gameplay code queries water height without duplicating wave math.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W4-01</td>
+<td><strong><code>WaterSubsystem</code> per <code>GameWorld</code></strong> — owns active bodies, time, global wind fetch</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-02</td>
+<td><strong>Public API</strong> — <code>SampleWaterHeight(worldXZ, t)</code>, <code>SampleWaterNormal</code>, <code>IsUnderwater(worldPos)</code></td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-03</td>
+<td><strong><code>BuoyancyComponent</code></strong> — sample submerged volume (approximate: sphere/capsule vs plane); Archimedes + linear/angular damping</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-04</td>
+<td><strong>Drag when submerged</strong> — scale <code>Rigidbody3D</code> linear/angular damping by submerge fraction</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-05</td>
+<td><strong>Physics query extension</strong> — vertical ray returns <code>WaterHit</code> vs <code>TerrainHit</code> (closest surface)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-06</td>
+<td><strong>Splash triggers</strong> — <code>OnWaterEnter</code> / <code>OnWaterExit</code> signals; queue <code>VfxLibrary::WaterSplash</code> at impact point</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-07</td>
+<td><strong>Audio hook</strong> — <code>SoundCue</code> play on enter/splash (data path; no new audio engine work)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-08</td>
+<td><strong>Demo</strong> — buoyant crates + character wading depth line in <code>WaterLakeDemo</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W4-09</td>
+<td><strong>Unit tests</strong> — buoyancy net force sign; height API matches <code>GerstnerWaveMath</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="w5-underwater-rendering-character-swim">W5 — Underwater rendering &amp; character swim</h2>
+<p><strong>Exit criteria:</strong> Camera below surface gets fog/color shift; character can swim with distinct surface vs underwater motion.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W5-01</td>
+<td><strong><code>UnderwaterPostSettings</code></strong> on <code>SceneRenderParams</code> — enable when camera submerged; density, color, distortion strength</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W5-02</td>
+<td><strong>Underwater fullscreen pass</strong> — after water surface, before tonemap; exponential fog using water depth</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W5-03</td>
+<td><strong>Split-plane camera</strong> — optional dual fog when camera half-submerged (P2)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W5-04</td>
+<td><strong><code>CharacterSwimMotor</code> or FSM mode</strong> — surface swim, dive, buoyancy assist; integrates with <code>CharacterController3D</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W5-05</td>
+<td><strong>Regional post override</strong> — <code>PostProcessVolumeComponent</code> underwater preset auto-blend</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W5-06</td>
+<td><strong>Demo hotkeys</strong> — toggle dive, swim speed, underwater post strength</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="w6-advanced-simulation-effects-optional">W6 — Advanced simulation &amp; effects (optional)</h2>
+<p><strong>Exit criteria:</strong> Documented path for FFT ocean or river flow; boat wake ripples; no requirement for default demos.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W6-01</td>
+<td><strong>Flow map river mode</strong> — 2D flow/normal texture on <code>WaterBodyComponent</code>; advect UVs in shader</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W6-02</td>
+<td><strong>FFT ocean (compute)</strong> — Phillips spectrum, IFFT height/normal on GPU; ping-pong buffers; fallback to Gerstner</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W6-03</td>
+<td><strong>Wake / ripple texture</strong> — dynamic RG texture updated by moving objects (compute or CPU stamp); added to displacement</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W6-04</td>
+<td><strong>Caustics projection</strong> — project animated caustic texture onto terrain below water (decal pass)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W6-05</td>
+<td><strong>LOD tiers</strong> — near: full W1–W3; far: single normal map + flat plane + no SSR</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W6-06</td>
+<td><strong>Weather coupling</strong> — wind field drives wave amplitude/speed (<code>OPEN_WORLD</code> D6 hook)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="w7-tooling-content-pipeline-docs">W7 — Tooling, content pipeline &amp; docs</h2>
+<p><strong>Exit criteria:</strong> Artists have water presets; engineers have debug viz; CI loads a water scene headlessly.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WATER-W7-01</td>
+<td><strong><code>docs/WATER_ARTIST_GUIDE.md</code></strong> — preset tuning, shore foam, performance budgets</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W7-02</td>
+<td><strong>Programming guide</strong> — extend <a href="../../programming-guide/site/3-3d-graphics/06-terrain-and-sky.html">Terrain and Sky</a> with water section</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W7-03</td>
+<td><strong><code>.sparkwater</code> preset file</strong> — JSON round-trip (wave list, colors, foam, SSR flags)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W7-04</td>
+<td><strong>Debug draw</strong> — water level grid, wave gizmos, foam mask heatmap (dev key)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W7-05</td>
+<td><strong>Editor inspector</strong> — <code>WaterBodyComponent</code> fields in scene editor prototype</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W7-06</td>
+<td><strong>CI smoke</strong> — spawn water body + sample height + one draw submit without GPU validation layer</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>WATER-W7-07</td>
+<td><strong>Sample scene</strong> — <code>assets/scenes/water_lake.sparkscene</code></td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="dependency-graph">Dependency graph</h2>
+<div class="mermaid-wrap"><div class="mermaid">flowchart TB
+  W0[W0 Scene hooks]
+  W1[W1 Gerstner shader]
+  W2[W2 Refraction / foam]
+  W3[W3 Reflections]
+  W4[W4 Gameplay API]
+  W5[W5 Underwater / swim]
+  W6[W6 Advanced sim]
+  W7[W7 Tooling]
+  W0 --> W1
+  W1 --> W2
+  W2 --> W3
+  W1 --> W4
+  W2 --> W5
+  W4 --> W5
+  W3 --> W6
+  W1 --> W7</div></div>
+<hr />
+<h2 id="mapping-to-foliage_roadmap">Mapping to FOLIAGE_ROADMAP</h2>
+<table>
+<thead>
+<tr>
+<th>Foliage ID</th>
+<th>Water link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLIAGE-F0 <code>WindSubsystem</code></td>
+<td>Shared global wind for wave amplitude (W6-06)</td>
+</tr>
+<tr>
+<td>FOLIAGE-F6-04</td>
+<td>Single <code>WindSettings</code> UBO for vegetation + water</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a>.</p>
+<hr />
+<h2 id="mapping-to-open_world_action_roadmap">Mapping to OPEN_WORLD_ACTION_ROADMAP</h2>
+<table>
+<thead>
+<tr>
+<th>Open-world ID</th>
+<th>Water milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D6 Weather / surface wetness</td>
+<td>W2 foam + W6-06 wind coupling (shared with FOLIAGE F6)</td>
+</tr>
+<tr>
+<td>C1 LOD &amp; visibility</td>
+<td>W6-05 water LOD</td>
+</tr>
+<tr>
+<td>A2 Frame budgets</td>
+<td>W3-06 SSR budget; W6-05 far LOD</td>
+</tr>
+<tr>
+<td>§0 “Defer full fluid sim”</td>
+<td>This roadmap — spectral/Gerstner only</td>
+</tr>
+<tr>
+<td>“E3 vertical” biome polish</td>
+<td>W1–W3 + W5 underwater post</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="renderer-frame-order-target">Renderer frame order (target)</h2>
+<p>After W0–W3, <code>VulkanRenderer</code> should record:</p>
+<ol>
+<li>Shadow maps (unchanged)</li>
+<li><strong>HDR opaque + sky</strong> (unchanged)</li>
+<li><strong>Copy scene color + linear depth</strong> (W0) — shared by water, transmission, SSAO</li>
+<li><strong>Water surface pass</strong> (W1–W3) — <code>VulkanWaterPass</code></li>
+<li><strong>Other transparent meshes</strong> (existing <code>transparentDraws</code> / transmission)</li>
+<li><strong>Underwater post</strong> (W5, when camera submerged)</li>
+<li>SSAO (optional)</li>
+<li>Tonemap → UI</li>
+</ol>
+<p>Document final binding layout in <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> when W0 lands.</p>
+<hr />
+<h2 id="key-types-proposed">Key types (proposed)</h2>
+<pre><code class="language-cpp">enum class WaterBodyMode : std::uint8_t { InfiniteOcean, FiniteLake, RiverSpline };
+
+struct GerstnerWave {
+    Vector2 direction;  // normalized XZ
+    float amplitude;
+    float wavelength;
+    float speed;
+    float steepness;    // 0..1 (Q)
+};
+
+struct WaterWaveSettings {
+    StaticArray&lt;GerstnerWave, 4&gt; waves{};
+    float globalWindSpeed = 1.0F;
+};
+
+class WaterBodyComponent final : public GameComponent {
+    WaterBodyMode mode = WaterBodyMode::InfiniteOcean;
+    float waterLevelY = 0.0F;
+    WaterWaveSettings waves{};
+    // foam, absorption, SSR flags ...
+};
+
+// Gameplay (WaterSubsystem)
+float SampleWaterHeight(const Vector2&amp; worldXZ, float timeSeconds) noexcept;
+Vector3 SampleWaterNormal(const Vector2&amp; worldXZ, float timeSeconds) noexcept;
+bool IsUnderwater(const Vector3&amp; worldPosition, float timeSeconds) noexcept;
+</code></pre>
+<hr />
+<h2 id="9-bulk-github-issue-creation-optional">9. Bulk GitHub issue creation (optional)</h2>
+<p>From repo root, with <a href="https://cli.github.com/"><code>gh</code></a> authenticated:</p>
+<pre><code class="language-bash">gh issue create \
+  --title &quot;[WATER-W1-02] GerstnerWaveMath CPU sampler shared with shader&quot; \
+  --label &quot;water,rendering,milestone-W1&quot; \
+  --body &quot;$(cat &lt;&lt;'EOF'
+Milestone: W1 — Gerstner water shader v1
+Priority: P0
+
+## Summary
+Implement Gerstner height/normal/displacement on CPU for gameplay and unit tests; match water.vert math.
+
+## Acceptance
+- [ ] SampleHeight/Normal at (0,0,t) matches reference for single wave
+- [ ] Used by WaterSubsystem in W4
+- [ ] Header under include/spark/scene/water/ or include/spark/render/water/
+
+## Files (expected)
+- include/spark/scene/water/GerstnerWaveMath.hpp
+- tests/scene/GerstnerWaveMathTest.cpp
+EOF
+)&quot;
+</code></pre>
+<p>Create labels once:</p>
+<pre><code class="language-bash">gh label create &quot;water&quot; --description &quot;Water surfaces and simulation&quot; --color &quot;0366d6&quot; 2&gt;/dev/null || true
+for m in 0 1 2 3 4 5 6 7; do
+  gh label create &quot;milestone-W${m}&quot; --description &quot;WATER_ROADMAP W${m}&quot; --color &quot;0e8a16&quot; 2&gt;/dev/null || true
+done
+</code></pre>
+<hr />
+<h2 id="10-references-in-this-repo">10. References in this repo</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>include/spark/engine/SceneRenderParams.hpp</code></td>
+<td>Draw lists, fog, IBL, SSAO flags</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/SceneSubmitDrawPartition.cpp</code></td>
+<td>Opaque vs transparent partition</td>
+</tr>
+<tr>
+<td><code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code></td>
+<td>Opaque HDR + transparent/transmission</td>
+</tr>
+<tr>
+<td><code>src/spark/render/core/VulkanRenderer.cpp</code></td>
+<td>Pass composition</td>
+</tr>
+<tr>
+<td><code>include/spark/render/post/VulkanScreenSpaceEffectsPass.hpp</code></td>
+<td>Depth copy pattern (SSAO)</td>
+</tr>
+<tr>
+<td><code>shaders/scene.frag</code></td>
+<td>Lit opaque + transmission sampling</td>
+</tr>
+<tr>
+<td><code>shaders/ibl.glsl</code></td>
+<td>Environment specular/diffuse</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/rendering/TerrainComponent.hpp</code></td>
+<td>Shore height queries</td>
+</tr>
+<tr>
+<td><code>include/spark/scene/vfx/VfxLibrary.hpp</code></td>
+<td><code>WaterSplash</code> preset</td>
+</tr>
+<tr>
+<td><code>docs/SCENE_AND_RENDERING_GAPS.md</code></td>
+<td>Offscreen RT, reflection probes</td>
+</tr>
+<tr>
+<td><code>docs/LIGHTING_AND_SHADOWS.md</code></td>
+<td>Current frame flow</td>
+</tr>
+<tr>
+<td><code>docs/programming-guide/3-3d-graphics/06-terrain-and-sky.md</code></td>
+<td>Natural home for water guide (W7)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Last updated: Water roadmap — milestones W0–W7. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+  <script>
+    document.querySelectorAll('pre code').forEach((block) => {
+      if (block.classList.contains('language-mermaid')) return;
+      if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+    });
+  </script>
+</body>
+</html>

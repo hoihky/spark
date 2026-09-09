@@ -186,8 +186,9 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 |-----|-------------|------------------------|
 | **Transparency queue** | `transparentDraws` + `SceneTransparentSortMode` (material opacity &lt; 1); opaque `draws` | `SceneDrawItem::sortKey` for fine-grained ordering within queues |
 | **Render layers** | `shadowFlags` only | `layerMask`, `renderQueue` (background / opaque / transparent / overlay) |
-| **Instancing** | One `SceneDrawItem` per object | `InstanceBatch` or `drawInstances` with shared mesh + per-instance data |
-| **LOD selection** | Caller picks mesh | Submit helper chooses LOD from camera distance |
+| **Instancing** | One `SceneDrawItem` per object | `InstanceBatch` or `drawInstances` with shared mesh + per-instance data — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F1 |
+| **LOD selection** | Caller picks mesh | Submit helper chooses LOD from camera distance — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4 |
+| **Foliage (grass / trees)** | Per-entity glTF trees only (`CharacterCameraDemo`) | `GrassFieldComponent`, `TreeInstanceBatch`, wind UBO — [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
 | **Custom shaders** | `SceneShadingModel::LitPbr` / `ToonCel` | Material shader graph or `userShaderId` escape hatch |
 
 ### 3.2 `SceneRenderParams` limits

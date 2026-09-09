@@ -16,6 +16,8 @@
 | [**LIGHTING_AND_SHADOWS.md**](LIGHTING_AND_SHADOWS.md) | Rendering | CSM, punctual lights, SSAO, frame order |
 | [**MATERIALS_AND_LIGHTING.md**](MATERIALS_AND_LIGHTING.md) | Artists / rendering | PBR channels, IBL, material limits |
 | [**ANIMATION_3D_ROADMAP.md**](ANIMATION_3D_ROADMAP.md) | Animation | Skeletal animation milestones |
+| [**WATER_ROADMAP.md**](WATER_ROADMAP.md) | Rendering / gameplay | Water surfaces, waves, buoyancy, underwater |
+| [**FOLIAGE_ROADMAP.md**](FOLIAGE_ROADMAP.md) | Rendering / world | Grass, trees, wind, instancing, LOD |
 | [**ANIMATION_SAMPLE_ASSETS.md**](ANIMATION_SAMPLE_ASSETS.md) | Animation | Fox / CesiumMan clip tables, FSM resolve, test matrix |
 | [**BLENDER_GLTF_ANIMATION_EXPORT.md**](BLENDER_GLTF_ANIMATION_EXPORT.md) | Artists | Blender export checklist for skinned glTF |
 | [**CSHARP_SCRIPTING.md**](CSHARP_SCRIPTING.md) | Scripting | CoreCLR host, C# bindings |

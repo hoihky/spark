@@ -243,6 +243,8 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Heightfield terrain** | Procedural or authored height → mesh | `TerrainComponent`, `TerrainMeshGenerator`, settings in `spark/scene/mesh/TerrainGeneratorSettings.hpp` |
 | **Sky backdrop** | Box / dome / plane modes | `SkyComponent`, `SceneSkyMode` on draws; often combined with `MeshComponent` |
 | **Solid sky tint** | Clear HDR color attachment when no sky draw covers the horizon | `worldClearColorEnabled` + `worldClearColor` (see `TerrainDemo`) |
+| **Water (planned)** | Surfaces, waves, buoyancy | [`docs/WATER_ROADMAP.md`](WATER_ROADMAP.md) |
+| **Foliage (planned)** | Grass, instanced trees, wind | [`docs/FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
 
 ### 5.8 Characters and animation
 

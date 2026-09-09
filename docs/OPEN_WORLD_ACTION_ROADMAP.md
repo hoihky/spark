@@ -87,6 +87,7 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | C3 | **Impostors / billboards / simplified clusters** for distant architecture | P1 | |
 | C4 | **Frustum + sector culling** — aggressive defaults | P0 | Leverage existing `Scene` spatial options |
 | C5 | **GPU occlusion / PVS** | P2 | Only if profiling proves need |
+| C6 | **Foliage (grass + trees)** — GPU instancing, wind, LOD/impostors | P1 | See [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
 
 **Exit criteria:** Same route shows **~2× fewer draws** at mid-distance vs naive submit, without unacceptable visual regression.
 
@@ -104,7 +105,7 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | D4 | **Player torch / flashlight** — strict perf cap | P1 | Optional spotlight in forward pass |
 | D5 | **SSAO** | — | **Done** — `VulkanScreenSpaceEffectsPass`, `ssaoEnabled` on `SceneRenderParams` |
 | D5b | **Contact shadows** | P2 | Short screen-space sun trace (not implemented) |
-| D6 | **Weather** — rain/snow particles + surface wetness/roughness | P1 | Start cheap, not full fluid sim |
+| D6 | **Weather** — rain/snow particles + surface wetness/roughness + **wind field** | P1 | Wind drives [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F6 + [`WATER_ROADMAP.md`](WATER_ROADMAP.md) W6-06 |
 | D7 | **Volumetric fog / god rays** | P2 | Separate pass or raymarch (not implemented) |
 
 **Exit criteria:** **Day → night** combat encounter stays **readable** within GPU budget.
@@ -253,6 +254,8 @@ Adjust length if team size or scope changes.
 ## 7. References in this repo
 
 - `docs/ANIMATION_3D_ROADMAP.md` — tracked 3D animation milestones (M1–M6); maps to Phase F/G items below.
+- `docs/FOLIAGE_ROADMAP.md` — grass, trees, wind, instancing, LOD (Phase C6 / D6 wind).
+- `docs/WATER_ROADMAP.md` — water surfaces, waves, buoyancy; shares wind field with foliage.
 - `docs/GUI_EDITOR_ROADMAP.md` — retained GUI inventory + Spark Editor milestones (E0–E6).
 - `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md` — ECS, rendering, physics summary, `SceneRenderParams`, Vulkan overview.
 - `include/spark/engine/SceneRenderParams.hpp` — GPU snapshot contract.

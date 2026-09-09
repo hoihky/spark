@@ -125,4 +125,16 @@ tod->SetLooping(false);  // when you advance time manually in gameplay code
 
 Regional fog: add `FogVolumeComponent` on a trigger volume (camera-inside test at submit).
 
+## Grass and trees (planned)
+
+Wind-reactive vegetation is not implemented yet. Tracked milestones:
+
+| Topic | Roadmap |
+|-------|---------|
+| Grass chunks, density masks, blade wind | [`docs/FOLIAGE_ROADMAP.md`](../../../FOLIAGE_ROADMAP.md) (F2) |
+| Instanced trees, foliage materials, LOD / impostors | [`docs/FOLIAGE_ROADMAP.md`](../../../FOLIAGE_ROADMAP.md) (F3–F4) |
+| Global wind field (shared with water waves) | [`docs/FOLIAGE_ROADMAP.md`](../../../FOLIAGE_ROADMAP.md) (F0) · [`docs/WATER_ROADMAP.md`](../../../WATER_ROADMAP.md) |
+
+Today, sample trees are placed as individual glTF entities (see `CharacterCameraDemo` and `assets/models/Tree_*.gltf`).
+
 Next: [Particles](07-particles.md).

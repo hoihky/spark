@@ -1005,12 +1005,17 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>Instancing</strong></td>
 <td>One <code>SceneDrawItem</code> per object</td>
-<td><code>InstanceBatch</code> or <code>drawInstances</code> with shared mesh + per-instance data</td>
+<td><code>InstanceBatch</code> or <code>drawInstances</code> with shared mesh + per-instance data — see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F1</td>
 </tr>
 <tr>
 <td><strong>LOD selection</strong></td>
 <td>Caller picks mesh</td>
-<td>Submit helper chooses LOD from camera distance</td>
+<td>Submit helper chooses LOD from camera distance — see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F4</td>
+</tr>
+<tr>
+<td><strong>Foliage (grass / trees)</strong></td>
+<td>Per-entity glTF trees only (<code>CharacterCameraDemo</code>)</td>
+<td><code>GrassFieldComponent</code>, <code>TreeInstanceBatch</code>, wind UBO — <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a></td>
 </tr>
 <tr>
 <td><strong>Custom shaders</strong></td>
