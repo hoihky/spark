@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Documentation Index · Spark Game Engine</title>
-  <meta name="description" content="Spark documentation index">
+  <title>3D Animation Sample Assets · Spark Game Engine</title>
+  <meta name="description" content="3D animation sample assets">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -494,105 +494,205 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 
     <main class="doc-page">
       <article class="doc-body">
-        <h1 id="spark-documentation-index">Spark documentation index</h1>
-<p><strong>Build / preview HTML:</strong> from this folder run <code>./build-all.sh</code>, then <code>python3 -m http.server 8080</code> and open <code>http://127.0.0.1:8080/index.html</code>. Generated pages embed theme CSS inline so they also work when opened directly as local files.</p>
+        <h1 id="3d-animation-sample-assets">3D animation sample assets</h1>
+<p>Reference skinned glTF characters shipped with Spark for demos, tests, and export validation. See also <a href="blender-gltf-animation-export.html"><code>BLENDER_GLTF_ANIMATION_EXPORT.md</code></a> for artist rules.</p>
+<h2 id="summary">Summary</h2>
 <table>
 <thead>
 <tr>
-<th>Document</th>
-<th>Audience</th>
-<th>Summary</th>
+<th>Asset</th>
+<th>Path</th>
+<th>Joints</th>
+<th>Clips</th>
+<th>FSM resolve</th>
+<th>Primary use</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="readme.html"><strong>../README.md</strong></a></td>
-<td>Everyone</td>
-<td>Quick start, build targets, repo map</td>
+<td><strong>Fox</strong></td>
+<td><code>assets/models/Fox.glb</code></td>
+<td>24</td>
+<td>3</td>
+<td>idle/walk/run + attack proxy</td>
+<td>Quadruped locomotion, melee events on <code>Run</code>; primary CI / IK test asset</td>
 </tr>
 <tr>
-<td><a href="../../programming-guide/site/index.html"><strong>programming-guide/</strong></a></td>
-<td>Game devs</td>
-<td>Multi-part tutorial (tilemaps, TMX import, gameplay grid, pathfinding), <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><strong>UI toolkits</strong></a>, <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><strong>component reference</strong></a></td>
-</tr>
-<tr>
-<td><a href="gltf-display-roadmap.html"><strong>GLTF_DISPLAY_ROADMAP.md</strong></a></td>
-<td>Rendering / assets</td>
-<td>glTF display compatibility phases and test matrix</td>
-</tr>
-<tr>
-<td><a href="architecture-and-developer-guide.html"><strong>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</strong></a></td>
-<td>Engine &amp; gameplay devs</td>
-<td>Loop, ECS, rendering, feature catalog</td>
-</tr>
-<tr>
-<td><a href="scene-and-rendering-gaps.html"><strong>SCENE_AND_RENDERING_GAPS.md</strong></a></td>
-<td>Gameplay devs</td>
-<td>C++ public API gaps — scene, ECS, rendering (<code>include/spark/</code>)</td>
-</tr>
-<tr>
-<td><a href="clion.html"><strong>CLION.md</strong></a></td>
-<td>IDE users</td>
-<td>CMake presets, editor-debug profile</td>
-</tr>
-<tr>
-<td><a href="spark-editor-plan.html"><strong>SPARK_EDITOR_PLAN.md</strong></a></td>
-<td>Editor contributors</td>
-<td>Godot-style editor milestones M0–M6; scene save/load, <code>project.spark</code>, glTF prefab overrides</td>
-</tr>
-<tr>
-<td><a href="vfx-roadmap.html"><strong>VFX_ROADMAP.md</strong></a></td>
-<td>VFX / gameplay</td>
-<td>Particle system phases P1–P5, built-in effects, <code>VfxLibrary</code></td>
-</tr>
-<tr>
-<td><a href="gui-editor-roadmap.html"><strong>GUI_EDITOR_ROADMAP.md</strong></a></td>
-<td>UI / tools devs</td>
-<td><code>spark/ui</code> control inventory, editor UX tasks</td>
-</tr>
-<tr>
-<td><a href="lighting-and-shadows.html"><strong>LIGHTING_AND_SHADOWS.md</strong></a></td>
-<td>Rendering</td>
-<td>CSM, punctual lights, SSAO, frame order</td>
-</tr>
-<tr>
-<td><a href="materials-and-lighting.html"><strong>MATERIALS_AND_LIGHTING.md</strong></a></td>
-<td>Artists / rendering</td>
-<td>PBR channels, IBL, material limits</td>
-</tr>
-<tr>
-<td><a href="animation-3d-roadmap.html"><strong>ANIMATION_3D_ROADMAP.md</strong></a></td>
-<td>Animation</td>
-<td>Skeletal animation milestones</td>
-</tr>
-<tr>
-<td><a href="animation-sample-assets.html"><strong>ANIMATION_SAMPLE_ASSETS.md</strong></a></td>
-<td>Animation</td>
-<td>Fox / CesiumMan clip tables, FSM resolve, test matrix</td>
-</tr>
-<tr>
-<td><a href="blender-gltf-animation-export.html"><strong>BLENDER_GLTF_ANIMATION_EXPORT.md</strong></a></td>
-<td>Artists</td>
-<td>Blender export checklist for skinned glTF</td>
-</tr>
-<tr>
-<td><a href="csharp-scripting.html"><strong>CSHARP_SCRIPTING.md</strong></a></td>
-<td>Scripting</td>
-<td>CoreCLR host, C# bindings</td>
-</tr>
-<tr>
-<td><a href="open-world-action-roadmap.html"><strong>OPEN_WORLD_ACTION_ROADMAP.md</strong></a></td>
-<td>Long-term</td>
-<td>Streaming, combat, AI phases</td>
-</tr>
-<tr>
-<td><a href="2d-arpg-features.html"><strong>2D_ARPG_FEATURES.md</strong></a></td>
-<td>2D gameplay</td>
-<td>Physics, queries, anim FSM backlog</td>
+<td><strong>CesiumMan</strong></td>
+<td><code>assets/models/CesiumMan.glb</code></td>
+<td>19</td>
+<td>1</td>
+<td>walk only (unnamed clip)</td>
+<td>Khronos humanoid baseline, walk-cycle combat demo</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Also:</strong> <a href="readme.html"><code>.run/README.md</code></a> (CLion run configs), <a href="clion.html"><code>spark_editor/CLION.md</code></a>, <a href="../assets/CREDITS.md"><code>assets/CREDITS.md</code></a>.</p>
+<p>Sidecar event files (optional): <code>*.spark-anim-events.json</code> next to each <code>.glb</code>.</p>
+<hr />
+<h2 id="fox-foxglb">Fox (<code>Fox.glb</code>)</h2>
+<p>Khronos sample quadruped. Default avatar in <strong>Character camera</strong> and <strong>ThreeDDemo</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Clip index</th>
+<th>glTF name</th>
+<th>Duration (approx.)</th>
+<th><code>Character3DAnimFsm</code> resolve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>Survey</code></td>
+<td>~2.0 s</td>
+<td><strong>Idle</strong> (name contains <code>survey</code>)</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>Walk</code></td>
+<td>~1.0 s</td>
+<td><strong>Walk</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Run</code></td>
+<td>~0.5 s</td>
+<td><strong>Run</strong>; also used as <strong>attack proxy</strong> in Character camera demo (<code>F</code> key)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Joint highlights:</strong> <code>_rootJoint</code> → <code>b_Hip_01</code> (hips). Root-motion pattern resolver matches <code>hip</code>.</p>
+<p><strong>Events:</strong> <code>Fox.spark-anim-events.json</code> — <code>Run</code> clip:
+- <code>footstep</code> @ 0.10 s
+- <code>active_start</code> @ 0.18 s
+- <code>active_end</code> @ 0.42 s</p>
+<p><strong><code>walkClipIndex</code>:</strong> <code>1</code> (first clip whose name contains <code>walk</code>).</p>
+<p><strong>Demo wiring:</strong> Character camera uses Fox by default; melee hit window driven by <code>Run</code> events; attachment socket searches <code>head</code> then <code>hip</code>.</p>
+<hr />
+<h2 id="cesiumman-cesiummanglb">CesiumMan (<code>CesiumMan.glb</code>)</h2>
+<p>Khronos sample humanoid (single walk cycle).</p>
+<table>
+<thead>
+<tr>
+<th>Clip index</th>
+<th>glTF name</th>
+<th>Duration (approx.)</th>
+<th><code>Character3DAnimFsm</code> resolve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><em>(empty)</em></td>
+<td>~1.0 s</td>
+<td><strong>Walk</strong> (only clip; also used as idle/run fallback)</td>
+</tr>
+</tbody>
+</table>
+<p>There is no separate idle, run, or attack clip. <code>ConfigureLocomotionFromSkeleton</code> maps:
+- <strong>Idle</strong> → clip 0 (no <code>idle</code> name match; falls back to walk clip index)
+- <strong>Walk</strong> → clip 0
+- <strong>Run</strong> → <code>kInvalidAnimClipIndex</code> (no <code>run</code> match — FSM reuses walk clip at runtime when sprinting)</p>
+<p><strong>Joint highlights:</strong> <code>Skeleton_torso_joint_1</code>, <code>torso_joint_3</code> — no <code>hip</code> substring; root motion uses pattern fallback or explicit joint index.</p>
+<p><strong>Events:</strong> <code>CesiumMan.spark-anim-events.json</code> — unnamed walk clip matched by sidecar name <code>Walk</code>:
+- <code>active_start</code> @ 0.25 s
+- <code>active_end</code> @ 0.55 s</p>
+<p><strong><code>walkClipIndex</code>:</strong> <code>0</code>.</p>
+<p><strong>Demo wiring:</strong> Character camera <strong>M</strong> key switches to CesiumMan; attack hint resolves to <code>walk</code> substring (clip 0).</p>
+<hr />
+<h2 id="clip-name-conventions-engine">Clip name conventions (engine)</h2>
+<p><code>ResolveLocomotionClipsFromSkeleton</code> (<code>LocomotionClipSet.cpp</code>) resolves clips by <strong>case-insensitive</strong> exact name or <strong>substring</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Name patterns tried</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Idle</td>
+<td><code>idle</code>, <code>survey</code>, <code>rest</code>, <code>stand</code></td>
+</tr>
+<tr>
+<td>Walk</td>
+<td><code>walk</code></td>
+</tr>
+<tr>
+<td>Run</td>
+<td><code>run</code>, <code>jog</code>, <code>sprint</code></td>
+</tr>
+<tr>
+<td>Attack</td>
+<td><code>attack</code>, <code>punch</code>, <code>kick</code>, <code>shoot</code></td>
+</tr>
+<tr>
+<td>Hurt</td>
+<td><code>hurt</code>, <code>hit</code>, <code>damage</code>, <code>pain</code></td>
+</tr>
+</tbody>
+</table>
+<p>When adding new sample assets, prefer these names so <code>Character3DAnimFsmComponent::ConfigureLocomotionFromSkeleton</code> works without manual clip indices.</p>
+<hr />
+<h2 id="tests-referencing-these-assets">Tests referencing these assets</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Assets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GltfSkinnedCompressionTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>GltfSkinnedLoadValidationTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>GltfAnimationEventsTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>SkeletonPaletteBlendTest</code></td>
+<td>Fox (walk/run blend)</td>
+</tr>
+<tr>
+<td><code>SkeletonPaletteCacheTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>SkinnedAnimationBudgetTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>SkinnedGltfPbrTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>SkinnedIkTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>RootMotionSamplerTest</code></td>
+<td>Fox</td>
+</tr>
+<tr>
+<td><code>SampleAssetCatalogTest</code></td>
+<td>Fox, CesiumMan</td>
+</tr>
+<tr>
+<td><code>GltfDisplayCompatibilityTest</code></td>
+<td>Fox, DamagedHelmet</td>
+</tr>
+<tr>
+<td><code>GltfVisualParityTest</code></td>
+<td>Fox, ChronographWatch</td>
+</tr>
+</tbody>
+</table>
       </article>
     </main>
 

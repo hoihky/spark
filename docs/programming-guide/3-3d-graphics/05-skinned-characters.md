@@ -19,9 +19,8 @@ Load via `world.LoadSkinnedGltf("assets/models/Fox.glb")`.
 
 | Asset | Clips | Notes |
 |-------|-------|-------|
-| `assets/models/Fox.glb` | Survey, Walk, Run | Quadruped; default Character camera avatar |
+| `assets/models/Fox.glb` | Survey, Walk, Run | Quadruped; default Character camera avatar; primary CI / IK test asset |
 | `assets/models/CesiumMan.glb` | *(single unnamed walk)* | Khronos humanoid baseline |
-| `assets/models/SparkHumanoid.glb` | Idle, Walk, Run, Attack | Minimal biped for tests (`tools/generate_spark_humanoid.py`) |
 
 Full clip tables, joint counts, and FSM resolve rules: [`docs/ANIMATION_SAMPLE_ASSETS.md`](../../../ANIMATION_SAMPLE_ASSETS.md).
 
@@ -112,7 +111,7 @@ Skinned imports carry the same full PBR material table as rigid glTF (`GltfMater
 
 `GltfAssetBinder::BindSkinnedMesh` uses the presenter automatically. Custom render loops should use `SkinnedSceneDrawMaterialApplicator` (same path as `SceneSubmit`) instead of binding only the albedo texture.
 
-`assets/models/SparkHumanoid.glb` embeds normal + ORM maps for CI (`tools/generate_spark_humanoid.py`).
+Shipped skinned glTF assets (for example `Fox.glb`) carry full PBR material slots where authored in the source file.
 
 ## Foot IK + aim IK (M5-09 / M5-10)
 

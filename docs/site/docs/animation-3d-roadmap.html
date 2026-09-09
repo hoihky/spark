@@ -496,7 +496,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <article class="doc-body">
         <h1 id="3d-animation-engine-roadmap-tracked-tasks">3D Animation — Engine Roadmap &amp; Tracked Tasks</h1>
 <p>Living plan for <strong>skeletal mesh playback</strong>, <strong>gameplay-driven clip control</strong>, <strong>blending</strong>, <strong>events</strong>, and <strong>scale</strong>. It complements the high-level traversal/combat items in <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase F) with concrete engine work items, and the cross-system gap summary in <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
-<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.8, <a href="ANIMATION_SAMPLE_ASSETS.md"><code>ANIMATION_SAMPLE_ASSETS.md</code></a>, <code>include/spark/animation/Skeleton.hpp</code>, <code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code>, <code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>shaders/scene.vert</code>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.8, <a href="animation-sample-assets.html"><code>ANIMATION_SAMPLE_ASSETS.md</code></a>, <code>include/spark/animation/Skeleton.hpp</code>, <code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code>, <code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>shaders/scene.vert</code>.</p>
 <p><strong>2D reference (target parity for gameplay drivers):</strong> <code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code> — see <a href="2d-arpg-features.html"><code>2D_ARPG_FEATURES.md</code></a>.</p>
 <hr />
 <h2 id="how-to-track-work">How to track work</h2>
@@ -572,8 +572,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><strong>1D speed blend tree + crossfade-from-blend precedence</strong> (M3 done)</td>
 </tr>
 <tr>
-<td>Animation events / root motion / IK</td>
-<td><strong>M4 complete</strong> (events, root motion, attachments, C#); IK not started</td>
+<td>Animation events / root motion</td>
+<td><strong>M4 complete</strong> (events, root motion, attachments, C#)</td>
+</tr>
+<tr>
+<td>Foot IK + aim IK</td>
+<td><strong>M5-09, M5-10</strong> done — <code>FootIkComponent</code>, <code>AimIkComponent</code>, <code>SkinnedIkService</code></td>
 </tr>
 <tr>
 <td>C# / C API clip control</td>
@@ -1061,7 +1065,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 </tr>
 <tr>
 <td>AN3D-M6-05</td>
-<td><strong>Sample assets:</strong> document CesiumMan / Fox expected clips; add minimal humanoid with idle/walk/run/attack</td>
+<td><strong>Sample assets:</strong> document Fox / CesiumMan clip tables and FSM resolve (<code>ANIMATION_SAMPLE_ASSETS.md</code>)</td>
 <td>P1</td>
 <td>[x]</td>
 </tr>

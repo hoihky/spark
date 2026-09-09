@@ -37,7 +37,8 @@ Copy the **Issue body** block under each task when filing issues (or use the bul
 | Loop modes / crossfade / clip API (M1) | Done — `AnimLoopMode`, `SetClipIndexWithCrossfade`, C/C# bindings |
 | 3D animation state machine (M2) | Done — `Character3DAnimFsmComponent` (locomotion, blend, combat, AI blackboard) |
 | Clip blending / crossfade | **1D speed blend tree + crossfade-from-blend precedence** (M3 done) |
-| Animation events / root motion / IK | **M4 complete** (events, root motion, attachments, C#); IK not started |
+| Animation events / root motion | **M4 complete** (events, root motion, attachments, C#) |
+| Foot IK + aim IK | **M5-09, M5-10** done — `FootIkComponent`, `AimIkComponent`, `SkinnedIkService` |
 | C# / C API clip control | Done (M1) — loop mode, finished, crossfade, clip names |
 
 ---
@@ -186,7 +187,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 | AN3D-M6-02 | **Load validation:** warnings for joint count, zero duration, missing inverse bind, no animations | P0 | [x] |
 | AN3D-M6-03 | **Debug draw:** skeleton lines in world (dev key / demo flag) | P1 | [x] |
 | AN3D-M6-04 | **Debug HUD:** clip name, time, loop mode, blend weight | P1 | [x] |
-| AN3D-M6-05 | **Sample assets:** document CesiumMan / Fox expected clips; add minimal humanoid with idle/walk/run/attack | P1 | [x] |
+| AN3D-M6-05 | **Sample assets:** document Fox / CesiumMan clip tables and FSM resolve (`ANIMATION_SAMPLE_ASSETS.md`) | P1 | [x] |
 | AN3D-M6-06 | **CI smoke:** load skinned glTF headless; assert joint count & one palette sample | P2 | [x] |
 
 ---

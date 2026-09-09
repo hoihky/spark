@@ -748,8 +748,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       </aside>
 
       <main class="content">
-        <article class="doc"><h1>Skinned Characters</h1>
-<h2>Class Design: <code>SkinnedGltfAsset</code></h2>
+        <article class="doc">
+          <header class="doc-header">
+            <h1>05 skinned characters</h1>
+          </header>
+          <div class="doc-body"><h1 id="skinned-characters">Skinned Characters</h1>
+<h2 id="class-design-skinnedgltfasset">Class Design: <code>SkinnedGltfAsset</code></h2>
 <pre><code class="language-cpp">struct SkinnedGltfAsset {
     SharedPtr&lt;SkinnedMesh&gt; mesh;
     SharedPtr&lt;Skeleton&gt; skeleton;
@@ -760,7 +764,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 };
 </code></pre>
 <p>Load via <code>world.LoadSkinnedGltf("assets/models/Fox.glb")</code>.</p>
-<h2>Components</h2>
+<h2 id="sample-assets-m6">Sample assets (M6)</h2>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Clips</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>assets/models/Fox.glb</code></td>
+<td>Survey, Walk, Run</td>
+<td>Quadruped; default Character camera avatar; primary CI / IK test asset</td>
+</tr>
+<tr>
+<td><code>assets/models/CesiumMan.glb</code></td>
+<td><em>(single unnamed walk)</em></td>
+<td>Khronos humanoid baseline</td>
+</tr>
+</tbody>
+</table>
+<p>Full clip tables, joint counts, and FSM resolve rules: <a href="../../../ANIMATION_SAMPLE_ASSETS.html"><code>docs/ANIMATION_SAMPLE_ASSETS.md</code></a>.</p>
+<h2 id="components">Components</h2>
 <pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/models/Fox.glb&quot;);
 
 auto* go = world.CreateGameObject();
@@ -776,14 +803,14 @@ anim-&gt;SetLoopMode(AnimLoopMode::Loop);
 fsm-&gt;ConfigureLocomotionFromSkeleton(*fox.skeleton, fox.walkClipIndex);
 </code></pre>
 <p><code>GameObject</code> stable-sorts components by <code>UpdatePriority</code> each frame — add the FSM and animator in any order; the FSM (priority <strong>100</strong>) always runs before the animator (<strong>200</strong>).</p>
-<h2>Class Design: <code>AnimatorComponent</code></h2>
+<h2 id="class-design-animatorcomponent">Class Design: <code>AnimatorComponent</code></h2>
 <ul>
 <li>Samples animation clips into joint palette</li>
 <li><code>UpdatePriority</code> = <code>AnimatorPlayback</code> (200)</li>
 <li>Loop modes, crossfade, dual-clip locomotion blend</li>
 <li>Emits skinned draws with <code>jointPalette</code> in <code>SceneDrawItem</code></li>
 </ul>
-<h2>Class Design: <code>Character3DAnimFsmComponent</code> (M2)</h2>
+<h2 id="class-design-character3danimfsmcomponent-m2">Class Design: <code>Character3DAnimFsmComponent</code> (M2)</h2>
 <p>Higher-level <strong>locomotion + combat</strong> driver for <code>AnimatorComponent</code> on the same object.</p>
 <table>
 <thead>
@@ -821,7 +848,7 @@ fsm-&gt;ConfigureLocomotionFromSkeleton(*fox.skeleton, fox.walkClipIndex);
 </tr>
 </tbody>
 </table>
-<p>Clip names are resolved via <code>ConfigureLocomotionFromSkeleton</code> (<code>idle</code>, <code>walk</code>, <code>run</code>, <code>attack</code>, <code>hurt</code>, … — case-insensitive substring match). See <a href="../../../BLENDER_GLTF_ANIMATION_EXPORT.md"><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></a>.</p>
+<p>Clip names are resolved via <code>ConfigureLocomotionFromSkeleton</code> (<code>idle</code>, <code>walk</code>, <code>run</code>, <code>attack</code>, <code>hurt</code>, … — case-insensitive substring match). See <a href="../../../BLENDER_GLTF_ANIMATION_EXPORT.html"><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></a>.</p>
 <pre><code class="language-cpp">fsm-&gt;SetWalkSpeedThreshold(0.35F);
 fsm-&gt;SetRunSpeedThreshold(2.5F);
 fsm-&gt;SetLocomotionBlendEnabled(true);
@@ -830,7 +857,112 @@ fsm-&gt;RequestAttack();
 fsm-&gt;RequestHurt();
 </code></pre>
 <p><strong>Parent / child layout</strong> (Character Camera demo): put <code>Rigidbody3D</code> or <code>CharacterController3D</code> on the <strong>root</strong>; put <code>SkinnedMesh</code>, <code>Character3DAnimFsm</code>, and <code>Animator</code> on a <strong>visual child</strong>. The FSM walks the parent chain for motor velocity.</p>
-<h2>Attachment Points</h2>
+<h2 id="performance-palette-cache-submit-budget-m5">Performance: palette cache + submit budget (M5)</h2>
+<p><code>SceneSubmit</code> routes skinned palette solves through <code>GameWorld::GetSkinnedAnimationService()</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SkeletonPaletteCacheKey</code></td>
+<td>Captures skeleton + quantized playback signature</td>
+</tr>
+<tr>
+<td><code>SkeletonPaletteCache</code></td>
+<td>Shares palette arrays for identical signatures in one frame</td>
+</tr>
+<tr>
+<td><code>SkinnedAnimationBudget</code></td>
+<td>Caps palette CPU solves and skinned draw submissions</td>
+</tr>
+<tr>
+<td><code>SkinnedPaletteResolver</code></td>
+<td>Cache → compute → bind-pose fallback strategy</td>
+</tr>
+<tr>
+<td><code>SkinnedAnimationService</code></td>
+<td>Per-world coordinator used by <code>FillStandardLitSceneFromWorld</code></td>
+</tr>
+</tbody>
+</table>
+<p>Optional ECS policy (first active instance per submit):</p>
+<pre><code class="language-cpp">auto* budget = sceneRoot-&gt;AddComponent&lt;SkinnedAnimationBudgetComponent&gt;();
+budget-&gt;SetMaxPaletteUpdatesPerFrame(48);   // 0 = unlimited
+budget-&gt;SetMaxSkinnedDrawsPerFrame(96);     // 0 = unlimited
+budget-&gt;SetPaletteCacheEnabled(true);
+budget-&gt;SetPaletteQuantizationHz(30.0F);
+</code></pre>
+<p>When the palette update cap is exceeded, extra characters fall back to <strong>bind pose</strong> for that frame. When the skinned draw cap is exceeded, additional skinned draws are skipped.</p>
+<h2 id="skinned-gltf-pbr-m5-07">Skinned glTF PBR (M5-07)</h2>
+<p>Skinned imports carry the same full PBR material table as rigid glTF (<code>GltfMaterial</code> / <code>MaterialComponent</code> slots: base color, normal, metallic-roughness, emissive).</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SkinnedGltfMaterialPresenter</code></td>
+<td>Binds <code>SkinnedGltfAsset</code> materials onto <code>MaterialComponent</code> or <code>MultiMaterialComponent</code> at load time</td>
+</tr>
+<tr>
+<td><code>SkinnedSceneDrawMaterialApplicator</code></td>
+<td>Applies those component textures to skinned <code>SceneDrawItem</code> layers at submit time</td>
+</tr>
+</tbody>
+</table>
+<p><code>GltfAssetBinder::BindSkinnedMesh</code> uses the presenter automatically. Custom render loops should use <code>SkinnedSceneDrawMaterialApplicator</code> (same path as <code>SceneSubmit</code>) instead of binding only the albedo texture.</p>
+<p>Shipped skinned glTF assets (for example <code>Fox.glb</code>) carry full PBR material slots where authored in the source file.</p>
+<h2 id="foot-ik-aim-ik-m5-09-m5-10">Foot IK + aim IK (M5-09 / M5-10)</h2>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FootIkComponent</code></td>
+<td>Per-limb ground raycasts + two-bone foot placement</td>
+</tr>
+<tr>
+<td><code>AimIkComponent</code></td>
+<td>Partial spine-chain blend toward camera or target object</td>
+</tr>
+<tr>
+<td><code>IkGroundProbe</code></td>
+<td>Physics raycast with Y-plane fallback</td>
+</tr>
+<tr>
+<td><code>SkinnedIkPipeline</code></td>
+<td>Applies foot + aim solvers to a sampled pose</td>
+</tr>
+<tr>
+<td><code>SkinnedIkService</code></td>
+<td>Per-world IK coordinator used during palette resolve</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">auto* footIk = visual-&gt;AddComponent&lt;FootIkComponent&gt;();
+footIk-&gt;SetLeftFootPatterns(&quot;hips&quot;, &quot;&quot;, &quot;leg_l&quot;);
+footIk-&gt;SetRightFootPatterns(&quot;hips&quot;, &quot;&quot;, &quot;leg_r&quot;);
+footIk-&gt;ConfigureFromSkeleton(*skeleton);
+footIk-&gt;SetEnabled(true);
+
+auto* aimIk = visual-&gt;AddComponent&lt;AimIkComponent&gt;();
+aimIk-&gt;ConfigureFromSkeleton(*skeleton);
+aimIk-&gt;SetWorldTarget(cameraPosition);
+aimIk-&gt;SetWeight(0.55F);
+</code></pre>
+<p><code>SceneSubmit</code> and <code>SkinnedAnimationService::TryResolvePalette</code> automatically run IK when either component is enabled on the skinned object. Character Camera demo: <strong>K</strong> toggles foot IK, <strong>L</strong> toggles aim IK.</p>
+<h2 id="attachment-points">Attachment Points</h2>
 <p>Use <code>AttachmentSocketComponent</code> for bone-accurate weapon / VFX anchors (priority 250, after animator):</p>
 <pre><code class="language-cpp">auto* socket = characterVisual-&gt;AddComponent&lt;AttachmentSocketComponent&gt;();
 socket-&gt;SetSourceObject(characterVisual);
@@ -838,7 +970,7 @@ socket-&gt;SetAttachedObject(swordObject);
 socket-&gt;SetJointByNamePattern(&quot;hand&quot;);
 socket-&gt;SetLocalOffset({0.05F, 0.0F, 0.1F});
 </code></pre>
-<h2>Animation Events</h2>
+<h2 id="animation-events">Animation Events</h2>
 <pre><code class="language-cpp">auto* events = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
 events-&gt;ImportFromSkeleton(*skeleton);  // from .spark-anim-events.json or future glTF extras
 
@@ -846,16 +978,20 @@ auto* melee = go-&gt;AddComponent&lt;AnimationMeleeHitComponent&gt;();
 melee-&gt;SetFacingObject(characterRoot);
 melee-&gt;AddTarget(enemy);
 </code></pre>
-<p>Sidecar format and export notes: <a href="../../../BLENDER_GLTF_ANIMATION_EXPORT.md"><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></a>.</p>
-<h2>Root Motion</h2>
+<p>Sidecar format and export notes: <a href="../../../BLENDER_GLTF_ANIMATION_EXPORT.html"><code>docs/BLENDER_GLTF_ANIMATION_EXPORT.md</code></a>.</p>
+<h2 id="root-motion">Root Motion</h2>
 <pre><code class="language-cpp">auto* rootMotion = characterRoot-&gt;AddComponent&lt;RootMotionComponent&gt;();
 rootMotion-&gt;SetAnimatorObject(characterVisual);
 rootMotion-&gt;SetApplyTarget(characterRoot);
 rootMotion-&gt;UsePatternMotionJointResolver();
 rootMotion-&gt;SetInPlace(true);  // toggle false to drive transform from clip
 </code></pre>
-<p>See <a href="../1-overview-architecture/07-game-component-reference.md#animation">Game Component Reference</a>.</p>
-<p>Next: <a href="06-terrain-and-sky.md">Terrain and Sky</a>.</p></article>
+<p>See <a href="../1-overview-architecture/07-game-component-reference.html#animation">Game Component Reference</a>.</p>
+<p>Next: <a href="06-terrain-and-sky.html">Terrain and Sky</a>.</p></div>
+          <footer class="doc-footer">
+            <p>Generated by <strong>MDWeb</strong></p>
+          </footer>
+        </article>
 
         
                 <aside class="toc" aria-label="On this page">

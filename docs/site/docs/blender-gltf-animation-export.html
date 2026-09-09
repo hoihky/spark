@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Documentation Index · Spark Game Engine</title>
-  <meta name="description" content="Spark documentation index">
+  <title>Blender glTF Animation Export · Spark Game Engine</title>
+  <meta name="description" content="Blender → glTF animation export (Spark)">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -494,105 +494,193 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 
     <main class="doc-page">
       <article class="doc-body">
-        <h1 id="spark-documentation-index">Spark documentation index</h1>
-<p><strong>Build / preview HTML:</strong> from this folder run <code>./build-all.sh</code>, then <code>python3 -m http.server 8080</code> and open <code>http://127.0.0.1:8080/index.html</code>. Generated pages embed theme CSS inline so they also work when opened directly as local files.</p>
+        <h1 id="blender-gltf-animation-export-spark">Blender → glTF animation export (Spark)</h1>
+<p>Spark reads <strong>animation gameplay events</strong>, <strong>locomotion clips</strong>, and <strong>root-motion joints</strong> from glTF plus optional sidecar JSON. This page is the artist/engine checklist for 3D character export.</p>
+<h2 id="quick-checklist">Quick checklist</h2>
 <table>
 <thead>
 <tr>
-<th>Document</th>
-<th>Audience</th>
-<th>Summary</th>
+<th>Rule</th>
+<th>Why</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="readme.html"><strong>../README.md</strong></a></td>
-<td>Everyone</td>
-<td>Quick start, build targets, repo map</td>
+<td>≤ <strong>64 joints</strong> per skin (current GPU limit)</td>
+<td>Palette SSBO size in <code>scene.vert</code></td>
 </tr>
 <tr>
-<td><a href="../../programming-guide/site/index.html"><strong>programming-guide/</strong></a></td>
-<td>Game devs</td>
-<td>Multi-part tutorial (tilemaps, TMX import, gameplay grid, pathfinding), <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html"><strong>UI toolkits</strong></a>, <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><strong>component reference</strong></a></td>
+<td>Name clips <strong><code>Idle</code></strong>, <strong><code>Walk</code></strong>, <strong><code>Run</code></strong>, <strong><code>Attack</code></strong>, <strong><code>Hurt</code></strong> (substring match)</td>
+<td><code>Character3DAnimFsmComponent</code> auto-resolve</td>
 </tr>
 <tr>
-<td><a href="gltf-display-roadmap.html"><strong>GLTF_DISPLAY_ROADMAP.md</strong></a></td>
-<td>Rendering / assets</td>
-<td>glTF display compatibility phases and test matrix</td>
+<td>Name root/hips joint with <strong><code>hip</code></strong>, <strong><code>root</code></strong>, or <strong><code>pelvis</code></strong></td>
+<td><code>RootMotionComponent</code> pattern resolver</td>
 </tr>
 <tr>
-<td><a href="architecture-and-developer-guide.html"><strong>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</strong></a></td>
-<td>Engine &amp; gameplay devs</td>
-<td>Loop, ECS, rendering, feature catalog</td>
+<td>Use <strong>LINEAR</strong> rotation/translation keys</td>
+<td>STEP / CUBICSPLINE not fully supported yet</td>
 </tr>
 <tr>
-<td><a href="scene-and-rendering-gaps.html"><strong>SCENE_AND_RENDERING_GAPS.md</strong></a></td>
-<td>Gameplay devs</td>
-<td>C++ public API gaps — scene, ECS, rendering (<code>include/spark/</code>)</td>
+<td>Add melee events <strong><code>active_start</code></strong> / <strong><code>active_end</code></strong> on attack clips</td>
+<td><code>AnimationMeleeHitComponent</code> hit window</td>
 </tr>
 <tr>
-<td><a href="clion.html"><strong>CLION.md</strong></a></td>
-<td>IDE users</td>
-<td>CMake presets, editor-debug profile</td>
-</tr>
-<tr>
-<td><a href="spark-editor-plan.html"><strong>SPARK_EDITOR_PLAN.md</strong></a></td>
-<td>Editor contributors</td>
-<td>Godot-style editor milestones M0–M6; scene save/load, <code>project.spark</code>, glTF prefab overrides</td>
-</tr>
-<tr>
-<td><a href="vfx-roadmap.html"><strong>VFX_ROADMAP.md</strong></a></td>
-<td>VFX / gameplay</td>
-<td>Particle system phases P1–P5, built-in effects, <code>VfxLibrary</code></td>
-</tr>
-<tr>
-<td><a href="gui-editor-roadmap.html"><strong>GUI_EDITOR_ROADMAP.md</strong></a></td>
-<td>UI / tools devs</td>
-<td><code>spark/ui</code> control inventory, editor UX tasks</td>
-</tr>
-<tr>
-<td><a href="lighting-and-shadows.html"><strong>LIGHTING_AND_SHADOWS.md</strong></a></td>
-<td>Rendering</td>
-<td>CSM, punctual lights, SSAO, frame order</td>
-</tr>
-<tr>
-<td><a href="materials-and-lighting.html"><strong>MATERIALS_AND_LIGHTING.md</strong></a></td>
-<td>Artists / rendering</td>
-<td>PBR channels, IBL, material limits</td>
-</tr>
-<tr>
-<td><a href="animation-3d-roadmap.html"><strong>ANIMATION_3D_ROADMAP.md</strong></a></td>
-<td>Animation</td>
-<td>Skeletal animation milestones</td>
-</tr>
-<tr>
-<td><a href="animation-sample-assets.html"><strong>ANIMATION_SAMPLE_ASSETS.md</strong></a></td>
-<td>Animation</td>
-<td>Fox / CesiumMan clip tables, FSM resolve, test matrix</td>
-</tr>
-<tr>
-<td><a href="blender-gltf-animation-export.html"><strong>BLENDER_GLTF_ANIMATION_EXPORT.md</strong></a></td>
-<td>Artists</td>
-<td>Blender export checklist for skinned glTF</td>
-</tr>
-<tr>
-<td><a href="csharp-scripting.html"><strong>CSHARP_SCRIPTING.md</strong></a></td>
-<td>Scripting</td>
-<td>CoreCLR host, C# bindings</td>
-</tr>
-<tr>
-<td><a href="open-world-action-roadmap.html"><strong>OPEN_WORLD_ACTION_ROADMAP.md</strong></a></td>
-<td>Long-term</td>
-<td>Streaming, combat, AI phases</td>
-</tr>
-<tr>
-<td><a href="2d-arpg-features.html"><strong>2D_ARPG_FEATURES.md</strong></a></td>
-<td>2D gameplay</td>
-<td>Physics, queries, anim FSM backlog</td>
+<td>Place sidecar next to <code>.glb</code> when using events</td>
+<td>See below</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Also:</strong> <a href="readme.html"><code>.run/README.md</code></a> (CLion run configs), <a href="clion.html"><code>spark_editor/CLION.md</code></a>, <a href="../assets/CREDITS.md"><code>assets/CREDITS.md</code></a>.</p>
+<h2 id="gltf-animation-extras-reserved">glTF animation extras (reserved)</h2>
+<p>When the bundled cgltf build exposes animation extras JSON, Spark will read:</p>
+<pre><code class="language-json">{ &quot;sparkEvents&quot;: [ { &quot;time&quot;: 0.18, &quot;name&quot;: &quot;active_start&quot; } ] }
+</code></pre>
+<p>Until then, use the <strong>sidecar file</strong> below (works today).</p>
+<h2 id="sidecar-file-recommended-for-events">Sidecar file (recommended for events)</h2>
+<p>Place next to the model:</p>
+<p><code>MyCharacter.glb</code> → <code>MyCharacter.spark-anim-events.json</code></p>
+<pre><code class="language-json">{
+  &quot;version&quot;: 1,
+  &quot;clips&quot;: [
+    {
+      &quot;name&quot;: &quot;Run&quot;,
+      &quot;events&quot;: [
+        { &quot;time&quot;: 0.18, &quot;name&quot;: &quot;active_start&quot; },
+        { &quot;time&quot;: 0.42, &quot;name&quot;: &quot;active_end&quot; },
+        { &quot;time&quot;: 0.30, &quot;name&quot;: &quot;footstep&quot; }
+      ]
+    }
+  ]
+}
+</code></pre>
+<ul>
+<li>Clip <code>name</code> matches the glTF animation name (case-insensitive).</li>
+<li>Event <code>name</code> is a UTF-8 string; engine convention for combat windows is <code>active_start</code> / <code>active_end</code>.</li>
+<li><code>time</code> is seconds from clip start (absolute, not normalized).</li>
+</ul>
+<h2 id="event-naming-conventions">Event naming conventions</h2>
+<table>
+<thead>
+<tr>
+<th>Event name</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>active_start</code></td>
+<td>Begin hit trace / damage window</td>
+</tr>
+<tr>
+<td><code>active_end</code></td>
+<td>End hit trace / damage window</td>
+</tr>
+<tr>
+<td><code>footstep</code></td>
+<td>VFX / SFX (see <code>AnimationEventVfxComponent</code>)</td>
+</tr>
+<tr>
+<td><code>spawn_vfx</code></td>
+<td>Custom gameplay hook from C# callback</td>
+</tr>
+</tbody>
+</table>
+<h2 id="runtime-wiring-c">Runtime wiring (C++)</h2>
+<pre><code class="language-cpp">auto* recv = character-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
+recv-&gt;ImportFromSkeleton(*skeleton);
+
+auto* melee = character-&gt;AddComponent&lt;AnimationMeleeHitComponent&gt;();
+melee-&gt;SetFacingObject(characterRoot);
+melee-&gt;AddTarget(enemy);
+
+auto* socket = character-&gt;AddComponent&lt;AttachmentSocketComponent&gt;();
+socket-&gt;SetSourceObject(characterVisual);
+socket-&gt;SetAttachedObject(weaponObject);
+socket-&gt;SetJointByNamePattern(&quot;hand&quot;);  // or SetJointIndex(...)
+socket-&gt;SetLocalOffset({0, 0, 0.2f});
+
+auto* rootMotion = characterRoot-&gt;AddComponent&lt;RootMotionComponent&gt;();
+rootMotion-&gt;SetAnimatorObject(characterVisual);
+rootMotion-&gt;SetApplyTarget(characterRoot);
+rootMotion-&gt;UsePatternMotionJointResolver();
+rootMotion-&gt;SetInPlace(true);  // toggle false to drive transform from clip
+</code></pre>
+<h2 id="c-gameplay-events">C# gameplay events</h2>
+<pre><code class="language-csharp">receiver.SetCallback((owner, payload) =&gt;
+{
+    Console.WriteLine($&quot;Event {payload.EventName} clip {payload.ClipIndex} @ {payload.TimeSeconds}&quot;);
+});
+</code></pre>
+<p>See <code>AnimationEventReceiverComponent</code> in <code>Spark.Bindings</code>.</p>
+<h2 id="root-motion-notes">Root motion notes</h2>
+<ul>
+<li>Export locomotion with motion on the <strong>hips/root</strong> joint (not only on a child mesh).</li>
+<li>Spark extracts per-frame translation from the resolved motion joint and applies it to a target transform.</li>
+<li>Use <code>SetInPlace(true)</code> when gameplay code (WASD / character controller) owns world movement.</li>
+</ul>
+<h2 id="attachment-sockets">Attachment sockets</h2>
+<ul>
+<li>Bind props, weapons, or VFX anchors with <code>AttachmentSocketComponent</code>.</li>
+<li>Joint index or <code>SetJointByNamePattern("head")</code> (case-insensitive substring).</li>
+<li>Socket follows locomotion blend and crossfade poses automatically.</li>
+</ul>
+<h2 id="load-time-validation-m6">Load-time validation (M6)</h2>
+<p><code>GameWorld::LoadSkinnedGltf</code> runs <code>GltfSkinnedLoadValidator</code> after a successful parse. Non-fatal issues are logged to <strong>stderr</strong> with the asset path:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Warning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Joint count &gt; 64</td>
+<td>Exceeds recommended GPU skinning budget</td>
+</tr>
+<tr>
+<td>Joint count = <code>Skeleton::MaxJoints</code> (128)</td>
+<td>At engine hard limit</td>
+</tr>
+<tr>
+<td>No animation clips</td>
+<td>Skinned mesh has no clips</td>
+</tr>
+<tr>
+<td>Clip duration ≈ 0</td>
+<td>Clip name + duration in message</td>
+</tr>
+<tr>
+<td>Missing <code>inverse_bind_matrices</code></td>
+<td>Skinning may be incorrect</td>
+</tr>
+<tr>
+<td>Non-invertible inverse bind</td>
+<td>One or more joint matrices invalid</td>
+</tr>
+<tr>
+<td>Vertex joint index ≥ joint count</td>
+<td>Bad skin weights</td>
+</tr>
+</tbody>
+</table>
+<p>Fix these in Blender before shipping; the load still succeeds so you can inspect in-engine.</p>
+<h2 id="demo">Demo</h2>
+<p><strong>Character camera demo</strong></p>
+<ul>
+<li><strong>WASD</strong> — analog walk/run blend (magnitude controls walk↔run)</li>
+<li><strong>Shift+WASD</strong> — sprint</li>
+<li><strong>F</strong> — attack (<code>active_start</code> / <code>active_end</code> on Fox <code>Run</code> clip)</li>
+<li><strong>H</strong> — hurt</li>
+<li><strong>R</strong> — toggle root motion</li>
+<li><strong>B</strong> — toggle skeleton debug draw (bone segments + joint markers)</li>
+<li><strong>K</strong> — toggle foot IK</li>
+<li><strong>L</strong> — toggle aim IK</li>
+<li><strong>M</strong> — switch Fox ↔ CesiumMan</li>
+<li>Yellow cube on head/hip socket shows attachment follow</li>
+</ul>
+<p>Sample sidecars: <code>assets/models/Fox.spark-anim-events.json</code>, <code>CesiumMan.spark-anim-events.json</code>.</p>
+<p><strong>Sample asset catalog:</strong> see <a href="animation-sample-assets.html"><code>ANIMATION_SAMPLE_ASSETS.md</code></a> for Fox / CesiumMan clip tables and FSM resolve behavior.</p>
       </article>
     </main>
 
