@@ -50,7 +50,8 @@ public:
     void FillCustomDrawPacked(
             const SceneRenderParams& scene,
             Array<CustomMeshGpuSlice>& outOpaquePacked,
-            Array<CustomMeshGpuSlice>& outTransparentPacked) const;
+            Array<CustomMeshGpuSlice>& outTransparentPacked,
+            Array<CustomMeshGpuSlice>& outWaterPacked) const;
 
 private:
     struct BufferSet {

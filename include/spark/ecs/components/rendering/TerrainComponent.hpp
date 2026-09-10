@@ -50,6 +50,16 @@ public:
     /** Transforms @p centerWorld to local XZ; scales radius from world using max horizontal scale of the object. */
     void ApplyHeightBrushWorld(GameObject& owner, Vector3 centerWorld, float radiusWorld, float deltaY);
 
+    /**
+     * Radial island mask: heights fade to @p submergedDepth outside @p beachRadiusWorld.
+     * Call after procedural generation to carve shoreline around the origin.
+     */
+    void ApplyIslandFalloff(
+            GameObject& owner,
+            float coreRadiusWorld,
+            float beachRadiusWorld,
+            float submergedDepth);
+
 private:
     void EnsureHeightBuffer(GameObject& owner);
     [[nodiscard]] static bool RayTriangle(

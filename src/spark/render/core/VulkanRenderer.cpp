@@ -87,6 +87,7 @@ void VulkanRenderer::CleanupSwapchain() {
     presentationFramebuffers.Destroy(device());
 
     scenePipeline.DestroyGraphicsPipeline(device());
+    waterPass.DestroyGraphicsPipeline(device());
     screenUi.DestroyPipelines(device());
     particlePass.DestroyGraphicsPipeline(device());
     tilemapPass.DestroyGraphicsPipeline(device());
@@ -123,6 +124,8 @@ void VulkanRenderer::RecreateSwapchain() {
     screenSpaceEffectsPass.RecreateFlightTargets(
             physicalDevice(), device(), presentSwapchain().extent, sceneDepthFormat, VulkanFrameSync::kMaxFramesInFlight);
     scenePipeline.CreateGraphicsPipeline(
+            device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
+    waterPass.CreateGraphicsPipeline(
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
     screenUi.CreatePipelines(device(), presentRenderPass.vkPass);
     particlePass.CreateGraphicsPipeline(device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout());
@@ -182,13 +185,16 @@ void VulkanRenderer::RecreateHdrFlightTargets() {
             physicalDevice(),
             device(),
             presentSwapchain().extent,
+            sceneDepthFormat,
             VulkanFrameSync::kMaxFramesInFlight);
     opaqueBackground.InitializeLayouts(
             device(), commandPool, graphicsQueue(), presentSwapchain().extent);
     for (std::uint32_t fi = 0; fi < VulkanFrameSync::kMaxFramesInFlight; ++fi) {
         if (opaqueBackground.HasFlight(fi)) {
             sceneDescriptors.UpdateOpaqueBackgroundSampler(
-                    device(), fi, opaqueBackground.View(fi), opaqueBackground.Sampler());
+                    device(), fi, opaqueBackground.ColorView(fi), opaqueBackground.ColorSampler());
+            sceneDescriptors.UpdateOpaqueSceneDepthSampler(
+                    device(), fi, opaqueBackground.DepthView(fi), opaqueBackground.DepthSampler());
         }
     }
 }
@@ -319,8 +325,37 @@ void VulkanRenderer::RecordSceneCommandBuffer(
         };
         sceneOpaquePass.Record(commandBuffer, opaqueCtx);
 
-        const bool hasTransparentDraws =
-                sceneParamsValid && !pendingScene.transparentDraws.IsEmpty();
+        const bool hasWaterDraws = sceneParamsValid && !pendingScene.waterDraws.IsEmpty();
+        const bool hasTransparentDraws = sceneParamsValid && !pendingScene.transparentDraws.IsEmpty();
+
+        // W0: water uses the lit pipeline in the active HDR pass (no scratch color/depth sample yet).
+        // W2 refraction will end the pass, copy bindings 13/14, then resume before drawing water.
+        if (hasWaterDraws) {
+            const VulkanWaterRecordContext waterCtx{
+                    .scene = &pendingScene,
+                    .sceneParamsValid = sceneParamsValid,
+                    .frameIndex = frameIndex,
+                    .extent = presentSwapchain().extent,
+                    .pipeline = waterPass.Pipeline(),
+                    .pipelineLayout = waterPass.PipelineLayout(),
+                    .descriptorSet = sceneDescriptors.DescriptorSet(frameIndex),
+                    .meshBindings =
+                            {
+                                    .staticVertexBuffer = vertexBuffer,
+                                    .staticIndexBuffer = indexBuffer,
+                                    .customVertexBuffer = customMesh.vertexBuffer,
+                                    .customIndexBuffer = customMesh.indexBuffer,
+                                    .cubeIndexCount = cubeIndexCount,
+                                    .planeIndexCount = planeIndexCount,
+                                    .planeFirstIndex = planeFirstIndex,
+                                    .cubeVertexOffset = cubeVertexOffset,
+                                    .planeVertexOffset = planeVertexOffset,
+                                    .customDrawPacked = &customDrawPackedWater,
+                            },
+            };
+            waterPass.Record(commandBuffer, waterCtx, customDrawPackedWater);
+        }
+
         if (hasTransparentDraws) {
             vkCmdEndRenderPass(commandBuffer);
             hdrTonemapPass.MarkColorEndedRenderPass(frameIndex);
@@ -485,7 +520,8 @@ void VulkanRenderer::DrawFrame() {
             VulkanFrameSync::kMaxFramesInFlight);
 
     customMeshPool.UpdateFromScene(pendingScene, submittedFrameCounter, VulkanFrameSync::kMaxFramesInFlight);
-    customMeshPool.FillCustomDrawPacked(pendingScene, customDrawPacked, customDrawPackedTransparent);
+    customMeshPool.FillCustomDrawPacked(
+            pendingScene, customDrawPacked, customDrawPackedTransparent, customDrawPackedWater);
     ++submittedFrameCounter;
 
     if (frameCapture.NeedsPostSubmitWork()) {
@@ -578,6 +614,11 @@ bool SceneHasCustomMeshDraws(const SceneRenderParams& scene) noexcept {
             return true;
         }
     }
+    for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
+        if (isCustom(scene.waterDraws[i].item)) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -642,6 +683,7 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
 
     customDrawPacked.Clear();
     customDrawPackedTransparent.Clear();
+    customDrawPackedWater.Clear();
 
     if (vertexBuffer != VK_NULL_HANDLE) {
         vkDestroyBuffer(device(), vertexBuffer, nullptr);
@@ -660,6 +702,7 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
         indexBufferMemory = VK_NULL_HANDLE;
     }
 
+    waterPass.DestroyGraphicsPipeline(device());
     particlePass.DestroyGraphicsPipeline(device());
     tilemapPass.DestroyGraphicsPipeline(device());
     spritePass.DestroyGraphicsPipeline(device());

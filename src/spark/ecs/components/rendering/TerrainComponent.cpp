@@ -203,4 +203,37 @@ void TerrainComponent::ApplyHeightBrushWorld(GameObject& owner, Vector3 centerWo
     ApplyHeightBrushLocal(owner, {cL.x, cL.z}, radiusLocal, deltaY);
 }
 
+void TerrainComponent::ApplyIslandFalloff(
+        GameObject& owner,
+        const float coreRadiusWorld,
+        const float beachRadiusWorld,
+        const float submergedDepth) {
+    EnsureHeightBuffer(owner);
+    const std::int32_t nx = TerrainMeshGenerator::GridVertexCountX(settings);
+    const std::int32_t nz = TerrainMeshGenerator::GridVertexCountZ(settings);
+    const float hx = settings.halfExtentX;
+    const float hz = settings.halfExtentZ;
+    const float beach = (std::max)(beachRadiusWorld, coreRadiusWorld + 1.0e-3F);
+    const float core = (std::max)(coreRadiusWorld, 0.0F);
+
+    for (std::int32_t iz = 0; iz < nz; ++iz) {
+        const float tz = static_cast<float>(iz) / static_cast<float>(nz - 1);
+        const float z = -hz + tz * (2.0F * hz);
+        for (std::int32_t ix = 0; ix < nx; ++ix) {
+            const float tx = static_cast<float>(ix) / static_cast<float>(nx - 1);
+            const float x = -hx + tx * (2.0F * hx);
+            const float dist = std::sqrt(x * x + z * z);
+            float mask = 1.0F;
+            if (dist > core) {
+                const float t = (dist - core) / (beach - core);
+                const float s = (std::min)((std::max)(t, 0.0F), 1.0F);
+                mask = 1.0F - s * s * (3.0F - 2.0F * s);
+            }
+            const std::size_t idx = static_cast<std::size_t>(iz * nx + ix);
+            heightSamples[idx] = heightSamples[idx] * mask + submergedDepth * (1.0F - mask);
+        }
+    }
+    RegenerateMesh(owner);
+}
+
 }  // namespace Spark

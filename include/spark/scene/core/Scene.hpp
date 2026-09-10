@@ -14,6 +14,7 @@
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
+#include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/core/GameWorld.hpp"
@@ -249,6 +250,49 @@ public:
             const MaterialComponent* mat = o->GetComponent<MaterialComponent>();
             fn(*o, *sky, *mesh, mat, o->GetWorldMatrix());
         });
+    }
+
+    /**
+     * WaterBodyComponent + MeshComponent (+ optional MaterialComponent).
+     * Used by scene submit to fill <c>SceneRenderParams::waterDraws</c>.
+     */
+    template<typename Fn>
+    void ForEachWaterBody(Fn&& fn) const {
+        world.ForEachActiveGameObject([&fn](GameObject* o) {
+            if (o == nullptr) {
+                return;
+            }
+            const WaterBodyComponent* water = o->GetComponent<WaterBodyComponent>();
+            if (water == nullptr) {
+                return;
+            }
+            const MeshComponent* mesh = o->GetComponent<MeshComponent>();
+            if (mesh == nullptr || !mesh->GetMesh()) {
+                return;
+            }
+            const MaterialComponent* mat = o->GetComponent<MaterialComponent>();
+            fn(*o, *water, *mesh, mat, o->GetWorldMatrix());
+        });
+    }
+
+    /** Same callback as <c>ForEachWaterBody</c>, filtered by the view frustum. */
+    template<typename Fn>
+    void ForEachWaterBodyInViewFrustum(const Matrix4& viewProjection, Fn&& fn) const {
+        struct LocalSink final : DrawableFrustumSink {
+            Fn& f;
+            explicit LocalSink(Fn& inF) noexcept : f(inF) {}
+            void OnDrawable(GameObject* object,
+                    const MeshComponent& mesh,
+                    const MaterialComponent* material,
+                    const Matrix4& worldMatrix) override {
+                const WaterBodyComponent* water = object->GetComponent<WaterBodyComponent>();
+                if (water == nullptr) {
+                    return;
+                }
+                f(*object, *water, mesh, material, worldMatrix);
+            }
+        } sink{fn};
+        DispatchWaterBodyFrustumCull(*this, viewProjection, sceneSpatialPartitionKind, sink);
     }
 
     /**

@@ -8,6 +8,7 @@
 #include "spark/demo/MaterialShowcase3DDemo.hpp"
 #include "spark/demo/GltfSamples3DDemo.hpp"
 #include "spark/demo/ModelViewer3DDemo.hpp"
+#include "spark/demo/WaterLakeDemo.hpp"
 #include "spark/demo/SkyDemo.hpp"
 #include "spark/demo/VfxShowcaseDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
@@ -141,6 +142,9 @@ public:
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_V) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_V, hotkeyId)) {
                 EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_W) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_W, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
 #if SPARK_HAS_EDITOR
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_E) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_E, hotkeyId)) {
@@ -259,6 +263,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::WaterLake) {
+            waterLakeDemo.Simulate(timing, context);
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Simulate(timing, GetScene(), context);
@@ -318,6 +327,8 @@ public:
             gltfSamples3DDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::ModelViewer3D) {
             modelViewer3DDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::WaterLake) {
+            waterLakeDemo.Render(GetScene(), GetWorld(), context);
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Render(GetScene(), context);
@@ -493,6 +504,16 @@ public:
         modelViewer3DDemo.Load(GetWorld(), context);
         modelViewer3DLoaded = true;
         mode = DemoMode::ModelViewer3D;
+        context.GetInput().SetCursorCaptured(true);
+    }
+
+    void EnterWaterLakeDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        if (!waterLakeDemoLoaded) {
+            waterLakeDemo.Load(GetWorld(), context);
+            waterLakeDemoLoaded = true;
+        }
+        mode = DemoMode::WaterLake;
         context.GetInput().SetCursorCaptured(true);
     }
 
@@ -764,6 +785,10 @@ private:
             modelViewer3DDemo.Unload(GetWorld());
             modelViewer3DLoaded = false;
         }
+        if (waterLakeDemoLoaded) {
+            waterLakeDemo.Unload(GetWorld());
+            waterLakeDemoLoaded = false;
+        }
 #if SPARK_HAS_EDITOR
         if (sparkEditorDemoLoaded) {
             sparkEditorDemo.Unload(GetScene());
@@ -816,6 +841,7 @@ private:
                 &ShellGame::EnterImGuiShowcase,
                 &ShellGame::EnterGltfSamples3DDemo,
                 &ShellGame::EnterModelViewer3DDemo,
+                &ShellGame::EnterWaterLakeDemo,
 #if SPARK_HAS_EDITOR
                 &ShellGame::EnterSparkEditorDemo,
 #endif
@@ -867,7 +893,7 @@ private:
         Ui::LabelDesc helpDesc{};
         helpDesc.id = Utf8String("help");
         helpDesc.text = Utf8String(
-                "* = recommended. Demos listed 1-22. Hotkeys: 1-9, 0, T, C, I, ;, Y, B, N, G, Q, V. H toggles help.");
+                "* = recommended. Demos listed 1-23. Hotkeys: 1-9, 0, T, C, I, ;, Y, B, N, G, Q, V, W. H toggles help.");
         helpDesc.muted = true;
         auto help = factory.CreateLabel(helpDesc);
 
@@ -1017,6 +1043,8 @@ private:
     bool gltfSamplesLoaded = false;
     ModelViewer3DDemo modelViewer3DDemo{};
     bool modelViewer3DLoaded = false;
+    WaterLakeDemo waterLakeDemo{};
+    bool waterLakeDemoLoaded = false;
 #if SPARK_HAS_EDITOR
     SparkEditorDemo sparkEditorDemo{};
     bool sparkEditorDemoLoaded = false;

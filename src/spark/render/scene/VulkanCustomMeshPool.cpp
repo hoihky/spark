@@ -222,6 +222,14 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
         }
     }
     if (!hasCustomDraw) {
+        for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
+            if (isCustomDraw(scene.waterDraws[i].item)) {
+                hasCustomDraw = true;
+                break;
+            }
+        }
+    }
+    if (!hasCustomDraw) {
         ClearKnownMeshes();
         return;
     }
@@ -266,6 +274,9 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
     for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
         ingest(scene.transparentDraws[i]);
     }
+    for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
+        ingest(scene.waterDraws[i].item);
+    }
 }
 
 std::uint64_t VulkanCustomMeshPool::ComputeKnownFingerprint() const {
@@ -275,6 +286,7 @@ std::uint64_t VulkanCustomMeshPool::ComputeKnownFingerprint() const {
         if (p != nullptr) {
             Fnv64Mix(h, static_cast<std::uint64_t>(p->GetVertices().GetSize()));
             Fnv64Mix(h, static_cast<std::uint64_t>(p->GetIndices().GetSize()));
+            Fnv64Mix(h, static_cast<std::uint64_t>(p->GetGeometryRevision()));
         }
     };
     auto mixSkinned = [&](const SkinnedMesh* p) {
@@ -373,6 +385,9 @@ void VulkanCustomMeshPool::PackSceneGeometry(
     for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
         collectRigid(scene.transparentDraws[i]);
     }
+    for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
+        collectRigid(scene.waterDraws[i].item);
+    }
 
     Array<const SkinnedMesh*> uniqueSkinned;
     auto collectSkinned = [&](const SceneDrawItem& d) {
@@ -396,6 +411,9 @@ void VulkanCustomMeshPool::PackSceneGeometry(
     }
     for (std::size_t i = 0; i < scene.transparentDraws.GetSize(); ++i) {
         collectSkinned(scene.transparentDraws[i]);
+    }
+    for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
+        collectSkinned(scene.waterDraws[i].item);
     }
 
     interleaved.Clear();
@@ -579,9 +597,11 @@ VulkanCustomMeshPool::Bindings VulkanCustomMeshPool::GetBindings() const noexcep
 void VulkanCustomMeshPool::FillCustomDrawPacked(
         const SceneRenderParams& scene,
         Array<CustomMeshGpuSlice>& outOpaquePacked,
-        Array<CustomMeshGpuSlice>& outTransparentPacked) const {
+        Array<CustomMeshGpuSlice>& outTransparentPacked,
+        Array<CustomMeshGpuSlice>& outWaterPacked) const {
     outOpaquePacked.Resize(scene.draws.GetSize());
     outTransparentPacked.Resize(scene.transparentDraws.GetSize());
+    outWaterPacked.Resize(scene.waterDraws.GetSize());
     for (std::size_t i = 0; i < scene.draws.GetSize(); ++i) {
         outOpaquePacked[i] = CustomMeshGpuSlice{};
         const SceneDrawItem& d = scene.draws[i];
@@ -608,6 +628,20 @@ void VulkanCustomMeshPool::FillCustomDrawPacked(
         }
         if (d.customMesh) {
             outTransparentPacked[i] = ResolveRigidDrawSlice(d);
+        }
+    }
+    for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
+        outWaterPacked[i] = CustomMeshGpuSlice{};
+        const SceneDrawItem& d = scene.waterDraws[i].item;
+        if (d.mesh != SceneMeshSlot::Custom) {
+            continue;
+        }
+        if (d.skinnedMesh) {
+            outWaterPacked[i] = ResolveSkinnedDrawSlice(d);
+            continue;
+        }
+        if (d.customMesh) {
+            outWaterPacked[i] = ResolveRigidDrawSlice(d);
         }
     }
 }

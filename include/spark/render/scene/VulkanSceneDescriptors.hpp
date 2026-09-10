@@ -20,7 +20,8 @@ class VulkanSpritePass;
 
 /**
  * Scene descriptor set layout, per-flight uniform/skin SSBOs, pool, and bound descriptor sets.
- * Binding slots 0–13 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR, IBL LUT, opaque background).
+ * Binding slots 0–14 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR, IBL LUT,
+ * opaque background color, opaque scene depth for water/refraction).
  */
 class VulkanSceneDescriptors {
 public:
@@ -51,6 +52,11 @@ public:
             std::uint32_t frameIndex,
             VkImageView opaqueBackgroundView,
             VkSampler opaqueBackgroundSampler);
+    void UpdateOpaqueSceneDepthSampler(
+            VkDevice device,
+            std::uint32_t frameIndex,
+            VkImageView opaqueSceneDepthView,
+            VkSampler opaqueSceneDepthSampler);
     void Destroy(VkDevice device) noexcept;
 
     [[nodiscard]] VkDescriptorSetLayout Layout() const noexcept { return descriptorSetLayout; }

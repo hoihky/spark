@@ -47,6 +47,9 @@ function(spark_add_physics_tests)
             tests/scene/SkinnedGltfPbrTest.cpp
             tests/animation/SkinnedIkTest.cpp
             tests/scene/GltfAnimationEventsTest.cpp
+            tests/scene/WaterSurfaceMeshTest.cpp
+            tests/scene/SceneWaterSubmitTest.cpp
+            tests/scene/GerstnerWaveSurfaceTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

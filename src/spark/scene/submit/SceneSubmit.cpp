@@ -22,6 +22,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
+#include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
@@ -162,6 +163,9 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
             return;
         }
         const MultiMaterialComponent* multiMat = o->GetComponent<MultiMaterialComponent>();
+        if (o->GetComponent<WaterBodyComponent>() != nullptr) {
+            return;
+        }
         const SkyComponent* sky = o->GetComponent<SkyComponent>();
         if (sky != nullptr && sky->IsSkyEnabled()) {
             if (skiesSubmittedOutsideCull) {
@@ -265,6 +269,7 @@ void FillStandardLitSceneFromWorld(
 
     params.draws.Clear();
     params.transparentDraws.Clear();
+    params.waterDraws.Clear();
     params.sceneTextures.Clear();
     params.sceneHdrTextures.Clear();
     params.pointLights.Clear();
@@ -486,6 +491,8 @@ void FillStandardLitSceneFromWorld(
 
     SceneSubmitDetail::StableSortDrawItems(drawList);
     PartitionSortedDrawItemsIntoSceneParams(drawList, params, cameraPositionWorld);
+    SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+            world, viewProjection, cameraPositionWorld, params, findOrAddTexture, sceneForCulling);
 
     const SceneSpriteTileCull spriteTileCull(viewProjection);
     const SceneTilemapSubmitter tilemapSubmitter{};

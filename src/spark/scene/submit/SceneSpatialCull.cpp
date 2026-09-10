@@ -6,6 +6,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/math/AxisAlignedBox.hpp"
 #include "spark/math/Frustum.hpp"
 #include "spark/scene/core/Scene.hpp"
@@ -81,6 +82,34 @@ void GatherDrawables(const Scene& scene, Array<DrawableRecord>& out) {
     out.Clear();
     scene.GetWorld().ForEachActiveGameObject([&out](GameObject* o) {
         if (o == nullptr) {
+            return;
+        }
+        if (o->GetComponent<WaterBodyComponent>() != nullptr) {
+            return;
+        }
+        const MeshComponent* mc = o->GetComponent<MeshComponent>();
+        if (mc == nullptr || !mc->GetMesh()) {
+            return;
+        }
+        DrawableRecord r{};
+        r.object = o;
+        r.mesh = mc;
+        r.material = o->GetComponent<MaterialComponent>();
+        r.world = o->GetWorldMatrix();
+        if (!TryWorldAabbFromMesh(*mc, r.world, r.aabbMin, r.aabbMax)) {
+            return;
+        }
+        out.PushBack(r);
+    });
+}
+
+void GatherWaterBodies(const Scene& scene, Array<DrawableRecord>& out) {
+    out.Clear();
+    scene.GetWorld().ForEachActiveGameObject([&out](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
+        if (o->GetComponent<WaterBodyComponent>() == nullptr) {
             return;
         }
         const MeshComponent* mc = o->GetComponent<MeshComponent>();
@@ -604,6 +633,9 @@ void DispatchDrawableFrustumCull(
             if (o == nullptr) {
                 return;
             }
+            if (o->GetComponent<WaterBodyComponent>() != nullptr) {
+                return;
+            }
             const MeshComponent* mc = o->GetComponent<MeshComponent>();
             if (mc == nullptr || !mc->GetMesh()) {
                 return;
@@ -652,6 +684,25 @@ void DispatchSkinnedDrawableFrustumCull(const Scene& scene,
         ScenePartitionKind mode,
         SkinnedDrawableFrustumSink& sink) {
     DispatchSkinnedDrawableFrustumCull(scene.GetWorld(), viewProjection, mode, sink);
+}
+
+void DispatchWaterBodyFrustumCull(
+        const Scene& scene, const Matrix4& viewProjection, ScenePartitionKind mode, DrawableFrustumSink& sink) {
+    if (mode == ScenePartitionKind::None) {
+        scene.ForEachWaterBody([&sink](GameObject& o,
+                                         const WaterBodyComponent& /*water*/,
+                                         const MeshComponent& mesh,
+                                         const MaterialComponent* mat,
+                                         const Matrix4& worldM) {
+            sink.OnDrawable(&o, mesh, mat, worldM);
+        });
+        return;
+    }
+    Array<DrawableRecord> records;
+    records.Reserve(16);
+    GatherWaterBodies(scene, records);
+    const Frustum fr = Frustum::FromColumnMajorViewProjection(viewProjection);
+    RunDrawableCull(records, fr, mode, sink);
 }
 
 }  // namespace Spark

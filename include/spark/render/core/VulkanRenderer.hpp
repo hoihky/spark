@@ -27,6 +27,7 @@
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/scene/VulkanSceneMeshGpu.hpp"
 #include "spark/render/scene/VulkanSceneOpaqueBackground.hpp"
+#include "spark/render/scene/VulkanWaterPass.hpp"
 #include "spark/render/scene/VulkanSceneOpaquePass.hpp"
 #include "spark/render/scene/VulkanScenePipeline.hpp"
 #include "spark/render/scene/VulkanSceneHdrTextureUploader.hpp"
@@ -131,6 +132,7 @@ private:
     VulkanSceneOpaqueBackground opaqueBackground;
     VulkanScreenSpaceEffectsPass screenSpaceEffectsPass;
     VulkanSceneOpaquePass sceneOpaquePass;
+    VulkanWaterPass waterPass;
     VulkanSceneTextureUploader sceneTextureUploader;
     VulkanSceneHdrTextureUploader sceneHdrTextureUploader;
     VulkanCustomMeshPool customMeshPool;
@@ -174,6 +176,7 @@ private:
 
     Array<CustomMeshGpuSlice> customDrawPacked;
     Array<CustomMeshGpuSlice> customDrawPackedTransparent;
+    Array<CustomMeshGpuSlice> customDrawPackedWater;
     std::uint64_t submittedFrameCounter = 0;
 
     VkCommandPool commandPool = VK_NULL_HANDLE;

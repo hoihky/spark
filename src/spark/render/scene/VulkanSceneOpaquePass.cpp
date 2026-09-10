@@ -209,6 +209,128 @@ void VulkanSceneOpaquePass::Record(
     VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullScissor);
 }
 
+void VulkanSceneOpaquePass::RecordLitMeshDraws(
+        const VkCommandBuffer commandBuffer,
+        const VulkanSceneOpaqueRecordContext& ctx,
+        const Array<SceneDrawItem>& draws,
+        const Array<CustomMeshGpuSlice>& customPacked) const {
+    if (!ctx.sceneParamsValid || ctx.pipelineLit == VK_NULL_HANDLE || ctx.pipelineLayout == VK_NULL_HANDLE ||
+        ctx.descriptorSet == VK_NULL_HANDLE || draws.IsEmpty()) {
+        return;
+    }
+    if (ctx.meshBindings.staticVertexBuffer == VK_NULL_HANDLE || ctx.meshBindings.staticIndexBuffer == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkRect2D fullScissor{};
+    VulkanScreenUiClip::BindScenePassScissor(commandBuffer, ctx.scene, ctx.extent, fullScissor);
+    VulkanScreenUiClip::BindScenePassViewport(commandBuffer, ctx.scene, ctx.extent);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipelineLit);
+
+    const VkDeviceSize vbOffset = 0;
+    vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            ctx.pipelineLayout,
+            0,
+            1,
+            &ctx.descriptorSet,
+            0,
+            nullptr);
+
+    SceneMeshDrawBindings meshBindings = ctx.meshBindings;
+    meshBindings.customDrawPacked = &customPacked;
+
+    ModelPushConstants push{};
+    SceneMeshGeometryBinding bound = SceneMeshGeometryBinding::None;
+
+    for (std::size_t di = 0; di < draws.GetSize(); ++di) {
+        const SceneDrawItem& d = draws[di];
+        const SceneMeshDrawRange range = ResolveSceneMeshDrawRange(d, di, meshBindings);
+        if (!range.drawable) {
+            continue;
+        }
+
+        VulkanSceneApplyRasterState(commandBuffer, d, SceneSkyMode::None);
+
+        if (range.binding == SceneMeshGeometryBinding::StaticScene) {
+            if (bound != SceneMeshGeometryBinding::StaticScene) {
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshBindings.staticVertexBuffer, &vbOffset);
+                vkCmdBindIndexBuffer(commandBuffer, meshBindings.staticIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                bound = SceneMeshGeometryBinding::StaticScene;
+            }
+        } else if (range.binding == SceneMeshGeometryBinding::CustomDynamic) {
+            if (bound != SceneMeshGeometryBinding::CustomDynamic) {
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, &meshBindings.customVertexBuffer, &vbOffset);
+                vkCmdBindIndexBuffer(commandBuffer, meshBindings.customIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                bound = SceneMeshGeometryBinding::CustomDynamic;
+            }
+        }
+
+        std::memcpy(push.model, d.model.m, sizeof(push.model));
+        push.albedo[0] = d.albedo.x;
+        push.albedo[1] = d.albedo.y;
+        push.albedo[2] = d.albedo.z;
+        push.albedo[3] = d.opacity > 0.0F ? d.opacity : 1.0F;
+        push.textureLayer = d.textureLayer;
+        push.skyMode = static_cast<std::int32_t>(SceneSkyMode::None);
+        push.metallic = d.metallic;
+        push.roughness = d.roughness;
+        push.metallicFactor = d.metallicFactor;
+        push.roughnessFactor = d.roughnessFactor;
+        push.occlusionStrength = d.occlusionStrength;
+        push.shadowFlags = d.shadowFlags;
+        push.alphaCutoff = d.alphaCutoff;
+        FillMaterialMapUvPush(push, d);
+        push.emissive[0] = d.emissiveColor.x;
+        push.emissive[1] = d.emissiveColor.y;
+        push.emissive[2] = d.emissiveColor.z;
+        push.emissive[3] = d.emissiveIntensity;
+        push.emissiveFactor[0] = d.emissiveFactor.x;
+        push.emissiveFactor[1] = d.emissiveFactor.y;
+        push.emissiveFactor[2] = d.emissiveFactor.z;
+        FillMaterialExtensionPush(push, d.gltfExtensions);
+        push.albedoHdrLinear = d.textureIsHdrLinear ? 1 : 0;
+        push.normalScale = d.normalScale;
+        push.useSkinning = 0;
+        push.jointCount = 0;
+        push.shadingModel = static_cast<std::int32_t>(d.shadingModel);
+        push.toonDiffuseBands = std::clamp(d.toonDiffuseBands, 2, 8);
+        push.toonRimIntensity = d.toonRimIntensity;
+        push.toonRimPower = d.toonRimPower;
+        push.normalMapLayer = d.normalMapLayer;
+        push.metallicRoughnessMapLayer = d.metallicRoughnessMapLayer;
+        push.emissiveMapLayer = d.emissiveMapLayer;
+        push.iridescenceThicknessMapLayer = d.iridescenceThicknessMapLayer;
+
+        if (!d.jointPalette.IsEmpty() && d.skinnedMesh && ctx.skinSsboMapped != nullptr &&
+            ctx.frameIndex < ctx.skinSsboMapped->GetSize() &&
+            (*ctx.skinSsboMapped)[ctx.frameIndex] != nullptr) {
+            const std::uint32_t jc = static_cast<std::uint32_t>(d.jointPalette.GetSize());
+            if (jc > 0 && jc <= ctx.maxSkinJoints) {
+                push.useSkinning = 1;
+                push.jointCount = static_cast<std::int32_t>(jc);
+                std::memcpy(
+                        (*ctx.skinSsboMapped)[ctx.frameIndex],
+                        d.jointPalette.GetData(),
+                        static_cast<std::size_t>(jc) * sizeof(Matrix4));
+            }
+        }
+
+        vkCmdPushConstants(
+                commandBuffer,
+                ctx.pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(ModelPushConstants),
+                &push);
+        vkCmdDrawIndexed(commandBuffer, range.indexCount, 1, range.firstIndex, range.vertexOffset, 0);
+    }
+
+    VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullScissor);
+}
+
 void VulkanSceneOpaquePass::RecordTransparent(
         const VkCommandBuffer commandBuffer,
         const VulkanSceneOpaqueRecordContext& ctx,

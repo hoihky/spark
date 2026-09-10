@@ -60,11 +60,12 @@ Per frame, `VulkanRenderer::RecordSceneCommandBuffer` records (in order):
 
 1. **Texture / UI font uploads** (`VulkanDeferredUploadBatch`)
 2. **Shadow maps** — punctual then directional (`VulkanPunctualShadowPass`, `VulkanDirectionalShadowPass`)
-3. **HDR scene pass** — opaque + sky (`VulkanSceneOpaquePass`), sprites, particles; color → `R16G16B16A16`, depth stored for copy
-4. **Transparent scene (optional)** — when `transparentDraws` is non-empty: end HDR pass, copy opaque color to per-flight scratch (`VulkanSceneOpaqueBackground`), resume HDR pass with load ops, draw transmission/blended meshes (samples scratch at binding **13**)
-5. **SSAO (optional)** — when `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR
-6. **Tonemap** — scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass`)
-7. **Screen UI** — solid rects + text in the **present** render pass (`VulkanScreenUiPass`; rects then text per layer for stable batching)
+3. **HDR scene pass** — opaque + sky (`VulkanSceneOpaquePass`); water bodies are **not** in `draws` (see `waterDraws`); color → `R16G16B16A16`, depth stored for copy
+4. **Water (optional)** — when `waterDraws` is non-empty: `VulkanWaterPass` draws in the **same** HDR pass after opaque + sky using `water.vert` / `water.frag` (Gerstner displacement, Fresnel sky IBL, sun GGX specular, CSM receive). Scene descriptor set (UBO, IBL, shadow map) + water push constants (wave array). Scratch images (bindings **13**/**14**) are allocated but not sampled until W2 refraction.
+5. **Transparent (optional)** — when `transparentDraws` is non-empty: end HDR pass, copy opaque color to per-flight scratch (`VulkanSceneOpaqueBackground`), resume HDR pass with load ops, draw transmission/blended meshes (samples scratch at binding **13**)
+6. **SSAO (optional)** — when `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR
+7. **Tonemap** — scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass`)
+8. **Screen UI** — solid rects + text in the **present** render pass (`VulkanScreenUiPass`; rects then text per layer for stable batching)
 
 ## Technical references (repo)
 
@@ -77,7 +78,9 @@ Per frame, `VulkanRenderer::RecordSceneCommandBuffer` records (in order):
 - `include/spark/render/ui/VulkanScreenUiPass.hpp` — screen-space UI (font atlas, solid/text batches).
 - `include/spark/render/core/VulkanRenderer.hpp` — composes passes; delegates device/swapchain to `VulkanDeviceContext`.
 - `include/spark/render/scene/VulkanSceneUniformGpu.hpp` — `SceneUniformGpu` must stay **std140**-compatible with the scene UBO in GLSL.
-- `include/spark/render/scene/VulkanSceneDescriptors.hpp` — scene descriptor pool, layout, per-frame sets.
+- `include/spark/render/scene/VulkanSceneDescriptors.hpp` — scene descriptor pool, layout, per-frame sets (bindings **0–14**; **13** = opaque HDR color scratch, **14** = opaque depth scratch for water/refraction).
+- `include/spark/render/scene/VulkanWaterPass.hpp` — water surface slot between opaque and transparent.
+- `include/spark/render/scene/VulkanSceneOpaqueBackground.hpp` — per-flight HDR color + depth copies after opaque (+ sky).
 - `include/spark/render/lighting/SceneLightingResolver.hpp` — profile + time-of-day → resolved sun/ambient.
 - `src/spark/render/core/VulkanRenderer.cpp` — frame recording and swapchain presentation.
 

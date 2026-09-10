@@ -75,6 +75,12 @@ public:
     };
 
     void Record(VkCommandBuffer commandBuffer, const VulkanSceneOpaqueRecordContext& ctx) const;
+    /** Non-sky lit meshes (used by <c>VulkanWaterPass</c> until a dedicated water shader exists). */
+    void RecordLitMeshDraws(
+            VkCommandBuffer commandBuffer,
+            const VulkanSceneOpaqueRecordContext& ctx,
+            const Array<SceneDrawItem>& draws,
+            const Array<CustomMeshGpuSlice>& customPacked) const;
     void RecordTransparent(
             VkCommandBuffer commandBuffer,
             const VulkanSceneOpaqueRecordContext& ctx,

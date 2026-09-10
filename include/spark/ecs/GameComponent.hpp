@@ -93,6 +93,7 @@ enum class ComponentKind : std::uint32_t {
     SpawnPoint,
     GltfSceneSource,
     GltfInstanceNode,
+    WaterBody,
 };
 
 /**

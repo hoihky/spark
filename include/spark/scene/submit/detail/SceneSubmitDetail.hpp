@@ -13,7 +13,9 @@
 namespace Spark {
 
 class GameObject;
+class GameWorld;
 class MaterialComponent;
+class Scene;
 class Mesh;
 class MeshComponent;
 class MultiMaterialComponent;
@@ -65,6 +67,14 @@ void PopulateSkyDrawItem(
         const MaterialComponent* mat,
         const Matrix4& worldM,
         SceneRenderParams& params) noexcept;
+
+void SubmitWaterBodiesFromWorld(
+        GameWorld& world,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        SceneRenderParams& params,
+        const FindSceneTextureFn& findOrAddTexture,
+        const Scene* sceneForCulling);
 
 void StableSortDrawItems(Array<SceneDrawItem>& items);
 void StableSortSprites(Array<SceneSpriteDraw>& items, SceneSpriteSortMode mode);

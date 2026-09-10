@@ -18,7 +18,7 @@
 namespace Spark {
 
 void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
-    VkDescriptorSetLayoutBinding bindings[14]{};
+    VkDescriptorSetLayoutBinding bindings[15]{};
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[0].descriptorCount = 1;
@@ -89,9 +89,14 @@ void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
     bindings[13].descriptorCount = 1;
     bindings[13].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    bindings[14].binding = 14;
+    bindings[14].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    bindings[14].descriptorCount = 1;
+    bindings[14].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 14;
+    layoutInfo.bindingCount = 15;
     layoutInfo.pBindings = bindings;
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout failed");
@@ -161,7 +166,7 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = framesInFlight;
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = framesInFlight * 8;
+    poolSizes[1].descriptorCount = framesInFlight * 9;
     poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     poolSizes[2].descriptorCount = framesInFlight * 5;
 
@@ -462,6 +467,32 @@ void VulkanSceneDescriptors::UpdateOpaqueBackgroundSampler(
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write.dstSet = descriptorSets[frameIndex];
     write.dstBinding = 13;
+    write.dstArrayElement = 0;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.descriptorCount = 1;
+    write.pImageInfo = &imageInfo;
+    vkUpdateDescriptorSets(device, 1, &write, 0, nullptr);
+}
+
+void VulkanSceneDescriptors::UpdateOpaqueSceneDepthSampler(
+        const VkDevice device,
+        const std::uint32_t frameIndex,
+        const VkImageView opaqueSceneDepthView,
+        const VkSampler opaqueSceneDepthSampler) {
+    if (frameIndex >= descriptorSets.GetSize() || opaqueSceneDepthView == VK_NULL_HANDLE ||
+        opaqueSceneDepthSampler == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = opaqueSceneDepthView;
+    imageInfo.sampler = opaqueSceneDepthSampler;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[frameIndex];
+    write.dstBinding = 14;
     write.dstArrayElement = 0;
     write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     write.descriptorCount = 1;

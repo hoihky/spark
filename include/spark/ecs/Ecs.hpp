@@ -25,6 +25,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/ecs/components/rendering/TerrainComponent.hpp"
+#include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"

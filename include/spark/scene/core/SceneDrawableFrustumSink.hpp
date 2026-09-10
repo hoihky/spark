@@ -38,6 +38,10 @@ public:
 void DispatchDrawableFrustumCull(
         const Scene& scene, const Matrix4& viewProjection, ScenePartitionKind mode, DrawableFrustumSink& sink);
 
+/** Frustum cull for objects with <c>WaterBodyComponent</c> + <c>MeshComponent</c> only. */
+void DispatchWaterBodyFrustumCull(
+        const Scene& scene, const Matrix4& viewProjection, ScenePartitionKind mode, DrawableFrustumSink& sink);
+
 void DispatchSkinnedDrawableFrustumCull(
         const GameWorld& world,
         const Matrix4& viewProjection,

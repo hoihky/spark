@@ -8,6 +8,7 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
 
@@ -202,27 +203,8 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     timeSpeed = 1.0F;
     animateTime = true;
 
-    skyBoxMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TodSkySphere"));
-    *skyBoxMesh = Spark::Mesh::CreateSkySphere(1.0F, 20, 40);
     groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TodGround"));
     *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
-
-    skyEquirectTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("TodSkyEquirect"));
-    skyHasEquirect = false;
-    Spark::Texture2D skyDecoded;
-    if (Spark::Texture2D::TryLoadFromFile(SPARK_SKY_TEXTURE_PATH, skyDecoded)) {
-        *skyEquirectTex = Spark::MoveTemp(skyDecoded);
-        skyHasEquirect = true;
-        w.RegisterTexture(skyEquirectTex, "spark/demo/tod_sky_equirect");
-    } else {
-        Spark::Utf8String alt(SPARK_ASSETS_DIR);
-        alt.AppendUtf8("/textures/sky/equirect_sky_1k.hdr");
-        if (Spark::Texture2D::TryLoadFromFile(alt.CStr(), skyDecoded)) {
-            *skyEquirectTex = Spark::MoveTemp(skyDecoded);
-            skyHasEquirect = true;
-            w.RegisterTexture(skyEquirectTex, "spark/demo/tod_sky_equirect");
-        }
-    }
 
     groundObject = w.CreateGameObject();
     groundObject->GetName() = Spark::Utf8String("Ground");
@@ -232,18 +214,6 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     roots.PushBack(groundObject);
 
     carLoaded = TryPlaceCar(w, "/models/Lantern.glb", {0.0F, 0.0F, 0.0F}, 0.0F, 2.2F);
-
-    skyObject = w.CreateGameObject();
-    skyObject->GetName() = Spark::Utf8String("Sky");
-    skyTransform = skyObject->AddComponent<Spark::TransformComponent>();
-    skyObject->AddComponent<Spark::MeshComponent>(skyBoxMesh, Spark::Vector3::One);
-    sky = skyObject->AddComponent<Spark::SkyComponent>(Spark::SceneSkyMode::Dome);
-    skyMat = skyObject->AddComponent<Spark::MaterialComponent>();
-    if (skyHasEquirect) {
-        skyMat->SetBaseColorTexture(skyEquirectTex);
-    }
-    roots.PushBack(skyObject);
-    UpdateSkyTintForTime(cycleClockSeconds / cycleDurationSeconds);
 
     Spark::GameObject* driverGo = w.CreateGameObject();
     driverGo->GetName() = Spark::Utf8String("TodDriver");
@@ -295,22 +265,13 @@ void TimeOfDayDemo::Unload(Spark::GameWorld& w) {
     roots.Clear();
     carLoaded = false;
     groundObject = nullptr;
-    skyObject = nullptr;
-    skyTransform = nullptr;
-    sky = nullptr;
-    skyMat = nullptr;
-    skyEquirectTex.Reset();
-    skyHasEquirect = false;
     timeDriver = nullptr;
     fogVolume = nullptr;
     postVolume = nullptr;
 }
 
-void TimeOfDayDemo::UpdateSkyTintForTime(const float normalizedTime) {
-    if (sky == nullptr) {
-        return;
-    }
-    ResolvedSceneLighting resolved = ResolveSceneLightingFromParams(
+Spark::Vector3 TimeOfDayDemo::ComputeProceduralSkyClearColor(const float normalizedTime) const noexcept {
+    const ResolvedSceneLighting resolved = ResolveSceneLightingFromParams(
             SceneLightingProfile::Outdoor,
             0.0F,
             0.0F,
@@ -324,18 +285,10 @@ void TimeOfDayDemo::UpdateSkyTintForTime(const float normalizedTime) {
             true,
             true,
             normalizedTime);
-    ApplyTimeOfDayLighting(
-            normalizedTime,
-            SceneLightingProfile::Outdoor,
-            resolved,
-            nullptr,
-            nullptr,
-            nullptr);
-    const Spark::Vector3 skyTint{
+    return {
             std::min(resolved.ambient.skyColor.x * 2.2F, 1.0F),
             std::min(resolved.ambient.skyColor.y * 2.2F, 1.0F),
             std::min(resolved.ambient.skyColor.z * 2.2F, 1.0F)};
-    sky->SetTint(skyTint);
 }
 
 void TimeOfDayDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context) {
@@ -381,14 +334,6 @@ void TimeOfDayDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCon
     if (timeDriver != nullptr) {
         timeDriver->SetTimeOfDay(timeNorm);
     }
-    UpdateSkyTintForTime(timeNorm);
-
-    if (skyTransform != nullptr) {
-        skyTransform->SetTranslation(camera.position);
-        skyTransform->SetRotation(Spark::Quaternion::Identity);
-        skyTransform->SetUniformScale(92.0F);
-    }
-
     if (hudDetailDirty || (animateTime && hudDetailClock >= 0.35F)) {
         hudDetailClock = 0.0F;
         hudDetailDirty = false;
@@ -444,9 +389,10 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
     params.shadowDepthSampleFlipV = true;
     params.iblEnabled = true;
     params.iblIntensity = 0.85F;
-    params.iblEnvironmentLayer = -1;
-    params.iblUseHdrSkyEnvironment = skyHasEquirect;
     params.ssaoEnabled = ssaoEnabled;
+    // Procedural clear-color sky (TerrainDemo-style). Time-of-day tints the horizon via lighting only.
+    params.worldClearColorEnabled = true;
+    params.worldClearColor = ComputeProceduralSkyClearColor(params.timeOfDay);
 
     FillStandardLitSceneFromWorld(
             world,

@@ -100,11 +100,16 @@ public:
     /** MikkTSpace-style tangents from positions, normals, and UVs (when glTF omits TANGENT). */
     static void RecomputeTangentSpace(Mesh& mesh);
 
+    /** Bumped when vertex data changes in place (e.g. water wave deformation). */
+    void NotifyGeometryChanged() noexcept { ++geometryRevision; }
+    [[nodiscard]] std::uint32_t GetGeometryRevision() const noexcept { return geometryRevision; }
+
 private:
     Utf8String name;
     Array<Vertex> vertices;
     Array<std::uint32_t> indices;
     Array<MeshSubmesh> submeshes;
+    std::uint32_t geometryRevision = 0;
 };
 
 }  // namespace Spark

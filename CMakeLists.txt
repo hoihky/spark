@@ -422,6 +422,8 @@ set(SHADER_SOURCES
         ${SHADER_DIR}/tonemap.vert
         ${SHADER_DIR}/tonemap.frag
         ${SHADER_DIR}/post_process.frag
+        ${SHADER_DIR}/water.vert
+        ${SHADER_DIR}/water.frag
 )
 set(SPV_FILES "")
 foreach (SHADER ${SHADER_SOURCES})
@@ -433,7 +435,7 @@ foreach (SHADER ${SHADER_SOURCES})
             OUTPUT ${SPV}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SPV_DIR}
             COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0 -I${SHADER_DIR} ${SHADER} -o ${SPV}
-            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/post_common.glsl
+            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl
             COMMENT "SPIR-V: ${NAME_WE}.${EXT_NO_DOT}"
             VERBATIM
     )
@@ -569,6 +571,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/ImGuiShowcaseDemo.cpp
         src/spark/demo/GltfSamples3DDemo.cpp
         src/spark/demo/ModelViewer3DDemo.cpp
+        src/spark/demo/WaterLakeDemo.cpp
 )
 
 set(SPARK_ENGINE_EDITOR_SOURCES
@@ -746,6 +749,13 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/vfx/VfxSubsystem.cpp
         src/spark/ecs/components/rendering/VfxPlayerComponent.cpp
         src/spark/ecs/components/rendering/TerrainComponent.cpp
+        src/spark/ecs/components/water/WaterBodyComponent.cpp
+        src/spark/scene/water/WaterBodyExtent.cpp
+        src/spark/scene/water/WaterSurfaceMesh.cpp
+        src/spark/scene/water/WaterWaveSettings.cpp
+        src/spark/scene/water/GerstnerWave.cpp
+        src/spark/scene/water/GerstnerWaveSurface.cpp
+        src/spark/scene/water/WaterWavePreset.cpp
         src/spark/ui/core/UiElementBase.cpp
         src/spark/ui/core/UiTheme.cpp
         src/spark/ui/core/UiThemeCatalog.cpp
@@ -783,6 +793,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/scene/VulkanSceneDescriptors.cpp
         src/spark/render/scene/VulkanIblBrdfLut.cpp
         src/spark/render/scene/VulkanSceneOpaqueBackground.cpp
+        src/spark/render/scene/VulkanWaterPass.cpp
+        src/spark/render/scene/WaterPushConstantsBuilder.cpp
         src/spark/render/core/VulkanRenderer.cpp
         src/spark/render/shadow/VulkanDirectionalShadowCascadeMath.cpp
         src/spark/render/shadow/VulkanDirectionalShadowPass.cpp
@@ -840,6 +852,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/PhysicsQueries3D.cpp
         src/spark/scene/submit/SkinnedSceneDrawMaterialApplicator.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
+        src/spark/scene/submit/SceneSubmitWater.cpp
         src/spark/scene/submit/SceneSubmitLighting.cpp
         src/spark/scene/submit/SceneSubmitMaterial.cpp
         src/spark/scene/serialization/ComponentSnapshotRegistry.cpp

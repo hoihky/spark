@@ -13,6 +13,7 @@
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
+#include "spark/scene/water/WaterWaveSettings.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
@@ -243,6 +244,17 @@ struct SceneDrawItem {
     MaterialGltfExtensions gltfExtensions{};
 };
 
+/**
+ * Water surface draw collected after opaque partition (see <c>SceneRenderParams::waterDraws</c>).
+ * <c>sortDepth</c> is squared distance from the camera for back-to-front ordering.
+ */
+struct SceneWaterDraw {
+    SceneDrawItem item;
+    float sortDepth = 0.0F;
+    float waveTimeSeconds = 0.0F;
+    WaterWaveSettings waveSettings{};
+};
+
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */
 enum class ScreenRectGradient : std::uint8_t {
     None = 0,
@@ -331,6 +343,9 @@ struct SceneRenderParams {
     Array<SceneDrawItem> draws;
     /** Alpha-blended lit meshes (after opaque <c>draws</c>, before sprites). */
     Array<SceneDrawItem> transparentDraws;
+    /** Dedicated water pass (after opaque + sky, before <c>transparentDraws</c>). */
+    static constexpr std::uint32_t MaxWaterDraws = 32;
+    Array<SceneWaterDraw> waterDraws;
     /** Textures packed into a GPU 2D array (same order as textureLayer indices in draws). Max 64. */
     Array<SharedPtr<Texture2D>> sceneTextures;
     static constexpr std::uint32_t MaxSceneHdrTextures = 8;

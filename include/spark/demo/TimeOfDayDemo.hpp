@@ -21,7 +21,7 @@ public:
     void Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngineContext& context);
 
 private:
-    void UpdateSkyTintForTime(float normalizedTime);
+    [[nodiscard]] Spark::Vector3 ComputeProceduralSkyClearColor(float normalizedTime) const noexcept;
     [[nodiscard]] bool TryPlaceCar(
             Spark::GameWorld& w,
             const char* relativePath,
@@ -41,17 +41,10 @@ private:
 
     void RefreshHudDetail(float timeNorm) noexcept;
 
-    Spark::SharedPtr<Spark::Mesh> skyBoxMesh;
     Spark::SharedPtr<Spark::Mesh> groundAsset;
     bool carLoaded = false;
 
     Spark::GameObject* groundObject = nullptr;
-    Spark::GameObject* skyObject = nullptr;
-    Spark::TransformComponent* skyTransform = nullptr;
-    Spark::SkyComponent* sky = nullptr;
-    Spark::MaterialComponent* skyMat = nullptr;
-    Spark::SharedPtr<Spark::Texture2D> skyEquirectTex;
-    bool skyHasEquirect = false;
     DemoHelpHud helpHud{};
     Spark::TimeOfDayDriverComponent* timeDriver = nullptr;
     Spark::FogVolumeComponent* fogVolume = nullptr;
