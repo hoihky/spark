@@ -33,7 +33,10 @@ private:
             const Matrix4& world,
             const Vector3& cameraPositionWorld) noexcept;
 
-    void SortDrawsBackToFront(Array<SceneWaterDraw>& items, const Vector3& cameraPositionWorld) const;
+    void SortDrawsBackToFront(
+            Array<SceneWaterDraw>& items,
+            const Vector3& cameraPositionWorld,
+            SceneWaterSortMode sortMode) const;
 
     void PushMeshDraws(
             Array<SceneWaterDraw>& outDraws,
@@ -48,7 +51,9 @@ private:
             const WaterWaveSettings& waveSettings,
             float waterLevelY,
             const Vector3& deepColor,
-            float absorption) const;
+            float absorption,
+            float foamStrength,
+            float detailNormalStrength) const;
 
     void AppendBodyDraw(
             GameObject& owner,

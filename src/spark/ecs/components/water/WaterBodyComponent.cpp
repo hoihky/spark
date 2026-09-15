@@ -111,6 +111,14 @@ void WaterBodyComponent::SetAbsorption(float value) noexcept {
     absorption = value;
 }
 
+void WaterBodyComponent::SetFoamStrength(float value) noexcept {
+    foamStrength = value;
+}
+
+void WaterBodyComponent::SetDetailNormalStrength(float value) noexcept {
+    detailNormalStrength = value;
+}
+
 WaterWaveSettings WaterBodyComponent::GetResolvedWaveSettings() const noexcept {
     WaterWaveSettings settings = WaterWavePreset(wavePresetId).ToSettings();
     if (waveAmplitudeScale == 1.0F && waveSpeedScale == 1.0F) {

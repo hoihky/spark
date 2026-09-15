@@ -42,6 +42,14 @@ enum class SceneTransparentSortMode : std::uint8_t {
     BackToFrontByDepth = 1,
 };
 
+/** Water surface draw ordering (see <c>SceneRenderParams::waterDraws</c>). */
+enum class SceneWaterSortMode : std::uint8_t {
+    /** Submission order only. */
+    None = 0,
+    /** Farther surfaces first (uses <c>SceneWaterDraw::sortDepth</c> vs camera). */
+    BackToFrontByDepth = 1,
+};
+
 /** Built-in mesh slots matching the Vulkan scene vertex/index pack (see VulkanRenderer::CreateSceneGeometry). */
 enum class SceneMeshSlot : std::uint8_t {
     UnitCube = 0,
@@ -256,6 +264,8 @@ struct SceneWaterDraw {
     float waterLevelY = 0.0F;
     Vector3 deepColor{0.02F, 0.12F, 0.28F};
     float absorption = 0.35F;
+    float foamStrength = 0.85F;
+    float detailNormalStrength = 0.34F;
 };
 
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */
@@ -462,6 +472,11 @@ struct SceneRenderParams {
      */
     SceneSpriteSortMode spriteSortMode = SceneSpriteSortMode::SortOrderOnly;
     SceneTransparentSortMode transparentSortMode = SceneTransparentSortMode::BackToFrontByDepth;
+    /**
+     * Water pass draws after opaque (+ sky snapshot) and before <c>transparentDraws</c>.
+     * Sorting only affects order within <c>waterDraws</c> (multiple lakes / tiles).
+     */
+    SceneWaterSortMode waterSortMode = SceneWaterSortMode::BackToFrontByDepth;
 
     /** Alpha-blended sprite quads (after tilemaps, before additive particles). Sorted per <c>spriteSortMode</c>. */
     static constexpr std::uint32_t MaxSprites = 8192;

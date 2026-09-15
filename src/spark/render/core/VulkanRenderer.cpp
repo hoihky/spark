@@ -355,7 +355,8 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                     .sceneParamsValid = sceneParamsValid,
                     .frameIndex = frameIndex,
                     .extent = presentSwapchain().extent,
-                    .pipeline = waterPass.Pipeline(),
+                    .pipelineOpaque = waterPass.PipelineOpaque(),
+                    .pipelineTransparent = waterPass.PipelineTransparent(),
                     .pipelineLayout = waterPass.PipelineLayout(),
                     .descriptorSet = sceneDescriptors.DescriptorSet(frameIndex),
                     .meshBindings =

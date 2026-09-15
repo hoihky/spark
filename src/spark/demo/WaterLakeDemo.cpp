@@ -48,6 +48,8 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
         waterBody->SetWaveSpeedScale(2.0F);
         waterBody->SetDeepColor({0.18F, 0.52F, 0.68F});
         waterBody->SetAbsorption(0.03F);
+        waterBody->SetFoamStrength(0.92F);
+        waterBody->SetDetailNormalStrength(0.38F);
     }
     if (MaterialComponent* waterMat = waterObject->AddComponent<MaterialComponent>()) {
         waterMat->SetRoughness(0.018F);

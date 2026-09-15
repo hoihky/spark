@@ -68,4 +68,15 @@ vec3 sparkGerstnerNormal(vec2 worldXZ, float timeSeconds, int waveCount, WaterGe
     return normalize(cross(binormal, tangent));
 }
 
+/** Horizontal deformation Jacobian (det < 1 => steep / breaking crests). */
+float sparkGerstnerJacobian(vec2 worldXZ, float timeSeconds, int waveCount, WaterGerstnerWaveGpu waves[4]) {
+    vec3 displacement = vec3(0.0);
+    vec3 tangent = vec3(1.0, 0.0, 0.0);
+    vec3 binormal = vec3(0.0, 0.0, 1.0);
+    for (int i = 0; i < waveCount; ++i) {
+        sparkGerstnerAccumulate(worldXZ, timeSeconds, waves[i], displacement, tangent, binormal);
+    }
+    return tangent.x * binormal.z - tangent.z * binormal.x;
+}
+
 #endif

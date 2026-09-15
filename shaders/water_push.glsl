@@ -14,6 +14,8 @@ layout(push_constant) uniform WaterPush {
     float absorption;
     WaterGerstnerWaveGpu waves[4];
     vec4 deepColor;
+    float foamStrength;
+    float detailNormalStrength;
 } waterPush;
 
 #endif

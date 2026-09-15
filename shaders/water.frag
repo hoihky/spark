@@ -12,6 +12,8 @@ layout(set = 0, binding = 11) uniform sampler2DArray sceneHdrTextures;
 #include "scene_ubo.glsl"
 #include "water_background.glsl"
 #include "water_push.glsl"
+#include "water_detail.glsl"
+#include "water_foam.glsl"
 #include "gerstner_wave.glsl"
 #include "ibl.glsl"
 #include "color_space.glsl"
@@ -40,7 +42,10 @@ void main() {
         discard;
     }
 
-    vec3 N = sparkGerstnerNormal(vWorldXZ, waterPush.timeSeconds, waterPush.waveCount, waterPush.waves);
+    vec3 gerstnerN = sparkGerstnerNormal(vWorldXZ, waterPush.timeSeconds, waterPush.waveCount, waterPush.waves);
+    float detailStrength = clamp(waterPush.detailNormalStrength, 0.0, 1.0);
+    vec3 detailN = waterDetailNormal(vWorldXZ, waterPush.timeSeconds, detailStrength);
+    vec3 N = waterCombineNormals(gerstnerN, detailN, detailStrength);
     vec3 V = normalize(ubo.cameraPos.xyz - vWorldPos);
     float NdotV = max(dot(N, V), 0.001);
 
@@ -101,5 +106,14 @@ void main() {
 
     float alpha = clamp(waterPush.baseColor.a, 0.0, 1.0);
     vec3 color = body + sunDiffuse + spec + ambient * alpha;
+
+    float crestFoam = waterCrestFoamMask(
+            vWorldXZ,
+            waterPush.timeSeconds,
+            waterPush.waveCount,
+            waterPush.waves,
+            clamp(waterPush.foamStrength, 0.0, 1.0));
+    color = mix(color, vec3(0.94, 0.98, 1.0), crestFoam);
+
     outColor = vec4(color, alpha);
 }

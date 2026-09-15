@@ -22,6 +22,8 @@ WaterPushConstantsBuilder::WaterPushConstantsBuilder(const SceneWaterDraw& draw)
     push.deepColor[1] = draw.deepColor.y;
     push.deepColor[2] = draw.deepColor.z;
     push.deepColor[3] = 1.0F;
+    push.foamStrength = draw.foamStrength;
+    push.detailNormalStrength = draw.detailNormalStrength;
 
     for (std::size_t wi = 0; wi < WaterWaveSettings::kMaxWaves; ++wi) {
         WriteWave(draw.waveSettings.GetWave(wi), push.waves[wi]);

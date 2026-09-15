@@ -18,7 +18,8 @@ struct VulkanWaterRecordContext {
     bool sceneParamsValid = false;
     std::uint32_t frameIndex = 0;
     VkExtent2D extent{};
-    VkPipeline pipeline = VK_NULL_HANDLE;
+    VkPipeline pipelineOpaque = VK_NULL_HANDLE;
+    VkPipeline pipelineTransparent = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
     SceneMeshDrawBindings meshBindings{};
@@ -42,13 +43,15 @@ public:
             const VulkanWaterRecordContext& ctx,
             const Array<CustomMeshGpuSlice>& waterCustomPacked) const;
 
-    [[nodiscard]] VkPipeline Pipeline() const noexcept { return pipeline; }
+    [[nodiscard]] VkPipeline PipelineOpaque() const noexcept { return pipelineOpaque; }
+    [[nodiscard]] VkPipeline PipelineTransparent() const noexcept { return pipelineTransparent; }
     [[nodiscard]] VkPipelineLayout PipelineLayout() const noexcept { return pipelineLayout; }
 
 private:
     VkShaderModule vertModule = VK_NULL_HANDLE;
     VkShaderModule fragModule = VK_NULL_HANDLE;
-    VkPipeline pipeline = VK_NULL_HANDLE;
+    VkPipeline pipelineOpaque = VK_NULL_HANDLE;
+    VkPipeline pipelineTransparent = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 };
 

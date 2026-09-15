@@ -23,7 +23,11 @@ float SceneWaterSubmit::SquaredDistanceFromCamera(
 
 void SceneWaterSubmit::SortDrawsBackToFront(
         Array<SceneWaterDraw>& items,
-        const Vector3& cameraPositionWorld) const {
+        const Vector3& cameraPositionWorld,
+        const SceneWaterSortMode sortMode) const {
+    if (sortMode != SceneWaterSortMode::BackToFrontByDepth) {
+        return;
+    }
     const auto fartherFirst = [&cameraPositionWorld](const SceneWaterDraw& a, const SceneWaterDraw& b) noexcept -> bool {
         if (a.sortDepth != b.sortDepth) {
             return a.sortDepth > b.sortDepth;
@@ -56,7 +60,9 @@ void SceneWaterSubmit::PushMeshDraws(
         const WaterWaveSettings& waveSettings,
         const float waterLevelY,
         const Vector3& deepColor,
-        const float absorption) const {
+        const float absorption,
+        const float foamStrength,
+        const float detailNormalStrength) const {
     const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
     if (submeshes.IsEmpty() || multiMat == nullptr) {
         SceneWaterDraw draw{};
@@ -66,6 +72,8 @@ void SceneWaterSubmit::PushMeshDraws(
         draw.waterLevelY = waterLevelY;
         draw.deepColor = deepColor;
         draw.absorption = absorption;
+        draw.foamStrength = foamStrength;
+        draw.detailNormalStrength = detailNormalStrength;
         draw.item = baseItem;
         draw.item.submeshIndex = kSceneDrawFullSubmesh;
         if (mat != nullptr) {
@@ -90,6 +98,8 @@ void SceneWaterSubmit::PushMeshDraws(
         draw.waterLevelY = waterLevelY;
         draw.deepColor = deepColor;
         draw.absorption = absorption;
+        draw.foamStrength = foamStrength;
+        draw.detailNormalStrength = detailNormalStrength;
         draw.item = baseItem;
         draw.item.submeshIndex = static_cast<std::uint32_t>(si);
         const MeshSubmesh& sm = submeshes[si];
@@ -125,6 +135,8 @@ void SceneWaterSubmit::AppendBodyDraw(
     const float waterLevelY = water.GetWaterLevelY();
     const Vector3 deepColor = water.GetResolvedDeepColor(mat);
     const float absorption = water.GetAbsorption();
+    const float foamStrength = water.GetFoamStrength();
+    const float detailNormalStrength = water.GetDetailNormalStrength();
     SceneDrawItem baseItem{};
     baseItem.model = worldM;
     baseItem.mesh = mesh.GetSlot();
@@ -152,7 +164,9 @@ void SceneWaterSubmit::AppendBodyDraw(
                 water.GetResolvedWaveSettings(),
                 waterLevelY,
                 deepColor,
-                absorption);
+                absorption,
+                foamStrength,
+                detailNormalStrength);
         return;
     }
 
@@ -164,6 +178,8 @@ void SceneWaterSubmit::AppendBodyDraw(
     draw.waterLevelY = waterLevelY;
     draw.deepColor = deepColor;
     draw.absorption = absorption;
+    draw.foamStrength = foamStrength;
+    draw.detailNormalStrength = detailNormalStrength;
     if (mat != nullptr) {
         ApplyMaterialComponentToSceneDrawItem(draw.item, mat, &params);
         SceneSubmitDetail::ApplyAlbedoTexture(draw.item, mat->GetBaseColorTexture(), Vector3::One, findOrAddTexture);
@@ -209,7 +225,7 @@ void SceneWaterSubmit::SubmitFromWorld(
         });
     }
 
-    SortDrawsBackToFront(params.waterDraws, cameraPositionWorld);
+    SortDrawsBackToFront(params.waterDraws, cameraPositionWorld, params.waterSortMode);
 }
 
 namespace SceneSubmitDetail {

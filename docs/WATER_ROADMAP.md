@@ -147,10 +147,10 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 | WATER-W2-01 | **Refraction** — sample W0 color buffer with normal-based UV offset; chromatic aberration optional (P2) | P0 | [ ] |
 | WATER-W2-02 | **Depth-based absorption** — `waterDepth = waterY - sceneDepth`; Beer–Lambert or artist `shallowColor` / `deepColor` lerp | P0 | [x] |
 | WATER-W2-03 | **Shoreline foam mask** — compare water surface Y vs terrain height (heightmap sample or depth intersection); foam noise texture | P0 | [ ] |
-| WATER-W2-04 | **Crest foam** — Jacobian or steepness threshold on Gerstner sum | P1 | [ ] |
-| WATER-W2-05 | **Detail normals** — layered scrolling normal map (2–3 scales) added to Gerstner normal | P1 | [ ] |
+| WATER-W2-04 | **Crest foam** — Jacobian or steepness threshold on Gerstner sum | P1 | [x] |
+| WATER-W2-05 | **Detail normals** — layered scrolling normal map (2–3 scales) added to Gerstner normal | P1 | [x] |
 | WATER-W2-06 | **Terrain integration** — `TerrainComponent` height query at foam generation (CPU debug + GPU approximate) | P1 | [ ] |
-| WATER-W2-07 | **Transparency sort** — water draws after opaque, before other `transparentDraws`; document sort mode | P1 | [ ] |
+| WATER-W2-07 | **Transparency sort** — water draws after opaque, before other `transparentDraws`; document sort mode | P1 | [x] |
 | WATER-W2-08 | **Demo polish** — beach slope on terrain demo island; foam visible at shoreline | P1 | [ ] |
 
 ---

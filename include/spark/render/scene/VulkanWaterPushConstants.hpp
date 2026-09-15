@@ -27,13 +27,17 @@ struct WaterPushConstants {
     float absorption = 0.35F;
     WaterGerstnerWaveGpu waves[4]{};
     float deepColor[4]{0.02F, 0.12F, 0.28F, 1.0F};
-    /** std430 rounds the push-constant block to 256 bytes (SPIR-V range [0, 256]). */
+    float foamStrength = 0.85F;
+    float detailNormalStrength = 0.34F;
+    /** std430 rounds the push-constant block to 264 bytes (SPIR-V range [0, 264]). */
     float blockPadding[2]{};
 };
 
 static_assert(sizeof(WaterGerstnerWaveGpu) == 32);
-static_assert(sizeof(WaterPushConstants) == 256);
+static_assert(sizeof(WaterPushConstants) == 264);
 static_assert(offsetof(WaterPushConstants, waves) == 104);
 static_assert(offsetof(WaterPushConstants, deepColor) == 232);
+static_assert(offsetof(WaterPushConstants, foamStrength) == 248);
+static_assert(offsetof(WaterPushConstants, detailNormalStrength) == 252);
 
 }  // namespace Spark

@@ -13,13 +13,51 @@
 
 namespace Spark {
 
+namespace {
+
+VkGraphicsPipelineCreateInfo MakeWaterPipelineCreateInfo(
+        const VkPipelineShaderStageCreateInfo* shaderStages,
+        const VkPipelineVertexInputStateCreateInfo& vertexInputInfo,
+        const VkPipelineInputAssemblyStateCreateInfo& inputAssembly,
+        const VkPipelineViewportStateCreateInfo& viewportState,
+        const VkPipelineRasterizationStateCreateInfo& rasterizer,
+        const VkPipelineMultisampleStateCreateInfo& multisampling,
+        const VkPipelineDepthStencilStateCreateInfo& depthStencil,
+        const VkPipelineColorBlendStateCreateInfo& colorBlending,
+        const VkPipelineDynamicStateCreateInfo& dynamicState,
+        const VkPipelineLayout pipelineLayout,
+        const VkRenderPass hdrRenderPass) {
+    VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
+    pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineCreateInfo.stageCount = 2;
+    pipelineCreateInfo.pStages = shaderStages;
+    pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
+    pipelineCreateInfo.pInputAssemblyState = &inputAssembly;
+    pipelineCreateInfo.pViewportState = &viewportState;
+    pipelineCreateInfo.pRasterizationState = &rasterizer;
+    pipelineCreateInfo.pMultisampleState = &multisampling;
+    pipelineCreateInfo.pDepthStencilState = &depthStencil;
+    pipelineCreateInfo.pColorBlendState = &colorBlending;
+    pipelineCreateInfo.pDynamicState = &dynamicState;
+    pipelineCreateInfo.layout = pipelineLayout;
+    pipelineCreateInfo.renderPass = hdrRenderPass;
+    pipelineCreateInfo.subpass = 0;
+    return pipelineCreateInfo;
+}
+
+}  // namespace
+
 void VulkanWaterPass::DestroyGraphicsPipeline(const VkDevice device) noexcept {
     if (device == VK_NULL_HANDLE) {
         return;
     }
-    if (pipeline != VK_NULL_HANDLE) {
-        vkDestroyPipeline(device, pipeline, nullptr);
-        pipeline = VK_NULL_HANDLE;
+    if (pipelineOpaque != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipelineOpaque, nullptr);
+        pipelineOpaque = VK_NULL_HANDLE;
+    }
+    if (pipelineTransparent != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipelineTransparent, nullptr);
+        pipelineTransparent = VK_NULL_HANDLE;
     }
     if (pipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -106,7 +144,6 @@ void VulkanWaterPass::CreateGraphicsPipeline(
     rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0F;
-    // Cull/front-face are set per draw via VulkanSceneApplyRasterState (dynamic state).
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
@@ -114,22 +151,36 @@ void VulkanWaterPass::CreateGraphicsPipeline(
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-    VkPipelineDepthStencilStateCreateInfo depthStencil{};
-    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable = VK_TRUE;
-    depthStencil.depthWriteEnable = VK_TRUE;
-    // LESS fails at the far plane against the cleared sky depth (1.0); sky does not write depth.
-    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    VkPipelineDepthStencilStateCreateInfo depthStencilOpaque{};
+    depthStencilOpaque.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencilOpaque.depthTestEnable = VK_TRUE;
+    depthStencilOpaque.depthWriteEnable = VK_TRUE;
+    depthStencilOpaque.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-                                          VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
+    VkPipelineDepthStencilStateCreateInfo depthStencilTransparent = depthStencilOpaque;
+    depthStencilTransparent.depthWriteEnable = VK_FALSE;
 
-    VkPipelineColorBlendStateCreateInfo colorBlending{};
-    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    VkPipelineColorBlendAttachmentState opaqueBlendAttachment{};
+    opaqueBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                                           VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    opaqueBlendAttachment.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendAttachmentState transparentBlendAttachment = opaqueBlendAttachment;
+    transparentBlendAttachment.blendEnable = VK_TRUE;
+    transparentBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    transparentBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    transparentBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+    transparentBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    transparentBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    transparentBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
+    VkPipelineColorBlendStateCreateInfo opaqueColorBlending{};
+    opaqueColorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    opaqueColorBlending.attachmentCount = 1;
+    opaqueColorBlending.pAttachments = &opaqueBlendAttachment;
+
+    VkPipelineColorBlendStateCreateInfo transparentColorBlending = opaqueColorBlending;
+    transparentColorBlending.pAttachments = &transparentBlendAttachment;
 
     Array<VkDynamicState> dynamicStatesList;
     dynamicStatesList.PushBack(VK_DYNAMIC_STATE_VIEWPORT);
@@ -156,23 +207,37 @@ void VulkanWaterPass::CreateGraphicsPipeline(
         throw std::runtime_error("VulkanWaterPass: vkCreatePipelineLayout failed");
     }
 
-    VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
-    pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineCreateInfo.stageCount = 2;
-    pipelineCreateInfo.pStages = shaderStages;
-    pipelineCreateInfo.pVertexInputState = &vertexInputInfo;
-    pipelineCreateInfo.pInputAssemblyState = &inputAssembly;
-    pipelineCreateInfo.pViewportState = &viewportState;
-    pipelineCreateInfo.pRasterizationState = &rasterizer;
-    pipelineCreateInfo.pMultisampleState = &multisampling;
-    pipelineCreateInfo.pDepthStencilState = &depthStencil;
-    pipelineCreateInfo.pColorBlendState = &colorBlending;
-    pipelineCreateInfo.pDynamicState = &dynamicState;
-    pipelineCreateInfo.layout = pipelineLayout;
-    pipelineCreateInfo.renderPass = hdrRenderPass;
-    pipelineCreateInfo.subpass = 0;
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline) != VK_SUCCESS) {
-        throw std::runtime_error("VulkanWaterPass: vkCreateGraphicsPipelines failed");
+    const VkGraphicsPipelineCreateInfo opaqueInfo = MakeWaterPipelineCreateInfo(
+            shaderStages,
+            vertexInputInfo,
+            inputAssembly,
+            viewportState,
+            rasterizer,
+            multisampling,
+            depthStencilOpaque,
+            opaqueColorBlending,
+            dynamicState,
+            pipelineLayout,
+            hdrRenderPass);
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &opaqueInfo, nullptr, &pipelineOpaque) != VK_SUCCESS) {
+        throw std::runtime_error("VulkanWaterPass: vkCreateGraphicsPipelines (opaque) failed");
+    }
+
+    const VkGraphicsPipelineCreateInfo transparentInfo = MakeWaterPipelineCreateInfo(
+            shaderStages,
+            vertexInputInfo,
+            inputAssembly,
+            viewportState,
+            rasterizer,
+            multisampling,
+            depthStencilTransparent,
+            transparentColorBlending,
+            dynamicState,
+            pipelineLayout,
+            hdrRenderPass);
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &transparentInfo, nullptr, &pipelineTransparent) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("VulkanWaterPass: vkCreateGraphicsPipelines (transparent) failed");
     }
 }
 
@@ -180,9 +245,11 @@ void VulkanWaterPass::Record(
         const VkCommandBuffer commandBuffer,
         const VulkanWaterRecordContext& ctx,
         const Array<CustomMeshGpuSlice>& waterCustomPacked) const {
-    if (!ctx.sceneParamsValid || ctx.scene == nullptr || ctx.pipeline == VK_NULL_HANDLE ||
-        ctx.pipelineLayout == VK_NULL_HANDLE || ctx.descriptorSet == VK_NULL_HANDLE ||
-        ctx.scene->waterDraws.IsEmpty()) {
+    if (!ctx.sceneParamsValid || ctx.scene == nullptr || ctx.pipelineLayout == VK_NULL_HANDLE ||
+        ctx.descriptorSet == VK_NULL_HANDLE || ctx.scene->waterDraws.IsEmpty()) {
+        return;
+    }
+    if (ctx.pipelineOpaque == VK_NULL_HANDLE && ctx.pipelineTransparent == VK_NULL_HANDLE) {
         return;
     }
     if (ctx.meshBindings.staticVertexBuffer == VK_NULL_HANDLE || ctx.meshBindings.staticIndexBuffer == VK_NULL_HANDLE) {
@@ -193,7 +260,6 @@ void VulkanWaterPass::Record(
     VulkanScreenUiClip::BindScenePassScissor(commandBuffer, ctx.scene, ctx.extent, fullScissor);
     VulkanScreenUiClip::BindScenePassViewport(commandBuffer, ctx.scene, ctx.extent);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
     vkCmdSetCullMode(commandBuffer, VK_CULL_MODE_BACK_BIT);
     vkCmdSetFrontFace(commandBuffer, VK_FRONT_FACE_CLOCKWISE);
     vkCmdBindDescriptorSets(
@@ -212,6 +278,7 @@ void VulkanWaterPass::Record(
     const VkDeviceSize vbOffset = 0;
     SceneMeshGeometryBinding bound = SceneMeshGeometryBinding::None;
     WaterPushConstants push{};
+    VkPipeline boundPipeline = VK_NULL_HANDLE;
 
     for (std::size_t di = 0; di < ctx.scene->waterDraws.GetSize(); ++di) {
         const SceneWaterDraw& waterDraw = ctx.scene->waterDraws[di];
@@ -219,6 +286,17 @@ void VulkanWaterPass::Record(
         const SceneMeshDrawRange range = ResolveSceneMeshDrawRange(d, di, meshBindings);
         if (!range.drawable) {
             continue;
+        }
+
+        const bool transparent = d.opacity < 0.999F;
+        const VkPipeline drawPipeline =
+                transparent ? ctx.pipelineTransparent : ctx.pipelineOpaque;
+        if (drawPipeline == VK_NULL_HANDLE) {
+            continue;
+        }
+        if (drawPipeline != boundPipeline) {
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawPipeline);
+            boundPipeline = drawPipeline;
         }
 
         if (range.binding == SceneMeshGeometryBinding::StaticScene) {

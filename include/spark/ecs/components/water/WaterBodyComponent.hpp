@@ -54,6 +54,8 @@ public:
     [[nodiscard]] const Vector3& GetMeshAlbedo() const noexcept { return meshAlbedo; }
     [[nodiscard]] const Vector3& GetDeepColor() const noexcept { return deepColor; }
     [[nodiscard]] float GetAbsorption() const noexcept { return absorption; }
+    [[nodiscard]] float GetFoamStrength() const noexcept { return foamStrength; }
+    [[nodiscard]] float GetDetailNormalStrength() const noexcept { return detailNormalStrength; }
     /** Combines mesh albedo with optional material tint for the water shader pass. */
     [[nodiscard]] Vector3 GetResolvedSurfaceAlbedo(const MaterialComponent* material) const noexcept;
     /** Combines deep color with optional material tint for depth absorption. */
@@ -67,6 +69,8 @@ public:
     void SetMeshAlbedo(const Vector3& value) noexcept;
     void SetDeepColor(const Vector3& value) noexcept;
     void SetAbsorption(float value) noexcept;
+    void SetFoamStrength(float value) noexcept;
+    void SetDetailNormalStrength(float value) noexcept;
     void SetWaveTimeScale(float value) noexcept { waveTimeScale = value; }
     void SetWaveAmplitudeScale(float value) noexcept { waveAmplitudeScale = value; }
     void SetWaveSpeedScale(float value) noexcept { waveSpeedScale = value; }
@@ -99,6 +103,8 @@ private:
     Vector3 meshAlbedo{0.08F, 0.35F, 0.55F};
     Vector3 deepColor{0.02F, 0.12F, 0.28F};
     float absorption = 0.35F;
+    float foamStrength = 0.85F;
+    float detailNormalStrength = 0.34F;
     float waveTimeSeconds = 0.0F;
     float waveTimeScale = 1.0F;
     float waveAmplitudeScale = 1.0F;
