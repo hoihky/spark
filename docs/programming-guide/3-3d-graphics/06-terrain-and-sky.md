@@ -125,6 +125,65 @@ tod->SetLooping(false);  // when you advance time manually in gameplay code
 
 Regional fog: add `FogVolumeComponent` on a trigger volume (camera-inside test at submit).
 
+## Water bodies (`WaterBodyComponent`)
+
+Infinite ocean / lake surfaces use a dedicated **water pass** (Gerstner waves, refraction, depth absorption, crest foam). Water is collected into `SceneRenderParams::waterDraws` and drawn **after opaque + sky** and **before** generic `transparentDraws`.
+
+```cpp
+#include "spark/ecs/components/water/WaterBodyComponent.hpp"
+#include "spark/scene/water/WaterBodyMode.hpp"
+#include "spark/scene/water/WaterWavePreset.hpp"
+
+WaterSurfaceMeshSettings meshSettings{};
+meshSettings.SetSubdivisionsPerAxis(96);
+meshSettings.SetTileHalfExtent(128.0F);
+
+auto* waterGo = world.CreateGameObject();
+waterGo->AddComponent<TransformComponent>();
+waterGo->AddComponent<WaterBodyComponent>(
+        WaterBodyMode::InfiniteOcean,
+        0.0F,  // waterLevelY
+        WaterBodyExtent::MakeInfinitePlaceholder(),
+        WaterWavePresetId::StormySea,
+        meshSettings,
+        Vector3{0.10F, 0.58F, 0.78F});  // surface albedo
+
+WaterBodyComponent* water = waterGo->GetComponent<WaterBodyComponent>();
+water->SetWavePresetId(WaterWavePresetId::OceanModerate);
+water->SetAbsorption(0.03F);
+water->SetFoamStrength(0.9F);
+water->SetDetailNormalStrength(0.35F);
+```
+
+### Wave presets (`.sparkwater`)
+
+Built-in presets ship as assets under `assets/water/`:
+
+| File | Preset id | Use |
+|------|-----------|-----|
+| `calm_lake.sparkwater` | `CalmLake` | Small ripples |
+| `ocean_moderate.sparkwater` | `OceanModerate` | Default coast |
+| `stormy_sea.sparkwater` | `StormySea` | Large swell |
+
+Format (`sparkwater_v1`):
+
+```text
+sparkwater_v1
+preset CalmLake
+globalWindSpeed 1.0
+wave <dirX> <dirZ> <amplitude> <wavelength> <speed> <steepness>
+```
+
+`WaterWaveSettings::FromPreset` loads the asset when present (build copies to `SPARK_BUILD_ASSETS_DIR/water/`) and falls back to embedded defaults otherwise. Gameplay height queries use the same math via `GerstnerWaveSurface`.
+
+```cpp
+GerstnerWaveSurface surface = WaterWavePreset(WaterWavePresetId::CalmLake).ToSurface();
+float height = surface.SampleHeight(worldX, worldZ, timeSeconds);
+Vector3 normal = surface.SampleNormal(worldX, worldZ, timeSeconds);
+```
+
+See **`WaterLakeDemo`** (SparkDemo **#23**, key **W**) for fly camera, preset hotkey (**P**), and submerged test geometry. Roadmap: [`docs/WATER_ROADMAP.md`](../../../WATER_ROADMAP.md).
+
 ## Grass and trees (planned)
 
 Wind-reactive vegetation is not implemented yet. Tracked milestones:

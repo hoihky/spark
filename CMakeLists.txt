@@ -504,6 +504,10 @@ endif ()
 if (EXISTS "${SPARK_ASSETS_DIR}/vfx")
     file(COPY "${SPARK_ASSETS_DIR}/vfx/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/vfx")
 endif ()
+file(MAKE_DIRECTORY "${SPARK_ASSETS_DIR}/water")
+if (EXISTS "${SPARK_ASSETS_DIR}/water")
+    file(COPY "${SPARK_ASSETS_DIR}/water/" DESTINATION "${SPARK_BUILD_ASSETS_DIR}/water")
+endif ()
 
 # Kenney CC0 — Simplified Platformer character (idle + walk frames), merged horizontally in Platformer2D demo.
 set(SPARK_KENNEY_PLATFORMER_DIR "${SPARK_ASSETS_DIR}/sprites/kenney")
@@ -756,6 +760,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/water/GerstnerWave.cpp
         src/spark/scene/water/GerstnerWaveSurface.cpp
         src/spark/scene/water/WaterWavePreset.cpp
+        src/spark/scene/water/WaterPresetAssetLoader.cpp
         src/spark/ui/core/UiElementBase.cpp
         src/spark/ui/core/UiTheme.cpp
         src/spark/ui/core/UiThemeCatalog.cpp

@@ -90,7 +90,7 @@ Pick a tier per project; milestones below build toward **Tier B** (action-game r
 | WATER-W0-05 | **Depth/color export for water** — per-flight `VulkanSceneOpaqueBackground`-style images: **linear depth** + **HDR color** after opaque (and optionally after sky); document binding indices | P0 | [x] |
 | WATER-W0-06 | **`VulkanWaterPass` skeleton** — dedicated render pass slot in `VulkanRenderer` after opaque (+ sky), before generic transparent; no-op clear initially | P0 | [x] |
 | WATER-W0-07 | **Shadow flags** — water receives shadows (`kSceneShadowReceive`); does not cast (or optional cast for very shallow ponds) | P1 | [x] |
-| WATER-W0-08 | **Component reference + programming guide** stub under terrain/sky chapter | P1 | [ ] |
+| WATER-W0-08 | **Component reference + programming guide** stub under terrain/sky chapter | P1 | [x] |
 | WATER-W0-09 | **Scene serialization handler** — `water_body` snapshot in `spark_scene_v4` (level, extent, preset id) | P2 | [ ] |
 
 <details>
@@ -132,9 +132,9 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 | WATER-W1-03 | **`shaders/water.vert`** — displace vertices; pass world position, wave normal, screen UV | P0 | [x] |
 | WATER-W1-04 | **`shaders/water.frag` v1** — Fresnel (Schlick), sky IBL sample (`ibl.glsl`), directional sun specular (GGX), base water color | P0 | [x] |
 | WATER-W1-05 | **Pipeline + descriptors** — `VulkanWaterPass` binds scene UBO, IBL, shadow maps, water push constants (wave array) | P0 | [x] |
-| WATER-W1-06 | **`WaterPreset` assets** — `CalmLake`, `OceanModerate`, `StormySea` default parameter sets | P1 | [ ] |
+| WATER-W1-06 | **`WaterPreset` assets** — `CalmLake`, `OceanModerate`, `StormySea` default parameter sets | P1 | [x] |
 | WATER-W1-07 | **Demo: `WaterLakeDemo`** — terrain island + infinite ocean; fly camera; time scale hotkey | P1 | [x] (menu **23** / **W**) |
-| WATER-W1-08 | **Unit tests** — Gerstner height/normal at t=0 matches analytic reference; symmetry on flat sea state | P2 | [ ] |
+| WATER-W1-08 | **Unit tests** — Gerstner height/normal at t=0 matches analytic reference; symmetry on flat sea state | P2 | [x] |
 
 ---
 

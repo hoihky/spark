@@ -1,0 +1,6 @@
+sparkwater_v1
+preset CalmLake
+globalWindSpeed 1.0
+wave 1.0 0.15 0.045 9.0 0.55 0.35
+wave -0.35 0.92 0.028 5.5 0.72 0.30
+wave 0.62 -0.78 0.016 3.2 0.95 0.25

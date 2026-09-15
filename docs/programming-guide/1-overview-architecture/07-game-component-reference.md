@@ -288,6 +288,30 @@ go->AddComponent<TerrainComponent>(settings, Vector3{0.4F, 0.55F, 0.35F});
 go->AddComponent<MaterialComponent>(grassTex);
 ```
 
+### `WaterBodyComponent`
+
+**Kind:** `WaterBody` · **Consumed by:** dedicated water pass (`SceneRenderParams::waterDraws`)
+
+```cpp
+#include "spark/ecs/components/water/WaterBodyComponent.hpp"
+
+WaterSurfaceMeshSettings mesh{};
+mesh.SetTileHalfExtent(64.0F);
+go->AddComponent<WaterBodyComponent>(
+        WaterBodyMode::FiniteLake,
+        0.0F,
+        WaterBodyExtent::MakeRectangle(48.0F, 48.0F),
+        WaterWavePresetId::CalmLake,
+        mesh,
+        Vector3{0.12F, 0.45F, 0.62F});
+WaterBodyComponent* water = go->GetComponent<WaterBodyComponent>();
+water->SetAbsorption(0.08F);
+water->SetFoamStrength(0.85F);
+water->RegenerateSurface(*go);
+```
+
+Wave parameters resolve from `assets/water/<preset>.sparkwater` when available. See [Terrain and Sky](../3-3d-graphics/06-terrain-and-sky.md#water-bodies-waterbodycomponent).
+
 ### `ParticleEmitterComponent`
 
 **Kind:** `ParticleEmitter` · **Consumed by:** `OnUpdate` + `SceneRenderParams::particles`

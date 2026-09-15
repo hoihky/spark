@@ -34,6 +34,7 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 | 3D camera rigs | `CameraComponent`, `SpringArm3DComponent`, `CameraFollow3DComponent` |
 | Time of day | `TimeOfDayDriverComponent` → `SceneRenderParams::timeOfDay` |
 | Terrain | `TerrainComponent` (heightfield) |
+| Water | `WaterBodyComponent` (Gerstner surface, dedicated pass) |
 | Sky | `SkyComponent` + `SceneSkyMode` |
 | World clear color | `worldClearColorEnabled` + `worldClearColor` (solid HDR background) |
 | Particles | `ParticleEmitterComponent` |
