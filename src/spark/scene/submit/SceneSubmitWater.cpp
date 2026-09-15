@@ -53,13 +53,19 @@ void SceneWaterSubmit::PushMeshDraws(
         const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture,
         const float sortDepth,
         const float waveTimeSeconds,
-        const WaterWaveSettings& waveSettings) const {
+        const WaterWaveSettings& waveSettings,
+        const float waterLevelY,
+        const Vector3& deepColor,
+        const float absorption) const {
     const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
     if (submeshes.IsEmpty() || multiMat == nullptr) {
         SceneWaterDraw draw{};
         draw.sortDepth = sortDepth;
         draw.waveTimeSeconds = waveTimeSeconds;
         draw.waveSettings = waveSettings;
+        draw.waterLevelY = waterLevelY;
+        draw.deepColor = deepColor;
+        draw.absorption = absorption;
         draw.item = baseItem;
         draw.item.submeshIndex = kSceneDrawFullSubmesh;
         if (mat != nullptr) {
@@ -81,6 +87,9 @@ void SceneWaterSubmit::PushMeshDraws(
         draw.sortDepth = sortDepth;
         draw.waveTimeSeconds = waveTimeSeconds;
         draw.waveSettings = waveSettings;
+        draw.waterLevelY = waterLevelY;
+        draw.deepColor = deepColor;
+        draw.absorption = absorption;
         draw.item = baseItem;
         draw.item.submeshIndex = static_cast<std::uint32_t>(si);
         const MeshSubmesh& sm = submeshes[si];
@@ -113,6 +122,9 @@ void SceneWaterSubmit::AppendBodyDraw(
     }
 
     const float sortDepth = SquaredDistanceFromCamera(worldM, cameraPositionWorld);
+    const float waterLevelY = water.GetWaterLevelY();
+    const Vector3 deepColor = water.GetResolvedDeepColor(mat);
+    const float absorption = water.GetAbsorption();
     SceneDrawItem baseItem{};
     baseItem.model = worldM;
     baseItem.mesh = mesh.GetSlot();
@@ -137,7 +149,10 @@ void SceneWaterSubmit::AppendBodyDraw(
                 findOrAddTexture,
                 sortDepth,
                 water.GetWaveTimeSeconds(),
-                water.GetResolvedWaveSettings());
+                water.GetResolvedWaveSettings(),
+                waterLevelY,
+                deepColor,
+                absorption);
         return;
     }
 
@@ -146,6 +161,9 @@ void SceneWaterSubmit::AppendBodyDraw(
     draw.item = baseItem;
     draw.waveTimeSeconds = water.GetWaveTimeSeconds();
     draw.waveSettings = water.GetResolvedWaveSettings();
+    draw.waterLevelY = waterLevelY;
+    draw.deepColor = deepColor;
+    draw.absorption = absorption;
     if (mat != nullptr) {
         ApplyMaterialComponentToSceneDrawItem(draw.item, mat, &params);
         SceneSubmitDetail::ApplyAlbedoTexture(draw.item, mat->GetBaseColorTexture(), Vector3::One, findOrAddTexture);

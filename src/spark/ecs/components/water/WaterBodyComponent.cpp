@@ -103,6 +103,14 @@ void WaterBodyComponent::SetMeshAlbedo(const Vector3& value) noexcept {
     meshAlbedo = value;
 }
 
+void WaterBodyComponent::SetDeepColor(const Vector3& value) noexcept {
+    deepColor = value;
+}
+
+void WaterBodyComponent::SetAbsorption(float value) noexcept {
+    absorption = value;
+}
+
 WaterWaveSettings WaterBodyComponent::GetResolvedWaveSettings() const noexcept {
     WaterWaveSettings settings = WaterWavePreset(wavePresetId).ToSettings();
     if (waveAmplitudeScale == 1.0F && waveSpeedScale == 1.0F) {
@@ -130,6 +138,15 @@ Vector3 WaterBodyComponent::GetResolvedSurfaceAlbedo(const MaterialComponent* ma
         albedo = {albedo.x * tint.x, albedo.y * tint.y, albedo.z * tint.z};
     }
     return albedo;
+}
+
+Vector3 WaterBodyComponent::GetResolvedDeepColor(const MaterialComponent* material) const noexcept {
+    Vector3 color = deepColor;
+    if (material != nullptr) {
+        const Vector3& tint = material->GetTint();
+        color = {color.x * tint.x, color.y * tint.y, color.z * tint.z};
+    }
+    return color;
 }
 
 void WaterBodyComponent::RegenerateSurface(GameObject& owner) {

@@ -793,6 +793,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/scene/VulkanSceneDescriptors.cpp
         src/spark/render/scene/VulkanIblBrdfLut.cpp
         src/spark/render/scene/VulkanSceneOpaqueBackground.cpp
+        src/spark/render/scene/VulkanSceneOpaqueSnapshot.cpp
         src/spark/render/scene/VulkanWaterPass.cpp
         src/spark/render/scene/WaterPushConstantsBuilder.cpp
         src/spark/render/core/VulkanRenderer.cpp

@@ -45,7 +45,10 @@ private:
             const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture,
             float sortDepth,
             float waveTimeSeconds,
-            const WaterWaveSettings& waveSettings) const;
+            const WaterWaveSettings& waveSettings,
+            float waterLevelY,
+            const Vector3& deepColor,
+            float absorption) const;
 
     void AppendBodyDraw(
             GameObject& owner,

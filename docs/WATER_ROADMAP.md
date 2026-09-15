@@ -145,7 +145,7 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 | ID | Task | P | Status |
 |----|------|---|--------|
 | WATER-W2-01 | **Refraction** — sample W0 color buffer with normal-based UV offset; chromatic aberration optional (P2) | P0 | [ ] |
-| WATER-W2-02 | **Depth-based absorption** — `waterDepth = waterY - sceneDepth`; Beer–Lambert or artist `shallowColor` / `deepColor` lerp | P0 | [ ] |
+| WATER-W2-02 | **Depth-based absorption** — `waterDepth = waterY - sceneDepth`; Beer–Lambert or artist `shallowColor` / `deepColor` lerp | P0 | [x] |
 | WATER-W2-03 | **Shoreline foam mask** — compare water surface Y vs terrain height (heightmap sample or depth intersection); foam noise texture | P0 | [ ] |
 | WATER-W2-04 | **Crest foam** — Jacobian or steepness threshold on Gerstner sum | P1 | [ ] |
 | WATER-W2-05 | **Detail normals** — layered scrolling normal map (2–3 scales) added to Gerstner normal | P1 | [ ] |

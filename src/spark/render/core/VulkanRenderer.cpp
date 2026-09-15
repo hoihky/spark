@@ -20,6 +20,7 @@
 
 #include "spark/render/lighting/SceneLightingResolver.hpp"
 #include "spark/render/core/VulkanRendererGpu.hpp"
+#include "spark/render/scene/VulkanSceneOpaqueSnapshot.hpp"
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
 #include "spark/render/post/VulkanScreenSpaceEffectsPass.hpp"
 
@@ -327,9 +328,27 @@ void VulkanRenderer::RecordSceneCommandBuffer(
 
         const bool hasWaterDraws = sceneParamsValid && !pendingScene.waterDraws.IsEmpty();
         const bool hasTransparentDraws = sceneParamsValid && !pendingScene.transparentDraws.IsEmpty();
+        const bool needsOpaqueSnapshot =
+                VulkanSceneOpaqueSnapshot::IsRequired(hasWaterDraws, hasTransparentDraws);
 
-        // W0: water uses the lit pipeline in the active HDR pass (no scratch color/depth sample yet).
-        // W2 refraction will end the pass, copy bindings 13/14, then resume before drawing water.
+        if (needsOpaqueSnapshot) {
+            const VulkanHdrTonemapPass::FlightTarget& hdrFlight = hdrTonemapPass.Flight(frameIndex);
+            const VkImage sceneDepthImage =
+                    frameIndex < sceneDepthResources.GetSize() ? sceneDepthResources[frameIndex].image
+                                                               : VK_NULL_HANDLE;
+            VulkanSceneOpaqueSnapshot::RecordInterruptAndExport(
+                    commandBuffer,
+                    frameIndex,
+                    presentSwapchain().extent,
+                    hdrTonemapPass,
+                    opaqueBackground,
+                    hdrFlight.colorImage,
+                    sceneDepthImage,
+                    hasWaterDraws);
+            VulkanSceneOpaqueSnapshot::RecordResumeOpaquePass(
+                    commandBuffer, frameIndex, presentSwapchain().extent, hdrTonemapPass);
+        }
+
         if (hasWaterDraws) {
             const VulkanWaterRecordContext waterCtx{
                     .scene = &pendingScene,
@@ -357,15 +376,6 @@ void VulkanRenderer::RecordSceneCommandBuffer(
         }
 
         if (hasTransparentDraws) {
-            vkCmdEndRenderPass(commandBuffer);
-            hdrTonemapPass.MarkColorEndedRenderPass(frameIndex);
-
-            const VulkanHdrTonemapPass::FlightTarget& hdrFlight = hdrTonemapPass.Flight(frameIndex);
-            opaqueBackground.RecordCopyFromHdrColor(
-                    commandBuffer, frameIndex, hdrFlight.colorImage, presentSwapchain().extent);
-
-            hdrTonemapPass.BeginColorAttachmentBarrierIfNeeded(commandBuffer, frameIndex);
-            hdrTonemapPass.BeginHdrResumeRenderPass(commandBuffer, frameIndex, presentSwapchain().extent);
             sceneOpaquePass.RecordTransparent(commandBuffer, opaqueCtx, customDrawPackedTransparent);
         }
     }

@@ -9,8 +9,8 @@
 namespace Spark {
 
 /**
- * Per-flight copies of the HDR opaque color buffer (binding **13**) and scene depth (binding **14**)
- * for transmission and future water refraction.
+ * Per-flight scratch images for the HDR opaque color buffer (binding **13**) and scene depth (binding **14**).
+ * Populated by `VulkanSceneOpaqueSnapshot` after opaque + sky for water refraction and glTF transmission.
  */
 class VulkanSceneOpaqueBackground {
 public:

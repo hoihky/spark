@@ -253,6 +253,9 @@ struct SceneWaterDraw {
     float sortDepth = 0.0F;
     float waveTimeSeconds = 0.0F;
     WaterWaveSettings waveSettings{};
+    float waterLevelY = 0.0F;
+    Vector3 deepColor{0.02F, 0.12F, 0.28F};
+    float absorption = 0.35F;
 };
 
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */

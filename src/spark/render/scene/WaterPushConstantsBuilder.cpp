@@ -16,8 +16,12 @@ WaterPushConstantsBuilder::WaterPushConstantsBuilder(const SceneWaterDraw& draw)
     push.waveCount = static_cast<std::int32_t>(draw.waveSettings.GetActiveWaveCount());
     push.shadowFlags = draw.item.shadowFlags;
     push.roughness = draw.item.roughness > 0.0F ? draw.item.roughness : 0.04F;
-    push.padding0 = 0.0F;
-    push.padding1 = 0.0F;
+    push.waterLevelY = draw.waterLevelY;
+    push.absorption = draw.absorption;
+    push.deepColor[0] = draw.deepColor.x;
+    push.deepColor[1] = draw.deepColor.y;
+    push.deepColor[2] = draw.deepColor.z;
+    push.deepColor[3] = 1.0F;
 
     for (std::size_t wi = 0; wi < WaterWaveSettings::kMaxWaves; ++wi) {
         WriteWave(draw.waveSettings.GetWave(wi), push.waves[wi]);

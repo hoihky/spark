@@ -10,6 +10,7 @@ layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
 layout(set = 0, binding = 11) uniform sampler2DArray sceneHdrTextures;
 
 #include "scene_ubo.glsl"
+#include "water_background.glsl"
 #include "water_push.glsl"
 #include "gerstner_wave.glsl"
 #include "ibl.glsl"
@@ -74,7 +75,8 @@ void main() {
 
     vec3 f0 = vec3(0.02);
     vec3 F = waterF_Schlick(NdotV, f0);
-    float fresnel = clamp(F.x * 0.68 + 0.32, 0.0, 1.0);
+    // Sky reflection only at grazing angles — no floor, so looking down shows refracted underwater.
+    float fresnel = mix(F.x, 1.0, pow(clamp(1.0 - NdotV, 0.0, 1.0), 4.0));
 
     float D = waterD_GGX(NdotH, roughness);
     float G = waterG_SchlickGGX(NdotV, roughness) * waterG_SchlickGGX(NdotL, roughness);
@@ -82,11 +84,22 @@ void main() {
 
     vec3 sunDiffuse = baseColor * sunRad * NdotL * 0.20;
 
-    float alpha = clamp(waterPush.baseColor.a, 0.0, 1.0);
-    float skyMix = mix(0.42, 0.62, alpha);
-    vec3 shallow = mix(baseColor, skyReflection, skyMix + 0.10 * NdotL);
-    vec3 body = mix(shallow, skyReflection, fresnel * (0.55 + 0.45 * alpha));
+    vec2 refractUv = waterComputeRefractScreenUv(vWorldPos, N, V, roughness);
+    vec3 refractedScene = waterSampleRefractedOpaqueAtUv(refractUv);
+    float columnDepth = waterComputeColumnDepth(refractUv, vWorldPos.y);
+    vec3 shallowColor = mix(vec3(1.0), baseColor * 1.2, 0.48);
+    vec3 deepColor = waterPush.deepColor.rgb;
+    float absorption = max(waterPush.absorption, 0.0);
+    vec3 waterTint = waterApplyDepthAbsorption(shallowColor, deepColor, columnDepth, absorption);
+    // Keep submerged objects readable: light tint over refraction, stronger tint only on open water.
+    float underwater = smoothstep(0.05, 0.35, columnDepth);
+    float tintStrength = mix(0.55, 0.18, underwater);
+    vec3 refractedTinted = refractedScene * mix(vec3(1.0), waterTint, tintStrength);
+    refractedTinted += baseColor * mix(0.34, 0.06, underwater);
+    vec3 tintedSky = skyReflection * mix(vec3(1.0), shallowColor * 1.2, 0.65);
+    vec3 body = mix(refractedTinted, tintedSky, fresnel);
 
+    float alpha = clamp(waterPush.baseColor.a, 0.0, 1.0);
     vec3 color = body + sunDiffuse + spec + ambient * alpha;
     outColor = vec4(color, alpha);
 }

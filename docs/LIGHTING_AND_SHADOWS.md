@@ -60,12 +60,21 @@ Per frame, `VulkanRenderer::RecordSceneCommandBuffer` records (in order):
 
 1. **Texture / UI font uploads** (`VulkanDeferredUploadBatch`)
 2. **Shadow maps** — punctual then directional (`VulkanPunctualShadowPass`, `VulkanDirectionalShadowPass`)
-3. **HDR scene pass** — opaque + sky (`VulkanSceneOpaquePass`); water bodies are **not** in `draws` (see `waterDraws`); color → `R16G16B16A16`, depth stored for copy
-4. **Water (optional)** — when `waterDraws` is non-empty: `VulkanWaterPass` draws in the **same** HDR pass after opaque + sky using `water.vert` / `water.frag` (Gerstner displacement, Fresnel sky IBL, sun GGX specular, CSM receive). Scene descriptor set (UBO, IBL, shadow map) + water push constants (wave array). Scratch images (bindings **13**/**14**) are allocated but not sampled until W2 refraction.
-5. **Transparent (optional)** — when `transparentDraws` is non-empty: end HDR pass, copy opaque color to per-flight scratch (`VulkanSceneOpaqueBackground`), resume HDR pass with load ops, draw transmission/blended meshes (samples scratch at binding **13**)
-6. **SSAO (optional)** — when `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR
-7. **Tonemap** — scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass`)
-8. **Screen UI** — solid rects + text in the **present** render pass (`VulkanScreenUiPass`; rects then text per layer for stable batching)
+3. **HDR scene pass (opaque subpass)** — opaque + sky (`VulkanSceneOpaquePass`); water bodies are **not** in `draws` (see `waterDraws`); color → `R16G16B16A16`, depth attachment retained for copy
+4. **Opaque snapshot (optional)** — when `waterDraws` or `transparentDraws` is non-empty: `VulkanSceneOpaqueSnapshot` ends the HDR pass, copies the opaque result into per-flight scratch images via `VulkanSceneOpaqueBackground`, then resumes the HDR pass with load ops (`VulkanHdrTonemapPass::BeginHdrResumeRenderPass`). Water also copies **depth** into the scratch depth image; transmission copies **color only**.
+5. **Water (optional)** — when `waterDraws` is non-empty: `VulkanWaterPass` records after the snapshot resume using `water.vert` / `water.frag` (Gerstner displacement, screen-space refraction of binding **13**, Beer–Lambert depth absorption from binding **14**, Fresnel sky IBL, sun GGX specular). Depth absorption reconstructs scene world position from binding **14** and lerps shallow → deep color by vertical column depth (`shaders/water_background.glsl`).
+6. **Transparent (optional)** — when `transparentDraws` is non-empty: `VulkanSceneOpaquePass::RecordTransparent` after water (same resumed HDR pass); glTF transmission samples binding **13** (`sceneOpaqueColor`).
+7. **2D composite + particles** — tilemaps, sprites, particles in the resumed HDR pass
+8. **SSAO (optional)** — when `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR
+9. **Tonemap** — scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass`)
+10. **Screen UI** — solid rects + text in the **present** render pass (`VulkanScreenUiPass`; rects then text per layer for stable batching)
+
+### Scene descriptor bindings (water / transmission)
+
+| Binding | GLSL name | Content | Copied when |
+|---------|-----------|---------|-------------|
+| **13** | `sceneOpaqueColor` | HDR color after opaque + sky (pre-water) | `waterDraws` or `transparentDraws` |
+| **14** | `sceneOpaqueDepth` | Scene depth attachment (hardware depth; linearize in shader) | `waterDraws` only |
 
 ## Technical references (repo)
 
@@ -80,7 +89,8 @@ Per frame, `VulkanRenderer::RecordSceneCommandBuffer` records (in order):
 - `include/spark/render/scene/VulkanSceneUniformGpu.hpp` — `SceneUniformGpu` must stay **std140**-compatible with the scene UBO in GLSL.
 - `include/spark/render/scene/VulkanSceneDescriptors.hpp` — scene descriptor pool, layout, per-frame sets (bindings **0–14**; **13** = opaque HDR color scratch, **14** = opaque depth scratch for water/refraction).
 - `include/spark/render/scene/VulkanWaterPass.hpp` — water surface slot between opaque and transparent.
-- `include/spark/render/scene/VulkanSceneOpaqueBackground.hpp` — per-flight HDR color + depth copies after opaque (+ sky).
+- `include/spark/render/scene/VulkanSceneOpaqueBackground.hpp` — per-flight HDR color + depth scratch images (bindings **13** / **14**).
+- `include/spark/render/scene/VulkanSceneOpaqueSnapshot.hpp` — ends HDR pass, triggers scratch copies, resumes pass for water / transmission.
 - `include/spark/render/lighting/SceneLightingResolver.hpp` — profile + time-of-day → resolved sun/ambient.
 - `src/spark/render/core/VulkanRenderer.cpp` — frame recording and swapchain presentation.
 

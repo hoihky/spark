@@ -2,24 +2,9 @@
 #ifndef SPARK_GLTF_PBR_EXTENSIONS_GLSL
 #define SPARK_GLTF_PBR_EXTENSIONS_GLSL
 
+#include "scene_screen.glsl"
+
 layout(set = 0, binding = 13) uniform sampler2D sceneOpaqueColor;
-
-vec2 sparkSceneScreenUv(vec2 clipNdc) {
-    vec2 uv = vec2(clipNdc.x * 0.5 + 0.5, (1.0 - clipNdc.y) * 0.5);
-    if (ubo.viewportSize.w > 0.5) {
-        uv.y = 1.0 - uv.y;
-    }
-    return uv;
-}
-
-vec2 sparkSceneScreenUvFromWorld(vec3 worldPos) {
-    vec4 clip = ubo.viewProj * vec4(worldPos, 1.0);
-    if (abs(clip.w) < 1e-5) {
-        vec2 vp = max(ubo.viewportSize.xy, vec2(1.0));
-        return gl_FragCoord.xy / vp;
-    }
-    return sparkSceneScreenUv(clip.xy / clip.w);
-}
 
 vec3 sparkSampleOpaqueBackground(vec3 worldPos, vec3 N, vec3 V) {
     vec3 refractDir = refract(-V, N, 1.0 / 1.5);

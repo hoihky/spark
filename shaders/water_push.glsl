@@ -10,9 +10,10 @@ layout(push_constant) uniform WaterPush {
     int waveCount;
     int shadowFlags;
     float roughness;
-    float padding0;
-    float padding1;  // std430: align waves[4] to offset 104 (matches C++ WaterPushConstants)
+    float waterLevelY;
+    float absorption;
     WaterGerstnerWaveGpu waves[4];
+    vec4 deepColor;
 } waterPush;
 
 #endif
