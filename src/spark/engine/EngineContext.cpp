@@ -2,6 +2,7 @@
 
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/engine/IFramePresenter.hpp"
+#include "spark/render/IRenderTargetService.hpp"
 #include "spark/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/scene/core/Scene.hpp"
@@ -56,6 +57,10 @@ Scene* EngineContext::TryGetScene() noexcept {
 
 IImGuiLayer* EngineContext::TryGetImGuiLayer() noexcept {
     return imguiLayerBinding;
+}
+
+IRenderTargetService* EngineContext::TryGetRenderTargetService() noexcept {
+    return presenter.TryGetRenderTargetService();
 }
 
 }  // namespace Spark

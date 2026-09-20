@@ -1,5 +1,6 @@
 #include "spark/render/scene/VulkanSceneOpaqueBackground.hpp"
 
+#include "spark/render/present/VulkanSceneDepthCopy.hpp"
 #include "spark/render/post/VulkanHdrTonemapPass.hpp"
 #include "spark/render/core/VulkanRendererGpu.hpp"
 
@@ -88,7 +89,10 @@ void VulkanSceneOpaqueBackground::Recreate(
     if (vkCreateSampler(device, &samplerInfo, nullptr, &colorSampler) != VK_SUCCESS) {
         throw std::runtime_error("VulkanSceneOpaqueBackground: vkCreateSampler (color) failed");
     }
-    if (vkCreateSampler(device, &samplerInfo, nullptr, &depthSampler) != VK_SUCCESS) {
+    VkSamplerCreateInfo depthSamplerInfo = samplerInfo;
+    depthSamplerInfo.magFilter = VK_FILTER_NEAREST;
+    depthSamplerInfo.minFilter = VK_FILTER_NEAREST;
+    if (vkCreateSampler(device, &depthSamplerInfo, nullptr, &depthSampler) != VK_SUCCESS) {
         throw std::runtime_error("VulkanSceneOpaqueBackground: vkCreateSampler (depth) failed");
     }
 }
@@ -367,100 +371,8 @@ void VulkanSceneOpaqueBackground::RecordCopyFromSceneDepth(
         return;
     }
 
-    VkImageMemoryBarrier barriers[2]{};
-    barriers[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barriers[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    barriers[0].dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    barriers[0].oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    barriers[0].newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    barriers[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barriers[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barriers[0].image = sceneDepthImage;
-    barriers[0].subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    barriers[0].subresourceRange.levelCount = 1;
-    barriers[0].subresourceRange.layerCount = 1;
-
-    barriers[1].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barriers[1].srcAccessMask =
-            (scratch.depthLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) ? VK_ACCESS_SHADER_READ_BIT : 0;
-    barriers[1].dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barriers[1].oldLayout =
-            scratch.depthLayout == VK_IMAGE_LAYOUT_UNDEFINED ? VK_IMAGE_LAYOUT_UNDEFINED : scratch.depthLayout;
-    barriers[1].newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barriers[1].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barriers[1].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barriers[1].image = scratch.depthImage;
-    barriers[1].subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    barriers[1].subresourceRange.levelCount = 1;
-    barriers[1].subresourceRange.layerCount = 1;
-
-    vkCmdPipelineBarrier(
-            commandBuffer,
-            VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0,
-            nullptr,
-            0,
-            nullptr,
-            1,
-            &barriers[0]);
-
-    VkPipelineStageFlags depthScratchSrcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    if (scratch.depthLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-        depthScratchSrcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-    }
-    vkCmdPipelineBarrier(
-            commandBuffer,
-            depthScratchSrcStage,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0,
-            nullptr,
-            0,
-            nullptr,
-            1,
-            &barriers[1]);
-
-    VkImageCopy copyRegion{};
-    copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    copyRegion.srcSubresource.layerCount = 1;
-    copyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-    copyRegion.dstSubresource.layerCount = 1;
-    copyRegion.extent = {extent.width, extent.height, 1};
-    vkCmdCopyImage(
-            commandBuffer,
-            sceneDepthImage,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            scratch.depthImage,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &copyRegion);
-
-    barriers[0].srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    barriers[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    barriers[0].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    barriers[0].newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    barriers[1].srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barriers[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    barriers[1].oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barriers[1].newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-    vkCmdPipelineBarrier(
-            commandBuffer,
-            VK_PIPELINE_STAGE_TRANSFER_BIT,
-            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                    VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-            0,
-            0,
-            nullptr,
-            0,
-            nullptr,
-            2,
-            barriers);
-
-    scratch.depthLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    VulkanSceneDepthCopyDst dst{.image = scratch.depthImage, .layout = &scratch.depthLayout};
+    VulkanRecordCopySceneDepthToSampled(commandBuffer, sceneDepthImage, dst, extent);
 }
 
 VkImageView VulkanSceneOpaqueBackground::ColorView(const std::uint32_t frameIndex) const noexcept {

@@ -9,6 +9,7 @@
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/water/WaterRenderingProfile.hpp"
 
 namespace Spark {
 
@@ -62,7 +63,11 @@ void SceneWaterSubmit::PushMeshDraws(
         const Vector3& deepColor,
         const float absorption,
         const float foamStrength,
-        const float detailNormalStrength) const {
+        const float detailNormalStrength,
+        const float shorelineFoamStrength,
+        const float shorelineFoamMaxDepth,
+        const Vector2 waterTileAnchorXZ,
+        const WaterScreenSpaceReflectionSettings& ssrSettings) const {
     const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
     if (submeshes.IsEmpty() || multiMat == nullptr) {
         SceneWaterDraw draw{};
@@ -74,6 +79,10 @@ void SceneWaterSubmit::PushMeshDraws(
         draw.absorption = absorption;
         draw.foamStrength = foamStrength;
         draw.detailNormalStrength = detailNormalStrength;
+        draw.shorelineFoamStrength = shorelineFoamStrength;
+        draw.shorelineFoamMaxDepth = shorelineFoamMaxDepth;
+        draw.waterTileAnchorXZ = waterTileAnchorXZ;
+        draw.ssrSettings = ssrSettings;
         draw.item = baseItem;
         draw.item.submeshIndex = kSceneDrawFullSubmesh;
         if (mat != nullptr) {
@@ -100,6 +109,10 @@ void SceneWaterSubmit::PushMeshDraws(
         draw.absorption = absorption;
         draw.foamStrength = foamStrength;
         draw.detailNormalStrength = detailNormalStrength;
+        draw.shorelineFoamStrength = shorelineFoamStrength;
+        draw.shorelineFoamMaxDepth = shorelineFoamMaxDepth;
+        draw.waterTileAnchorXZ = waterTileAnchorXZ;
+        draw.ssrSettings = ssrSettings;
         draw.item = baseItem;
         draw.item.submeshIndex = static_cast<std::uint32_t>(si);
         const MeshSubmesh& sm = submeshes[si];
@@ -137,6 +150,10 @@ void SceneWaterSubmit::AppendBodyDraw(
     const float absorption = water.GetAbsorption();
     const float foamStrength = water.GetFoamStrength();
     const float detailNormalStrength = water.GetDetailNormalStrength();
+    const float shorelineFoamStrength = water.GetShorelineFoamStrength();
+    const float shorelineFoamMaxDepth = water.GetShorelineFoamMaxDepth();
+    const Vector2 waterTileAnchorXZ = water.GetSurfaceTileAnchorXZ();
+    const WaterScreenSpaceReflectionSettings& ssrSettings = water.GetSsrSettings();
     SceneDrawItem baseItem{};
     baseItem.model = worldM;
     baseItem.mesh = mesh.GetSlot();
@@ -166,7 +183,11 @@ void SceneWaterSubmit::AppendBodyDraw(
                 deepColor,
                 absorption,
                 foamStrength,
-                detailNormalStrength);
+                detailNormalStrength,
+                shorelineFoamStrength,
+                shorelineFoamMaxDepth,
+                waterTileAnchorXZ,
+                ssrSettings);
         return;
     }
 
@@ -180,6 +201,10 @@ void SceneWaterSubmit::AppendBodyDraw(
     draw.absorption = absorption;
     draw.foamStrength = foamStrength;
     draw.detailNormalStrength = detailNormalStrength;
+    draw.shorelineFoamStrength = shorelineFoamStrength;
+    draw.shorelineFoamMaxDepth = shorelineFoamMaxDepth;
+    draw.waterTileAnchorXZ = waterTileAnchorXZ;
+    draw.ssrSettings = ssrSettings;
     if (mat != nullptr) {
         ApplyMaterialComponentToSceneDrawItem(draw.item, mat, &params);
         SceneSubmitDetail::ApplyAlbedoTexture(draw.item, mat->GetBaseColorTexture(), Vector3::One, findOrAddTexture);
@@ -226,6 +251,11 @@ void SceneWaterSubmit::SubmitFromWorld(
     }
 
     SortDrawsBackToFront(params.waterDraws, cameraPositionWorld, params.waterSortMode);
+
+    for (std::size_t di = 0; di < params.waterDraws.GetSize(); ++di) {
+        SceneWaterDraw& draw = params.waterDraws[di];
+        draw.resolvedSsr = ResolveWaterScreenSpaceReflection(draw.ssrSettings, params.waterRenderingProfile);
+    }
 }
 
 namespace SceneSubmitDetail {

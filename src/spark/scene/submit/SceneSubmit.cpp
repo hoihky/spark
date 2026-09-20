@@ -187,7 +187,8 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
         if (mc.GetSlot() == SceneMeshSlot::GroundPlane) {
             baseItem.doubleSided = true;
         }
-        baseItem.shadowFlags = defaultShadowFlags;
+        baseItem.shadowFlags = SceneSubmitDetail::ResolveDrawableShadowFlags(
+                o, mc.GetSlot(), worldM, defaultShadowFlags);
 
         if (mc.GetSlot() == SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
             !mc.GetMesh()->GetSubmeshes().IsEmpty()) {

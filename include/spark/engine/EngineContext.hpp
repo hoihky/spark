@@ -28,6 +28,7 @@ public:
     [[nodiscard]] SoundEngine* TryGetSoundEngine() noexcept override;
     [[nodiscard]] Scene* TryGetScene() noexcept override;
     [[nodiscard]] IImGuiLayer* TryGetImGuiLayer() noexcept override;
+    [[nodiscard]] IRenderTargetService* TryGetRenderTargetService() noexcept override;
 
 private:
     Window& window;

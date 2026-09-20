@@ -3,6 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/scene/water/WaterBodyExtent.hpp"
+#include "spark/scene/water/WaterScreenSpaceReflectionSettings.hpp"
 #include "spark/scene/water/WaterBodyMode.hpp"
 #include "spark/scene/water/WaterSurfaceMesh.hpp"
 #include "spark/scene/water/WaterSurfaceMeshSettings.hpp"
@@ -51,11 +52,15 @@ public:
         return surfaceMesh.GetSettings();
     }
     [[nodiscard]] const WaterSurfaceMesh& GetSurfaceMesh() const noexcept { return surfaceMesh; }
+    [[nodiscard]] Vector2 GetSurfaceTileAnchorXZ() const noexcept { return surfaceMesh.GetAnchorXZ(); }
     [[nodiscard]] const Vector3& GetMeshAlbedo() const noexcept { return meshAlbedo; }
     [[nodiscard]] const Vector3& GetDeepColor() const noexcept { return deepColor; }
     [[nodiscard]] float GetAbsorption() const noexcept { return absorption; }
     [[nodiscard]] float GetFoamStrength() const noexcept { return foamStrength; }
     [[nodiscard]] float GetDetailNormalStrength() const noexcept { return detailNormalStrength; }
+    [[nodiscard]] float GetShorelineFoamStrength() const noexcept { return shorelineFoamStrength; }
+    [[nodiscard]] float GetShorelineFoamMaxDepth() const noexcept { return shorelineFoamMaxDepth; }
+    [[nodiscard]] const WaterScreenSpaceReflectionSettings& GetSsrSettings() const noexcept { return ssrSettings; }
     /** Combines mesh albedo with optional material tint for the water shader pass. */
     [[nodiscard]] Vector3 GetResolvedSurfaceAlbedo(const MaterialComponent* material) const noexcept;
     /** Combines deep color with optional material tint for depth absorption. */
@@ -71,11 +76,21 @@ public:
     void SetAbsorption(float value) noexcept;
     void SetFoamStrength(float value) noexcept;
     void SetDetailNormalStrength(float value) noexcept;
+    void SetShorelineFoamStrength(float value) noexcept;
+    void SetShorelineFoamMaxDepth(float value) noexcept;
+    void SetSsrSettings(const WaterScreenSpaceReflectionSettings& value) noexcept { ssrSettings = value; }
+    void SetSsrEnabled(const bool enabled) noexcept { ssrSettings.SetEnabled(enabled); }
     void SetWaveTimeScale(float value) noexcept { waveTimeScale = value; }
     void SetWaveAmplitudeScale(float value) noexcept { waveAmplitudeScale = value; }
     void SetWaveSpeedScale(float value) noexcept { waveSpeedScale = value; }
     [[nodiscard]] float GetWaveAmplitudeScale() const noexcept { return waveAmplitudeScale; }
     [[nodiscard]] float GetWaveSpeedScale() const noexcept { return waveSpeedScale; }
+    /** World XZ travel direction for the dominant swell (wave 0); optional preset rotation. */
+    void SetSwellTravelDirectionWorld(Vector2 directionWorldXZ) noexcept;
+    void ClearSwellTravelDirectionOverride() noexcept;
+    [[nodiscard]] bool HasSwellTravelDirectionOverride() const noexcept {
+        return swellTravelDirectionOverride.has_value();
+    }
 
     /** Overrides ECS camera lookup for infinite-ocean clipmap recentring (e.g. fly-camera demos). */
     void SetClipmapCameraWorld(const Vector3& worldPosition) noexcept;
@@ -105,12 +120,16 @@ private:
     float absorption = 0.35F;
     float foamStrength = 0.85F;
     float detailNormalStrength = 0.34F;
+    float shorelineFoamStrength = 0.90F;
+    float shorelineFoamMaxDepth = 2.0F;
+    WaterScreenSpaceReflectionSettings ssrSettings{};
     float waveTimeSeconds = 0.0F;
     float waveTimeScale = 1.0F;
     float waveAmplitudeScale = 1.0F;
     float waveSpeedScale = 1.0F;
     bool surfaceDirty = true;
     std::optional<Vector3> clipmapCameraOverride{};
+    std::optional<Vector2> swellTravelDirectionOverride{};
 
     [[nodiscard]] bool TryResolveClipmapCameraWorld(const GameWorld& world, Vector3& outWorld) const noexcept;
 };

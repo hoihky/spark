@@ -153,8 +153,11 @@ void VulkanWaterPass::CreateGraphicsPipeline(
 
     VkPipelineDepthStencilStateCreateInfo depthStencilOpaque{};
     depthStencilOpaque.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencilOpaque.depthTestEnable = VK_TRUE;
-    depthStencilOpaque.depthWriteEnable = VK_TRUE;
+    // Do not depth-test against opaque terrain/beach — submerged ground is closer in the
+    // depth buffer and would skip the water shader (flat sand/sky color in the interior).
+    // Pixels above the water surface are discarded in water.frag via binding 14.
+    depthStencilOpaque.depthTestEnable = VK_FALSE;
+    depthStencilOpaque.depthWriteEnable = VK_FALSE;
     depthStencilOpaque.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 
     VkPipelineDepthStencilStateCreateInfo depthStencilTransparent = depthStencilOpaque;

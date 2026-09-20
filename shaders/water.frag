@@ -14,8 +14,9 @@ layout(set = 0, binding = 11) uniform sampler2DArray sceneHdrTextures;
 #include "water_push.glsl"
 #include "water_detail.glsl"
 #include "water_foam.glsl"
+#include "water_ssr.glsl"
+#include "water_reflection.glsl"
 #include "gerstner_wave.glsl"
-#include "ibl.glsl"
 #include "color_space.glsl"
 
 layout(location = 0) out vec4 outColor;
@@ -38,10 +39,6 @@ vec3 waterF_Schlick(float cosTheta, vec3 F0) {
 }
 
 void main() {
-    if (!gl_FrontFacing) {
-        discard;
-    }
-
     vec3 gerstnerN = sparkGerstnerNormal(vWorldXZ, waterPush.timeSeconds, waterPush.waveCount, waterPush.waves);
     float detailStrength = clamp(waterPush.detailNormalStrength, 0.0, 1.0);
     vec3 detailN = waterDetailNormal(vWorldXZ, waterPush.timeSeconds, detailStrength);
@@ -58,62 +55,87 @@ void main() {
     float NdotH = max(dot(N, H), 0.0);
 
     vec3 sunRad = ubo.lightColor.rgb * ubo.lightColor.w;
-    vec3 ambient = ubo.ambientColor.rgb * baseColor * 0.35;
-
-    int iblLayer = int(round(ubo.iblParams.x));
-    bool hdrEnv = ubo.iblParams.z > 0.5;
-    float iblIntensity = ubo.iblParams.y;
-    vec2 envUvScale = sparkIblEnvLayerUvScale();
-    vec3 R = reflect(-V, N);
-    float specLod = sparkHdrSpecularEnvLod(roughness, 0.0);
-    vec3 skySpecular = sparkSampleEnvironment(
-            sceneTextures, sceneHdrTextures, R, iblLayer, hdrEnv, envUvScale, specLod);
-    vec3 skyDiffuse = sparkSampleEnvironment(
-            sceneTextures,
-            sceneHdrTextures,
-            N,
-            iblLayer,
-            hdrEnv,
-            envUvScale,
-            SPARK_HDR_DIFFUSE_IBL_LOD);
-    vec3 skyReflection = mix(skyDiffuse, skySpecular, 0.55) * iblIntensity;
+    vec3 ambient = ubo.ambientColor.rgb * baseColor * 0.20;
 
     vec3 f0 = vec3(0.02);
     vec3 F = waterF_Schlick(NdotV, f0);
-    // Sky reflection only at grazing angles — no floor, so looking down shows refracted underwater.
-    float fresnel = mix(F.x, 1.0, pow(clamp(1.0 - NdotV, 0.0, 1.0), 4.0));
 
     float D = waterD_GGX(NdotH, roughness);
     float G = waterG_SchlickGGX(NdotV, roughness) * waterG_SchlickGGX(NdotL, roughness);
     vec3 spec = D * G * F / max(4.0 * NdotV * NdotL, 1.0e-4) * sunRad;
 
-    vec3 sunDiffuse = baseColor * sunRad * NdotL * 0.20;
+    vec3 sunDiffuse = baseColor * sunRad * NdotL * 0.16;
 
-    vec2 refractUv = waterComputeRefractScreenUv(vWorldPos, N, V, roughness);
-    vec3 refractedScene = waterSampleRefractedOpaqueAtUv(refractUv);
-    float columnDepth = waterComputeColumnDepth(refractUv, vWorldPos.y);
-    vec3 shallowColor = mix(vec3(1.0), baseColor * 1.2, 0.48);
+    vec2 surfaceUv = waterFramebufferScreenUv();
+    float sceneDepthAtSurface = waterSampleSceneDepthAtUv(surfaceUv);
+    if (!waterSceneDepthIsSky(sceneDepthAtSurface)) {
+        float sceneSurfaceY = waterReconstructWorld(surfaceUv, sceneDepthAtSurface).y;
+        if (sceneSurfaceY > vWorldPos.y + 0.25) {
+            discard;
+        }
+    }
+
+    float columnDepth = waterComputeColumnDepth(surfaceUv, vWorldPos.y);
+    vec3 shallowColor = mix(baseColor * 1.35, baseColor * 0.85, 0.35);
     vec3 deepColor = waterPush.deepColor.rgb;
     float absorption = max(waterPush.absorption, 0.0);
-    vec3 waterTint = waterApplyDepthAbsorption(shallowColor, deepColor, columnDepth, absorption);
-    // Keep submerged objects readable: light tint over refraction, stronger tint only on open water.
+
+    vec3 oceanAnchor = waterOpenOceanTint(shallowColor, deepColor, absorption);
+    float shoreBlend = waterShoreBlendWeight(columnDepth);
+
+    vec3 waterTint = waterApplyDepthAbsorption(shallowColor, deepColor, max(columnDepth, 0.12), absorption);
     float underwater = smoothstep(0.05, 0.35, columnDepth);
-    float tintStrength = mix(0.55, 0.18, underwater);
-    vec3 refractedTinted = refractedScene * mix(vec3(1.0), waterTint, tintStrength);
-    refractedTinted += baseColor * mix(0.34, 0.06, underwater);
-    vec3 tintedSky = skyReflection * mix(vec3(1.0), shallowColor * 1.2, 0.65);
-    vec3 body = mix(refractedTinted, tintedSky, fresnel);
+    vec2 refractUv = waterComputeRefractScreenUv(surfaceUv, vWorldPos, N, V, roughness);
+    vec3 refractedScene = waterSampleRefractOpaqueAtUv(refractUv);
+    vec3 shoreRefracted = refractedScene * mix(vec3(1.0), waterTint, mix(0.55, 0.38, underwater));
+    shoreRefracted += baseColor * mix(0.14, 0.08, underwater);
+
+    vec3 reflection = waterComposeReflection(
+            surfaceUv,
+            vWorldPos,
+            gerstnerN,
+            N,
+            V,
+            baseColor,
+            roughness,
+            shallowColor,
+            deepColor,
+            detailStrength);
+
+    float macroNdotV = max(dot(gerstnerN, V), 0.001);
+    float bodyFresnel = waterComputeBodyFresnel(macroNdotV);
+
+    // Open ocean: HDR refraction (ripple-distorted) vs sky reflection — fresnel drives the mix.
+    vec3 openRefract = mix(
+            waterGradeRefractHdr(refractedScene, shallowColor, deepColor),
+            oceanAnchor,
+            0.18);
+    vec3 openBody = mix(openRefract, reflection, bodyFresnel);
+    vec3 shoreBody = mix(shoreRefracted, reflection, bodyFresnel);
+    vec3 body = mix(openBody, shoreBody, shoreBlend);
 
     float alpha = clamp(waterPush.baseColor.a, 0.0, 1.0);
-    vec3 color = body + sunDiffuse + spec + ambient * alpha;
 
     float crestFoam = waterCrestFoamMask(
             vWorldXZ,
             waterPush.timeSeconds,
             waterPush.waveCount,
             waterPush.waves,
-            clamp(waterPush.foamStrength, 0.0, 1.0));
-    color = mix(color, vec3(0.94, 0.98, 1.0), crestFoam);
+            clamp(waterPush.foamStrength, 0.0, 1.0),
+            gerstnerN,
+            V);
+    float shorelineFoam = waterShorelineFoamMask(
+            surfaceUv,
+            vWorldPos.y,
+            max(waterPush.shorelineFoamMaxDepth, 0.05),
+            clamp(waterPush.shorelineFoamStrength, 0.0, 1.0),
+            waterPush.timeSeconds,
+            vWorldXZ);
+    float foam = clamp(max(crestFoam, shorelineFoam), 0.0, 1.0);
+
+    float rippleVis = 1.0 + 0.12 * (1.0 - N.y) + 0.08 * (1.0 - gerstnerN.y);
+    vec3 color = body * rippleVis + sunDiffuse + spec * (1.0 - crestFoam * 0.75) * 1.55 + ambient * alpha;
+    color = mix(color, vec3(0.82, 0.90, 0.96), foam * 0.62);
 
     outColor = vec4(color, alpha);
 }

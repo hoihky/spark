@@ -435,6 +435,32 @@ SharedPtr<Texture2D> GameWorldAssetCache::RegisterTexture(
     return texture;
 }
 
+SharedPtr<RenderTexture> GameWorldAssetCache::RegisterRenderTexture(
+        const SharedPtr<RenderTexture>& texture,
+        const char* cacheKey) {
+    if (!texture) {
+        return SharedPtr<RenderTexture>();
+    }
+    if (cacheKey != nullptr && cacheKey[0] != '\0') {
+        renderTextureCache.Add(Utf8String(cacheKey), texture);
+    }
+    const Utf8String& displayName = texture->GetName();
+    if (!displayName.IsEmpty()) {
+        renderTextureCache.Add(displayName, texture);
+    }
+    return texture;
+}
+
+SharedPtr<RenderTexture> GameWorldAssetCache::TryGetRenderTextureByKey(const char* cacheKey) const {
+    if (cacheKey == nullptr || cacheKey[0] == '\0') {
+        return SharedPtr<RenderTexture>();
+    }
+    if (const SharedPtr<RenderTexture>* found = renderTextureCache.Find(Utf8String(cacheKey))) {
+        return *found;
+    }
+    return SharedPtr<RenderTexture>();
+}
+
 SharedPtr<Mesh> GameWorldAssetCache::TryGetMeshByKeyOrPath(const char* keyOrPath) const {
     if (keyOrPath == nullptr || keyOrPath[0] == '\0') {
         return SharedPtr<Mesh>();

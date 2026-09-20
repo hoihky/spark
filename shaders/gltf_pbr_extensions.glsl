@@ -18,7 +18,7 @@ vec3 sparkSampleOpaqueBackground(vec3 worldPos, vec3 N, vec3 V) {
     vec2 uvRefract = sparkSceneScreenUvFromWorld(worldPos + refractDir * glassThickness);
     vec2 offset = uvRefract - uvDirect;
     vec2 sampleUv = clamp(uvDirect + offset * 2.5, vec2(0.001), vec2(0.999));
-    return texture(sceneOpaqueColor, sampleUv).rgb;
+    return texture(sceneOpaqueColor, sparkSceneOpaqueTextureUv(sampleUv)).rgb;
 }
 
 vec3 sparkComputeEmissive(vec4 vEmissive, int emissiveMapLayer) {

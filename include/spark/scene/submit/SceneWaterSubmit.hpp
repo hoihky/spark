@@ -53,7 +53,11 @@ private:
             const Vector3& deepColor,
             float absorption,
             float foamStrength,
-            float detailNormalStrength) const;
+            float detailNormalStrength,
+            float shorelineFoamStrength,
+            float shorelineFoamMaxDepth,
+            Vector2 waterTileAnchorXZ,
+            const WaterScreenSpaceReflectionSettings& ssrSettings) const;
 
     void AppendBodyDraw(
             GameObject& owner,

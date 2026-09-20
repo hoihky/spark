@@ -1,10 +1,13 @@
 #include "spark/scene/submit/SceneSubmit.hpp"
 
+#include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/ecs/components/rendering/TerrainComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
+#include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -150,6 +153,25 @@ void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept {
         }
     }
     params.iblEnvironmentLayer = -1;
+}
+
+std::int32_t ResolveDrawableShadowFlags(
+        const GameObject* object,
+        SceneMeshSlot meshSlot,
+        const Matrix4& worldMatrix,
+        std::int32_t defaultShadowFlags) noexcept {
+    std::int32_t flags = defaultShadowFlags;
+    if (object != nullptr && object->GetComponent<TerrainComponent>() != nullptr) {
+        flags |= kSceneShadowCast;
+    }
+    const float worldY = worldMatrix.TranslationVector().y;
+    if (meshSlot == SceneMeshSlot::GroundPlane && worldY < -0.5F) {
+        flags &= ~kSceneShadowCast;
+    }
+    if (meshSlot == SceneMeshSlot::UnitCube && worldY < 1.0F) {
+        flags &= ~kSceneShadowCast;
+    }
+    return flags;
 }
 
 void PopulateSkyDrawItem(

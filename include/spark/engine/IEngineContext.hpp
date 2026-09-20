@@ -7,6 +7,7 @@ namespace Spark {
 class Window;
 class IFramePresenter;
 class IInput;
+class IRenderTargetService;
 class IImGuiLayer;
 class SoundEngine;
 class Scene;
@@ -45,6 +46,9 @@ public:
      * Enable per game via <c>IImGuiLayer::SetEnabled</c> and <c>Ui::UiToolkitSettings</c>.
      */
     [[nodiscard]] virtual IImGuiLayer* TryGetImGuiLayer() noexcept = 0;
+
+    /** Offscreen render targets when the active presenter supports them (Vulkan). */
+    [[nodiscard]] virtual IRenderTargetService* TryGetRenderTargetService() noexcept { return nullptr; }
 };
 
 }  // namespace Spark

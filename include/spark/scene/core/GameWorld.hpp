@@ -100,11 +100,19 @@ public:
     SharedPtr<Texture2D> RegisterTexture(const SharedPtr<Texture2D>& texture, const char* cacheKey = nullptr) {
         return assetCache.RegisterTexture(texture, cacheKey);
     }
+    SharedPtr<RenderTexture> RegisterRenderTexture(
+            const SharedPtr<RenderTexture>& texture,
+            const char* cacheKey = nullptr) {
+        return assetCache.RegisterRenderTexture(texture, cacheKey);
+    }
     [[nodiscard]] SharedPtr<Mesh> TryGetMeshByKeyOrPath(const char* keyOrPath) const {
         return assetCache.TryGetMeshByKeyOrPath(keyOrPath);
     }
     [[nodiscard]] SharedPtr<Texture2D> TryGetTextureByKeyOrPath(const char* keyOrPath) const {
         return assetCache.TryGetTextureByKeyOrPath(keyOrPath);
+    }
+    [[nodiscard]] SharedPtr<RenderTexture> TryGetRenderTextureByKey(const char* cacheKey) const {
+        return assetCache.TryGetRenderTextureByKey(cacheKey);
     }
     [[nodiscard]] bool TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const {
         return assetCache.TryGetCachedSkinnedGltf(path, out);

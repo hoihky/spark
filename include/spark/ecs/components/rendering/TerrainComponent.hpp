@@ -60,6 +60,16 @@ public:
             float beachRadiusWorld,
             float submergedDepth);
 
+    /**
+     * Bilinear height sample on the terrain grid in world XZ (CPU debug / gameplay).
+     * GPU shoreline foam uses scene-depth reconstruction instead (see water_foam.glsl).
+     */
+    [[nodiscard]] bool TrySampleHeightWorld(
+            const GameObject& owner,
+            float worldX,
+            float worldZ,
+            float& outWorldY) const;
+
 private:
     void EnsureHeightBuffer(GameObject& owner);
     [[nodiscard]] static bool RayTriangle(

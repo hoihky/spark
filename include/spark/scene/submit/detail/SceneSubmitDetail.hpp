@@ -18,6 +18,7 @@ class MaterialComponent;
 class Scene;
 class Mesh;
 class MeshComponent;
+enum class SceneMeshSlot : std::uint8_t;
 class MultiMaterialComponent;
 class SkinnedMesh;
 class SkyComponent;
@@ -40,6 +41,13 @@ void ApplyAlbedoTexture(
         const SharedPtr<Texture2D>& baseColor,
         const Vector3& tint,
         const FindSceneTextureFn& findOrAddTexture);
+
+/** Terrain always casts; submerged ground / underwater props do not pollute CSM. */
+[[nodiscard]] std::int32_t ResolveDrawableShadowFlags(
+        const GameObject* object,
+        SceneMeshSlot meshSlot,
+        const Matrix4& worldMatrix,
+        std::int32_t defaultShadowFlags) noexcept;
 
 void PushRigidMeshDraws(
         Array<SceneDrawItem>& drawList,

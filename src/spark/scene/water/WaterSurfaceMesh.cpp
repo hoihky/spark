@@ -119,13 +119,10 @@ bool WaterSurfaceMesh::ShouldRebuildForCamera(const Vector3& cameraWorld) const 
     if (!hasAnchor) {
         return true;
     }
-    const float dx = cameraWorld.x - anchorXZ.x;
-    const float dz = cameraWorld.z - anchorXZ.y;
-    const float threshold = settings.GetRebuildMoveThreshold();
-    if (threshold <= 0.0F) {
-        return true;
-    }
-    return (dx * dx + dz * dz) > (threshold * threshold);
+    const Vector2 snapped = ComputeSnappedAnchorXZ(cameraWorld);
+    const float dx = snapped.x - anchorXZ.x;
+    const float dz = snapped.y - anchorXZ.y;
+    return (dx * dx + dz * dz) > 1.0e-4F;
 }
 
 Vector2 WaterSurfaceMesh::ComputeSnappedAnchorXZ(const Vector3& cameraWorld) const noexcept {
@@ -133,9 +130,11 @@ Vector2 WaterSurfaceMesh::ComputeSnappedAnchorXZ(const Vector3& cameraWorld) con
     if (span <= 1.0e-4F) {
         return {cameraWorld.x, cameraWorld.z};
     }
-    const float anchorX = std::floor(cameraWorld.x / span) * span + span * 0.5F;
-    const float anchorZ = std::floor(cameraWorld.z / span) * span + span * 0.5F;
-    return {anchorX, anchorZ};
+    // Origin-centered cells so content at world (0,0) — e.g. demo islands — does not sit on a snap seam.
+    const auto snapAxis = [span](const float coord) -> float {
+        return std::floor(coord / span + 0.5F) * span;
+    };
+    return {snapAxis(cameraWorld.x), snapAxis(cameraWorld.z)};
 }
 
 }  // namespace Spark

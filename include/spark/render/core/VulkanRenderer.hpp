@@ -27,6 +27,7 @@
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/scene/VulkanSceneMeshGpu.hpp"
 #include "spark/render/scene/VulkanSceneOpaqueBackground.hpp"
+#include "spark/render/scene/VulkanRenderTargetRegistry.hpp"
 #include "spark/render/scene/VulkanWaterPass.hpp"
 #include "spark/render/scene/VulkanSceneOpaquePass.hpp"
 #include "spark/render/scene/VulkanScenePipeline.hpp"
@@ -85,6 +86,7 @@ public:
     [[nodiscard]] bool IsVideoRecording() const override;
     [[nodiscard]] VideoRecorder* GetActiveVideoRecorder() override;
     [[nodiscard]] bool TryGetDrawableSize(int& outWidth, int& outHeight) const override;
+    [[nodiscard]] IRenderTargetService* TryGetRenderTargetService() noexcept override { return &renderTargetRegistry; }
 
     void DrawFrame();
 
@@ -142,6 +144,7 @@ private:
     VulkanTilemapPass tilemapPass;
     VulkanSpritePass spritePass;
     Vulkan2DCompositePass composite2DPass;
+    VulkanRenderTargetRegistry renderTargetRegistry;
 
     VulkanPresentationSwapchain& presentSwapchain() noexcept { return deviceContext.GetSwapchain(); }
     [[nodiscard]] const VulkanPresentationSwapchain& presentSwapchain() const noexcept {

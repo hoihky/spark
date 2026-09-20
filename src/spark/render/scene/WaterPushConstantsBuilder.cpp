@@ -1,6 +1,7 @@
 #include "spark/render/scene/WaterPushConstantsBuilder.hpp"
 
 #include "spark/scene/water/GerstnerWave.hpp"
+#include "spark/scene/water/WaterRenderingProfile.hpp"
 
 #include <cstring>
 
@@ -24,6 +25,20 @@ WaterPushConstantsBuilder::WaterPushConstantsBuilder(const SceneWaterDraw& draw)
     push.deepColor[3] = 1.0F;
     push.foamStrength = draw.foamStrength;
     push.detailNormalStrength = draw.detailNormalStrength;
+    push.shorelineFoamStrength = draw.shorelineFoamStrength;
+    push.shorelineFoamMaxDepth = draw.shorelineFoamMaxDepth;
+    push.tileAnchorXZ[0] = draw.waterTileAnchorXZ.x;
+    push.tileAnchorXZ[1] = draw.waterTileAnchorXZ.y;
+    const ResolvedWaterScreenSpaceReflection& ssr = draw.resolvedSsr;
+    push.ssrEnabled = ssr.enabled ? 1.0F : 0.0F;
+    push.ssrMaxRayDistance = ssr.maxRayDistance;
+    push.ssrThickness = ssr.thickness;
+    push.ssrStepScale = ssr.stepScale;
+    push.ssrMaxSteps = ssr.maxSteps;
+    push.ssrStrength = ssr.strength;
+    push.ssrHorizonFadeStart = ssr.horizonFadeStart;
+    push.ssrHorizonFadeEnd = ssr.horizonFadeEnd;
+    push.ssrHalfRes = ssr.halfRes ? 1.0F : 0.0F;
 
     for (std::size_t wi = 0; wi < WaterWaveSettings::kMaxWaves; ++wi) {
         WriteWave(draw.waveSettings.GetWave(wi), push.waves[wi]);

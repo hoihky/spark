@@ -3,7 +3,10 @@
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/ShellDemoSceneUtil.hpp"
+#include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/water/WaterBodyComponent.hpp"
+#include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/water/WaterWavePreset.hpp"
 
 namespace Spark {
@@ -11,8 +14,8 @@ namespace Spark {
 constexpr float kWaterLakeDemoFovYDeg = 60.0F;
 
 /**
- * W1 showcase: infinite Gerstner ocean at Y=0 with a contrasting procedural sky.
- * Uses the dedicated water shader pass and fly-camera clipmap follow.
+ * W1–W3 showcase: beach island + infinite Gerstner ocean at Y=0.
+ * Uses the dedicated water shader pass, SSR, and fly-camera clipmap follow.
  */
 class WaterLakeDemo {
 public:
@@ -24,6 +27,7 @@ public:
 private:
     void CycleWavePreset();
     void SyncOceanClipmapCamera();
+    void SyncSkyToCamera();
 
     Array<GameObject*> roots{};
     FlyCamera camera{};
@@ -31,11 +35,14 @@ private:
 
     GameObject* waterObject = nullptr;
     WaterBodyComponent* waterBody = nullptr;
+    GameObject* skyObject = nullptr;
+    SharedPtr<Mesh> skyMesh{};
 
-    WaterWavePreset wavePreset{WaterWavePresetId::StormySea};
-    float timeScale = 10.0F;
+    WaterWavePreset wavePreset{WaterWavePresetId::CalmLake};
+    float timeScale = 1.0F;
     float sceneTime = 0.0F;
     bool ssaoEnabled = false;
+    bool skyHasHdr = false;
 };
 
 }  // namespace Spark

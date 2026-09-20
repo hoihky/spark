@@ -613,7 +613,7 @@ Inside the **HDR scene** subpass the renderer switches pipelines:
 
 | Sub-stage | Pipeline / notes |
 |-----------|------------------|
-| **Scene (opaque + sky)** | Lit mesh pipeline; **sky** pipeline when `SceneSkyMode != None` (relaxed depth for backdrop). |
+| **Scene (opaque + sky)** | Lit mesh pipeline; **sky** pipeline when `SceneSkyMode != None` (relaxed depth — color only; far depth stays at clear `1.0` for water/SSR sky detection). |
 | **Scene (transparent)** | When `transparentDraws` is non-empty: copy opaque HDR color → scratch, resume HDR pass, lit transparent pipeline (`VulkanSceneOpaquePass::RecordTransparent`). |
 | **Sprites** | Alpha-blended world quads (`SceneSpriteDraw`), sorted by `spriteSortMode`. |
 | **Particles** | Additive billboards (`SceneParticleInstance`). |

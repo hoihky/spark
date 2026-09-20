@@ -59,15 +59,8 @@ void FlyCamera::ProcessMovement(IInput& input, float deltaSeconds) noexcept {
 
 Matrix4 FlyCamera::ViewMatrix() const noexcept {
     const Vector3 f = Forward();
-    Vector3 worldUp = Vector3::UnitY;
-    // When forward ≈ ±Y, Cross(f, UnitY) is tiny and LookAt becomes ill-conditioned; ground and
-    // large planes can project incorrectly. Use a different up hint for steep pitch.
-    const float align = std::fabs(Vector3::Dot(f, worldUp));
-    if (align > 0.92F) {
-        worldUp = Vector3::UnitZ;
-    }
     const Vector3 target = position + f;
-    return Matrix4::LookAt(position, target, worldUp);
+    return Matrix4::LookAt(position, target, Vector3::UnitY);
 }
 
 }  // namespace Spark

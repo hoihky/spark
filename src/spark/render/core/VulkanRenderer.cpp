@@ -74,6 +74,7 @@ VulkanRenderer::~VulkanRenderer() {
 }
 
 void VulkanRenderer::CleanupSwapchain() {
+    renderTargetRegistry.DestroyAll(device());
     InvalidateImGuiBackend();
     frameSync.DestroySwapchainSync(device());
     screenSpaceEffectsPass.DestroyPipeline(device());
@@ -167,6 +168,7 @@ void VulkanRenderer::RecreateSwapchain() {
 void VulkanRenderer::CreateRenderPass() {
     hdrTonemapPass.CreateRenderPass(device(), sceneDepthFormat);
     presentRenderPass.Create(device(), presentSwapchain().imageFormat, VK_FORMAT_UNDEFINED);
+    renderTargetRegistry.BindDevice(physicalDevice(), device(), hdrTonemapPass.HdrRenderPass(), sceneDepthFormat);
 }
 
 void VulkanRenderer::RecreateHdrFlightTargets() {
@@ -678,6 +680,7 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
     if (device() == VK_NULL_HANDLE) {
         return;
     }
+    renderTargetRegistry.DestroyAll(device());
     directionalShadow.DestroyGraphicsPipeline(device());
     punctualShadow.DestroyGraphicsPipeline(device());
     sceneDescriptors.Destroy(device());

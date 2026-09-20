@@ -236,4 +236,61 @@ void TerrainComponent::ApplyIslandFalloff(
     RegenerateMesh(owner);
 }
 
+bool TerrainComponent::TrySampleHeightWorld(
+        const GameObject& owner,
+        const float worldX,
+        const float worldZ,
+        float& outWorldY) const {
+    if (heightSamples.IsEmpty()) {
+        return false;
+    }
+
+    const std::int32_t nx = TerrainMeshGenerator::GridVertexCountX(settings);
+    const std::int32_t nz = TerrainMeshGenerator::GridVertexCountZ(settings);
+    const std::size_t need = TerrainMeshGenerator::HeightSampleCount(settings);
+    if (heightSamples.GetSize() != need || nx < 2 || nz < 2) {
+        return false;
+    }
+
+    const Matrix4 world = owner.GetWorldMatrix();
+    Matrix4 inv{};
+    if (!world.TryInvert(inv)) {
+        return false;
+    }
+    const Vector3 local = inv.TransformPoint({worldX, 0.0F, worldZ});
+
+    const float hx = settings.halfExtentX;
+    const float hz = settings.halfExtentZ;
+    if (local.x < -hx || local.x > hx || local.z < -hz || local.z > hz) {
+        return false;
+    }
+
+    const float u = (local.x + hx) / (2.0F * hx);
+    const float v = (local.z + hz) / (2.0F * hz);
+    const float fx = u * static_cast<float>(nx - 1);
+    const float fz = v * static_cast<float>(nz - 1);
+
+    const std::int32_t ix0 = static_cast<std::int32_t>(std::floor(fx));
+    const std::int32_t iz0 = static_cast<std::int32_t>(std::floor(fz));
+    const std::int32_t ix1 = (std::min)(ix0 + 1, nx - 1);
+    const std::int32_t iz1 = (std::min)(iz0 + 1, nz - 1);
+    const float tx = fx - static_cast<float>(ix0);
+    const float tz = fz - static_cast<float>(iz0);
+
+    const auto sample = [&](std::int32_t ix, std::int32_t iz) -> float {
+        const std::size_t idx = static_cast<std::size_t>(iz * nx + ix);
+        return heightSamples[idx];
+    };
+    const float h00 = sample(ix0, iz0);
+    const float h10 = sample(ix1, iz0);
+    const float h01 = sample(ix0, iz1);
+    const float h11 = sample(ix1, iz1);
+    const float h0 = h00 + (h10 - h00) * tx;
+    const float h1 = h01 + (h11 - h01) * tx;
+    const float heightLocal = h0 + (h1 - h0) * tz;
+
+    outWorldY = world.TransformPoint({local.x, heightLocal, local.z}).y;
+    return true;
+}
+
 }  // namespace Spark

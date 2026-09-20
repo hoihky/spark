@@ -11,15 +11,27 @@ TEST(WaterSurfaceMeshTest, SubdivisionsProduceExpectedTopology) {
     EXPECT_EQ(indexCount, 96U);
 }
 
-TEST(WaterSurfaceMeshTest, RebuildThresholdHonored) {
+TEST(WaterSurfaceMeshTest, RebuildWhenSnappedAnchorChanges) {
     Spark::WaterSurfaceMeshSettings settings{};
-    settings.SetTileHalfExtent(64.0F);
-    settings.SetRebuildMoveThreshold(10.0F);
+    settings.SetTileHalfExtent(50.0F);
     Spark::WaterSurfaceMesh surface(settings);
 
-    surface.RebuildTile(64.0F, 64.0F, {0.0F, 0.0F});
-    EXPECT_FALSE(surface.ShouldRebuildForCamera({5.0F, 0.0F, 5.0F}));
-    EXPECT_TRUE(surface.ShouldRebuildForCamera({20.0F, 0.0F, 0.0F}));
+    surface.RebuildTile(50.0F, 50.0F, {0.0F, 0.0F});
+    EXPECT_FALSE(surface.ShouldRebuildForCamera({10.0F, 0.0F, 10.0F}));
+    EXPECT_TRUE(surface.ShouldRebuildForCamera({120.0F, 0.0F, 10.0F}));
+}
+
+TEST(WaterSurfaceMeshTest, SnapAnchorCentersOnWorldOrigin) {
+    Spark::WaterSurfaceMeshSettings settings{};
+    settings.SetTileHalfExtent(128.0F);
+    Spark::WaterSurfaceMesh surface(settings);
+
+    const Spark::Vector2 nearIsland = surface.ComputeSnappedAnchorXZ({58.0F, 0.0F, 22.0F});
+    const Spark::Vector2 oppositeSide = surface.ComputeSnappedAnchorXZ({-42.0F, 0.0F, -18.0F});
+    EXPECT_FLOAT_EQ(nearIsland.x, 0.0F);
+    EXPECT_FLOAT_EQ(nearIsland.y, 0.0F);
+    EXPECT_FLOAT_EQ(oppositeSide.x, 0.0F);
+    EXPECT_FLOAT_EQ(oppositeSide.y, 0.0F);
 }
 
 TEST(WaterSurfaceMeshTest, SnapAnchorToTileGrid) {
@@ -28,8 +40,8 @@ TEST(WaterSurfaceMeshTest, SnapAnchorToTileGrid) {
     Spark::WaterSurfaceMesh surface(settings);
 
     const Spark::Vector2 anchor = surface.ComputeSnappedAnchorXZ({123.0F, 0.0F, 77.0F});
-    EXPECT_FLOAT_EQ(anchor.x, 150.0F);
-    EXPECT_FLOAT_EQ(anchor.y, 50.0F);
+    EXPECT_FLOAT_EQ(anchor.x, 100.0F);
+    EXPECT_FLOAT_EQ(anchor.y, 100.0F);
 }
 
 TEST(WaterSurfaceMeshTest, RebuildBumpsGeometryRevision) {

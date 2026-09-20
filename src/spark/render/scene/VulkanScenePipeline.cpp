@@ -153,6 +153,7 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
 
     VkPipelineDepthStencilStateCreateInfo depthStencilSky{};
     depthStencilSky.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    // Sky is backdrop-only (no depth test/write). Far depth stays at clear 1.0 for water/SSR.
     depthStencilSky.depthTestEnable = VK_FALSE;
     depthStencilSky.depthWriteEnable = VK_FALSE;
     depthStencilSky.depthCompareOp = VK_COMPARE_OP_LESS;

@@ -51,6 +51,10 @@ function(spark_add_physics_tests)
             tests/scene/SceneWaterSubmitTest.cpp
             tests/scene/GerstnerWaveSurfaceTest.cpp
             tests/scene/WaterPresetAssetLoaderTest.cpp
+            tests/scene/TerrainHeightSampleTest.cpp
+            tests/scene/RenderTextureTest.cpp
+            tests/scene/WaterScreenSpaceReflectionTest.cpp
+            tests/scene/WaterWaveDirectionTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

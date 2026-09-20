@@ -151,9 +151,21 @@ float sampleSunShadowAtCascade(
         vec3 Ld,
         float sunGracing) {
     vec4 ls = ubo.worldToShadowClip[cascade] * vec4(worldPos, 1.0);
-    vec3 proj = ls.xyz / max(ls.w, 1e-5);
-    vec2 uv = vec2(proj.x * 0.5 + 0.5, proj.y * 0.5 + 0.5);
-    uv = cascadeAtlasUv(uv, cascade);
+    if (ls.w <= 1e-5) {
+        return 1.0;
+    }
+    vec3 proj = ls.xyz / ls.w;
+    if (proj.z < 0.0 || proj.z > 1.0) {
+        return 1.0;
+    }
+    vec2 uvLocal = vec2(proj.x * 0.5 + 0.5, proj.y * 0.5 + 0.5);
+    // Outside the cascade tile: treat as lit (avoids false shadows at ortho frustum edges).
+    const float kShadowUvMargin = 1.5e-3;
+    if (any(lessThan(uvLocal, vec2(kShadowUvMargin))) ||
+        any(greaterThan(uvLocal, vec2(1.0 - kShadowUvMargin)))) {
+        return 1.0;
+    }
+    vec2 uv = cascadeAtlasUv(uvLocal, cascade);
     if (ubo.viewportSize.w > 0.5) {
         uv.y = 1.0 - uv.y;
     }

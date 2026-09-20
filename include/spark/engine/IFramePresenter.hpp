@@ -5,6 +5,7 @@
 namespace Spark {
 
 struct VideoRecordingSettings;
+class IRenderTargetService;
 class VideoRecorder;
 
 /**
@@ -61,6 +62,9 @@ public:
 
     /** Active recorder while <c>IsVideoRecording()</c>; used to tap mixed audio. */
     [[nodiscard]] virtual VideoRecorder* GetActiveVideoRecorder() { return nullptr; }
+
+    /** Offscreen <c>RenderTexture</c> allocation (Vulkan backend). Default: unavailable. */
+    [[nodiscard]] virtual IRenderTargetService* TryGetRenderTargetService() noexcept { return nullptr; }
 };
 
 }  // namespace Spark

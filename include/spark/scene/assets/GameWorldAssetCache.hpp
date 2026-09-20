@@ -16,6 +16,7 @@
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
+#include "spark/scene/render/RenderTexture.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
@@ -93,6 +94,10 @@ public:
     SharedPtr<Texture2D> RegisterTexture(const SharedPtr<Texture2D>& texture, const char* cacheKey = nullptr);
     [[nodiscard]] SharedPtr<Mesh> TryGetMeshByKeyOrPath(const char* keyOrPath) const;
     [[nodiscard]] SharedPtr<Texture2D> TryGetTextureByKeyOrPath(const char* keyOrPath) const;
+    [[nodiscard]] SharedPtr<RenderTexture> RegisterRenderTexture(
+            const SharedPtr<RenderTexture>& texture,
+            const char* cacheKey = nullptr);
+    [[nodiscard]] SharedPtr<RenderTexture> TryGetRenderTextureByKey(const char* cacheKey) const;
     [[nodiscard]] Utf8String TryFindTextureKey(const Texture2D* texture) const;
     [[nodiscard]] bool TryGetCachedGltf(const char* path, GltfAsset& out) const;
     [[nodiscard]] bool TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const;
@@ -140,6 +145,7 @@ private:
     HashMap<Utf8String, GltfSceneDocument, Detail::Utf8StringHasher> gltfSceneCache;
     HashMap<Utf8String, SkinnedGltfAsset, Detail::Utf8StringHasher> skinnedGltfCache;
     HashMap<Utf8String, SharedPtr<Texture2D>, Detail::Utf8StringHasher> textureCache;
+    HashMap<Utf8String, SharedPtr<RenderTexture>, Detail::Utf8StringHasher> renderTextureCache;
     HashMap<const Texture2D*, Utf8String, Detail::TexturePointerHasher> textureKeyByPointer;
     HashMap<Utf8String, MaterialAsset, Detail::Utf8StringHasher> materialCache;
     HashMap<Utf8String, VfxAsset, Detail::Utf8StringHasher> vfxCache;

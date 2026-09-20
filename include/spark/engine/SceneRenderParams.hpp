@@ -13,6 +13,8 @@
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
+#include "spark/scene/water/WaterRenderingProfile.hpp"
+#include "spark/scene/water/WaterScreenSpaceReflectionSettings.hpp"
 #include "spark/scene/water/WaterWaveSettings.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -266,6 +268,12 @@ struct SceneWaterDraw {
     float absorption = 0.35F;
     float foamStrength = 0.85F;
     float detailNormalStrength = 0.34F;
+    float shorelineFoamStrength = 0.90F;
+    float shorelineFoamMaxDepth = 2.0F;
+    Vector2 waterTileAnchorXZ{};
+    WaterScreenSpaceReflectionSettings ssrSettings{};
+    /** SSR budget after <c>SceneRenderParams::waterRenderingProfile</c> is applied during submit. */
+    ResolvedWaterScreenSpaceReflection resolvedSsr{};
 };
 
 /** Gradient mode for UI rects (per-corner colors are interpolated in ui_solid.frag). */
@@ -477,6 +485,11 @@ struct SceneRenderParams {
      * Sorting only affects order within <c>waterDraws</c> (multiple lakes / tiles).
      */
     SceneWaterSortMode waterSortMode = SceneWaterSortMode::BackToFrontByDepth;
+    /**
+     * Global water quality preset (SSR half-res, ray-step cap, min-spec disable).
+     * Per-body <c>WaterScreenSpaceReflectionSettings</c> are merged at submit time.
+     */
+    WaterRenderingProfile waterRenderingProfile = WaterRenderingProfile::Default;
 
     /** Alpha-blended sprite quads (after tilemaps, before additive particles). Sorted per <c>spriteSortMode</c>. */
     static constexpr std::uint32_t MaxSprites = 8192;

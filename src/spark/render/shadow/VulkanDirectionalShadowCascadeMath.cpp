@@ -171,13 +171,29 @@ bool VulkanDirectionalShadowCascadeMath::ComputeWorldToShadowClip(
                 accumulateWorldInLight({wx, 0.0F, wz});
             }
         }
+        const float footprint = (std::max)(wxMax - wxMin, wzMax - wzMin);
+        const float rim = (std::max)(24.0F, footprint * 0.12F);
+        const float exMinX = wxMin - rim;
+        const float exMaxX = wxMax + rim;
+        const float exMinZ = wzMin - rim;
+        const float exMaxZ = wzMax + rim;
+        for (const float wx : {exMinX, exMaxX}) {
+            for (const float wz : {exMinZ, exMaxZ}) {
+                accumulateWorldInLight({wx, 0.0F, wz});
+            }
+        }
     }
 
     const float spanX = maxX - minX;
     const float spanY = maxY - minY;
     const float spanZ = maxZ - minZ;
-    const float padX = std::max(18.0F, spanX * 0.26F);
-    const float padY = std::max(18.0F, spanY * 0.26F);
+    const float worldFootprint = (wxMax > wxMin + 1e-3F && wzMax > wzMin + 1e-3F)
+            ? (std::max)(wxMax - wxMin, wzMax - wzMin)
+            : 2.0F * kSceneGroundHalfExtent;
+    const float padFrac = (worldFootprint > 96.0F) ? 0.34F : 0.26F;
+    const float minPad = (worldFootprint > 96.0F) ? 28.0F : 18.0F;
+    const float padX = (std::max)(minPad, spanX * padFrac);
+    const float padY = (std::max)(minPad, spanY * padFrac);
     minX -= padX;
     maxX += padX;
     minY -= padY;

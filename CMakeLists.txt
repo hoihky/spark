@@ -435,7 +435,7 @@ foreach (SHADER ${SHADER_SOURCES})
             OUTPUT ${SPV}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SPV_DIR}
             COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0 -I${SHADER_DIR} ${SHADER} -o ${SPV}
-            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl
+            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/scene_screen.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_screen.glsl ${SHADER_DIR}/water_background.glsl ${SHADER_DIR}/water_detail.glsl ${SHADER_DIR}/water_foam.glsl ${SHADER_DIR}/water_ssr.glsl ${SHADER_DIR}/water_reflection.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl
             COMMENT "SPIR-V: ${NAME_WE}.${EXT_NO_DOT}"
             VERBATIM
     )
@@ -761,6 +761,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/water/GerstnerWaveSurface.cpp
         src/spark/scene/water/WaterWavePreset.cpp
         src/spark/scene/water/WaterPresetAssetLoader.cpp
+        src/spark/scene/water/WaterRenderingProfile.cpp
+        src/spark/scene/water/WaterWaveDirection.cpp
         src/spark/ui/core/UiElementBase.cpp
         src/spark/ui/core/UiTheme.cpp
         src/spark/ui/core/UiThemeCatalog.cpp
@@ -797,10 +799,14 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/core/VulkanFrameSync.cpp
         src/spark/render/scene/VulkanSceneDescriptors.cpp
         src/spark/render/scene/VulkanIblBrdfLut.cpp
+        src/spark/render/present/VulkanSceneDepthCopy.cpp
         src/spark/render/scene/VulkanSceneOpaqueBackground.cpp
         src/spark/render/scene/VulkanSceneOpaqueSnapshot.cpp
         src/spark/render/scene/VulkanWaterPass.cpp
         src/spark/render/scene/WaterPushConstantsBuilder.cpp
+        src/spark/render/scene/VulkanOffscreenRenderTarget.cpp
+        src/spark/render/scene/VulkanRenderTargetRegistry.cpp
+        src/spark/scene/render/RenderTexture.cpp
         src/spark/render/core/VulkanRenderer.cpp
         src/spark/render/shadow/VulkanDirectionalShadowCascadeMath.cpp
         src/spark/render/shadow/VulkanDirectionalShadowPass.cpp

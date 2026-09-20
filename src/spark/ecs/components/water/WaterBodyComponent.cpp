@@ -5,6 +5,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/scene/camera/Camera.hpp"
+#include "spark/scene/water/WaterWaveDirection.hpp"
 #include "spark/scene/water/WaterWavePreset.hpp"
 
 #include <algorithm>
@@ -119,8 +120,29 @@ void WaterBodyComponent::SetDetailNormalStrength(float value) noexcept {
     detailNormalStrength = value;
 }
 
+void WaterBodyComponent::SetShorelineFoamStrength(float value) noexcept {
+    shorelineFoamStrength = value;
+}
+
+void WaterBodyComponent::SetShorelineFoamMaxDepth(float value) noexcept {
+    shorelineFoamMaxDepth = value;
+}
+
+void WaterBodyComponent::SetSwellTravelDirectionWorld(const Vector2 directionWorldXZ) noexcept {
+    swellTravelDirectionOverride = directionWorldXZ;
+}
+
+void WaterBodyComponent::ClearSwellTravelDirectionOverride() noexcept {
+    swellTravelDirectionOverride.reset();
+}
+
 WaterWaveSettings WaterBodyComponent::GetResolvedWaveSettings() const noexcept {
     WaterWaveSettings settings = WaterWavePreset(wavePresetId).ToSettings();
+
+    if (swellTravelDirectionOverride.has_value()) {
+        WaterWaveDirection::RotateSettingsToPrimarySwell(settings, *swellTravelDirectionOverride);
+    }
+
     if (waveAmplitudeScale == 1.0F && waveSpeedScale == 1.0F) {
         return settings;
     }
@@ -185,17 +207,14 @@ void WaterBodyComponent::UpdateInfiniteOceanClipmap(GameObject& owner, const Vec
         return;
     }
 
-    if (!surfaceDirty && !surfaceMesh.ShouldRebuildForCamera(cameraWorld)) {
-        SyncTransformToSurface(owner, surfaceMesh.GetAnchorXZ());
-        return;
-    }
-
     const Vector2 centerXZ = surfaceMesh.ComputeSnappedAnchorXZ(cameraWorld);
-    const float tileHalf = surfaceMesh.GetSettings().GetTileHalfExtent();
-    surfaceMesh.RebuildTile(tileHalf, tileHalf, centerXZ);
+    if (!surfaceDirty && surfaceMesh.ShouldRebuildForCamera(cameraWorld)) {
+        const float tileHalf = surfaceMesh.GetSettings().GetTileHalfExtent();
+        surfaceMesh.RebuildTile(tileHalf, tileHalf, centerXZ);
+        ApplyMeshToOwner(owner);
+        surfaceDirty = false;
+    }
     SyncTransformToSurface(owner, centerXZ);
-    ApplyMeshToOwner(owner);
-    surfaceDirty = false;
 }
 
 float WaterBodyComponent::ResolveTileHalfExtentX() const noexcept {
