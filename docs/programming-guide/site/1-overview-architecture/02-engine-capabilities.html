@@ -831,6 +831,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>TerrainComponent</code> (heightfield)</td>
 </tr>
 <tr>
+<td>Water</td>
+<td><code>WaterBodyComponent</code> (Gerstner surface, dedicated pass)</td>
+</tr>
+<tr>
 <td>Sky</td>
 <td><code>SkyComponent</code> + <code>SceneSkyMode</code></td>
 </tr>
@@ -862,6 +866,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>SpriteComponent</code> → <code>SceneSpriteDraw</code></td>
 </tr>
 <tr>
+<td>Sprite animation</td>
+<td><code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code>, <code>SpriteAnimationEventReceiverComponent</code>, <code>AnimationHitbox2DComponent</code></td>
+</tr>
+<tr>
 <td>Tilemaps</td>
 <td><code>TilemapComponent</code>, <code>TilemapGameplayGridComponent</code>, <code>TilemapMapSourceComponent</code>, layers/autotile/animator/object helpers</td>
 </tr>
@@ -871,7 +879,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>Orthographic camera</td>
-<td><code>Camera2DComponent</code>, <code>Camera2DRigComponent</code></td>
+<td><code>Camera2DComponent</code>, <code>Camera2DRigComponent</code>, <code>ScreenShakeComponent</code></td>
+</tr>
+<tr>
+<td>Parallax backgrounds</td>
+<td><code>ParallaxLayerComponent</code> (camera-relative scroll + optional drift)</td>
 </tr>
 <tr>
 <td>Y-sort occlusion</td>
@@ -880,6 +892,37 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td>2D sprite lighting modes</td>
 <td><code>SpriteLighting2DMode</code> on draw items</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2d-gameplay-components">2D Gameplay Components</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Platformer motor</td>
+<td><code>CharacterController2DComponent</code>, <code>OneWayPlatform2DComponent</code></td>
+</tr>
+<tr>
+<td>Triggers / pickups</td>
+<td><code>TriggerVolume2DComponent</code>, <code>PickupComponent</code>, <code>InteractableComponent</code></td>
+</tr>
+<tr>
+<td>Semantic input</td>
+<td><code>InputActionMapComponent</code>, <code>PlayerInputComponent</code></td>
+</tr>
+<tr>
+<td>Game flow</td>
+<td><code>GameStateComponent</code>, <code>GameFlowTriggerComponent</code></td>
+</tr>
+<tr>
+<td>Combat vitals</td>
+<td><code>HealthComponent</code>, <code>DamageableComponent</code></td>
 </tr>
 </tbody>
 </table>
@@ -894,7 +937,7 @@ Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flu
 Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 </code></pre>
 <p>Legacy free functions (<code>SimulatePhysics2D</code>, <code>SimulatePhysics3D</code>, …) remain but are <strong>deprecated</strong> — prefer <code>PhysicsSubsystem</code>.</p>
-<p><strong>70 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
+<p><strong>97 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
 <h2 id="asset-loading-on-gameworld">Asset Loading on GameWorld</h2>
 <pre><code class="language-cpp">Spark::GltfAsset asset = world.LoadGltf(&quot;assets/models/Cube.glb&quot;);
 Spark::SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/models/Fox.glb&quot;);

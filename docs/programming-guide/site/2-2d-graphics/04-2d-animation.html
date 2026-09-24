@@ -791,6 +791,37 @@ fsm-&gt;RequestAttack();
 fsm-&gt;RequestHurt();
 </code></pre>
 <p>Uses <code>Rigidbody2D</code> velocity for locomotion when present; can read <code>AiAgentComponent</code> blackboard for combat commands.</p>
+<h2 id="sprite-animation-events">Sprite Animation Events</h2>
+<h3 id="spriteanimationeventreceivercomponent"><code>SpriteAnimationEventReceiverComponent</code></h3>
+<p><strong>Priority:</strong> 215 (after <code>SpriteAnimatorComponent</code> at 200). Markers use <strong>normalized clip time</strong> (0..1).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp&quot;
+
+auto* recv = go-&gt;AddComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
+recv-&gt;AddMarker(1, 0.25F, &quot;Footstep&quot;);  // run clip, 25%
+recv-&gt;AddMarker(1, 0.75F, &quot;Footstep&quot;);
+</code></pre>
+<p>Fires <code>SignalId::SpriteAnimationEvent</code> to sibling components (<code>ptr</code> = event name, <code>a</code> = clip index).</p>
+<h3 id="spriteanimationeventvfxcomponent"><code>SpriteAnimationEventVfxComponent</code></h3>
+<p>Listens for <code>SpriteAnimationEvent</code> and queues VFX from <code>VfxLibrary</code> by asset key:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp&quot;
+
+auto* vfx = go-&gt;AddComponent&lt;SpriteAnimationEventVfxComponent&gt;();
+vfx-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
+vfx-&gt;SetWorldOffset({0.0F, -0.35F, 0.0F});
+</code></pre>
+<p>Pair receiver + VFX on the same <code>GameObject</code> as <code>SpriteAnimatorComponent</code>.</p>
+<h2 id="animationhitbox2dcomponent"><code>AnimationHitbox2DComponent</code></h2>
+<p>Frame-synced melee / hurtbox during sprite clips. Active when local frame ∈ <code>[start, end]</code>:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/AnimationHitbox2DComponent.hpp&quot;
+
+auto* hit = go-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();
+hit-&gt;SetClipIndex(2U);
+hit-&gt;SetStartLocalFrame(0U);
+hit-&gt;SetEndLocalFrame(0U);
+hit-&gt;SetShape(AnimationHitbox2DShape::Arc);
+hit-&gt;SetRadius(1.0F);
+</code></pre>
+<p>See <a href="../7-2d-game/04-player-controller.html">Player Controller</a> and <a href="../5-physics/04-queries.html">Queries</a>.</p>
 <h2 id="animationeventreceivercomponent-3d"><code>AnimationEventReceiverComponent</code> (3D)</h2>
 <p>For skeletal clips, use markers on the same object as <code>AnimatorComponent</code>:</p>
 <pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();

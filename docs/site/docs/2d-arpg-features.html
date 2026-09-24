@@ -566,7 +566,43 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><strong>P1.4</strong></td>
 <td><strong>Hitboxes / attack arcs</strong></td>
 <td>Implemented</td>
-<td><code>PhysicsQueries2D.hpp</code>: <strong><code>QueryOverlapCircleDynamics2D</code></strong> (P0.4-style dynamic broad-phase + circle narrow), <strong><code>QueryOverlapArcStatics2D</code></strong> / <strong><code>QueryOverlapArcDynamics2D</code></strong> (disk ∩ symmetric sector; direction normalized internally), convenience <strong><code>QueryOverlapArcWorldStatics2D</code></strong> / <strong><code>QueryOverlapArcWorldDynamics2D</code></strong>. <code>PhysicsQueryHitDynamic2D</code> for dynamic hits. Platformer demo: gems use <strong>layer 1</strong> static trigger circles + <strong>layer 2</strong> weapon query; <strong>J</strong> attack clip active frames run an arc overlap vs statics (P0.3) and collect gems; proximity collect unchanged.</td>
+<td><code>AnimationHitbox2DComponent</code> (frame-synced sprite clip window) + <code>PhysicsQueries2D.hpp</code> arc/circle overlaps. Platformer demo: <strong>J</strong> attack drives arc query vs enemy hurtboxes; gems use <code>TriggerVolume2DComponent</code> + <code>PickupComponent</code>.</td>
+</tr>
+<tr>
+<td><strong>P1.5</strong></td>
+<td><strong>Character controller 2D</strong></td>
+<td>Implemented</td>
+<td><code>CharacterController2DComponent</code>: coyote time, jump buffer, ground snap, one-way platforms (<code>OneWayPlatform2DComponent</code>), drop-through. Used by <code>Platformer2DDemo</code> with <code>PlayerInputComponent</code>.</td>
+</tr>
+<tr>
+<td><strong>P1.6</strong></td>
+<td><strong>Dedicated trigger volumes</strong></td>
+<td>Implemented</td>
+<td><code>TriggerVolume2DComponent</code> with enter/stay/exit signals (<code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code>). Replaces ad-hoc <code>SetIsTrigger</code> for goals, gems, zones.</td>
+</tr>
+<tr>
+<td><strong>P1.7</strong></td>
+<td><strong>Semantic input</strong></td>
+<td>Implemented</td>
+<td><code>InputActionMapComponent</code> + <code>PlayerInputComponent</code>; <code>InputActionTriggered</code> signal.</td>
+</tr>
+<tr>
+<td><strong>P1.8</strong></td>
+<td><strong>Game flow state</strong></td>
+<td>Implemented</td>
+<td><code>GameStateComponent</code> (State pattern + push/pop stack) + <code>GameFlowTriggerComponent</code> (Mediator). Platformer goal → <code>Victory</code>.</td>
+</tr>
+<tr>
+<td><strong>P1.9</strong></td>
+<td><strong>Parallax + screen shake</strong></td>
+<td>Implemented</td>
+<td><code>ParallaxLayerComponent</code> (priority 290, optional sine drift) + <code>ScreenShakeComponent</code> (composite impulses, read by <code>Camera2DRigComponent</code>).</td>
+</tr>
+<tr>
+<td><strong>P1.10</strong></td>
+<td><strong>Sprite animation events</strong></td>
+<td>Implemented</td>
+<td><code>SpriteAnimationEventReceiverComponent</code> + <code>SpriteAnimationEventVfxComponent</code>; <code>SpriteAnimationEvent</code> signal.</td>
 </tr>
 </tbody>
 </table>

@@ -1,6 +1,6 @@
 # Game Component Reference
 
-Complete reference for all **70** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **97** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -19,18 +19,19 @@ Complete reference for all **70** built-in `GameComponent` types in Spark (`incl
 | Folder | Components |
 |--------|------------|
 | [Core](#core) | `TransformComponent` |
-| [Rendering](#rendering) | `Mesh`, `Material`, `SkinnedMesh`, `Sprite`, `Tilemap`, `Sky`, `Terrain`, `ParticleEmitter`, `TextOverlay`, `Billboard`, `DecalProjector`, `FogVolume`, `PostProcessVolume`, `BlendMode`, `RenderLayer`, `SortingGroup`, `SpriteLighting2D` |
+| [Rendering](#rendering) | `Mesh`, `Material`, `SkinnedMesh`, `Sprite`, `Tilemap`, `Sky`, `Terrain`, `WaterBody`, `ParticleEmitter`, `TextOverlay`, `Billboard`, `DecalProjector`, `FogVolume`, `PostProcessVolume`, `BlendMode`, `RenderLayer`, `SortingGroup`, `SpriteLighting2D`, `ParallaxLayer` |
 | [Tilemap](#tilemap) | `TilemapGameplayGrid`, `TilemapTileAnimator`, `TilemapAutotile`, `TilemapObjectLayer`, `TilemapObjectSpawn`, `TilemapObjectGizmo`, `TilemapMapSource` |
 | [Lighting](#lighting) | `DirectionalLight`, `PointLight`, `SpotLight` |
-| [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `CameraFollow3D`, `SpringArm3D` |
-| [Physics 2D](#physics-2d) | `BoxCollider2D`, `CircleCollider2D`, `PolygonCollider2D`, `Rigidbody2D`, `TilemapCollider2D`, `PhysicsMaterial2D`, `DistanceJoint2D`, `HingeJoint2D` |
+| [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `ScreenShake`, `CameraFollow3D`, `SpringArm3D` |
+| [Physics 2D](#physics-2d) | `BoxCollider2D`, `CircleCollider2D`, `PolygonCollider2D`, `Rigidbody2D`, `CharacterController2D`, `OneWayPlatform2D`, `TriggerVolume2D`, `TilemapCollider2D`, `PhysicsMaterial2D`, `DistanceJoint2D`, `HingeJoint2D` |
 | [Physics 3D](#physics-3d) | `BoxCollider3D`, `SphereCollider3D`, `CapsuleCollider3D`, `MeshCollider3D`, `Rigidbody3D`, `CharacterController3D`, `TriggerVolume3D`, `PhysicsMaterial3D`, `DistanceJoint3D`, `HingeJoint3D`, `SpringJoint3D`, `Collision` |
-| [Animation](#animation) | `Animator`, `SpriteAnimator`, `AnimationEventReceiver`, `AttachmentSocket`, `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
+| [Animation](#animation) | `Animator`, `SpriteAnimator`, `AnimationEventReceiver`, `AnimationEventVfx`, `SpriteAnimationEventReceiver`, `SpriteAnimationEventVfx`, `AnimationHitbox2D`, `AttachmentSocket`, `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
+| [Input](#input) | `InputActionMap`, `PlayerInput` |
 | [AI](#ai) | `AiAgent`, `NavMeshAgent`, `PatrolPath`, `PerceptionSensor` |
 | [Audio](#audio) | `SoundCue`, `AudioListener`, `AmbientZone` |
 | [UI](#ui) | `UiCanvas` |
-| [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver` |
-| [Gameplay](#gameplay) | `Health`, `Damageable` |
+| [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver`, `SpawnPoint`, `GltfSceneSource`, `GltfInstanceNode` |
+| [Gameplay](#gameplay) | `Health`, `Damageable`, `Interactable`, `Pickup`, `GameState`, `GameFlowTrigger` |
 
 ---
 
@@ -38,13 +39,15 @@ Complete reference for all **70** built-in `GameComponent` types in Spark (`incl
 
 | Priority | Constant / note | Components |
 |----------|-----------------|------------|
-| 0 | default | Most components; `ParticleEmitterComponent` |
-| 50 | — | `BillboardComponent` |
+| 0 | default | Most components; `ParticleEmitterComponent`, `GameStateComponent` |
+| 50 | — | `PlayerInputComponent`, `BillboardComponent` |
 | 100 | `ComponentUpdatePriority::AnimationDriver` | `Character3DAnimFsmComponent`, `Sprite2DCharacterAnimFsmComponent` |
 | 200 | `ComponentUpdatePriority::AnimatorPlayback` | `AnimatorComponent`, `SpriteAnimatorComponent` |
 | 210 | — | `AnimationEventReceiverComponent` |
+| 215 | — | `SpriteAnimationEventReceiverComponent`, `AnimationHitbox2DComponent` |
 | 250 | — | `AttachmentSocketComponent` |
-| 295 | — | `SpringArm3DComponent` |
+| 290 | — | `ParallaxLayerComponent` |
+| 295 | — | `ScreenShakeComponent`, `SpringArm3DComponent` |
 | 300 | — | `Camera2DRigComponent`, `CameraFollow3DComponent` |
 
 **Rule of thumb:** add animation **drivers** (FSM) before **playback** (`Animator` / `SpriteAnimator`) on the same `GameObject`.
@@ -58,22 +61,36 @@ Complete reference for all **70** built-in `GameComponent` types in Spark (`incl
 | `TransformChanged` | — | `TransformComponent` on TRS change |
 | `MeshDirty` | — | mesh/material paths |
 | `CollisionBoundsDirty` | — | `CollisionComponent` |
-| `Physics2DTriggerOverlap` | `ptr` = other `GameObject*`, `a` = id, `b` = static index | `PhysicsWorld2D` |
+| `Physics2DTriggerOverlap` | `ptr` = other `GameObject*`, `a` = id, `b` = static index | `PhysicsWorld2D` (legacy collider triggers) |
+| `Physics2DTriggerEnter` / `Stay` / `Exit` | `ptr` = other `GameObject*`, `a` = id | `TriggerVolume2DComponent` |
 | `Physics3DTriggerEnter` / `Exit` | `ptr` = other `GameObject*`, `a` = id | `TriggerVolumeWorld3D` |
 | `AnimationEvent` | `ptr` = event name C-string, `a` = clip index | `AnimationEventReceiverComponent` |
+| `SpriteAnimationEvent` | `ptr` = event name, `a` = clip index, `b` = time in clip | `SpriteAnimationEventReceiverComponent` |
+| `InputActionTriggered` | `ptr` = action name, `a` = `InputActionPhase` | `PlayerInputComponent` |
+| `GameStateChanged` | `ptr` = owner `GameObject*`, `a` = new state, `b` = previous state | `GameStateComponent` |
 | `DamageApplied` | `ptr` = `DamageSignalPayload*` (sync only) | `HealthComponent` |
 | `Died` | `ptr` = instigator `GameObject*` or null | `HealthComponent` |
 | `UserBase + n` | custom | your gameplay code |
 
 ```cpp
 void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override {
-    if (id == SignalId::Physics2DTriggerOverlap) {
+    if (id == SignalId::Physics2DTriggerEnter) {
         GameObject* other = static_cast<GameObject*>(payload.ptr);
         (void)other;
     }
-    if (id == SignalId::AnimationEvent) {
+    if (id == SignalId::SpriteAnimationEvent) {
         const char* name = static_cast<const char*>(payload.ptr);
         (void)name;
+    }
+    if (id == SignalId::InputActionTriggered) {
+        const char* action = static_cast<const char*>(payload.ptr);
+        const auto phase = static_cast<InputActionPhase>(payload.a);
+        (void)action;
+        (void)phase;
+    }
+    if (id == SignalId::GameStateChanged) {
+        const auto next = static_cast<GameFlowState>(payload.a);
+        (void)next;
     }
     if (id == SignalId::DamageApplied) {
         const auto* dmg = static_cast<const DamageSignalPayload*>(payload.ptr);
@@ -406,6 +423,42 @@ go->AddComponent<RenderLayerComponent>("Characters", 10);
 parent->AddComponent<SortingGroupComponent>(100);
 ```
 
+### `ParallaxLayerComponent`
+
+**Kind:** `ParallaxLayer` · **Priority:** 290 · **Sibling:** `SpriteComponent` or `TransformComponent`  
+**Consumed by:** `OnUpdate` — writes owner transform from camera delta
+
+Scrolls a distant layer slower than the active camera. Point `SetCameraReference` at the camera rig object (the same `GameObject` that owns `Camera2DRigComponent`). On attach, the component captures the owner's current translation as **rest offset** relative to a configurable world anchor.
+
+**Design:** Strategy via `ParallaxDriftMode` for optional procedural sway (clouds). Runs before `ScreenShakeComponent` (295) and `Camera2DRigComponent` (300) so shake applies to the final view, not the parallax math.
+
+```cpp
+#include "spark/ecs/components/rendering/ParallaxLayerComponent.hpp"
+
+bgSky->AddComponent<SpriteComponent>(skyTex, ...);
+auto* parallax = bgSky->AddComponent<ParallaxLayerComponent>();
+parallax->SetFactorX(0.04F);           // 4% of camera X movement
+parallax->SetFactorY(0.0F);            // horizontal-only (default axis mode)
+parallax->SetAnchorWorld({20.0F, 0.0F, 0.0F});
+
+// After camera exists:
+parallax->SetCameraReference(mainCameraGo);
+
+// Slow cloud sway layered on parallax:
+parallax->SetDriftMode(ParallaxDriftMode::SineHorizontal);
+parallax->SetDriftAmplitude(0.35F);
+parallax->SetDriftFrequencyHz(0.22F);
+```
+
+| API | Meaning |
+|-----|---------|
+| `SetFactorX` / `SetFactorY` | How much of camera delta is applied (0 = fixed, 1 = moves with camera) |
+| `SetAxisMode` | `Horizontal` (default) or `Both` |
+| `SetRestOffset` | Override captured rest pose (world units from anchor) |
+| `SetAnchorWorld` | Reference point; parallax delta = camera position − anchor |
+
+See `Platformer2DDemo::SpawnBackgroundLayers` and `WireParallaxLayers` for a full multi-layer setup.
+
 ---
 
 ## Lighting
@@ -460,6 +513,30 @@ rig->SetTarget(player);
 rig->SetFollowSmoothRate(7.5F);
 rig->SetLookAheadScale(0.15F);
 ```
+
+`Camera2DRigComponent::OnUpdate` reads `ScreenShakeComponent::GetOffset()` on the same object and adds it to the final camera translation. Attach shake to the camera rig, not to parallax layers.
+
+### `ScreenShakeComponent`
+
+**Kind:** `ScreenShake` · **Priority:** 295 · **Sibling:** `Camera2DRigComponent` on same object  
+**Design:** Composite pattern — multiple `CameraShakeImpulse` instances sum each frame; optional **trauma** accumulator for sustained rumble.
+
+```cpp
+#include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
+
+auto* shake = cameraGo->AddComponent<ScreenShakeComponent>();
+
+// Directional burst (world-unit peak offset, duration, frequency Hz):
+shake->AddImpulse({0.18F, -0.12F}, 0.25F, 30.0F);
+
+// Trauma-based shake (0..1 energy, decays over time):
+shake->AddTrauma(0.45F);
+
+// Read offset (applied automatically by Camera2DRigComponent):
+const Vector2& offset = shake->GetOffset();
+```
+
+Typical triggers: player hurt (`AddImpulse` on damage), explosions, goal reached. Call `Clear()` to reset impulses and trauma instantly.
 
 ### `SpringArm3DComponent` + `CameraFollow3DComponent`
 
@@ -558,6 +635,78 @@ auto* hj = hingeA->GetComponent<HingeJoint2DComponent>();
 hj->SetLocalAnchorA({0.0F, 0.5F});
 hj->SetLocalAnchorB({0.0F, -0.5F});
 ```
+
+### `CharacterController2DComponent`
+
+**Kind:** `CharacterController2D` · **Siblings:** `Rigidbody2DComponent` + `BoxCollider2DComponent` (or circle)  
+**Consumed by:** `PhysicsSubsystem::Simulate2D` → `SimulateCharacterControllers2D`
+
+Platformer motor with coyote time, jump buffer, ground snap, slope limit, and one-way platform drop-through. Set horizontal intent and optional jump **before** `Simulate2D`.
+
+```cpp
+#include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
+
+auto* rb = player->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Dynamic, 1.0F);
+player->AddComponent<BoxCollider2DComponent>();
+auto* cc = player->AddComponent<CharacterController2DComponent>();
+cc->SetMoveSpeed(11.0F);
+cc->SetJumpSpeed(13.2F);
+cc->SetCoyoteTimeSeconds(0.12F);
+cc->SetJumpBufferSeconds(0.1F);
+
+// Each frame, after PlayerInputComponent (or manual input):
+cc->SetMoveInputX(playerInput->GetActionAxis1D("MoveX"));
+if (playerInput->WasActionPressedThisFrame("Jump")) {
+    cc->RequestJump();
+}
+if (playerInput->IsActionPressed("Drop")) {
+    cc->SetDropThroughOneWay(true);  // cleared after one prepare step
+}
+physics.Simulate2D(world, timing);
+
+// Land feedback:
+if (cc->IsGrounded() && !cc->WasGroundedLastFrame()) {
+    // spawn dust VFX
+}
+```
+
+Pair with `PlayerInputComponent` (priority 50) so semantic actions are ready before the controller reads them.
+
+### `OneWayPlatform2DComponent`
+
+**Kind:** `OneWayPlatform2D` · **Sibling:** static `BoxCollider2DComponent`
+
+Marker on platform colliders. The character controller treats the surface as pass-through from below unless landing from above (or drop-through is not requested).
+
+```cpp
+platform->AddComponent<BoxCollider2DComponent>(Vector2{4.0F, 0.15F});
+platform->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
+platform->AddComponent<OneWayPlatform2DComponent>();
+```
+
+### `TriggerVolume2DComponent`
+
+**Kind:** `TriggerVolume2D` · **Consumed by:** `SimulateTriggerVolumes2D` (called inside `Simulate2D`)
+
+Non-blocking overlap volume with enter/stay/exit callbacks and sibling signals. Prefer this over `SetIsTrigger(true)` on solid colliders when you want dedicated gameplay volumes (goals, pickups, hazards).
+
+```cpp
+#include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
+
+auto* trig = zone->AddComponent<TriggerVolume2DComponent>(
+    TriggerVolume2DShape::Box,
+    Vector2{1.5F, 2.0F},   // half extents (box) or ignored for circle + SetRadius
+    Vector2::Zero);        // local offset
+trig->SetFilterTag("player");  // optional: only detect tagged objects
+trig->SetOnEnter([](GameObject& other) { (void)other; });
+
+// Circle gem pickup:
+gem->AddComponent<TriggerVolume2DComponent>(TriggerVolume2DShape::Circle);
+auto* circle = gem->GetComponent<TriggerVolume2DComponent>();
+circle->SetRadius(0.45F);
+```
+
+Signals (`Physics2DTriggerEnter` / `Stay` / `Exit`) are delivered to **sibling** components on the same `GameObject`. Pair with `PickupComponent` or `GameFlowTriggerComponent` instead of wiring lambdas in demo code when possible.
 
 ### Layer filter
 
@@ -740,6 +889,137 @@ fsm->RequestAttack();
 fsm->RequestHurt();
 ```
 
+### `SpriteAnimationEventReceiverComponent`
+
+**Kind:** `SpriteAnimationEventReceiver` · **Priority:** 215 · **Sibling:** `SpriteAnimatorComponent`  
+**Design:** Observer — watches sprite clip playback and fires `SignalId::SpriteAnimationEvent` when normalized-time markers are crossed.
+
+Markers use **normalized time** (0..1 of clip duration), not frame indices. Reset when the clip loops or changes.
+
+```cpp
+#include "spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp"
+
+auto* recv = go->AddComponent<SpriteAnimationEventReceiverComponent>();
+recv->AddMarker(1, 0.25F, "Footstep");  // clip 1, 25% through
+recv->AddMarker(1, 0.75F, "Footstep");
+
+class FootstepSfx final : public GameComponent {
+public:
+    void OnSignal(GameObject& owner, SignalId id, const SignalPayload& p) override {
+        if (id == SignalId::SpriteAnimationEvent) {
+            const char* name = static_cast<const char*>(p.ptr);
+            if (std::strcmp(name, "Footstep") == 0) {
+                owner.GetComponent<SoundCueComponent>()->Queue(footstepClip, 0.5F);
+            }
+        }
+    }
+};
+go->AddComponent<FootstepSfx>();
+```
+
+### `SpriteAnimationEventVfxComponent`
+
+**Kind:** `SpriteAnimationEventVfx` · **Sibling:** `SpriteAnimationEventReceiverComponent`  
+**Design:** Strategy bindings — maps event names to `VfxLibrary` asset keys; queues one-shot VFX at owner world position on matching `SpriteAnimationEvent`.
+
+```cpp
+#include "spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp"
+
+auto* vfx = go->AddComponent<SpriteAnimationEventVfxComponent>();
+vfx->AddBinding("Footstep", "dust_puff");
+vfx->AddBinding("Land", "impact_ring");
+vfx->SetWorldOffset({0.0F, -0.4F, 0.0F});
+```
+
+### `AnimationHitbox2DComponent`
+
+**Kind:** `AnimationHitbox2D` · **Priority:** 215 · **Sibling:** `SpriteAnimatorComponent`  
+**Consumed by:** `OnUpdate` during active hit window — runs `PhysicsQueryWorld2D` overlap (circle or arc) and applies damage via `DamageableComponent` on targets.
+
+Frame-synced combat hitbox: active while the animator's **local frame** is in `[startFrame, endFrame]` for `clipIndex`. Only fires once per target per swing.
+
+```cpp
+#include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
+
+auto* hitbox = player->AddComponent<AnimationHitbox2DComponent>();
+hitbox->SetClipIndex(2U);           // attack clip
+hitbox->SetStartLocalFrame(0U);
+hitbox->SetEndLocalFrame(0U);
+hitbox->SetShape(AnimationHitbox2DShape::Arc);
+hitbox->SetRadius(1.1F);
+hitbox->SetArcHalfAngleRadians(0.9F);
+hitbox->SetLocalOffset({0.5F, 0.0F});  // offset from owner, flipped by facing sign
+hitbox->SetDamagePerHit(10.0F);
+
+PhysicsQueryFilter2D filter{};
+filter.queryCategoryBits = 1u << 3;  // weapon layer
+filter.queryMaskBits = 1u << 4;      // enemy hurtbox layer
+filter.hitTriggers = true;
+filter.hitSolids = false;
+hitbox->SetQueryFilter(filter);
+```
+
+Facing follows owner transform X scale sign (negative scale = facing left). See [Queries](../5-physics/04-queries.md) for arc overlap details.
+
+---
+
+## Input
+
+Semantic input separates **hardware bindings** (Flyweight config) from **runtime polling** (Command / Observer).
+
+### `InputActionMapComponent`
+
+**Kind:** `InputActionMap` · **Data-only** — no `OnUpdate`; consumed by `PlayerInputComponent` on the same entity.
+
+```cpp
+#include "spark/ecs/components/input/InputActionMapComponent.hpp"
+#include "spark/input/InputActionTypes.hpp"
+
+auto* map = player->AddComponent<InputActionMapComponent>();
+map->BindAxis1D("MoveX", GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map->BindButton("Jump", GLFW_KEY_SPACE);
+map->BindButton("Drop", GLFW_KEY_S, GLFW_KEY_DOWN);
+map->BindButton("Attack", GLFW_KEY_J);
+
+const InputActionDefinition* jump = map->FindAction("Jump");
+```
+
+| `InputActionType` | Binding API | Runtime query |
+|-------------------|-------------|---------------|
+| `Button` | `BindButton(name, primary, secondary=-1)` | `IsActionPressed`, `WasActionPressedThisFrame` |
+| `Axis1D` | `BindAxis1D(name, neg, pos, secNeg=-1, secPos=-1)` | `GetActionAxis1D` (−1..1) |
+
+### `PlayerInputComponent`
+
+**Kind:** `PlayerInput` · **Priority:** 50 · **Sibling:** `InputActionMapComponent`  
+Emits `SignalId::InputActionTriggered` on action edges (`InputActionPhase::Started` / `Canceled`).
+
+```cpp
+#include "spark/ecs/components/input/PlayerInputComponent.hpp"
+
+auto* input = player->AddComponent<PlayerInputComponent>();
+input->SetActionMap(map);
+
+// After OnUpdate (or call Refresh early for custom order):
+if (input->WasActionPressedThisFrame("Jump")) {
+    controller->RequestJump();
+}
+const float moveX = input->GetActionAxis1D("MoveX");
+controller->SetMoveInputX(moveX);
+
+// Signal listener for UI prompts:
+void OnSignal(GameObject& owner, SignalId id, const SignalPayload& p) override {
+    if (id == SignalId::InputActionTriggered) {
+        const char* action = static_cast<const char*>(p.ptr);
+        const auto phase = static_cast<InputActionPhase>(p.a);
+        (void)action;
+        (void)phase;
+    }
+}
+```
+
+Call `Refresh(owner, context)` manually when your game tick polls input before `GameWorld::UpdateGameObjects` (e.g. character controller in `Simulate` after a custom input pass).
+
 ---
 
 ## AI
@@ -919,6 +1199,117 @@ void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) over
 }
 ```
 
+### `InteractableComponent`
+
+**Kind:** `Interactable` · **Optional sibling:** `TriggerVolume2DComponent` for range
+
+Generic use/interact prompt. `TryInteract(instigator)` runs when the instigator is in range (radius around owner transform) and passes optional tag filter.
+
+```cpp
+#include "spark/ecs/components/gameplay/InteractableComponent.hpp"
+
+auto* chest = chestGo->AddComponent<InteractableComponent>();
+chest->SetPromptText("Open");
+chest->SetInteractionRadius(1.5F);
+chest->SetRequiredInstigatorTag("player");
+chest->SetOnInteract([](GameObject& instigator) {
+    (void)instigator;
+    // open inventory UI
+});
+
+// Each frame when player presses Interact:
+if (playerInput->WasActionPressedThisFrame("Interact") && chest->CanInteract(*player)) {
+    chest->TryInteract(*player);
+}
+```
+
+### `PickupComponent`
+
+**Kind:** `Pickup` · **Sibling:** `TriggerVolume2DComponent` (recommended)
+
+Collectible item. Auto-collects on `Physics2DTriggerEnter` when enabled, or via `InteractableComponent::TryInteract`. Defers owner destroy to end of physics step to avoid signal re-entrancy crashes.
+
+```cpp
+#include "spark/ecs/components/gameplay/PickupComponent.hpp"
+
+gem->AddComponent<TriggerVolume2DComponent>(TriggerVolume2DShape::Circle);
+gem->GetComponent<TriggerVolume2DComponent>()->SetRadius(0.4F);
+
+auto* pickup = gem->AddComponent<PickupComponent>();
+pickup->SetItemId("gem");
+pickup->SetQuantity(1);
+pickup->SetAutoCollectOnTriggerEnter(true);
+pickup->SetDestroyOwnerOnCollect(true);
+pickup->SetOnCollected([](GameObject& collector, const char* itemId, int qty) {
+    (void)collector;
+    (void)itemId;
+    (void)qty;
+});
+
+// After Simulate2D (flushes deferred destroys):
+PickupComponent::ProcessDeferredDestroys(world);
+```
+
+### `GameStateComponent`
+
+**Kind:** `GameState` · **Design:** State pattern with optional push/pop stack for pause menus.
+
+```cpp
+#include "spark/ecs/components/gameplay/GameStateComponent.hpp"
+
+auto* flow = manager->AddComponent<GameStateComponent>(GameFlowState::Playing);
+flow->SetOnTransition([](GameFlowState prev, GameFlowState next, GameObject& owner) {
+    (void)prev;
+    (void)owner;
+    if (next == GameFlowState::Victory) {
+        // celebration VFX, disable player input, etc.
+    }
+});
+
+if (pausePressed) {
+    flow->PushState(GameFlowState::Paused);
+}
+if (resumePressed) {
+    flow->PopState();
+}
+
+flow->RequestState(GameFlowState::Victory);  // emits GameStateChanged to siblings
+```
+
+| `GameFlowState` | Typical use |
+|-----------------|-------------|
+| `Intro` | Title / cutscene |
+| `Playing` | Normal gameplay |
+| `Paused` | Menu overlay |
+| `Victory` / `Defeat` | End states |
+
+### `GameFlowTriggerComponent`
+
+**Kind:** `GameFlowTrigger` · **Design:** Mediator — bridges world signals to `GameStateComponent::RequestState`.
+
+Attach to the object that **receives** the source signal (trigger volume owner for `TriggerEnter`, player for `Died`). Point `SetStateOwner` at the object that owns `GameStateComponent` when they differ.
+
+```cpp
+#include "spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp"
+
+// Goal zone on goalTriggerGo:
+goalTriggerGo->AddComponent<TriggerVolume2DComponent>(TriggerVolume2DShape::Box, {2.0F, 3.0F});
+auto* goalFlow = goalTriggerGo->AddComponent<GameFlowTriggerComponent>();
+goalFlow->SetSource(GameFlowTriggerSource::TriggerEnter);
+goalFlow->SetTargetState(GameFlowState::Victory);
+goalFlow->SetInstigatorNameFilter("Player");
+goalFlow->SetStateOwner(gameFlowGo);  // gameFlowGo owns GameStateComponent
+
+// Player death → defeat:
+player->AddComponent<GameFlowTriggerComponent>();
+auto* deathFlow = player->GetComponent<GameFlowTriggerComponent>();
+deathFlow->SetSource(GameFlowTriggerSource::Died);
+deathFlow->SetTargetState(GameFlowState::Defeat);
+deathFlow->SetStateOwner(gameFlowGo);
+```
+
+`OnGameState` source listens for `GameStateChanged` on the **same** `GameObject` — use for chained reactions (e.g. enable HUD only when `Playing`).
+
 ---
 
 ## Typical object recipes
@@ -928,13 +1319,43 @@ void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) over
 ```cpp
 player->AddComponent<TransformComponent>();
 player->AddComponent<SpriteComponent>(heroTex);
-player->AddComponent<SpriteAnimatorComponent>();
 player->AddComponent<Sprite2DCharacterAnimFsmComponent>();
-player->AddComponent<Rigidbody2DComponent>();
+player->AddComponent<SpriteAnimatorComponent>();
 player->AddComponent<BoxCollider2DComponent>();
+player->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Dynamic, 1.0F);
+player->AddComponent<CharacterController2DComponent>();
+player->AddComponent<AnimationHitbox2DComponent>();  // melee window
+auto* map = player->AddComponent<InputActionMapComponent>();
+map->BindAxis1D("MoveX", GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map->BindButton("Jump", GLFW_KEY_SPACE);
+map->BindButton("Attack", GLFW_KEY_J);
+auto* input = player->AddComponent<PlayerInputComponent>();
+input->SetActionMap(map);
 player->AddComponent<SoundCueComponent>();
 player->AddComponent<HealthComponent>(100.0F);
 player->AddComponent<DamageableComponent>();
+```
+
+### 2D camera rig with parallax + shake
+
+```cpp
+cameraGo->AddComponent<Camera2DComponent>()->SetHalfExtentY(6.5F);
+cameraGo->AddComponent<Camera2DRigComponent>()->SetTarget(player);
+cameraGo->AddComponent<ScreenShakeComponent>();
+
+bgLayer->AddComponent<SpriteComponent>(mountainsTex, ...);
+auto* parallax = bgLayer->AddComponent<ParallaxLayerComponent>();
+parallax->SetFactorX(0.18F);
+parallax->SetCameraReference(cameraGo);
+```
+
+### Gem pickup
+
+```cpp
+gem->AddComponent<SpriteComponent>(gemTex, ...);
+gem->AddComponent<TriggerVolume2DComponent>(TriggerVolume2DShape::Circle);
+gem->GetComponent<TriggerVolume2DComponent>()->SetRadius(0.4F);
+gem->AddComponent<PickupComponent>()->SetItemId("gem");
 ```
 
 ### 3D skinned enemy

@@ -776,7 +776,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>Simulation</td>
-<td>ECS</td>
+<td>ECS (<strong>97</strong> built-in components)</td>
 <td><code>GameWorld</code>, <code>GameObject</code>, <code>GameComponent</code></td>
 </tr>
 <tr>
@@ -811,7 +811,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Explicit frame contract</strong> — simulation in <code>OnUpdate</code>, rendering as immutable <code>SceneRenderParams</code> in <code>OnRender</code>.</li>
 <li><strong>Dependency inversion</strong> — games depend on <code>IGame</code> / <code>IEngineContext</code>, not <code>VulkanRenderer</code>.</li>
 <li><strong>Composition</strong> — behavior lives in components; <code>GameObject</code> is a lightweight container.</li>
-<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem.</li>
+<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem. <code>Platformer2DDemo</code> (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.</li>
 </ol>
 <h2 id="minimal-bootstrap">Minimal Bootstrap</h2>
 <pre><code class="language-cpp">#include &quot;spark/engine/Engine.hpp&quot;

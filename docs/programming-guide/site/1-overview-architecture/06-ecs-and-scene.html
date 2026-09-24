@@ -826,6 +826,11 @@ public:
 </thead>
 <tbody>
 <tr>
+<td>—</td>
+<td>50</td>
+<td><code>PlayerInput</code> (semantic actions before gameplay)</td>
+</tr>
+<tr>
 <td><code>Billboard</code></td>
 <td>50</td>
 <td>Face camera before gameplay</td>
@@ -847,13 +852,23 @@ public:
 </tr>
 <tr>
 <td>—</td>
+<td>215</td>
+<td><code>SpriteAnimationEventReceiver</code>, <code>AnimationHitbox2D</code></td>
+</tr>
+<tr>
+<td>—</td>
 <td>250</td>
 <td><code>AttachmentSocket</code></td>
 </tr>
 <tr>
 <td>—</td>
+<td>290</td>
+<td><code>ParallaxLayer</code> (background scroll before camera rig)</td>
+</tr>
+<tr>
+<td>—</td>
 <td>295</td>
-<td><code>SpringArm3D</code></td>
+<td><code>ScreenShake</code>, <code>SpringArm3D</code></td>
 </tr>
 <tr>
 <td>—</td>
@@ -921,6 +936,10 @@ void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; paylo
         GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
         (void)other;
     }
+    if (id == SignalId::Physics2DTriggerEnter) {
+        GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
+        (void)other;
+    }
     if (id == SignalId::Physics3DTriggerEnter) {
         GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
         (void)other;
@@ -929,12 +948,27 @@ void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; paylo
         const char* eventName = static_cast&lt;const char*&gt;(payload.ptr);
         (void)eventName;
     }
+    if (id == SignalId::SpriteAnimationEvent) {
+        const char* eventName = static_cast&lt;const char*&gt;(payload.ptr);
+        (void)eventName;
+    }
+    if (id == SignalId::InputActionTriggered) {
+        const char* action = static_cast&lt;const char*&gt;(payload.ptr);
+        const auto phase = static_cast&lt;InputActionPhase&gt;(payload.a);
+        (void)action;
+        (void)phase;
+    }
+    if (id == SignalId::GameStateChanged) {
+        const auto next = static_cast&lt;GameFlowState&gt;(payload.a);
+        (void)next;
+    }
     if (id == SignalId::DamageApplied) {
         const auto* dmg = static_cast&lt;const DamageSignalPayload*&gt;(payload.ptr);
         (void)dmg;
     }
 }
 </code></pre>
+<p>Signals are <strong>sibling-only</strong>: <code>EmitSignal</code> on a <code>GameObject</code> dispatches to components on that same object, not children or parents. When a trigger on <code>goalTriggerGo</code> fires <code>Physics2DTriggerEnter</code>, attach <code>GameFlowTriggerComponent</code> on <code>goalTriggerGo</code>, not on the player. Use <code>SetStateOwner</code> when the <code>GameStateComponent</code> lives on a different manager object.</p>
 <p>See <a href="07-game-component-reference.html">Game Component Reference</a> for every component and signal payload.</p>
 <h2 id="rendering-hand-off">Rendering Hand-off</h2>
 <pre><code class="language-cpp">Spark::SceneRenderParams params{};

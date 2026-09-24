@@ -45,12 +45,15 @@ Built-in priorities (`ComponentUpdatePriority`). Each `GameObject` **stable-sort
 
 | Priority | Value | Examples |
 |----------|-------|----------|
+| — | 50 | `PlayerInput` (semantic actions before gameplay) |
 | `Billboard` | 50 | Face camera before gameplay |
 | `AnimationDriver` | 100 | `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
 | `AnimatorPlayback` | 200 | `Animator`, `SpriteAnimator` |
 | — | 210 | `AnimationEventReceiver` |
+| — | 215 | `SpriteAnimationEventReceiver`, `AnimationHitbox2D` |
 | — | 250 | `AttachmentSocket` |
-| — | 295 | `SpringArm3D` |
+| — | 290 | `ParallaxLayer` (background scroll before camera rig) |
+| — | 295 | `ScreenShake`, `SpringArm3D` |
 | — | 300 | `Camera2DRig`, `CameraFollow3D` |
 
 Full per-component tables: [Game Component Reference](07-game-component-reference.md).
@@ -132,6 +135,10 @@ void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) over
         GameObject* other = static_cast<GameObject*>(payload.ptr);
         (void)other;
     }
+    if (id == SignalId::Physics2DTriggerEnter) {
+        GameObject* other = static_cast<GameObject*>(payload.ptr);
+        (void)other;
+    }
     if (id == SignalId::Physics3DTriggerEnter) {
         GameObject* other = static_cast<GameObject*>(payload.ptr);
         (void)other;
@@ -140,12 +147,28 @@ void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) over
         const char* eventName = static_cast<const char*>(payload.ptr);
         (void)eventName;
     }
+    if (id == SignalId::SpriteAnimationEvent) {
+        const char* eventName = static_cast<const char*>(payload.ptr);
+        (void)eventName;
+    }
+    if (id == SignalId::InputActionTriggered) {
+        const char* action = static_cast<const char*>(payload.ptr);
+        const auto phase = static_cast<InputActionPhase>(payload.a);
+        (void)action;
+        (void)phase;
+    }
+    if (id == SignalId::GameStateChanged) {
+        const auto next = static_cast<GameFlowState>(payload.a);
+        (void)next;
+    }
     if (id == SignalId::DamageApplied) {
         const auto* dmg = static_cast<const DamageSignalPayload*>(payload.ptr);
         (void)dmg;
     }
 }
 ```
+
+Signals are **sibling-only**: `EmitSignal` on a `GameObject` dispatches to components on that same object, not children or parents. When a trigger on `goalTriggerGo` fires `Physics2DTriggerEnter`, attach `GameFlowTriggerComponent` on `goalTriggerGo`, not on the player. Use `SetStateOwner` when the `GameStateComponent` lives on a different manager object.
 
 See [Game Component Reference](07-game-component-reference.md) for every component and signal payload.
 

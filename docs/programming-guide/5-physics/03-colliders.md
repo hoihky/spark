@@ -56,6 +56,24 @@ platform->AddComponent<PhysicsMaterial2DComponent>(0.5F, 0.2F);
 
 **2D joints** — `DistanceJoint2DComponent`, `HingeJoint2DComponent` (require `PhysicsWorld2DSettings::jointIterations > 0`).
 
+**TriggerVolume2DComponent** — dedicated non-blocking volumes with enter/stay/exit signals (preferred for goals, pickups, hazards):
+
+```cpp
+#include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
+
+zone->AddComponent<TriggerVolume2DComponent>(
+    TriggerVolume2DShape::Box, Vector2{2.0F, 3.0F});
+zone->GetComponent<TriggerVolume2DComponent>()->SetFilterTag("player");
+
+// Circle pickup:
+gem->AddComponent<TriggerVolume2DComponent>(TriggerVolume2DShape::Circle);
+gem->GetComponent<TriggerVolume2DComponent>()->SetRadius(0.4F);
+```
+
+`SimulateTriggerVolumes2D` runs inside `PhysicsSubsystem::Simulate2D`. Signals (`Physics2DTriggerEnter` / `Stay` / `Exit`) dispatch to **sibling** components — pair with `PickupComponent` or `GameFlowTriggerComponent`.
+
+**OneWayPlatform2DComponent** — marker on static platforms for `CharacterController2DComponent` pass-through from below.
+
 ## Layer Masks
 
 ```cpp

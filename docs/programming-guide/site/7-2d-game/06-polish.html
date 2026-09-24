@@ -753,10 +753,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>06 polish</h1>
           </header>
           <div class="doc-body"><h1 id="polish-and-ship">Polish and Ship</h1>
+<h2 id="juice-screen-shake-parallax">Juice: Screen Shake + Parallax</h2>
+<p>Screen shake and parallax are component-driven — no manual camera math in <code>Simulate</code>:</p>
+<pre><code class="language-cpp">// Hurt feedback:
+cameraShake-&gt;AddImpulse({0.12F, -0.06F}, 0.18F, 30.0F);
+
+// Victory (from GameStateComponent::SetOnTransition):
+cameraShake-&gt;AddImpulse({0.22F, 0.14F}, 0.35F, 26.0F);
+</code></pre>
+<p>Tune parallax <code>factorX</code> per layer (sky 0.04, mountains 0.18, hills 0.32). Add <code>ParallaxDriftMode::SineHorizontal</code> on cloud layers for ambient motion without scripting.</p>
+<h2 id="sprite-animation-events">Sprite Animation Events</h2>
+<p>Footsteps and land dust can use marker-driven VFX instead of hard-coded frame checks:</p>
+<pre><code class="language-cpp">player-&gt;AddComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
+auto* recv = player-&gt;GetComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
+recv-&gt;AddMarker(1, 0.5F, &quot;Footstep&quot;);  // run clip, midpoint
+
+auto* vfx = player-&gt;AddComponent&lt;SpriteAnimationEventVfxComponent&gt;();
+vfx-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
+</code></pre>
+<p>See <a href="../2-2d-graphics/04-2d-animation.html#sprite-animation-events">2D Animation</a>.</p>
 <h2 id="sound">Sound</h2>
 <pre><code class="language-cpp">auto* cue = playerObject-&gt;AddComponent&lt;SoundCueComponent&gt;();
 if (justJumped) cue-&gt;Queue(SoundClip::CreateToneBlip(520, 0.07F, 0.5F));
 </code></pre>
+<p>Land dust SFX pairs well with <code>CharacterController2DComponent::WasGroundedLastFrame()</code> transition detection.</p>
 <h2 id="pause-menu-ui">Pause Menu (UI)</h2>
 <pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
 

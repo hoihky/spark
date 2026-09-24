@@ -753,33 +753,101 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>04 player controller</h1>
           </header>
           <div class="doc-body"><h1 id="player-controller">Player Controller</h1>
+<p>The platformer demo (<code>Platformer2DDemo</code>) uses a <strong>component stack</strong> instead of raw GLFW polling in <code>Simulate</code>. This chapter mirrors that pattern: semantic input → character motor → animation hitbox.</p>
+<h2 id="component-stack">Component Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InputActionMapComponent</code></td>
+<td>Flyweight key bindings (<code>MoveX</code>, <code>Jump</code>, <code>Attack</code>, …)</td>
+</tr>
+<tr>
+<td><code>PlayerInputComponent</code></td>
+<td>Polls <code>IInput</code> each frame; exposes <code>WasActionPressedThisFrame</code></td>
+</tr>
+<tr>
+<td><code>CharacterController2DComponent</code></td>
+<td>Coyote time, jump buffer, one-way drop-through</td>
+</tr>
+<tr>
+<td><code>Rigidbody2DComponent</code> + <code>BoxCollider2DComponent</code></td>
+<td>Physics body the motor drives</td>
+</tr>
+<tr>
+<td><code>Sprite2DCharacterAnimFsmComponent</code> + <code>SpriteAnimatorComponent</code></td>
+<td>Locomotion + attack clips</td>
+</tr>
+<tr>
+<td><code>AnimationHitbox2DComponent</code></td>
+<td>Frame-synced melee arc during attack clip</td>
+</tr>
+</tbody>
+</table>
 <h2 id="spawn-player">Spawn Player</h2>
 <pre><code class="language-cpp">playerObject = world.CreateGameObject();
+playerObject-&gt;GetName() = Utf8String(&quot;Player&quot;);
 playerTr = playerObject-&gt;AddComponent&lt;TransformComponent&gt;();
 playerTr-&gt;SetScale({0.88F, 1.05F, 1.0F});
 playerTr-&gt;SetTranslation({kPlayerSpawnX, spawnY, 0.04F});
 
 playerObject-&gt;AddComponent&lt;SpriteComponent&gt;(
-    tileTex, Vector4{0.35F, 0.55F, 0.95F, 1.0F},
-    Vector4{0,0,1,1}, 500);
+    heroTex, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 500);
+
+auto* fsm = playerObject-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+auto* anim = playerObject-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
+anim-&gt;SetUniformGrid(4, 4);
+anim-&gt;AddClip(SpriteAnimationClip{0, 1, 1.0F, true});   // idle
+anim-&gt;AddClip(SpriteAnimationClip{1, 2, 10.0F, true});  // run
+anim-&gt;AddClip(SpriteAnimationClip{2, 1, 14.0F, false});  // attack
+fsm-&gt;SetLocomotionClips(0, 1);
+fsm-&gt;SetCombatClips(2, 3);
+fsm-&gt;SetLocomotionSource(Sprite2DAnimLocomotionSource::HorizontalAbsVelX);
 
 playerObject-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
 playerRb = playerObject-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(
     RigidbodyBodyType2D::Dynamic, 1.0F);
-</code></pre>
-<h2 id="movement-jump">Movement + Jump</h2>
-<pre><code class="language-cpp">float run = 0.0F;
-if (in.IsKeyDown(GLFW_KEY_A) || in.IsKeyDown(GLFW_KEY_LEFT)) run -= 1.0F;
-if (in.IsKeyDown(GLFW_KEY_D) || in.IsKeyDown(GLFW_KEY_RIGHT)) run += 1.0F;
 
-if (std::fabs(run) &gt; 0.5F) facingLeft = (run &lt; 0.0F);
+playerController = playerObject-&gt;AddComponent&lt;CharacterController2DComponent&gt;();
+playerController-&gt;SetMoveSpeed(11.0F);
+playerController-&gt;SetJumpSpeed(13.2F);
+</code></pre>
+<h2 id="input-action-map">Input Action Map</h2>
+<pre><code class="language-cpp">auto* actionMap = playerObject-&gt;AddComponent&lt;InputActionMapComponent&gt;();
+actionMap-&gt;BindAxis1D(&quot;MoveX&quot;, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+actionMap-&gt;BindButton(&quot;Jump&quot;, GLFW_KEY_SPACE);
+actionMap-&gt;BindButton(&quot;Drop&quot;, GLFW_KEY_S, GLFW_KEY_DOWN);
+actionMap-&gt;BindButton(&quot;Attack&quot;, GLFW_KEY_J);
+
+playerInput = playerObject-&gt;AddComponent&lt;PlayerInputComponent&gt;();
+playerInput-&gt;SetActionMap(actionMap);
+</code></pre>
+<p><code>PlayerInputComponent</code> runs at priority <strong>50</strong>, before most gameplay <code>OnUpdate</code> hooks. Game code in <code>Simulate</code> can read actions immediately after <code>UpdateGameObjects</code> or call <code>Refresh</code> earlier if needed.</p>
+<h2 id="movement-jump-each-frame">Movement + Jump (each frame)</h2>
+<pre><code class="language-cpp">const float moveX = playerInput-&gt;GetActionAxis1D(&quot;MoveX&quot;);
+playerController-&gt;SetMoveInputX(moveX);
+
+if (playerInput-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
+    playerController-&gt;RequestJump();
+}
+if (playerInput-&gt;IsActionPressed(&quot;Drop&quot;)) {
+    playerController-&gt;SetDropThroughOneWay(true);
+}
+
+// Face flip from input or velocity:
+if (std::fabs(moveX) &gt; 0.1F) {
+    facingLeft = (moveX &lt; 0.0F);
+}
 playerTr-&gt;SetScale({facingLeft ? -baseScaleX : baseScaleX, baseScaleY, 1.0F});
 
-Vector2 v = playerRb-&gt;GetVelocity();
-v.x = run * kRunSpeed;
-if (playerRb-&gt;IsGrounded() &amp;&amp; in.IsKeyPressedThisFrame(GLFW_KEY_SPACE))
-    v.y = kJumpSpeed;
-playerRb-&gt;SetVelocity(v);
+if (playerInput-&gt;WasActionPressedThisFrame(&quot;Attack&quot;)) {
+    fsm-&gt;RequestAttack();
+}
 
 physics.Simulate2D(GetWorld(), timing);
 </code></pre>
@@ -787,14 +855,31 @@ physics.Simulate2D(GetWorld(), timing);
 <pre><code class="language-cpp">physics.GetWorld2D().GetSettings().gravityY = -30.0F;
 physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
 </code></pre>
-<h2 id="respawn-goal">Respawn + Goal</h2>
-<pre><code class="language-cpp">if (p.y &lt; kFallRespawnY) {
+<h2 id="melee-hitbox">Melee Hitbox</h2>
+<pre><code class="language-cpp">auto* melee = playerObject-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();
+melee-&gt;SetClipIndex(2U);
+melee-&gt;SetStartLocalFrame(0U);
+melee-&gt;SetEndLocalFrame(0U);
+melee-&gt;SetShape(AnimationHitbox2DShape::Arc);
+melee-&gt;SetRadius(1.1F);
+melee-&gt;SetDamagePerHit(1.0F);
+
+PhysicsQueryFilter2D filter{};
+filter.queryCategoryBits = 1u &lt;&lt; 3;
+filter.queryMaskBits = 1u &lt;&lt; 4;
+filter.hitTriggers = true;
+filter.hitSolids = false;
+melee-&gt;SetQueryFilter(filter);
+</code></pre>
+<p>The hitbox runs overlap queries only while the attack clip's local frame is inside the configured window.</p>
+<h2 id="respawn-fall-death">Respawn + Fall Death</h2>
+<pre><code class="language-cpp">const Vector3 p = playerTr-&gt;GetLocalTransform().translation;
+if (p.y &lt; kFallRespawnY) {
     playerTr-&gt;SetTranslation({kPlayerSpawnX, spawnY, p.z});
     playerRb-&gt;SetVelocity(Vector2::Zero);
 }
-if (!goalReached &amp;&amp; p.x &gt;= kGoalMinX)
-    goalReached = true;
 </code></pre>
+<p>Use <code>GameStateComponent</code> + <code>GameFlowTriggerComponent</code> for goal and defeat flow instead of ad-hoc booleans — see <a href="05-camera-hud.html">Camera and HUD</a>.</p>
 <p>Next: <a href="05-camera-hud.html">Camera and HUD</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

@@ -754,36 +754,138 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           </header>
           <div class="doc-body"><h1 id="shadows">Shadows</h1>
 <h2 id="quick-start-shadow-enabled-scene">Quick Start: Shadow-Enabled Scene</h2>
-<p>The simplest path is <code>SubmitStandardLitSceneFromWorldWithCamera</code> with a directional sun and shadow-casting punctual lights on entities:</p>
-<pre><code class="language-cpp">// 1. Sun direction + intensity passed to submit (enables directional CSM when renderer settings allow)
-SubmitStandardLitSceneFromWorldWithCamera(
-    GetWorld(), ctx,
-    Vector3{0.3F, -1.0F, 0.2F}.Normalized(),
+<p>The simplest path is <code>FillStandardLitSceneFromWorld</code> with a directional sun and shadow-casting punctual lights on entities:</p>
+<pre><code class="language-cpp">SceneRenderParams params{};
+params.lightingProfile = SceneLightingProfile::Outdoor;
+params.directionalShadowsEnabled = true;
+params.punctualShadowsEnabled = true;
+
+FillStandardLitSceneFromWorld(
+    world, context, viewProj, cameraPos,
+    Vector3{0.3F, -1.0F, 0.2F}.Normalized(),  // toward sun (overridden when useTimeOfDay)
     Vector3{1.0F, 0.98F, 0.95F}, 1.4F,
     Vector3{0.14F, 0.16F, 0.22F},
-    true, sceneTime);
+    true,  // particles
+    {}, {}, sceneTime, params);
 
-// 2. Punctual shadows on individual lights
+// Punctual shadows on individual lights
 auto* pl = lamp-&gt;AddComponent&lt;PointLightComponent&gt;();
 pl-&gt;SetCastsShadow(true);
-
-auto* sl = spotGo-&gt;AddComponent&lt;SpotLightComponent&gt;();
-sl-&gt;SetCastsShadow(true);
 </code></pre>
-<p>Opaque <code>MeshComponent</code> draws cast shadows by default. Budget shadow-casting punctual lights — each adds GPU cost.</p>
-<h2 id="directional-csm-manual-scenerenderparams">Directional CSM (Manual <code>SceneRenderParams</code>)</h2>
-<p>When building params yourself (e.g. <code>ThreeDDemo</code>), configure shadow fields:</p>
+<p>Opaque <code>MeshComponent</code> draws <strong>cast and receive</strong> directional shadows by default (<code>shadowsCastByDefault</code> / <code>shadowsReceiveByDefault</code> on <code>SceneRenderParams</code>, resolved via <code>SceneLightingProfile</code>).</p>
+<h2 id="directional-csm-scenerenderparams">Directional CSM (<code>SceneRenderParams</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>directionalShadowsEnabled</code></td>
+<td><code>true</code></td>
+<td>Master toggle for CSM build + sampling</td>
+</tr>
+<tr>
+<td><code>shadowCascadeNear</code></td>
+<td><code>0</code></td>
+<td>CSM near split; <code>0</code> = lighting preset</td>
+</tr>
+<tr>
+<td><code>shadowCascadeFar</code></td>
+<td><code>0</code></td>
+<td>CSM far split; <code>0</code> = preset (<code>400</code> outdoor). Raise for large islands (e.g. <code>1200</code> in <code>WaterLakeDemo</code>)</td>
+</tr>
+<tr>
+<td><code>shadowBias</code></td>
+<td><code>0.0026</code></td>
+<td>Depth bias in shadow compare</td>
+</tr>
+<tr>
+<td><code>shadowNormalBias</code></td>
+<td><code>0.048</code></td>
+<td>Extra bias on grazing surfaces</td>
+</tr>
+<tr>
+<td><code>shadowDepthSampleFlipV</code></td>
+<td><code>false</code></td>
+<td>Flip shadow atlas V when sampling (MoltenVK)</td>
+</tr>
+<tr>
+<td><code>shadowDistanceMax</code></td>
+<td><code>0</code></td>
+<td>World distance where shadows fade out; <code>0</code> = preset</td>
+</tr>
+<tr>
+<td><code>shadowFadeStartRatio</code></td>
+<td><code>0</code></td>
+<td>Fade begins at <code>shadowDistanceMax * ratio</code></td>
+</tr>
+<tr>
+<td><code>shadowsCastByDefault</code></td>
+<td><code>true</code></td>
+<td>Default cast bit for submitted draws</td>
+</tr>
+<tr>
+<td><code>shadowsReceiveByDefault</code></td>
+<td><code>true</code></td>
+<td>Default receive bit for submitted draws</td>
+</tr>
+<tr>
+<td><code>useTimeOfDay</code> / <code>timeOfDay</code></td>
+<td>preset</td>
+<td>When enabled, overrides sun direction/color before shadow matrices are built</td>
+</tr>
+</tbody>
+</table>
 <pre><code class="language-cpp">SceneRenderParams params{};
-params.enableDirectionalShadows = true;
-params.shadowCascadeCount = 4;
-params.shadowMapResolution = 2048;
-params.shadowBias = 0.002F;
-params.shadowNormalBias = 0.02F;
+params.lightingProfile = SceneLightingProfile::Outdoor;
 params.directionalShadowsEnabled = true;
-// ... fill draws, lights, viewProjection ...
-context.SetSceneRenderParams(params);
+params.shadowCascadeFar = 900.0F;  // wider cascade 0 for large outdoor scenes
+params.shadowBias = 0.0026F;
+params.shadowNormalBias = 0.048F;
 </code></pre>
-<p>When using <code>SubmitStandardLitSceneFromWorld</code>, directional shadows follow the sun vector you pass and renderer defaults.</p>
+<h2 id="per-draw-and-per-material-shadow-flags">Per-draw and per-material shadow flags</h2>
+<p>Scene submit packs <code>SceneDrawItem::shadowFlags</code> (<code>kSceneShadowCast</code> / <code>kSceneShadowReceive</code>).</p>
+<p><strong><code>MaterialComponent</code> overrides</strong> (optional, easiest for props):</p>
+<pre><code class="language-cpp">auto* mat = seabed-&gt;AddComponent&lt;MaterialComponent&gt;();
+mat-&gt;SetShadowCastOverride(false);      // never cast CSM
+mat-&gt;SetShadowReceiveOverride(true);  // optional explicit receive
+mat-&gt;ClearShadowCastOverride();         // back to scene defaults + built-in rules
+</code></pre>
+<p><strong>Built-in submit rules</strong> (when cast is not overridden on the material):</p>
+<table>
+<thead>
+<tr>
+<th>Draw</th>
+<th>Cast</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TerrainComponent</code></td>
+<td>Always casts</td>
+</tr>
+<tr>
+<td><code>GroundPlane</code> with world <code>Y &lt; -0.5</code></td>
+<td>Does not cast (submerged seabed)</td>
+</tr>
+<tr>
+<td><code>UnitCube</code> with world <code>Y &lt; 1</code></td>
+<td>Does not cast (underwater props)</td>
+</tr>
+<tr>
+<td><code>SkyComponent</code></td>
+<td>Neither cast nor receive</td>
+</tr>
+<tr>
+<td><code>WaterBodyComponent</code></td>
+<td>Separate <code>waterDraws</code>; receive-only via <code>ResolveWaterShadowFlags</code> (<code>kSceneShadowReceive</code>, never cast)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="punctual-light-shadows">Punctual Light Shadows</h2>
 <pre><code class="language-cpp">pl-&gt;SetCastsShadow(true);   // PointLightComponent
 sl-&gt;SetCastsShadow(true);   // SpotLightComponent
@@ -801,24 +903,39 @@ mat-&gt;SetToonRimPower(2.5F);
 <thead>
 <tr>
 <th>Artifact</th>
+<th>Likely cause</th>
 <th>Tweak</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Peter-panning</td>
+<td>Bias too low</td>
 <td>Increase <code>shadowBias</code></td>
 </tr>
 <tr>
 <td>Shadow acne</td>
+<td>Bias too low / grazing</td>
 <td>Increase <code>shadowNormalBias</code></td>
 </tr>
 <tr>
+<td>Large rectangular slab on terrain</td>
+<td>CSM cascade split across mesh; seabed casting</td>
+<td>Raise <code>shadowCascadeFar</code>; disable cast on submerged props (<code>SetShadowCastOverride(false)</code>)</td>
+</tr>
+<tr>
 <td>Shimmering CSM</td>
-<td>Adjust cascade splits in renderer settings</td>
+<td>Texel snapping + camera motion</td>
+<td>Expected at cascade edges; increase <code>cascadeBlendFraction</code> in profile</td>
+</tr>
+<tr>
+<td>Water shows gray matching terrain shadow</td>
+<td>SSR/refraction samples opaque color (binding 13)</td>
+<td>Fix terrain shadow; water does not sample CSM directly yet</td>
 </tr>
 </tbody>
 </table>
+<p>CSM sampling treats UV / depth outside the cascade tile as <strong>fully lit</strong> (<code>scene.frag</code>) to avoid false shadows at ortho frustum edges.</p>
 <p>Next: <a href="05-skinned-characters.html">Skinned Characters</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

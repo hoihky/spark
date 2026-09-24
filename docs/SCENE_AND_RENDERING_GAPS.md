@@ -27,7 +27,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 |-----|------|
 | `GameWorld` | `CreateGameObject`, `DestroyGameObject`, `SetParent`, `UpdateGameObjects`; asset I/O via **`GameWorldAssetCache`** (`Load*` / `Register*`) |
 | `GameObject` | `AddComponent<T>`, `GetComponent<T>`, `GetWorldMatrix`, signals |
-| `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **64** concrete `ComponentKind` values (+ `Unknown`) |
+| `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **97** concrete `ComponentKind` values (+ `Unknown`) — see [component reference](programming-guide/1-overview-architecture/07-game-component-reference.md) |
 | `Scene` | Query iterators: `ForEachDrawable`, `ForEachSkinnedDrawable`, lights, sky, GUI, particles; frustum variants |
 
 ### Scene → render bridge

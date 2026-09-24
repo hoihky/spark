@@ -753,20 +753,70 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>05 camera hud</h1>
           </header>
           <div class="doc-body"><h1 id="camera-and-hud">Camera and HUD</h1>
-<h2 id="camera-follow">Camera Follow</h2>
-<pre><code class="language-cpp">camera.position = {kPlayerSpawnX, spawnY + 1.0F, 0.0F};
-camera.halfExtentY = 6.5F;
+<h2 id="ecs-camera-rig">ECS Camera Rig</h2>
+<p>Replace manual <code>Camera2D</code> position lerping with <code>Camera2DRigComponent</code> on a dedicated camera object. Add <code>ScreenShakeComponent</code> on the <strong>same</strong> object so shake offsets are applied inside the rig before submit.</p>
+<pre><code class="language-cpp">mainCameraGo = world.CreateGameObject();
+auto* cam2d = mainCameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;();
+cam2d-&gt;SetHalfExtentY(6.5F);
 
-// Each frame:
-const float follow = std::min(1.0F, 8.0F * timing.deltaTimeSeconds);
-camera.position.x += (p.x - camera.position.x) * follow;
-camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
+auto* rig = mainCameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;();
+rig-&gt;SetMode(Camera2DRigMode::FollowTarget);
+rig-&gt;SetTarget(playerObject);
+rig-&gt;SetFollowSmoothRate(8.0F);
+rig-&gt;SetLookAheadScale(0.12F);
+
+cameraShake = mainCameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+</code></pre>
+<h3 id="screen-shake-triggers">Screen shake triggers</h3>
+<pre><code class="language-cpp">// Player hurt:
+cameraShake-&gt;AddImpulse({0.14F, -0.08F}, 0.2F, 32.0F);
+
+// Goal reached (in GameStateComponent transition callback):
+cameraShake-&gt;AddImpulse({0.22F, 0.14F}, 0.35F, 26.0F);
+</code></pre>
+<p><code>Camera2DRigComponent</code> reads <code>ScreenShakeComponent::GetOffset()</code> automatically — do not add shake offset manually in render code.</p>
+<h2 id="parallax-backgrounds">Parallax Backgrounds</h2>
+<p>Attach <code>ParallaxLayerComponent</code> to each distant sprite layer. Wire the camera reference after the camera exists:</p>
+<pre><code class="language-cpp">bgMountains-&gt;AddComponent&lt;SpriteComponent&gt;(mountainsTex, ...);
+auto* parallax = bgMountains-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;SetFactorX(0.18F);
+parallax-&gt;SetCameraReference(mainCameraGo);
+parallax-&gt;SetAnchorWorld({kBackgroundAnchorX, 0.0F, 0.0F});
+
+// Optional cloud sway:
+parallax-&gt;SetDriftMode(ParallaxDriftMode::SineHorizontal);
+parallax-&gt;SetDriftAmplitude(0.35F);
+parallax-&gt;SetDriftFrequencyHz(0.22F);
+</code></pre>
+<p>Lower <code>factorX</code> = slower scroll (farther away). Parallax runs at priority <strong>290</strong>, before shake and rig.</p>
+<h2 id="game-flow-state">Game Flow State</h2>
+<p>Centralize win/lose/pause in <code>GameStateComponent</code> on a manager object:</p>
+<pre><code class="language-cpp">gameFlowGo = world.CreateGameObject();
+gameState = gameFlowGo-&gt;AddComponent&lt;GameStateComponent&gt;(GameFlowState::Playing);
+gameState-&gt;SetOnTransition([](GameFlowState, GameFlowState next, GameObject&amp;) {
+    if (next == GameFlowState::Victory) {
+        // celebration VFX, BGM sting, enable goal glow
+    }
+});
+
+// Goal trigger on separate object:
+goalTriggerGo-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(
+    TriggerVolume2DShape::Box, Vector2{goalHalfW, goalHalfH});
+auto* goalFlow = goalTriggerGo-&gt;AddComponent&lt;GameFlowTriggerComponent&gt;();
+goalFlow-&gt;SetSource(GameFlowTriggerSource::TriggerEnter);
+goalFlow-&gt;SetTargetState(GameFlowState::Victory);
+goalFlow-&gt;SetInstigatorNameFilter(&quot;Player&quot;);
+goalFlow-&gt;SetStateOwner(gameFlowGo);
+</code></pre>
+<p>Query state in HUD and gameplay:</p>
+<pre><code class="language-cpp">const bool victory = gameState-&gt;IsState(GameFlowState::Victory);
 </code></pre>
 <h2 id="hud-text">HUD Text</h2>
 <pre><code class="language-cpp">hudText-&gt;SetText(Utf8String(std::format(
-    &quot;2D platformer {} | pos ({:.1f},{:.1f}) | A/D Space | ESC quit&quot;,
-    goalReached ? &quot;— GOAL!&quot; : &quot;&quot;,
-    p.x, p.y).c_str()));
+    &quot;2D platformer {} | HP {:.0f} | gems {}/{}&quot;,
+    gameState-&gt;IsState(GameFlowState::Victory) ? &quot;— GOAL!&quot; : &quot;&quot;,
+    playerHealth-&gt;GetCurrentHealth(),
+    gemsCollected, kGemCount).c_str()));
 </code></pre>
 <h2 id="render-submit">Render Submit</h2>
 <pre><code class="language-cpp">const Matrix4 viewProj = camera.ViewProjection(static_cast&lt;float&gt;(fbW), static_cast&lt;float&gt;(fbH));
@@ -781,6 +831,7 @@ SubmitStandardLitSceneFromWorld(
     false, pr, pu, sceneTimeSeconds,
     SceneSpriteSortMode::SortOrderThenWorldY);
 </code></pre>
+<p>When using <code>Camera2DRigComponent</code>, read the rig's resolved <code>Camera2D</code> pose for submit (the demo copies rig output into its <code>Camera2D</code> struct each frame).</p>
 <p>Next: <a href="06-polish.html">Polish and Ship</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

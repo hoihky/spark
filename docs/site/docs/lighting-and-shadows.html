@@ -546,7 +546,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Toggle &amp; tuning</strong></td>
-<td><code>SceneRenderParams::directionalShadowsEnabled</code>, <code>shadowBias</code>, <code>shadowNormalBias</code>.</td>
+<td><code>SceneRenderParams::directionalShadowsEnabled</code>, <code>shadowCascadeNear</code> / <code>shadowCascadeFar</code> (0 = preset), <code>shadowBias</code>, <code>shadowNormalBias</code>, <code>shadowsCastByDefault</code>, <code>shadowsReceiveByDefault</code>.</td>
+</tr>
+<tr>
+<td><strong>CSM edge robustness</strong></td>
+<td><code>scene.frag</code> / <code>water_sun_shadow.glsl</code>: cascade-local UV outside <code>[0,1]</code> or clip Z outside <code>[0,1]</code> → treated as lit; <code>VulkanDirectionalShadowCascadeMath</code> expands ortho padding for large horizontal footprints.</td>
 </tr>
 <tr>
 <td><strong>HDR + tonemap</strong></td>
@@ -570,7 +574,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Per-draw shadow flags</strong></td>
-<td><code>SceneDrawItem::shadowFlags</code> (<code>kSceneShadowCast</code> / <code>kSceneShadowReceive</code>) — shadow pass skips non-casters; lit pass skips receivers.</td>
+<td><code>SceneDrawItem::shadowFlags</code> (<code>kSceneShadowCast</code> / <code>kSceneShadowReceive</code>) — shadow pass skips non-casters; lit pass skips receivers. Resolved in scene submit via <code>ResolveDrawableShadowFlags</code> (terrain always casts unless overridden; submerged <code>GroundPlane</code> / low <code>UnitCube</code> props do not cast).</td>
+</tr>
+<tr>
+<td><strong><code>MaterialComponent</code> shadow overrides</strong></td>
+<td><code>SetShadowCastOverride</code> / <code>SetShadowReceiveOverride</code> — per-draw opt-out without changing global <code>shadowsCastByDefault</code>.</td>
 </tr>
 <tr>
 <td><strong>Time of day</strong></td>
@@ -668,12 +676,40 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <ol>
 <li><strong>Texture / UI font uploads</strong> (<code>VulkanDeferredUploadBatch</code>)</li>
 <li><strong>Shadow maps</strong> — punctual then directional (<code>VulkanPunctualShadowPass</code>, <code>VulkanDirectionalShadowPass</code>)</li>
-<li><strong>HDR scene pass</strong> — opaque + sky (<code>VulkanSceneOpaquePass</code>), sprites, particles; color → <code>R16G16B16A16</code>, depth stored for copy</li>
-<li><strong>Transparent scene (optional)</strong> — when <code>transparentDraws</code> is non-empty: end HDR pass, copy opaque color to per-flight scratch (<code>VulkanSceneOpaqueBackground</code>), resume HDR pass with load ops, draw transmission/blended meshes (samples scratch at binding <strong>13</strong>)</li>
+<li><strong>HDR scene pass (opaque subpass)</strong> — opaque + sky (<code>VulkanSceneOpaquePass</code>); water bodies are <strong>not</strong> in <code>draws</code> (see <code>waterDraws</code>); color → <code>R16G16B16A16</code>, depth attachment retained for copy</li>
+<li><strong>Opaque snapshot (optional)</strong> — when <code>waterDraws</code> or <code>transparentDraws</code> is non-empty: <code>VulkanSceneOpaqueSnapshot</code> ends the HDR pass, copies the opaque result into per-flight scratch images via <code>VulkanSceneOpaqueBackground</code>, then resumes the HDR pass with load ops (<code>VulkanHdrTonemapPass::BeginHdrResumeRenderPass</code>). Water also copies <strong>depth</strong> into the scratch depth image; transmission copies <strong>color only</strong>.</li>
+<li><strong>Water (optional)</strong> — when <code>waterDraws</code> is non-empty: <code>VulkanWaterPass</code> records after the snapshot resume using <code>water.vert</code> / <code>water.frag</code> (Gerstner displacement, crest foam via Jacobian threshold, layered procedural detail normals, screen-space refraction of binding <strong>13</strong>, Beer–Lambert depth absorption from binding <strong>14</strong>, Fresnel sky IBL + SSR, sun GGX specular with CSM via <code>water_sun_shadow.glsl</code>). Water draws are sorted back-to-front via <code>SceneRenderParams::waterSortMode</code> (default <code>BackToFrontByDepth</code>). <strong>Depth test is disabled</strong> on the water pipeline; fragments above opaque geometry are discarded in <code>water.frag</code> using binding <strong>14</strong>. Water <strong>never casts</strong> (<code>kSceneShadowCast</code> off); <strong>receives</strong> directional CSM when <code>directionalShadowsEnabled</code> and <code>ResolveWaterShadowFlags</code> resolves receive (material override respected).</li>
+<li><strong>Transparent (optional)</strong> — when <code>transparentDraws</code> is non-empty: <code>VulkanSceneOpaquePass::RecordTransparent</code> <strong>after all water draws</strong> (same resumed HDR pass); sorted via <code>SceneRenderParams::transparentSortMode</code>. glTF transmission samples binding <strong>13</strong> (<code>sceneOpaqueColor</code>). Water always renders before other transparent meshes so glass/transmission composites on top.</li>
+<li><strong>2D composite + particles</strong> — tilemaps, sprites, particles in the resumed HDR pass</li>
 <li><strong>SSAO (optional)</strong> — when <code>ssaoEnabled</code>: depth copy → fullscreen <code>post_process.frag</code> → scratch HDR</li>
 <li><strong>Tonemap</strong> — scratch HDR or scene HDR → swapchain image (<code>VulkanHdrTonemapPass</code>)</li>
 <li><strong>Screen UI</strong> — solid rects + text in the <strong>present</strong> render pass (<code>VulkanScreenUiPass</code>; rects then text per layer for stable batching)</li>
 </ol>
+<h3 id="scene-descriptor-bindings-water-transmission">Scene descriptor bindings (water / transmission)</h3>
+<table>
+<thead>
+<tr>
+<th>Binding</th>
+<th>GLSL name</th>
+<th>Content</th>
+<th>Copied when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>13</strong></td>
+<td><code>sceneOpaqueColor</code></td>
+<td>HDR color after opaque + sky (pre-water)</td>
+<td><code>waterDraws</code> or <code>transparentDraws</code></td>
+</tr>
+<tr>
+<td><strong>14</strong></td>
+<td><code>sceneOpaqueDepth</code></td>
+<td>Scene depth attachment (hardware depth; linearize in shader)</td>
+<td><code>waterDraws</code> only</td>
+</tr>
+</tbody>
+</table>
 <h2 id="technical-references-repo">Technical references (repo)</h2>
 <ul>
 <li><code>shaders/scene.vert</code>, <code>shaders/scene.frag</code> — lit opaque pass + shadow sampling.</li>
@@ -685,7 +721,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>include/spark/render/ui/VulkanScreenUiPass.hpp</code> — screen-space UI (font atlas, solid/text batches).</li>
 <li><code>include/spark/render/core/VulkanRenderer.hpp</code> — composes passes; delegates device/swapchain to <code>VulkanDeviceContext</code>.</li>
 <li><code>include/spark/render/scene/VulkanSceneUniformGpu.hpp</code> — <code>SceneUniformGpu</code> must stay <strong>std140</strong>-compatible with the scene UBO in GLSL.</li>
-<li><code>include/spark/render/scene/VulkanSceneDescriptors.hpp</code> — scene descriptor pool, layout, per-frame sets.</li>
+<li><code>include/spark/render/scene/VulkanSceneDescriptors.hpp</code> — scene descriptor pool, layout, per-frame sets (bindings <strong>0–14</strong>; <strong>13</strong> = opaque HDR color scratch, <strong>14</strong> = opaque depth scratch for water/refraction).</li>
+<li><code>include/spark/render/scene/VulkanWaterPass.hpp</code> — water surface slot between opaque and transparent.</li>
+<li><code>include/spark/render/scene/VulkanSceneOpaqueBackground.hpp</code> — per-flight HDR color + depth scratch images (bindings <strong>13</strong> / <strong>14</strong>).</li>
+<li><code>include/spark/render/scene/VulkanSceneOpaqueSnapshot.hpp</code> — ends HDR pass, triggers scratch copies, resumes pass for water / transmission.</li>
 <li><code>include/spark/render/lighting/SceneLightingResolver.hpp</code> — profile + time-of-day → resolved sun/ambient.</li>
 <li><code>src/spark/render/core/VulkanRenderer.cpp</code> — frame recording and swapchain presentation.</li>
 </ul>

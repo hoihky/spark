@@ -550,7 +550,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>Directional CSM + punctual lights</td>
-<td>Done — sun glints feasible on water normals</td>
+<td>Done — sun specular on water; terrain receives CSM</td>
 </tr>
 <tr>
 <td>Terrain heightfield + raycast</td>
@@ -569,32 +569,36 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>Done — particle burst preset; not wired to a water surface</td>
 </tr>
 <tr>
-<td><strong>Water body component / submit path</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong><code>WaterBodyComponent</code> + <code>waterDraws</code> submit</strong></td>
+<td><strong>Done</strong> — <code>SceneSubmitWater.cpp</code>, <code>VulkanWaterPass</code></td>
 </tr>
 <tr>
-<td><strong>Water material / shader</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Gerstner water shader (W1–W3 core)</strong></td>
+<td><strong>Done</strong> — <code>water.vert</code> / <code>water.frag</code>, foam, SSR, refraction bindings <strong>13</strong> / <strong>14</strong></td>
 </tr>
 <tr>
 <td><strong>Wave height gameplay API</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Not started</strong> (W4)</td>
 </tr>
 <tr>
 <td><strong>Buoyancy / swim controller</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Not started</strong> (W5)</td>
 </tr>
 <tr>
-<td><strong>Offscreen render targets (planar reflection)</strong></td>
-<td><strong>Not started</strong> — documented gap in <code>SCENE_AND_RENDERING_GAPS.md</code></td>
+<td><strong>Planar reflection RT</strong></td>
+<td><strong>Not started</strong> (W3-04)</td>
 </tr>
 <tr>
 <td><strong>Reflection probes</strong></td>
-<td><strong>Not started</strong> — documented gap</td>
+<td><strong>Not started</strong></td>
 </tr>
 <tr>
 <td><strong>SSR</strong></td>
-<td><strong>Not started</strong> — depth buffer exists (SSAO path)</td>
+<td><strong>Done</strong> — <code>water_ssr.glsl</code> + <code>VulkanSceneOpaqueBackground</code> depth copy</td>
+</tr>
+<tr>
+<td><strong>Water receives CSM</strong></td>
+<td><strong>Done</strong> — <code>water_sun_shadow.glsl</code> in <code>water.frag</code>; <code>waterDraws</code> set <code>kSceneShadowReceive</code> when directional shadows enabled</td>
 </tr>
 </tbody>
 </table>
@@ -707,49 +711,49 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>WATER-W0-01</td>
 <td><strong><code>WaterBodyComponent</code></strong> — mode enum: <code>InfiniteOcean</code>, <code>FiniteLake</code>, <code>RiverSpline</code> (data only for v1); <code>waterLevelY</code>, extent, wave preset id</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-02</td>
 <td><strong><code>WaterSurfaceMesh</code></strong> — camera-centered clipmap or subdivided plane; rebuild when camera moves beyond threshold</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-03</td>
 <td><strong><code>SceneRenderParams::waterDraws</code></strong> (or <code>waterSurfaces</code>) — separate array from <code>transparentDraws</code>; max count + sort key (distance)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-04</td>
 <td><strong><code>SceneSubmit</code> collection</strong> — <code>ForEachWaterBodyInViewFrustum</code> (or tag query); fill <code>waterDraws</code> after opaque partition, before generic transparent</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-05</td>
 <td><strong>Depth/color export for water</strong> — per-flight <code>VulkanSceneOpaqueBackground</code>-style images: <strong>linear depth</strong> + <strong>HDR color</strong> after opaque (and optionally after sky); document binding indices</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-06</td>
 <td><strong><code>VulkanWaterPass</code> skeleton</strong> — dedicated render pass slot in <code>VulkanRenderer</code> after opaque (+ sky), before generic transparent; no-op clear initially</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-07</td>
-<td><strong>Shadow flags</strong> — water receives shadows (<code>kSceneShadowReceive</code>); does not cast (or optional cast for very shallow ponds)</td>
+<td><strong>Shadow flags</strong> — water does not cast; receive via <code>water_sun_shadow.glsl</code> when directional shadows enabled (<code>ResolveWaterShadowFlags</code> → <code>kSceneShadowReceive</code>)</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-08</td>
 <td><strong>Component reference + programming guide</strong> stub under terrain/sky chapter</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W0-09</td>
@@ -803,49 +807,49 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 <td>WATER-W1-01</td>
 <td><strong><code>WaterWaveSettings</code></strong> — up to 4 Gerstner waves: amplitude, wavelength, speed, direction, steepness (Q)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W1-02</td>
-<td><strong>CPU <code>GerstnerWaveMath</code></strong> — <code>SampleHeight</code>, <code>SampleNormal</code>, <code>SampleHorizontalDisplacement</code> at <code>(x,z,t)</code>; shared by shader and gameplay</td>
+<td><strong>CPU <code>GerstnerWaveSurface</code></strong> — <code>SampleHeight</code>, <code>SampleNormal</code>, <code>SampleHorizontalDisplacement</code> at <code>(x,z,t)</code>; shared by shader and gameplay</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W1-03</td>
 <td><strong><code>shaders/water.vert</code></strong> — displace vertices; pass world position, wave normal, screen UV</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W1-04</td>
 <td><strong><code>shaders/water.frag</code> v1</strong> — Fresnel (Schlick), sky IBL sample (<code>ibl.glsl</code>), directional sun specular (GGX), base water color</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W1-05</td>
 <td><strong>Pipeline + descriptors</strong> — <code>VulkanWaterPass</code> binds scene UBO, IBL, shadow maps, water push constants (wave array)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W1-06</td>
 <td><strong><code>WaterPreset</code> assets</strong> — <code>CalmLake</code>, <code>OceanModerate</code>, <code>StormySea</code> default parameter sets</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W1-07</td>
 <td><strong>Demo: <code>WaterLakeDemo</code></strong> — terrain island + infinite ocean; fly camera; time scale hotkey</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x] (menu <strong>23</strong> / <strong>W</strong>)</td>
 </tr>
 <tr>
 <td>WATER-W1-08</td>
 <td><strong>Unit tests</strong> — Gerstner height/normal at t=0 matches analytic reference; symmetry on flat sea state</td>
 <td>P2</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 </tbody>
 </table>
@@ -866,49 +870,49 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 <td>WATER-W2-01</td>
 <td><strong>Refraction</strong> — sample W0 color buffer with normal-based UV offset; chromatic aberration optional (P2)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-02</td>
 <td><strong>Depth-based absorption</strong> — <code>waterDepth = waterY - sceneDepth</code>; Beer–Lambert or artist <code>shallowColor</code> / <code>deepColor</code> lerp</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-03</td>
 <td><strong>Shoreline foam mask</strong> — compare water surface Y vs terrain height (heightmap sample or depth intersection); foam noise texture</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-04</td>
 <td><strong>Crest foam</strong> — Jacobian or steepness threshold on Gerstner sum</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-05</td>
 <td><strong>Detail normals</strong> — layered scrolling normal map (2–3 scales) added to Gerstner normal</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-06</td>
 <td><strong>Terrain integration</strong> — <code>TerrainComponent</code> height query at foam generation (CPU debug + GPU approximate)</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-07</td>
 <td><strong>Transparency sort</strong> — water draws after opaque, before other <code>transparentDraws</code>; document sort mode</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W2-08</td>
 <td><strong>Demo polish</strong> — beach slope on terrain demo island; foam visible at shoreline</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 </tbody>
 </table>
@@ -929,19 +933,19 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 <td>WATER-W3-01</td>
 <td><strong><code>IRenderTarget</code> / <code>RenderTexture</code> handle</strong> — offscreen color+depth (prerequisite for planar reflection)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W3-02</td>
 <td><strong>SSR pass</strong> — ray march in screen space using scene depth; roughness-aware fade; reuse SSAO depth copy path</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W3-03</td>
 <td><strong>SSR + IBL composite</strong> — Fresnel blends SSR hit vs <code>iblSpecular</code>; horizon fade</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W3-04</td>
@@ -959,7 +963,7 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 <td>WATER-W3-06</td>
 <td><strong>Perf budget</strong> — SSR half-res option; max ray steps; disable on min-spec profile</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W3-07</td>
@@ -1163,7 +1167,7 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 <td>WATER-W7-02</td>
 <td><strong>Programming guide</strong> — extend <a href="../../programming-guide/site/3-3d-graphics/06-terrain-and-sky.html">Terrain and Sky</a> with water section</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>WATER-W7-03</td>
@@ -1270,21 +1274,89 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 </tbody>
 </table>
 <hr />
-<h2 id="renderer-frame-order-target">Renderer frame order (target)</h2>
-<p>After W0–W3, <code>VulkanRenderer</code> should record:</p>
+<h2 id="renderer-frame-order-implemented">Renderer frame order (implemented)</h2>
+<p><code>VulkanRenderer::RecordSceneCommandBuffer</code> records:</p>
 <ol>
-<li>Shadow maps (unchanged)</li>
-<li><strong>HDR opaque + sky</strong> (unchanged)</li>
-<li><strong>Copy scene color + linear depth</strong> (W0) — shared by water, transmission, SSAO</li>
-<li><strong>Water surface pass</strong> (W1–W3) — <code>VulkanWaterPass</code></li>
-<li><strong>Other transparent meshes</strong> (existing <code>transparentDraws</code> / transmission)</li>
-<li><strong>Underwater post</strong> (W5, when camera submerged)</li>
-<li>SSAO (optional)</li>
-<li>Tonemap → UI</li>
+<li>Shadow maps (punctual + directional CSM)</li>
+<li><strong>HDR opaque + sky</strong> (<code>VulkanSceneOpaquePass</code>)</li>
+<li><strong>Opaque snapshot</strong> (when <code>waterDraws</code> or <code>transparentDraws</code> non-empty) — copy HDR color + depth to bindings <strong>13</strong> / <strong>14</strong> via <code>VulkanSceneOpaqueSnapshot</code> + <code>VulkanSceneOpaqueBackground</code></li>
+<li><strong>Water</strong> (<code>VulkanWaterPass</code>) — depth test <strong>off</strong>; <code>water.frag</code> discards fragments above scene depth (binding <strong>14</strong>)</li>
+<li><strong>Transparent meshes</strong> — transmission samples binding <strong>13</strong></li>
+<li>Sprites / particles (same HDR pass)</li>
+<li>SSAO (optional) → tonemap → screen UI</li>
 </ol>
-<p>Document final binding layout in <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> when W0 lands.</p>
+<p>Full binding table: <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> § Frame flow.</p>
 <hr />
-<h2 id="key-types-proposed">Key types (proposed)</h2>
+<h2 id="implementation-notes-consolidated">Implementation notes (consolidated)</h2>
+<h3 id="end-to-end-data-path">End-to-end data path</h3>
+<pre><code>WaterLakeDemo::Render
+  → FillStandardLitSceneFromWorld (terrain + props + water collection)
+  → SceneLightingResolver (time of day, cascades, shadow defaults)
+VulkanRenderer
+  → directional CSM Record (casters from draws with kSceneShadowCast)
+  → opaque + sky → snapshot (13/14) → water pass → transparent
+</code></pre>
+<h3 id="shadow-large-terrain-waterlake">Shadow + large terrain (WaterLake)</h3>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Mitigation in repo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Island spans CSM cascade 0/1 (~90 m split at default <code>shadowCascadeFar=720</code>)</td>
+<td>Demo sets <code>shadowCascadeFar = 1200</code> (~150 m cascade 0)</td>
+</tr>
+<tr>
+<td>Seabed / cubes pollute CSM</td>
+<td><code>MaterialComponent::SetShadowCastOverride(false)</code> or built-in heuristics (<code>ResolveDrawableShadowFlags</code>)</td>
+</tr>
+<tr>
+<td>False shadow at cascade ortho edge</td>
+<td><code>scene.frag</code> treats out-of-tile UV / clip Z as lit; wider ortho padding in <code>VulkanDirectionalShadowCascadeMath</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="water-screen-space">Water screen space</h3>
+<ul>
+<li>Use <strong><code>water_screen.glsl</code></strong> UV helpers only in water shaders (framebuffer Y = 0 top). Do not mix with <code>post_common.glsl</code> flip conventions.</li>
+<li>Water <strong>does not</strong> depth-test against the scene buffer (terrain would win over the water plane). Shoreline coverage uses a <strong>discard</strong> when scene surface is above the water vertex + margin.</li>
+</ul>
+<h3 id="api-entry-points">API entry points</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add water</td>
+<td><code>WaterBodyComponent</code> + <code>FillStandardLitSceneFromWorld</code></td>
+</tr>
+<tr>
+<td>Tune waves</td>
+<td><code>WaterWavePreset</code>, <code>.sparkwater</code> assets, <code>SetSsrSettings</code></td>
+</tr>
+<tr>
+<td>Lake + island demo</td>
+<td><code>WaterLakeDemo</code> — menu <strong>23</strong> / <strong>W</strong></td>
+</tr>
+<tr>
+<td>Disable prop shadows</td>
+<td><code>mat-&gt;SetShadowCastOverride(false)</code></td>
+</tr>
+<tr>
+<td>Widen CSM for big meshes</td>
+<td><code>params.shadowCascadeFar</code> on <code>SceneRenderParams</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="key-types-implemented">Key types (implemented)</h2>
 <pre><code class="language-cpp">enum class WaterBodyMode : std::uint8_t { InfiniteOcean, FiniteLake, RiverSpline };
 
 struct GerstnerWave {
@@ -1383,6 +1455,14 @@ done
 <tr>
 <td><code>include/spark/ecs/components/rendering/TerrainComponent.hpp</code></td>
 <td>Shore height queries</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/water/WaterBodyComponent.hpp</code></td>
+<td>Water body ECS component (W0-01)</td>
+</tr>
+<tr>
+<td><code>include/spark/scene/water/WaterSurfaceMesh.hpp</code></td>
+<td>Clipmap / subdivided surface mesh (W0-02)</td>
 </tr>
 <tr>
 <td><code>include/spark/scene/vfx/VfxLibrary.hpp</code></td>

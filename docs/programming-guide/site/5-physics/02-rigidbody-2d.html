@@ -786,8 +786,10 @@ float GetGravityScale() const noexcept;
 </tbody>
 </table>
 <h2 id="player-controller-platformer">Player Controller (Platformer)</h2>
-<p>Configure physics once, then step each frame:</p>
+<p>Prefer <code>CharacterController2DComponent</code> over direct velocity writes. It adds coyote time, jump buffer, ground snap, slope limits, and one-way platform drop-through on top of <code>Rigidbody2DComponent</code>.</p>
 <pre><code class="language-cpp">#include &quot;spark/physics/PhysicsSubsystem.hpp&quot;
+#include &quot;spark/ecs/components/physics/2d/CharacterController2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/input/PlayerInputComponent.hpp&quot;
 
 PhysicsSubsystem physics;
 
@@ -797,20 +799,29 @@ void OnAttach(IEngineContext&amp; context) override {
 }
 
 void OnUpdate(const FrameTiming&amp; timing) {
-    Vector2 v = playerRb-&gt;GetVelocity();
-    float run = 0.0F;
-    if (in.IsKeyDown(GLFW_KEY_A)) run -= 1.0F;
-    if (in.IsKeyDown(GLFW_KEY_D)) run += 1.0F;
-    v.x = run * kRunSpeed;
-
-    if (playerRb-&gt;IsGrounded() &amp;&amp; in.IsKeyPressedThisFrame(GLFW_KEY_SPACE))
-        v.y = kJumpSpeed;
-
-    playerRb-&gt;SetVelocity(v);
+    playerController-&gt;SetMoveInputX(playerInput-&gt;GetActionAxis1D(&quot;MoveX&quot;));
+    if (playerInput-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
+        playerController-&gt;RequestJump();
+    }
     physics.Simulate2D(GetWorld(), timing);
+    PickupComponent::ProcessDeferredDestroys(GetWorld());
 }
 </code></pre>
-<p>See <code>Platformer2DDemo</code> for a full sample using <code>PhysicsSubsystem</code>.</p>
+<h3 id="one-way-platforms">One-way platforms</h3>
+<p>Mark static platforms with <code>OneWayPlatform2DComponent</code>. The character controller ignores them from below unless landing from above:</p>
+<pre><code class="language-cpp">platform-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{4.0F, 0.15F});
+platform-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);
+platform-&gt;AddComponent&lt;OneWayPlatform2DComponent&gt;();
+</code></pre>
+<p>Press <strong>S</strong> / <strong>Down</strong> (via <code>SetDropThroughOneWay(true)</code>) to fall through for one frame.</p>
+<h3 id="legacy-direct-velocity-control">Legacy: direct velocity control</h3>
+<p>You can still drive <code>Rigidbody2DComponent</code> velocity manually for prototypes, but you lose coyote time and one-way semantics:</p>
+<pre><code class="language-cpp">Vector2 v = playerRb-&gt;GetVelocity();
+v.x = run * kRunSpeed;
+if (playerRb-&gt;IsGrounded() &amp;&amp; jumpPressed) v.y = kJumpSpeed;
+playerRb-&gt;SetVelocity(v);
+</code></pre>
+<p>See <code>Platformer2DDemo</code> for the full component-based sample.</p>
 <h2 id="static-platform">Static Platform</h2>
 <pre><code class="language-cpp">go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
 go-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);

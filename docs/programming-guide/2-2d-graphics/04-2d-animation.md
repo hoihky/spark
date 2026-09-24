@@ -51,6 +51,53 @@ fsm->RequestHurt();
 
 Uses `Rigidbody2D` velocity for locomotion when present; can read `AiAgentComponent` blackboard for combat commands.
 
+## Sprite Animation Events
+
+### `SpriteAnimationEventReceiverComponent`
+
+**Priority:** 215 (after `SpriteAnimatorComponent` at 200). Markers use **normalized clip time** (0..1).
+
+```cpp
+#include "spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp"
+
+auto* recv = go->AddComponent<SpriteAnimationEventReceiverComponent>();
+recv->AddMarker(1, 0.25F, "Footstep");  // run clip, 25%
+recv->AddMarker(1, 0.75F, "Footstep");
+```
+
+Fires `SignalId::SpriteAnimationEvent` to sibling components (`ptr` = event name, `a` = clip index).
+
+### `SpriteAnimationEventVfxComponent`
+
+Listens for `SpriteAnimationEvent` and queues VFX from `VfxLibrary` by asset key:
+
+```cpp
+#include "spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp"
+
+auto* vfx = go->AddComponent<SpriteAnimationEventVfxComponent>();
+vfx->AddBinding("Footstep", "dust_puff");
+vfx->SetWorldOffset({0.0F, -0.35F, 0.0F});
+```
+
+Pair receiver + VFX on the same `GameObject` as `SpriteAnimatorComponent`.
+
+## `AnimationHitbox2DComponent`
+
+Frame-synced melee / hurtbox during sprite clips. Active when local frame ∈ `[start, end]`:
+
+```cpp
+#include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
+
+auto* hit = go->AddComponent<AnimationHitbox2DComponent>();
+hit->SetClipIndex(2U);
+hit->SetStartLocalFrame(0U);
+hit->SetEndLocalFrame(0U);
+hit->SetShape(AnimationHitbox2DShape::Arc);
+hit->SetRadius(1.0F);
+```
+
+See [Player Controller](../7-2d-game/04-player-controller.md) and [Queries](../5-physics/04-queries.md).
+
 ## `AnimationEventReceiverComponent` (3D)
 
 For skeletal clips, use markers on the same object as `AnimatorComponent`:

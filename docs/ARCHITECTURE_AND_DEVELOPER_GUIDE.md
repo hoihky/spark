@@ -267,9 +267,15 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
 | **Sprites** | Textured quads, sorting, optional 2D lighting modes | `SpriteComponent`, `SceneSpriteDraw`, `SpriteLighting2DMode` (`spark/render/sprites2d/SpriteLighting2D.hpp`) |
-| **Sprite animation** | Flipbook / state machine hooks | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent` |
+| **Sprite animation** | Flipbook / state machine / frame hitboxes / sprite events | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent`, `AnimationHitbox2DComponent`, `SpriteAnimationEventReceiverComponent`, `SpriteAnimationEventVfxComponent` |
+| **Parallax** | Camera-relative background scroll + optional drift | `ParallaxLayerComponent` (priority 290) |
+| **2D camera rig** | Follow, look-ahead, shake offset | `Camera2DComponent`, `Camera2DRigComponent` (300), `ScreenShakeComponent` (295) |
+| **Semantic input** | Action maps + runtime polling | `InputActionMapComponent`, `PlayerInputComponent`, `InputActionTypes.hpp` |
+| **Game flow** | Win/lose/pause state machine | `GameStateComponent`, `GameFlowTriggerComponent` |
+| **Interact / pickup** | Triggers, collectibles, deferred destroy | `TriggerVolume2DComponent`, `InteractableComponent`, `PickupComponent` |
 | **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
-| **2D camera** | Ortho view-projection helper | `Camera2D` (`spark/scene/camera/Camera2D.hpp`) |
+| **2D camera struct** | Ortho view-projection helper (non-ECS) | `Camera2D` (`spark/scene/camera/Camera2D.hpp`) |
+| **2D character motor** | Platformer coyote/jump buffer/one-way | `CharacterController2DComponent`, `OneWayPlatform2DComponent`, `SimulateCharacterControllers2D` |
 | **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `PhysicsSubsystem`, `PhysicsQueryWorld2D` (see §11) |
 
 ### 5.6 3D physics and joints
@@ -510,6 +516,9 @@ Representative **3D / rendering** components:
 | `SoundCueComponent` | Queues one-shots; drained by `ProcessSoundCues`. |
 | `AudioListenerComponent` | Spatial audio listener pose (priority-based). |
 | `HealthComponent` / `DamageableComponent` | Hit points, damage routing, `DamageApplied` / `Died` signals. |
+| `InteractableComponent` / `PickupComponent` | Use prompts and auto-collect triggers; deferred destroy after physics. |
+| `GameStateComponent` / `GameFlowTriggerComponent` | High-level flow states; mediator from triggers/death to state transitions. |
+| `InputActionMapComponent` / `PlayerInputComponent` | Semantic input bindings and per-frame action state. |
 | `BillboardComponent` | Orients transform toward main camera (priority 50). |
 | `DecalProjectorComponent` | Collects `SceneRenderParams::decals` (GPU pass optional). |
 | `AnimationEventReceiverComponent` | Clip markers → `SignalId::AnimationEvent`. |
@@ -523,6 +532,9 @@ Representative **3D / rendering** components:
 | `SpriteAnimatorComponent` | Flipbook / clip-style animation. |
 | `SpriteLighting2DComponent` | Modes consumed by `SceneSpriteDraw::lightingMode`. |
 | `Sprite2DCharacterAnimFsmComponent` | Higher-level 2D character animation state. |
+| `SpriteAnimationEventReceiverComponent` / `SpriteAnimationEventVfxComponent` | Sprite clip markers → signals / VFX queue. |
+| `AnimationHitbox2DComponent` | Frame-window overlap queries for 2D combat. |
+| `ParallaxLayerComponent` | Camera-relative background scroll. |
 | `Character3DAnimFsmComponent` | Locomotion / attack overlay for `AnimatorComponent` (add before animator on same object). |
 | `TilemapComponent` | Multi-layer tile grid + shared `Tileset` (paint/display cells, per-layer collision/gameplay flags). |
 | `TilemapGameplayGridComponent` | Baked walkability + `TilemapGridFrame` for pathfinding (pairs with `GridPathfinder`). |
@@ -533,6 +545,9 @@ Representative **3D / rendering** components:
 | `PolygonCollider2DComponent` | Convex static polygon (max 16 verts). |
 | `TilemapCollider2DComponent` | Bakes static colliders from `TileDefinition` on sibling `TilemapComponent` layers with `contributeCollision`. |
 | `Rigidbody2DComponent` | 2D dynamics body. |
+| `CharacterController2DComponent` | Platformer motor (coyote, jump buffer, one-way). |
+| `OneWayPlatform2DComponent` | Pass-through-from-below marker on static platforms. |
+| `TriggerVolume2DComponent` | Dedicated 2D trigger volumes with enter/stay/exit signals. |
 
 **3D physics (minimal solver):**
 
@@ -552,11 +567,12 @@ Representative **3D / rendering** components:
 | Component | Purpose |
 |-----------|---------|
 | `CameraComponent` / `Camera2DComponent` | Main 3D / 2D cameras (priority resolves "main"). |
-| `Camera2DRigComponent` | 2D follow / bounds / zoom (priority 300). |
+| `Camera2DRigComponent` | 2D follow / bounds / zoom (priority 300); reads `ScreenShakeComponent`. |
+| `ScreenShakeComponent` | Composite camera impulses + trauma (priority 295). |
 | `SpringArm3DComponent` | 3D orbit arm behind pivot (priority 295). |
 | `CameraFollow3DComponent` | 3D smooth follow + look-at (priority 300). |
 
-The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**70** concrete types + `Unknown`).
+The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**97** concrete types + `Unknown`).
 
 **Full usage reference:** [`docs/programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).
 

@@ -753,7 +753,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>07 game component reference</h1>
           </header>
           <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
-<p>Complete reference for all <strong>70</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
+<p>Complete reference for all <strong>97</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
 <p><strong>Includes:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
 <p><strong>Subsystem tick order (typical frame):</strong></p>
 <ol>
@@ -779,7 +779,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#rendering">Rendering</a></td>
-<td><code>Mesh</code>, <code>Material</code>, <code>SkinnedMesh</code>, <code>Sprite</code>, <code>Tilemap</code>, <code>Sky</code>, <code>Terrain</code>, <code>ParticleEmitter</code>, <code>TextOverlay</code>, <code>Billboard</code>, <code>DecalProjector</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>BlendMode</code>, <code>RenderLayer</code>, <code>SortingGroup</code>, <code>SpriteLighting2D</code></td>
+<td><code>Mesh</code>, <code>Material</code>, <code>SkinnedMesh</code>, <code>Sprite</code>, <code>Tilemap</code>, <code>Sky</code>, <code>Terrain</code>, <code>WaterBody</code>, <code>ParticleEmitter</code>, <code>TextOverlay</code>, <code>Billboard</code>, <code>DecalProjector</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>BlendMode</code>, <code>RenderLayer</code>, <code>SortingGroup</code>, <code>SpriteLighting2D</code>, <code>ParallaxLayer</code></td>
 </tr>
 <tr>
 <td><a href="#tilemap">Tilemap</a></td>
@@ -791,11 +791,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#camera">Camera</a></td>
-<td><code>Camera</code>, <code>Camera2D</code>, <code>Camera2DRig</code>, <code>CameraFollow3D</code>, <code>SpringArm3D</code></td>
+<td><code>Camera</code>, <code>Camera2D</code>, <code>Camera2DRig</code>, <code>ScreenShake</code>, <code>CameraFollow3D</code>, <code>SpringArm3D</code></td>
 </tr>
 <tr>
 <td><a href="#physics-2d">Physics 2D</a></td>
-<td><code>BoxCollider2D</code>, <code>CircleCollider2D</code>, <code>PolygonCollider2D</code>, <code>Rigidbody2D</code>, <code>TilemapCollider2D</code>, <code>PhysicsMaterial2D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code></td>
+<td><code>BoxCollider2D</code>, <code>CircleCollider2D</code>, <code>PolygonCollider2D</code>, <code>Rigidbody2D</code>, <code>CharacterController2D</code>, <code>OneWayPlatform2D</code>, <code>TriggerVolume2D</code>, <code>TilemapCollider2D</code>, <code>PhysicsMaterial2D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code></td>
 </tr>
 <tr>
 <td><a href="#physics-3d">Physics 3D</a></td>
@@ -803,7 +803,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#animation">Animation</a></td>
-<td><code>Animator</code>, <code>SpriteAnimator</code>, <code>AnimationEventReceiver</code>, <code>AttachmentSocket</code>, <code>Character3DAnimFsm</code>, <code>Sprite2DCharacterAnimFsm</code></td>
+<td><code>Animator</code>, <code>SpriteAnimator</code>, <code>AnimationEventReceiver</code>, <code>AnimationEventVfx</code>, <code>SpriteAnimationEventReceiver</code>, <code>SpriteAnimationEventVfx</code>, <code>AnimationHitbox2D</code>, <code>AttachmentSocket</code>, <code>Character3DAnimFsm</code>, <code>Sprite2DCharacterAnimFsm</code></td>
+</tr>
+<tr>
+<td><a href="#input">Input</a></td>
+<td><code>InputActionMap</code>, <code>PlayerInput</code></td>
 </tr>
 <tr>
 <td><a href="#ai">AI</a></td>
@@ -819,11 +823,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#world">World</a></td>
-<td><code>SceneSpatialPolicy</code>, <code>TimeOfDayDriver</code></td>
+<td><code>SceneSpatialPolicy</code>, <code>TimeOfDayDriver</code>, <code>SpawnPoint</code>, <code>GltfSceneSource</code>, <code>GltfInstanceNode</code></td>
 </tr>
 <tr>
 <td><a href="#gameplay">Gameplay</a></td>
-<td><code>Health</code>, <code>Damageable</code></td>
+<td><code>Health</code>, <code>Damageable</code>, <code>Interactable</code>, <code>Pickup</code>, <code>GameState</code>, <code>GameFlowTrigger</code></td>
 </tr>
 </tbody>
 </table>
@@ -841,12 +845,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td>0</td>
 <td>default</td>
-<td>Most components; <code>ParticleEmitterComponent</code></td>
+<td>Most components; <code>ParticleEmitterComponent</code>, <code>GameStateComponent</code></td>
 </tr>
 <tr>
 <td>50</td>
 <td>—</td>
-<td><code>BillboardComponent</code></td>
+<td><code>PlayerInputComponent</code>, <code>BillboardComponent</code></td>
 </tr>
 <tr>
 <td>100</td>
@@ -864,14 +868,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>AnimationEventReceiverComponent</code></td>
 </tr>
 <tr>
+<td>215</td>
+<td>—</td>
+<td><code>SpriteAnimationEventReceiverComponent</code>, <code>AnimationHitbox2DComponent</code></td>
+</tr>
+<tr>
 <td>250</td>
 <td>—</td>
 <td><code>AttachmentSocketComponent</code></td>
 </tr>
 <tr>
+<td>290</td>
+<td>—</td>
+<td><code>ParallaxLayerComponent</code></td>
+</tr>
+<tr>
 <td>295</td>
 <td>—</td>
-<td><code>SpringArm3DComponent</code></td>
+<td><code>ScreenShakeComponent</code>, <code>SpringArm3DComponent</code></td>
 </tr>
 <tr>
 <td>300</td>
@@ -910,7 +924,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><code>Physics2DTriggerOverlap</code></td>
 <td><code>ptr</code> = other <code>GameObject*</code>, <code>a</code> = id, <code>b</code> = static index</td>
-<td><code>PhysicsWorld2D</code></td>
+<td><code>PhysicsWorld2D</code> (legacy collider triggers)</td>
+</tr>
+<tr>
+<td><code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code></td>
+<td><code>ptr</code> = other <code>GameObject*</code>, <code>a</code> = id</td>
+<td><code>TriggerVolume2DComponent</code></td>
 </tr>
 <tr>
 <td><code>Physics3DTriggerEnter</code> / <code>Exit</code></td>
@@ -921,6 +940,21 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>AnimationEvent</code></td>
 <td><code>ptr</code> = event name C-string, <code>a</code> = clip index</td>
 <td><code>AnimationEventReceiverComponent</code></td>
+</tr>
+<tr>
+<td><code>SpriteAnimationEvent</code></td>
+<td><code>ptr</code> = event name, <code>a</code> = clip index, <code>b</code> = time in clip</td>
+<td><code>SpriteAnimationEventReceiverComponent</code></td>
+</tr>
+<tr>
+<td><code>InputActionTriggered</code></td>
+<td><code>ptr</code> = action name, <code>a</code> = <code>InputActionPhase</code></td>
+<td><code>PlayerInputComponent</code></td>
+</tr>
+<tr>
+<td><code>GameStateChanged</code></td>
+<td><code>ptr</code> = owner <code>GameObject*</code>, <code>a</code> = new state, <code>b</code> = previous state</td>
+<td><code>GameStateComponent</code></td>
 </tr>
 <tr>
 <td><code>DamageApplied</code></td>
@@ -940,13 +974,23 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <pre><code class="language-cpp">void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
-    if (id == SignalId::Physics2DTriggerOverlap) {
+    if (id == SignalId::Physics2DTriggerEnter) {
         GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
         (void)other;
     }
-    if (id == SignalId::AnimationEvent) {
+    if (id == SignalId::SpriteAnimationEvent) {
         const char* name = static_cast&lt;const char*&gt;(payload.ptr);
         (void)name;
+    }
+    if (id == SignalId::InputActionTriggered) {
+        const char* action = static_cast&lt;const char*&gt;(payload.ptr);
+        const auto phase = static_cast&lt;InputActionPhase&gt;(payload.a);
+        (void)action;
+        (void)phase;
+    }
+    if (id == SignalId::GameStateChanged) {
+        const auto next = static_cast&lt;GameFlowState&gt;(payload.a);
+        (void)next;
     }
     if (id == SignalId::DamageApplied) {
         const auto* dmg = static_cast&lt;const DamageSignalPayload*&gt;(payload.ptr);
@@ -986,7 +1030,10 @@ mat-&gt;SetRoughness(0.7F);
 mat-&gt;SetNormalTexture(normalMap);
 mat-&gt;SetMetallicRoughnessTexture(ormMap);
 mat-&gt;SetOpacity(0.85F);  // → transparent pass
+mat-&gt;SetShadowParticipation(Spark::SceneShadowParticipation::ReceiveOnly());
+// or: mat-&gt;SetShadowCastOverride(false);
 </code></pre>
+<p>Shadow participation defaults come from <code>SceneRenderParams::shadowsCastByDefault</code> / <code>shadowsReceiveByDefault</code>. Overrides and built-in rules are documented in <a href="../3-3d-graphics/04-shadows.html">Shadows</a>.</p>
 <h3 id="multimaterialcomponent"><code>MultiMaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Unknown</code> (serialization pending) · <strong>Sibling:</strong> <code>MeshComponent</code> on multi-material glTF meshes</p>
 <p>Per-submesh material slots indexed by <code>MeshSubmesh::materialIndex</code>. Populated from a loaded glTF asset:</p>
@@ -1084,6 +1131,25 @@ settings.noiseScale = 0.055F;
 go-&gt;AddComponent&lt;TerrainComponent&gt;(settings, Vector3{0.4F, 0.55F, 0.35F});
 go-&gt;AddComponent&lt;MaterialComponent&gt;(grassTex);
 </code></pre>
+<h3 id="waterbodycomponent"><code>WaterBodyComponent</code></h3>
+<p><strong>Kind:</strong> <code>WaterBody</code> · <strong>Consumed by:</strong> dedicated water pass (<code>SceneRenderParams::waterDraws</code>)</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/water/WaterBodyComponent.hpp&quot;
+
+WaterSurfaceMeshSettings mesh{};
+mesh.SetTileHalfExtent(64.0F);
+go-&gt;AddComponent&lt;WaterBodyComponent&gt;(
+        WaterBodyMode::FiniteLake,
+        0.0F,
+        WaterBodyExtent::MakeRectangle(48.0F, 48.0F),
+        WaterWavePresetId::CalmLake,
+        mesh,
+        Vector3{0.12F, 0.45F, 0.62F});
+WaterBodyComponent* water = go-&gt;GetComponent&lt;WaterBodyComponent&gt;();
+water-&gt;SetAbsorption(0.08F);
+water-&gt;SetFoamStrength(0.85F);
+water-&gt;RegenerateSurface(*go);
+</code></pre>
+<p>Wave parameters resolve from <code>assets/water/&lt;preset&gt;.sparkwater</code> when available. See <a href="../3-3d-graphics/06-terrain-and-sky.html#water-bodies-waterbodycomponent">Terrain and Sky</a>.</p>
 <h3 id="particleemittercomponent"><code>ParticleEmitterComponent</code></h3>
 <p><strong>Kind:</strong> <code>ParticleEmitter</code> · <strong>Consumed by:</strong> <code>OnUpdate</code> + <code>SceneRenderParams::particles</code></p>
 <pre><code class="language-cpp">auto* pe = go-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
@@ -1145,6 +1211,54 @@ go-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
 // Batch sort for subtree (descendant sprites/tilemaps)
 parent-&gt;AddComponent&lt;SortingGroupComponent&gt;(100);
 </code></pre>
+<h3 id="parallaxlayercomponent"><code>ParallaxLayerComponent</code></h3>
+<p><strong>Kind:</strong> <code>ParallaxLayer</code> · <strong>Priority:</strong> 290 · <strong>Sibling:</strong> <code>SpriteComponent</code> or <code>TransformComponent</code><br />
+<strong>Consumed by:</strong> <code>OnUpdate</code> — writes owner transform from camera delta</p>
+<p>Scrolls a distant layer slower than the active camera. Point <code>SetCameraReference</code> at the camera rig object (the same <code>GameObject</code> that owns <code>Camera2DRigComponent</code>). On attach, the component captures the owner's current translation as <strong>rest offset</strong> relative to a configurable world anchor.</p>
+<p><strong>Design:</strong> Strategy via <code>ParallaxDriftMode</code> for optional procedural sway (clouds). Runs before <code>ScreenShakeComponent</code> (295) and <code>Camera2DRigComponent</code> (300) so shake applies to the final view, not the parallax math.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/ParallaxLayerComponent.hpp&quot;
+
+bgSky-&gt;AddComponent&lt;SpriteComponent&gt;(skyTex, ...);
+auto* parallax = bgSky-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;SetFactorX(0.04F);           // 4% of camera X movement
+parallax-&gt;SetFactorY(0.0F);            // horizontal-only (default axis mode)
+parallax-&gt;SetAnchorWorld({20.0F, 0.0F, 0.0F});
+
+// After camera exists:
+parallax-&gt;SetCameraReference(mainCameraGo);
+
+// Slow cloud sway layered on parallax:
+parallax-&gt;SetDriftMode(ParallaxDriftMode::SineHorizontal);
+parallax-&gt;SetDriftAmplitude(0.35F);
+parallax-&gt;SetDriftFrequencyHz(0.22F);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SetFactorX</code> / <code>SetFactorY</code></td>
+<td>How much of camera delta is applied (0 = fixed, 1 = moves with camera)</td>
+</tr>
+<tr>
+<td><code>SetAxisMode</code></td>
+<td><code>Horizontal</code> (default) or <code>Both</code></td>
+</tr>
+<tr>
+<td><code>SetRestOffset</code></td>
+<td>Override captured rest pose (world units from anchor)</td>
+</tr>
+<tr>
+<td><code>SetAnchorWorld</code></td>
+<td>Reference point; parallax delta = camera position − anchor</td>
+</tr>
+</tbody>
+</table>
+<p>See <code>Platformer2DDemo::SpawnBackgroundLayers</code> and <code>WireParallaxLayers</code> for a full multi-layer setup.</p>
 <hr />
 <h2 id="lighting">Lighting</h2>
 <h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
@@ -1181,6 +1295,24 @@ rig-&gt;SetTarget(player);
 rig-&gt;SetFollowSmoothRate(7.5F);
 rig-&gt;SetLookAheadScale(0.15F);
 </code></pre>
+<p><code>Camera2DRigComponent::OnUpdate</code> reads <code>ScreenShakeComponent::GetOffset()</code> on the same object and adds it to the final camera translation. Attach shake to the camera rig, not to parallax layers.</p>
+<h3 id="screenshakecomponent"><code>ScreenShakeComponent</code></h3>
+<p><strong>Kind:</strong> <code>ScreenShake</code> · <strong>Priority:</strong> 295 · <strong>Sibling:</strong> <code>Camera2DRigComponent</code> on same object<br />
+<strong>Design:</strong> Composite pattern — multiple <code>CameraShakeImpulse</code> instances sum each frame; optional <strong>trauma</strong> accumulator for sustained rumble.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/camera/ScreenShakeComponent.hpp&quot;
+
+auto* shake = cameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+
+// Directional burst (world-unit peak offset, duration, frequency Hz):
+shake-&gt;AddImpulse({0.18F, -0.12F}, 0.25F, 30.0F);
+
+// Trauma-based shake (0..1 energy, decays over time):
+shake-&gt;AddTrauma(0.45F);
+
+// Read offset (applied automatically by Camera2DRigComponent):
+const Vector2&amp; offset = shake-&gt;GetOffset();
+</code></pre>
+<p>Typical triggers: player hurt (<code>AddImpulse</code> on damage), explosions, goal reached. Call <code>Clear()</code> to reset impulses and trauma instantly.</p>
 <h3 id="springarm3dcomponent-camerafollow3dcomponent"><code>SpringArm3DComponent</code> + <code>CameraFollow3DComponent</code></h3>
 <p>Third-person orbit (runs at priorities 295 / 300).</p>
 <pre><code class="language-cpp">GameObject* rig = world.CreateGameObject();
@@ -1252,6 +1384,61 @@ auto* hj = hingeA-&gt;GetComponent&lt;HingeJoint2DComponent&gt;();
 hj-&gt;SetLocalAnchorA({0.0F, 0.5F});
 hj-&gt;SetLocalAnchorB({0.0F, -0.5F});
 </code></pre>
+<h3 id="charactercontroller2dcomponent"><code>CharacterController2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>CharacterController2D</code> · <strong>Siblings:</strong> <code>Rigidbody2DComponent</code> + <code>BoxCollider2DComponent</code> (or circle)<br />
+<strong>Consumed by:</strong> <code>PhysicsSubsystem::Simulate2D</code> → <code>SimulateCharacterControllers2D</code></p>
+<p>Platformer motor with coyote time, jump buffer, ground snap, slope limit, and one-way platform drop-through. Set horizontal intent and optional jump <strong>before</strong> <code>Simulate2D</code>.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/CharacterController2DComponent.hpp&quot;
+
+auto* rb = player-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
+player-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
+auto* cc = player-&gt;AddComponent&lt;CharacterController2DComponent&gt;();
+cc-&gt;SetMoveSpeed(11.0F);
+cc-&gt;SetJumpSpeed(13.2F);
+cc-&gt;SetCoyoteTimeSeconds(0.12F);
+cc-&gt;SetJumpBufferSeconds(0.1F);
+
+// Each frame, after PlayerInputComponent (or manual input):
+cc-&gt;SetMoveInputX(playerInput-&gt;GetActionAxis1D(&quot;MoveX&quot;));
+if (playerInput-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
+    cc-&gt;RequestJump();
+}
+if (playerInput-&gt;IsActionPressed(&quot;Drop&quot;)) {
+    cc-&gt;SetDropThroughOneWay(true);  // cleared after one prepare step
+}
+physics.Simulate2D(world, timing);
+
+// Land feedback:
+if (cc-&gt;IsGrounded() &amp;&amp; !cc-&gt;WasGroundedLastFrame()) {
+    // spawn dust VFX
+}
+</code></pre>
+<p>Pair with <code>PlayerInputComponent</code> (priority 50) so semantic actions are ready before the controller reads them.</p>
+<h3 id="onewayplatform2dcomponent"><code>OneWayPlatform2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>OneWayPlatform2D</code> · <strong>Sibling:</strong> static <code>BoxCollider2DComponent</code></p>
+<p>Marker on platform colliders. The character controller treats the surface as pass-through from below unless landing from above (or drop-through is not requested).</p>
+<pre><code class="language-cpp">platform-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{4.0F, 0.15F});
+platform-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);
+platform-&gt;AddComponent&lt;OneWayPlatform2DComponent&gt;();
+</code></pre>
+<h3 id="triggervolume2dcomponent"><code>TriggerVolume2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>TriggerVolume2D</code> · <strong>Consumed by:</strong> <code>SimulateTriggerVolumes2D</code> (called inside <code>Simulate2D</code>)</p>
+<p>Non-blocking overlap volume with enter/stay/exit callbacks and sibling signals. Prefer this over <code>SetIsTrigger(true)</code> on solid colliders when you want dedicated gameplay volumes (goals, pickups, hazards).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp&quot;
+
+auto* trig = zone-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(
+    TriggerVolume2DShape::Box,
+    Vector2{1.5F, 2.0F},   // half extents (box) or ignored for circle + SetRadius
+    Vector2::Zero);        // local offset
+trig-&gt;SetFilterTag(&quot;player&quot;);  // optional: only detect tagged objects
+trig-&gt;SetOnEnter([](GameObject&amp; other) { (void)other; });
+
+// Circle gem pickup:
+gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+auto* circle = gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;();
+circle-&gt;SetRadius(0.45F);
+</code></pre>
+<p>Signals (<code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code>) are delivered to <strong>sibling</strong> components on the same <code>GameObject</code>. Pair with <code>PickupComponent</code> or <code>GameFlowTriggerComponent</code> instead of wiring lambdas in demo code when possible.</p>
 <h3 id="layer-filter">Layer filter</h3>
 <pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
 </code></pre>
@@ -1374,6 +1561,126 @@ auto* fsm = go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
 fsm-&gt;RequestAttack();
 fsm-&gt;RequestHurt();
 </code></pre>
+<h3 id="spriteanimationeventreceivercomponent"><code>SpriteAnimationEventReceiverComponent</code></h3>
+<p><strong>Kind:</strong> <code>SpriteAnimationEventReceiver</code> · <strong>Priority:</strong> 215 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code><br />
+<strong>Design:</strong> Observer — watches sprite clip playback and fires <code>SignalId::SpriteAnimationEvent</code> when normalized-time markers are crossed.</p>
+<p>Markers use <strong>normalized time</strong> (0..1 of clip duration), not frame indices. Reset when the clip loops or changes.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp&quot;
+
+auto* recv = go-&gt;AddComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
+recv-&gt;AddMarker(1, 0.25F, &quot;Footstep&quot;);  // clip 1, 25% through
+recv-&gt;AddMarker(1, 0.75F, &quot;Footstep&quot;);
+
+class FootstepSfx final : public GameComponent {
+public:
+    void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) override {
+        if (id == SignalId::SpriteAnimationEvent) {
+            const char* name = static_cast&lt;const char*&gt;(p.ptr);
+            if (std::strcmp(name, &quot;Footstep&quot;) == 0) {
+                owner.GetComponent&lt;SoundCueComponent&gt;()-&gt;Queue(footstepClip, 0.5F);
+            }
+        }
+    }
+};
+go-&gt;AddComponent&lt;FootstepSfx&gt;();
+</code></pre>
+<h3 id="spriteanimationeventvfxcomponent"><code>SpriteAnimationEventVfxComponent</code></h3>
+<p><strong>Kind:</strong> <code>SpriteAnimationEventVfx</code> · <strong>Sibling:</strong> <code>SpriteAnimationEventReceiverComponent</code><br />
+<strong>Design:</strong> Strategy bindings — maps event names to <code>VfxLibrary</code> asset keys; queues one-shot VFX at owner world position on matching <code>SpriteAnimationEvent</code>.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp&quot;
+
+auto* vfx = go-&gt;AddComponent&lt;SpriteAnimationEventVfxComponent&gt;();
+vfx-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
+vfx-&gt;AddBinding(&quot;Land&quot;, &quot;impact_ring&quot;);
+vfx-&gt;SetWorldOffset({0.0F, -0.4F, 0.0F});
+</code></pre>
+<h3 id="animationhitbox2dcomponent"><code>AnimationHitbox2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>AnimationHitbox2D</code> · <strong>Priority:</strong> 215 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code><br />
+<strong>Consumed by:</strong> <code>OnUpdate</code> during active hit window — runs <code>PhysicsQueryWorld2D</code> overlap (circle or arc) and applies damage via <code>DamageableComponent</code> on targets.</p>
+<p>Frame-synced combat hitbox: active while the animator's <strong>local frame</strong> is in <code>[startFrame, endFrame]</code> for <code>clipIndex</code>. Only fires once per target per swing.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/AnimationHitbox2DComponent.hpp&quot;
+
+auto* hitbox = player-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();
+hitbox-&gt;SetClipIndex(2U);           // attack clip
+hitbox-&gt;SetStartLocalFrame(0U);
+hitbox-&gt;SetEndLocalFrame(0U);
+hitbox-&gt;SetShape(AnimationHitbox2DShape::Arc);
+hitbox-&gt;SetRadius(1.1F);
+hitbox-&gt;SetArcHalfAngleRadians(0.9F);
+hitbox-&gt;SetLocalOffset({0.5F, 0.0F});  // offset from owner, flipped by facing sign
+hitbox-&gt;SetDamagePerHit(10.0F);
+
+PhysicsQueryFilter2D filter{};
+filter.queryCategoryBits = 1u &lt;&lt; 3;  // weapon layer
+filter.queryMaskBits = 1u &lt;&lt; 4;      // enemy hurtbox layer
+filter.hitTriggers = true;
+filter.hitSolids = false;
+hitbox-&gt;SetQueryFilter(filter);
+</code></pre>
+<p>Facing follows owner transform X scale sign (negative scale = facing left). See <a href="../5-physics/04-queries.html">Queries</a> for arc overlap details.</p>
+<hr />
+<h2 id="input">Input</h2>
+<p>Semantic input separates <strong>hardware bindings</strong> (Flyweight config) from <strong>runtime polling</strong> (Command / Observer).</p>
+<h3 id="inputactionmapcomponent"><code>InputActionMapComponent</code></h3>
+<p><strong>Kind:</strong> <code>InputActionMap</code> · <strong>Data-only</strong> — no <code>OnUpdate</code>; consumed by <code>PlayerInputComponent</code> on the same entity.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/input/InputActionMapComponent.hpp&quot;
+#include &quot;spark/input/InputActionTypes.hpp&quot;
+
+auto* map = player-&gt;AddComponent&lt;InputActionMapComponent&gt;();
+map-&gt;BindAxis1D(&quot;MoveX&quot;, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map-&gt;BindButton(&quot;Jump&quot;, GLFW_KEY_SPACE);
+map-&gt;BindButton(&quot;Drop&quot;, GLFW_KEY_S, GLFW_KEY_DOWN);
+map-&gt;BindButton(&quot;Attack&quot;, GLFW_KEY_J);
+
+const InputActionDefinition* jump = map-&gt;FindAction(&quot;Jump&quot;);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>InputActionType</code></th>
+<th>Binding API</th>
+<th>Runtime query</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Button</code></td>
+<td><code>BindButton(name, primary, secondary=-1)</code></td>
+<td><code>IsActionPressed</code>, <code>WasActionPressedThisFrame</code></td>
+</tr>
+<tr>
+<td><code>Axis1D</code></td>
+<td><code>BindAxis1D(name, neg, pos, secNeg=-1, secPos=-1)</code></td>
+<td><code>GetActionAxis1D</code> (−1..1)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="playerinputcomponent"><code>PlayerInputComponent</code></h3>
+<p><strong>Kind:</strong> <code>PlayerInput</code> · <strong>Priority:</strong> 50 · <strong>Sibling:</strong> <code>InputActionMapComponent</code><br />
+Emits <code>SignalId::InputActionTriggered</code> on action edges (<code>InputActionPhase::Started</code> / <code>Canceled</code>).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/input/PlayerInputComponent.hpp&quot;
+
+auto* input = player-&gt;AddComponent&lt;PlayerInputComponent&gt;();
+input-&gt;SetActionMap(map);
+
+// After OnUpdate (or call Refresh early for custom order):
+if (input-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
+    controller-&gt;RequestJump();
+}
+const float moveX = input-&gt;GetActionAxis1D(&quot;MoveX&quot;);
+controller-&gt;SetMoveInputX(moveX);
+
+// Signal listener for UI prompts:
+void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) override {
+    if (id == SignalId::InputActionTriggered) {
+        const char* action = static_cast&lt;const char*&gt;(p.ptr);
+        const auto phase = static_cast&lt;InputActionPhase&gt;(p.a);
+        (void)action;
+        (void)phase;
+    }
+}
+</code></pre>
+<p>Call <code>Refresh(owner, context)</code> manually when your game tick polls input before <code>GameWorld::UpdateGameObjects</code> (e.g. character controller in <code>Simulate</code> after a custom input pass).</p>
 <hr />
 <h2 id="ai">AI</h2>
 <p><code>SimulateGameAi</code> runs, in order: <code>ProcessNavMeshAgents</code> → <code>ProcessPerceptionSensors</code> → each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
@@ -1499,18 +1806,152 @@ hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
     }
 }
 </code></pre>
+<h3 id="interactablecomponent"><code>InteractableComponent</code></h3>
+<p><strong>Kind:</strong> <code>Interactable</code> · <strong>Optional sibling:</strong> <code>TriggerVolume2DComponent</code> for range</p>
+<p>Generic use/interact prompt. <code>TryInteract(instigator)</code> runs when the instigator is in range (radius around owner transform) and passes optional tag filter.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/InteractableComponent.hpp&quot;
+
+auto* chest = chestGo-&gt;AddComponent&lt;InteractableComponent&gt;();
+chest-&gt;SetPromptText(&quot;Open&quot;);
+chest-&gt;SetInteractionRadius(1.5F);
+chest-&gt;SetRequiredInstigatorTag(&quot;player&quot;);
+chest-&gt;SetOnInteract([](GameObject&amp; instigator) {
+    (void)instigator;
+    // open inventory UI
+});
+
+// Each frame when player presses Interact:
+if (playerInput-&gt;WasActionPressedThisFrame(&quot;Interact&quot;) &amp;&amp; chest-&gt;CanInteract(*player)) {
+    chest-&gt;TryInteract(*player);
+}
+</code></pre>
+<h3 id="pickupcomponent"><code>PickupComponent</code></h3>
+<p><strong>Kind:</strong> <code>Pickup</code> · <strong>Sibling:</strong> <code>TriggerVolume2DComponent</code> (recommended)</p>
+<p>Collectible item. Auto-collects on <code>Physics2DTriggerEnter</code> when enabled, or via <code>InteractableComponent::TryInteract</code>. Defers owner destroy to end of physics step to avoid signal re-entrancy crashes.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/PickupComponent.hpp&quot;
+
+gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetRadius(0.4F);
+
+auto* pickup = gem-&gt;AddComponent&lt;PickupComponent&gt;();
+pickup-&gt;SetItemId(&quot;gem&quot;);
+pickup-&gt;SetQuantity(1);
+pickup-&gt;SetAutoCollectOnTriggerEnter(true);
+pickup-&gt;SetDestroyOwnerOnCollect(true);
+pickup-&gt;SetOnCollected([](GameObject&amp; collector, const char* itemId, int qty) {
+    (void)collector;
+    (void)itemId;
+    (void)qty;
+});
+
+// After Simulate2D (flushes deferred destroys):
+PickupComponent::ProcessDeferredDestroys(world);
+</code></pre>
+<h3 id="gamestatecomponent"><code>GameStateComponent</code></h3>
+<p><strong>Kind:</strong> <code>GameState</code> · <strong>Design:</strong> State pattern with optional push/pop stack for pause menus.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameStateComponent.hpp&quot;
+
+auto* flow = manager-&gt;AddComponent&lt;GameStateComponent&gt;(GameFlowState::Playing);
+flow-&gt;SetOnTransition([](GameFlowState prev, GameFlowState next, GameObject&amp; owner) {
+    (void)prev;
+    (void)owner;
+    if (next == GameFlowState::Victory) {
+        // celebration VFX, disable player input, etc.
+    }
+});
+
+if (pausePressed) {
+    flow-&gt;PushState(GameFlowState::Paused);
+}
+if (resumePressed) {
+    flow-&gt;PopState();
+}
+
+flow-&gt;RequestState(GameFlowState::Victory);  // emits GameStateChanged to siblings
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>GameFlowState</code></th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Intro</code></td>
+<td>Title / cutscene</td>
+</tr>
+<tr>
+<td><code>Playing</code></td>
+<td>Normal gameplay</td>
+</tr>
+<tr>
+<td><code>Paused</code></td>
+<td>Menu overlay</td>
+</tr>
+<tr>
+<td><code>Victory</code> / <code>Defeat</code></td>
+<td>End states</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gameflowtriggercomponent"><code>GameFlowTriggerComponent</code></h3>
+<p><strong>Kind:</strong> <code>GameFlowTrigger</code> · <strong>Design:</strong> Mediator — bridges world signals to <code>GameStateComponent::RequestState</code>.</p>
+<p>Attach to the object that <strong>receives</strong> the source signal (trigger volume owner for <code>TriggerEnter</code>, player for <code>Died</code>). Point <code>SetStateOwner</code> at the object that owns <code>GameStateComponent</code> when they differ.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp&quot;
+
+// Goal zone on goalTriggerGo:
+goalTriggerGo-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Box, {2.0F, 3.0F});
+auto* goalFlow = goalTriggerGo-&gt;AddComponent&lt;GameFlowTriggerComponent&gt;();
+goalFlow-&gt;SetSource(GameFlowTriggerSource::TriggerEnter);
+goalFlow-&gt;SetTargetState(GameFlowState::Victory);
+goalFlow-&gt;SetInstigatorNameFilter(&quot;Player&quot;);
+goalFlow-&gt;SetStateOwner(gameFlowGo);  // gameFlowGo owns GameStateComponent
+
+// Player death → defeat:
+player-&gt;AddComponent&lt;GameFlowTriggerComponent&gt;();
+auto* deathFlow = player-&gt;GetComponent&lt;GameFlowTriggerComponent&gt;();
+deathFlow-&gt;SetSource(GameFlowTriggerSource::Died);
+deathFlow-&gt;SetTargetState(GameFlowState::Defeat);
+deathFlow-&gt;SetStateOwner(gameFlowGo);
+</code></pre>
+<p><code>OnGameState</code> source listens for <code>GameStateChanged</code> on the <strong>same</strong> <code>GameObject</code> — use for chained reactions (e.g. enable HUD only when <code>Playing</code>).</p>
 <hr />
 <h2 id="typical-object-recipes">Typical object recipes</h2>
 <h3 id="2d-platformer-player">2D platformer player</h3>
 <pre><code class="language-cpp">player-&gt;AddComponent&lt;TransformComponent&gt;();
 player-&gt;AddComponent&lt;SpriteComponent&gt;(heroTex);
-player-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
 player-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
-player-&gt;AddComponent&lt;Rigidbody2DComponent&gt;();
+player-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
 player-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
+player-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
+player-&gt;AddComponent&lt;CharacterController2DComponent&gt;();
+player-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();  // melee window
+auto* map = player-&gt;AddComponent&lt;InputActionMapComponent&gt;();
+map-&gt;BindAxis1D(&quot;MoveX&quot;, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map-&gt;BindButton(&quot;Jump&quot;, GLFW_KEY_SPACE);
+map-&gt;BindButton(&quot;Attack&quot;, GLFW_KEY_J);
+auto* input = player-&gt;AddComponent&lt;PlayerInputComponent&gt;();
+input-&gt;SetActionMap(map);
 player-&gt;AddComponent&lt;SoundCueComponent&gt;();
 player-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
 player-&gt;AddComponent&lt;DamageableComponent&gt;();
+</code></pre>
+<h3 id="2d-camera-rig-with-parallax-shake">2D camera rig with parallax + shake</h3>
+<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;()-&gt;SetHalfExtentY(6.5F);
+cameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;()-&gt;SetTarget(player);
+cameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+
+bgLayer-&gt;AddComponent&lt;SpriteComponent&gt;(mountainsTex, ...);
+auto* parallax = bgLayer-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;SetFactorX(0.18F);
+parallax-&gt;SetCameraReference(cameraGo);
+</code></pre>
+<h3 id="gem-pickup">Gem pickup</h3>
+<pre><code class="language-cpp">gem-&gt;AddComponent&lt;SpriteComponent&gt;(gemTex, ...);
+gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetRadius(0.4F);
+gem-&gt;AddComponent&lt;PickupComponent&gt;()-&gt;SetItemId(&quot;gem&quot;);
 </code></pre>
 <h3 id="3d-skinned-enemy">3D skinned enemy</h3>
 <pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();

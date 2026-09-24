@@ -44,7 +44,43 @@ SubmitStandardLitSceneFromWorld(
     SceneSpriteSortMode::SortOrderThenWorldY);
 ```
 
-## Smooth Follow (from Platformer Sample)
+## ECS Camera Rig (recommended)
+
+For gameplay projects, prefer `Camera2DRigComponent` over manual lerping. It handles follow smoothing, look-ahead, bounds clamping, and reads `ScreenShakeComponent` offset on the same object.
+
+```cpp
+#include "spark/ecs/components/camera/Camera2DComponent.hpp"
+#include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
+#include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
+
+GameObject* cameraGo = world.CreateGameObject();
+cameraGo->AddComponent<Camera2DComponent>()->SetHalfExtentY(6.5F);
+auto* rig = cameraGo->AddComponent<Camera2DRigComponent>();
+rig->SetMode(Camera2DRigMode::FollowTarget);
+rig->SetTarget(player);
+rig->SetFollowSmoothRate(8.0F);
+rig->SetLookAheadScale(0.12F);
+cameraGo->AddComponent<ScreenShakeComponent>();
+```
+
+`Camera2DRigComponent` runs at priority **300**; `ScreenShakeComponent` at **295**; background `ParallaxLayerComponent` at **290**.
+
+## Parallax Layers
+
+Distant sprites scroll slower than the camera:
+
+```cpp
+#include "spark/ecs/components/rendering/ParallaxLayerComponent.hpp"
+
+bgGo->AddComponent<SpriteComponent>(skyTex, ...);
+auto* parallax = bgGo->AddComponent<ParallaxLayerComponent>();
+parallax->SetFactorX(0.06F);
+parallax->SetCameraReference(cameraGo);
+```
+
+See `Platformer2DDemo::SpawnBackgroundLayers` for a full stack (sky, mountains, hills, clouds with sine drift).
+
+## Manual Smooth Follow (legacy / tutorials)
 
 ```cpp
 const Vector3 p = playerTr->GetLocalTransform().translation;
@@ -52,6 +88,8 @@ const float follow = std::min(1.0F, 8.0F * timing.deltaTimeSeconds);
 camera.position.x += (p.x - camera.position.x) * follow;
 camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
 ```
+
+Use this only when you are not using `Camera2DRigComponent`.
 
 ## Pixel-Perfect Tips
 

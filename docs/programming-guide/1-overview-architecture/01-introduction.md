@@ -8,7 +8,7 @@ Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vul
 |-------|------------|------------|
 | Window / input | GLFW | `Window`, `IInput` |
 | Rendering | Vulkan (internal) | `SceneRenderParams`, `IFramePresenter` |
-| Simulation | ECS | `GameWorld`, `GameObject`, `GameComponent` |
+| Simulation | ECS (**97** built-in components) | `GameWorld`, `GameObject`, `GameComponent` |
 | Physics | Custom solvers | `PhysicsSubsystem`, `PhysicsWorld2D`, `PhysicsWorld3D` |
 | AI | FSM, GOAP, steering | `SimulateGameAi`, `AiAgentComponent` |
 | Audio | Software mixer | `SoundEngine`, `SoundCueComponent` |
@@ -20,7 +20,7 @@ Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vul
 1. **Explicit frame contract** — simulation in `OnUpdate`, rendering as immutable `SceneRenderParams` in `OnRender`.
 2. **Dependency inversion** — games depend on `IGame` / `IEngineContext`, not `VulkanRenderer`.
 3. **Composition** — behavior lives in components; `GameObject` is a lightweight container.
-4. **Demos as documentation** — `src/spark/demo/` and `SparkDemo` showcase every subsystem.
+4. **Demos as documentation** — `src/spark/demo/` and `SparkDemo` showcase every subsystem. `Platformer2DDemo` (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.
 
 ## Minimal Bootstrap
 

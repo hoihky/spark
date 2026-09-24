@@ -814,12 +814,39 @@ SubmitStandardLitSceneFromWorld(
     sceneTimeSeconds,
     SceneSpriteSortMode::SortOrderThenWorldY);
 </code></pre>
-<h2 id="smooth-follow-from-platformer-sample">Smooth Follow (from Platformer Sample)</h2>
+<h2 id="ecs-camera-rig-recommended">ECS Camera Rig (recommended)</h2>
+<p>For gameplay projects, prefer <code>Camera2DRigComponent</code> over manual lerping. It handles follow smoothing, look-ahead, bounds clamping, and reads <code>ScreenShakeComponent</code> offset on the same object.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/camera/Camera2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/camera/Camera2DRigComponent.hpp&quot;
+#include &quot;spark/ecs/components/camera/ScreenShakeComponent.hpp&quot;
+
+GameObject* cameraGo = world.CreateGameObject();
+cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;()-&gt;SetHalfExtentY(6.5F);
+auto* rig = cameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;();
+rig-&gt;SetMode(Camera2DRigMode::FollowTarget);
+rig-&gt;SetTarget(player);
+rig-&gt;SetFollowSmoothRate(8.0F);
+rig-&gt;SetLookAheadScale(0.12F);
+cameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+</code></pre>
+<p><code>Camera2DRigComponent</code> runs at priority <strong>300</strong>; <code>ScreenShakeComponent</code> at <strong>295</strong>; background <code>ParallaxLayerComponent</code> at <strong>290</strong>.</p>
+<h2 id="parallax-layers">Parallax Layers</h2>
+<p>Distant sprites scroll slower than the camera:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/ParallaxLayerComponent.hpp&quot;
+
+bgGo-&gt;AddComponent&lt;SpriteComponent&gt;(skyTex, ...);
+auto* parallax = bgGo-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;SetFactorX(0.06F);
+parallax-&gt;SetCameraReference(cameraGo);
+</code></pre>
+<p>See <code>Platformer2DDemo::SpawnBackgroundLayers</code> for a full stack (sky, mountains, hills, clouds with sine drift).</p>
+<h2 id="manual-smooth-follow-legacy-tutorials">Manual Smooth Follow (legacy / tutorials)</h2>
 <pre><code class="language-cpp">const Vector3 p = playerTr-&gt;GetLocalTransform().translation;
 const float follow = std::min(1.0F, 8.0F * timing.deltaTimeSeconds);
 camera.position.x += (p.x - camera.position.x) * follow;
 camera.position.y += ((p.y + 0.85F) - camera.position.y) * follow;
 </code></pre>
+<p>Use this only when you are not using <code>Camera2DRigComponent</code>.</p>
 <h2 id="pixel-perfect-tips">Pixel-Perfect Tips</h2>
 <ul>
 <li>Use integer world positions for tile-aligned art.</li>

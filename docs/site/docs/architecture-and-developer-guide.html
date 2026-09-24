@@ -551,7 +551,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Engine loop:</strong> <code>spark/engine/</code> — <code>Engine</code>, <code>IGame</code>, <code>Game</code>, <code>ISceneProvider</code>, <code>IEngineContext</code>, <code>EngineContext</code>, <code>GlfwInput</code>, <code>FrameTiming</code>, <code>SceneRenderParams</code>.</li>
 <li><strong>World &amp; entities:</strong> <code>spark/scene/core/GameWorld.hpp</code>, <code>spark/ecs/GameObject.hpp</code>, <code>spark/scene/core/Scene.hpp</code>.</li>
 <li><strong>Components:</strong> <code>spark/ecs/components/</code> — domain subfolders (<code>core/</code>, <code>rendering/</code>, <code>lighting/</code>, <code>camera/</code>, <code>physics/2d|3d/</code>, <code>animation/</code>, <code>ai/</code>, <code>audio/</code>, <code>ui/</code>, <code>world/</code>).</li>
-<li><strong>Math &amp; containers:</strong> <code>spark/math/</code>, <code>spark/core/</code>, <code>spark/memory/</code> (<code>SharedPtr</code>, <code>UniquePtr</code>, <code>Array</code>, <code>Utf8String</code>).</li>
+<li><strong>Math &amp; containers:</strong> <code>spark/math/</code>, <code>spark/core/</code>, <code>spark/memory/</code> (<code>SharedPtr</code>, <code>UniquePtr</code>, <code>Array</code>, <code>Utf8String</code>, <code>Optional</code>, <code>Function</code>, <code>HashMap</code>, <code>Queue</code>).</li>
 <li><strong>Rendering contract:</strong> <code>spark/engine/SceneRenderParams.hpp</code> — what the GPU path consumes each frame.</li>
 <li><strong>Fast path for lit scenes:</strong> <code>spark/scene/submit/SceneSubmit.hpp</code> — <code>SubmitStandardLitSceneFromWorld</code> (implementation split across <code>SceneSubmit.cpp</code>, <code>SceneSubmitLighting.cpp</code>, <code>SceneSubmitMaterial.cpp</code>, <code>SceneSubmitDrawPartition.cpp</code>).</li>
 </ul>
@@ -846,9 +846,99 @@ cmake --build cmake-build-debug -j
 <td>One-call fill for typical 3D scenes</td>
 <td><code>SubmitStandardLitSceneFromWorld</code> (<code>spark/scene/submit/SceneSubmit.hpp</code>)</td>
 </tr>
+<tr>
+<td><strong>Lit scene facade</strong></td>
+<td>Fluent camera + lighting + submit</td>
+<td><code>LitSceneBuilder</code>, <code>LitSceneSubmitOptions</code> (<code>spark/scene/submit/</code>)</td>
+</tr>
+<tr>
+<td><strong>Lighting preset setup</strong></td>
+<td>Profile + overrides without touching draw lists</td>
+<td><code>SceneLightingSetup</code> (<code>spark/render/lighting/SceneLightingSetup.hpp</code>)</td>
+</tr>
+<tr>
+<td><strong>Shadow participation VO</strong></td>
+<td>Cast/receive intent for materials and draws</td>
+<td><code>SceneShadowParticipation</code> (<code>spark/render/lighting/SceneShadowParticipation.hpp</code>)</td>
+</tr>
+<tr>
+<td><strong>Params validation</strong></td>
+<td>Clamp unsafe lighting / SSAO / fog values</td>
+<td><code>SceneRenderParams::Sanitize()</code></td>
+</tr>
 </tbody>
 </table>
 <p>Gap analysis (more light types, material channels, IBL, caps): <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a>.</p>
+<h4 id="recommended-lit-scene-path-additive-api">Recommended lit-scene path (additive API)</h4>
+<p>Existing positional APIs are unchanged. For new gameplay code, prefer the options struct or builder:</p>
+<pre><code class="language-cpp">#include &quot;spark/scene/submit/LitSceneBuilder.hpp&quot;
+#include &quot;spark/scene/submit/LitSceneSubmitOptions.hpp&quot;
+#include &quot;spark/render/lighting/SceneLightingSetup.hpp&quot;
+
+Spark::LitSceneSubmitOptions opts;
+opts.WithDirectionalLight(sunDir, sunColor, sunIntensity).WithSceneTime(sceneTime);
+
+Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor)
+    .WithShadowCascades(0.12F, 1200.0F)
+    .WithShadowDistanceFade(150.0F)
+    .ApplyTo(params);  // optional: or chain on LitSceneBuilder
+
+Spark::LitSceneBuilder(world, context)
+    .WithLightingSetup(Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor))
+    .WithOptions(opts)
+    .WithCameraFromWorld()
+    .Submit();
+</code></pre>
+<p>Call <code>SceneRenderParams::Sanitize()</code> when assembling params manually (editor, custom presenters).</p>
+<h4 id="spark-core-vs-c-standard-library">Spark core vs C++ standard library</h4>
+<p>Spark ships its own containers and utilities under <code>spark/core/</code> to keep the engine link surface predictable:</p>
+<table>
+<thead>
+<tr>
+<th>Use</th>
+<th>Spark type</th>
+<th>Avoid in public engine APIs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dynamic array</td>
+<td><code>Array&lt;T&gt;</code></td>
+<td><code>std::vector</code></td>
+</tr>
+<tr>
+<td>Hash map</td>
+<td><code>HashMap&lt;K,V&gt;</code></td>
+<td><code>std::unordered_map</code></td>
+</tr>
+<tr>
+<td>UTF-8 text</td>
+<td><code>Utf8String</code></td>
+<td><code>std::string</code></td>
+</tr>
+<tr>
+<td>Optional value</td>
+<td><code>Optional&lt;T&gt;</code>, <code>Nullopt</code></td>
+<td><code>std::optional</code></td>
+</tr>
+<tr>
+<td>Callback / lambda storage</td>
+<td><code>Function&lt;Sig&gt;</code></td>
+<td><code>std::function</code></td>
+</tr>
+<tr>
+<td>Unique ownership</td>
+<td><code>UniquePtr&lt;T&gt;</code></td>
+<td><code>std::unique_ptr</code></td>
+</tr>
+<tr>
+<td>Shared ownership</td>
+<td><code>SharedPtr&lt;T&gt;</code></td>
+<td><code>std::shared_ptr</code></td>
+</tr>
+</tbody>
+</table>
+<p>Fixed-width integers (<code>std::uint32_t</code>, <code>std::size_t</code>) and <code>&lt;cmath&gt;</code> transcendentals in math headers are still used where they map cleanly to platform ABIs. Demos and third-party interop (e.g. CoreCLR host) may keep <code>std::string</code> at boundaries; prefer <code>Utf8String</code> / <code>Array</code> inside engine code.</p>
 <h3 id="54-materials-and-shading">5.4 Materials and shading</h3>
 <table>
 <thead>
@@ -914,8 +1004,33 @@ cmake --build cmake-build-debug -j
 </tr>
 <tr>
 <td><strong>Sprite animation</strong></td>
-<td>Flipbook / state machine hooks</td>
-<td><code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code></td>
+<td>Flipbook / state machine / frame hitboxes / sprite events</td>
+<td><code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code>, <code>AnimationHitbox2DComponent</code>, <code>SpriteAnimationEventReceiverComponent</code>, <code>SpriteAnimationEventVfxComponent</code></td>
+</tr>
+<tr>
+<td><strong>Parallax</strong></td>
+<td>Camera-relative background scroll + optional drift</td>
+<td><code>ParallaxLayerComponent</code> (priority 290)</td>
+</tr>
+<tr>
+<td><strong>2D camera rig</strong></td>
+<td>Follow, look-ahead, shake offset</td>
+<td><code>Camera2DComponent</code>, <code>Camera2DRigComponent</code> (300), <code>ScreenShakeComponent</code> (295)</td>
+</tr>
+<tr>
+<td><strong>Semantic input</strong></td>
+<td>Action maps + runtime polling</td>
+<td><code>InputActionMapComponent</code>, <code>PlayerInputComponent</code>, <code>InputActionTypes.hpp</code></td>
+</tr>
+<tr>
+<td><strong>Game flow</strong></td>
+<td>Win/lose/pause state machine</td>
+<td><code>GameStateComponent</code>, <code>GameFlowTriggerComponent</code></td>
+</tr>
+<tr>
+<td><strong>Interact / pickup</strong></td>
+<td>Triggers, collectibles, deferred destroy</td>
+<td><code>TriggerVolume2DComponent</code>, <code>InteractableComponent</code>, <code>PickupComponent</code></td>
 </tr>
 <tr>
 <td><strong>Tilemaps</strong></td>
@@ -923,9 +1038,14 @@ cmake --build cmake-build-debug -j
 <td><code>TilemapComponent</code>, <code>TilemapGameplayGridComponent</code>, <code>TilemapMapSourceComponent</code>, <code>TmxImporter</code>, <code>ApplyTilemapDocument</code></td>
 </tr>
 <tr>
-<td><strong>2D camera</strong></td>
-<td>Ortho view-projection helper</td>
+<td><strong>2D camera struct</strong></td>
+<td>Ortho view-projection helper (non-ECS)</td>
 <td><code>Camera2D</code> (<code>spark/scene/camera/Camera2D.hpp</code>)</td>
+</tr>
+<tr>
+<td><strong>2D character motor</strong></td>
+<td>Platformer coyote/jump buffer/one-way</td>
+<td><code>CharacterController2DComponent</code>, <code>OneWayPlatform2DComponent</code>, <code>SimulateCharacterControllers2D</code></td>
 </tr>
 <tr>
 <td><strong>2D physics &amp; queries</strong></td>
@@ -1445,6 +1565,18 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <td>Hit points, damage routing, <code>DamageApplied</code> / <code>Died</code> signals.</td>
 </tr>
 <tr>
+<td><code>InteractableComponent</code> / <code>PickupComponent</code></td>
+<td>Use prompts and auto-collect triggers; deferred destroy after physics.</td>
+</tr>
+<tr>
+<td><code>GameStateComponent</code> / <code>GameFlowTriggerComponent</code></td>
+<td>High-level flow states; mediator from triggers/death to state transitions.</td>
+</tr>
+<tr>
+<td><code>InputActionMapComponent</code> / <code>PlayerInputComponent</code></td>
+<td>Semantic input bindings and per-frame action state.</td>
+</tr>
+<tr>
 <td><code>BillboardComponent</code></td>
 <td>Orients transform toward main camera (priority 50).</td>
 </tr>
@@ -1488,6 +1620,18 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <td>Higher-level 2D character animation state.</td>
 </tr>
 <tr>
+<td><code>SpriteAnimationEventReceiverComponent</code> / <code>SpriteAnimationEventVfxComponent</code></td>
+<td>Sprite clip markers → signals / VFX queue.</td>
+</tr>
+<tr>
+<td><code>AnimationHitbox2DComponent</code></td>
+<td>Frame-window overlap queries for 2D combat.</td>
+</tr>
+<tr>
+<td><code>ParallaxLayerComponent</code></td>
+<td>Camera-relative background scroll.</td>
+</tr>
+<tr>
 <td><code>Character3DAnimFsmComponent</code></td>
 <td>Locomotion / attack overlay for <code>AnimatorComponent</code> (add before animator on same object).</td>
 </tr>
@@ -1526,6 +1670,18 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <tr>
 <td><code>Rigidbody2DComponent</code></td>
 <td>2D dynamics body.</td>
+</tr>
+<tr>
+<td><code>CharacterController2DComponent</code></td>
+<td>Platformer motor (coyote, jump buffer, one-way).</td>
+</tr>
+<tr>
+<td><code>OneWayPlatform2DComponent</code></td>
+<td>Pass-through-from-below marker on static platforms.</td>
+</tr>
+<tr>
+<td><code>TriggerVolume2DComponent</code></td>
+<td>Dedicated 2D trigger volumes with enter/stay/exit signals.</td>
 </tr>
 </tbody>
 </table>
@@ -1587,7 +1743,11 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </tr>
 <tr>
 <td><code>Camera2DRigComponent</code></td>
-<td>2D follow / bounds / zoom (priority 300).</td>
+<td>2D follow / bounds / zoom (priority 300); reads <code>ScreenShakeComponent</code>.</td>
+</tr>
+<tr>
+<td><code>ScreenShakeComponent</code></td>
+<td>Composite camera impulses + trauma (priority 295).</td>
 </tr>
 <tr>
 <td><code>SpringArm3DComponent</code></td>
@@ -1599,7 +1759,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </tr>
 </tbody>
 </table>
-<p>The authoritative list of kinds is <strong><code>enum class ComponentKind</code></strong> in <code>spark/ecs/GameComponent.hpp</code> (<strong>70</strong> concrete types + <code>Unknown</code>).</p>
+<p>The authoritative list of kinds is <strong><code>enum class ComponentKind</code></strong> in <code>spark/ecs/GameComponent.hpp</code> (<strong>97</strong> concrete types + <code>Unknown</code>).</p>
 <p><strong>Full usage reference:</strong> <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>docs/programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</p>
 <p>Include umbrella <strong><code>spark/ecs/Ecs.hpp</code></strong> in tooling if you want a single include for registration patterns (headers still remain modular).</p>
 <h3 id="81-component-storage-model-mental-diagram">8.1 Component storage model (mental diagram)</h3>
@@ -1722,7 +1882,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </tr>
 <tr>
 <td><strong>HDR scene</strong></td>
-<td>Offscreen <strong>R16G16B16A16</strong> + depth (<code>VulkanHdrTonemapPass::HdrRenderPass</code>) — opaque/sky, optional <strong>transparent resume</strong> (transmission), sprites, particles</td>
+<td>Offscreen <strong>R16G16B16A16</strong> + depth (<code>VulkanHdrTonemapPass::HdrRenderPass</code>) — opaque/sky, optional <strong>opaque snapshot</strong> (bindings <strong>13</strong>/<strong>14</strong>), <strong>water</strong> (<code>VulkanWaterPass</code>), <strong>transparent resume</strong> (transmission), sprites, particles</td>
 </tr>
 <tr>
 <td><strong>SSAO (optional)</strong></td>
@@ -1753,11 +1913,19 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <tbody>
 <tr>
 <td><strong>Scene (opaque + sky)</strong></td>
-<td>Lit mesh pipeline; <strong>sky</strong> pipeline when <code>SceneSkyMode != None</code> (relaxed depth for backdrop).</td>
+<td>Lit mesh pipeline; <strong>sky</strong> pipeline when <code>SceneSkyMode != None</code> (relaxed depth — color only; far depth stays at clear <code>1.0</code> for water/SSR sky detection).</td>
+</tr>
+<tr>
+<td><strong>Opaque snapshot</strong></td>
+<td>When <code>waterDraws</code> or <code>transparentDraws</code> non-empty: end HDR pass, copy color (+ depth for water) to scratch (<code>VulkanSceneOpaqueBackground</code>), resume pass.</td>
+</tr>
+<tr>
+<td><strong>Water</strong></td>
+<td><code>VulkanWaterPass</code> — Gerstner surface; samples bindings <strong>13</strong>/<strong>14</strong>; depth test off; discard above-scene in shader.</td>
 </tr>
 <tr>
 <td><strong>Scene (transparent)</strong></td>
-<td>When <code>transparentDraws</code> is non-empty: copy opaque HDR color → scratch, resume HDR pass, lit transparent pipeline (<code>VulkanSceneOpaquePass::RecordTransparent</code>).</td>
+<td>When <code>transparentDraws</code> is non-empty: lit transparent pipeline after water (<code>VulkanSceneOpaquePass::RecordTransparent</code>); transmission samples binding <strong>13</strong>.</td>
 </tr>
 <tr>
 <td><strong>Sprites</strong></td>

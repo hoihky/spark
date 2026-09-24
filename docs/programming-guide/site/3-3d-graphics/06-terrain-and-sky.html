@@ -897,6 +897,81 @@ tod-&gt;SetLooping(false);  // when you advance time manually in gameplay code
 // FillStandardLitSceneFromWorld calls ProcessTimeOfDayDrivers internally.
 </code></pre>
 <p>Regional fog: add <code>FogVolumeComponent</code> on a trigger volume (camera-inside test at submit).</p>
+<h2 id="water-bodies-waterbodycomponent">Water bodies (<code>WaterBodyComponent</code>)</h2>
+<p>Infinite ocean / lake surfaces use a dedicated <strong>water pass</strong> (Gerstner waves, refraction, depth absorption, crest foam). Water is collected into <code>SceneRenderParams::waterDraws</code> and drawn <strong>after opaque + sky</strong> and <strong>before</strong> generic <code>transparentDraws</code>.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/water/WaterBodyComponent.hpp&quot;
+#include &quot;spark/scene/water/WaterBodyMode.hpp&quot;
+#include &quot;spark/scene/water/WaterWavePreset.hpp&quot;
+
+WaterSurfaceMeshSettings meshSettings{};
+meshSettings.SetSubdivisionsPerAxis(96);
+meshSettings.SetTileHalfExtent(128.0F);
+
+auto* waterGo = world.CreateGameObject();
+waterGo-&gt;AddComponent&lt;TransformComponent&gt;();
+waterGo-&gt;AddComponent&lt;WaterBodyComponent&gt;(
+        WaterBodyMode::InfiniteOcean,
+        0.0F,  // waterLevelY
+        WaterBodyExtent::MakeInfinitePlaceholder(),
+        WaterWavePresetId::StormySea,
+        meshSettings,
+        Vector3{0.10F, 0.58F, 0.78F});  // surface albedo
+
+WaterBodyComponent* water = waterGo-&gt;GetComponent&lt;WaterBodyComponent&gt;();
+water-&gt;SetWavePresetId(WaterWavePresetId::OceanModerate);
+water-&gt;SetAbsorption(0.03F);
+water-&gt;SetFoamStrength(0.9F);
+water-&gt;SetDetailNormalStrength(0.35F);
+</code></pre>
+<h3 id="wave-presets-sparkwater">Wave presets (<code>.sparkwater</code>)</h3>
+<p>Built-in presets ship as assets under <code>assets/water/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Preset id</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calm_lake.sparkwater</code></td>
+<td><code>CalmLake</code></td>
+<td>Small ripples</td>
+</tr>
+<tr>
+<td><code>ocean_moderate.sparkwater</code></td>
+<td><code>OceanModerate</code></td>
+<td>Default coast</td>
+</tr>
+<tr>
+<td><code>stormy_sea.sparkwater</code></td>
+<td><code>StormySea</code></td>
+<td>Large swell</td>
+</tr>
+</tbody>
+</table>
+<p>Format (<code>sparkwater_v1</code>):</p>
+<pre><code class="language-text">sparkwater_v1
+preset CalmLake
+globalWindSpeed 1.0
+wave &lt;dirX&gt; &lt;dirZ&gt; &lt;amplitude&gt; &lt;wavelength&gt; &lt;speed&gt; &lt;steepness&gt;
+</code></pre>
+<p><code>WaterWaveSettings::FromPreset</code> loads the asset when present (build copies to <code>SPARK_BUILD_ASSETS_DIR/water/</code>) and falls back to embedded defaults otherwise. Gameplay height queries use the same math via <code>GerstnerWaveSurface</code>.</p>
+<pre><code class="language-cpp">GerstnerWaveSurface surface = WaterWavePreset(WaterWavePresetId::CalmLake).ToSurface();
+float height = surface.SampleHeight(worldX, worldZ, timeSeconds);
+Vector3 normal = surface.SampleNormal(worldX, worldZ, timeSeconds);
+</code></pre>
+<p>See <strong><code>WaterLakeDemo</code></strong> (SparkDemo <strong>#23</strong>, key <strong>W</strong>) for fly camera, preset hotkey (<strong>P</strong>), and submerged test geometry. Roadmap: <a href="../../../WATER_ROADMAP.html"><code>docs/WATER_ROADMAP.md</code></a>.</p>
+<h3 id="shadows-and-large-islands">Shadows and large islands</h3>
+<p>Large terrain under directional CSM may cross a cascade split (visible as a soft rectangular shadow band). Mitigations used in <code>WaterLakeDemo</code>:</p>
+<pre><code class="language-cpp">params.shadowCascadeFar = 1200.0F;  // wider cascade 0 (~150 m) for a 240 m island
+
+// Submerged seabed / test cubes should not cast into the island shadow map:
+seabedMat-&gt;SetShadowCastOverride(false);
+cubeMat-&gt;SetShadowCastOverride(false);
+</code></pre>
+<p>Water surfaces do not sample CSM today (<code>waterDraws</code> shadow flags = 0). Terrain shadow still affects water indirectly via SSR/refraction of binding <strong>13</strong>. See <a href="04-shadows.html">Shadows</a>.</p>
 <h2 id="grass-and-trees-planned">Grass and trees (planned)</h2>
 <p>Wind-reactive vegetation is not implemented yet. Tracked milestones:</p>
 <table>

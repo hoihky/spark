@@ -45,11 +45,23 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 | Feature | Types |
 |---------|-------|
 | Sprites | `SpriteComponent` → `SceneSpriteDraw` |
+| Sprite animation | `SpriteAnimatorComponent`, `Sprite2DCharacterAnimFsmComponent`, `SpriteAnimationEventReceiverComponent`, `AnimationHitbox2DComponent` |
 | Tilemaps | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, layers/autotile/animator/object helpers |
 | TMX import | `TmxImporter`, `ApplyTilemapDocument`, `ResolveTilemapAssetPath` |
-| Orthographic camera | `Camera2DComponent`, `Camera2DRigComponent` |
+| Orthographic camera | `Camera2DComponent`, `Camera2DRigComponent`, `ScreenShakeComponent` |
+| Parallax backgrounds | `ParallaxLayerComponent` (camera-relative scroll + optional drift) |
 | Y-sort occlusion | `SceneSpriteSortMode::SortOrderThenWorldY` |
 | 2D sprite lighting modes | `SpriteLighting2DMode` on draw items |
+
+## 2D Gameplay Components
+
+| Feature | Types |
+|---------|-------|
+| Platformer motor | `CharacterController2DComponent`, `OneWayPlatform2DComponent` |
+| Triggers / pickups | `TriggerVolume2DComponent`, `PickupComponent`, `InteractableComponent` |
+| Semantic input | `InputActionMapComponent`, `PlayerInputComponent` |
+| Game flow | `GameStateComponent`, `GameFlowTriggerComponent` |
+| Combat vitals | `HealthComponent`, `DamageableComponent` |
 
 ## Simulation & Tools
 
@@ -66,7 +78,7 @@ Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 
 Legacy free functions (`SimulatePhysics2D`, `SimulatePhysics3D`, …) remain but are **deprecated** — prefer `PhysicsSubsystem`.
 
-**70 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
+**97 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
 
 ## Asset Loading on GameWorld
 

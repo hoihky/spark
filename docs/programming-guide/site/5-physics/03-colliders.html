@@ -808,6 +808,19 @@ level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
 <pre><code class="language-cpp">platform-&gt;AddComponent&lt;PhysicsMaterial2DComponent&gt;(0.5F, 0.2F);
 </code></pre>
 <p><strong>2D joints</strong> — <code>DistanceJoint2DComponent</code>, <code>HingeJoint2DComponent</code> (require <code>PhysicsWorld2DSettings::jointIterations &gt; 0</code>).</p>
+<p><strong>TriggerVolume2DComponent</strong> — dedicated non-blocking volumes with enter/stay/exit signals (preferred for goals, pickups, hazards):</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp&quot;
+
+zone-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(
+    TriggerVolume2DShape::Box, Vector2{2.0F, 3.0F});
+zone-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetFilterTag(&quot;player&quot;);
+
+// Circle pickup:
+gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetRadius(0.4F);
+</code></pre>
+<p><code>SimulateTriggerVolumes2D</code> runs inside <code>PhysicsSubsystem::Simulate2D</code>. Signals (<code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code>) dispatch to <strong>sibling</strong> components — pair with <code>PickupComponent</code> or <code>GameFlowTriggerComponent</code>.</p>
+<p><strong>OneWayPlatform2DComponent</strong> — marker on static platforms for <code>CharacterController2DComponent</code> pass-through from below.</p>
 <h2 id="layer-masks">Layer Masks</h2>
 <pre><code class="language-cpp">auto* box = go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
 box-&gt;SetCategoryBits(1u &lt;&lt; 0);   // layer 0 = player
