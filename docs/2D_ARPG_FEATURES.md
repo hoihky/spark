@@ -42,4 +42,6 @@ Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`
 - **Interface segregation**: Colliders expose only category/mask accessors used by physics and queries.
 - **Dependency inversion**: Higher-level combat/trigger systems depend on abstract overlap events, not raw collision internals.
 
+| **P1.11** | **2D grid nav ECS** | Implemented | `GridNavAgent2DComponent` (tilemap A* via `TilemapGameplayGridComponent`), `GridPathFollower2DComponent` (transform / rigidbody follow), `GridNavTarget2DComponent`, `ProcessGridNavAgents2D` in `SimulateGameAi`. |
+
 Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), unified save blob (P2.3).

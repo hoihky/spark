@@ -61,6 +61,7 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 | Triggers / pickups | `TriggerVolume2DComponent`, `PickupComponent`, `InteractableComponent` |
 | Semantic input | `InputActionMapComponent`, `PlayerInputComponent` |
 | Game flow | `GameStateComponent`, `GameFlowTriggerComponent` |
+| Grid navigation | `GridNavAgent2DComponent`, `GridPathFollower2DComponent`, `GridNavTarget2DComponent` |
 | Combat vitals | `HealthComponent`, `DamageableComponent` |
 
 ## Simulation & Tools
@@ -78,7 +79,7 @@ Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 
 Legacy free functions (`SimulatePhysics2D`, `SimulatePhysics3D`, …) remain but are **deprecated** — prefer `PhysicsSubsystem`.
 
-**97 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
+**100 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
 
 ## Asset Loading on GameWorld
 

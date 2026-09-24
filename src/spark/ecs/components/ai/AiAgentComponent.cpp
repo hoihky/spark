@@ -52,7 +52,7 @@ void AiAgentComponent::SubsystemTick(const FrameTiming& timing, GameObject& owne
         blackboard.SetFloat(0, wp.x);
         blackboard.SetFloat(1, wp.y);
         const Vector3 p = tr->GetLocalTransform().translation;
-        const Vector2 pos{p.x, p.z};
+        const Vector2 pos = (plane == AiSteeringPlane::XyRigidbody2D) ? Vector2{p.x, p.y} : Vector2{p.x, p.z};
         if ((pos - wp).LengthSquared() < 0.04F) {
             ++pathIndex;
         }

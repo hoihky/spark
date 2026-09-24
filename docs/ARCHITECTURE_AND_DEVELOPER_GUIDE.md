@@ -276,6 +276,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
 | **2D camera struct** | Ortho view-projection helper (non-ECS) | `Camera2D` (`spark/scene/camera/Camera2D.hpp`) |
 | **2D character motor** | Platformer coyote/jump buffer/one-way | `CharacterController2DComponent`, `OneWayPlatform2DComponent`, `SimulateCharacterControllers2D` |
+| **2D grid navigation** | Tilemap A* + click-to-move / chase | `GridNavAgent2DComponent`, `GridPathFollower2DComponent`, `GridNavTarget2DComponent`, `ProcessGridNavAgents2D` |
 | **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `PhysicsSubsystem`, `PhysicsQueryWorld2D` (see §11) |
 
 ### 5.6 3D physics and joints
@@ -572,7 +573,7 @@ Representative **3D / rendering** components:
 | `SpringArm3DComponent` | 3D orbit arm behind pivot (priority 295). |
 | `CameraFollow3DComponent` | 3D smooth follow + look-at (priority 300). |
 
-The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**97** concrete types + `Unknown`).
+The authoritative list of kinds is **`enum class ComponentKind`** in `spark/ecs/GameComponent.hpp` (**100** concrete types + `Unknown`).
 
 **Full usage reference:** [`docs/programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).
 

@@ -46,6 +46,7 @@ Built-in priorities (`ComponentUpdatePriority`). Each `GameObject` **stable-sort
 | Priority | Value | Examples |
 |----------|-------|----------|
 | — | 50 | `PlayerInput` (semantic actions before gameplay) |
+| — | 125 | `GridPathFollower2D` (after `ProcessGridNavAgents2D`, before animator playback) |
 | `Billboard` | 50 | Face camera before gameplay |
 | `AnimationDriver` | 100 | `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
 | `AnimatorPlayback` | 200 | `Animator`, `SpriteAnimator` |

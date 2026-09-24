@@ -11,6 +11,7 @@
 namespace Spark {
 
 void SimulateGameAi(GameWorld& world, const FrameTiming& timing, IEngineContext& context) {
+    ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
     ProcessNavMeshAgents(world);
     ProcessPerceptionSensors(world);
     world.ForEachActiveGameObject([&](GameObject* o) {

@@ -94,6 +94,9 @@
 
 // AI / audio / UI / world
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
+#include "spark/ecs/components/ai/GridNavAgent2DComponent.hpp"
+#include "spark/ecs/components/ai/GridNavTarget2DComponent.hpp"
+#include "spark/ecs/components/ai/GridPathFollower2DComponent.hpp"
 #include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
 #include "spark/ecs/components/ai/PatrolPathComponent.hpp"
 #include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"

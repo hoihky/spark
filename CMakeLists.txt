@@ -675,6 +675,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/AnimatorComponent.cpp
         src/spark/ecs/components/physics/CollisionComponent.cpp
         src/spark/ecs/components/ai/NavMeshAgentComponent.cpp
+        src/spark/ecs/components/ai/GridNavAgent2DComponent.cpp
+        src/spark/ecs/components/ai/GridPathFollower2DComponent.cpp
         src/spark/ecs/components/gameplay/HealthComponent.cpp
         src/spark/ecs/components/gameplay/DamageableComponent.cpp
         src/spark/ecs/components/gameplay/InteractableComponent.cpp

@@ -1,6 +1,6 @@
 # Game Component Reference
 
-Complete reference for all **97** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **100** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -8,7 +8,7 @@ Complete reference for all **97** built-in `GameComponent` types in Spark (`incl
 
 1. `UpdateGameObjects` — component `OnUpdate` (billboards, springs, …)
 2. `PhysicsSubsystem::Simulate2D` / `SimulateAll3D` (+ character controllers, triggers)
-3. `SimulateGameAi` — `ProcessNavMeshAgents`, `ProcessPerceptionSensors`, then `AiAgentComponent`
+3. `SimulateGameAi` — `ProcessGridNavAgents2D`, `ProcessNavMeshAgents`, `ProcessPerceptionSensors`, then `AiAgentComponent`
 4. `ProcessSoundCues` — `ProcessAudioListeners`, `ProcessAmbientZones`, cue flush
 5. `FillStandardLitSceneFromWorld` — `ProcessTimeOfDayDrivers`, regional fog/post volumes, lighting resolve
 
@@ -27,7 +27,7 @@ Complete reference for all **97** built-in `GameComponent` types in Spark (`incl
 | [Physics 3D](#physics-3d) | `BoxCollider3D`, `SphereCollider3D`, `CapsuleCollider3D`, `MeshCollider3D`, `Rigidbody3D`, `CharacterController3D`, `TriggerVolume3D`, `PhysicsMaterial3D`, `DistanceJoint3D`, `HingeJoint3D`, `SpringJoint3D`, `Collision` |
 | [Animation](#animation) | `Animator`, `SpriteAnimator`, `AnimationEventReceiver`, `AnimationEventVfx`, `SpriteAnimationEventReceiver`, `SpriteAnimationEventVfx`, `AnimationHitbox2D`, `AttachmentSocket`, `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
 | [Input](#input) | `InputActionMap`, `PlayerInput` |
-| [AI](#ai) | `AiAgent`, `NavMeshAgent`, `PatrolPath`, `PerceptionSensor` |
+| [AI](#ai) | `AiAgent`, `NavMeshAgent`, `GridNavAgent2D`, `GridPathFollower2D`, `GridNavTarget2D`, `PatrolPath`, `PerceptionSensor` |
 | [Audio](#audio) | `SoundCue`, `AudioListener`, `AmbientZone` |
 | [UI](#ui) | `UiCanvas` |
 | [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver`, `SpawnPoint`, `GltfSceneSource`, `GltfInstanceNode` |
@@ -41,6 +41,7 @@ Complete reference for all **97** built-in `GameComponent` types in Spark (`incl
 |----------|-----------------|------------|
 | 0 | default | Most components; `ParticleEmitterComponent`, `GameStateComponent` |
 | 50 | — | `PlayerInputComponent`, `BillboardComponent` |
+| 125 | — | `GridPathFollower2DComponent` |
 | 100 | `ComponentUpdatePriority::AnimationDriver` | `Character3DAnimFsmComponent`, `Sprite2DCharacterAnimFsmComponent` |
 | 200 | `ComponentUpdatePriority::AnimatorPlayback` | `AnimatorComponent`, `SpriteAnimatorComponent` |
 | 210 | — | `AnimationEventReceiverComponent` |
@@ -1040,9 +1041,61 @@ agent->SetSteeringPlane(AiSteeringPlane::XzWorld);
 agent->SetFsmEnabled(true);
 ```
 
+### `GridNavAgent2DComponent` + `GridPathFollower2DComponent` + `GridNavTarget2DComponent`
+
+**2D tilemap pathfinding** on the XY plane via sibling `TilemapGameplayGridComponent`. Run `ProcessGridNavAgents2D(world, deltaTime)` each frame (called automatically from `SimulateGameAi`).
+
+```cpp
+#include "spark/ecs/components/ai/GridNavAgent2DComponent.hpp"
+#include "spark/ecs/components/ai/GridPathFollower2DComponent.hpp"
+#include "spark/ecs/components/ai/GridNavTarget2DComponent.hpp"
+#include "spark/ai/NavigationSubsystem.hpp"
+
+// Tilemap board (already has TilemapGameplayGridComponent):
+mapGo->AddComponent<TilemapGameplayGridComponent>()->SetAutoRebake(true);
+
+// Click-to-move player:
+auto* nav = player->AddComponent<GridNavAgent2DComponent>();
+nav->SetGridSourceObject(mapGo);
+nav->SetGoalMode(GridNavGoalMode2D::WorldPosition);
+nav->SetGoalWorldPosition({goalX, goalY});
+nav->SetSyncToAiAgent(false);  // use follower instead of AiAgent steering
+
+auto* follower = player->AddComponent<GridPathFollower2DComponent>();
+follower->SetMaxSpeed(7.0F);
+follower->SetMode(GridPathFollower2DMode::Transform);
+
+// Each frame (before UpdateGameObjects for follower motion):
+ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
+```
+
+| Component | Role |
+|-----------|------|
+| `GridNavAgent2DComponent` | A* replan on `TilemapGridFrame`; stores cell path + world waypoints |
+| `GridPathFollower2DComponent` | Moves transform or `Rigidbody2D` along waypoints (priority 125) |
+| `GridNavTarget2DComponent` | Marker on goal entities; optional snap-to-walkable-cell |
+
+**Goal modes** (`GridNavGoalMode2D`):
+
+- `TargetObject` — follow `goalTarget` transform (pair with `GridNavTarget2DComponent`)
+- `WorldPosition` — fixed world XY (mouse pick in tilemap demos)
+- `GridCell` — explicit `{x, y}` cell index
+
+When `SetSyncToAiAgent(true)` (default), the polyline is copied into `AiAgentComponent` — use with `SetSteeringPlane(AiSteeringPlane::XyRigidbody2D)` for steering-based enemies.
+
+```cpp
+// Enemy chases player on tilemap grid:
+enemy->AddComponent<AiAgentComponent>()->SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);
+auto* chase = enemy->AddComponent<GridNavAgent2DComponent>();
+chase->SetGridSourceObject(mapGo);
+chase->SetGoalMode(GridNavGoalMode2D::TargetObject);
+chase->SetGoalTarget(player);
+player->AddComponent<GridNavTarget2DComponent>();
+```
+
 ### `PatrolPathComponent` + `NavMeshAgentComponent`
 
-**PatrolPath** stores local waypoints; **NavMeshAgent** copies them into `AiAgentComponent::pathWorldPolylineXZ` each AI tick (or runs grid A* when `UseGridPathfinding()` is true).
+**PatrolPath** stores local waypoints; **NavMeshAgent** copies them into `AiAgentComponent::pathWorldPolylineXZ` each AI tick (or runs legacy bitmap grid A* on the XZ plane when `UseGridPathfinding()` is true). For **2D tilemaps**, prefer `GridNavAgent2DComponent`.
 
 ```cpp
 // Waypoint object (or same object as agent):
