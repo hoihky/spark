@@ -603,7 +603,7 @@ Screenshot path (`VulkanScreenshotCapture`):
 | **Deferred uploads** | Scene texture array, UI font atlases |
 | **Punctual shadow maps** | Spot atlas + point depth array (`VulkanPunctualShadowPass`) |
 | **Directional shadow maps** | CSM atlas (`VulkanDirectionalShadowPass`) |
-| **HDR scene** | Offscreen **R16G16B16A16** + depth (`VulkanHdrTonemapPass::HdrRenderPass`) — opaque/sky, optional **transparent resume** (transmission), sprites, particles |
+| **HDR scene** | Offscreen **R16G16B16A16** + depth (`VulkanHdrTonemapPass::HdrRenderPass`) — opaque/sky, optional **opaque snapshot** (bindings **13**/**14**), **water** (`VulkanWaterPass`), **transparent resume** (transmission), sprites, particles |
 | **SSAO (optional)** | When `ssaoEnabled`: depth copy → fullscreen `post_process.frag` → scratch HDR (`VulkanScreenSpaceEffectsPass`) |
 | **Tonemap** | Scratch HDR or scene HDR → swapchain image (`VulkanHdrTonemapPass::RecordTonemap`) |
 | **Screen UI** | Solid rects + text in the **present** render pass (`VulkanScreenUiPass`) |
@@ -614,7 +614,9 @@ Inside the **HDR scene** subpass the renderer switches pipelines:
 | Sub-stage | Pipeline / notes |
 |-----------|------------------|
 | **Scene (opaque + sky)** | Lit mesh pipeline; **sky** pipeline when `SceneSkyMode != None` (relaxed depth — color only; far depth stays at clear `1.0` for water/SSR sky detection). |
-| **Scene (transparent)** | When `transparentDraws` is non-empty: copy opaque HDR color → scratch, resume HDR pass, lit transparent pipeline (`VulkanSceneOpaquePass::RecordTransparent`). |
+| **Opaque snapshot** | When `waterDraws` or `transparentDraws` non-empty: end HDR pass, copy color (+ depth for water) to scratch (`VulkanSceneOpaqueBackground`), resume pass. |
+| **Water** | `VulkanWaterPass` — Gerstner surface; samples bindings **13**/**14**; depth test off; discard above-scene in shader. |
+| **Scene (transparent)** | When `transparentDraws` is non-empty: lit transparent pipeline after water (`VulkanSceneOpaquePass::RecordTransparent`); transmission samples binding **13**. |
 | **Sprites** | Alpha-blended world quads (`SceneSpriteDraw`), sorted by `spriteSortMode`. |
 | **Particles** | Additive billboards (`SceneParticleInstance`). |
 

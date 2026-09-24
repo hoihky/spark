@@ -160,7 +160,7 @@ void SceneWaterSubmit::AppendBodyDraw(
     baseItem.albedo = water.GetResolvedSurfaceAlbedo(mat);
     baseItem.textureLayer = -1;
     baseItem.doubleSided = false;
-    baseItem.shadowFlags = 0;
+    baseItem.shadowFlags = SceneSubmitDetail::ResolveWaterShadowFlags(mat, params);
     if (mesh.GetSlot() == SceneMeshSlot::Custom) {
         baseItem.customMesh = mesh.GetMesh();
     }

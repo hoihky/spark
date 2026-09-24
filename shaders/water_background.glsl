@@ -13,9 +13,9 @@ const float WATER_REFRACTION_NORMAL_SCALE = 0.12;
 /** Cleared far-plane depth (1.0) when sky does not write depth; also matches scene.vert sky inset. */
 const float WATER_SCENE_DEPTH_SKY = 0.9999;
 /** Reflection / SSR samples binding 13. */
-const float WATER_OPAQUE_HDR_EXPOSURE = 0.62;
+const float WATER_OPAQUE_HDR_EXPOSURE = 0.58;
 /** Refraction path — lower exposure so head-on views do not blow out to pale HDR sky. */
-const float WATER_REFRACT_HDR_EXPOSURE = 0.38;
+const float WATER_REFRACT_HDR_EXPOSURE = 0.34;
 /** Fixed column depth for open-ocean depth anchor (subtle, not flat fill). */
 const float WATER_OPEN_OCEAN_COLUMN_DEPTH = 3.0;
 
@@ -94,23 +94,23 @@ vec3 waterOpenOceanTint(vec3 shallowRgb, vec3 deepRgb, float absorption) {
 
 /** Reflection: light tint — preserve HDR sky brightness variation and ripple contrast. */
 vec3 waterGradeReflectionHdr(vec3 hdr, vec3 shallowRgb, vec3 deepRgb) {
-    vec3 tinted = hdr * mix(vec3(1.0), shallowRgb * 1.18 + deepRgb * 0.22, 0.40);
-    return tinted / (vec3(1.0) + tinted * 0.22);
+    vec3 tinted = hdr * mix(vec3(1.0), shallowRgb * 1.14 + deepRgb * 0.28, 0.44);
+    return tinted / (vec3(1.0) + tinted * 0.28);
 }
 
 /** Refraction: stronger water-color anchor so head-on views stay turquoise, not white. */
 vec3 waterGradeRefractHdr(vec3 hdr, vec3 shallowRgb, vec3 deepRgb) {
-    vec3 tinted = hdr * mix(vec3(1.0), shallowRgb * 1.32 + deepRgb * 0.48, 0.58);
-    tinted = tinted / (vec3(1.0) + tinted * 0.42);
-    vec3 anchor = mix(shallowRgb, deepRgb, 0.55);
-    return mix(tinted, anchor, 0.28);
+    vec3 tinted = hdr * mix(vec3(1.0), shallowRgb * 1.28 + deepRgb * 0.52, 0.62);
+    tinted = tinted / (vec3(1.0) + tinted * 0.48);
+    vec3 anchor = mix(shallowRgb, deepRgb, 0.58);
+    return mix(tinted, anchor, 0.32);
 }
 
 /** Schlick fresnel with a modest floor — real view variation without pale blowout. */
 float waterComputeBodyFresnel(float macroNdotV) {
     float ndv = clamp(macroNdotV, 0.001, 1.0);
     float F = 0.02 + 0.98 * pow(1.0 - ndv, 5.0);
-    return clamp(F + 0.14 * pow(1.0 - ndv, 1.6), 0.26, 0.93);
+    return clamp(F + 0.18 * pow(1.0 - ndv, 1.45), 0.24, 0.90);
 }
 
 /** Shallow shoreline band only (column between surface and seabed/terrain). */

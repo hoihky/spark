@@ -13,6 +13,7 @@
 #include "spark/scene/texture/Texture2D.hpp"
 
 #include <cstdio>
+#include <optional>
 
 namespace Spark {
 
@@ -159,19 +160,55 @@ std::int32_t ResolveDrawableShadowFlags(
         const GameObject* object,
         SceneMeshSlot meshSlot,
         const Matrix4& worldMatrix,
+        const MaterialComponent* material,
         std::int32_t defaultShadowFlags) noexcept {
     std::int32_t flags = defaultShadowFlags;
-    if (object != nullptr && object->GetComponent<TerrainComponent>() != nullptr) {
-        flags |= kSceneShadowCast;
+
+    if (material != nullptr) {
+        if (const std::optional<bool> castOverride = material->GetShadowCastOverride(); castOverride.has_value()) {
+            if (*castOverride) {
+                flags |= kSceneShadowCast;
+            } else {
+                flags &= ~kSceneShadowCast;
+            }
+        }
+        if (const std::optional<bool> receiveOverride = material->GetShadowReceiveOverride();
+            receiveOverride.has_value()) {
+            if (*receiveOverride) {
+                flags |= kSceneShadowReceive;
+            } else {
+                flags &= ~kSceneShadowReceive;
+            }
+        }
     }
-    const float worldY = worldMatrix.TranslationVector().y;
-    if (meshSlot == SceneMeshSlot::GroundPlane && worldY < -0.5F) {
-        flags &= ~kSceneShadowCast;
+
+    if (material == nullptr || !material->GetShadowCastOverride().has_value()) {
+        if (object != nullptr && object->GetComponent<TerrainComponent>() != nullptr) {
+            flags |= kSceneShadowCast;
+        }
+        const float worldY = worldMatrix.TranslationVector().y;
+        if (meshSlot == SceneMeshSlot::GroundPlane && worldY < -0.5F) {
+            flags &= ~kSceneShadowCast;
+        }
+        if (meshSlot == SceneMeshSlot::UnitCube && worldY < 1.0F) {
+            flags &= ~kSceneShadowCast;
+        }
     }
-    if (meshSlot == SceneMeshSlot::UnitCube && worldY < 1.0F) {
-        flags &= ~kSceneShadowCast;
-    }
+
     return flags;
+}
+
+std::int32_t ResolveWaterShadowFlags(
+        const MaterialComponent* material,
+        const SceneRenderParams& params) noexcept {
+    if (!params.directionalShadowsEnabled) {
+        return 0;
+    }
+    bool receive = params.shadowsReceiveByDefault;
+    if (material != nullptr && material->GetShadowReceiveOverride().has_value()) {
+        receive = *material->GetShadowReceiveOverride();
+    }
+    return receive ? kSceneShadowReceive : 0;
 }
 
 void PopulateSkyDrawItem(

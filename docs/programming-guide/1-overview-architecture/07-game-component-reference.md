@@ -131,7 +131,10 @@ mat->SetRoughness(0.7F);
 mat->SetNormalTexture(normalMap);
 mat->SetMetallicRoughnessTexture(ormMap);
 mat->SetOpacity(0.85F);  // → transparent pass
+mat->SetShadowCastOverride(false);  // optional: opt out of directional CSM cast
 ```
+
+Shadow participation defaults come from `SceneRenderParams::shadowsCastByDefault` / `shadowsReceiveByDefault`. Overrides and built-in rules are documented in [Shadows](../3-3d-graphics/04-shadows.md).
 
 ### `MultiMaterialComponent`
 

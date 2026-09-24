@@ -33,18 +33,19 @@ Copy the **Issue body** block under each task when filing issues (see [§9](#9-b
 | HDR forward lit meshes + depth buffer | Done — `VulkanSceneOpaquePass`, `R16G16B16A16` color |
 | Transparent / transmission pass | Done — `transparentDraws`; opaque color copied to scratch (binding **13**) for screen-space refraction sampling |
 | Sky dome + equirect IBL | Done — `SkyComponent`, `ibl.glsl`, BRDF LUT |
-| Directional CSM + punctual lights | Done — sun glints feasible on water normals |
+| Directional CSM + punctual lights | Done — sun specular on water; terrain receives CSM |
 | Terrain heightfield + raycast | Done — `TerrainComponent::TryRaycastWorld` |
 | Fog / time-of-day data path | Done — `FogVolumeComponent`, `TimeOfDayDriverComponent` |
 | 2D tilemap animated water tiles | Done — cosmetic only (`TilemapShowcase2DDemo`) |
 | `VfxLibrary::WaterSplash` | Done — particle burst preset; not wired to a water surface |
-| **Water body component / submit path** | **Not started** |
-| **Water material / shader** | **Not started** |
-| **Wave height gameplay API** | **Not started** |
-| **Buoyancy / swim controller** | **Not started** |
-| **Offscreen render targets (planar reflection)** | **Not started** — documented gap in `SCENE_AND_RENDERING_GAPS.md` |
-| **Reflection probes** | **Not started** — documented gap |
-| **SSR** | **Implemented** — `water_ssr.glsl` + shared `VulkanSceneDepthCopy` (opaque background depth for water) |
+| **`WaterBodyComponent` + `waterDraws` submit** | **Done** — `SceneSubmitWater.cpp`, `VulkanWaterPass` |
+| **Gerstner water shader (W1–W3 core)** | **Done** — `water.vert` / `water.frag`, foam, SSR, refraction bindings **13** / **14** |
+| **Wave height gameplay API** | **Not started** (W4) |
+| **Buoyancy / swim controller** | **Not started** (W5) |
+| **Planar reflection RT** | **Not started** (W3-04) |
+| **Reflection probes** | **Not started** |
+| **SSR** | **Done** — `water_ssr.glsl` + `VulkanSceneOpaqueBackground` depth copy |
+| **Water receives CSM** | **Done** — `water_sun_shadow.glsl` in `water.frag`; `waterDraws` set `kSceneShadowReceive` when directional shadows enabled |
 
 ---
 
@@ -89,7 +90,7 @@ Pick a tier per project; milestones below build toward **Tier B** (action-game r
 | WATER-W0-04 | **`SceneSubmit` collection** — `ForEachWaterBodyInViewFrustum` (or tag query); fill `waterDraws` after opaque partition, before generic transparent | P0 | [x] |
 | WATER-W0-05 | **Depth/color export for water** — per-flight `VulkanSceneOpaqueBackground`-style images: **linear depth** + **HDR color** after opaque (and optionally after sky); document binding indices | P0 | [x] |
 | WATER-W0-06 | **`VulkanWaterPass` skeleton** — dedicated render pass slot in `VulkanRenderer` after opaque (+ sky), before generic transparent; no-op clear initially | P0 | [x] |
-| WATER-W0-07 | **Shadow flags** — water receives shadows (`kSceneShadowReceive`); does not cast (or optional cast for very shallow ponds) | P1 | [x] |
+| WATER-W0-07 | **Shadow flags** — water does not cast; receive via `water_sun_shadow.glsl` when directional shadows enabled (`ResolveWaterShadowFlags` → `kSceneShadowReceive`) | P1 | [x] |
 | WATER-W0-08 | **Component reference + programming guide** stub under terrain/sky chapter | P1 | [x] |
 | WATER-W0-09 | **Scene serialization handler** — `water_body` snapshot in `spark_scene_v4` (level, extent, preset id) | P2 | [ ] |
 
@@ -144,7 +145,7 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| WATER-W2-01 | **Refraction** — sample W0 color buffer with normal-based UV offset; chromatic aberration optional (P2) | P0 | [ ] |
+| WATER-W2-01 | **Refraction** — sample W0 color buffer with normal-based UV offset; chromatic aberration optional (P2) | P0 | [x] |
 | WATER-W2-02 | **Depth-based absorption** — `waterDepth = waterY - sceneDepth`; Beer–Lambert or artist `shallowColor` / `deepColor` lerp | P0 | [x] |
 | WATER-W2-03 | **Shoreline foam mask** — compare water surface Y vs terrain height (heightmap sample or depth intersection); foam noise texture | P0 | [x] |
 | WATER-W2-04 | **Crest foam** — Jacobian or steepness threshold on Gerstner sum | P1 | [x] |
@@ -226,7 +227,7 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 | ID | Task | P | Status |
 |----|------|---|--------|
 | WATER-W7-01 | **`docs/WATER_ARTIST_GUIDE.md`** — preset tuning, shore foam, performance budgets | P1 | [ ] |
-| WATER-W7-02 | **Programming guide** — extend [Terrain and Sky](programming-guide/3-3d-graphics/06-terrain-and-sky.md) with water section | P1 | [ ] |
+| WATER-W7-02 | **Programming guide** — extend [Terrain and Sky](programming-guide/3-3d-graphics/06-terrain-and-sky.md) with water section | P1 | [x] |
 | WATER-W7-03 | **`.sparkwater` preset file** — JSON round-trip (wave list, colors, foam, SSR flags) | P1 | [ ] |
 | WATER-W7-04 | **Debug draw** — water level grid, wave gizmos, foam mask heatmap (dev key) | P2 | [ ] |
 | WATER-W7-05 | **Editor inspector** — `WaterBodyComponent` fields in scene editor prototype | P2 | [ ] |
@@ -282,24 +283,61 @@ See [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md).
 
 ---
 
-## Renderer frame order (target)
+## Renderer frame order (implemented)
 
-After W0–W3, `VulkanRenderer` should record:
+`VulkanRenderer::RecordSceneCommandBuffer` records:
 
-1. Shadow maps (unchanged)
-2. **HDR opaque + sky** (unchanged)
-3. **Copy scene color + linear depth** (W0) — shared by water, transmission, SSAO
-4. **Water surface pass** (W1–W3) — `VulkanWaterPass`
-5. **Other transparent meshes** (existing `transparentDraws` / transmission)
-6. **Underwater post** (W5, when camera submerged)
-7. SSAO (optional)
-8. Tonemap → UI
+1. Shadow maps (punctual + directional CSM)
+2. **HDR opaque + sky** (`VulkanSceneOpaquePass`)
+3. **Opaque snapshot** (when `waterDraws` or `transparentDraws` non-empty) — copy HDR color + depth to bindings **13** / **14** via `VulkanSceneOpaqueSnapshot` + `VulkanSceneOpaqueBackground`
+4. **Water** (`VulkanWaterPass`) — depth test **off**; `water.frag` discards fragments above scene depth (binding **14**)
+5. **Transparent meshes** — transmission samples binding **13**
+6. Sprites / particles (same HDR pass)
+7. SSAO (optional) → tonemap → screen UI
 
-Document final binding layout in [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) when W0 lands.
+Full binding table: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) § Frame flow.
 
 ---
 
-## Key types (proposed)
+## Implementation notes (consolidated)
+
+### End-to-end data path
+
+```
+WaterLakeDemo::Render
+  → FillStandardLitSceneFromWorld (terrain + props + water collection)
+  → SceneLightingResolver (time of day, cascades, shadow defaults)
+VulkanRenderer
+  → directional CSM Record (casters from draws with kSceneShadowCast)
+  → opaque + sky → snapshot (13/14) → water pass → transparent
+```
+
+### Shadow + large terrain (WaterLake)
+
+| Issue | Mitigation in repo |
+|-------|-------------------|
+| Island spans CSM cascade 0/1 (~90 m split at default `shadowCascadeFar=720`) | Demo sets `shadowCascadeFar = 1200` (~150 m cascade 0) |
+| Seabed / cubes pollute CSM | `MaterialComponent::SetShadowCastOverride(false)` or built-in heuristics (`ResolveDrawableShadowFlags`) |
+| False shadow at cascade ortho edge | `scene.frag` treats out-of-tile UV / clip Z as lit; wider ortho padding in `VulkanDirectionalShadowCascadeMath` |
+
+### Water screen space
+
+- Use **`water_screen.glsl`** UV helpers only in water shaders (framebuffer Y = 0 top). Do not mix with `post_common.glsl` flip conventions.
+- Water **does not** depth-test against the scene buffer (terrain would win over the water plane). Shoreline coverage uses a **discard** when scene surface is above the water vertex + margin.
+
+### API entry points
+
+| Task | API |
+|------|-----|
+| Add water | `WaterBodyComponent` + `FillStandardLitSceneFromWorld` |
+| Tune waves | `WaterWavePreset`, `.sparkwater` assets, `SetSsrSettings` |
+| Lake + island demo | `WaterLakeDemo` — menu **23** / **W** |
+| Disable prop shadows | `mat->SetShadowCastOverride(false)` |
+| Widen CSM for big meshes | `params.shadowCascadeFar` on `SceneRenderParams` |
+
+---
+
+## Key types (implemented)
 
 ```cpp
 enum class WaterBodyMode : std::uint8_t { InfiniteOcean, FiniteLake, RiverSpline };

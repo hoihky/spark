@@ -165,6 +165,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
     if (MaterialComponent* seabedMat = seabed->AddComponent<MaterialComponent>()) {
         seabedMat->SetRoughness(0.82F);
         seabedMat->SetMetallic(0.0F);
+        seabedMat->SetShadowCastOverride(false);
     }
     roots.PushBack(seabed);
 
@@ -190,6 +191,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
         if (MaterialComponent* cubeMat = cube->AddComponent<MaterialComponent>()) {
             cubeMat->SetRoughness(0.35F);
             cubeMat->SetMetallic(0.0F);
+            cubeMat->SetShadowCastOverride(false);
         }
         roots.PushBack(cube);
     }
@@ -320,8 +322,6 @@ void WaterLakeDemo::Render(Scene& scene, GameWorld& world, IEngineContext& conte
     params.directionalShadowsEnabled = true;
     // Widen cascade 0 (~150 m split) so the 240 m island fits one tile from fly + top-down views.
     params.shadowCascadeFar = 1200.0F;
-    // Only terrain casts; seabed / absorption cubes stay receive-only (see ResolveDrawableShadowFlags).
-    params.shadowsCastByDefault = false;
     params.shadowDepthSampleFlipV = true;
     params.punctualShadowsEnabled = false;
     params.ssaoEnabled = ssaoEnabled;

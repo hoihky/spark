@@ -47,7 +47,13 @@ void ApplyAlbedoTexture(
         const GameObject* object,
         SceneMeshSlot meshSlot,
         const Matrix4& worldMatrix,
+        const MaterialComponent* material,
         std::int32_t defaultShadowFlags) noexcept;
+
+/** Water never casts; receives directional CSM when enabled (material override respected). */
+[[nodiscard]] std::int32_t ResolveWaterShadowFlags(
+        const MaterialComponent* material,
+        const SceneRenderParams& params) noexcept;
 
 void PushRigidMeshDraws(
         Array<SceneDrawItem>& drawList,

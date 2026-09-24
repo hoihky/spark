@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
@@ -24,11 +25,33 @@ Spark::GameObject& AddWaterBody(Spark::GameWorld& world, float worldX) {
 
 }  // namespace
 
-TEST(SceneWaterSubmitTest, WaterBodyFillsWaterDrawsWithoutShadowParticipation) {
+TEST(SceneWaterSubmitTest, WaterBodyReceivesDirectionalShadowsByDefault) {
     Spark::GameWorld world{};
     AddWaterBody(world, 0.0F);
 
     Spark::SceneRenderParams params{};
+    params.directionalShadowsEnabled = true;
+    params.shadowsReceiveByDefault = true;
+    const auto findTex = [](const Spark::SharedPtr<Spark::Texture2D>&, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
+        return -1;
+    };
+
+    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+            world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
+
+    EXPECT_EQ(params.waterDraws.GetSize(), 1U);
+    EXPECT_EQ(params.waterDraws[0].item.shadowFlags, Spark::kSceneShadowReceive);
+    EXPECT_EQ(params.waterDraws[0].item.shadowFlags & Spark::kSceneShadowCast, 0);
+    EXPECT_FALSE(params.waterDraws[0].item.doubleSided);
+    EXPECT_EQ(params.waterDraws[0].item.mesh, Spark::SceneMeshSlot::Custom);
+}
+
+TEST(SceneWaterSubmitTest, WaterBodySkipsShadowReceiveWhenDisabled) {
+    Spark::GameWorld world{};
+    AddWaterBody(world, 0.0F);
+
+    Spark::SceneRenderParams params{};
+    params.directionalShadowsEnabled = false;
     const auto findTex = [](const Spark::SharedPtr<Spark::Texture2D>&, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
         return -1;
     };
@@ -38,8 +61,26 @@ TEST(SceneWaterSubmitTest, WaterBodyFillsWaterDrawsWithoutShadowParticipation) {
 
     EXPECT_EQ(params.waterDraws.GetSize(), 1U);
     EXPECT_EQ(params.waterDraws[0].item.shadowFlags, 0);
-    EXPECT_FALSE(params.waterDraws[0].item.doubleSided);
-    EXPECT_EQ(params.waterDraws[0].item.mesh, Spark::SceneMeshSlot::Custom);
+}
+
+TEST(SceneWaterSubmitTest, WaterMaterialCanDisableShadowReceive) {
+    Spark::GameWorld world{};
+    Spark::GameObject& object = AddWaterBody(world, 0.0F);
+    Spark::MaterialComponent* material = object.AddComponent<Spark::MaterialComponent>();
+    material->SetShadowReceiveOverride(false);
+
+    Spark::SceneRenderParams params{};
+    params.directionalShadowsEnabled = true;
+    params.shadowsReceiveByDefault = true;
+    const auto findTex = [](const Spark::SharedPtr<Spark::Texture2D>&, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
+        return -1;
+    };
+
+    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+            world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
+
+    EXPECT_EQ(params.waterDraws.GetSize(), 1U);
+    EXPECT_EQ(params.waterDraws[0].item.shadowFlags, 0);
 }
 
 TEST(SceneWaterSubmitTest, WaterDrawsSortFartherFirst) {

@@ -184,6 +184,20 @@ Vector3 normal = surface.SampleNormal(worldX, worldZ, timeSeconds);
 
 See **`WaterLakeDemo`** (SparkDemo **#23**, key **W**) for fly camera, preset hotkey (**P**), and submerged test geometry. Roadmap: [`docs/WATER_ROADMAP.md`](../../../WATER_ROADMAP.md).
 
+### Shadows and large islands
+
+Large terrain under directional CSM may cross a cascade split (visible as a soft rectangular shadow band). Mitigations used in `WaterLakeDemo`:
+
+```cpp
+params.shadowCascadeFar = 1200.0F;  // wider cascade 0 (~150 m) for a 240 m island
+
+// Submerged seabed / test cubes should not cast into the island shadow map:
+seabedMat->SetShadowCastOverride(false);
+cubeMat->SetShadowCastOverride(false);
+```
+
+Water surfaces do not sample CSM today (`waterDraws` shadow flags = 0). Terrain shadow still affects water indirectly via SSR/refraction of binding **13**. See [Shadows](04-shadows.md).
+
 ## Grass and trees (planned)
 
 Wind-reactive vegetation is not implemented yet. Tracked milestones:

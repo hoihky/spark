@@ -10,6 +10,7 @@
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
 
 #include <cstdint>
+#include <optional>
 
 namespace Spark {
 
@@ -117,6 +118,22 @@ public:
     /** Applies the cached library asset when async loading has completed. */
     void TryApplyMaterialAsset(GameWorld& world);
 
+    /**
+     * Optional per-material shadow participation overrides (directional CSM).
+     * When unset, scene submit uses `SceneRenderParams::shadowsCastByDefault` /
+     * `shadowsReceiveByDefault` plus built-in rules (terrain always casts; submerged
+     * ground planes and underwater unit cubes do not cast).
+     */
+    void SetShadowCastOverride(const bool casts) noexcept { shadowCastOverride = casts; }
+    void ClearShadowCastOverride() noexcept { shadowCastOverride.reset(); }
+    [[nodiscard]] std::optional<bool> GetShadowCastOverride() const noexcept { return shadowCastOverride; }
+
+    void SetShadowReceiveOverride(const bool receives) noexcept { shadowReceiveOverride = receives; }
+    void ClearShadowReceiveOverride() noexcept { shadowReceiveOverride.reset(); }
+    [[nodiscard]] std::optional<bool> GetShadowReceiveOverride() const noexcept {
+        return shadowReceiveOverride;
+    }
+
 private:
     void NotifyMaterialChanged();
 
@@ -150,6 +167,8 @@ private:
     float normalScale = 1.0F;
     MaterialGltfExtensions gltfExtensions{};
     MaterialLibraryBinding libraryBinding;
+    std::optional<bool> shadowCastOverride{};
+    std::optional<bool> shadowReceiveOverride{};
 };
 
 }  // namespace Spark

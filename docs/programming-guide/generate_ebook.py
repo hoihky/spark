@@ -1121,17 +1121,19 @@ chapter(P3, "04-shadows.md", "Shadows", 4, """
 
 ## Directional CSM
 
-Cascaded shadow maps for the sun direction — configured on `SceneRenderParams`:
+Cascaded shadow maps for the sun — configured on `SceneRenderParams`:
 
 ```cpp
-params.enableDirectionalShadows = true;
-params.shadowCascadeCount = 4;
-params.shadowMapResolution = 2048;
-params.shadowBias = 0.002F;
-params.shadowNormalBias = 0.02F;
+params.lightingProfile = SceneLightingProfile::Outdoor;
+params.directionalShadowsEnabled = true;
+params.shadowCascadeFar = 900.0F;  // 0 = preset; raise for large islands
+params.shadowBias = 0.0026F;
+params.shadowNormalBias = 0.048F;
 ```
 
-When using `SubmitStandardLitSceneFromWorld`, enable shadows via the directional light setup and ensure meshes cast shadows (default for opaque draws).
+Use `FillStandardLitSceneFromWorld` or set params manually. Opaque draws cast/receive by default.
+
+Per-material opt-out: `mat->SetShadowCastOverride(false);` — see `ResolveDrawableShadowFlags` in scene submit.
 
 ## Punctual Light Shadows
 
@@ -1146,7 +1148,7 @@ GPU cost scales with shadow-casting light count — budget carefully.
 
 ```cpp
 mat->SetShadingModel(SceneShadingModel::ToonCel);
-mat->SetToonSteps(3);
+mat->SetToonDiffuseBands(3);
 mat->SetToonSmoothness(0.1F);
 ```
 

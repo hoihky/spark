@@ -57,7 +57,7 @@ vec3 waterEvalReflectionFallback(
     }
 
     // Extra screen jitter from surface slope so detail ripples distort reflections.
-    sampleUv += safeN.xz * 0.038;
+    sampleUv += safeN.xz * 0.046;
     sampleUv = clamp(sampleUv, vec2(0.001), vec2(0.999));
 
     vec3 sampleRgb = waterSampleRefractedOpaqueAtUv(sampleUv);
@@ -85,7 +85,8 @@ vec3 waterComposeReflection(
         float detailStrength) {
     vec3 macroReflection = waterEvalReflectionFallback(surfaceUv, worldPos, macroN, V, shallowColor, deepColor);
     vec3 rippleReflection = waterEvalReflectionFallback(surfaceUv, worldPos, rippleN, V, shallowColor, deepColor);
-    float rippleMix = clamp(0.32 + detailStrength * 0.62, 0.32, 0.90);
+    float grazing = 1.0 - max(dot(normalize(rippleN), normalize(V)), 0.0);
+    float rippleMix = clamp(0.38 + detailStrength * 0.54 + grazing * 0.22, 0.38, 0.92);
     vec3 reflection = mix(macroReflection, rippleReflection, rippleMix);
 
     if (waterPush.ssrEnabled < 0.5) {

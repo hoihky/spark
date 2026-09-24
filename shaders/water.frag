@@ -12,6 +12,7 @@ layout(set = 0, binding = 11) uniform sampler2DArray sceneHdrTextures;
 #include "scene_ubo.glsl"
 #include "water_background.glsl"
 #include "water_push.glsl"
+#include "water_sun_shadow.glsl"
 #include "water_detail.glsl"
 #include "water_foam.glsl"
 #include "water_ssr.glsl"
@@ -53,6 +54,19 @@ void main() {
     float NdotL = max(dot(N, Ld), 0.0);
     vec3 H = normalize(V + Ld);
     float NdotH = max(dot(N, H), 0.0);
+    float sunGracing = 1.0 - clamp(dot(N, Ld), 0.0, 1.0);
+
+    float sunShadow = 1.0;
+    if (ubo.shadowParams.w > 0.5 && (waterPush.shadowFlags & 2) != 0) {
+        sunShadow = waterBlendSunShadow(vWorldPos, N, Ld);
+        float shadowFadeEnd = ubo.viewportSize.z;
+        if (shadowFadeEnd > 0.5) {
+            float distCam = length(vWorldPos - ubo.cameraPos.xyz);
+            float fadeStart = shadowFadeEnd * clamp(ubo.timeGlobal.y, 0.5, 0.98);
+            float fade = smoothstep(fadeStart, shadowFadeEnd, distCam);
+            sunShadow = mix(sunShadow, 1.0, fade);
+        }
+    }
 
     vec3 sunRad = ubo.lightColor.rgb * ubo.lightColor.w;
     vec3 ambient = ubo.ambientColor.rgb * baseColor * 0.20;
@@ -62,9 +76,9 @@ void main() {
 
     float D = waterD_GGX(NdotH, roughness);
     float G = waterG_SchlickGGX(NdotV, roughness) * waterG_SchlickGGX(NdotL, roughness);
-    vec3 spec = D * G * F / max(4.0 * NdotV * NdotL, 1.0e-4) * sunRad;
+    vec3 spec = D * G * F / max(4.0 * NdotV * NdotL, 1.0e-4) * sunRad * sunShadow;
 
-    vec3 sunDiffuse = baseColor * sunRad * NdotL * 0.16;
+    vec3 sunDiffuse = baseColor * sunRad * NdotL * 0.16 * sunShadow;
 
     vec2 surfaceUv = waterFramebufferScreenUv();
     float sceneDepthAtSurface = waterSampleSceneDepthAtUv(surfaceUv);
@@ -133,8 +147,14 @@ void main() {
             vWorldXZ);
     float foam = clamp(max(crestFoam, shorelineFoam), 0.0, 1.0);
 
-    float rippleVis = 1.0 + 0.12 * (1.0 - N.y) + 0.08 * (1.0 - gerstnerN.y);
-    vec3 color = body * rippleVis + sunDiffuse + spec * (1.0 - crestFoam * 0.75) * 1.55 + ambient * alpha;
+    float rippleVis = 1.0 + 0.10 * (1.0 - N.y) + 0.10 * (1.0 - gerstnerN.y);
+    vec3 color = body * rippleVis + sunDiffuse + spec * (1.0 - crestFoam * 0.75) * 1.42 + ambient * alpha;
+
+    float skyFill = (1.0 - sunShadow) * (0.05 + 0.09 * sunGracing);
+    vec3 skyHue = mix(ubo.ambientColor.rgb, ubo.ambientSky.rgb, 0.70);
+    color += baseColor * skyFill * max(dot(N, vec3(0.0, 1.0, 0.0)), 0.0) * skyHue *
+             max(length(sunRad), 1.0e-4) * 0.10;
+
     color = mix(color, vec3(0.82, 0.90, 0.96), foam * 0.62);
 
     outColor = vec4(color, alpha);
