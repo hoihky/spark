@@ -3,9 +3,8 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/core/HashMap.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
+#include "spark/core/Function.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
-
-#include <functional>
 
 namespace Spark {
 
@@ -19,7 +18,7 @@ public:
     [[nodiscard]] SceneDocument Capture(
             const GameWorld& world,
             const SceneCaptureContext& ctx,
-            const std::function<bool(const GameObject*)>& includeEntity) const;
+            const Function<bool(const GameObject*)>& includeEntity) const;
 
     [[nodiscard]] bool WriteToFile(const SceneDocument& document, const char* path) const;
     [[nodiscard]] bool WriteToString(const SceneDocument& document, Utf8String& out) const;

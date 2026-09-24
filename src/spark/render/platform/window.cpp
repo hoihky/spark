@@ -1,5 +1,7 @@
 #include "spark/render/platform/Window.hpp"
 
+#include "spark/core/Utility.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -59,7 +61,7 @@ void Window::GetContentScale(float& scaleX, float& scaleY) const {
 }
 
 void Window::SetFramebufferResizeCallback(FramebufferResizeCallback callback) {
-    resizeCallback = std::move(callback);
+    resizeCallback = MoveTemp(callback);
 }
 
 void Window::HandleFramebufferResize(int width, int height) {
@@ -76,7 +78,7 @@ void Window::OnCursorPosForward(GLFWwindow* window, double x, double y) {
 }
 
 void Window::SetCursorPosCallback(CursorPosCallback callback) {
-    cursorPosCallback = std::move(callback);
+    cursorPosCallback = MoveTemp(callback);
     glfwSetCursorPosCallback(glfwWindow, cursorPosCallback ? OnCursorPosForward : nullptr);
 }
 
@@ -88,7 +90,7 @@ void Window::OnScrollForward(GLFWwindow* window, double xoffset, double yoffset)
 }
 
 void Window::SetScrollCallback(ScrollCallback callback) {
-    scrollCallback = std::move(callback);
+    scrollCallback = MoveTemp(callback);
     glfwSetScrollCallback(glfwWindow, scrollCallback ? OnScrollForward : nullptr);
 }
 
@@ -100,7 +102,7 @@ void Window::OnCharForward(GLFWwindow* window, const unsigned int codepoint) {
 }
 
 void Window::SetCharCallback(CharCallback callback) {
-    charCallback = std::move(callback);
+    charCallback = MoveTemp(callback);
     glfwSetCharCallback(glfwWindow, charCallback ? OnCharForward : nullptr);
 }
 

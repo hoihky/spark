@@ -2,9 +2,8 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
+#include "spark/core/Function.hpp"
 #include "spark/ui/core/UiTypes.hpp"
-
-#include <functional>
 
 namespace Spark {
 
@@ -16,7 +15,7 @@ class UiPaintContext;
 class UiContextMenu {
 public:
     /** Opens at framebuffer pixel coordinates (top-left origin, same as <c>GetCursorFramebufferPixels</c>). */
-    void Open(float x, float y, Array<Utf8String> itemLabels, std::function<void(int index)> onPick);
+    void Open(float x, float y, Array<Utf8String> itemLabels, Function<void(int index)> onPick);
     void Close() noexcept;
 
     [[nodiscard]] bool IsOpen() const noexcept { return open; }
@@ -31,7 +30,7 @@ private:
     float anchorX = 0.0F;
     float anchorY = 0.0F;
     Array<Utf8String> items{};
-    std::function<void(int index)> onPick{};
+    Function<void(int index)> onPick{};
     int hoverIndex = -1;
     Rect panelRect{};
     float rowHeight = 32.0F;

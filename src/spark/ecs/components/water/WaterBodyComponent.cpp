@@ -54,11 +54,11 @@ void WaterBodyComponent::SetClipmapCameraWorld(const Vector3& worldPosition) noe
 }
 
 void WaterBodyComponent::ClearClipmapCameraOverride() noexcept {
-    clipmapCameraOverride.reset();
+    clipmapCameraOverride.Reset();
 }
 
 bool WaterBodyComponent::TryResolveClipmapCameraWorld(const GameWorld& world, Vector3& outWorld) const noexcept {
-    if (clipmapCameraOverride.has_value()) {
+    if (clipmapCameraOverride.HasValue()) {
         outWorld = *clipmapCameraOverride;
         return true;
     }
@@ -133,13 +133,13 @@ void WaterBodyComponent::SetSwellTravelDirectionWorld(const Vector2 directionWor
 }
 
 void WaterBodyComponent::ClearSwellTravelDirectionOverride() noexcept {
-    swellTravelDirectionOverride.reset();
+    swellTravelDirectionOverride.Reset();
 }
 
 WaterWaveSettings WaterBodyComponent::GetResolvedWaveSettings() const noexcept {
     WaterWaveSettings settings = WaterWavePreset(wavePresetId).ToSettings();
 
-    if (swellTravelDirectionOverride.has_value()) {
+    if (swellTravelDirectionOverride.HasValue()) {
         WaterWaveDirection::RotateSettingsToPrimarySwell(settings, *swellTravelDirectionOverride);
     }
 

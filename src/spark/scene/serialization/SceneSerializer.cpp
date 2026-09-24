@@ -9,7 +9,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <functional>
 
 namespace Spark {
 
@@ -257,7 +256,7 @@ SceneSerializer::SceneSerializer(const ComponentSnapshotRegistry& inRegistry) : 
 SceneDocument SceneSerializer::Capture(
         const GameWorld& world,
         const SceneCaptureContext& ctx,
-        const std::function<bool(const GameObject*)>& includeEntity) const {
+        const Function<bool(const GameObject*)>& includeEntity) const {
     SceneDocument doc;
     world.ForEachGameObject([&](const GameObject* object) {
         if (object == nullptr) {

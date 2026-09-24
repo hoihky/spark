@@ -2,9 +2,8 @@
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/core/Function.hpp"
 #include "spark/gameplay/DamageTypes.hpp"
-
-#include <functional>
 
 namespace Spark {
 
@@ -31,12 +30,12 @@ public:
     /** Returns applied damage after clamping; emits signals when damage > 0. */
     float ApplyDamage(float amount, GameObject* instigator = nullptr);
 
-    void SetOnDeath(std::function<void(GameObject&, GameObject*)> callback) { onDeath = MoveTemp(callback); }
+    void SetOnDeath(Function<void(GameObject&, GameObject*)> callback) { onDeath = MoveTemp(callback); }
 
 private:
     float maximum = 100.0F;
     float current = 100.0F;
-    std::function<void(GameObject&, GameObject*)> onDeath{};
+    Function<void(GameObject&, GameObject*)> onDeath{};
 };
 
 }  // namespace Spark

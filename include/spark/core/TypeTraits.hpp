@@ -1,5 +1,7 @@
 #pragma once
 
+#include "spark/core/Utility.hpp"
+
 namespace Spark {
 
 template<typename...>
@@ -32,6 +34,25 @@ struct RemoveCv<const volatile T> {
 
 template<typename T>
 using RemoveCvT = typename RemoveCv<T>::Type;
+
+template<typename T>
+using RemoveReferenceT = typename RemoveReference<T>::Type;
+
+template<typename T>
+using DecayT = RemoveCvT<RemoveReferenceT<T>>;
+
+template<typename A, typename B>
+struct IsSame {
+    static constexpr bool Value = false;
+};
+
+template<typename A>
+struct IsSame<A, A> {
+    static constexpr bool Value = true;
+};
+
+template<typename A, typename B>
+inline constexpr bool IsSameV = IsSame<A, B>::Value;
 
 namespace Detail {
 

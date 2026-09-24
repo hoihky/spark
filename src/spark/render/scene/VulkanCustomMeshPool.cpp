@@ -234,6 +234,11 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
         return;
     }
 
+    // Rebuild from the current submission only. Accumulating raw pointers across frames
+    // leaves dangling entries when SceneDrawItem SharedPtrs are released each frame.
+    knownRigidMeshes.Clear();
+    knownSkinnedMeshes.Clear();
+
     auto tryAddRigid = [this](const Mesh* mesh) {
         if (mesh == nullptr) {
             return;

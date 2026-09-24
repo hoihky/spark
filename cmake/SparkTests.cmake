@@ -50,6 +50,8 @@ function(spark_add_physics_tests)
             tests/scene/WaterSurfaceMeshTest.cpp
             tests/scene/SceneWaterSubmitTest.cpp
             tests/scene/SceneShadowFlagsTest.cpp
+            tests/scene/EngineApiFacadeTest.cpp
+            tests/scene/OptionalTest.cpp
             tests/scene/GerstnerWaveSurfaceTest.cpp
             tests/scene/WaterPresetAssetLoaderTest.cpp
             tests/scene/TerrainHeightSampleTest.cpp

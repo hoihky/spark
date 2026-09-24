@@ -33,6 +33,7 @@ x64_Release/
 
 # --- CMake / build trees ---
 build/
+build-*/
 out/
 cmake-build-*/
 CMakeFiles/
@@ -122,4 +123,3 @@ coverage/
 # --- Optional: large third-party drops (uncomment if you vendor binaries locally) ---
 # assets/**/*.zip
 # third_party/
-/build-test

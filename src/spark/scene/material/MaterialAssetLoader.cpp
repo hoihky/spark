@@ -1,6 +1,7 @@
 #include "spark/scene/material/MaterialAssetLoader.hpp"
 
 #include "spark/config.hpp"
+#include "spark/core/Function.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/scene/assets/GameWorldAssetCache.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -8,7 +9,6 @@
 
 #include <cstdio>
 #include <cstring>
-#include <functional>
 #include <sys/stat.h>
 
 namespace Spark {
@@ -80,7 +80,7 @@ bool PopulateAssetFromSlot(
         const char* materialPath,
         const MaterialSlotSnapshot::Data& slot,
         MaterialAsset& out,
-        const std::function<bool(const Utf8String& relativePath, SharedPtr<Texture2D>& outTexture)>& bindTexture) {
+        const Function<bool(const Utf8String& relativePath, SharedPtr<Texture2D>& outTexture)>& bindTexture) {
     if (!bindTexture(slot.baseColorPath, out.baseColor) || !bindTexture(slot.normalPath, out.normalMap) ||
         !bindTexture(slot.metallicRoughnessPath, out.metallicRoughness) ||
         !bindTexture(slot.emissivePath, out.emissiveMap)) {

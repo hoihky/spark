@@ -2,6 +2,7 @@
 
 #include "spark/render/platform/Window.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <vulkan/vulkan.h>

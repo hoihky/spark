@@ -46,7 +46,7 @@ void UiContextMenu::Open(
         const float x,
         const float y,
         Array<Utf8String> itemLabels,
-        std::function<void(int index)> pick) {
+        Function<void(int index)> pick) {
     Close();
     if (itemLabels.IsEmpty()) {
         return;

@@ -558,6 +558,12 @@ struct SceneRenderParams {
     Vector3 worldClearColor{0.0F, 0.0F, 0.0F};
 
     [[nodiscard]] std::uint32_t NextUiPaintOrder() noexcept { return ++uiPaintOrderNext; }
+
+    /**
+     * Clamps lighting, shadow, SSAO, fog, and time-of-day fields to safe GPU ranges.
+     * Call after manual edits or before submit when params are assembled outside scene submit.
+     */
+    void Sanitize() noexcept;
 };
 
 }  // namespace Spark

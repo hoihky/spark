@@ -5,9 +5,8 @@
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
 #include "spark/scene/submit/SceneSpriteTileCull.hpp"
+#include "spark/core/Function.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
-
-#include <functional>
 
 namespace Spark {
 
@@ -20,8 +19,8 @@ class TilemapComponent;
  */
 class SceneTilemapSubmitter {
 public:
-    using FindTextureLayerFn = std::function<std::int32_t(const SharedPtr<Texture2D>&)>;
-    using ResolveBlendModeFn = std::function<SceneBlendMode(const GameObject&)>;
+    using FindTextureLayerFn = Function<std::int32_t(const SharedPtr<Texture2D>&)>;
+    using ResolveBlendModeFn = Function<SceneBlendMode(const GameObject&)>;
 
     void Submit(
             GameWorld& world,

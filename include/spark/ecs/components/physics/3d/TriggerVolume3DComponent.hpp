@@ -5,8 +5,9 @@
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/math/Vector3.hpp"
 
+#include "spark/core/Function.hpp"
+
 #include <cstdint>
-#include <functional>
 
 namespace Spark {
 
@@ -31,7 +32,7 @@ enum class TriggerVolume3DShape : std::uint8_t {
  */
 class TriggerVolume3DComponent final : public GameComponent {
 public:
-    using ObjectCallback = std::function<void(GameObject& other)>;
+    using ObjectCallback = Function<void(GameObject& other)>;
 
     static constexpr ComponentKind TypeKind = ComponentKind::TriggerVolume3D;
 
@@ -65,8 +66,8 @@ public:
     [[nodiscard]] const char* GetFilterTag() const noexcept { return filterTag; }
     void SetFilterTag(const char* tag) noexcept { filterTag = tag; }
 
-    void SetOnEnter(ObjectCallback callback) { onEnter = std::move(callback); }
-    void SetOnExit(ObjectCallback callback) { onExit = std::move(callback); }
+    void SetOnEnter(ObjectCallback callback) { onEnter = MoveTemp(callback); }
+    void SetOnExit(ObjectCallback callback) { onExit = MoveTemp(callback); }
 
     /** True while <c>other</c> overlaps this volume (after the last <c>SimulateTriggerVolumes3D</c> step). */
     [[nodiscard]] bool IsOverlapping(const GameObject& other) const noexcept;

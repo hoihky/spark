@@ -1,8 +1,7 @@
 #pragma once
 
+#include "spark/core/Function.hpp"
 #include "spark/core/Utf8String.hpp"
-
-#include <functional>
 
 namespace Spark {
 
@@ -15,7 +14,7 @@ class MaterialAsset;
  */
 class MaterialLibraryBinding {
 public:
-    using ApplyFn = std::function<void(const MaterialAsset&)>;
+    using ApplyFn = Function<void(const MaterialAsset&)>;
 
     [[nodiscard]] const Utf8String& GetKey() const noexcept { return key; }
     [[nodiscard]] bool HasKey() const noexcept { return !key.IsEmpty(); }

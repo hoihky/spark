@@ -844,6 +844,10 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/present/VulkanPresentRenderPass.cpp
         src/spark/render/lighting/SceneLightingProfile.cpp
         src/spark/render/lighting/SceneLightingResolver.cpp
+        src/spark/render/lighting/SceneLightingSetup.cpp
+        src/spark/render/lighting/SceneShadowParticipation.cpp
+        src/spark/engine/SceneRenderParams.cpp
+        src/spark/scene/submit/LitSceneBuilder.cpp
         src/spark/render/present/VulkanDepthResources.cpp
         src/spark/render/present/VulkanPresentationSwapchain.cpp
         src/spark/render/present/VulkanPresentationFramebuffers.cpp

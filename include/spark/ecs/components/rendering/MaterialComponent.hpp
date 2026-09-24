@@ -8,9 +8,10 @@
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
+#include "spark/core/Optional.hpp"
+#include "spark/render/lighting/SceneShadowParticipation.hpp"
 
 #include <cstdint>
-#include <optional>
 
 namespace Spark {
 
@@ -125,13 +126,21 @@ public:
      * ground planes and underwater unit cubes do not cast).
      */
     void SetShadowCastOverride(const bool casts) noexcept { shadowCastOverride = casts; }
-    void ClearShadowCastOverride() noexcept { shadowCastOverride.reset(); }
-    [[nodiscard]] std::optional<bool> GetShadowCastOverride() const noexcept { return shadowCastOverride; }
+    void ClearShadowCastOverride() noexcept { shadowCastOverride.Reset(); }
+    [[nodiscard]] Optional<bool> GetShadowCastOverride() const noexcept { return shadowCastOverride; }
 
     void SetShadowReceiveOverride(const bool receives) noexcept { shadowReceiveOverride = receives; }
-    void ClearShadowReceiveOverride() noexcept { shadowReceiveOverride.reset(); }
-    [[nodiscard]] std::optional<bool> GetShadowReceiveOverride() const noexcept {
+    void ClearShadowReceiveOverride() noexcept { shadowReceiveOverride.Reset(); }
+    [[nodiscard]] Optional<bool> GetShadowReceiveOverride() const noexcept {
         return shadowReceiveOverride;
+    }
+
+    /** Unified shadow API; wraps cast/receive overrides above. */
+    void SetShadowParticipation(const SceneShadowParticipation& participation) noexcept {
+        participation.ApplyTo(*this);
+    }
+    [[nodiscard]] SceneShadowParticipation GetShadowParticipation() const noexcept {
+        return SceneShadowParticipation::FromMaterial(*this);
     }
 
 private:
@@ -167,8 +176,8 @@ private:
     float normalScale = 1.0F;
     MaterialGltfExtensions gltfExtensions{};
     MaterialLibraryBinding libraryBinding;
-    std::optional<bool> shadowCastOverride{};
-    std::optional<bool> shadowReceiveOverride{};
+    Optional<bool> shadowCastOverride{};
+    Optional<bool> shadowReceiveOverride{};
 };
 
 }  // namespace Spark

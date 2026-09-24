@@ -37,7 +37,7 @@ Key header groups:
 - **Engine loop:** `spark/engine/` — `Engine`, `IGame`, `Game`, `ISceneProvider`, `IEngineContext`, `EngineContext`, `GlfwInput`, `FrameTiming`, `SceneRenderParams`.
 - **World & entities:** `spark/scene/core/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/core/Scene.hpp`.
 - **Components:** `spark/ecs/components/` — domain subfolders (`core/`, `rendering/`, `lighting/`, `camera/`, `physics/2d|3d/`, `animation/`, `ai/`, `audio/`, `ui/`, `world/`).
-- **Math & containers:** `spark/math/`, `spark/core/`, `spark/memory/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`).
+- **Math & containers:** `spark/math/`, `spark/core/`, `spark/memory/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`, `Optional`, `Function`, `HashMap`, `Queue`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
 - **Fast path for lit scenes:** `spark/scene/submit/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).
 
@@ -199,8 +199,54 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Particles** | CPU billboards, additive pass | `SceneParticleInstance`, `particles`, `particleCameraRight` / `Up` |
 | **Screen UI** | Solid rects + text, three paint layers | `screenRects` / `screenTexts`, overlay, late; `ScreenRectDraw`, `ScreenTextDraw`, `NextUiPaintOrder` |
 | **ECS → standard frame** | One-call fill for typical 3D scenes | `SubmitStandardLitSceneFromWorld` (`spark/scene/submit/SceneSubmit.hpp`) |
+| **Lit scene facade** | Fluent camera + lighting + submit | `LitSceneBuilder`, `LitSceneSubmitOptions` (`spark/scene/submit/`) |
+| **Lighting preset setup** | Profile + overrides without touching draw lists | `SceneLightingSetup` (`spark/render/lighting/SceneLightingSetup.hpp`) |
+| **Shadow participation VO** | Cast/receive intent for materials and draws | `SceneShadowParticipation` (`spark/render/lighting/SceneShadowParticipation.hpp`) |
+| **Params validation** | Clamp unsafe lighting / SSAO / fog values | `SceneRenderParams::Sanitize()` |
 
 Gap analysis (more light types, material channels, IBL, caps): [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md).
+
+#### Recommended lit-scene path (additive API)
+
+Existing positional APIs are unchanged. For new gameplay code, prefer the options struct or builder:
+
+```cpp
+#include "spark/scene/submit/LitSceneBuilder.hpp"
+#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
+#include "spark/render/lighting/SceneLightingSetup.hpp"
+
+Spark::LitSceneSubmitOptions opts;
+opts.WithDirectionalLight(sunDir, sunColor, sunIntensity).WithSceneTime(sceneTime);
+
+Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor)
+    .WithShadowCascades(0.12F, 1200.0F)
+    .WithShadowDistanceFade(150.0F)
+    .ApplyTo(params);  // optional: or chain on LitSceneBuilder
+
+Spark::LitSceneBuilder(world, context)
+    .WithLightingSetup(Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor))
+    .WithOptions(opts)
+    .WithCameraFromWorld()
+    .Submit();
+```
+
+Call `SceneRenderParams::Sanitize()` when assembling params manually (editor, custom presenters).
+
+#### Spark core vs C++ standard library
+
+Spark ships its own containers and utilities under `spark/core/` to keep the engine link surface predictable:
+
+| Use | Spark type | Avoid in public engine APIs |
+|-----|------------|-----------------------------|
+| Dynamic array | `Array<T>` | `std::vector` |
+| Hash map | `HashMap<K,V>` | `std::unordered_map` |
+| UTF-8 text | `Utf8String` | `std::string` |
+| Optional value | `Optional<T>`, `Nullopt` | `std::optional` |
+| Callback / lambda storage | `Function<Sig>` | `std::function` |
+| Unique ownership | `UniquePtr<T>` | `std::unique_ptr` |
+| Shared ownership | `SharedPtr<T>` | `std::shared_ptr` |
+
+Fixed-width integers (`std::uint32_t`, `std::size_t`) and `<cmath>` transcendentals in math headers are still used where they map cleanly to platform ABIs. Demos and third-party interop (e.g. CoreCLR host) may keep `std::string` at boundaries; prefer `Utf8String` / `Array` inside engine code.
 
 ### 5.4 Materials and shading
 

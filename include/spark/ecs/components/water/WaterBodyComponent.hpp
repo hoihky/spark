@@ -8,9 +8,8 @@
 #include "spark/scene/water/WaterSurfaceMesh.hpp"
 #include "spark/scene/water/WaterSurfaceMeshSettings.hpp"
 #include "spark/scene/water/WaterWavePresetId.hpp"
+#include "spark/core/Optional.hpp"
 #include "spark/scene/water/WaterWaveSettings.hpp"
-
-#include <optional>
 
 namespace Spark {
 
@@ -89,7 +88,7 @@ public:
     void SetSwellTravelDirectionWorld(Vector2 directionWorldXZ) noexcept;
     void ClearSwellTravelDirectionOverride() noexcept;
     [[nodiscard]] bool HasSwellTravelDirectionOverride() const noexcept {
-        return swellTravelDirectionOverride.has_value();
+        return swellTravelDirectionOverride.HasValue();
     }
 
     /** Overrides ECS camera lookup for infinite-ocean clipmap recentring (e.g. fly-camera demos). */
@@ -128,8 +127,8 @@ private:
     float waveAmplitudeScale = 1.0F;
     float waveSpeedScale = 1.0F;
     bool surfaceDirty = true;
-    std::optional<Vector3> clipmapCameraOverride{};
-    std::optional<Vector2> swellTravelDirectionOverride{};
+    Optional<Vector3> clipmapCameraOverride{};
+    Optional<Vector2> swellTravelDirectionOverride{};
 
     [[nodiscard]] bool TryResolveClipmapCameraWorld(const GameWorld& world, Vector3& outWorld) const noexcept;
 };

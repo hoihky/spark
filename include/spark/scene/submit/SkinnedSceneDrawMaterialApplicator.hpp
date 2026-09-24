@@ -34,7 +34,7 @@ public:
 
     private:
         SceneRenderParams& renderParams;
-        const SceneSubmitDetail::FindSceneTextureFn& findTexture;
+        SceneSubmitDetail::FindSceneTextureFn findTexture;
     };
 
     explicit SkinnedSceneDrawMaterialApplicator(

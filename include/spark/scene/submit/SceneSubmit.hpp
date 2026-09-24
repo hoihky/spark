@@ -4,6 +4,7 @@
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 
 namespace Spark {
 
@@ -55,6 +56,15 @@ void FillStandardLitSceneFromWorld(
         SceneSpriteSortMode spriteSortMode = SceneSpriteSortMode::SortOrderOnly,
         const Scene* sceneForCulling = nullptr);
 
+/** Options-based overload; identical behavior to the positional API above. */
+void FillStandardLitSceneFromWorld(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        const LitSceneSubmitOptions& options,
+        SceneRenderParams& outParams);
+
 /**
  * Resolves the main camera in <c>world</c> (<c>Camera2DComponent</c> preferred when priorities tie higher)
  * and fills view/projection fields on <c>outParams</c>.
@@ -82,6 +92,14 @@ void SubmitStandardLitSceneFromWorld(
         float sceneTimeSeconds = 0.0F,
         SceneSpriteSortMode spriteSortMode = SceneSpriteSortMode::SortOrderOnly);
 
+/** Options-based overload; sanitizes params before submit. */
+void SubmitStandardLitSceneFromWorld(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        const LitSceneSubmitOptions& options);
+
 /**
  * Resolves the main ECS camera, fills params, and submits. Returns false when no enabled camera exists.
  */
@@ -95,5 +113,11 @@ void SubmitStandardLitSceneFromWorld(
         bool enableParticles,
         float sceneTimeSeconds = 0.0F,
         SceneSpriteSortMode spriteSortMode = SceneSpriteSortMode::SortOrderOnly);
+
+/** Camera + options; sanitizes params before submit. */
+[[nodiscard]] bool SubmitStandardLitSceneFromWorldWithCamera(
+        GameWorld& world,
+        IEngineContext& context,
+        const LitSceneSubmitOptions& options);
 
 }  // namespace Spark

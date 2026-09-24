@@ -260,6 +260,12 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterAvatarHudName = Spark::Utf8String{};
         characterSkinnedMesh = nullptr;
         characterMaterial = nullptr;
+        attackSocketMarker = nullptr;
+        attackSocket = nullptr;
+        footIk = nullptr;
+        aimIk = nullptr;
+        skeletonDebugDraw = nullptr;
+        meleeTargets.Clear();
         foxAssetReady = false;
         cesiumAssetReady = false;
 
@@ -366,6 +372,11 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         animEventReceiver = nullptr;
         meleeHit = nullptr;
         rootMotion = nullptr;
+        attackSocketMarker = nullptr;
+        attackSocket = nullptr;
+        footIk = nullptr;
+        aimIk = nullptr;
+        skeletonDebugDraw = nullptr;
         meleeTargets.Clear();
         characterSkinnedMesh = nullptr;
         characterMaterial = nullptr;
@@ -692,11 +703,7 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             params.pointLights.PushBack(gpu);
         });
 
-        auto findOrAddTexture =
-                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex) -> std::int32_t {
-            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, nullptr, nullptr);
-        };
-        const auto findSceneTexture =
+        const Spark::SceneSubmitDetail::FindSceneTextureFn findSceneTexture =
                 [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* uvScale,
                           Spark::Vector2* uvOffset) -> std::int32_t {
             return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
@@ -723,26 +730,31 @@ void CharacterCameraDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, S
             if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
                 return;
             }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
+            Spark::SceneDrawItem baseItem{};
+            baseItem.model = world;
+            baseItem.mesh = mc.GetSlot();
+            baseItem.albedo = mc.GetAlbedo();
+            baseItem.textureLayer = -1;
             if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
+                baseItem.customMesh = mc.GetMesh();
             }
             if (mc.GetSlot() == Spark::SceneMeshSlot::GroundPlane) {
-                item.doubleSided = true;
+                baseItem.doubleSided = true;
             }
-            Spark::Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
+            const Spark::MultiMaterialComponent* multiMat =
+                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
+            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
+                !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+                Spark::SceneSubmitDetail::PushRigidMeshDraws(
+                        drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findSceneTexture);
+                return;
+            }
+            Spark::SceneDrawItem item = baseItem;
             if (mat != nullptr) {
                 ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Spark::Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-                }
+                Spark::SceneSubmitDetail::ApplyAlbedoTexture(
+                        item, mat->GetBaseColorTexture(), mat->GetTint(), findSceneTexture);
             }
-            item.albedo = alb;
             drawList.PushBack(item);
         });
 

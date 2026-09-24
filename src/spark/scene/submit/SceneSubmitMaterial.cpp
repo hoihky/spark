@@ -13,7 +13,7 @@
 #include "spark/scene/texture/Texture2D.hpp"
 
 #include <cstdio>
-#include <optional>
+#include "spark/core/Optional.hpp"
 
 namespace Spark {
 
@@ -165,15 +165,15 @@ std::int32_t ResolveDrawableShadowFlags(
     std::int32_t flags = defaultShadowFlags;
 
     if (material != nullptr) {
-        if (const std::optional<bool> castOverride = material->GetShadowCastOverride(); castOverride.has_value()) {
+        if (const Optional<bool> castOverride = material->GetShadowCastOverride(); castOverride.HasValue()) {
             if (*castOverride) {
                 flags |= kSceneShadowCast;
             } else {
                 flags &= ~kSceneShadowCast;
             }
         }
-        if (const std::optional<bool> receiveOverride = material->GetShadowReceiveOverride();
-            receiveOverride.has_value()) {
+        if (const Optional<bool> receiveOverride = material->GetShadowReceiveOverride();
+            receiveOverride.HasValue()) {
             if (*receiveOverride) {
                 flags |= kSceneShadowReceive;
             } else {
@@ -182,7 +182,7 @@ std::int32_t ResolveDrawableShadowFlags(
         }
     }
 
-    if (material == nullptr || !material->GetShadowCastOverride().has_value()) {
+    if (material == nullptr || !material->GetShadowCastOverride().HasValue()) {
         if (object != nullptr && object->GetComponent<TerrainComponent>() != nullptr) {
             flags |= kSceneShadowCast;
         }
@@ -205,7 +205,7 @@ std::int32_t ResolveWaterShadowFlags(
         return 0;
     }
     bool receive = params.shadowsReceiveByDefault;
-    if (material != nullptr && material->GetShadowReceiveOverride().has_value()) {
+    if (material != nullptr && material->GetShadowReceiveOverride().HasValue()) {
         receive = *material->GetShadowReceiveOverride();
     }
     return receive ? kSceneShadowReceive : 0;

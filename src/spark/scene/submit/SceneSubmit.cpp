@@ -46,7 +46,6 @@
 
 #include "spark/math/Constants.hpp"
 
-#include <functional>
 
 namespace Spark {
 
@@ -56,7 +55,7 @@ void ApplyAlbedoTexture(
         SceneDrawItem& item,
         const SharedPtr<Texture2D>& baseColor,
         const Vector3& tint,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+        const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture) {
     item.albedo = {item.albedo.x * tint.x, item.albedo.y * tint.y, item.albedo.z * tint.z};
     if (!baseColor) {
         return;
@@ -85,7 +84,7 @@ void PushRigidMeshDraws(
         const MaterialComponent* mat,
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+        const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture) {
     const Array<MeshSubmesh>& submeshes = mesh.GetSubmeshes();
     if (submeshes.IsEmpty() || multiMat == nullptr) {
         SceneDrawItem item = baseItem;
@@ -126,7 +125,7 @@ void PushSkinnedMeshDraws(
         const MaterialComponent* mat,
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
-        const std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>& findOrAddTexture) {
+        const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture) {
     SkinnedSceneDrawMaterialApplicator applicator(params, findOrAddTexture);
     applicator.AppendSkinnedDraws(drawList, baseItem, mesh, mat, multiMat);
 }
@@ -138,7 +137,7 @@ namespace {
 struct RigidDrawableSubmitSink final : DrawableFrustumSink {
     Array<SceneDrawItem>& drawList;
     SceneRenderParams& params;
-    const SceneSubmitDetail::FindSceneTextureFn& findOrAddTexture;
+    SceneSubmitDetail::FindSceneTextureFn findOrAddTexture;
     std::int32_t defaultShadowFlags = 0;
     bool skiesSubmittedOutsideCull = false;
 
@@ -417,7 +416,7 @@ void FillStandardLitSceneFromWorld(
         GameWorld& gameWorld;
         Array<SceneDrawItem>& draws;
         SceneRenderParams& params;
-        const SceneSubmitDetail::FindSceneTextureFn& findTex;
+        SceneSubmitDetail::FindSceneTextureFn findTex;
         SkinnedAnimationService& skinnedService;
         SkinnedSceneDrawMaterialApplicator materialApplicator;
         std::int32_t defaultShadowFlags = 0;
@@ -434,7 +433,7 @@ void FillStandardLitSceneFromWorld(
               params(inParams),
               findTex(inFindTex),
               skinnedService(inSkinnedService),
-              materialApplicator(inParams, inFindTex),
+              materialApplicator(inParams, findTex),
               defaultShadowFlags(inDefaultShadowFlags) {}
 
         void OnSkinnedDrawable(GameObject* object,
@@ -634,6 +633,31 @@ void FillStandardLitSceneFromWorld(
     }
 }
 
+void FillStandardLitSceneFromWorld(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        const LitSceneSubmitOptions& options,
+        SceneRenderParams& outParams) {
+    FillStandardLitSceneFromWorld(
+            world,
+            context,
+            viewProjection,
+            cameraPositionWorld,
+            options.lightDirectionWorld,
+            options.lightColor,
+            options.lightIntensity,
+            options.ambientColor,
+            options.enableParticles,
+            options.particleCameraRight,
+            options.particleCameraUp,
+            options.sceneTimeSeconds,
+            outParams,
+            options.spriteSortMode,
+            options.sceneForCulling);
+}
+
 void SubmitStandardLitSceneFromWorld(
         GameWorld& world,
         IEngineContext& context,
@@ -663,6 +687,18 @@ void SubmitStandardLitSceneFromWorld(
             sceneTimeSeconds,
             params,
             spriteSortMode);
+    context.SetSceneRenderParams(params);
+}
+
+void SubmitStandardLitSceneFromWorld(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        const LitSceneSubmitOptions& options) {
+    SceneRenderParams params{};
+    FillStandardLitSceneFromWorld(world, context, viewProjection, cameraPositionWorld, options, params);
+    params.Sanitize();
     context.SetSceneRenderParams(params);
 }
 
@@ -724,6 +760,44 @@ bool SubmitStandardLitSceneFromWorldWithCamera(
             sceneTimeSeconds,
             params,
             spriteSortMode);
+    context.SetSceneRenderParams(params);
+    return true;
+}
+
+bool SubmitStandardLitSceneFromWorldWithCamera(
+        GameWorld& world,
+        IEngineContext& context,
+        const LitSceneSubmitOptions& options) {
+    int fbW = 0;
+    int fbH = 0;
+    context.GetFramebufferSize(fbW, fbH);
+    if (fbW <= 0) {
+        fbW = 1;
+    }
+    if (fbH <= 0) {
+        fbH = 1;
+    }
+    SceneRenderParams params{};
+    if (!TryFillSceneCameraFromWorld(
+                world,
+                static_cast<float>(fbW),
+                static_cast<float>(fbH),
+                params)) {
+        return false;
+    }
+    LitSceneSubmitOptions resolved = options;
+    if (resolved.enableParticles) {
+        resolved.particleCameraRight = params.particleCameraRight;
+        resolved.particleCameraUp = params.particleCameraUp;
+    }
+    FillStandardLitSceneFromWorld(
+            world,
+            context,
+            params.viewProjection,
+            params.cameraPositionWorld,
+            resolved,
+            params);
+    params.Sanitize();
     context.SetSceneRenderParams(params);
     return true;
 }

@@ -7,8 +7,9 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Matrix4.hpp"
 
+#include "spark/core/Function.hpp"
+
 #include <cstdint>
-#include <functional>
 
 namespace Spark {
 
@@ -34,7 +35,7 @@ std::int32_t FindOrAddSceneTexture(
         Vector2* outUvOffset = nullptr,
         bool* outIsHdrLinear = nullptr);
 
-using FindSceneTextureFn = std::function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>;
+using FindSceneTextureFn = Function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>;
 
 void ApplyAlbedoTexture(
         SceneDrawItem& item,
