@@ -35,6 +35,12 @@ enum class SignalId : std::uint32_t {
     DamageApplied = 8,
     /** Owner's health reached zero. <c>ptr</c> = instigator <c>GameObject*</c> or nullptr. */
     Died = 9,
+    /** 2D trigger volume enter: <c>ptr</c> = other <c>GameObject*</c>, <c>a</c> = other object id. */
+    Physics2DTriggerEnter = 10,
+    /** 2D trigger volume exit: same payload as <c>Physics2DTriggerEnter</c>. */
+    Physics2DTriggerExit = 11,
+    /** 2D trigger volume stay (each <c>SimulateTriggerVolumes2D</c> step): same payload. */
+    Physics2DTriggerStay = 12,
     UserBase = 0x10000,
 };
 

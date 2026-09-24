@@ -56,7 +56,10 @@
 #include "spark/ecs/components/physics/2d/HingeJoint2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
@@ -71,6 +74,7 @@
 
 // Animation
 #include "spark/ecs/components/animation/AnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"
 #include "spark/ecs/components/animation/AnimationEventVfxComponent.hpp"
@@ -94,6 +98,8 @@
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
+#include "spark/ecs/components/gameplay/InteractableComponent.hpp"
+#include "spark/ecs/components/gameplay/PickupComponent.hpp"
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"

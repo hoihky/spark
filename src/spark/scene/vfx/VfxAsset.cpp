@@ -24,10 +24,14 @@ void VfxAsset::Activate(
         GameObject& owner,
         const VfxPlaybackMode mode) const {
     ApplyTo(emitterOut);
-    if (mode == VfxPlaybackMode::Once && burstCount > 0) {
-        emitterOut.Burst(owner, burstCount);
-        emitterOut.SetEmissionRate(0.0F);
+    if (mode != VfxPlaybackMode::Once) {
+        return;
     }
+    if (burstCount > 0) {
+        emitterOut.Burst(owner, burstCount);
+    }
+    // One-shots must not keep ring/continuous modules emitting forever.
+    emitterOut.SetEmissionRate(0.0F);
 }
 
 bool VfxAsset::IsCompositeBuiltin(const char* builtinName) noexcept {

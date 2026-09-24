@@ -9,6 +9,9 @@ void ExplosionFx::Initialize(Spark::GameWorld& worldIn) noexcept {
 }
 
 void ExplosionFx::Shutdown() noexcept {
+    if (world != nullptr) {
+        world->GetVfxSubsystem().Shutdown(*world);
+    }
     world = nullptr;
 }
 
@@ -24,25 +27,26 @@ void ExplosionFx::SpawnBurst(const float worldX, const float worldY, const int /
 }
 
 void ExplosionFx::SpawnEnemyDefeat(const float worldX, const float worldY) noexcept {
-    QueueAt("explosion", worldX, worldY, spawnZ);
     QueueAt("impact", worldX, worldY, spawnZ + 0.01F);
-    QueueAt("dust", worldX, worldY - 0.15F, spawnZ - 0.01F);
+}
+
+void ExplosionFx::SpawnMeleeDefeat(const float worldX, const float worldY) noexcept {
+    QueueAt("impact", worldX, worldY, spawnZ + 0.01F);
 }
 
 void ExplosionFx::SpawnGemPickup(const float worldX, const float worldY) noexcept {
     QueueAt("loot_sparkle", worldX, worldY, spawnZ + 0.02F);
 }
 
-void ExplosionFx::SpawnLandDust(const float worldX, const float worldY) noexcept {
-    QueueAt("dust", worldX, worldY, spawnZ - 0.02F);
+void ExplosionFx::SpawnLandDust(const float /*worldX*/, const float /*worldY*/) noexcept {
+    // Intentionally quiet — land dust stacked with other combat VFX and read as stray noise.
 }
 
-void ExplosionFx::SpawnMuzzleFlash(const float worldX, const float worldY) noexcept {
-    QueueAt("muzzle_flash", worldX, worldY, spawnZ + 0.04F);
+void ExplosionFx::SpawnMuzzleFlash(const float /*worldX*/, const float /*worldY*/) noexcept {
+    // Muzzle flash omitted in the teaching demo to keep the scene readable.
 }
 
 void ExplosionFx::SpawnPlayerHurt(const float worldX, const float worldY) noexcept {
-    QueueAt("shockwave", worldX, worldY, spawnZ + 0.02F);
     QueueAt("impact", worldX, worldY, spawnZ + 0.01F);
 }
 

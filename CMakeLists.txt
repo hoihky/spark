@@ -664,6 +664,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/rendering/SkinnedMeshComponent.cpp
         src/spark/ecs/components/animation/AnimationEventReceiverComponent.cpp
         src/spark/ecs/components/animation/AnimationEventVfxComponent.cpp
+        src/spark/ecs/components/animation/AnimationHitbox2DComponent.cpp
         src/spark/ecs/components/animation/AnimationMeleeHitComponent.cpp
         src/spark/ecs/components/animation/RootMotionComponent.cpp
         src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
@@ -673,7 +674,10 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/ai/NavMeshAgentComponent.cpp
         src/spark/ecs/components/gameplay/HealthComponent.cpp
         src/spark/ecs/components/gameplay/DamageableComponent.cpp
+        src/spark/ecs/components/gameplay/InteractableComponent.cpp
+        src/spark/ecs/components/gameplay/PickupComponent.cpp
         src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
+        src/spark/ecs/components/physics/2d/TriggerVolume2DComponent.cpp
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/SkeletonPaletteCacheKey.cpp
@@ -955,8 +959,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/Collision3D.cpp
         src/spark/physics/SpatialHashGrid3D.cpp
         src/spark/physics/PhysicsWorld3D.cpp
+        src/spark/physics/CharacterController2D.cpp
         src/spark/physics/CharacterController3D.cpp
+        src/spark/physics/TriggerVolume2D.cpp
         src/spark/physics/TriggerVolume3D.cpp
+        src/spark/gameplay/Interaction2D.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp
         src/spark/ai/steering/SteeringBehaviors3D.cpp

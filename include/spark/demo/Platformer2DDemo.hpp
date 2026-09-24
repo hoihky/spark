@@ -13,9 +13,12 @@
 #include "spark/demo/platformer2d/Platformer2DHealthHud.hpp"
 #include "spark/demo/platformer2d/Platformer2DPlayerCombat.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
+#include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
+#include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
+#include "spark/engine/IEngineContext.hpp"
 #include "spark/audio/SoundClip.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
@@ -87,7 +90,6 @@ public:
     static constexpr float kGoalCenterY = Platformer2D::Config::kGoalCenterY;
     static constexpr float kGoalHalfW = Platformer2D::Config::kGoalHalfW;
     static constexpr float kGoalHalfH = Platformer2D::Config::kGoalHalfH;
-    static constexpr float kGemCollectRadius = 0.62F;
     static constexpr std::uint16_t kGemHurtboxCategoryBits = Platformer2D::Config::kGemHurtboxCategoryBits;
 
     void Load(Spark::GameWorld& w, Spark::IEngineContext& context);
@@ -129,6 +131,8 @@ private:
     Spark::GameObject* playerObject = nullptr;
     Spark::TransformComponent* playerTr = nullptr;
     Spark::Rigidbody2DComponent* playerRb = nullptr;
+    Spark::CharacterController2DComponent* playerController = nullptr;
+    Spark::AnimationHitbox2DComponent* playerMelee = nullptr;
     Spark::HealthComponent* playerHealth = nullptr;
     Spark::DamageableComponent* playerDamageable = nullptr;
     SpriteAnimatorComponent* playerAnim = nullptr;
@@ -157,8 +161,10 @@ private:
     Spark::TransformComponent* goalFlagTr = nullptr;
     Spark::GameObject* goalGlowGo = nullptr;
     Spark::TransformComponent* goalGlowTr = nullptr;
+    Spark::GameObject* goalTriggerGo = nullptr;
 
     Spark::SoundEngine* audioEngine = nullptr;
+    Spark::IEngineContext* engineContext = nullptr;
 
     Platformer2D::BulletPool playerBullets{};
     Platformer2D::BulletPool enemyBullets{};
@@ -173,7 +179,6 @@ private:
     int gemsCollected = 0;
     int gemsTotal = 0;
     bool goalReached = false;
-    bool wasGrounded = true;
     float sceneTime = 0.0F;
     float goalPulse = 0.0F;
     char statusHudBuffer[160]{};

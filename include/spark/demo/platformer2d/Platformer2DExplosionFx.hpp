@@ -15,6 +15,8 @@ public:
 
     void SpawnBurst(float worldX, float worldY, int /*particleCount*/ = 0) noexcept;
     void SpawnEnemyDefeat(float worldX, float worldY) noexcept;
+    /** Lighter feedback for melee kills (avoids stacking explosion + dust + impact). */
+    void SpawnMeleeDefeat(float worldX, float worldY) noexcept;
     void SpawnGemPickup(float worldX, float worldY) noexcept;
     void SpawnLandDust(float worldX, float worldY) noexcept;
     void SpawnMuzzleFlash(float worldX, float worldY) noexcept;

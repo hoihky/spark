@@ -1,6 +1,7 @@
 #include "spark/demo/platformer2d/Platformer2DEnemySquad.hpp"
 
 #include "spark/demo/platformer2d/Platformer2DCombatMath.hpp"
+#include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/physics/CollisionFilter2D.hpp"
@@ -42,6 +43,7 @@ void EnemySquad::Load(
         enemyHit->SetCategoryBits(Config::kEnemyHurtboxCategoryBits);
         enemyHit->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
         ego->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
+        ego->AddComponent<Spark::HealthComponent>(1.0F);
         enemies[static_cast<std::size_t>(ei)] = {
                 true,
                 ego,
@@ -65,6 +67,7 @@ void EnemySquad::Unload(Spark::GameWorld& world) noexcept
         }
     }
     enemies.Clear();
+    pendingDestroy.Clear();
     defeatedCount = 0;
 }
 
@@ -153,6 +156,34 @@ void EnemySquad::Tick(
             enemy.fireCooldown = 0.45F;
         }
     }
+}
+
+void EnemySquad::OnEnemyDied(Spark::GameObject& enemy, ExplosionFx& explosions) noexcept {
+    for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {
+        Enemy& slot = enemies[ei];
+        if (!slot.alive || slot.go != &enemy) {
+            continue;
+        }
+        const Spark::Vector3 epos = slot.tr != nullptr ? slot.tr->GetLocalTransform().translation : Spark::Vector3::Zero;
+        explosions.SpawnMeleeDefeat(epos.x, epos.y);
+        slot.alive = false;
+        pendingDestroy.PushBack(slot.go);
+        slot.go = nullptr;
+        slot.tr = nullptr;
+        slot.spr = nullptr;
+        ++defeatedCount;
+        return;
+    }
+}
+
+void EnemySquad::FlushPendingDestroys(Spark::GameWorld& world) noexcept {
+    for (std::size_t i = 0; i < pendingDestroy.GetSize(); ++i) {
+        Spark::GameObject* object = pendingDestroy[i];
+        if (object != nullptr) {
+            world.DestroyGameObject(object);
+        }
+    }
+    pendingDestroy.Clear();
 }
 
 int EnemySquad::ResolvePlayerBulletHits(

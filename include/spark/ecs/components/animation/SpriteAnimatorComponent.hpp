@@ -51,6 +51,13 @@ public:
     /** For the current clip: when <c>loop == false</c>, true once playback reaches the last frame. */
     [[nodiscard]] bool IsCurrentClipFinished() const noexcept;
 
+    [[nodiscard]] float GetTimeInClipSeconds() const noexcept { return timeInClipSeconds; }
+
+    /** Local frame index within the active clip (0 .. frameCount-1). */
+    [[nodiscard]] std::uint32_t GetCurrentLocalFrame() const noexcept;
+
+    [[nodiscard]] const SpriteAnimationClip* GetCurrentClip() const noexcept;
+
     [[nodiscard]] static Vector4 ComputeUniformGridUv(
             std::uint32_t columns,
             std::uint32_t rows,

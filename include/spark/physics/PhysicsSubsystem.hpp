@@ -1,10 +1,12 @@
 #pragma once
 
+#include "spark/physics/CharacterController2D.hpp"
 #include "spark/physics/CharacterController3D.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
 #include "spark/physics/PhysicsQueries3D.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/physics/TriggerVolume2D.hpp"
 #include "spark/physics/TriggerVolume3D.hpp"
 #include "spark/engine/FrameTiming.hpp"
 
@@ -31,6 +33,8 @@ public:
     void SetBroadPhaseCellSize2D(float cellWorldSize) noexcept;
 
     void Simulate2D(GameWorld& world, const FrameTiming& timing);
+    void SimulateCharacterControllers2D(GameWorld& world, const FrameTiming& timing);
+    void SimulateTriggerVolumes2D(GameWorld& world, const FrameTiming& timing);
     void Simulate3D(GameWorld& world, const FrameTiming& timing);
     void SimulateCharacterControllers3D(GameWorld& world, const FrameTiming& timing);
     void SimulateTriggerVolumes3D(GameWorld& world, const FrameTiming& timing);
@@ -50,6 +54,14 @@ public:
     [[nodiscard]] PhysicsQueryWorld3D& GetQueries3D() noexcept { return queries3D; }
     [[nodiscard]] const PhysicsQueryWorld3D& GetQueries3D() const noexcept { return queries3D; }
 
+    [[nodiscard]] CharacterControllerWorld2D& GetCharacterController2D() noexcept { return characterController2D; }
+    [[nodiscard]] const CharacterControllerWorld2D& GetCharacterController2D() const noexcept {
+        return characterController2D;
+    }
+
+    [[nodiscard]] TriggerVolumeWorld2D& GetTriggerVolumes2D() noexcept { return triggerVolumes2D; }
+    [[nodiscard]] const TriggerVolumeWorld2D& GetTriggerVolumes2D() const noexcept { return triggerVolumes2D; }
+
     [[nodiscard]] CharacterControllerWorld3D& GetCharacterController3D() noexcept { return characterController3D; }
     [[nodiscard]] const CharacterControllerWorld3D& GetCharacterController3D() const noexcept {
         return characterController3D;
@@ -60,6 +72,8 @@ public:
 
 private:
     PhysicsWorld2D world2D{};
+    CharacterControllerWorld2D characterController2D{};
+    TriggerVolumeWorld2D triggerVolumes2D{};
     PhysicsWorld3D world3D{};
     PhysicsQueryWorld2D queries2D{};
     PhysicsQueryWorld3D queries3D{};

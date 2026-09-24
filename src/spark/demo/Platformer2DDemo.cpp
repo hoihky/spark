@@ -3,17 +3,20 @@
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
+#include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
+#include "spark/ecs/components/gameplay/PickupComponent.hpp"
+#include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
-
 #include <cstdio>
 
 namespace Spark {
@@ -261,13 +264,14 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     goalGlowGo->GetName() = Spark::Utf8String("PlatGoalGlow");
     goalGlowTr = goalGlowGo->AddComponent<Spark::TransformComponent>();
     goalGlowTr->SetTranslation({kGoalCenterX, kGoalCenterY + 0.35F, 0.02F});
-    goalGlowTr->SetScale({2.4F, 2.4F, 1.0F});
+    goalGlowTr->SetScale({1.6F, 1.6F, 1.0F});
     goalGlowGo->AddComponent<Spark::SpriteComponent>(
             hudWhiteTex,
-            Spark::Vector4{1.0F, 0.88F, 0.35F, 0.35F},
+            Spark::Vector4{1.0F, 0.88F, 0.35F, 0.18F},
             Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
             15);
     goalGlowGo->AddComponent<Spark::BlendModeComponent>(Spark::SceneBlendMode::Additive);
+    goalGlowGo->SetActive(false);
     roots.Track(goalGlowGo);
 
     goalFlagGo = world.CreateGameObject();
@@ -312,7 +316,7 @@ void Platformer2DDemo::UpdateGoalPresentation(const float deltaSeconds) noexcept
     goalPulse += deltaSeconds;
     const float pulse = 0.92F + 0.08F * std::sin(goalPulse * (goalReached ? 5.5F : 2.8F));
     if (goalGlowTr != nullptr) {
-        const float glowScale = goalReached ? 3.2F : 2.4F;
+        const float glowScale = goalReached ? 2.2F : 1.6F;
         goalGlowTr->SetScale({glowScale * pulse, glowScale * pulse, 1.0F});
     }
     if (goalFlagTr != nullptr) {
@@ -348,6 +352,7 @@ void Platformer2DDemo::RefreshStatusHud() noexcept
 
 void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
+    engineContext = &context;
     Unload(w);
 
     roots.Clear();
@@ -367,7 +372,6 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     gemsCollected = 0;
     gemsTotal = 0;
     goalReached = false;
-    wasGrounded = true;
     goalPulse = 0.0F;
     sceneTime = 0.0F;
 
@@ -471,6 +475,9 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         if (i == 10) {
             go->AddComponent<Spark::PhysicsMaterial2DComponent>(0.08F, 0.05F);
         }
+        if (i == 5 || i == 11) {
+            go->AddComponent<Spark::OneWayPlatform2DComponent>();
+        }
         roots.Track(go);
     }
 
@@ -489,10 +496,6 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                     playerAtlasTex->GetWidth(),
                     playerAtlasTex->GetHeight()),
             500);
-    playerObject->AddComponent<Spark::SpriteLighting2DComponent>(
-            SpriteLighting2DMode::PulseEmission,
-            Spark::Vector4{0.55F, 0.78F, 1.0F, 0.35F},
-            Spark::Vector4{1.2F, 0.38F, 0.0F, 0.0F});
     playerAnim = playerObject->AddComponent<Spark::SpriteAnimatorComponent>();
     playerAnim->SetUniformGrid(playerAtlasColumns, kPlayerAtlasRows);
     playerAnim->AddClip(SpriteAnimationClip{0, 1, 1.0F, true});
@@ -502,10 +505,28 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerAnim->SetClipIndex(0);
     playerCharFsm->SetLocomotionClips(0, 1);
     playerCharFsm->SetCombatClips(2, 3);
-    playerCharFsm->SetLocomotionSource(Sprite2DAnimLocomotionSource::SpeedSq);
-    playerCharFsm->SetMoveSpeedThreshold(0.35F);
+    playerCharFsm->SetLocomotionSource(Sprite2DAnimLocomotionSource::HorizontalAbsVelX);
+    playerCharFsm->SetMoveSpeedThreshold(0.8F);
     playerObject->AddComponent<Spark::BoxCollider2DComponent>();
     playerRb = playerObject->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Dynamic, 1.0F);
+    playerController = playerObject->AddComponent<Spark::CharacterController2DComponent>();
+    playerController->SetMoveSpeed(Platformer2D::Config::kPlayerMoveSpeed);
+    playerController->SetJumpSpeed(Platformer2D::Config::kPlayerJumpSpeed);
+    playerMelee = playerObject->AddComponent<Spark::AnimationHitbox2DComponent>();
+    playerMelee->SetClipIndex(2U);
+    playerMelee->SetStartLocalFrame(0U);
+    playerMelee->SetEndLocalFrame(0U);
+    playerMelee->SetShape(Spark::AnimationHitbox2DShape::Arc);
+    playerMelee->SetRadius(Platformer2D::Config::kMeleeHitRadius);
+    playerMelee->SetArcHalfAngleRadians(Platformer2D::Config::kMeleeArcHalfAngleRadians);
+    playerMelee->SetLocalOffset({Platformer2D::Config::kPlayerHalfW * 0.95F, 0.0F});
+    playerMelee->SetDamagePerHit(1.0F);
+    Spark::PhysicsQueryFilter2D meleeFilter{};
+    meleeFilter.queryCategoryBits = Platformer2D::Config::kWeaponQueryCategoryBits;
+    meleeFilter.queryMaskBits = Platformer2D::Config::kEnemyHurtboxCategoryBits;
+    meleeFilter.hitSolids = false;
+    meleeFilter.hitTriggers = true;
+    playerMelee->SetQueryFilter(meleeFilter);
     playerHealth = playerObject->AddComponent<Spark::HealthComponent>(Platformer2D::Config::kPlayerMaxHealth);
     playerDamageable = playerObject->AddComponent<Spark::DamageableComponent>();
     playerObject->AddComponent<Spark::SoundCueComponent>();
@@ -513,6 +534,30 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
     healthHud.Initialize(w, hudWhiteTex, roots);
     SpawnBackgroundLayers(w);
+
+    goalTriggerGo = w.CreateGameObject();
+    goalTriggerGo->GetName() = Spark::Utf8String("PlatGoalTrigger");
+    Spark::TransformComponent* goalTriggerTr = goalTriggerGo->AddComponent<Spark::TransformComponent>();
+    goalTriggerTr->SetTranslation({kGoalCenterX, kGoalCenterY, 0.0F});
+    auto* goalVolume = goalTriggerGo->AddComponent<Spark::TriggerVolume2DComponent>(
+            Spark::TriggerVolume2DShape::Box,
+            Spark::Vector2{kGoalHalfW, kGoalHalfH});
+    goalVolume->SetOnEnter([this](Spark::GameObject& other) {
+        if (goalReached || playerObject == nullptr || &other != playerObject) {
+            return;
+        }
+        goalReached = true;
+        if (goalGlowGo != nullptr) {
+            goalGlowGo->SetActive(true);
+        }
+        explosions.SpawnGoalCelebration(kGoalCenterX, kGoalCenterY);
+        if (sfxPowerUp.Get() != nullptr) {
+            DemoAudio::QueueCue(*playerObject, sfxPowerUp, 1.0F);
+        } else if (engineContext != nullptr) {
+            DemoPlayProceduralClip(*engineContext, DemoSfx::ClipPlatformerGoal(), 0.95F);
+        }
+    });
+    roots.Track(goalTriggerGo);
 
     for (int gi = 0; gi < kGemCount; ++gi) {
         Spark::GameObject* gem = w.CreateGameObject();
@@ -528,26 +573,56 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 Spark::Vector4{1.0F, 1.0F, 1.0F, 1.0F},
                 Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
                 620 + gi);
-        const float hue = static_cast<float>(gi) * 0.51F;
-        const Spark::Vector3 rgb{
-                0.42F + 0.5F * std::fabs(std::sin(hue)),
-                0.48F + 0.45F * std::fabs(std::sin(hue + 2.05F)),
-                0.72F + 0.28F * std::fabs(std::sin(hue + 4.1F))};
-        gem->AddComponent<Spark::SpriteLighting2DComponent>(
-                SpriteLighting2DMode::PulseEmission,
-                Spark::Vector4{rgb.x * 1.25F, rgb.y * 1.22F, rgb.z * 1.18F, 0.95F + 0.14F * static_cast<float>(gi % 7)},
-                Spark::Vector4{1.45F + 0.12F * static_cast<float>(gi % 5), 0.48F, 0.0F, 0.0F});
-        Spark::CircleCollider2DComponent* gemHit = gem->AddComponent<Spark::CircleCollider2DComponent>(1.0F);
-        gemHit->SetIsTrigger(true);
-        gemHit->SetCategoryBits(kGemHurtboxCategoryBits);
-        gemHit->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
-        gem->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
+        gem->AddComponent<Spark::TriggerVolume2DComponent>(
+                Spark::TriggerVolume2DShape::Circle,
+                Spark::Vector2{0.5F, 0.5F},
+                Spark::Vector2::Zero);
+        auto* trigger = gem->GetComponent<Spark::TriggerVolume2DComponent>();
+        if (trigger != nullptr) {
+            trigger->SetRadius(0.55F);
+        }
+        auto* pickup = gem->AddComponent<Spark::PickupComponent>();
+        pickup->SetItemId("gem");
+        pickup->SetOnCollected([this, gem](Spark::GameObject& /*collector*/, const char*, int) {
+            if (gem != nullptr) {
+                if (Spark::TransformComponent* gtr = gem->GetComponent<Spark::TransformComponent>()) {
+                    const Spark::Vector3 gpos = gtr->GetLocalTransform().translation;
+                    explosions.SpawnGemPickup(gpos.x, gpos.y);
+                }
+                for (std::size_t idx = 0; idx < gemObjects.GetSize(); ++idx) {
+                    if (gemObjects[idx] == gem) {
+                        gemObjects[idx] = nullptr;
+                        break;
+                    }
+                }
+            }
+            ++gemsCollected;
+            if (playerObject != nullptr && sfxCoin.Get() != nullptr) {
+                DemoAudio::QueueCue(*playerObject, sfxCoin, 0.95F);
+            } else if (engineContext != nullptr) {
+                DemoPlayProceduralClip(*engineContext, DemoSfx::ClipGemCollect(), 0.88F);
+            }
+        });
         gemObjects.PushBack(gem);
         gemBasePositions.PushBack(
                 {kGemSpawns[static_cast<std::size_t>(gi)][0], kGemSpawns[static_cast<std::size_t>(gi)][1]});
     }
 
     enemySquad.Load(w, enemyAtlasTex, enemyIdleUv, enemyAttackUv);
+    for (std::size_t ei = 0; ei < enemySquad.Enemies().GetSize(); ++ei) {
+        Spark::Platformer2D::EnemySquad::Enemy& enemy = enemySquad.Enemies()[ei];
+        if (enemy.go == nullptr) {
+            continue;
+        }
+        if (Spark::HealthComponent* hp = enemy.go->GetComponent<Spark::HealthComponent>()) {
+            hp->SetOnDeath([this](Spark::GameObject& self, Spark::GameObject* /*killer*/) {
+                enemySquad.OnEnemyDied(self, explosions);
+                if (playerObject != nullptr && sfxExplosion.Get() != nullptr) {
+                    DemoAudio::QueueCue(*playerObject, sfxExplosion, 0.92F);
+                }
+            });
+        }
+    }
 
     playerBullets.Initialize(
             w,
@@ -591,7 +666,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
     helpHud.Mount(w, "2D platformer", DemoHelpHud::Style::DarkOnBright);
     helpHud.SetScreenOffset(Spark::DemoHud::kScreenMargin, 58.0F);
-    helpHud.SetControlHints("WASD move | Space jump | J attack | TAB menu");
+    helpHud.SetControlHints("WASD move | Space jump | S drop | J attack | TAB menu");
     RefreshStatusHud();
 
     context.GetInput().SetCursorCaptured(false);
@@ -599,6 +674,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
 void Platformer2DDemo::Unload(Spark::GameWorld& w)
 {
+    engineContext = nullptr;
     helpHud.Unmount(w);
     if (audioEngine != nullptr) {
         audioEngine->ClearBackgroundMusic();
@@ -649,9 +725,12 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     goalFlagTr = nullptr;
     goalGlowGo = nullptr;
     goalGlowTr = nullptr;
+    goalTriggerGo = nullptr;
     playerObject = nullptr;
     playerTr = nullptr;
     playerRb = nullptr;
+    playerController = nullptr;
+    playerMelee = nullptr;
     playerHealth = nullptr;
     playerDamageable = nullptr;
     playerAnim = nullptr;
@@ -663,7 +742,6 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     gemsCollected = 0;
     gemsTotal = 0;
     goalReached = false;
-    wasGrounded = true;
     goalPulse = 0.0F;
     sceneTime = 0.0F;
     facingLeft = false;
@@ -674,6 +752,7 @@ void Platformer2DDemo::Simulate(
         Spark::IEngineContext& context,
         Spark::GameWorld& world)
 {
+    engineContext = &context;
     sceneTime += timing.deltaTimeSeconds;
     Spark::IInput& in = context.GetInput();
     const float dt = timing.deltaTimeSeconds;
@@ -681,9 +760,8 @@ void Platformer2DDemo::Simulate(
     const Platformer2D::BulletProfile enemyBulletProfile = MakeEnemyBulletProfile();
 
     playerCombat.TickCooldown(dt);
-    Spark::ProcessVfx(world);
 
-    if (playerRb != nullptr && playerTr != nullptr) {
+    if (playerController != nullptr && playerTr != nullptr) {
         float run = 0.0F;
         if (in.IsKeyDown(GLFW_KEY_A) || in.IsKeyDown(GLFW_KEY_LEFT)) {
             run -= 1.0F;
@@ -700,21 +778,23 @@ void Platformer2DDemo::Simulate(
         }
         playerTr->SetScale({facingLeft ? -playerBaseScaleX : playerBaseScaleX, playerBaseScaleY, 1.0F});
 
-        Spark::Vector2 v = playerRb->GetVelocity();
-        v.x = run * 11.0F;
-        const bool jumpPressed = playerRb->IsGrounded() && in.IsKeyPressedThisFrame(GLFW_KEY_SPACE);
+        playerController->SetMoveInputX(run);
+        if (in.IsKeyDown(GLFW_KEY_S) || in.IsKeyDown(GLFW_KEY_DOWN)) {
+            playerController->SetDropThroughOneWay(true);
+        }
+        const bool jumpPressed =
+                in.IsKeyPressedThisFrame(GLFW_KEY_SPACE) && playerController->IsGrounded();
         if (jumpPressed) {
-            v.y = 13.2F;
+            playerController->RequestJump();
             if (playerObject != nullptr && sfxJump.Get() != nullptr) {
                 DemoAudio::QueueCue(*playerObject, sfxJump, 0.95F);
             }
         }
-        playerRb->SetVelocity(v);
     }
 
     physics.Simulate2D(world, timing);
 
-    if (playerRb != nullptr && playerTr != nullptr) {
+    if (playerTr != nullptr) {
         const bool attackPressed = in.IsKeyPressedThisFrame(GLFW_KEY_J);
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
         const float healthBefore = playerHealth != nullptr ? playerHealth->GetCurrent() : 0.0F;
@@ -755,19 +835,23 @@ void Platformer2DDemo::Simulate(
             explosions.SpawnPlayerHurt(p.x, p.y);
         }
 
-        const bool groundedNow = playerRb->IsGrounded();
-        const Spark::Vector2 landingVel = playerRb->GetVelocity();
-        if (groundedNow && !wasGrounded && landingVel.y < -2.5F) {
-            explosions.SpawnLandDust(p.x, p.y - kPlayerHalfH + 0.05F);
-            DemoPlayProceduralClip(context, DemoSfx::ClipPlatformerLand(), 0.55F);
+        if (playerController != nullptr) {
+            const bool groundedNow = playerController->IsGrounded();
+            const bool justLanded = groundedNow && !playerController->WasGroundedLastFrame();
+            const float landingVelY = playerRb != nullptr ? playerRb->GetVelocity().y : 0.0F;
+            if (justLanded && landingVelY < -2.5F) {
+                DemoPlayProceduralClip(context, DemoSfx::ClipPlatformerLand(), 0.55F);
+            }
         }
-        wasGrounded = groundedNow;
         if (playerHealth != nullptr && !playerHealth->IsAlive()) {
             playerHealth->ResetToFull();
             playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
             playerRb->SetVelocity(Spark::Vector2::Zero);
             playerCombat.ClearIncomingProjectiles(enemyBullets);
             goalReached = false;
+            if (goalGlowGo != nullptr) {
+                goalGlowGo->SetActive(false);
+            }
         }
 
         if (p.y < kFallRespawnY) {
@@ -781,20 +865,18 @@ void Platformer2DDemo::Simulate(
             playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
             playerRb->SetVelocity(Spark::Vector2::Zero);
             goalReached = false;
+            if (goalGlowGo != nullptr) {
+                goalGlowGo->SetActive(false);
+            }
         }
 
-        const float gcr2 = kGemCollectRadius * kGemCollectRadius;
-        for (std::size_t gi = 0; gi < gemObjects.GetSize();) {
+        for (std::size_t gi = 0; gi < gemObjects.GetSize(); ++gi) {
             Spark::GameObject* gem = gemObjects[gi];
-            if (gem == nullptr) {
-                gemObjects.RemoveAt(gi);
+            if (gem == nullptr || !gem->IsActiveInHierarchy()) {
                 continue;
             }
             Spark::TransformComponent* gtr = gem->GetComponent<Spark::TransformComponent>();
             if (gtr == nullptr) {
-                world.DestroyGameObject(gem);
-                gemObjects.RemoveAt(gi);
-                gemBasePositions.RemoveAt(gi);
                 continue;
             }
             const float bob = std::sin(sceneTime * 4.2F + static_cast<float>(gi) * 0.73F) * 0.08F;
@@ -804,40 +886,14 @@ void Platformer2DDemo::Simulate(
             gtr->SetTranslation({base.x, base.y + bob, 0.05F + 0.0003F * static_cast<float>(gi)});
             gtr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitZ, spin));
             gtr->SetScale({pulse, pulse, 1.0F});
-
-            const Spark::Vector3 gpos = gtr->GetLocalTransform().translation;
-            const float gdx = gpos.x - p.x;
-            const float gdy = gpos.y - p.y;
-            if (gdx * gdx + gdy * gdy <= gcr2) {
-                explosions.SpawnGemPickup(gpos.x, gpos.y);
-                world.DestroyGameObject(gem);
-                gemObjects.RemoveAt(gi);
-                gemBasePositions.RemoveAt(gi);
-                ++gemsCollected;
-                if (playerObject != nullptr && sfxCoin.Get() != nullptr) {
-                    DemoAudio::QueueCue(*playerObject, sfxCoin, 0.95F);
-                } else {
-                    DemoPlayProceduralClip(context, DemoSfx::ClipGemCollect(), 0.88F);
-                }
-                continue;
-            }
-            ++gi;
-        }
-
-        if (!goalReached && std::fabs(p.x - kGoalCenterX) <= kGoalHalfW && std::fabs(p.y - kGoalCenterY) <= kGoalHalfH) {
-            goalReached = true;
-            explosions.SpawnGoalCelebration(kGoalCenterX, kGoalCenterY);
-            if (playerObject != nullptr && sfxPowerUp.Get() != nullptr) {
-                DemoAudio::QueueCue(*playerObject, sfxPowerUp, 1.0F);
-            } else {
-                DemoPlayProceduralClip(context, DemoSfx::ClipPlatformerGoal(), 0.95F);
-            }
         }
 
         UpdateBackgroundParallax(p.x);
         UpdateGoalPresentation(dt);
         RefreshStatusHud();
     }
+
+    enemySquad.FlushPendingDestroys(world);
 
     if (mainCameraGo != nullptr) {
         if (Spark::Camera2DComponent* cam = mainCameraGo->GetComponent<Spark::Camera2DComponent>()) {

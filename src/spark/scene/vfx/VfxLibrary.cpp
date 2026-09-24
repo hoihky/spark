@@ -797,6 +797,22 @@ std::uint32_t VfxLibrary::GetDefaultBurstCount(const VfxBuiltinId id) noexcept {
         return 36;
     case VfxBuiltinId::Shockwave:
         return 72;
+    case VfxBuiltinId::Sparkle:
+        return 48;
+    case VfxBuiltinId::LootSparkle:
+        return 36;
+    case VfxBuiltinId::Heal:
+        return 64;
+    case VfxBuiltinId::Electric:
+        return 40;
+    case VfxBuiltinId::MagicBolt:
+        return 32;
+    case VfxBuiltinId::Embers:
+        return 28;
+    case VfxBuiltinId::HolyLight:
+        return 56;
+    case VfxBuiltinId::Curse:
+        return 48;
     default:
         return 0;
     }

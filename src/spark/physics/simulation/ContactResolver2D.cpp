@@ -14,6 +14,7 @@
 #include "spark/physics/colliders/DynamicCollider2D.hpp"
 #include "spark/physics/core/ColliderMaterial.hpp"
 #include "spark/physics/PhysicsMaterial2D.hpp"
+#include "spark/physics/CharacterController2D.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
 #include "spark/physics/simulation/TriggerDispatcher2D.hpp"
 #include "spark/physics/shapes/ShapeType2D.hpp"
@@ -47,6 +48,18 @@ namespace ContactResolver2DDetail {
 }
 
 constexpr float kDefaultDynamicRestitution2D = 0.12F;
+
+[[nodiscard]] bool ShouldResolveDynamicAgainstStatic(
+        GameObject& dyn,
+        Rigidbody2DComponent& rb,
+        const Collider2D& staticCol,
+        const CollisionAabb2& dynamicBox) noexcept {
+    const float feetY = dynamicBox.minY;
+    if (!ShouldResolveCharacterAgainstStatic2D(dyn, rb, staticCol, feetY)) {
+        return false;
+    }
+    return true;
+}
 
 void ResolveNormalVelocity(Vector2& v, const float nx, const float ny, const float restitution) noexcept {
     const float vn = v.x * nx + v.y * ny;
@@ -439,6 +452,9 @@ void ResolveDynamicBoxVsStatics(
             if (colliders[si].IsTrigger() || col.GetIsTrigger()) {
                 continue;
             }
+            if (!ShouldResolveDynamicAgainstStatic(dyn, rb, colliders[si], box)) {
+                continue;
+            }
             if (TryResolveBoxWithStaticCollider(box, tr, rb, colliders[si])) {
                 ComputeBoxCollider2WorldAabb(dyn, col, box);
                 any = true;
@@ -511,6 +527,14 @@ void ResolveDynamicCircleVsStatics(
                 continue;
             }
             if (colliders[si].IsTrigger() || col.GetIsTrigger()) {
+                continue;
+            }
+            CollisionAabb2 feetBox{};
+            feetBox.minX = query.minX;
+            feetBox.maxX = query.maxX;
+            feetBox.minY = query.minY;
+            feetBox.maxY = query.maxY;
+            if (!ShouldResolveDynamicAgainstStatic(dyn, rb, colliders[si], feetBox)) {
                 continue;
             }
             if (TryResolveCircleWithStaticCollider(dyn, col, tr, rb, colliders[si])) {

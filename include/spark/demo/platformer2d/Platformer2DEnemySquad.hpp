@@ -51,6 +51,12 @@ public:
     /** Returns how many enemies were destroyed this call. Spawns explosion FX for each kill. */
     int ResolvePlayerBulletHits(BulletPool& playerBullets, ExplosionFx& explosions, Spark::GameWorld& world) noexcept;
 
+    /** Called when an enemy <c>HealthComponent</c> reaches zero (melee or other damage). */
+    void OnEnemyDied(Spark::GameObject& enemy, ExplosionFx& explosions) noexcept;
+
+    /** Destroys enemies queued by <c>OnEnemyDied</c> (call after simulation / combat). */
+    void FlushPendingDestroys(Spark::GameWorld& world) noexcept;
+
     [[nodiscard]] int GetDefeatedCount() const noexcept { return defeatedCount; }
     [[nodiscard]] int GetTotalCount() const noexcept { return Config::kEnemyCount; }
     [[nodiscard]] Spark::Array<Enemy>& Enemies() noexcept { return enemies; }
@@ -64,6 +70,7 @@ private:
             const BulletProfile& profile) noexcept;
 
     Spark::Array<Enemy> enemies{};
+    Spark::Array<Spark::GameObject*> pendingDestroy{};
     Spark::Vector4 idleUv{};
     Spark::Vector4 attackUv{};
     int defeatedCount = 0;

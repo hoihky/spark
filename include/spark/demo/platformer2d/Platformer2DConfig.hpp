@@ -40,7 +40,13 @@ struct Config {
     static constexpr int kExplosionBurstCount = 10;
 
     static constexpr std::uint16_t kGemHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(1);
+    static constexpr std::uint16_t kWeaponQueryCategoryBits = Spark::CollisionFilter2D::LayerBit(2);
     static constexpr std::uint16_t kEnemyHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(3);
+
+    static constexpr float kPlayerMoveSpeed = 11.0F;
+    static constexpr float kPlayerJumpSpeed = 13.2F;
+    static constexpr float kMeleeHitRadius = 1.05F;
+    static constexpr float kMeleeArcHalfAngleRadians = 0.85F;
 
     /** World XY plus patrol span (x, y, patrolMinX, patrolMaxX). */
     static constexpr float kGoalCenterX = 43.2F;

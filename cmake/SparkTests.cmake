@@ -22,6 +22,7 @@ function(spark_add_physics_tests)
             tests/physics/ColliderBakePipelineTest.cpp
             tests/physics/DynamicColliderTest.cpp
             tests/physics/PhysicsWorld2DIntegrationTest.cpp
+            tests/physics/Gameplay2DComponentsTest.cpp
             tests/scene/MaterialLibraryRoundTripTest.cpp
             tests/scene/GltfDisplayCompatibilityTest.cpp
             tests/scene/GltfSceneGraphTest.cpp

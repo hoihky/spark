@@ -100,6 +100,19 @@ TEST(VfxPlayerComponentTest, SnapshotRoundTrip) {
     EXPECT_TRUE(restoredPlayer->GetPlayOnStartOnce());
 }
 
+TEST(VfxAssetTest, PlayOnceLootSparkleBurstsWithoutContinuousEmission) {
+    Spark::GameWorld world{};
+    Spark::GameObject* go = world.CreateGameObject();
+    go->AddComponent<Spark::TransformComponent>();
+    Spark::ParticleEmitterComponent* pe = go->AddComponent<Spark::ParticleEmitterComponent>();
+
+    Spark::VfxAsset asset = Spark::VfxAsset::FromBuiltin("loot_sparkle");
+    EXPECT_GT(asset.burstCount, 0u);
+    asset.Activate(*pe, *go, Spark::VfxPlaybackMode::Once);
+    EXPECT_EQ(pe->GetEmissionRate(), 0.0F);
+    EXPECT_GT(pe->GetAliveParticleCount(), 0u);
+}
+
 TEST(VfxSubsystemTest, QueuedOneShotCreatesParticles) {
     Spark::GameWorld world{};
     world.GetVfxSubsystem().Queue("explosion", {1.0F, 2.0F, 3.0F});

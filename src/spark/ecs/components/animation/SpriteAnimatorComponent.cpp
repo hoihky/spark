@@ -61,6 +61,32 @@ void SpriteAnimatorComponent::SetClipIndex(std::uint32_t index) noexcept {
     }
 }
 
+const SpriteAnimationClip* SpriteAnimatorComponent::GetCurrentClip() const noexcept {
+    if (clips.IsEmpty() || currentClipIndex >= clips.GetSize()) {
+        return nullptr;
+    }
+    return &clips[currentClipIndex];
+}
+
+std::uint32_t SpriteAnimatorComponent::GetCurrentLocalFrame() const noexcept {
+    const SpriteAnimationClip* clip = GetCurrentClip();
+    if (clip == nullptr || clip->frameCount == 0U) {
+        return 0U;
+    }
+    const float fps = (clip->framesPerSecond > 1.0e-6F) ? clip->framesPerSecond : 8.0F;
+    const float frameDur = 1.0F / fps;
+    std::uint32_t localFrame = 0U;
+    if (frameDur > 1.0e-8F) {
+        localFrame = static_cast<std::uint32_t>(timeInClipSeconds / frameDur);
+    }
+    if (!clip->loop) {
+        localFrame = std::min(localFrame, clip->frameCount - 1U);
+    } else {
+        localFrame %= clip->frameCount;
+    }
+    return localFrame;
+}
+
 bool SpriteAnimatorComponent::IsCurrentClipFinished() const noexcept {
     if (clips.IsEmpty() || currentClipIndex >= clips.GetSize()) {
         return true;
