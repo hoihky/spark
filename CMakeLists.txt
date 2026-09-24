@@ -659,11 +659,14 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/camera/CameraComponent.cpp
         src/spark/ecs/components/camera/Camera2DComponent.cpp
         src/spark/ecs/components/camera/Camera2DRigComponent.cpp
+        src/spark/ecs/components/camera/ScreenShakeComponent.cpp
         src/spark/ecs/components/camera/CameraFollow3DComponent.cpp
         src/spark/ecs/components/camera/SpringArm3DComponent.cpp
         src/spark/ecs/components/rendering/SkinnedMeshComponent.cpp
         src/spark/ecs/components/animation/AnimationEventReceiverComponent.cpp
         src/spark/ecs/components/animation/AnimationEventVfxComponent.cpp
+        src/spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.cpp
+        src/spark/ecs/components/animation/SpriteAnimationEventVfxComponent.cpp
         src/spark/ecs/components/animation/AnimationHitbox2DComponent.cpp
         src/spark/ecs/components/animation/AnimationMeleeHitComponent.cpp
         src/spark/ecs/components/animation/RootMotionComponent.cpp
@@ -676,6 +679,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/gameplay/DamageableComponent.cpp
         src/spark/ecs/components/gameplay/InteractableComponent.cpp
         src/spark/ecs/components/gameplay/PickupComponent.cpp
+        src/spark/ecs/components/gameplay/GameStateComponent.cpp
+        src/spark/ecs/components/gameplay/GameFlowTriggerComponent.cpp
+        src/spark/ecs/components/input/InputActionMapComponent.cpp
+        src/spark/ecs/components/input/PlayerInputComponent.cpp
+        src/spark/ecs/components/rendering/ParallaxLayerComponent.cpp
         src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
         src/spark/ecs/components/physics/2d/TriggerVolume2DComponent.cpp
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp

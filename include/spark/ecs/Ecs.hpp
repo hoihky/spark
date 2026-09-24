@@ -24,6 +24,7 @@
 #include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
+#include "spark/ecs/components/rendering/ParallaxLayerComponent.hpp"
 #include "spark/ecs/components/rendering/TerrainComponent.hpp"
 #include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
@@ -46,6 +47,7 @@
 #include "spark/ecs/components/camera/CameraFollow3DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/camera/CameraComponent.hpp"
+#include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
 #include "spark/ecs/components/camera/SpringArm3DComponent.hpp"
 
 // Physics
@@ -87,6 +89,8 @@
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
+#include "spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp"
+#include "spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp"
 
 // AI / audio / UI / world
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
@@ -100,6 +104,10 @@
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/gameplay/InteractableComponent.hpp"
 #include "spark/ecs/components/gameplay/PickupComponent.hpp"
+#include "spark/ecs/components/gameplay/GameStateComponent.hpp"
+#include "spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp"
+#include "spark/ecs/components/input/InputActionMapComponent.hpp"
+#include "spark/ecs/components/input/PlayerInputComponent.hpp"
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"

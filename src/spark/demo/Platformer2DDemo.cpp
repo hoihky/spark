@@ -11,6 +11,12 @@
 #include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
+#include "spark/ecs/components/rendering/ParallaxLayerComponent.hpp"
+#include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
+#include "spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp"
+#include "spark/ecs/components/gameplay/GameStateComponent.hpp"
+#include "spark/ecs/components/input/InputActionMapComponent.hpp"
+#include "spark/ecs/components/input/PlayerInputComponent.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
@@ -214,6 +220,10 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     bgSkyTr->SetScale({120.0F, 22.0F, 1.0F});
     bgSkyGo->AddComponent<Spark::SpriteComponent>(
             bgSkyTex, Spark::Vector4{1.0F, 1.0F, 1.0F, 1.0F}, Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F}, 1);
+    {
+        auto* parallax = bgSkyGo->AddComponent<Spark::ParallaxLayerComponent>();
+        parallax->SetFactorX(0.04F);
+    }
     roots.Track(bgSkyGo);
 
     bgMountainsGo = world.CreateGameObject();
@@ -226,6 +236,10 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
             Spark::Vector4{0.88F, 0.90F, 0.98F, 0.92F},
             Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
             2);
+    {
+        auto* parallax = bgMountainsGo->AddComponent<Spark::ParallaxLayerComponent>();
+        parallax->SetFactorX(0.18F);
+    }
     roots.Track(bgMountainsGo);
 
     bgHillsGo = world.CreateGameObject();
@@ -238,6 +252,10 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
             Spark::Vector4{0.72F, 0.95F, 0.78F, 0.95F},
             Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
             3);
+    {
+        auto* parallax = bgHillsGo->AddComponent<Spark::ParallaxLayerComponent>();
+        parallax->SetFactorX(0.32F);
+    }
     roots.Track(bgHillsGo);
 
     bgCloudGoA = world.CreateGameObject();
@@ -248,6 +266,13 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     bgCloudGoA->AddComponent<Spark::SpriteComponent>(
             bgCloudTex, Spark::Vector4{1.0F, 1.0F, 1.0F, 0.82F}, Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F}, 4);
     bgCloudGoA->AddComponent<Spark::BlendModeComponent>(Spark::SceneBlendMode::AlphaOver);
+    {
+        auto* parallax = bgCloudGoA->AddComponent<Spark::ParallaxLayerComponent>();
+        parallax->SetFactorX(0.12F);
+        parallax->SetDriftMode(Spark::ParallaxDriftMode::SineHorizontal);
+        parallax->SetDriftAmplitude(0.35F);
+        parallax->SetDriftFrequencyHz(0.22F);
+    }
     roots.Track(bgCloudGoA);
 
     bgCloudGoB = world.CreateGameObject();
@@ -258,6 +283,14 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     bgCloudGoB->AddComponent<Spark::SpriteComponent>(
             bgCloudTex, Spark::Vector4{1.0F, 1.0F, 1.0F, 0.74F}, Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F}, 5);
     bgCloudGoB->AddComponent<Spark::BlendModeComponent>(Spark::SceneBlendMode::AlphaOver);
+    {
+        auto* parallax = bgCloudGoB->AddComponent<Spark::ParallaxLayerComponent>();
+        parallax->SetFactorX(0.10F);
+        parallax->SetDriftMode(Spark::ParallaxDriftMode::SineHorizontal);
+        parallax->SetDriftAmplitude(0.45F);
+        parallax->SetDriftFrequencyHz(0.17F);
+        parallax->SetDriftPhase(1.4F);
+    }
     roots.Track(bgCloudGoB);
 
     goalGlowGo = world.CreateGameObject();
@@ -291,28 +324,27 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     roots.Track(goalFlagGo);
 }
 
-void Platformer2DDemo::UpdateBackgroundParallax(const float cameraX) noexcept
+void Platformer2DDemo::WireParallaxLayers() noexcept
 {
-    const float dx = cameraX - kBackgroundAnchorX;
-    if (bgSkyTr != nullptr) {
-        bgSkyTr->SetTranslation({kBackgroundAnchorX + dx * 0.04F, 4.2F, -0.45F});
-    }
-    if (bgMountainsTr != nullptr) {
-        bgMountainsTr->SetTranslation({kBackgroundAnchorX + dx * 0.18F, 1.35F, -0.35F});
-    }
-    if (bgHillsTr != nullptr) {
-        bgHillsTr->SetTranslation({kBackgroundAnchorX + dx * 0.32F, 0.55F, -0.25F});
-    }
-    if (bgCloudTrA != nullptr) {
-        bgCloudTrA->SetTranslation({6.0F + dx * 0.12F + std::sin(sceneTime * 0.22F) * 0.35F, 6.8F, -0.15F});
-    }
-    if (bgCloudTrB != nullptr) {
-        bgCloudTrB->SetTranslation({34.0F + dx * 0.10F + std::sin(sceneTime * 0.17F + 1.4F) * 0.45F, 7.4F, -0.14F});
-    }
+    auto wire = [&](Spark::GameObject* object) {
+        if (object == nullptr) {
+            return;
+        }
+        if (Spark::ParallaxLayerComponent* parallax = object->GetComponent<Spark::ParallaxLayerComponent>()) {
+            parallax->SetCameraReference(mainCameraGo);
+            parallax->SetAnchorWorld({kBackgroundAnchorX, 0.0F, 0.0F});
+        }
+    };
+    wire(bgSkyGo);
+    wire(bgMountainsGo);
+    wire(bgHillsGo);
+    wire(bgCloudGoA);
+    wire(bgCloudGoB);
 }
 
 void Platformer2DDemo::UpdateGoalPresentation(const float deltaSeconds) noexcept
 {
+    const bool goalReached = gameState != nullptr && gameState->IsState(Spark::GameFlowState::Victory);
     goalPulse += deltaSeconds;
     const float pulse = 0.92F + 0.08F * std::sin(goalPulse * (goalReached ? 5.5F : 2.8F));
     if (goalGlowTr != nullptr) {
@@ -328,6 +360,7 @@ void Platformer2DDemo::UpdateGoalPresentation(const float deltaSeconds) noexcept
 
 void Platformer2DDemo::RefreshStatusHud() noexcept
 {
+    const bool goalReached = gameState != nullptr && gameState->IsState(Spark::GameFlowState::Victory);
     if (goalReached) {
         std::snprintf(
                 statusHudBuffer,
@@ -371,7 +404,6 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
     gemsCollected = 0;
     gemsTotal = 0;
-    goalReached = false;
     goalPulse = 0.0F;
     sceneTime = 0.0F;
 
@@ -381,7 +413,6 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     phys.resolveDynamicVsDynamic = false;
     phys.jointIterations = 4;
     gemsTotal = kGemCount;
-    goalReached = false;
     facingLeft = false;
     sceneTime = 0.0F;
     playerBaseScaleX = kPlayerHalfW * 2.0F;
@@ -530,7 +561,36 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerHealth = playerObject->AddComponent<Spark::HealthComponent>(Platformer2D::Config::kPlayerMaxHealth);
     playerDamageable = playerObject->AddComponent<Spark::DamageableComponent>();
     playerObject->AddComponent<Spark::SoundCueComponent>();
+    auto* actionMap = playerObject->AddComponent<Spark::InputActionMapComponent>();
+    actionMap->BindAxis1D("MoveX", GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+    actionMap->BindButton("Jump", GLFW_KEY_SPACE);
+    actionMap->BindButton("Drop", GLFW_KEY_S, GLFW_KEY_DOWN);
+    actionMap->BindButton("Attack", GLFW_KEY_J);
+    playerInput = playerObject->AddComponent<Spark::PlayerInputComponent>();
+    playerInput->SetActionMap(actionMap);
     roots.Track(playerObject);
+
+    gameFlowGo = w.CreateGameObject();
+    gameFlowGo->GetName() = Spark::Utf8String("PlatGameFlow");
+    gameState = gameFlowGo->AddComponent<Spark::GameStateComponent>(Spark::GameFlowState::Playing);
+    gameState->SetOnTransition([this](Spark::GameFlowState, Spark::GameFlowState next, Spark::GameObject&) {
+        if (next != Spark::GameFlowState::Victory) {
+            return;
+        }
+        if (goalGlowGo != nullptr) {
+            goalGlowGo->SetActive(true);
+        }
+        explosions.SpawnGoalCelebration(kGoalCenterX, kGoalCenterY);
+        if (playerObject != nullptr && sfxPowerUp.Get() != nullptr) {
+            DemoAudio::QueueCue(*playerObject, sfxPowerUp, 1.0F);
+        } else if (engineContext != nullptr) {
+            DemoPlayProceduralClip(*engineContext, DemoSfx::ClipPlatformerGoal(), 0.95F);
+        }
+        if (cameraShake != nullptr) {
+            cameraShake->AddImpulse({0.22F, 0.14F}, 0.35F, 26.0F);
+        }
+    });
+    roots.Track(gameFlowGo);
 
     healthHud.Initialize(w, hudWhiteTex, roots);
     SpawnBackgroundLayers(w);
@@ -539,24 +599,14 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     goalTriggerGo->GetName() = Spark::Utf8String("PlatGoalTrigger");
     Spark::TransformComponent* goalTriggerTr = goalTriggerGo->AddComponent<Spark::TransformComponent>();
     goalTriggerTr->SetTranslation({kGoalCenterX, kGoalCenterY, 0.0F});
-    auto* goalVolume = goalTriggerGo->AddComponent<Spark::TriggerVolume2DComponent>(
+    goalTriggerGo->AddComponent<Spark::TriggerVolume2DComponent>(
             Spark::TriggerVolume2DShape::Box,
             Spark::Vector2{kGoalHalfW, kGoalHalfH});
-    goalVolume->SetOnEnter([this](Spark::GameObject& other) {
-        if (goalReached || playerObject == nullptr || &other != playerObject) {
-            return;
-        }
-        goalReached = true;
-        if (goalGlowGo != nullptr) {
-            goalGlowGo->SetActive(true);
-        }
-        explosions.SpawnGoalCelebration(kGoalCenterX, kGoalCenterY);
-        if (sfxPowerUp.Get() != nullptr) {
-            DemoAudio::QueueCue(*playerObject, sfxPowerUp, 1.0F);
-        } else if (engineContext != nullptr) {
-            DemoPlayProceduralClip(*engineContext, DemoSfx::ClipPlatformerGoal(), 0.95F);
-        }
-    });
+    auto* goalFlow = goalTriggerGo->AddComponent<Spark::GameFlowTriggerComponent>();
+    goalFlow->SetSource(Spark::GameFlowTriggerSource::TriggerEnter);
+    goalFlow->SetTargetState(Spark::GameFlowState::Victory);
+    goalFlow->SetInstigatorNameFilter("Player");
+    goalFlow->SetStateOwner(gameFlowGo);
     roots.Track(goalTriggerGo);
 
     for (int gi = 0; gi < kGemCount; ++gi) {
@@ -661,6 +711,8 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     cameraRig->SetUseBounds(true);
     cameraRig->SetBoundsMin({-8.0F, -1.5F});
     cameraRig->SetBoundsMax({50.0F, 9.0F});
+    cameraShake = mainCameraGo->AddComponent<Spark::ScreenShakeComponent>();
+    WireParallaxLayers();
 
     physics.GetQueries2D().RebuildStatics(w);
 
@@ -735,13 +787,16 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     playerDamageable = nullptr;
     playerAnim = nullptr;
     playerCharFsm = nullptr;
+    playerInput = nullptr;
     mainCameraGo = nullptr;
     cameraRig = nullptr;
+    cameraShake = nullptr;
+    gameFlowGo = nullptr;
+    gameState = nullptr;
 
     physics = PhysicsSubsystem{};
     gemsCollected = 0;
     gemsTotal = 0;
-    goalReached = false;
     goalPulse = 0.0F;
     sceneTime = 0.0F;
     facingLeft = false;
@@ -754,22 +809,20 @@ void Platformer2DDemo::Simulate(
 {
     engineContext = &context;
     sceneTime += timing.deltaTimeSeconds;
-    Spark::IInput& in = context.GetInput();
     const float dt = timing.deltaTimeSeconds;
     const Platformer2D::BulletProfile playerBulletProfile = MakePlayerBulletProfile();
     const Platformer2D::BulletProfile enemyBulletProfile = MakeEnemyBulletProfile();
+    const bool gameplayActive = gameState == nullptr || gameState->IsState(Spark::GameFlowState::Playing);
 
     playerCombat.TickCooldown(dt);
 
-    if (playerController != nullptr && playerTr != nullptr) {
-        float run = 0.0F;
-        if (in.IsKeyDown(GLFW_KEY_A) || in.IsKeyDown(GLFW_KEY_LEFT)) {
-            run -= 1.0F;
-        }
-        if (in.IsKeyDown(GLFW_KEY_D) || in.IsKeyDown(GLFW_KEY_RIGHT)) {
-            run += 1.0F;
-        }
-        const bool attackPressed = in.IsKeyPressedThisFrame(GLFW_KEY_J);
+    if (gameplayActive && playerInput != nullptr && playerObject != nullptr) {
+        playerInput->Refresh(*playerObject, context);
+    }
+
+    if (gameplayActive && playerController != nullptr && playerTr != nullptr && playerInput != nullptr) {
+        const float run = playerInput->GetActionAxis1D("MoveX");
+        const bool attackPressed = playerInput->WasActionPressedThisFrame("Attack");
         if (playerCharFsm != nullptr && attackPressed) {
             playerCharFsm->RequestAttack();
         }
@@ -779,11 +832,11 @@ void Platformer2DDemo::Simulate(
         playerTr->SetScale({facingLeft ? -playerBaseScaleX : playerBaseScaleX, playerBaseScaleY, 1.0F});
 
         playerController->SetMoveInputX(run);
-        if (in.IsKeyDown(GLFW_KEY_S) || in.IsKeyDown(GLFW_KEY_DOWN)) {
+        if (playerInput->IsActionPressed("Drop")) {
             playerController->SetDropThroughOneWay(true);
         }
         const bool jumpPressed =
-                in.IsKeyPressedThisFrame(GLFW_KEY_SPACE) && playerController->IsGrounded();
+                playerInput->WasActionPressedThisFrame("Jump") && playerController->IsGrounded();
         if (jumpPressed) {
             playerController->RequestJump();
             if (playerObject != nullptr && sfxJump.Get() != nullptr) {
@@ -795,7 +848,8 @@ void Platformer2DDemo::Simulate(
     physics.Simulate2D(world, timing);
 
     if (playerTr != nullptr) {
-        const bool attackPressed = in.IsKeyPressedThisFrame(GLFW_KEY_J);
+        const bool attackPressed =
+                playerInput != nullptr && playerInput->WasActionPressedThisFrame("Attack");
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
         const float healthBefore = playerHealth != nullptr ? playerHealth->GetCurrent() : 0.0F;
         const bool fired = playerCombat.TryFireOnAttackPressed(
@@ -833,6 +887,9 @@ void Platformer2DDemo::Simulate(
                 sfxHurt);
         if (playerHealth != nullptr && playerHealth->GetCurrent() < healthBefore) {
             explosions.SpawnPlayerHurt(p.x, p.y);
+            if (cameraShake != nullptr) {
+                cameraShake->AddImpulse({0.16F, 0.10F}, 0.22F, 30.0F);
+            }
         }
 
         if (playerController != nullptr) {
@@ -848,7 +905,9 @@ void Platformer2DDemo::Simulate(
             playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
             playerRb->SetVelocity(Spark::Vector2::Zero);
             playerCombat.ClearIncomingProjectiles(enemyBullets);
-            goalReached = false;
+            if (gameState != nullptr) {
+                gameState->RequestState(Spark::GameFlowState::Playing);
+            }
             if (goalGlowGo != nullptr) {
                 goalGlowGo->SetActive(false);
             }
@@ -864,7 +923,9 @@ void Platformer2DDemo::Simulate(
             }
             playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
             playerRb->SetVelocity(Spark::Vector2::Zero);
-            goalReached = false;
+            if (gameState != nullptr) {
+                gameState->RequestState(Spark::GameFlowState::Playing);
+            }
             if (goalGlowGo != nullptr) {
                 goalGlowGo->SetActive(false);
             }
@@ -888,7 +949,6 @@ void Platformer2DDemo::Simulate(
             gtr->SetScale({pulse, pulse, 1.0F});
         }
 
-        UpdateBackgroundParallax(p.x);
         UpdateGoalPresentation(dt);
         RefreshStatusHud();
     }

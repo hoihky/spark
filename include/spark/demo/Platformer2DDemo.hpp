@@ -13,9 +13,12 @@
 #include "spark/demo/platformer2d/Platformer2DHealthHud.hpp"
 #include "spark/demo/platformer2d/Platformer2DPlayerCombat.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
+#include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
 #include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
+#include "spark/ecs/components/gameplay/GameStateComponent.hpp"
+#include "spark/ecs/components/input/PlayerInputComponent.hpp"
 #include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
@@ -101,7 +104,7 @@ private:
     [[nodiscard]] Platformer2D::BulletProfile MakePlayerBulletProfile() const noexcept;
     [[nodiscard]] Platformer2D::BulletProfile MakeEnemyBulletProfile() const noexcept;
     void SpawnBackgroundLayers(Spark::GameWorld& world);
-    void UpdateBackgroundParallax(float cameraX) noexcept;
+    void WireParallaxLayers() noexcept;
     void UpdateGoalPresentation(float deltaSeconds) noexcept;
     void RefreshStatusHud() noexcept;
 
@@ -128,6 +131,9 @@ private:
 
     Spark::GameObject* mainCameraGo = nullptr;
     Spark::Camera2DRigComponent* cameraRig = nullptr;
+    Spark::ScreenShakeComponent* cameraShake = nullptr;
+    Spark::GameObject* gameFlowGo = nullptr;
+    Spark::GameStateComponent* gameState = nullptr;
     Spark::GameObject* playerObject = nullptr;
     Spark::TransformComponent* playerTr = nullptr;
     Spark::Rigidbody2DComponent* playerRb = nullptr;
@@ -137,6 +143,7 @@ private:
     Spark::DamageableComponent* playerDamageable = nullptr;
     SpriteAnimatorComponent* playerAnim = nullptr;
     Sprite2DCharacterAnimFsmComponent* playerCharFsm = nullptr;
+    Spark::PlayerInputComponent* playerInput = nullptr;
     float playerBaseScaleX = kPlayerHalfW * 2.0F;
     float playerBaseScaleY = kPlayerHalfH * 2.0F;
     bool facingLeft = false;
@@ -178,7 +185,6 @@ private:
 
     int gemsCollected = 0;
     int gemsTotal = 0;
-    bool goalReached = false;
     float sceneTime = 0.0F;
     float goalPulse = 0.0F;
     char statusHudBuffer[160]{};

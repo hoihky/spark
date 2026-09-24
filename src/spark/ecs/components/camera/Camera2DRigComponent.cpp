@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
+#include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
@@ -100,6 +101,12 @@ void Camera2DRigComponent::Tick(
                 rig.boundsMax,
                 cam->GetHalfExtentY(),
                 framebufferAspect);
+    }
+
+    if (ScreenShakeComponent* shake = owner.GetComponent<ScreenShakeComponent>()) {
+        const Vector2 offset = shake->GetOffset();
+        current.x += offset.x;
+        current.y += offset.y;
     }
 
     camTr->SetTranslation(current);

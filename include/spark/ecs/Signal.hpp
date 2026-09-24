@@ -41,6 +41,21 @@ enum class SignalId : std::uint32_t {
     Physics2DTriggerExit = 11,
     /** 2D trigger volume stay (each <c>SimulateTriggerVolumes2D</c> step): same payload. */
     Physics2DTriggerStay = 12,
+    /**
+     * Sprite clip marker from <c>SpriteAnimationEventReceiverComponent</c>.
+     * <c>ptr</c> = event name, <c>a</c> = clip index, <c>b</c> = time in clip (bit pattern).
+     */
+    SpriteAnimationEvent = 13,
+    /**
+     * Input action edge from <c>PlayerInputComponent</c>.
+     * <c>ptr</c> = action name, <c>a</c> = <c>InputActionPhase</c>.
+     */
+    InputActionTriggered = 14,
+    /**
+     * Game flow transition from <c>GameStateComponent</c>.
+     * <c>ptr</c> = owner <c>GameObject*</c>, <c>a</c> = new state, <c>b</c> = previous state.
+     */
+    GameStateChanged = 15,
     UserBase = 0x10000,
 };
 
