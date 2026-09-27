@@ -19,6 +19,7 @@ public:
     void SpawnMeleeDefeat(float worldX, float worldY) noexcept;
     void SpawnGemPickup(float worldX, float worldY) noexcept;
     void SpawnLandDust(float worldX, float worldY) noexcept;
+    void SpawnJumpRing(float worldX, float worldY) noexcept;
     void SpawnMuzzleFlash(float worldX, float worldY) noexcept;
     void SpawnPlayerHurt(float worldX, float worldY) noexcept;
     void SpawnGoalCelebration(float worldX, float worldY) noexcept;

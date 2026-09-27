@@ -139,7 +139,7 @@ void SceneTilemapSubmitter::Submit(
                 continue;
             }
 
-            StableSortTilemapTileInstances(
+            TilemapLayerSorter{}.StableSortInstances(
                     params.tilemapTiles,
                     tileBegin,
                     appended,

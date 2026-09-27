@@ -30,22 +30,44 @@ void CollectDynamicBodies2D(GameWorld& world, Array<DynamicBody2D>& out) {
         if (rb == nullptr || tr == nullptr) {
             return;
         }
-        if (rb->GetBodyType() != RigidbodyBodyType2D::Dynamic) {
-            return;
-        }
         BoxCollider2DComponent* box = object->GetComponent<BoxCollider2DComponent>();
         CircleCollider2DComponent* circle = object->GetComponent<CircleCollider2DComponent>();
-        if (box == nullptr && circle == nullptr) {
+
+        if (rb->GetBodyType() == RigidbodyBodyType2D::Dynamic) {
+            if (box == nullptr && circle == nullptr) {
+                return;
+            }
+            DynamicBody2D body{};
+            body.object = object;
+            body.transform = tr;
+            body.rb = rb;
+            body.box = box;
+            body.circle = circle;
+            RefreshDynamicBody2D(body);
+            out.PushBack(MoveTemp(body));
             return;
         }
-        DynamicBody2D body{};
-        body.object = object;
-        body.transform = tr;
-        body.rb = rb;
-        body.box = box;
-        body.circle = circle;
-        RefreshDynamicBody2D(body);
-        out.PushBack(MoveTemp(body));
+
+        // Static / kinematic trigger colliders (e.g. child hurtboxes parented to moving enemies).
+        if (circle != nullptr && circle->GetIsTrigger()) {
+            DynamicBody2D body{};
+            body.object = object;
+            body.transform = tr;
+            body.rb = rb;
+            body.circle = circle;
+            RefreshDynamicBody2D(body);
+            out.PushBack(MoveTemp(body));
+            return;
+        }
+        if (box != nullptr && box->GetIsTrigger()) {
+            DynamicBody2D body{};
+            body.object = object;
+            body.transform = tr;
+            body.rb = rb;
+            body.box = box;
+            RefreshDynamicBody2D(body);
+            out.PushBack(MoveTemp(body));
+        }
     });
 }
 

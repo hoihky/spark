@@ -40,6 +40,7 @@ enum class DemoStorageId : std::uint8_t {
     GltfSamples3D,
     ModelViewer3D,
     WaterLake,
+    VfxShowcase2D,
 #if SPARK_HAS_EDITOR
     SparkEditor,
 #endif

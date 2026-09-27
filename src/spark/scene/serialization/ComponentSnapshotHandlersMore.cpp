@@ -205,6 +205,37 @@ void AppendParticleEmitterP4Extension(
                 c.w);
         out.AppendUtf8(num);
     }
+
+    std::snprintf(
+            num,
+            sizeof(num),
+            " p5 %u %d",
+            static_cast<unsigned>(pe.GetRenderSpace()),
+            pe.GetSpriteLayerSortOrder());
+    out.AppendUtf8(num);
+}
+
+bool TryRestoreParticleEmitterP5Extension(const char*& cursor, ParticleEmitterComponent& pe) {
+    while (*cursor == ' ' || *cursor == '\t') {
+        ++cursor;
+    }
+    if (*cursor == '\0' || std::strncmp(cursor, "p5", 2) != 0) {
+        return true;
+    }
+    cursor += 2;
+    while (*cursor == ' ' || *cursor == '\t') {
+        ++cursor;
+    }
+    unsigned renderSpace = 0U;
+    int sortOrder = 200;
+    int consumed = 0;
+    if (std::sscanf(cursor, "%u %d%n", &renderSpace, &sortOrder, &consumed) < 2 || consumed <= 0) {
+        return false;
+    }
+    cursor += consumed;
+    pe.SetRenderSpace(static_cast<ParticleRenderSpace>(renderSpace));
+    pe.SetSpriteLayerSortOrder(sortOrder);
+    return true;
 }
 
 bool TryRestoreParticleEmitterP4Extension(
@@ -329,7 +360,7 @@ bool TryRestoreParticleEmitterP4Extension(
             pe.SetTexture(loaded);
         }
     }
-    return true;
+    return TryRestoreParticleEmitterP5Extension(cursor, pe);
 }
 
 class TextOverlaySnapshotHandler final : public IComponentSnapshotHandler {

@@ -9,6 +9,8 @@
 #include "spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
 #include "spark/scene/tilemap/TilemapObjectQuery.hpp"
+#include "spark/scene/tilemap/TilemapEditValidator.hpp"
+#include "spark/scene/tilemap/TilemapSparkMapExporter.hpp"
 #include "spark/scene/tilemap/TilemapObjectSpawnRegistry.hpp"
 #include "spark/scene/tilemap/TilemapFileResolve.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
@@ -135,7 +137,7 @@ GameObject* SpawnShowcaseChest(
     }
     GameObject* chest = world.CreateGameObject();
     chest->GetName() = marker.name.IsEmpty() ? Utf8String("Chest") : marker.name;
-    const Vector3 pos = TilemapObjectMarkerWorldPosition(marker, frame);
+    const Vector3 pos = TilemapObjectQuery{}.MarkerWorldPosition(marker, frame);
     if (TransformComponent* tr = chest->AddComponent<TransformComponent>()) {
         tr->SetTranslation({pos.x, pos.y, 0.09F});
         tr->SetUniformScale(TilemapShowcase2DDemo::kTileWorld * 0.75F);
@@ -149,11 +151,11 @@ GameObject* SpawnShowcaseChest(
 }
 
 void RegisterShowcaseSpawnHandlers() {
-    TilemapObjectSpawnRegistry::Register("chest", &SpawnShowcaseChest);
+    TilemapObjectSpawnRegistry::Default().Register("chest", &SpawnShowcaseChest);
 }
 
 void UnregisterShowcaseSpawnHandlers() {
-    TilemapObjectSpawnRegistry::Unregister("chest");
+    TilemapObjectSpawnRegistry::Default().Unregister("chest");
 }
 
 [[nodiscard]] Utf8String ResolveSampleTmxPath() noexcept {
@@ -266,6 +268,7 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
     camera.halfExtentY = static_cast<float>(kRows) * 0.55F * kTileWorld;
 
     BuildLevel();
+    EnsureEditSessionAttached(w);
     if (objectLayer != nullptr) {
         BuildObjectMarkers(*objectLayer, objectLayerIndex);
         boardGo->AddComponent<Spark::TilemapObjectSpawnComponent>();
@@ -375,7 +378,27 @@ void TilemapShowcase2DDemo::LoadLevelSceneFromFile(Spark::GameWorld& w)
     tmxStatus = Utf8String("Loaded scenes/platformer_level.sparkscene");
 }
 
+void TilemapShowcase2DDemo::EnsureEditSessionAttached(Spark::GameWorld& world) {
+    if (boardGo == nullptr || tilemap == nullptr) {
+        return;
+    }
+    if (!editSessionAttached) {
+        Spark::TilemapEditSessionOptions options{};
+        options.activeLayerIndex = 0U;
+        options.autoRebakePolicy = Spark::TilemapEditAutoRebakePolicy::AfterGestureOnly;
+        options.validateAfterCommit = true;
+        options.derivedRebakeOptions.gameplayGrid = true;
+        options.derivedRebakeOptions.autotile = true;
+        if (editSession.Attach(*boardGo, options)) {
+            editSession.SetDerivedRebakeContext(&world, nullptr);
+            editSessionAttached = true;
+        }
+    }
+}
+
 void TilemapShowcase2DDemo::Unload(Spark::GameWorld& w) {
+    editSession.Detach();
+    editSessionAttached = false;
     Detail::UnregisterShowcaseSpawnHandlers();
     Detail::g_showcaseSpawn.atlas.Reset();
     if (sceneManager && levelSceneId != Spark::kInvalidSceneInstanceId) {
@@ -634,6 +657,11 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
                 source->SetPixelsPerWorldUnit(16.0F);
                 source->SetHotReload(true);
                 if (source->ImportNow(*boardGo, boardGo->GetWorld())) {
+                    editSession.Detach();
+                    editSessionAttached = false;
+                    if (!source->GetLastValidationSummary().IsEmpty()) {
+                        tmxStatus = source->GetLastValidationSummary();
+                    }
                     tilemap = boardGo->GetComponent<TilemapComponent>();
                     if (auto* autotile = boardGo->GetComponent<TilemapAutotileComponent>()) {
                         autotile->SetRebuildOnUpdate(false);
@@ -686,6 +714,9 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
         BuildLevel();
         if (boardGo != nullptr) {
             Spark::GameWorld& world = boardGo->GetWorld();
+            editSession.Detach();
+            editSessionAttached = false;
+            EnsureEditSessionAttached(world);
             if (auto* autotile = boardGo->GetComponent<Spark::TilemapAutotileComponent>()) {
                 autotile->SetRebuildOnUpdate(true);
                 autotile->RequestRebuild();
@@ -699,6 +730,51 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
             if (auto* gizmo = boardGo->GetComponent<Spark::TilemapObjectGizmoComponent>()) {
                 gizmo->RebuildVisuals(*boardGo, world);
             }
+        }
+    }
+
+    if (boardGo != nullptr && in.IsMouseButtonPressedThisFrame(GLFW_MOUSE_BUTTON_RIGHT) && gameplayGrid != nullptr) {
+        float mx = 0.0F;
+        float my = 0.0F;
+        in.GetCursorFramebufferPixels(mx, my, fbW, fbH);
+        int gx = 0;
+        int gy = 0;
+        if (PickCell(context, mx, my, gx, gy)) {
+            EnsureEditSessionAttached(boardGo->GetWorld());
+            Spark::TilemapBrush brush{};
+            brush.mode = Spark::TilemapBrush::Mode::Single;
+            brush.single = Spark::TileCell::FromTileId(kTileWall);
+            editSession.SetBrush(brush);
+            editSession.BeginGesture();
+            static_cast<void>(editSession.PaintCell(static_cast<std::uint32_t>(gx), static_cast<std::uint32_t>(gy)));
+            editSession.EndGesture();
+            if (!editSession.GetLastValidationSummary().IsEmpty()) {
+                tmxStatus = editSession.GetLastValidationSummary();
+            }
+        }
+    }
+
+    if (in.IsKeyPressedThisFrame(GLFW_KEY_U) && boardGo != nullptr) {
+        EnsureEditSessionAttached(boardGo->GetWorld());
+        const Spark::TilemapEditValidator validator{};
+        const Spark::TilemapEditValidationReport report = validator.ValidateFromOwner(*boardGo);
+        tmxStatus = report.IsClean() ? Utf8String("Validation: OK") : report.FormatSummary();
+    }
+
+    if (in.IsKeyDown(GLFW_KEY_LEFT_SHIFT) && in.IsKeyPressedThisFrame(GLFW_KEY_S) && boardGo != nullptr) {
+        EnsureEditSessionAttached(boardGo->GetWorld());
+        Spark::TilemapSparkMapExporter exporter{};
+        Spark::TilemapSparkMapExporter::Options exportOptions{};
+        exportOptions.blockSaveWhenInvalid = false;
+        const Spark::TilemapSparkMapExporter::Result saved =
+                exporter.Save(*boardGo, "spark/tilemap_showcase_edited.sparkmap", exportOptions);
+        if (saved.IsSuccess()) {
+            tmxStatus = Utf8String("Saved spark/tilemap_showcase_edited.sparkmap");
+            if (!saved.GetValidationReport().IsClean()) {
+                tmxStatus.AppendUtf8(" (with validation notes)");
+            }
+        } else {
+            tmxStatus = saved.GetErrorMessage();
         }
     }
 
@@ -750,7 +826,9 @@ void TilemapShowcase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IE
         if (hudText->IsVisible()) {
             Utf8String hud{};
             hud.AppendUtf8("Tilemap showcase — layers, animation, autotile, path grid, object markers\n");
-            hud.AppendUtf8("Left-click: pathfind   R: reset   L: load Kenney sampleMap.tmx   O: load platformer_level.sparkscene\n");
+            hud.AppendUtf8(
+                    "Left-click: pathfind   Right-click: paint wall (edit session)   U: validate   Shift+S: save .sparkmap\n");
+            hud.AppendUtf8("R: reset   L: load Kenney sampleMap.tmx   O: load platformer_level.sparkscene\n");
             if (!tmxStatus.IsEmpty()) {
                 hud.AppendUtf8(tmxStatus.CStr());
                 hud.AppendUtf8("\n");

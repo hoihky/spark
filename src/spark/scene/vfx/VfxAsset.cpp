@@ -1,5 +1,6 @@
 #include "spark/scene/vfx/VfxAsset.hpp"
 
+#include <algorithm>
 #include <cstring>
 
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
@@ -27,8 +28,25 @@ void VfxAsset::Activate(
     if (mode != VfxPlaybackMode::Once) {
         return;
     }
-    if (burstCount > 0) {
-        emitterOut.Burst(owner, burstCount);
+    std::uint32_t spawnBurst = burstCount;
+    if (spawnBurst == 0 && !builtinName.IsEmpty()) {
+        for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(VfxBuiltinId::Count); ++i) {
+            const auto id = static_cast<VfxBuiltinId>(i);
+            if (std::strcmp(builtinName.CStr(), VfxLibrary::GetBuiltinName(id)) == 0) {
+                spawnBurst = VfxLibrary::GetDefaultBurstCount(id);
+                break;
+            }
+        }
+    }
+    if (spawnBurst > 0) {
+        emitterOut.Burst(owner, spawnBurst);
+    } else if (std::strcmp(emitterOut.GetEmissionModuleId(), "continuous") == 0
+               && emitterOut.GetEmissionRate() > 0.0F) {
+        constexpr float kSeedSeconds = 0.6F;
+        spawnBurst = static_cast<std::uint32_t>(emitterOut.GetEmissionRate() * kSeedSeconds + 0.5F);
+        spawnBurst = std::min(spawnBurst, emitterOut.GetMaxParticles());
+        spawnBurst = std::max(1U, spawnBurst);
+        emitterOut.Burst(owner, spawnBurst);
     }
     // One-shots must not keep ring/continuous modules emitting forever.
     emitterOut.SetEmissionRate(0.0F);

@@ -2,7 +2,9 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/memory/SharedPtr.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
 
@@ -30,10 +32,26 @@ public:
     void SetParam0(const Vector4& v) noexcept { param0 = v; }
     void SetParam1(const Vector4& v) noexcept { param1 = v; }
 
+    void SetNormalMap(SharedPtr<Texture2D> texture) noexcept { normalMap = MoveTemp(texture); }
+    [[nodiscard]] const SharedPtr<Texture2D>& GetNormalMap() const noexcept { return normalMap; }
+    void SetRampMap(SharedPtr<Texture2D> texture) noexcept { rampMap = MoveTemp(texture); }
+    [[nodiscard]] const SharedPtr<Texture2D>& GetRampMap() const noexcept { return rampMap; }
+
+    /** When true, normal map UVs follow <c>SpriteComponent</c> atlas UV each frame (animated sprites). */
+    void SetSyncNormalUvWithSprite(const bool sync) noexcept { syncNormalUvWithSprite = sync; }
+    [[nodiscard]] bool GetSyncNormalUvWithSprite() const noexcept { return syncNormalUvWithSprite; }
+    /** Used when <c>syncNormalUvWithSprite</c> is false (separate normal-atlas region). */
+    void SetNormalUvRect(const Vector4& rect) noexcept { normalUvRect = rect; }
+    [[nodiscard]] const Vector4& GetNormalUvRect() const noexcept { return normalUvRect; }
+
 private:
     SpriteLighting2DMode mode = SpriteLighting2DMode::None;
     Vector4 param0{1.0F, 1.0F, 1.0F, 1.0F};
     Vector4 param1{1.0F, 0.0F, 0.0F, 0.0F};
+    SharedPtr<Texture2D> normalMap{};
+    SharedPtr<Texture2D> rampMap{};
+    bool syncNormalUvWithSprite = true;
+    Vector4 normalUvRect{0.0F, 0.0F, 1.0F, 1.0F};
 };
 
 }  // namespace Spark

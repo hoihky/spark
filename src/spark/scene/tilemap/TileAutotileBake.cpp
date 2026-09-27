@@ -1,5 +1,9 @@
 #include "spark/scene/tilemap/TileAutotileBake.hpp"
 
+#include "spark/scene/tilemap/TilemapEditRevision.hpp"
+
+#include <algorithm>
+
 namespace Spark {
 
 namespace {
@@ -55,8 +59,45 @@ namespace {
 
 }  // namespace
 
-void RebuildTilemapAutotileLayer(TilemapComponent& tilemap, const std::uint32_t layerIndex) noexcept {
-    if (layerIndex >= tilemap.GetLayerCount()) {
+namespace {
+
+void RebuildAutotileCell(
+        TilemapComponent& tilemap,
+        const Tileset& tileset,
+        const std::uint32_t layerIndex,
+        const std::uint32_t x,
+        const std::uint32_t y) noexcept {
+    TileCell cell = tilemap.GetTileCell(layerIndex, x, y);
+    const std::uint16_t paintId = cell.GetPaintTileId();
+    if (paintId == TileCell::kEmptyTileId) {
+        return;
+    }
+    const std::uint8_t group = tileset.Definition(paintId).autotileGroup;
+    if (group == 0) {
+        return;
+    }
+    const TileAutotileRuleSet* rules = tileset.FindAutotileRuleSet(group);
+    if (rules == nullptr) {
+        return;
+    }
+    const std::uint8_t mask = ComputeNeighborMask4(tilemap, layerIndex, x, y, group);
+    const TileAutotileVariant& variant = rules->variants[mask];
+    if (variant.tileId != 0) {
+        cell.tileId = variant.tileId;
+    } else {
+        cell.tileId = paintId;
+    }
+    cell.transformFlags = variant.transformFlags;
+    tilemap.SetTileCell(layerIndex, x, y, cell);
+}
+
+}  // namespace
+
+void TilemapAutotileBaker::RebuildLayerRegion(
+        TilemapComponent& tilemap,
+        const std::uint32_t layerIndex,
+        const TilemapCellRegion& region) const noexcept {
+    if (layerIndex >= tilemap.GetLayerCount() || region.IsEmpty()) {
         return;
     }
     const SharedPtr<Tileset>& tilesetPtr = tilemap.GetTileset();
@@ -66,36 +107,29 @@ void RebuildTilemapAutotileLayer(TilemapComponent& tilemap, const std::uint32_t 
     const Tileset& tileset = *tilesetPtr;
     const std::uint32_t mw = tilemap.GetMapWidth();
     const std::uint32_t mh = tilemap.GetMapHeight();
-    if (mw == 0 || mh == 0) {
+    if (mw == 0U || mh == 0U) {
         return;
     }
-
-    for (std::uint32_t y = 0; y < mh; ++y) {
-        for (std::uint32_t x = 0; x < mw; ++x) {
-            TileCell cell = tilemap.GetTileCell(layerIndex, x, y);
-            const std::uint16_t paintId = cell.GetPaintTileId();
-            if (paintId == TileCell::kEmptyTileId) {
-                continue;
-            }
-            const std::uint8_t group = tileset.Definition(paintId).autotileGroup;
-            if (group == 0) {
-                continue;
-            }
-            const TileAutotileRuleSet* rules = tileset.FindAutotileRuleSet(group);
-            if (rules == nullptr) {
-                continue;
-            }
-            const std::uint8_t mask = ComputeNeighborMask4(tilemap, layerIndex, x, y, group);
-            const TileAutotileVariant& variant = rules->variants[mask];
-            if (variant.tileId != 0) {
-                cell.tileId = variant.tileId;
-            } else {
-                cell.tileId = paintId;
-            }
-            cell.transformFlags = variant.transformFlags;
-            tilemap.SetTileCell(layerIndex, x, y, cell);
+    const std::uint32_t maxX = std::min(region.maxX, mw - 1U);
+    const std::uint32_t maxY = std::min(region.maxY, mh - 1U);
+    for (std::uint32_t y = region.minY; y <= maxY; ++y) {
+        for (std::uint32_t x = region.minX; x <= maxX; ++x) {
+            RebuildAutotileCell(tilemap, tileset, layerIndex, x, y);
         }
     }
+}
+
+void TilemapAutotileBaker::RebuildLayer(TilemapComponent& tilemap, const std::uint32_t layerIndex) const noexcept {
+    if (layerIndex >= tilemap.GetLayerCount()) {
+        return;
+    }
+    const std::uint32_t mw = tilemap.GetMapWidth();
+    const std::uint32_t mh = tilemap.GetMapHeight();
+    if (mw == 0U || mh == 0U) {
+        return;
+    }
+    const TilemapCellRegion whole = TilemapCellRegion::WholeMap(layerIndex, mw, mh);
+    RebuildLayerRegion(tilemap, layerIndex, whole);
 }
 
 }  // namespace Spark

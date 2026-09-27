@@ -87,6 +87,21 @@ public:
 
     static Texture2D CreateSolid(std::uint32_t w, std::uint32_t h, Vector3 rgb, float alpha = 1.0F);
 
+    /** Tangent-space +Z normal (128,128,255) for 2D normal-mapped sprites. */
+    static Texture2D CreateFlatNormalMap(std::uint32_t size = 4U);
+
+    /** Horizontal grayscale ramp (dark → light) for <c>SpriteLighting2DMode::Ramp</c>. */
+    static Texture2D CreateLightingRamp(std::uint32_t width = 256U, std::uint32_t height = 4U);
+
+    /**
+     * Flat +Z normal atlas matching a uniform sprite grid (same layout as <c>SpriteAnimator</c> grid UVs).
+     */
+    static Texture2D CreateNormalAtlasForUniformGrid(
+            std::uint32_t columns,
+            std::uint32_t rows,
+            std::uint32_t cellPixelWidth,
+            std::uint32_t cellPixelHeight);
+
     /**
      * Load PNG/JPEG/etc. via stb_image into RGBA8. Also accepts raw KTX2 files with BC7/ASTC payloads.
      * Returns false if the file is missing or invalid.

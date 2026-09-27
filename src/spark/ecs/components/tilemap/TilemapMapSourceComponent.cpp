@@ -7,6 +7,7 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TilemapDocumentSerializer.hpp"
 #include "spark/scene/tilemap/TilemapFileResolve.hpp"
+#include "spark/scene/tilemap/TilemapEditValidator.hpp"
 #include "spark/scene/tilemap/TmxImporter.hpp"
 
 #include <chrono>
@@ -53,9 +54,9 @@ bool TilemapMapSourceComponent::ImportFromSources(GameObject& owner, GameWorld& 
         }
     } else if (!tmxPath.IsEmpty()) {
         TmxImporter importer{};
-        const TmxImportResult imported = importer.ImportFromFile(tmxPath.CStr(), document);
-        if (!imported.success) {
-            outError = imported.errorMessage;
+        const TmxImporter::Result imported = importer.ImportFromFile(tmxPath.CStr(), document);
+        if (!imported.IsSuccess()) {
+            outError = imported.GetErrorMessage();
             return false;
         }
     } else {
@@ -63,9 +64,10 @@ bool TilemapMapSourceComponent::ImportFromSources(GameObject& owner, GameWorld& 
         return false;
     }
 
-    const TilemapDocumentApplyResult applied = ApplyTilemapDocument(document, owner, world, applyOptions);
-    if (!applied.success) {
-        outError = applied.errorMessage;
+    const TilemapDocumentApplier applier{};
+    const TilemapDocumentApplier::Result applied = applier.Apply(document, owner, world, applyOptions);
+    if (!applied.IsSuccess()) {
+        outError = applied.GetErrorMessage();
         return false;
     }
 
@@ -77,6 +79,10 @@ bool TilemapMapSourceComponent::ImportFromSources(GameObject& owner, GameWorld& 
         spawn->RespawnAll(owner, world);
     }
 
+    const TilemapEditValidator validator{};
+    const TilemapEditValidationReport validation = validator.Validate(document);
+    lastValidationSummary = validation.FormatSummary();
+
     TouchSourceTimestamp();
     return true;
 }
@@ -87,6 +93,7 @@ void TilemapMapSourceComponent::TouchSourceTimestamp() {
 }
 
 bool TilemapMapSourceComponent::ImportNow(GameObject& owner, GameWorld& world) {
+    lastValidationSummary.Clear();
     Utf8String error{};
     const bool ok = ImportFromSources(owner, world, error);
     lastError = ok ? Utf8String{} : error;

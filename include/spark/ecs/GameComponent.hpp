@@ -116,6 +116,7 @@ enum class ComponentKind : std::uint32_t {
     GltfSceneSource,
     GltfInstanceNode,
     WaterBody,
+    PointLight2D,
 };
 
 /**

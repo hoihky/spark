@@ -39,6 +39,7 @@ public:
     bool ImportNow(GameObject& owner, GameWorld& world);
 
     [[nodiscard]] const Utf8String& GetLastError() const noexcept { return lastError; }
+    [[nodiscard]] const Utf8String& GetLastValidationSummary() const noexcept { return lastValidationSummary; }
 
     void OnAttach(GameObject& owner) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
@@ -49,11 +50,12 @@ private:
 
     Utf8String tmxPath{};
     Utf8String sparkMapPath{};
-    TilemapDocumentApplyOptions applyOptions{};
+    TilemapDocumentApplier::Options applyOptions{};
     bool importOnAttach = true;
     bool hotReload = false;
     std::int64_t lastSourceTimestampNs = -1;
     Utf8String lastError{};
+    Utf8String lastValidationSummary{};
 };
 
 }  // namespace Spark

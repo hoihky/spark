@@ -35,19 +35,26 @@ void ExplosionFx::SpawnMeleeDefeat(const float worldX, const float worldY) noexc
 }
 
 void ExplosionFx::SpawnGemPickup(const float worldX, const float worldY) noexcept {
-    QueueAt("loot_sparkle", worldX, worldY, spawnZ + 0.02F);
+    QueueAt("coin_pop_2d", worldX, worldY, spawnZ + 0.02F);
+    QueueAt("loot_sparkle", worldX, worldY + 0.15F, spawnZ + 0.03F);
 }
 
-void ExplosionFx::SpawnLandDust(const float /*worldX*/, const float /*worldY*/) noexcept {
-    // Intentionally quiet — land dust stacked with other combat VFX and read as stray noise.
+void ExplosionFx::SpawnLandDust(const float worldX, const float worldY) noexcept {
+    QueueAt("footstep_puff_2d", worldX, worldY, spawnZ - 0.01F);
+    QueueAt("dust", worldX, worldY, spawnZ - 0.015F);
 }
 
-void ExplosionFx::SpawnMuzzleFlash(const float /*worldX*/, const float /*worldY*/) noexcept {
-    // Muzzle flash omitted in the teaching demo to keep the scene readable.
+void ExplosionFx::SpawnJumpRing(const float worldX, const float worldY) noexcept {
+    QueueAt("jump_ring_2d", worldX, worldY, spawnZ - 0.02F);
+}
+
+void ExplosionFx::SpawnMuzzleFlash(const float worldX, const float worldY) noexcept {
+    QueueAt("slash_arc_2d", worldX, worldY, spawnZ + 0.02F);
 }
 
 void ExplosionFx::SpawnPlayerHurt(const float worldX, const float worldY) noexcept {
-    QueueAt("impact", worldX, worldY, spawnZ + 0.01F);
+    QueueAt("block_impact_2d", worldX, worldY, spawnZ + 0.01F);
+    QueueAt("impact", worldX, worldY, spawnZ + 0.012F);
 }
 
 void ExplosionFx::SpawnGoalCelebration(const float worldX, const float worldY) noexcept {

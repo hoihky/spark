@@ -6,10 +6,13 @@
 
 namespace Spark {
 
-/** Resolves a painted tile id to the atlas id for the current animation time. */
-[[nodiscard]] std::uint16_t ResolveAnimatedTileId(
-        const Tileset& tileset,
-        std::uint16_t sourceTileId,
-        float animationTimeSeconds) noexcept;
+/** Resolves painted tile ids to the atlas frame for a given animation clock. */
+class TileAnimationResolver final {
+public:
+    [[nodiscard]] std::uint16_t ResolveDisplayTileId(
+            const Tileset& tileset,
+            std::uint16_t sourceTileId,
+            float animationTimeSeconds) const noexcept;
+};
 
 }  // namespace Spark

@@ -15,6 +15,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
+#include "spark/ecs/components/lighting/PointLight2DComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
@@ -668,6 +669,97 @@ private:
     }
 };
 
+class PointLight2DSnapshotHandler final : public IComponentSnapshotHandler {
+public:
+    [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::PointLight2D; }
+    [[nodiscard]] const char* GetKindTag() const noexcept override { return "point_light_2d"; }
+
+    [[nodiscard]] bool TryCapture(
+            const GameObject& owner,
+            const SceneCaptureContext& /*ctx*/,
+            ComponentRecord& out) const override {
+        const PointLight2DComponent* pl = owner.GetComponent<PointLight2DComponent>();
+        if (pl == nullptr) {
+            return false;
+        }
+        const Vector3& c = pl->GetColor();
+        const Vector2& off = pl->GetLocalOffset();
+        char buf[256]{};
+        std::snprintf(
+                buf,
+                sizeof(buf),
+                "%.6f %.6f %.6f %.6f %.6f %.6f %.6f %.6f %d %d %.6f %.6f %.6f",
+                off.x,
+                off.y,
+                pl->GetWorldZ(),
+                c.x,
+                c.y,
+                c.z,
+                pl->GetIntensity(),
+                pl->GetRange(),
+                pl->GetFlickerEnabled() ? 1 : 0,
+                pl->IsEnabled() ? 1 : 0,
+                pl->GetFlickerAmount(),
+                pl->GetFlickerHz(),
+                0.0F);
+        out.kind = Utf8String(GetKindTag());
+        out.payload = Utf8String(buf);
+        return true;
+    }
+
+    [[nodiscard]] bool TryRestore(
+            GameObject& owner,
+            const ComponentRecord& record,
+            GameWorld& /*world*/,
+            const SceneApplyContext& /*ctx*/) const override {
+        if (!KindTagEquals(record.kind, GetKindTag())) {
+            return false;
+        }
+        Vector2 offset{};
+        float worldZ = 0.12F;
+        Vector3 color{1.0F, 0.9F, 0.75F};
+        float intensity = 2.0F;
+        float range = 10.0F;
+        int flicker = 0;
+        int enabled = 1;
+        float flickerAmount = 0.18F;
+        float flickerHz = 9.0F;
+        float unusedPad = 0.0F;
+        if (std::sscanf(
+                    record.payload.CStr(),
+                    "%f %f %f %f %f %f %f %f %d %d %f %f %f",
+                    &offset.x,
+                    &offset.y,
+                    &worldZ,
+                    &color.x,
+                    &color.y,
+                    &color.z,
+                    &intensity,
+                    &range,
+                    &flicker,
+                    &enabled,
+                    &flickerAmount,
+                    &flickerHz,
+                    &unusedPad)
+            < 8) {
+            return false;
+        }
+        PointLight2DComponent* pl = owner.GetComponent<PointLight2DComponent>();
+        if (pl == nullptr) {
+            pl = owner.AddComponent<PointLight2DComponent>(color, intensity, range);
+        } else {
+            pl->SetColor(color);
+            pl->SetIntensity(intensity);
+            pl->SetRange(range);
+        }
+        pl->SetLocalOffset(offset);
+        pl->SetWorldZ(worldZ);
+        pl->SetFlicker(flicker != 0, flickerAmount, flickerHz);
+        pl->SetEnabled(enabled != 0);
+        return true;
+    }
+};
+
 class PointLightSnapshotHandler final : public IComponentSnapshotHandler {
 public:
     [[nodiscard]] ComponentKind GetKind() const noexcept override { return ComponentKind::PointLight; }
@@ -953,6 +1045,7 @@ void RegisterBuiltInHandlers(ComponentSnapshotRegistry& registry) {
     RegisterHandler<TransformSnapshotHandler>(registry);
     RegisterHandler<MeshSnapshotHandler>(registry);
     RegisterHandler<MaterialSnapshotHandler>(registry);
+    RegisterHandler<PointLight2DSnapshotHandler>(registry);
     RegisterHandler<PointLightSnapshotHandler>(registry);
     RegisterHandler<CameraSnapshotHandler>(registry);
     RegisterHandler<SkinnedMeshSnapshotHandler>(registry);

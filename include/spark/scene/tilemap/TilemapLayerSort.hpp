@@ -9,13 +9,16 @@
 
 namespace Spark {
 
-/** Stable-sorts a slice of <c>SceneRenderParams::tilemapTiles</c> for draw order within one layer batch. */
-void StableSortTilemapTileInstances(
-        Array<SceneTilemapTileInstance>& tiles,
-        std::uint32_t begin,
-        std::uint32_t count,
-        TilemapLayerSortMode mode,
-        const Matrix4& worldTransform,
-        float tileWorldSize) noexcept;
+/** Stable-sorts tile instances for draw order within one layer batch. */
+class TilemapLayerSorter final {
+public:
+    void StableSortInstances(
+            Array<SceneTilemapTileInstance>& tiles,
+            std::uint32_t begin,
+            std::uint32_t count,
+            TilemapLayerSortMode mode,
+            const Matrix4& worldTransform,
+            float tileWorldSize) const noexcept;
+};
 
 }  // namespace Spark

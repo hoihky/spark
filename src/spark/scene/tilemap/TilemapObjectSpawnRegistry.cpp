@@ -5,42 +5,47 @@
 
 namespace Spark {
 
-namespace {
-
-struct RegistryState {
+struct TilemapObjectSpawnRegistry::HandlerMap {
     HashMap<Utf8String, TilemapObjectSpawnFn, Detail::Utf8StringHasher> handlers{};
 };
 
-RegistryState& State() noexcept {
-    static RegistryState s{};
-    return s;
+TilemapObjectSpawnRegistry& TilemapObjectSpawnRegistry::Default() noexcept {
+    static TilemapObjectSpawnRegistry registry{};
+    return registry;
 }
 
-}  // namespace
+TilemapObjectSpawnRegistry::HandlerMap& TilemapObjectSpawnRegistry::entries() noexcept {
+    static HandlerMap map{};
+    return map;
+}
+
+const TilemapObjectSpawnRegistry::HandlerMap& TilemapObjectSpawnRegistry::entries() const noexcept {
+    return const_cast<TilemapObjectSpawnRegistry*>(this)->entries();
+}
 
 void TilemapObjectSpawnRegistry::Register(const char* typeId, const TilemapObjectSpawnFn spawnFn) noexcept {
     if (typeId == nullptr || spawnFn == nullptr) {
         return;
     }
-    State().handlers.Add(Utf8String(typeId), spawnFn);
+    entries().handlers.Add(Utf8String(typeId), spawnFn);
 }
 
 void TilemapObjectSpawnRegistry::Unregister(const char* typeId) noexcept {
     if (typeId == nullptr) {
         return;
     }
-    State().handlers.Remove(Utf8String(typeId));
+    entries().handlers.Remove(Utf8String(typeId));
 }
 
-TilemapObjectSpawnFn TilemapObjectSpawnRegistry::Find(const Utf8String& typeId) noexcept {
-    if (const TilemapObjectSpawnFn* fn = State().handlers.Find(typeId); fn != nullptr) {
+TilemapObjectSpawnFn TilemapObjectSpawnRegistry::Find(const Utf8String& typeId) const noexcept {
+    if (const TilemapObjectSpawnFn* fn = entries().handlers.Find(typeId); fn != nullptr) {
         return *fn;
     }
     return nullptr;
 }
 
 void TilemapObjectSpawnRegistry::Clear() noexcept {
-    State().handlers.Clear();
+    entries().handlers.Clear();
 }
 
 }  // namespace Spark

@@ -21,7 +21,11 @@ public:
 
 ```cpp
 auto jumpSfx = SoundClip::CreateToneBlip(440.0F, 0.08F, 0.5F);
-auto landSfx = SoundClip::CreateToneBlip(220.0F, 0.06F, 0.4F);
+auto landSfx = SoundClip::CreateNoiseBurst(0.06F, 0.16F, 900.0F);
+
+// Cached gameplay presets (jump, land, collect, hurt, …):
+#include "spark/audio/ProceduralSoundPresets.hpp"
+auto collect = ProceduralSoundPresets::Get(ProceduralSoundPreset::Collectible);
 ```
 
 Useful for prototyping — `Platformer2DDemo` falls back to procedural clips when bundled WAV/MP3 files are missing.

@@ -23,6 +23,23 @@ public:
     /** Short sine blip for UI / gameplay when no asset is present (48 kHz stereo). */
     [[nodiscard]] static SharedPtr<SoundClip> CreateToneBlip(float frequencyHz, float durationSeconds, float gain);
 
+    /** Exponential-decay sine with optional pitch sweep (start → end Hz). */
+    [[nodiscard]] static SharedPtr<SoundClip> CreateToneSweep(
+            float startHz,
+            float endHz,
+            float durationSeconds,
+            float gain);
+
+    /** Band-limited noise burst with fast attack and exponential decay. */
+    [[nodiscard]] static SharedPtr<SoundClip> CreateNoiseBurst(float durationSeconds, float gain, float lowPassHz = 0.0F);
+
+    /** Two sine partials with a shared envelope (coin / pickup chime). */
+    [[nodiscard]] static SharedPtr<SoundClip> CreateLayeredChime(
+            float frequencyHzA,
+            float frequencyHzB,
+            float durationSeconds,
+            float gain);
+
     /**
      * Soft looping pad (48 kHz stereo): exact harmonic periods so the buffer loops without a click.
      * Intended as placeholder background music when no authored track is loaded.

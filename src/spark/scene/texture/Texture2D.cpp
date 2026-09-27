@@ -444,6 +444,59 @@ Texture2D Texture2D::CreateCheckerboard(
     return t;
 }
 
+Texture2D Texture2D::CreateFlatNormalMap(const std::uint32_t size) {
+    Texture2D t(Utf8String("FlatNormal"));
+    Array<std::uint8_t> bytes;
+    bytes.Resize(static_cast<std::size_t>(size) * static_cast<std::size_t>(size) * 4U);
+    for (std::size_t i = 0; i < bytes.GetSize(); i += 4U) {
+        bytes[i] = 128U;
+        bytes[i + 1U] = 128U;
+        bytes[i + 2U] = 255U;
+        bytes[i + 3U] = 255U;
+    }
+    t.SetPixels(size, size, MoveTemp(bytes));
+    return t;
+}
+
+Texture2D Texture2D::CreateNormalAtlasForUniformGrid(
+        const std::uint32_t columns,
+        const std::uint32_t rows,
+        const std::uint32_t cellPixelWidth,
+        const std::uint32_t cellPixelHeight) {
+    const std::uint32_t width = std::max(1U, columns) * std::max(1U, cellPixelWidth);
+    const std::uint32_t height = std::max(1U, rows) * std::max(1U, cellPixelHeight);
+    Texture2D t(Utf8String("NormalAtlasGrid"));
+    Array<std::uint8_t> bytes;
+    bytes.Resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4U);
+    for (std::size_t i = 0; i < bytes.GetSize(); i += 4U) {
+        bytes[i] = 128U;
+        bytes[i + 1U] = 128U;
+        bytes[i + 2U] = 255U;
+        bytes[i + 3U] = 255U;
+    }
+    t.SetPixels(width, height, MoveTemp(bytes));
+    return t;
+}
+
+Texture2D Texture2D::CreateLightingRamp(const std::uint32_t width, const std::uint32_t height) {
+    Texture2D t(Utf8String("LightingRamp"));
+    Array<std::uint8_t> bytes;
+    bytes.Resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4U);
+    for (std::uint32_t y = 0; y < height; ++y) {
+        for (std::uint32_t x = 0; x < width; ++x) {
+            const std::size_t i = (static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)) * 4U;
+            const float u = static_cast<float>(x) / static_cast<float>(width > 1U ? width - 1U : 1U);
+            const auto g = static_cast<std::uint8_t>(std::clamp(u * 255.0F, 0.0F, 255.0F));
+            bytes[i] = g;
+            bytes[i + 1U] = g;
+            bytes[i + 2U] = g;
+            bytes[i + 3U] = 255U;
+        }
+    }
+    t.SetPixels(width, height, MoveTemp(bytes));
+    return t;
+}
+
 Texture2D Texture2D::CreateSolid(std::uint32_t w, std::uint32_t h, Vector3 rgb, float alpha) {
     Texture2D t(Utf8String("Solid"));
     Array<std::uint8_t> bytes;

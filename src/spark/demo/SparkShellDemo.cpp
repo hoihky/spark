@@ -11,6 +11,7 @@
 #include "spark/demo/WaterLakeDemo.hpp"
 #include "spark/demo/SkyDemo.hpp"
 #include "spark/demo/VfxShowcaseDemo.hpp"
+#include "spark/demo/VfxShowcase2DDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
 #include "spark/demo/CharacterCameraDemo.hpp"
 #include "spark/demo/Tetris2DDemo.hpp"
@@ -145,6 +146,9 @@ public:
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_W) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_W, hotkeyId)) {
                 EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_X) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_X, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
 #if SPARK_HAS_EDITOR
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_E) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_E, hotkeyId)) {
@@ -268,6 +272,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::VfxShowcase2D) {
+            vfxShowcase2DDemo.Simulate(timing, context, GetWorld());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Simulate(timing, GetScene(), context);
@@ -329,6 +338,8 @@ public:
             modelViewer3DDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::WaterLake) {
             waterLakeDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::VfxShowcase2D) {
+            vfxShowcase2DDemo.Render(GetScene(), GetWorld(), context);
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Render(GetScene(), context);
@@ -515,6 +526,14 @@ public:
         }
         mode = DemoMode::WaterLake;
         context.GetInput().SetCursorCaptured(true);
+    }
+
+    void EnterVfxShowcase2DDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        vfxShowcase2DDemo.Load(GetWorld(), context);
+        vfxShowcase2DLoaded = true;
+        mode = DemoMode::VfxShowcase2D;
+        context.GetInput().SetCursorCaptured(false);
     }
 
     void EnterMaze3DDemo(IEngineContext& context) {
@@ -789,6 +808,10 @@ private:
             waterLakeDemo.Unload(GetWorld());
             waterLakeDemoLoaded = false;
         }
+        if (vfxShowcase2DLoaded) {
+            vfxShowcase2DDemo.Unload(GetWorld());
+            vfxShowcase2DLoaded = false;
+        }
 #if SPARK_HAS_EDITOR
         if (sparkEditorDemoLoaded) {
             sparkEditorDemo.Unload(GetScene());
@@ -842,6 +865,7 @@ private:
                 &ShellGame::EnterGltfSamples3DDemo,
                 &ShellGame::EnterModelViewer3DDemo,
                 &ShellGame::EnterWaterLakeDemo,
+                &ShellGame::EnterVfxShowcase2DDemo,
 #if SPARK_HAS_EDITOR
                 &ShellGame::EnterSparkEditorDemo,
 #endif
@@ -1045,6 +1069,8 @@ private:
     bool modelViewer3DLoaded = false;
     WaterLakeDemo waterLakeDemo{};
     bool waterLakeDemoLoaded = false;
+    VfxShowcase2DDemo vfxShowcase2DDemo{};
+    bool vfxShowcase2DLoaded = false;
 #if SPARK_HAS_EDITOR
     SparkEditorDemo sparkEditorDemo{};
     bool sparkEditorDemoLoaded = false;

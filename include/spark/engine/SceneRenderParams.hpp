@@ -125,11 +125,15 @@ struct SceneSpriteDraw {
     Vector4 tint{1.0F, 1.0F, 1.0F, 1.0F};
     /** Atlas UV bounds (minU, minV, maxU, maxV) in normalized 0–1 space. */
     Vector4 uvRect{0.0F, 0.0F, 1.0F, 1.0F};
+    /** Normal-map atlas UVs (defaults to <c>uvRect</c> when synced with sprite animation). */
+    Vector4 normalUvRect{0.0F, 0.0F, 1.0F, 1.0F};
     std::int32_t textureLayer = -1;
     /** Matches sprite push constant layout (SpriteLighting2DMode). */
     SpriteLighting2DMode lightingMode = SpriteLighting2DMode::None;
-    float lightingPad0 = 0.0F;
-    float lightingPad1 = 0.0F;
+    /** Scene texture array layer for normal map (-1 = flat Z). */
+    std::int32_t normalTextureLayer = -1;
+    /** Scene texture array layer for ramp gradient (Ramp mode). */
+    std::int32_t rampTextureLayer = -1;
     /** Shader-specific (see SpriteLighting2DMode). */
     Vector4 lightingParam0{1.0F, 1.0F, 1.0F, 1.0F};
     Vector4 lightingParam1{1.0F, 0.0F, 0.0F, 0.0F};

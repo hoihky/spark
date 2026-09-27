@@ -10,7 +10,7 @@ class GameObject;
 class GameWorld;
 
 /**
- * Strategy hook for map object types (F2). Games register spawn functions per <c>typeId</c>;
+ * Strategy hook for map object types. Games register spawn handlers per <c>typeId</c>;
  * <c>TilemapObjectSpawnComponent</c> invokes them when markers load.
  */
 using TilemapObjectSpawnFn = GameObject* (*)(GameWorld& world,
@@ -18,16 +18,22 @@ using TilemapObjectSpawnFn = GameObject* (*)(GameWorld& world,
                                             const TilemapObjectMarker& marker,
                                             const TilemapGridFrame& frame);
 
-/** Global type-id → spawn function table (process lifetime). */
+/** Type-id → spawn function registry (use <c>Default()</c> for the process-wide table). */
 class TilemapObjectSpawnRegistry final {
 public:
-    static void Register(const char* typeId, TilemapObjectSpawnFn spawnFn) noexcept;
-    static void Unregister(const char* typeId) noexcept;
-    [[nodiscard]] static TilemapObjectSpawnFn Find(const Utf8String& typeId) noexcept;
-    static void Clear() noexcept;
+    [[nodiscard]] static TilemapObjectSpawnRegistry& Default() noexcept;
+
+    void Register(const char* typeId, TilemapObjectSpawnFn spawnFn) noexcept;
+    void Unregister(const char* typeId) noexcept;
+    [[nodiscard]] TilemapObjectSpawnFn Find(const Utf8String& typeId) const noexcept;
+    void Clear() noexcept;
 
 private:
-    TilemapObjectSpawnRegistry() = delete;
+    TilemapObjectSpawnRegistry() = default;
+
+    struct HandlerMap;
+    HandlerMap& entries() noexcept;
+    const HandlerMap& entries() const noexcept;
 };
 
 }  // namespace Spark

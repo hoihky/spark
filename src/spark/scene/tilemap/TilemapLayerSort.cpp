@@ -37,13 +37,13 @@ namespace {
 
 }  // namespace
 
-void StableSortTilemapTileInstances(
+void TilemapLayerSorter::StableSortInstances(
         Array<SceneTilemapTileInstance>& tiles,
         const std::uint32_t begin,
         const std::uint32_t count,
         const TilemapLayerSortMode mode,
         const Matrix4& worldTransform,
-        const float tileWorldSize) noexcept {
+        const float tileWorldSize) const noexcept {
     if (mode != TilemapLayerSortMode::WorldY || count <= 1U || tileWorldSize <= 0.0F) {
         return;
     }

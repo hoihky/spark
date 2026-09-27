@@ -25,7 +25,7 @@ struct DynamicBody2D {
 /** Rebuilds <c>body.collider</c> from the attached box or circle component. */
 void RefreshDynamicBody2D(DynamicBody2D& body) noexcept;
 
-/** Appends every active dynamic rigidbody with a box or circle collider. */
+/** Appends dynamic rigidbodies and static/kinematic trigger colliders for overlap queries. */
 void CollectDynamicBodies2D(GameWorld& world, Array<DynamicBody2D>& out);
 
 }  // namespace Spark

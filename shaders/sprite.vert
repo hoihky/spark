@@ -9,6 +9,7 @@ layout(location = 2) in vec2 inTexCoord;
 #include "sprite_instance.glsl"
 
 layout(location = 0) out vec2 vTex;
+layout(location = 8) out vec2 vNormalTex;
 layout(location = 1) flat out int vLayer;
 layout(location = 2) out vec2 vLocalXY;
 layout(location = 3) out vec3 vWorldPos;
@@ -22,6 +23,7 @@ void main() {
     vec4 wp = inst.model * vec4(inPosition, 1.0);
     gl_Position = ubo.viewProj * wp;
     vTex = mix(inst.uvRect.xy, inst.uvRect.zw, inTexCoord);
+    vNormalTex = mix(inst.normalUvRect.xy, inst.normalUvRect.zw, inTexCoord);
     vLayer = inst.textureLayer;
     vLocalXY = inPosition.xy;
     vWorldPos = wp.xyz;

@@ -86,7 +86,6 @@ public:
             {15.75F, 6.05F},
             {45.0F, 5.35F},
     };
-    static constexpr float kPlayerSpawnX = -8.5F;
     static constexpr float kFallRespawnY = -8.0F;
     static constexpr float kGemDrawScale = 0.72F;
     static constexpr float kGoalCenterX = Platformer2D::Config::kGoalCenterX;
@@ -107,6 +106,7 @@ private:
     void WireParallaxLayers() noexcept;
     void UpdateGoalPresentation(float deltaSeconds) noexcept;
     void RefreshStatusHud() noexcept;
+    void RespawnPlayerAtSpawn() noexcept;
 
     DemoRootCollection roots{};
     Spark::Array<Spark::GameObject*> gemObjects{};
@@ -114,6 +114,7 @@ private:
     Spark::SharedPtr<Spark::Texture2D> gemTex{};
     Spark::SharedPtr<Spark::Texture2D> platformTilesTex{};
     Spark::SharedPtr<Spark::Texture2D> playerAtlasTex{};
+    Spark::SharedPtr<Spark::Texture2D> playerNormalTex{};
     Spark::SharedPtr<Spark::Texture2D> enemyAtlasTex{};
     Spark::SharedPtr<Spark::Texture2D> playerBulletTex{};
     Spark::SharedPtr<Spark::Texture2D> enemyBulletTex{};
@@ -146,6 +147,10 @@ private:
     Spark::PlayerInputComponent* playerInput = nullptr;
     float playerBaseScaleX = kPlayerHalfW * 2.0F;
     float playerBaseScaleY = kPlayerHalfH * 2.0F;
+    Spark::Vector3 playerSpawnPosition{
+            Platformer2D::Config::kPlayerSpawnX,
+            kGroundSurfaceY + kPlayerHalfH,
+            0.04F};
     bool facingLeft = false;
 
     Spark::SharedPtr<Spark::SoundClip> sfxJump{};

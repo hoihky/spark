@@ -5,10 +5,11 @@ struct SpriteInstanceGpu {
     mat4 model;
     vec4 tint;
     vec4 uvRect;
+    vec4 normalUvRect;
     int textureLayer;
     int lightingMode;
-    float lightingPad0;
-    float lightingPad1;
+    int normalTextureLayer;
+    int rampTextureLayer;
     vec4 lightingA;
     vec4 lightingB;
 };

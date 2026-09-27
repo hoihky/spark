@@ -3,6 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/ai/path/IGridWalkability.hpp"
+#include "spark/scene/tilemap/TilemapEditRevision.hpp"
 #include "spark/scene/tilemap/TilemapGameplayGrid.hpp"
 #include "spark/scene/tilemap/TilemapGameplayWalkRule.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
@@ -36,6 +37,9 @@ public:
 
     /** Rebakes when <c>RequestRebake()</c> was called or <c>autoRebake</c> is true. */
     void RebakeIfNeeded(const GameObject& owner) noexcept;
+
+    /** Partial rebake for editor dirty regions (Phase C). */
+    void RebakeRegion(const GameObject& owner, const TilemapCellRegion& region) noexcept;
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 

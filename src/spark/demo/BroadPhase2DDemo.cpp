@@ -364,7 +364,8 @@ Platformer2D::BulletProfile BroadPhase2DDemo::MakePlayerBulletProfile() const no
     profile.damage = 1.0F;
     profile.baseTint = {0.35F, 0.92F, 1.0F, 0.94F};
     profile.additiveBlend = true;
-    profile.blockOnSolidHit = true;
+    // Maze walls are dense static boxes; block-on-solid would kill shots in the same frame they spawn.
+    profile.blockOnSolidHit = false;
     profile.targetFilter.queryCategoryBits = Platformer2D::Config::kWeaponQueryCategoryBits;
     profile.targetFilter.queryMaskBits = Platformer2D::Config::kEnemyHurtboxCategoryBits;
     profile.targetFilter.hitSolids = false;
@@ -838,6 +839,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             });
     explosions.Initialize(w);
     SpawnEnemies(w, enemySpawnPoints);
+    physics.GetQueries2D().RebuildStatics(w);
 
     const float broadCell = std::max(16.0F, kCellWorld * 4.0F);
     Spark::ColliderBakePipeline2D::GetDefault().Rebuild(w, broadCell, staticColliders, broadGrid);

@@ -8,7 +8,11 @@
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/gameplay/PickupComponent.hpp"
 #include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
+#include "spark/ecs/components/camera/CameraBounds2DComponent.hpp"
+#include "spark/ecs/components/gameplay/DamageZone2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
+#include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
+#include "spark/scene/core/SceneSpawn2D.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/physics/CollisionFilter2D.hpp"
 #include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
@@ -21,6 +25,9 @@
 #include "spark/ecs/components/input/InputActionMapComponent.hpp"
 #include "spark/ecs/components/input/PlayerInputComponent.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
+#include "spark/audio/ProceduralSoundPresets.hpp"
+#include "spark/ecs/components/lighting/PointLight2DComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
@@ -478,6 +485,14 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         gemTex->GetName() = Spark::Utf8String("PlatGemFallback");
     }
     w.RegisterTexture(gemTex, "spark/plat/gem_collectible");
+    playerNormalTex = Spark::MakeShared<Spark::Texture2D>(
+            Spark::Texture2D::CreateNormalAtlasForUniformGrid(
+                    playerAtlasColumns,
+                    kPlayerAtlasRows,
+                    playerAtlasTex ? std::max(1U, playerAtlasTex->GetWidth() / std::max(1U, playerAtlasColumns)) : 32U,
+                    playerAtlasTex ? std::max(1U, playerAtlasTex->GetHeight() / std::max(1U, kPlayerAtlasRows)) : 32U));
+    playerNormalTex->GetName() = Spark::Utf8String("spark/plat/player_normal_atlas");
+    w.RegisterTexture(playerNormalTex, "spark/plat/player_normal_atlas");
 
     sfxJump = LoadPlatformerSfx("assets/audio/jump.wav");
     sfxCoin = LoadPlatformerSfx("assets/audio/coin.wav");
@@ -510,9 +525,11 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation({cx, cy, 0.01F + 0.001F * static_cast<float>(i)});
         tr->SetScale({sx, sy, 1.0F});
+        const Spark::Vector4 platTint =
+                (i == 9) ? Spark::Vector4{1.0F, 0.52F, 0.22F, 1.0F} : Spark::Vector4{0.95F, 0.92F, 0.88F, 1.0F};
         go->AddComponent<Spark::SpriteComponent>(
                 platformTilesTex,
-                Spark::Vector4{0.95F, 0.92F, 0.88F, 1.0F},
+                platTint,
                 platformUsingKenneyTilesheet
                         ? KenneySimplifiedPlatformerTileUv(kPlatformTileNumbers[static_cast<std::size_t>(i)])
                         : Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F},
@@ -523,6 +540,23 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
         if (i == 5 || i == 11) {
             go->AddComponent<Spark::OneWayPlatform2DComponent>();
+        }
+        if (i == 9) {
+            Spark::GameObject* lava = w.CreateGameObject();
+            lava->GetName() = Spark::Utf8String("PlatLavaZone");
+            lava->SetParent(go);
+            Spark::TransformComponent* lavaTr = lava->AddComponent<Spark::TransformComponent>();
+            lavaTr->SetTranslation({0.0F, sy * 0.48F, 0.025F});
+            auto* lavaZone = lava->AddComponent<Spark::DamageZone2DComponent>();
+            lavaZone->SetHalfExtents({sx * 0.46F, 0.22F});
+            lavaZone->SetDamagePerSecond(Platformer2D::Config::kLavaDamagePerSecond);
+            Spark::PhysicsQueryFilter2D hazardFilter{};
+            hazardFilter.queryCategoryBits = Platformer2D::Config::kHazardQueryCategoryBits;
+            hazardFilter.queryMaskBits = Platformer2D::Config::kPlayerHurtboxCategoryBits;
+            hazardFilter.hitSolids = false;
+            hazardFilter.hitTriggers = true;
+            lavaZone->SetTargetFilter(hazardFilter);
+            roots.Track(lava);
         }
         roots.Track(go);
     }
@@ -542,6 +576,21 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                     playerAtlasTex->GetWidth(),
                     playerAtlasTex->GetHeight()),
             500);
+    if (auto* playerLit = playerObject->AddComponent<Spark::SpriteLighting2DComponent>(
+                SpriteLighting2DMode::NormalMapped,
+                Spark::Vector4{1.0F, 0.32F, 0.9F, 1.0F},
+                Spark::Vector4{})) {
+        playerLit->SetNormalMap(playerNormalTex);
+    }
+    Spark::GameObject* playerTorch = w.CreateGameObject();
+    playerTorch->GetName() = Spark::Utf8String("PlayerTorchLight");
+    playerTorch->SetParent(playerObject);
+    playerTorch->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 0.35F, 0.0F});
+    if (auto* torchLight = playerTorch->AddComponent<Spark::PointLight2DComponent>(
+                Spark::Vector3{1.0F, 0.88F, 0.72F}, 2.2F, 7.5F)) {
+        torchLight->SetFlicker(true, 0.22F, 11.0F);
+    }
+    roots.Track(playerTorch);
     playerAnim = playerObject->AddComponent<Spark::SpriteAnimatorComponent>();
     playerAnim->SetUniformGrid(playerAtlasColumns, kPlayerAtlasRows);
     playerAnim->AddClip(SpriteAnimationClip{0, 1, 1.0F, true});
@@ -728,16 +777,42 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             });
     explosions.Initialize(w);
 
-    const float spawnY = kGroundSurfaceY + kPlayerHalfH;
-    playerTr->SetTranslation({kPlayerSpawnX, spawnY, 0.04F});
-    playerRb->SetVelocity(Spark::Vector2::Zero);
+    Spark::GameObject* playerSpawnGo = w.CreateGameObject();
+    playerSpawnGo->GetName() = Spark::Utf8String("PlatPlayerSpawn");
+    Spark::TransformComponent* playerSpawnTr = playerSpawnGo->AddComponent<Spark::TransformComponent>();
+    playerSpawnTr->SetTranslation(
+            {Platformer2D::Config::kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, 0.04F});
+    auto* playerSpawnMarker = playerSpawnGo->AddComponent<Spark::SpawnPoint2DComponent>();
+    playerSpawnMarker->SetSpawnName("Player");
+    playerSpawnMarker->SetUseTransformFacing(false);
+    playerSpawnMarker->SetFacingRadians(0.0F);
+    roots.Track(playerSpawnGo);
+
+    const Spark::SceneSpawnPose2D spawnPose = Spark::FindSpawnPoint2D(w, "Player");
+    playerSpawnPosition = spawnPose.found ? spawnPose.position
+                                          : Spark::Vector3{
+                                                    Platformer2D::Config::kPlayerSpawnX,
+                                                    kGroundSurfaceY + kPlayerHalfH,
+                                                    0.04F};
+    RespawnPlayerAtSpawn();
     healthHud.SetHealth(Platformer2D::Config::kPlayerMaxHealth, Platformer2D::Config::kPlayerMaxHealth);
+
+    Spark::GameObject* cameraBoundsGo = w.CreateGameObject();
+    cameraBoundsGo->GetName() = Spark::Utf8String("PlatCameraBounds");
+    Spark::TransformComponent* cameraBoundsTr = cameraBoundsGo->AddComponent<Spark::TransformComponent>();
+    cameraBoundsTr->SetTranslation(
+            {Platformer2D::Config::kCameraBoundsCenterX, Platformer2D::Config::kCameraBoundsCenterY, 0.0F});
+    auto* levelCameraBounds = cameraBoundsGo->AddComponent<Spark::CameraBounds2DComponent>();
+    levelCameraBounds->SetHalfExtents(
+            {Platformer2D::Config::kCameraBoundsHalfW, Platformer2D::Config::kCameraBoundsHalfH});
+    roots.Track(cameraBoundsGo);
 
     mainCameraGo = w.CreateGameObject();
     mainCameraGo->GetName() = Spark::Utf8String("MainCamera");
     roots.Track(mainCameraGo);
     Spark::TransformComponent* camTr = mainCameraGo->AddComponent<Spark::TransformComponent>();
-    camTr->SetTranslation({kPlayerSpawnX, spawnY + 1.2F, 0.0F});
+    camTr->SetTranslation(
+            {playerSpawnPosition.x, playerSpawnPosition.y + 1.2F, 0.0F});
     Spark::Camera2DComponent* cam = mainCameraGo->AddComponent<Spark::Camera2DComponent>();
     cam->SetHalfExtentY(8.5F);
     cam->SetPriority(100);
@@ -747,8 +822,6 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     cameraRig->SetTargetOffset({0.0F, 1.48F, 0.0F});
     cameraRig->SetFollowSmoothRate(7.5F);
     cameraRig->SetUseBounds(true);
-    cameraRig->SetBoundsMin({-8.0F, -1.5F});
-    cameraRig->SetBoundsMax({50.0F, 9.0F});
     cameraShake = mainCameraGo->AddComponent<Spark::ScreenShakeComponent>();
     WireParallaxLayers();
 
@@ -760,6 +833,16 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     RefreshStatusHud();
 
     context.GetInput().SetCursorCaptured(false);
+}
+
+void Platformer2DDemo::RespawnPlayerAtSpawn() noexcept
+{
+    if (playerTr != nullptr) {
+        playerTr->SetTranslation(playerSpawnPosition);
+    }
+    if (playerRb != nullptr) {
+        playerRb->SetVelocity(Spark::Vector2::Zero);
+    }
 }
 
 void Platformer2DDemo::Unload(Spark::GameWorld& w)
@@ -787,6 +870,7 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     gemTex.Reset();
     platformTilesTex.Reset();
     playerAtlasTex.Reset();
+    playerNormalTex.Reset();
     enemyAtlasTex.Reset();
     playerBulletTex.Reset();
     enemyBulletTex.Reset();
@@ -877,8 +961,12 @@ void Platformer2DDemo::Simulate(
                 playerInput->WasActionPressedThisFrame("Jump") && playerController->IsGrounded();
         if (jumpPressed) {
             playerController->RequestJump();
+            const Spark::Vector3 jp = playerTr->GetLocalTransform().translation;
+            explosions.SpawnJumpRing(jp.x, jp.y - kPlayerHalfH * 0.85F);
             if (playerObject != nullptr && sfxJump.Get() != nullptr) {
                 DemoAudio::QueueCue(*playerObject, sfxJump, 0.95F);
+            } else {
+                DemoPlayProceduralClip(context, ProceduralSoundPresets::Get(ProceduralSoundPreset::Jump), 0.72F);
             }
         }
     }
@@ -903,7 +991,7 @@ void Platformer2DDemo::Simulate(
             explosions.SpawnMuzzleFlash(
                     p.x + dirX * (kPlayerHalfW * 0.85F),
                     p.y + kPlayerHalfH * 0.12F);
-            DemoPlayProceduralClip(context, DemoSfx::ClipPlatformerShoot(), 0.82F);
+            DemoPlayProceduralClip(context, ProceduralSoundPresets::Get(ProceduralSoundPreset::AttackSwing), 0.82F);
         }
 
         enemySquad.Tick(dt, sceneTime, p.x, p.y, enemyBullets, enemyBulletProfile);
@@ -922,13 +1010,16 @@ void Platformer2DDemo::Simulate(
             const bool justLanded = groundedNow && !playerController->WasGroundedLastFrame();
             const float landingVelY = playerRb != nullptr ? playerRb->GetVelocity().y : 0.0F;
             if (justLanded && landingVelY < -2.5F) {
-                DemoPlayProceduralClip(context, DemoSfx::ClipPlatformerLand(), 0.55F);
+                const ProceduralSoundPreset landPreset =
+                        landingVelY < -7.0F ? ProceduralSoundPreset::LandHard : ProceduralSoundPreset::LandSoft;
+                DemoPlayProceduralClip(context, ProceduralSoundPresets::Get(landPreset), 0.55F);
+                explosions.SpawnLandDust(p.x, p.y - kPlayerHalfH);
             }
         }
         if (playerHealth != nullptr && !playerHealth->IsAlive()) {
             playerHealth->ResetToFull();
-            playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
-            playerRb->SetVelocity(Spark::Vector2::Zero);
+            playerSpawnPosition.z = p.z;
+            RespawnPlayerAtSpawn();
             playerCombat.ClearIncomingProjectiles(enemyBullets);
             if (gameState != nullptr) {
                 gameState->RequestState(Spark::GameFlowState::Playing);
@@ -946,8 +1037,8 @@ void Platformer2DDemo::Simulate(
                     playerHealth->ResetToFull();
                 }
             }
-            playerTr->SetTranslation({kPlayerSpawnX, kGroundSurfaceY + kPlayerHalfH, p.z});
-            playerRb->SetVelocity(Spark::Vector2::Zero);
+            playerSpawnPosition.z = p.z;
+            RespawnPlayerAtSpawn();
             if (gameState != nullptr) {
                 gameState->RequestState(Spark::GameFlowState::Playing);
             }

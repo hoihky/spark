@@ -555,6 +555,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/SkyDemo.cpp
         src/spark/demo/TerrainDemo.cpp
         src/spark/demo/VfxShowcaseDemo.cpp
+        src/spark/demo/VfxShowcase2DDemo.cpp
         src/spark/demo/CharacterCameraDemo.cpp
         src/spark/demo/BroadPhase2DDemo.cpp
         src/spark/demo/Platformer2DDemo.cpp
@@ -642,7 +643,15 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/tilemap/TilemapFileResolve.cpp
         src/spark/scene/tilemap/TmxImporter.cpp
         src/spark/scene/tilemap/TilemapDocumentApply.cpp
+        src/spark/scene/tilemap/TilemapDerivedDataRebake.cpp
+        src/spark/scene/tilemap/TilemapDocumentCapture.cpp
         src/spark/scene/tilemap/TilemapDocumentSerializer.cpp
+        src/spark/scene/tilemap/TilemapBrush.cpp
+        src/spark/scene/tilemap/TilemapEditRevision.cpp
+        src/spark/scene/tilemap/TilemapEditSession.cpp
+        src/spark/scene/tilemap/TilemapEditValidator.cpp
+        src/spark/scene/tilemap/TilemapSparkMapExporter.cpp
+        src/spark/scene/tilemap/TilemapPick.cpp
         src/spark/scene/tilemap/Tileset.cpp
         src/spark/scene/tilemap/TilemapLayerSort.cpp
         src/spark/scene/tilemap/TilemapGameplayRules.cpp
@@ -654,6 +663,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/rendering/MaterialComponent.cpp
         src/spark/ecs/components/rendering/MultiMaterialComponent.cpp
         src/spark/ecs/components/lighting/PointLightComponent.cpp
+        src/spark/ecs/components/lighting/PointLight2DComponent.cpp
         src/spark/ecs/components/lighting/DirectionalLightComponent.cpp
         src/spark/ecs/components/lighting/SpotLightComponent.cpp
         src/spark/ecs/components/camera/CameraComponent.cpp
@@ -996,6 +1006,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/audio/AmbientAudio.cpp
         src/spark/audio/AudioSpatial.cpp
         src/spark/audio/SoundClip.cpp
+        src/spark/audio/ProceduralSoundPresets.cpp
         src/spark/audio/WavDecoder.cpp
         src/spark/audio/SoundMixer.cpp
         src/spark/audio/SoundEngine.cpp

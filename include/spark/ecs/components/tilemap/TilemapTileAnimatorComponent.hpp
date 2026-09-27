@@ -10,7 +10,7 @@ class IEngineContext;
 
 /**
  * Advances global tile animation time for the sibling <c>TilemapComponent</c>.
- * The render path resolves animated atlas ids via <c>ResolveAnimatedTileId</c> at submit time.
+ * The render path resolves animated atlas ids via <c>TileAnimationResolver</c> at submit time.
  */
 class TilemapTileAnimatorComponent final : public GameComponent {
 public:

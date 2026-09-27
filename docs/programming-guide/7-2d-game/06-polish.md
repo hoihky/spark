@@ -32,9 +32,14 @@ See [2D Animation](../2-2d-graphics/04-2d-animation.md#sprite-animation-events).
 ## Sound
 
 ```cpp
-auto* cue = playerObject->AddComponent<SoundCueComponent>();
-if (justJumped) cue->Queue(SoundClip::CreateToneBlip(520, 0.07F, 0.5F));
+#include "spark/audio/ProceduralSoundPresets.hpp"
+
+if (justJumped) {
+    DemoPlayProceduralClip(context, ProceduralSoundPresets::Get(ProceduralSoundPreset::Jump), 0.5F);
+}
 ```
+
+Lower-level generators: `SoundClip::CreateToneSweep`, `CreateNoiseBurst`, `CreateLayeredChime` (see [Clips](../6-sound/02-clips.md)).
 
 Land dust SFX pairs well with `CharacterController2DComponent::WasGroundedLastFrame()` transition detection.
 

@@ -7,6 +7,30 @@
 
 namespace Spark {
 
+namespace {
+
+void SyncGridFrame(TilemapGridFrame& outFrame, const GameObject& owner, const TilemapComponent& tilemap) noexcept {
+    outFrame = TilemapGridFrame::FromMapTransform(
+            owner.GetWorldMatrix(),
+            tilemap.GetTileWorldSize(),
+            tilemap.GetMapWidth(),
+            tilemap.GetMapHeight());
+}
+
+}  // namespace
+
+void TilemapGameplayGridComponent::RebakeRegion(
+        const GameObject& owner,
+        const TilemapCellRegion& region) noexcept {
+    const TilemapComponent* tilemap = owner.GetComponent<TilemapComponent>();
+    if (tilemap == nullptr || tilemap->GetMapWidth() == 0U || tilemap->GetMapHeight() == 0U || region.IsEmpty()) {
+        return;
+    }
+    TilemapGameplayGridBaker{}.BakeRegion(*tilemap, walkRule, grid, region);
+    SyncGridFrame(frame, owner, *tilemap);
+    rebakeRequested = false;
+}
+
 void TilemapGameplayGridComponent::RebakeIfNeeded(const GameObject& owner) noexcept {
     if (!autoRebake && !rebakeRequested) {
         return;
@@ -18,12 +42,8 @@ void TilemapGameplayGridComponent::RebakeIfNeeded(const GameObject& owner) noexc
         return;
     }
 
-    BakeTilemapGameplayGrid(*tilemap, walkRule, grid);
-    frame = MakeTilemapGridFrame(
-            owner.GetWorldMatrix(),
-            tilemap->GetTileWorldSize(),
-            tilemap->GetMapWidth(),
-            tilemap->GetMapHeight());
+    TilemapGameplayGridBaker{}.BakeFull(*tilemap, walkRule, grid);
+    SyncGridFrame(frame, owner, *tilemap);
     rebakeRequested = false;
 }
 

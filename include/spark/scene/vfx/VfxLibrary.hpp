@@ -37,6 +37,20 @@ enum class VfxBuiltinId : std::uint8_t {
     GroundFire,
     Shockwave,
     MeteorTrail,
+    HitSpark2D,
+    CoinPop2D,
+    JumpRing2D,
+    LanternGlow2D,
+    RainSplash2D,
+    SlashArc2D,
+    FootstepPuff2D,
+    BlockImpact2D,
+    MagicNova2D,
+    HealSparkle2D,
+    PoisonBubble2D,
+    ShieldPulse2D,
+    WaterRipple2D,
+    EmberMotif2D,
     Count
 };
 

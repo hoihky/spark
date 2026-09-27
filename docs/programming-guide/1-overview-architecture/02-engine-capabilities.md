@@ -51,7 +51,9 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 | Orthographic camera | `Camera2DComponent`, `Camera2DRigComponent`, `ScreenShakeComponent` |
 | Parallax backgrounds | `ParallaxLayerComponent` (camera-relative scroll + optional drift) |
 | Y-sort occlusion | `SceneSpriteSortMode::SortOrderThenWorldY` |
-| 2D sprite lighting modes | `SpriteLighting2DMode` on draw items |
+| 2D sprite lighting modes | `SpriteLighting2DMode` (incl. normal-mapped + ramp) on `SpriteLighting2DComponent` |
+| 2D sprite-layer particles | `ParticleRenderSpace::SpriteLayer` on `ParticleEmitterComponent` |
+| Procedural gameplay SFX | `ProceduralSoundPresets`, `SoundClip::CreateNoiseBurst` / sweep / chime |
 
 ## 2D Gameplay Components
 

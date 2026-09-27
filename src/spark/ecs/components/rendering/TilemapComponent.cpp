@@ -235,7 +235,7 @@ void TilemapComponent::SetPaintTile(
 void TilemapComponent::BakeGameplayGrid(
         TilemapGameplayGrid& outGrid,
         const TilemapGameplayWalkRule rule) const noexcept {
-    BakeTilemapGameplayGrid(*this, rule, outGrid);
+    TilemapGameplayGridBaker{}.BakeFull(*this, rule, outGrid);
 }
 
 }  // namespace Spark

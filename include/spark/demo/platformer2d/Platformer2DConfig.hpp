@@ -45,6 +45,11 @@ struct Config {
     static constexpr std::uint16_t kPlayerHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(4);
     static constexpr std::uint16_t kEnemyBulletQueryCategoryBits = Spark::CollisionFilter2D::LayerBit(5);
 
+    static constexpr float kPlayerSpawnX = -8.5F;
+    static constexpr float kLavaDamagePerSecond = 22.0F;
+
+    static constexpr std::uint16_t kHazardQueryCategoryBits = Spark::CollisionFilter2D::LayerBit(6);
+
     static constexpr float kPlayerMoveSpeed = 11.0F;
     static constexpr float kPlayerJumpSpeed = 13.2F;
     static constexpr float kMeleeHitRadius = 1.05F;
@@ -55,6 +60,12 @@ struct Config {
     static constexpr float kGoalCenterY = 7.55F;
     static constexpr float kGoalHalfW = 4.8F;
     static constexpr float kGoalHalfH = 1.1F;
+
+    /** Level camera clamp (world XY); used by <c>CameraBounds2DComponent</c> at level center. */
+    static constexpr float kCameraBoundsCenterX = 21.0F;
+    static constexpr float kCameraBoundsCenterY = 3.75F;
+    static constexpr float kCameraBoundsHalfW = 29.0F;
+    static constexpr float kCameraBoundsHalfH = 5.25F;
 
     static constexpr float kEnemySpawns[kEnemyCount][4] = {
             {-4.5F, 1.35F, -6.8F, -1.5F},

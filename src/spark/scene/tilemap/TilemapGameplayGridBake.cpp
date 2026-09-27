@@ -2,9 +2,13 @@
 
 #include "spark/scene/tilemap/TilemapGameplayRules.hpp"
 
+#include <algorithm>
+
 namespace Spark {
 
 namespace {
+
+const TilemapGameplayRuleEvaluator kRules{};
 
 [[nodiscard]] bool IsMapCellWalkable(
         const TilemapComponent& tilemap,
@@ -26,7 +30,7 @@ namespace {
         const TileDefinition& definition = tilemap.GetDefinitionForTileId(paintId);
         TileCell paintAsCell = cell;
         paintAsCell.tileId = paintId;
-        if (TileBlocksGameplayPath(paintAsCell, definition, rule)) {
+        if (kRules.BlocksGameplayPath(paintAsCell, definition, rule)) {
             return false;
         }
     }
@@ -35,10 +39,34 @@ namespace {
 
 }  // namespace
 
-void BakeTilemapGameplayGrid(
+void TilemapGameplayGridBaker::BakeRegion(
         const TilemapComponent& tilemap,
         const TilemapGameplayWalkRule rule,
-        TilemapGameplayGrid& outGrid) {
+        TilemapGameplayGrid& outGrid,
+        const TilemapCellRegion& region) const {
+    const std::int32_t w = static_cast<std::int32_t>(tilemap.GetMapWidth());
+    const std::int32_t h = static_cast<std::int32_t>(tilemap.GetMapHeight());
+    if (w <= 0 || h <= 0 || region.IsEmpty()) {
+        return;
+    }
+    if (outGrid.Width() != w || outGrid.Height() != h) {
+        BakeFull(tilemap, rule, outGrid);
+        return;
+    }
+    const std::uint32_t maxX = std::min(region.maxX, tilemap.GetMapWidth() - 1U);
+    const std::uint32_t maxY = std::min(region.maxY, tilemap.GetMapHeight() - 1U);
+    for (std::uint32_t y = region.minY; y <= maxY; ++y) {
+        for (std::uint32_t x = region.minX; x <= maxX; ++x) {
+            const bool walkable = IsMapCellWalkable(tilemap, rule, x, y);
+            outGrid.SetBlocked(static_cast<std::int32_t>(x), static_cast<std::int32_t>(y), !walkable);
+        }
+    }
+}
+
+void TilemapGameplayGridBaker::BakeFull(
+        const TilemapComponent& tilemap,
+        const TilemapGameplayWalkRule rule,
+        TilemapGameplayGrid& outGrid) const {
     const std::int32_t w = static_cast<std::int32_t>(tilemap.GetMapWidth());
     const std::int32_t h = static_cast<std::int32_t>(tilemap.GetMapHeight());
     outGrid.Resize(w, h);

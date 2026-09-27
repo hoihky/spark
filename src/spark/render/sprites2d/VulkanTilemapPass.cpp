@@ -65,10 +65,14 @@ void FillTileInstanceGpu(
     out.uvRect[1] = uv.y * layer.atlasLayerUvScaleV;
     out.uvRect[2] = uv.z * layer.atlasLayerUvScaleU;
     out.uvRect[3] = uv.w * layer.atlasLayerUvScaleV;
+    out.normalUvRect[0] = out.uvRect[0];
+    out.normalUvRect[1] = out.uvRect[1];
+    out.normalUvRect[2] = out.uvRect[2];
+    out.normalUvRect[3] = out.uvRect[3];
     out.textureLayer = layer.textureLayer;
     out.lightingMode = 0;
-    out.lightingPad0 = 0.0F;
-    out.lightingPad1 = 0.0F;
+    out.normalTextureLayer = -1;
+    out.rampTextureLayer = -1;
     out.lightingA[0] = 1.0F;
     out.lightingA[1] = 1.0F;
     out.lightingA[2] = 1.0F;

@@ -120,6 +120,8 @@ void ApplySmoke(ParticleEmitterComponent& pe) {
 }
 
 void ApplySparkle(ParticleEmitterComponent& pe) {
+    pe.SetRenderSpace(ParticleRenderSpace::SpriteLayer);
+    pe.SetSpriteLayerSortOrder(420);
     pe.SetEmitterEnabled(true);
     pe.SetEmissionModuleId("continuous");
     pe.SetUseLocalEmission(true);
@@ -168,16 +170,23 @@ void ApplyImpact(ParticleEmitterComponent& pe) {
     pe.SetEmitterEnabled(true);
     pe.SetEmissionModuleId("burst_only");
     pe.SetUseLocalEmission(true);
-    pe.SetMaxParticles(128);
+    pe.SetMaxParticles(96);
     pe.SetEmissionRate(0.0F);
-    pe.SetLifetime(0.06F, 0.24F);
-    pe.SetStartEndSize(0.16F, 0.02F);
-    pe.SetStartEndColor(Vector4{1.0F, 0.95F, 0.72F, 1.0F}, Vector4{0.72F, 0.32F, 0.08F, 0.0F});
-    pe.SetGravity({0.0F, -5.2F, 0.0F});
+    pe.SetLifetime(0.04F, 0.16F);
+    pe.SetStartEndSize(0.12F, 0.015F);
+    pe.SetStartEndColor(Vector4{1.0F, 0.98F, 0.88F, 1.0F}, Vector4{0.85F, 0.42F, 0.12F, 0.0F});
+    pe.SetGravity({0.0F, -6.5F, 0.0F});
     pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
-    pe.SetSpreadAngleRadians(0.72F);
-    pe.SetSpeedRange(2.5F, 7.2F);
-    ApplySizeCurve(pe, SizeCurve3(0.12F, 0.18F, 0.4F, 0.08F, 0.02F));
+    pe.SetSpreadAngleRadians(0.38F);
+    pe.SetSpeedRange(3.5F, 8.5F);
+    ApplySizeCurve(pe, SizeCurve3(0.08F, 0.16F, 0.32F, 0.06F, 0.01F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 1.0F, 0.92F, 1.0F},
+                    {1.0F, 0.82F, 0.35F, 0.95F},
+                    {0.92F, 0.45F, 0.1F, 0.5F},
+                    {0.45F, 0.12F, 0.04F, 0.0F}));
 }
 
 void ApplyRain(ParticleEmitterComponent& pe) {
@@ -310,6 +319,8 @@ void ApplyPoison(ParticleEmitterComponent& pe) {
 }
 
 void ApplyDust(ParticleEmitterComponent& pe) {
+    pe.SetRenderSpace(ParticleRenderSpace::SpriteLayer);
+    pe.SetSpriteLayerSortOrder(380);
     pe.SetEmitterEnabled(true);
     pe.SetEmissionModuleId("burst_only");
     pe.SetUseLocalEmission(true);
@@ -572,18 +583,26 @@ void ApplyGroundFire(ParticleEmitterComponent& pe) {
 
 void ApplyShockwave(ParticleEmitterComponent& pe) {
     pe.SetEmitterEnabled(true);
-    pe.SetEmissionModuleId("burst_only");
+    pe.SetEmissionModuleId("ring");
+    pe.SetRingRadius(0.12F);
     pe.SetUseLocalEmission(true);
-    pe.SetMaxParticles(140);
+    pe.SetMaxParticles(160);
     pe.SetEmissionRate(0.0F);
-    pe.SetLifetime(0.18F, 0.42F);
-    pe.SetStartEndSize(0.08F, 0.48F);
-    pe.SetStartEndColor(Vector4{0.92F, 0.92F, 0.95F, 0.55F}, Vector4{0.55F, 0.55F, 0.58F, 0.0F});
-    pe.SetGravity({0.0F, 0.05F, 0.0F});
+    pe.SetLifetime(0.14F, 0.38F);
+    pe.SetStartEndSize(0.06F, 0.52F);
+    pe.SetStartEndColor(Vector4{0.95F, 0.96F, 1.0F, 0.62F}, Vector4{0.62F, 0.64F, 0.7F, 0.0F});
+    pe.SetGravity({0.0F, 0.02F, 0.0F});
     pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
-    pe.SetSpreadAngleRadians(0.22F);
-    pe.SetSpeedRange(4.5F, 9.0F);
-    ApplySizeCurve(pe, SizeCurve3(0.08F, 0.1F, 0.35F, 0.32F, 0.45F));
+    pe.SetSpreadAngleRadians(0.12F);
+    pe.SetSpeedRange(5.5F, 11.0F);
+    ApplySizeCurve(pe, SizeCurve3(0.06F, 0.08F, 0.28F, 0.38F, 0.48F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 1.0F, 1.0F, 0.7F},
+                    {0.88F, 0.9F, 0.95F, 0.55F},
+                    {0.72F, 0.74F, 0.78F, 0.28F},
+                    {0.55F, 0.56F, 0.6F, 0.0F}));
 }
 
 void ApplyMeteorTrail(ParticleEmitterComponent& pe) {
@@ -606,6 +625,302 @@ void ApplyMeteorTrail(ParticleEmitterComponent& pe) {
                     {1.0F, 0.42F, 0.05F, 0.9F},
                     {0.65F, 0.18F, 0.03F, 0.45F},
                     {0.25F, 0.08F, 0.02F, 0.0F}));
+}
+
+void BeginSpriteLayer2D(ParticleEmitterComponent& pe, const std::int32_t sortOrder) {
+    pe.SetRenderSpace(ParticleRenderSpace::SpriteLayer);
+    pe.SetSpriteLayerSortOrder(sortOrder);
+    pe.SetUseLocalEmission(false);
+    pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
+}
+
+void ApplyHitSpark2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 460);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(64);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.05F, 0.14F);
+    pe.SetStartEndSize(0.04F, 0.14F);
+    pe.SetStartEndColor(Vector4{1.0F, 0.98F, 0.92F, 1.0F}, Vector4{1.0F, 0.42F, 0.08F, 0.0F});
+    pe.SetGravity({0.0F, -1.2F, 0.0F});
+    pe.SetSpreadAngleRadians(2.65F);
+    pe.SetSpeedRange(4.5F, 9.5F);
+    ApplySizeCurve(pe, SizeCurve3(0.05F, 0.12F, 0.25F, 0.06F, 0.01F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 1.0F, 0.95F, 1.0F},
+                    {1.0F, 0.75F, 0.25F, 1.0F},
+                    {1.0F, 0.35F, 0.05F, 0.55F},
+                    {0.45F, 0.08F, 0.02F, 0.0F}));
+}
+
+void ApplyCoinPop2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 440);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(42);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.18F, 0.48F);
+    pe.SetStartEndSize(0.05F, 0.22F);
+    pe.SetStartEndColor(Vector4{1.0F, 0.95F, 0.22F, 1.0F}, Vector4{1.0F, 0.62F, 0.05F, 0.0F});
+    pe.SetGravity({0.0F, -2.4F, 0.0F});
+    pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
+    pe.SetSpreadAngleRadians(1.05F);
+    pe.SetSpeedRange(2.2F, 5.5F);
+    ApplySizeCurve(pe, SizeCurve3(0.12F, 0.08F, 0.45F, 0.18F, 0.04F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 0.98F, 0.45F, 1.0F},
+                    {1.0F, 0.82F, 0.15F, 1.0F},
+                    {0.95F, 0.55F, 0.05F, 0.65F},
+                    {0.55F, 0.28F, 0.02F, 0.0F}));
+}
+
+void ApplyJumpRing2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 350);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("ring");
+    pe.SetRingRadius(0.38F);
+    pe.SetMaxParticles(80);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.12F, 0.26F);
+    pe.SetStartEndSize(0.06F, 0.2F);
+    pe.SetStartEndColor(Vector4{0.55F, 0.92F, 1.0F, 0.95F}, Vector4{0.2F, 0.45F, 0.95F, 0.0F});
+    pe.SetGravity({0.0F, 0.35F, 0.0F});
+    pe.SetSpeedRange(1.4F, 3.2F);
+    ApplySizeCurve(pe, SizeCurve3(0.1F, 0.1F, 0.4F, 0.16F, 0.02F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {0.65F, 0.95F, 1.0F, 0.95F},
+                    {0.45F, 0.82F, 1.0F, 0.85F},
+                    {0.25F, 0.55F, 0.98F, 0.45F},
+                    {0.12F, 0.35F, 0.85F, 0.0F}));
+}
+
+void ApplyLanternGlow2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 410);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("continuous");
+    pe.SetMaxParticles(160);
+    pe.SetEmissionRate(32.0F);
+    pe.SetLifetime(0.45F, 1.25F);
+    pe.SetStartEndSize(0.14F, 0.02F);
+    pe.SetStartEndColor(Vector4{1.0F, 0.78F, 0.22F, 0.82F}, Vector4{0.85F, 0.18F, 0.02F, 0.0F});
+    pe.SetGravity({0.0F, 0.55F, 0.0F});
+    pe.SetSpreadAngleRadians(0.55F);
+    pe.SetSpeedRange(0.15F, 0.65F);
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 0.85F, 0.35F, 0.9F},
+                    {1.0F, 0.55F, 0.12F, 0.75F},
+                    {0.85F, 0.25F, 0.05F, 0.35F},
+                    {0.35F, 0.08F, 0.02F, 0.0F}));
+}
+
+void ApplyRainSplash2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 320);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(56);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.05F, 0.14F);
+    pe.SetStartEndSize(0.03F, 0.1F);
+    pe.SetStartEndColor(Vector4{0.72F, 0.88F, 1.0F, 0.75F}, Vector4{0.42F, 0.58F, 0.82F, 0.0F});
+    pe.SetGravity({0.0F, -0.85F, 0.0F});
+    pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
+    pe.SetSpreadAngleRadians(1.35F);
+    pe.SetSpeedRange(1.2F, 3.5F);
+    ApplySizeCurve(pe, SizeCurve3(0.08F, 0.05F, 0.35F, 0.09F, 0.02F));
+}
+
+void ApplySlashArc2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 470);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(36);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.06F, 0.16F);
+    pe.SetStartEndSize(0.14F, 0.38F);
+    pe.SetStartEndColor(Vector4{0.92F, 0.98F, 1.0F, 0.95F}, Vector4{0.35F, 0.65F, 1.0F, 0.0F});
+    pe.SetGravity({0.0F, -0.15F, 0.0F});
+    pe.SetEmissionDirection({1.0F, 0.08F, 0.0F});
+    pe.SetSpreadAngleRadians(0.28F);
+    pe.SetSpeedRange(5.5F, 11.0F);
+    ApplySizeCurve(pe, SizeCurve3(0.05F, 0.22F, 0.35F, 0.28F, 0.04F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {0.85F, 0.98F, 1.0F, 1.0F},
+                    {0.55F, 0.82F, 1.0F, 0.9F},
+                    {0.35F, 0.55F, 0.98F, 0.45F},
+                    {0.15F, 0.35F, 0.75F, 0.0F}));
+}
+
+void ApplyFootstepPuff2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 300);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(28);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.22F, 0.55F);
+    pe.SetStartEndSize(0.08F, 0.38F);
+    pe.SetStartEndColor(Vector4{0.78F, 0.72F, 0.62F, 0.42F}, Vector4{0.48F, 0.42F, 0.36F, 0.0F});
+    pe.SetGravity({0.0F, 0.12F, 0.0F});
+    pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
+    pe.SetSpreadAngleRadians(1.55F);
+    pe.SetSpeedRange(0.18F, 0.72F);
+    ApplySizeCurve(pe, SizeCurve3(0.15F, 0.1F, 0.5F, 0.32F, 0.38F));
+}
+
+void ApplyBlockImpact2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 455);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(40);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.12F, 0.32F);
+    pe.SetStartEndSize(0.06F, 0.16F);
+    pe.SetStartEndColor(Vector4{0.95F, 0.96F, 1.0F, 1.0F}, Vector4{0.55F, 0.58F, 0.68F, 0.0F});
+    pe.SetGravity({0.0F, -2.8F, 0.0F});
+    pe.SetEmissionDirection({0.0F, 1.0F, 0.0F});
+    pe.SetSpreadAngleRadians(1.15F);
+    pe.SetSpeedRange(2.8F, 6.5F);
+    ApplySizeCurve(pe, SizeCurve3(0.1F, 0.1F, 0.4F, 0.08F, 0.02F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 1.0F, 1.0F, 1.0F},
+                    {0.85F, 0.88F, 0.95F, 0.85F},
+                    {0.62F, 0.65F, 0.72F, 0.45F},
+                    {0.38F, 0.4F, 0.48F, 0.0F}));
+}
+
+void ApplyMagicNova2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 480);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("ring");
+    pe.SetRingRadius(0.2F);
+    pe.SetMaxParticles(120);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.2F, 0.45F);
+    pe.SetStartEndSize(0.1F, 0.42F);
+    pe.SetStartEndColor(Vector4{0.72F, 0.28F, 1.0F, 1.0F}, Vector4{0.18F, 0.72F, 1.0F, 0.0F});
+    pe.SetGravity({0.0F, 0.05F, 0.0F});
+    pe.SetSpeedRange(2.5F, 5.5F);
+    ApplySizeCurve(pe, SizeCurve3(0.08F, 0.14F, 0.4F, 0.32F, 0.04F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {0.85F, 0.45F, 1.0F, 1.0F},
+                    {0.55F, 0.25F, 0.98F, 0.9F},
+                    {0.35F, 0.65F, 1.0F, 0.55F},
+                    {0.12F, 0.35F, 0.85F, 0.0F}));
+}
+
+void ApplyHealSparkle2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 430);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("burst_only");
+    pe.SetMaxParticles(56);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.28F, 0.72F);
+    pe.SetStartEndSize(0.05F, 0.14F);
+    pe.SetStartEndColor(Vector4{0.35F, 1.0F, 0.48F, 1.0F}, Vector4{0.95F, 1.0F, 0.65F, 0.0F});
+    pe.SetGravity({0.0F, 1.35F, 0.0F});
+    pe.SetSpreadAngleRadians(2.1F);
+    pe.SetSpeedRange(1.2F, 3.2F);
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {0.55F, 1.0F, 0.72F, 1.0F},
+                    {0.35F, 0.98F, 0.42F, 0.95F},
+                    {0.75F, 1.0F, 0.55F, 0.55F},
+                    {0.25F, 0.75F, 0.35F, 0.0F}));
+}
+
+void ApplyPoisonBubble2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 390);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("continuous");
+    pe.SetMaxParticles(72);
+    pe.SetEmissionRate(14.0F);
+    pe.SetLifetime(0.55F, 1.35F);
+    pe.SetStartEndSize(0.14F, 0.32F);
+    pe.SetStartEndColor(Vector4{0.45F, 0.98F, 0.22F, 0.62F}, Vector4{0.55F, 0.15F, 0.72F, 0.0F});
+    pe.SetGravity({0.0F, 0.65F, 0.0F});
+    pe.SetSpreadAngleRadians(0.42F);
+    pe.SetSpeedRange(0.22F, 0.75F);
+    ApplySizeCurve(pe, SizeCurve3(0.2F, 0.14F, 0.55F, 0.26F, 0.3F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {0.55F, 0.98F, 0.35F, 0.65F},
+                    {0.35F, 0.85F, 0.22F, 0.55F},
+                    {0.62F, 0.25F, 0.78F, 0.35F},
+                    {0.22F, 0.12F, 0.42F, 0.0F}));
+}
+
+void ApplyShieldPulse2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 475);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("ring");
+    pe.SetRingRadius(0.48F);
+    pe.SetMaxParticles(96);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.16F, 0.34F);
+    pe.SetStartEndSize(0.04F, 0.22F);
+    pe.SetStartEndColor(Vector4{0.45F, 0.88F, 1.0F, 0.9F}, Vector4{0.12F, 0.42F, 0.95F, 0.0F});
+    pe.SetGravity({0.0F, 0.0F, 0.0F});
+    pe.SetSpeedRange(1.8F, 4.2F);
+    ApplySizeCurve(pe, SizeCurve3(0.1F, 0.06F, 0.45F, 0.18F, 0.03F));
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {0.55F, 0.92F, 1.0F, 0.95F},
+                    {0.35F, 0.72F, 1.0F, 0.75F},
+                    {0.22F, 0.52F, 0.98F, 0.4F},
+                    {0.1F, 0.32F, 0.82F, 0.0F}));
+}
+
+void ApplyWaterRipple2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 310);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("ring");
+    pe.SetRingRadius(0.08F);
+    pe.SetMaxParticles(64);
+    pe.SetEmissionRate(0.0F);
+    pe.SetLifetime(0.28F, 0.58F);
+    pe.SetStartEndSize(0.03F, 0.32F);
+    pe.SetStartEndColor(Vector4{0.68F, 0.88F, 1.0F, 0.5F}, Vector4{0.38F, 0.62F, 0.92F, 0.0F});
+    pe.SetGravity({0.0F, 0.0F, 0.0F});
+    pe.SetSpeedRange(0.55F, 1.35F);
+    ApplySizeCurve(pe, SizeCurve3(0.12F, 0.05F, 0.5F, 0.28F, 0.35F));
+}
+
+void ApplyEmberMotif2D(ParticleEmitterComponent& pe) {
+    BeginSpriteLayer2D(pe, 400);
+    pe.SetEmitterEnabled(true);
+    pe.SetEmissionModuleId("continuous");
+    pe.SetMaxParticles(180);
+    pe.SetEmissionRate(36.0F);
+    pe.SetLifetime(0.4F, 1.35F);
+    pe.SetStartEndSize(0.06F, 0.012F);
+    pe.SetStartEndColor(Vector4{1.0F, 0.62F, 0.15F, 0.95F}, Vector4{0.35F, 0.05F, 0.01F, 0.0F});
+    pe.SetGravity({0.0F, 0.75F, 0.0F});
+    pe.SetSpreadAngleRadians(0.72F);
+    pe.SetSpeedRange(0.28F, 1.05F);
+    ApplyColorCurve(
+            pe,
+            ColorCurve4(
+                    {1.0F, 0.72F, 0.22F, 1.0F},
+                    {0.98F, 0.42F, 0.08F, 0.85F},
+                    {0.72F, 0.18F, 0.03F, 0.4F},
+                    {0.28F, 0.05F, 0.01F, 0.0F}));
 }
 
 }  // namespace
@@ -702,6 +1017,48 @@ void VfxLibrary::ApplyBuiltin(const VfxBuiltinId id, ParticleEmitterComponent& e
     case VfxBuiltinId::MeteorTrail:
         ApplyMeteorTrail(emitter);
         break;
+    case VfxBuiltinId::HitSpark2D:
+        ApplyHitSpark2D(emitter);
+        break;
+    case VfxBuiltinId::CoinPop2D:
+        ApplyCoinPop2D(emitter);
+        break;
+    case VfxBuiltinId::JumpRing2D:
+        ApplyJumpRing2D(emitter);
+        break;
+    case VfxBuiltinId::LanternGlow2D:
+        ApplyLanternGlow2D(emitter);
+        break;
+    case VfxBuiltinId::RainSplash2D:
+        ApplyRainSplash2D(emitter);
+        break;
+    case VfxBuiltinId::SlashArc2D:
+        ApplySlashArc2D(emitter);
+        break;
+    case VfxBuiltinId::FootstepPuff2D:
+        ApplyFootstepPuff2D(emitter);
+        break;
+    case VfxBuiltinId::BlockImpact2D:
+        ApplyBlockImpact2D(emitter);
+        break;
+    case VfxBuiltinId::MagicNova2D:
+        ApplyMagicNova2D(emitter);
+        break;
+    case VfxBuiltinId::HealSparkle2D:
+        ApplyHealSparkle2D(emitter);
+        break;
+    case VfxBuiltinId::PoisonBubble2D:
+        ApplyPoisonBubble2D(emitter);
+        break;
+    case VfxBuiltinId::ShieldPulse2D:
+        ApplyShieldPulse2D(emitter);
+        break;
+    case VfxBuiltinId::WaterRipple2D:
+        ApplyWaterRipple2D(emitter);
+        break;
+    case VfxBuiltinId::EmberMotif2D:
+        ApplyEmberMotif2D(emitter);
+        break;
     case VfxBuiltinId::Count:
         break;
     }
@@ -769,6 +1126,34 @@ const char* VfxLibrary::GetBuiltinName(const VfxBuiltinId id) noexcept {
         return "shockwave";
     case VfxBuiltinId::MeteorTrail:
         return "meteor_trail";
+    case VfxBuiltinId::HitSpark2D:
+        return "hit_spark_2d";
+    case VfxBuiltinId::CoinPop2D:
+        return "coin_pop_2d";
+    case VfxBuiltinId::JumpRing2D:
+        return "jump_ring_2d";
+    case VfxBuiltinId::LanternGlow2D:
+        return "lantern_glow_2d";
+    case VfxBuiltinId::RainSplash2D:
+        return "rain_splash_2d";
+    case VfxBuiltinId::SlashArc2D:
+        return "slash_arc_2d";
+    case VfxBuiltinId::FootstepPuff2D:
+        return "footstep_puff_2d";
+    case VfxBuiltinId::BlockImpact2D:
+        return "block_impact_2d";
+    case VfxBuiltinId::MagicNova2D:
+        return "magic_nova_2d";
+    case VfxBuiltinId::HealSparkle2D:
+        return "heal_sparkle_2d";
+    case VfxBuiltinId::PoisonBubble2D:
+        return "poison_bubble_2d";
+    case VfxBuiltinId::ShieldPulse2D:
+        return "shield_pulse_2d";
+    case VfxBuiltinId::WaterRipple2D:
+        return "water_ripple_2d";
+    case VfxBuiltinId::EmberMotif2D:
+        return "ember_motif_2d";
     case VfxBuiltinId::Count:
         break;
     }
@@ -813,6 +1198,34 @@ std::uint32_t VfxLibrary::GetDefaultBurstCount(const VfxBuiltinId id) noexcept {
         return 56;
     case VfxBuiltinId::Curse:
         return 48;
+    case VfxBuiltinId::HitSpark2D:
+        return 18;
+    case VfxBuiltinId::CoinPop2D:
+        return 14;
+    case VfxBuiltinId::JumpRing2D:
+        return 48;
+    case VfxBuiltinId::RainSplash2D:
+        return 12;
+    case VfxBuiltinId::SlashArc2D:
+        return 16;
+    case VfxBuiltinId::FootstepPuff2D:
+        return 10;
+    case VfxBuiltinId::BlockImpact2D:
+        return 20;
+    case VfxBuiltinId::MagicNova2D:
+        return 72;
+    case VfxBuiltinId::HealSparkle2D:
+        return 32;
+    case VfxBuiltinId::ShieldPulse2D:
+        return 64;
+    case VfxBuiltinId::WaterRipple2D:
+        return 40;
+    case VfxBuiltinId::LanternGlow2D:
+        return 26;
+    case VfxBuiltinId::PoisonBubble2D:
+        return 16;
+    case VfxBuiltinId::EmberMotif2D:
+        return 32;
     default:
         return 0;
     }

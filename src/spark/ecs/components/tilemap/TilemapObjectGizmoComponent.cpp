@@ -40,7 +40,8 @@ void TilemapObjectGizmoComponent::RebuildVisuals(GameObject& owner, GameWorld& w
         return;
     }
 
-    const TilemapGridFrame frame = MakeTilemapGridFrameForObject(owner, *tilemap);
+    const TilemapGridFrame frame = TilemapGridFrame::FromTilemapObject(owner, *tilemap);
+    const TilemapObjectQuery objectQuery{};
     const float cellSize = tilemap->GetTileWorldSize();
     const Array<TilemapObjectLayer>& layers = objects->GetObjectLayers();
     for (std::size_t li = 0; li < layers.GetSize(); ++li) {
@@ -53,7 +54,7 @@ void TilemapObjectGizmoComponent::RebuildVisuals(GameObject& owner, GameWorld& w
             if (!ShouldDrawMarker(marker)) {
                 continue;
             }
-            const Vector3 worldPos = TilemapObjectMarkerWorldPosition(marker, frame);
+            const Vector3 worldPos = objectQuery.MarkerWorldPosition(marker, frame);
             GameObject* gizmoGo = world.CreateGameObject();
             if (gizmoGo == nullptr) {
                 continue;

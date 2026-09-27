@@ -6,6 +6,15 @@
 
 namespace Spark {
 
+void TilemapAutotileComponent::RebuildRegion(GameObject& owner, const TilemapCellRegion& region) noexcept {
+    TilemapComponent* tilemap = owner.GetComponent<TilemapComponent>();
+    if (tilemap == nullptr || region.IsEmpty()) {
+        return;
+    }
+    TilemapAutotileBaker{}.RebuildLayerRegion(*tilemap, layerIndex, region);
+    rebuildRequested = false;
+}
+
 void TilemapAutotileComponent::RebuildIfNeeded(GameObject& owner) noexcept {
     if (!rebuildOnUpdate && !rebuildRequested) {
         return;
@@ -15,7 +24,7 @@ void TilemapAutotileComponent::RebuildIfNeeded(GameObject& owner) noexcept {
         rebuildRequested = false;
         return;
     }
-    RebuildTilemapAutotileLayer(*tilemap, layerIndex);
+    TilemapAutotileBaker{}.RebuildLayer(*tilemap, layerIndex);
     rebuildRequested = false;
 }
 

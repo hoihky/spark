@@ -1,5 +1,8 @@
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
 
+#include "spark/ecs/components/rendering/TilemapComponent.hpp"
+#include "spark/ecs/GameObject.hpp"
+
 #include <cmath>
 
 namespace Spark {
@@ -39,17 +42,27 @@ bool TilemapGridFrame::IsCellInBounds(const GridPathfinder::Cell& cell) const no
            static_cast<std::uint32_t>(cell.y) < mapHeight;
 }
 
-TilemapGridFrame MakeTilemapGridFrame(
+TilemapGridFrame TilemapGridFrame::FromMapTransform(
         const Matrix4& tilemapWorldMatrix,
         const float tileWorldSize,
-        const std::uint32_t mapWidth,
-        const std::uint32_t mapHeight) noexcept {
+        const std::uint32_t inMapWidth,
+        const std::uint32_t inMapHeight) noexcept {
     TilemapGridFrame frame{};
     frame.worldFromLocal = tilemapWorldMatrix;
     frame.cellSize = tileWorldSize > 0.0F ? tileWorldSize : 1.0F;
-    frame.mapWidth = mapWidth;
-    frame.mapHeight = mapHeight;
+    frame.mapWidth = inMapWidth;
+    frame.mapHeight = inMapHeight;
     return frame;
+}
+
+TilemapGridFrame TilemapGridFrame::FromTilemapObject(
+        const GameObject& mapOwner,
+        const TilemapComponent& tilemap) noexcept {
+    return FromMapTransform(
+            mapOwner.GetWorldMatrix(),
+            tilemap.GetTileWorldSize(),
+            tilemap.GetMapWidth(),
+            tilemap.GetMapHeight());
 }
 
 }  // namespace Spark

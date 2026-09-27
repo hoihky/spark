@@ -2,6 +2,7 @@
 #extension GL_GOOGLE_include_directive : require
 
 layout(location = 0) in vec2 vTex;
+layout(location = 8) in vec2 vNormalTex;
 layout(location = 1) flat in int vLayer;
 layout(location = 2) in vec2 vLocalXY;
 layout(location = 3) in vec3 vWorldPos;
@@ -15,6 +16,7 @@ layout(set = 0, binding = 10) uniform sampler2DArray spriteSceneTextures;
 #include "scene_ubo.glsl"
 #include "clustered_lights.glsl"
 #include "color_space.glsl"
+#include "sprite_lighting_2d.glsl"
 
 layout(location = 0) out vec4 outColor;
 
@@ -89,6 +91,108 @@ void main() {
             }
         }
         outColor = vec4(acc, base.a);
+        return;
+    }
+
+    if (vLightingMode == 5) {
+        int normalLayer = int(vLightingB.x);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        vec3 lit = sparkSpriteAccumDirectional(base.rgb, n, vLightingA.y, vLightingA.z);
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, vLightingA.w);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 6) {
+        int normalLayer = int(vLightingB.x);
+        int rampLayer = int(vLightingB.y);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        vec3 ldir = normalize(vec3(ubo.lightDir.xy, 0.0));
+        float ndl = clamp(dot(n, ldir) * 0.5 + 0.5, 0.0, 1.0);
+        ndl = pow(ndl, max(0.25, vLightingA.y));
+        vec3 ramp = vec3(ndl);
+        if (rampLayer >= 0) {
+            ramp = textureLod(spriteSceneTextures, vec3(ndl, 0.5, float(rampLayer)), 0.0).rgb;
+        }
+        vec3 lit = base.rgb * mix(vec3(vLightingA.z), ramp, 0.85);
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, 0.65);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 7) {
+        int normalLayer = int(vLightingB.x);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        vec3 lit = sparkSpriteAccumDirectional(base.rgb, n, 0.28, 0.75);
+        vec3 ldir = normalize(vec3(ubo.lightDir.xy, 0.35));
+        vec3 h = normalize(ldir + vec3(0.0, 0.0, 1.0));
+        float spec = pow(max(0.0, dot(n, h)), max(1.0, vLightingA.y)) * max(0.0, vLightingA.z);
+        lit += ubo.lightColor.rgb * ubo.lightColor.w * spec;
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, 0.55);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 8) {
+        int normalLayer = int(vLightingB.x);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        float skyMix = clamp(n.y * 0.5 + 0.5, 0.0, 1.0);
+        vec3 ground = vLightingA.rgb;
+        vec3 sky = ubo.ambientSky.rgb;
+        vec3 hemi = mix(ground, sky, skyMix * clamp(vLightingA.w, 0.0, 1.0));
+        vec3 lit = base.rgb * (hemi + 0.25);
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, 0.45);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 9) {
+        int normalLayer = int(vLightingB.x);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        vec3 ldir = normalize(vec3(ubo.lightDir.xy, 0.0));
+        float wrap = clamp(vLightingA.y, 0.0, 1.0);
+        float ndl = clamp((dot(n, ldir) + wrap) / (1.0 + wrap), 0.0, 1.0);
+        vec3 amb = ubo.ambientColor.rgb * 0.35;
+        vec3 sun = ubo.lightColor.rgb * ubo.lightColor.w * ndl * max(0.0, vLightingA.z);
+        vec3 lit = base.rgb * (amb + sun);
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, 0.7);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 10) {
+        int normalLayer = int(vLightingB.x);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        vec3 lit = sparkSpriteAccumDirectional(base.rgb, n, 0.3, 0.85);
+        float rim = pow(1.0 - max(0.0, n.z), max(0.5, vLightingA.y)) * max(0.0, vLightingA.z);
+        lit += vec3(vLightingB.y, vLightingB.z, vLightingB.w) * rim;
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, 0.55);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 11) {
+        int normalLayer = int(vLightingB.x);
+        int rampLayer = int(vLightingB.y);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        vec2 mc = clamp(n.xy * 0.5 + 0.5, 0.0, 1.0);
+        vec3 mat = vec3(mc, 0.5);
+        if (rampLayer >= 0) {
+            mat = textureLod(spriteSceneTextures, vec3(mc, float(rampLayer)), 0.0).rgb;
+        }
+        vec3 lit = base.rgb * mat;
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, 0.35);
+        outColor = vec4(lit, base.a);
+        return;
+    }
+
+    if (vLightingMode == 12) {
+        int normalLayer = int(vLightingB.x);
+        vec3 n = sparkSpriteDecodeNormal(vNormalTex, normalLayer, vLightingA.x);
+        float flicker = 1.0 - clamp(vLightingB.y, 0.0, 0.85) * (0.5 + 0.5 * sin(ubo.timeGlobal.x * max(0.5, vLightingA.w) * 6.2831853));
+        vec3 lit = sparkSpriteAccumDirectional(base.rgb, n, vLightingA.y, vLightingA.z) * flicker;
+        lit += sparkSpriteAccumPointLights(base.rgb, n, vWorldPos, vLightingA.w * 0.65) * flicker;
+        outColor = vec4(lit, base.a);
         return;
     }
 

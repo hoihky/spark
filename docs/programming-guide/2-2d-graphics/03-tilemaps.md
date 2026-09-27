@@ -145,4 +145,6 @@ Reference: `TilemapShowcase2DDemo`, `Connect3Demo`.
 
 For manual platforms (no tilemap), use scaled sprites + `BoxCollider2DComponent` as in the platformer sample.
 
+**Editor APIs:** service classes (`TilemapDocumentCapturer`, `TilemapPicker`, `TilemapEditSession`, `TilemapDerivedDataRebaker`, …) — include `spark/scene/tilemap/TilemapServices.hpp` and see [Tilemap editor roadmap](04-tilemap-editor-roadmap.md).
+
 Next: [2D Animation](04-2d-animation.md).

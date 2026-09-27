@@ -102,9 +102,18 @@ Vector3 ParticleEmitterComponent::ResolveEmissionDirection(const GameObject& own
     return dir.Normalized();
 }
 
-void ParticleEmitterComponent::SpawnOne(const Vector3& origin, const Vector3& worldEmissionDir) {
+void ParticleEmitterComponent::SpawnOneWithBasis(
+        const Vector3& origin,
+        const Vector3& basisDir,
+        const float spreadScale) noexcept {
     EnsureSlotCapacity();
     const std::uint32_t cap = static_cast<std::uint32_t>(slots.GetSize());
+    Vector3 basis = basisDir;
+    if (basis.LengthSquared() < 1.0e-8F) {
+        basis = Vector3{0.0F, 1.0F, 0.0F};
+    } else {
+        basis = basis.Normalized();
+    }
     for (std::uint32_t i = 0; i < cap; ++i) {
         if (!slots[i].alive) {
             SimParticle& p = slots[i];
@@ -116,8 +125,7 @@ void ParticleEmitterComponent::SpawnOne(const Vector3& origin, const Vector3& wo
             p.size1 = sizeEnd;
             p.color0 = colorStart;
             p.color1 = colorEnd;
-            const Vector3 basis = worldEmissionDir;
-            const Vector3 jitter = RandomUnitSphere() * spreadRadians;
+            const Vector3 jitter = RandomUnitSphere() * (spreadRadians * spreadScale);
             Vector3 dir = basis + jitter;
             if (dir.LengthSquared() < 1.0e-8F) {
                 dir = basis;
@@ -128,6 +136,43 @@ void ParticleEmitterComponent::SpawnOne(const Vector3& origin, const Vector3& wo
             p.velocity = dir * sp;
             return;
         }
+    }
+}
+
+void ParticleEmitterComponent::SpawnOne(const Vector3& origin, const Vector3& worldEmissionDir) {
+    SpawnOneWithBasis(origin, worldEmissionDir, 1.0F);
+}
+
+void ParticleEmitterComponent::BurstRing(
+        GameObject& owner,
+        const std::uint32_t count,
+        const Vector3& origin) {
+    if (!enabled || count == 0) {
+        return;
+    }
+    const Vector3 worldDir = ResolveEmissionDirection(owner);
+    const bool spriteLayer = renderSpace == ParticleRenderSpace::SpriteLayer;
+    for (std::uint32_t i = 0; i < count; ++i) {
+        const float angle =
+                (static_cast<float>(i) / static_cast<float>(count)) * TwoPi + (Random01() - 0.5F) * 0.12F;
+        Vector3 spawnPos = origin;
+        Vector3 radial{};
+        if (spriteLayer) {
+            spawnPos.x += std::cos(angle) * ringRadius;
+            spawnPos.y += std::sin(angle) * ringRadius;
+            radial = {std::cos(angle), std::sin(angle), 0.0F};
+        } else {
+            spawnPos.x += std::cos(angle) * ringRadius;
+            spawnPos.z += std::sin(angle) * ringRadius;
+            radial = {std::cos(angle), 0.0F, std::sin(angle)};
+        }
+        Vector3 basis = radial + worldDir * 0.35F;
+        if (basis.LengthSquared() < 1.0e-8F) {
+            basis = radial;
+        } else {
+            basis = basis.Normalized();
+        }
+        SpawnOneWithBasis(spawnPos, basis, 0.18F);
     }
 }
 
@@ -151,9 +196,23 @@ void ParticleEmitterComponent::EmitRing(
         spawnDebt -= 1.0F;
         const float angle = Random01() * TwoPi;
         Vector3 ringOrigin = origin;
-        ringOrigin.x += std::cos(angle) * ringRadius;
-        ringOrigin.z += std::sin(angle) * ringRadius;
-        SpawnOne(ringOrigin, worldEmissionDir);
+        Vector3 radial{};
+        if (renderSpace == ParticleRenderSpace::SpriteLayer) {
+            ringOrigin.x += std::cos(angle) * ringRadius;
+            ringOrigin.y += std::sin(angle) * ringRadius;
+            radial = {std::cos(angle), std::sin(angle), 0.0F};
+        } else {
+            ringOrigin.x += std::cos(angle) * ringRadius;
+            ringOrigin.z += std::sin(angle) * ringRadius;
+            radial = {std::cos(angle), 0.0F, std::sin(angle)};
+        }
+        Vector3 basis = radial + worldEmissionDir * 0.25F;
+        if (basis.LengthSquared() < 1.0e-8F) {
+            basis = radial;
+        } else {
+            basis = basis.Normalized();
+        }
+        SpawnOneWithBasis(ringOrigin, basis, 0.22F);
     }
 }
 
@@ -163,6 +222,10 @@ void ParticleEmitterComponent::Burst(GameObject& owner, const std::uint32_t coun
     }
     const Matrix4 wm = owner.GetWorldMatrix();
     const Vector3 origin{wm.m[12], wm.m[13], wm.m[14]};
+    if (std::strcmp(emissionModuleId.CStr(), "ring") == 0) {
+        BurstRing(owner, count, origin);
+        return;
+    }
     const Vector3 worldDir = ResolveEmissionDirection(owner);
     for (std::uint32_t i = 0; i < count; ++i) {
         SpawnOne(origin, worldDir);

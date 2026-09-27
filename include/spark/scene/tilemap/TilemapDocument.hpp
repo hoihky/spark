@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/scene/tilemap/TileCell.hpp"
+#include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/scene/tilemap/TilemapObject.hpp"
 
 #include <cstdint>
@@ -35,13 +36,14 @@ struct TilemapDocumentTileLayer {
     std::int32_t orderInLayerOffset = 0;
     bool contributeCollision = true;
     bool contributeGameplayGrid = true;
+    TilemapLayerSortMode sortMode = TilemapLayerSortMode::GridOrder;
     Array<TileCell> cells{};
     TilemapPropertyList properties{};
 };
 
 /**
  * Portable tilemap description (import/export). Independent of ECS; applied via
- * <c>ApplyTilemapDocument</c> or saved as <c>.sparkmap</c>.
+ * <c>TilemapDocumentApplier</c> or saved as <c>.sparkmap</c>.
  */
 struct TilemapDocument {
     static constexpr const char* kMagic = "spark_tilemap_v1";

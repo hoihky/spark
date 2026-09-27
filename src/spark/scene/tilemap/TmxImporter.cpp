@@ -307,7 +307,11 @@ TileCell GidToCell(const std::uint32_t rawGid, const Array<TilemapDocumentTilese
     bool flipH = false;
     bool flipV = false;
     bool flipD = false;
-    DecodeTiledGid(rawGid, id, flipH, flipV, flipD);
+    const TmxImporter::Gid decoded(rawGid);
+    id = decoded.GetTileId();
+    flipH = decoded.FlipH();
+    flipV = decoded.FlipV();
+    flipD = decoded.FlipDiagonal();
     if (id == 0U) {
         return TileCell::Empty();
     }
@@ -498,20 +502,15 @@ void ParseObjectGroup(
 
 }  // namespace
 
-void DecodeTiledGid(
-        const std::uint32_t gid,
-        std::uint32_t& outTileId,
-        bool& outFlipH,
-        bool& outFlipV,
-        bool& outFlipDiagonal) noexcept {
-    outFlipH = (gid & 0x80000000U) != 0U;
-    outFlipV = (gid & 0x40000000U) != 0U;
-    outFlipDiagonal = (gid & 0x20000000U) != 0U;
-    outTileId = gid & 0x1FFFFFFFU;
+TmxImporter::Gid::Gid(const std::uint32_t rawGid) noexcept {
+    flipH = (rawGid & 0x80000000U) != 0U;
+    flipV = (rawGid & 0x40000000U) != 0U;
+    flipDiagonal = (rawGid & 0x20000000U) != 0U;
+    tileId = rawGid & 0x1FFFFFFFU;
 }
 
-TmxImportResult TmxImporter::ImportFromFile(const char* tmxPath, TilemapDocument& outDocument) const {
-    TmxImportResult result{};
+TmxImporter::Result TmxImporter::ImportFromFile(const char* tmxPath, TilemapDocument& outDocument) const {
+    Result result{};
     const Utf8String resolvedPath = ResolveTilemapAssetPath(tmxPath);
     if (resolvedPath.IsEmpty()) {
         result.errorMessage = Utf8String("TMX file not found");
@@ -557,7 +556,7 @@ TmxImportResult TmxImporter::ImportFromFile(const char* tmxPath, TilemapDocument
     std::uint32_t tilePixelH = 16U;
     TryGetAttributeUint(mapTag, mapTagEnd, "tilewidth", tilePixelW);
     TryGetAttributeUint(mapTag, mapTagEnd, "tileheight", tilePixelH);
-    /** Derived in <c>ApplyTilemapDocument</c> from <c>pixelsPerWorldUnit</c> when zero. */
+    /** Derived in <c>TilemapDocumentApplier</c> from <c>pixelsPerWorldUnit</c> when zero. */
     outDocument.tileWorldSize = 0.0F;
 
     const char* mapProps = FindTag(mapTag, "properties");

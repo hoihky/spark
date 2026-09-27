@@ -41,7 +41,7 @@ void TilemapObjectSpawnComponent::SpawnFromLayers(GameObject& owner, GameWorld& 
         return;
     }
 
-    const TilemapGridFrame frame = MakeTilemapGridFrameForObject(owner, *tilemap);
+    const TilemapGridFrame frame = TilemapGridFrame::FromTilemapObject(owner, *tilemap);
     const Array<TilemapObjectLayer>& layers = objects->GetObjectLayers();
     for (std::size_t li = 0; li < layers.GetSize(); ++li) {
         if (!layers[li].visible) {
@@ -56,7 +56,7 @@ void TilemapObjectSpawnComponent::SpawnFromLayers(GameObject& owner, GameWorld& 
             if (marker.typeId.IsEmpty()) {
                 continue;
             }
-            const TilemapObjectSpawnFn spawnFn = TilemapObjectSpawnRegistry::Find(marker.typeId);
+            const TilemapObjectSpawnFn spawnFn = TilemapObjectSpawnRegistry::Default().Find(marker.typeId);
             if (spawnFn == nullptr) {
                 continue;
             }

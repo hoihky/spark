@@ -6,6 +6,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
+#include "spark/render/sprites2d/SpriteLighting2D.hpp"
 #include "spark/render/scene/VulkanSceneVertexLayout.hpp"
 
 #include <cstring>
@@ -25,10 +26,14 @@ void FillSpriteInstanceGpu(const SceneSpriteDraw& sprite, VulkanSpriteInstanceGp
     out.uvRect[1] = sprite.uvRect.y;
     out.uvRect[2] = sprite.uvRect.z;
     out.uvRect[3] = sprite.uvRect.w;
+    out.normalUvRect[0] = sprite.normalUvRect.x;
+    out.normalUvRect[1] = sprite.normalUvRect.y;
+    out.normalUvRect[2] = sprite.normalUvRect.z;
+    out.normalUvRect[3] = sprite.normalUvRect.w;
     out.textureLayer = sprite.textureLayer;
     out.lightingMode = static_cast<std::int32_t>(sprite.lightingMode);
-    out.lightingPad0 = sprite.lightingPad0;
-    out.lightingPad1 = sprite.lightingPad1;
+    out.normalTextureLayer = sprite.normalTextureLayer;
+    out.rampTextureLayer = sprite.rampTextureLayer;
     out.lightingA[0] = sprite.lightingParam0.x;
     out.lightingA[1] = sprite.lightingParam0.y;
     out.lightingA[2] = sprite.lightingParam0.z;
@@ -37,6 +42,21 @@ void FillSpriteInstanceGpu(const SceneSpriteDraw& sprite, VulkanSpriteInstanceGp
     out.lightingB[1] = sprite.lightingParam1.y;
     out.lightingB[2] = sprite.lightingParam1.z;
     out.lightingB[3] = sprite.lightingParam1.w;
+    const SpriteLighting2DMode mode = sprite.lightingMode;
+    if (mode >= SpriteLighting2DMode::NormalMapped && mode <= SpriteLighting2DMode::FlickerLit) {
+        out.lightingB[0] = static_cast<float>(sprite.normalTextureLayer);
+    }
+    if (mode == SpriteLighting2DMode::Ramp || mode == SpriteLighting2DMode::MatcapApprox) {
+        out.lightingB[1] = static_cast<float>(sprite.rampTextureLayer);
+    }
+    if (mode == SpriteLighting2DMode::NormalMappedRim) {
+        out.lightingB[1] = sprite.lightingParam1.x;
+        out.lightingB[2] = sprite.lightingParam1.y;
+        out.lightingB[3] = sprite.lightingParam1.z;
+    }
+    if (mode == SpriteLighting2DMode::FlickerLit) {
+        out.lightingB[1] = sprite.lightingParam1.x;
+    }
 }
 
 }  // namespace

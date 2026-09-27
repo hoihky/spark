@@ -124,19 +124,26 @@ void SyncTileLayers(TilemapComponent& tilemap, const TilemapDocument& document) 
         dst.orderInLayerOffset = src.orderInLayerOffset;
         dst.contributeCollision = src.contributeCollision;
         dst.contributeGameplayGrid = src.contributeGameplayGrid;
-        dst.sortMode = TilemapLayerSortMode::GridOrder;
+        dst.sortMode = src.sortMode;
         dst.cells = src.cells;
     }
 }
 
 }  // namespace
 
-TilemapDocumentApplyResult ApplyTilemapDocument(
+TilemapDocumentApplier::Result TilemapDocumentApplier::Apply(
+        const TilemapDocument& document,
+        GameObject& owner,
+        GameWorld& world) const {
+    return Apply(document, owner, world, Options{});
+}
+
+TilemapDocumentApplier::Result TilemapDocumentApplier::Apply(
         const TilemapDocument& document,
         GameObject& owner,
         GameWorld& world,
-        const TilemapDocumentApplyOptions& options) {
-    TilemapDocumentApplyResult result{};
+        const Options& options) const {
+    Result result{};
     if (document.mapWidth == 0U || document.mapHeight == 0U || document.tileLayers.IsEmpty()) {
         result.errorMessage = Utf8String("Tilemap document is empty");
         return result;

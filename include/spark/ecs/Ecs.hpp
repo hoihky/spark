@@ -39,6 +39,7 @@
 
 // Lighting
 #include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
+#include "spark/ecs/components/lighting/PointLight2DComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 

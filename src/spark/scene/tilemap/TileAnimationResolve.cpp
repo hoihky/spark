@@ -1,5 +1,6 @@
 #include "spark/scene/tilemap/TileAnimationResolve.hpp"
 
+#include "spark/scene/tilemap/TileAnimation.hpp"
 #include "spark/scene/tilemap/TileCell.hpp"
 
 #include <algorithm>
@@ -7,10 +8,10 @@
 
 namespace Spark {
 
-std::uint16_t ResolveAnimatedTileId(
+std::uint16_t TileAnimationResolver::ResolveDisplayTileId(
         const Tileset& tileset,
         const std::uint16_t sourceTileId,
-        const float animationTimeSeconds) noexcept {
+        const float animationTimeSeconds) const noexcept {
     if (sourceTileId == TileCell::kEmptyTileId) {
         return sourceTileId;
     }

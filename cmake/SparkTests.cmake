@@ -59,6 +59,11 @@ function(spark_add_physics_tests)
             tests/scene/OptionalTest.cpp
             tests/scene/GerstnerWaveSurfaceTest.cpp
             tests/scene/WaterPresetAssetLoaderTest.cpp
+            tests/scene/TilemapCapturePickTest.cpp
+            tests/scene/TilemapEditSessionTest.cpp
+            tests/scene/TilemapDerivedDataRebakeTest.cpp
+            tests/scene/TilemapEditValidatorTest.cpp
+            tests/audio/ProceduralSoundTest.cpp
             tests/scene/TerrainHeightSampleTest.cpp
             tests/scene/RenderTextureTest.cpp
             tests/scene/WaterScreenSpaceReflectionTest.cpp

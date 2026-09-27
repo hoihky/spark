@@ -6,9 +6,13 @@
 
 namespace Spark {
 
-[[nodiscard]] bool TileBlocksGameplayPath(
-        const TileCell& cell,
-        const TileDefinition& definition,
-        TilemapGameplayWalkRule rule) noexcept;
+/** Evaluates walkability / path-blocking from tile metadata and walk rules. */
+class TilemapGameplayRuleEvaluator final {
+public:
+    [[nodiscard]] bool BlocksGameplayPath(
+            const TileCell& cell,
+            const TileDefinition& definition,
+            TilemapGameplayWalkRule rule) const noexcept;
+};
 
 }  // namespace Spark

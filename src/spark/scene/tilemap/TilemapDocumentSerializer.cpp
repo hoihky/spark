@@ -76,8 +76,9 @@ bool TilemapDocumentSerializer::WriteToString(const TilemapDocument& document, U
     }
     for (std::size_t li = 0; li < document.tileLayers.GetSize(); ++li) {
         const TilemapDocumentTileLayer& layer = document.tileLayers[li];
-        AppendFormat(out, "layer %s %d %d %d %d", layer.name.CStr(), layer.visible ? 1 : 0, layer.orderInLayerOffset,
-                layer.contributeCollision ? 1 : 0, layer.contributeGameplayGrid ? 1 : 0);
+        AppendFormat(out, "layer %s %d %d %d %d %d", layer.name.CStr(), layer.visible ? 1 : 0,
+                layer.orderInLayerOffset, layer.contributeCollision ? 1 : 0, layer.contributeGameplayGrid ? 1 : 0,
+                static_cast<int>(layer.sortMode));
         AppendLine(out, "cells_begin");
         const std::size_t cellCount = layer.cells.GetSize();
         for (std::size_t ci = 0; ci < cellCount; ++ci) {
@@ -216,7 +217,10 @@ bool TilemapDocumentSerializer::ReadFromString(const char* text, TilemapDocument
             int order = 0;
             int coll = 1;
             int gameplay = 1;
-            if (std::sscanf(line, "layer %127s %d %d %d %d", name, &visible, &order, &coll, &gameplay) != 5) {
+            int sortMode = 0;
+            const int parsed =
+                    std::sscanf(line, "layer %127s %d %d %d %d %d", name, &visible, &order, &coll, &gameplay, &sortMode);
+            if (parsed != 5 && parsed != 6) {
                 return false;
             }
             layer.name = Utf8String(name);
@@ -224,6 +228,7 @@ bool TilemapDocumentSerializer::ReadFromString(const char* text, TilemapDocument
             layer.orderInLayerOffset = order;
             layer.contributeCollision = coll != 0;
             layer.contributeGameplayGrid = gameplay != 0;
+            layer.sortMode = parsed == 6 ? static_cast<TilemapLayerSortMode>(sortMode) : TilemapLayerSortMode::GridOrder;
             out.tileLayers.PushBack(layer);
             currentLayer = &out.tileLayers.GetLast();
             inCells = false;

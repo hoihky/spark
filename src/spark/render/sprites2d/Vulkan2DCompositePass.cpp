@@ -163,6 +163,8 @@ void Vulkan2DCompositePass::Record(
         bool batchActive = false;
         std::int32_t batchTextureLayer = -2;
         auto batchLightingMode = SpriteLighting2DMode::None;
+        std::int32_t batchNormalLayer = -2;
+        std::int32_t batchRampLayer = -2;
 
         for (std::size_t ei = 0; ei < entries.GetSize(); ++ei) {
             const Composite2DEntry& entry = entries[ei];
@@ -183,16 +185,21 @@ void Vulkan2DCompositePass::Record(
                 batchActive = true;
                 batchTextureLayer = sprite.textureLayer;
                 batchLightingMode = sprite.lightingMode;
+                batchNormalLayer = sprite.normalTextureLayer;
+                batchRampLayer = sprite.rampTextureLayer;
                 spriteBatchIndices.PushBack(entry.index);
                 continue;
             }
-            if (sprite.textureLayer == batchTextureLayer && sprite.lightingMode == batchLightingMode) {
+            if (sprite.textureLayer == batchTextureLayer && sprite.lightingMode == batchLightingMode &&
+                sprite.normalTextureLayer == batchNormalLayer && sprite.rampTextureLayer == batchRampLayer) {
                 spriteBatchIndices.PushBack(entry.index);
             } else {
                 flushSpriteBatch(blendMode);
                 batchActive = true;
                 batchTextureLayer = sprite.textureLayer;
                 batchLightingMode = sprite.lightingMode;
+                batchNormalLayer = sprite.normalTextureLayer;
+                batchRampLayer = sprite.rampTextureLayer;
                 spriteBatchIndices.PushBack(entry.index);
             }
         }

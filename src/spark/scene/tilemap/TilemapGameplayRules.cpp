@@ -2,10 +2,10 @@
 
 namespace Spark {
 
-bool TileBlocksGameplayPath(
+bool TilemapGameplayRuleEvaluator::BlocksGameplayPath(
         const TileCell& cell,
         const TileDefinition& definition,
-        const TilemapGameplayWalkRule rule) noexcept {
+        const TilemapGameplayWalkRule rule) const noexcept {
     if (cell.IsEmpty()) {
         return true;
     }

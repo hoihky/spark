@@ -72,6 +72,7 @@ std::uint32_t SceneSpriteTileCull::CollectVisibleTiles(
     }
 
     std::uint32_t appended = 0;
+    const TileAnimationResolver animationResolver{};
     const std::uint32_t chunkSize = kDefaultTilemapChunkSize;
     const std::uint32_t chunksX = (mw + chunkSize - 1U) / chunkSize;
     const std::uint32_t chunksY = (mh + chunkSize - 1U) / chunkSize;
@@ -112,8 +113,8 @@ std::uint32_t SceneSpriteTileCull::CollectVisibleTiles(
                     std::uint16_t displayTileId = cell.tileId;
                     if (tilesetPtr) {
                         const std::uint16_t paintId = cell.GetPaintTileId();
-                        const std::uint16_t animated =
-                                ResolveAnimatedTileId(*tilesetPtr, paintId, tileAnimationTimeSeconds);
+                        const std::uint16_t animated = animationResolver.ResolveDisplayTileId(
+                                *tilesetPtr, paintId, tileAnimationTimeSeconds);
                         if (animated != paintId) {
                             displayTileId = animated;
                         }

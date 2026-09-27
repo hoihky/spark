@@ -15,6 +15,12 @@ class GameObject;
 class Texture2D;
 struct SceneParticleInstance;  // SceneRenderParams.hpp
 
+/** Where simulated particles are drawn (camera billboards vs sorted sprite quads). */
+enum class ParticleRenderSpace : std::uint8_t {
+    CameraBillboard = 0,
+    SpriteLayer = 1,
+};
+
 /**
  * CPU particle emitter: spawns, simulates, and exposes instances for SceneRenderParams::particles.
  * Expects a TransformComponent on the same GameObject (emission origin = world translation).
@@ -78,6 +84,12 @@ public:
     void SetUvRect(const Vector4& rect) noexcept { uvRect = rect; }
     [[nodiscard]] const Vector4& GetUvRect() const noexcept { return uvRect; }
 
+    void SetRenderSpace(ParticleRenderSpace space) noexcept { renderSpace = space; }
+    [[nodiscard]] ParticleRenderSpace GetRenderSpace() const noexcept { return renderSpace; }
+    /** Drawable sort key when <c>RenderSpace::SpriteLayer</c> (uses owner render layer if unset). */
+    void SetSpriteLayerSortOrder(std::int32_t order) noexcept { spriteLayerSortOrder = order; }
+    [[nodiscard]] std::int32_t GetSpriteLayerSortOrder() const noexcept { return spriteLayerSortOrder; }
+
     /** Append living particles for the renderer (respects global cap via caller). */
     void CollectInstances(Array<SceneParticleInstance>& out) const;
 
@@ -108,6 +120,8 @@ private:
 
     void EnsureSlotCapacity();
     void SpawnOne(const Vector3& origin, const Vector3& worldEmissionDir);
+    void SpawnOneWithBasis(const Vector3& origin, const Vector3& basisDir, float spreadScale) noexcept;
+    void BurstRing(GameObject& owner, std::uint32_t count, const Vector3& origin);
     [[nodiscard]] Vector3 ResolveEmissionDirection(const GameObject& owner) const;
     [[nodiscard]] float Random01() noexcept;
     [[nodiscard]] Vector3 RandomUnitSphere() noexcept;
@@ -134,6 +148,8 @@ private:
     float ringRadius = 0.35F;
     SharedPtr<Texture2D> particleTexture{};
     Vector4 uvRect{0.0F, 0.0F, 1.0F, 1.0F};
+    ParticleRenderSpace renderSpace = ParticleRenderSpace::CameraBillboard;
+    std::int32_t spriteLayerSortOrder = 200;
 
     Array<SimParticle> slots{};
     std::uint32_t rng = 0xC0FFEEu;

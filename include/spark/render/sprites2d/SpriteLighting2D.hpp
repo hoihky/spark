@@ -31,6 +31,32 @@ enum class SpriteLighting2DMode : std::int32_t {
      * param0.x = ambient add, param0.y = diffuse scale; param1.xyz unused.
      */
     PointSoft = 4,
+    /**
+     * Per-pixel normal map (second texture layer on the sprite instance).
+     * param0.x = normal strength, param0.y = ambient scale, param0.z = directional scale.
+     */
+    NormalMapped = 5,
+    /**
+     * Normal map + 1D ramp lookup (ramp texture layer on the instance).
+     * param0.x = normal strength; param0.y = ramp contrast; param0.z = ambient floor.
+     */
+    Ramp = 6,
+    /**
+     * Normal map + Blinn specular toward sun. param0.x = normal strength, param0.y = spec power, param0.z = spec scale.
+     */
+    SpecularGloss = 7,
+    /**
+     * Normal map + hemispheric sky/ground from normal Y. param0.xyz = ground tint, param0.w = sky vs ground mix scale.
+     */
+    Hemisphere = 8,
+    /** Normal map + wrap diffuse (soft toon). param0.x = strength, param0.y = wrap, param0.z = dir scale. */
+    WrapDiffuse = 9,
+    /** Normal map + directional + view rim. param0.x = strength, param0.y = rim power, param0.z = rim scale; param1.rgb = rim color. */
+    NormalMappedRim = 10,
+    /** Normal map + matcap-like ramp sample from normal XY. param0.x = strength; ramp texture layer required. */
+    MatcapApprox = 11,
+    /** Normal map + sun/points modulated by time flicker. param0.x–z as NormalMapped; param0.w = flicker Hz; param1.x = depth. */
+    FlickerLit = 12,
 };
 
 }  // namespace Spark

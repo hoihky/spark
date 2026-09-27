@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
+#include "spark/scene/tilemap/TilemapEditRevision.hpp"
 
 #include <cstdint>
 
@@ -33,6 +34,11 @@ public:
     void RequestRebuild() noexcept { rebuildRequested = true; }
 
     void RebuildIfNeeded(GameObject& owner) noexcept;
+
+    /** Partial autotile rebuild inside <c>region</c> (typically margin-expanded). */
+    void RebuildRegion(GameObject& owner, const TilemapCellRegion& region) noexcept;
+
+    void ClearRebuildRequest() noexcept { rebuildRequested = false; }
 
     /** Sets painted terrain and rebuilds autotile display for this layer. */
     void PaintTile(GameObject& owner, std::uint32_t x, std::uint32_t y, std::uint16_t paintTileId) noexcept;

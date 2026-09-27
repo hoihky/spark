@@ -11,6 +11,7 @@
 #include "spark/scene/core/SceneLoadSession.hpp"
 #include "spark/scene/core/SceneManager.hpp"
 #include "spark/memory/UniquePtr.hpp"
+#include "spark/scene/tilemap/TilemapEditSession.hpp"
 
 #include <cstdint>
 
@@ -49,6 +50,7 @@ private:
     void ClearPathMarkers();
     void ShowPath(const Array<GridPathfinder::Cell>& cells);
     [[nodiscard]] bool PickCell(Spark::IEngineContext& context, float mx, float my, int& outX, int& outY) const;
+    void EnsureEditSessionAttached(Spark::GameWorld& world);
 
     void LoadLevelSceneFromFile(Spark::GameWorld& w);
 
@@ -69,6 +71,8 @@ private:
     std::size_t pathStep = 0;
     float moveSpeed = 4.5F;
     Utf8String tmxStatus{};
+    Spark::TilemapEditSession editSession{};
+    bool editSessionAttached = false;
     Spark::UniquePtr<Spark::SceneManager> sceneManager;
     Spark::UniquePtr<Spark::SceneLoadSession> levelLoadSession;
     Spark::SceneInstanceId levelSceneId = Spark::kInvalidSceneInstanceId;

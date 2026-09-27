@@ -15,6 +15,7 @@
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/ecs/components/rendering/ParticleEmitterComponent.hpp"
+#include "spark/ecs/components/lighting/PointLight2DComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
@@ -31,6 +32,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/scene/submit/SkinnedAnimationService.hpp"
 #include "spark/scene/submit/SkinnedIkService.hpp"
 #include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
@@ -332,6 +334,29 @@ void FillStandardLitSceneFromWorld(
         if (o == nullptr) {
             return;
         }
+        const PointLight2DComponent* light2d = o->GetComponent<PointLight2DComponent>();
+        if (light2d == nullptr || !light2d->IsEnabled()) {
+            return;
+        }
+        if (params.pointLights.GetSize() >= SceneRenderParams::MaxPointLights) {
+            return;
+        }
+        const Matrix4 worldMat = o->GetWorldMatrix();
+        const Vector3 translation = worldMat.TranslationVector();
+        const Vector2 offset = light2d->GetLocalOffset();
+        ScenePointLight gpu{};
+        gpu.positionWorld = {translation.x + offset.x, translation.y + offset.y, light2d->GetWorldZ()};
+        gpu.range = light2d->GetRange();
+        gpu.color = light2d->GetColor();
+        gpu.intensity = light2d->GetEffectiveIntensity();
+        gpu.castsShadow = false;
+        params.pointLights.PushBack(gpu);
+    });
+
+    world.ForEachActiveGameObject([&params](GameObject* o) {
+        if (o == nullptr) {
+            return;
+        }
         const SpotLightComponent* sl = o->GetComponent<SpotLightComponent>();
         if (sl == nullptr || !sl->IsEnabled()) {
             return;
@@ -531,10 +556,23 @@ void FillStandardLitSceneFromWorld(
         } else {
             sd.textureLayer = -1;
         }
+        sd.normalUvRect = sd.uvRect;
         if (const SpriteLighting2DComponent* lit = o->GetComponent<SpriteLighting2DComponent>()) {
             sd.lightingMode = lit->GetMode();
             sd.lightingParam0 = lit->GetParam0();
             sd.lightingParam1 = lit->GetParam1();
+            if (!lit->GetSyncNormalUvWithSprite()) {
+                sd.normalUvRect = lit->GetNormalUvRect();
+                if (const SharedPtr<Texture2D>& normalTex = lit->GetNormalMap()) {
+                    sd.normalUvRect = normalTex->ScaleUvRectForSceneLayer(sd.normalUvRect);
+                }
+            }
+            if (const SharedPtr<Texture2D>& normalTex = lit->GetNormalMap()) {
+                sd.normalTextureLayer = findOrAddTexture(normalTex, nullptr, nullptr);
+            }
+            if (const SharedPtr<Texture2D>& rampTex = lit->GetRampMap()) {
+                sd.rampTextureLayer = findOrAddTexture(rampTex, nullptr, nullptr);
+            }
         }
         sd.blendMode = SceneSubmitDetail::ResolveSpriteBlendMode(*o);
         params.sprites.PushBack(sd);
@@ -557,9 +595,6 @@ void FillStandardLitSceneFromWorld(
             if (o == nullptr) {
                 return;
             }
-            if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
-                return;
-            }
             const ParticleEmitterComponent* pe = o->GetComponent<ParticleEmitterComponent>();
             if (pe == nullptr || !pe->IsEmitterEnabled()) {
                 return;
@@ -570,6 +605,27 @@ void FillStandardLitSceneFromWorld(
             if (pe->GetTexture()) {
                 textureLayer = findOrAddTexture(pe->GetTexture(), nullptr, nullptr);
             }
+            if (pe->GetRenderSpace() == ParticleRenderSpace::SpriteLayer) {
+                const ResolvedDrawableSort resolved =
+                        DrawableSortResolver::Resolve(*o, pe->GetSpriteLayerSortOrder());
+                for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
+                    if (params.sprites.GetSize() >= SceneRenderParams::MaxSprites) {
+                        return;
+                    }
+                    const SceneParticleInstance& particle = chunk[ci];
+                    SceneSpriteDraw sd{};
+                    sd.model = Matrix4::Translation(particle.position) * Matrix4::Scale({particle.size, particle.size, 1.0F});
+                    sd.tint = particle.color;
+                    sd.uvRect = particle.uvRect;
+                    sd.textureLayer = particle.textureLayer >= 0 ? particle.textureLayer : textureLayer;
+                    sd.sortOrder = resolved.key.sortingOrder;
+                    sd.sortingLayerOrder = resolved.key.sortingLayerOrder;
+                    sd.sortWorldY = particle.position.y;
+                    sd.blendMode = SceneBlendMode::Additive;
+                    params.sprites.PushBack(sd);
+                }
+                return;
+            }
             for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
                 if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
                     return;
@@ -578,6 +634,7 @@ void FillStandardLitSceneFromWorld(
                 params.particles.PushBack(chunk[ci]);
             }
         });
+        SceneSubmitDetail::StableSortSprites(params.sprites, params.spriteSortMode);
     }
 
     params.decals.Clear();

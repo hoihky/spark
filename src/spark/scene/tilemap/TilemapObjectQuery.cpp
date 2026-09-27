@@ -1,14 +1,12 @@
 #include "spark/scene/tilemap/TilemapObjectQuery.hpp"
 
 #include "spark/ai/path/GridPathfinder.hpp"
-#include "spark/ecs/components/rendering/TilemapComponent.hpp"
-#include "spark/ecs/GameObject.hpp"
 
 namespace Spark {
 
-Vector3 TilemapObjectMarkerWorldPosition(
+Vector3 TilemapObjectQuery::MarkerWorldPosition(
         const TilemapObjectMarker& marker,
-        const TilemapGridFrame& frame) noexcept {
+        const TilemapGridFrame& frame) const noexcept {
     const Vector3 local{
             (static_cast<float>(marker.cellX) + marker.offsetX) * frame.cellSize,
             (static_cast<float>(marker.cellY) + marker.offsetY) * frame.cellSize,
@@ -16,21 +14,11 @@ Vector3 TilemapObjectMarkerWorldPosition(
     return frame.worldFromLocal.TransformPoint(local);
 }
 
-TilemapGridFrame MakeTilemapGridFrameForObject(
-        const GameObject& mapOwner,
-        const TilemapComponent& tilemap) noexcept {
-    return MakeTilemapGridFrame(
-            mapOwner.GetWorldMatrix(),
-            tilemap.GetTileWorldSize(),
-            tilemap.GetMapWidth(),
-            tilemap.GetMapHeight());
-}
-
-void CollectTilemapObjectMarkersAtCell(
+void TilemapObjectQuery::CollectMarkersAtCell(
         const Array<TilemapObjectLayer>& layers,
         const std::uint32_t layerIndex,
         const GridPathfinder::Cell& cell,
-        Array<const TilemapObjectMarker*>& outMarkers) {
+        Array<const TilemapObjectMarker*>& outMarkers) const {
     if (layerIndex >= layers.GetSize() || !layers[layerIndex].visible) {
         return;
     }
@@ -42,10 +30,10 @@ void CollectTilemapObjectMarkersAtCell(
     }
 }
 
-void CollectTilemapObjectMarkersByType(
+void TilemapObjectQuery::CollectMarkersByType(
         const Array<TilemapObjectLayer>& layers,
         const Utf8String& typeId,
-        Array<const TilemapObjectMarker*>& outMarkers) {
+        Array<const TilemapObjectMarker*>& outMarkers) const {
     for (std::size_t li = 0; li < layers.GetSize(); ++li) {
         if (!layers[li].visible) {
             continue;
@@ -59,9 +47,9 @@ void CollectTilemapObjectMarkersByType(
     }
 }
 
-const TilemapObjectProperty* FindTilemapObjectProperty(
+const TilemapObjectProperty* TilemapObjectQuery::FindProperty(
         const TilemapObjectMarker& marker,
-        const char* key) noexcept {
+        const char* key) const noexcept {
     if (key == nullptr) {
         return nullptr;
     }
