@@ -683,6 +683,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/gameplay/PickupComponent.cpp
         src/spark/ecs/components/gameplay/GameStateComponent.cpp
         src/spark/ecs/components/gameplay/GameFlowTriggerComponent.cpp
+        src/spark/ecs/components/gameplay/DamageZone2DComponent.cpp
         src/spark/ecs/components/input/InputActionMapComponent.cpp
         src/spark/ecs/components/input/PlayerInputComponent.cpp
         src/spark/ecs/components/rendering/ParallaxLayerComponent.cpp
@@ -690,6 +691,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/physics/2d/TriggerVolume2DComponent.cpp
         src/spark/ecs/components/physics/2d/Hurtbox2DComponent.cpp
         src/spark/ecs/components/physics/2d/Projectile2DComponent.cpp
+        src/spark/ecs/components/camera/CameraBounds2DComponent.cpp
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/SkeletonPaletteCacheKey.cpp
@@ -904,6 +906,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/assets/GltfAssetPathResolver.cpp
         src/spark/scene/assets/ScenePathResolver.cpp
         src/spark/scene/core/SpawnPointService.cpp
+        src/spark/scene/core/SpawnPoint2DService.cpp
+        src/spark/scene/core/SceneSpawn2D.cpp
         src/spark/scene/core/SceneInstanceTracker.cpp
         src/spark/scene/core/SceneEntityRole.cpp
         src/spark/scene/core/SceneLoadSession.cpp
@@ -977,6 +981,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/TriggerVolume3D.cpp
         src/spark/gameplay/Interaction2D.cpp
         src/spark/gameplay/CombatDamage2D.cpp
+        src/spark/gameplay/CameraBounds2DResolve.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp
         src/spark/ai/steering/SteeringBehaviors3D.cpp

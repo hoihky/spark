@@ -1,6 +1,6 @@
 # Game Component Reference
 
-Complete reference for all **102** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **105** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -22,7 +22,7 @@ Complete reference for all **102** built-in `GameComponent` types in Spark (`inc
 | [Rendering](#rendering) | `Mesh`, `Material`, `SkinnedMesh`, `Sprite`, `Tilemap`, `Sky`, `Terrain`, `WaterBody`, `ParticleEmitter`, `TextOverlay`, `Billboard`, `DecalProjector`, `FogVolume`, `PostProcessVolume`, `BlendMode`, `RenderLayer`, `SortingGroup`, `SpriteLighting2D`, `ParallaxLayer` |
 | [Tilemap](#tilemap) | `TilemapGameplayGrid`, `TilemapTileAnimator`, `TilemapAutotile`, `TilemapObjectLayer`, `TilemapObjectSpawn`, `TilemapObjectGizmo`, `TilemapMapSource` |
 | [Lighting](#lighting) | `DirectionalLight`, `PointLight`, `SpotLight` |
-| [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `ScreenShake`, `CameraFollow3D`, `SpringArm3D` |
+| [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `CameraBounds2D`, `ScreenShake`, `CameraFollow3D`, `SpringArm3D` |
 | [Physics 2D](#physics-2d) | `BoxCollider2D`, `CircleCollider2D`, `PolygonCollider2D`, `Rigidbody2D`, `CharacterController2D`, `OneWayPlatform2D`, `TriggerVolume2D`, `Hurtbox2D`, `Projectile2D`, `TilemapCollider2D`, `PhysicsMaterial2D`, `DistanceJoint2D`, `HingeJoint2D` |
 | [Physics 3D](#physics-3d) | `BoxCollider3D`, `SphereCollider3D`, `CapsuleCollider3D`, `MeshCollider3D`, `Rigidbody3D`, `CharacterController3D`, `TriggerVolume3D`, `PhysicsMaterial3D`, `DistanceJoint3D`, `HingeJoint3D`, `SpringJoint3D`, `Collision` |
 | [Animation](#animation) | `Animator`, `SpriteAnimator`, `AnimationEventReceiver`, `AnimationEventVfx`, `SpriteAnimationEventReceiver`, `SpriteAnimationEventVfx`, `AnimationHitbox2D`, `AttachmentSocket`, `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
@@ -30,8 +30,8 @@ Complete reference for all **102** built-in `GameComponent` types in Spark (`inc
 | [AI](#ai) | `AiAgent`, `NavMeshAgent`, `GridNavAgent2D`, `GridPathFollower2D`, `GridNavTarget2D`, `PatrolPath`, `PerceptionSensor` |
 | [Audio](#audio) | `SoundCue`, `AudioListener`, `AmbientZone` |
 | [UI](#ui) | `UiCanvas` |
-| [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver`, `SpawnPoint`, `GltfSceneSource`, `GltfInstanceNode` |
-| [Gameplay](#gameplay) | `Health`, `Damageable`, `Interactable`, `Pickup`, `GameState`, `GameFlowTrigger` |
+| [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver`, `SpawnPoint`, `SpawnPoint2D`, `GltfSceneSource`, `GltfInstanceNode` |
+| [Gameplay](#gameplay) | `Health`, `Damageable`, `DamageZone2D`, `Interactable`, `Pickup`, `GameState`, `GameFlowTrigger` |
 
 ---
 
@@ -518,6 +518,20 @@ rig->SetLookAheadScale(0.15F);
 
 `Camera2DRigComponent::OnUpdate` reads `ScreenShakeComponent::GetOffset()` on the same object and adds it to the final camera translation. Attach shake to the camera rig, not to parallax layers.
 
+### `CameraBounds2DComponent`
+
+**Kind:** `CameraBounds2D` · **Consumed by:** `TryResolveCameraBounds2DForTarget` inside `Camera2DRigComponent` when `useBounds` or `BoundedFollow` is active.
+
+Place axis-aligned volumes in the level; when the rig follow target lies inside a volume, that volume's min/max override the rig's `boundsMin` / `boundsMax` for the frame (highest `priority` wins).
+
+```cpp
+#include "spark/ecs/components/camera/CameraBounds2DComponent.hpp"
+
+auto* room = zoneGo->AddComponent<CameraBounds2DComponent>();
+room->SetHalfExtents({24.0F, 14.0F});
+room->SetPriority(1);
+```
+
 ### `ScreenShakeComponent`
 
 **Kind:** `ScreenShake` · **Priority:** 295 · **Sibling:** `Camera2DRigComponent` on same object  
@@ -744,6 +758,21 @@ shot->SetTargetFilter(meleeStyleFilter);  // queryCategory + mask vs hurtbox lay
 shot->SetBlockOnSolidHit(true);
 shot->SetDestroyOwnerOnDeactivate(false);
 shot->Activate({originX, originY}, {speedX, speedY}, player);
+```
+
+### `DamageZone2DComponent`
+
+**Kind:** `DamageZone2D` · **Priority:** 215 · **Damage path:** `TryApplyCombatDamage2D`
+
+Axis-aligned or circular hazard volume. Overlap-queries each frame (`damagePerSecond * dt`) using the same filter model as projectiles. Optional trigger collider sync for editor visibility.
+
+```cpp
+#include "spark/ecs/components/gameplay/DamageZone2DComponent.hpp"
+
+auto* lava = hazard->AddComponent<DamageZone2DComponent>();
+lava->SetHalfExtents({4.0F, 1.0F});
+lava->SetDamagePerSecond(25.0F);
+lava->SetTargetFilter(hurtboxQueryFilter);
 ```
 
 ### Layer filter
@@ -1258,6 +1287,23 @@ tod->SetTimeOfDay(0.35F);
 tod->SetDayLengthSeconds(90.0F);
 tod->SetLooping(true);
 tod->SetPriority(1);
+```
+
+### `SpawnPoint2DComponent`
+
+**Kind:** `SpawnPoint2D` · **Resolved by:** `FindSpawnPoint2D` / `SpawnPoint2DService`
+
+2D counterpart to `SpawnPointComponent`: world XY from the transform, planar facing from local Z rotation (or explicit radians), optional `teamId`.
+
+```cpp
+#include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
+#include "spark/scene/core/SceneSpawn2D.hpp"
+
+auto* spawn = marker->AddComponent<SpawnPoint2DComponent>();
+spawn->SetSpawnName("PlayerStart");
+spawn->SetUseTransformFacing(true);
+
+const SceneSpawnPose2D pose = FindSpawnPoint2D(world, "PlayerStart");
 ```
 
 ---

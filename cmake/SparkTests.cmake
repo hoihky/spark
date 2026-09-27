@@ -26,6 +26,7 @@ function(spark_add_physics_tests)
             tests/physics/GameplayFlowComponentsTest.cpp
             tests/physics/GridNav2DComponentsTest.cpp
             tests/physics/Combat2DComponentsTest.cpp
+            tests/physics/Level2DComponentsTest.cpp
             tests/scene/MaterialLibraryRoundTripTest.cpp
             tests/scene/GltfDisplayCompatibilityTest.cpp
             tests/scene/GltfSceneGraphTest.cpp

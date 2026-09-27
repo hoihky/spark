@@ -48,6 +48,7 @@
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/camera/CameraComponent.hpp"
 #include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
+#include "spark/ecs/components/camera/CameraBounds2DComponent.hpp"
 #include "spark/ecs/components/camera/SpringArm3DComponent.hpp"
 
 // Physics
@@ -64,6 +65,7 @@
 #include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Projectile2DComponent.hpp"
+#include "spark/ecs/components/gameplay/DamageZone2DComponent.hpp"
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
@@ -116,3 +118,4 @@
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"
+#include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"

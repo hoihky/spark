@@ -9,6 +9,7 @@
 namespace Spark {
 
 class GameObject;
+class GameWorld;
 class IEngineContext;
 
 /** Production 2D camera behaviors; drives the owner's <c>TransformComponent</c> each tick. */
@@ -66,7 +67,8 @@ public:
             Camera2DRigComponent& rig,
             GameObject& owner,
             float deltaSeconds,
-            float framebufferAspect) noexcept;
+            float framebufferAspect,
+            const GameWorld* world = nullptr) noexcept;
 
 private:
     Camera2DRigMode mode = Camera2DRigMode::Manual;

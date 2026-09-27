@@ -1,6 +1,8 @@
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 
 #include "spark/ecs/GameObject.hpp"
+#include "spark/gameplay/CameraBounds2DResolve.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/ecs/components/camera/Camera2DComponent.hpp"
 #include "spark/ecs/components/camera/ScreenShakeComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
@@ -62,7 +64,8 @@ void Camera2DRigComponent::Tick(
         Camera2DRigComponent& rig,
         GameObject& owner,
         const float deltaSeconds,
-        const float framebufferAspect) noexcept {
+        const float framebufferAspect,
+        const GameWorld* world) noexcept {
     if (rig.mode == Camera2DRigMode::Manual) {
         return;
     }
@@ -95,10 +98,15 @@ void Camera2DRigComponent::Tick(
     current.z = desired.z;
 
     if (rig.mode == Camera2DRigMode::BoundedFollow || rig.useBounds) {
+        Vector2 boundsMin = rig.boundsMin;
+        Vector2 boundsMax = rig.boundsMax;
+        if (world != nullptr && followTarget != nullptr) {
+            TryResolveCameraBounds2DForTarget(*world, *followTarget, boundsMin, boundsMax);
+        }
         ClampCenterToBounds(
                 current,
-                rig.boundsMin,
-                rig.boundsMax,
+                boundsMin,
+                boundsMax,
                 cam->GetHalfExtentY(),
                 framebufferAspect);
     }
@@ -123,7 +131,7 @@ void Camera2DRigComponent::OnUpdate(
     if (fbH > 0) {
         aspect = static_cast<float>(fbW) / static_cast<float>(fbH);
     }
-    Tick(*this, owner, timing.deltaTimeSeconds, aspect);
+    Tick(*this, owner, timing.deltaTimeSeconds, aspect, &owner.GetWorld());
 }
 
 }  // namespace Spark
