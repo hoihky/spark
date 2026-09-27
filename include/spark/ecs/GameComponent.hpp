@@ -75,6 +75,8 @@ enum class ComponentKind : std::uint32_t {
     Interactable,
     Pickup,
     AnimationHitbox2D,
+    Hurtbox2D,
+    Projectile2D,
     ParallaxLayer,
     ScreenShake,
     SpriteAnimationEventReceiver,

@@ -5,10 +5,13 @@
 
 namespace Spark::Platformer2D {
 
-void PlayerCombat::TickCooldown(const float deltaSeconds) noexcept
+void PlayerCombat::TickCooldown(const float deltaSeconds, Spark::DamageableComponent* damageable) noexcept
 {
     if (hurtCooldown > 0.0F) {
         hurtCooldown = std::max(0.0F, hurtCooldown - deltaSeconds);
+    }
+    if (damageable != nullptr) {
+        damageable->SetInvulnerable(hurtCooldown > 0.0F);
     }
 }
 
@@ -17,6 +20,7 @@ bool PlayerCombat::TryFireOnAttackPressed(
         const float playerX,
         const float playerY,
         const bool facingLeft,
+        Spark::GameObject* instigator,
         BulletPool& playerBullets,
         const BulletProfile& playerBulletProfile) noexcept
 {
@@ -30,51 +34,44 @@ bool PlayerCombat::TryFireOnAttackPressed(
             playerY + Config::kPlayerHalfH * 0.08F,
             dirX,
             dirY,
+            instigator,
             playerBulletProfile);
 }
 
-void PlayerCombat::ResolveEnemyBulletHits(
-        BulletPool& enemyBullets,
-        const float playerX,
-        const float playerY,
-        Spark::HealthComponent* health,
-        Spark::DamageableComponent* damageable,
+namespace {
+
+bool IsInHierarchy(const Spark::GameObject& node, const Spark::GameObject* root) noexcept
+{
+    if (root == nullptr) {
+        return false;
+    }
+    for (const Spark::GameObject* walk = &node; walk != nullptr; walk = walk->GetParent()) {
+        if (walk == root) {
+            return true;
+        }
+    }
+    return false;
+}
+
+}  // namespace
+
+void PlayerCombat::OnPlayerDamagedByEnemyBullet(
+        Spark::GameObject& hitObject,
+        Spark::GameObject* playerRoot,
+        const float appliedDamage,
         Spark::Sprite2DCharacterAnimFsmComponent* animFsm,
         Spark::GameObject* audioActor,
         const Spark::SharedPtr<Spark::SoundClip>& hurtClip) noexcept
 {
-    for (std::size_t bi = 0; bi < enemyBullets.Slots().GetSize(); ++bi) {
-        BulletPool::Slot& bullet = enemyBullets.Slots()[bi];
-        if (!bullet.active) {
-            continue;
-        }
-        if (!CombatMath::BoxOverlap(
-                    bullet.cx,
-                    bullet.cy,
-                    bullet.profile.halfW,
-                    bullet.profile.halfH,
-                    playerX,
-                    playerY,
-                    Config::kPlayerHalfW,
-                    Config::kPlayerHalfH)) {
-            continue;
-        }
-        BulletPool::DeactivateSlot(bullet);
-        if (hurtCooldown > 0.0F) {
-            continue;
-        }
-        hurtCooldown = Config::kPlayerHurtCooldownSeconds;
-        if (animFsm != nullptr) {
-            animFsm->RequestHurt();
-        }
-        if (damageable != nullptr) {
-            damageable->ApplyDamage(Config::kEnemyBulletDamage, nullptr);
-        } else if (health != nullptr) {
-            health->ApplyDamage(Config::kEnemyBulletDamage, nullptr);
-        }
-        if (audioActor != nullptr && hurtClip.Get() != nullptr) {
-            DemoAudio::QueueCue(*audioActor, hurtClip, 0.95F);
-        }
+    if (appliedDamage <= 0.0F || !IsInHierarchy(hitObject, playerRoot)) {
+        return;
+    }
+    hurtCooldown = Config::kPlayerHurtCooldownSeconds;
+    if (animFsm != nullptr) {
+        animFsm->RequestHurt();
+    }
+    if (audioActor != nullptr && hurtClip.Get() != nullptr) {
+        DemoAudio::QueueCue(*audioActor, hurtClip, 0.95F);
     }
 }
 

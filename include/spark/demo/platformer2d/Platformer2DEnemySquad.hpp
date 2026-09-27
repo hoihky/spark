@@ -48,9 +48,6 @@ public:
             BulletPool& enemyBullets,
             const BulletProfile& enemyBulletProfile) noexcept;
 
-    /** Returns how many enemies were destroyed this call. Spawns explosion FX for each kill. */
-    int ResolvePlayerBulletHits(BulletPool& playerBullets, ExplosionFx& explosions, Spark::GameWorld& world) noexcept;
-
     /** Called when an enemy <c>HealthComponent</c> reaches zero (melee or other damage). */
     void OnEnemyDied(Spark::GameObject& enemy, ExplosionFx& explosions) noexcept;
 

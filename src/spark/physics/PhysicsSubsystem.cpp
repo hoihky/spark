@@ -1,6 +1,7 @@
 #include "spark/physics/PhysicsSubsystem.hpp"
 
 #include "spark/ecs/components/gameplay/PickupComponent.hpp"
+#include "spark/ecs/components/physics/2d/Projectile2DComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
@@ -19,6 +20,7 @@ void PhysicsSubsystem::Simulate2D(GameWorld& world, const FrameTiming& timing) {
     characterController2D.Finalize(world, timing);
     triggerVolumes2D.Simulate(world, timing);
     PickupComponent::ProcessDeferredDestroys(world);
+    Projectile2DComponent::ProcessDeferredDestroys(world);
 }
 
 void PhysicsSubsystem::SimulateCharacterControllers2D(GameWorld& world, const FrameTiming& timing) {

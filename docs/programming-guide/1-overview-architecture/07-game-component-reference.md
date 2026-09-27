@@ -1,6 +1,6 @@
 # Game Component Reference
 
-Complete reference for all **100** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **102** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -23,7 +23,7 @@ Complete reference for all **100** built-in `GameComponent` types in Spark (`inc
 | [Tilemap](#tilemap) | `TilemapGameplayGrid`, `TilemapTileAnimator`, `TilemapAutotile`, `TilemapObjectLayer`, `TilemapObjectSpawn`, `TilemapObjectGizmo`, `TilemapMapSource` |
 | [Lighting](#lighting) | `DirectionalLight`, `PointLight`, `SpotLight` |
 | [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `ScreenShake`, `CameraFollow3D`, `SpringArm3D` |
-| [Physics 2D](#physics-2d) | `BoxCollider2D`, `CircleCollider2D`, `PolygonCollider2D`, `Rigidbody2D`, `CharacterController2D`, `OneWayPlatform2D`, `TriggerVolume2D`, `TilemapCollider2D`, `PhysicsMaterial2D`, `DistanceJoint2D`, `HingeJoint2D` |
+| [Physics 2D](#physics-2d) | `BoxCollider2D`, `CircleCollider2D`, `PolygonCollider2D`, `Rigidbody2D`, `CharacterController2D`, `OneWayPlatform2D`, `TriggerVolume2D`, `Hurtbox2D`, `Projectile2D`, `TilemapCollider2D`, `PhysicsMaterial2D`, `DistanceJoint2D`, `HingeJoint2D` |
 | [Physics 3D](#physics-3d) | `BoxCollider3D`, `SphereCollider3D`, `CapsuleCollider3D`, `MeshCollider3D`, `Rigidbody3D`, `CharacterController3D`, `TriggerVolume3D`, `PhysicsMaterial3D`, `DistanceJoint3D`, `HingeJoint3D`, `SpringJoint3D`, `Collision` |
 | [Animation](#animation) | `Animator`, `SpriteAnimator`, `AnimationEventReceiver`, `AnimationEventVfx`, `SpriteAnimationEventReceiver`, `SpriteAnimationEventVfx`, `AnimationHitbox2D`, `AttachmentSocket`, `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
 | [Input](#input) | `InputActionMap`, `PlayerInput` |
@@ -46,6 +46,7 @@ Complete reference for all **100** built-in `GameComponent` types in Spark (`inc
 | 200 | `ComponentUpdatePriority::AnimatorPlayback` | `AnimatorComponent`, `SpriteAnimatorComponent` |
 | 210 | — | `AnimationEventReceiverComponent` |
 | 215 | — | `SpriteAnimationEventReceiverComponent`, `AnimationHitbox2DComponent` |
+| 220 | — | `Projectile2DComponent` |
 | 250 | — | `AttachmentSocketComponent` |
 | 290 | — | `ParallaxLayerComponent` |
 | 295 | — | `ScreenShakeComponent`, `SpringArm3DComponent` |
@@ -708,6 +709,42 @@ circle->SetRadius(0.45F);
 ```
 
 Signals (`Physics2DTriggerEnter` / `Stay` / `Exit`) are delivered to **sibling** components on the same `GameObject`. Pair with `PickupComponent` or `GameFlowTriggerComponent` instead of wiring lambdas in demo code when possible.
+
+### `Hurtbox2DComponent`
+
+**Kind:** `Hurtbox2D` · **Priority:** 40 · **Sibling:** auto-configured `CircleCollider2D` or `BoxCollider2D` (trigger)
+
+Passive damage receiver for query-based weapons. Syncs layer bits to a trigger collider and optional post-hit invulnerability (`NotifyDamageReceived` via `TryApplyCombatDamage2D`).
+
+```cpp
+#include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
+
+auto* hurt = enemy->AddComponent<Hurtbox2DComponent>();
+hurt->SetShape(Hurtbox2DShape::Circle);
+hurt->SetRadius(0.68F);
+hurt->SetCategoryBits(1u << 4);  // hurtbox layer
+hurt->SetInvulnerabilitySeconds(0.15F);
+enemy->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
+enemy->AddComponent<HealthComponent>(3.0F);
+```
+
+### `Projectile2DComponent`
+
+**Kind:** `Projectile2D` · **Priority:** 220 · **Damage path:** `TryApplyCombatDamage2D`
+
+Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; `destroyOwnerOnDeactivate` queues destroy flushed by `Projectile2DComponent::ProcessDeferredDestroys` (called from `PhysicsSubsystem::Simulate2D`).
+
+```cpp
+#include "spark/ecs/components/physics/2d/Projectile2DComponent.hpp"
+
+auto* shot = bulletGo->AddComponent<Projectile2DComponent>();
+shot->SetRadius(0.05F);
+shot->SetDamage(1.0F);
+shot->SetTargetFilter(meleeStyleFilter);  // queryCategory + mask vs hurtbox layer
+shot->SetBlockOnSolidHit(true);
+shot->SetDestroyOwnerOnDeactivate(false);
+shot->Activate({originX, originY}, {speedX, speedY}, player);
+```
 
 ### Layer filter
 

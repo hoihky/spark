@@ -74,7 +74,6 @@ private:
     [[nodiscard]] Platformer2D::BulletProfile MakeEnemyBulletProfile() const noexcept;
     void SpawnEnemies(Spark::GameWorld& world, const Spark::Array<Spark::Vector2>& spawnPoints);
     void TickEnemies(float deltaSeconds, float playerX, float playerY);
-    void ResolveCombat(Spark::GameWorld& world, Spark::IEngineContext& context, float playerX, float playerY);
 
     Spark::Array<Spark::GameObject*> roots{};
     Spark::Array<Spark::GameObject*> gemObjects{};

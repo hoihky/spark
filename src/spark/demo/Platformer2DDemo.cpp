@@ -8,6 +8,9 @@
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/gameplay/PickupComponent.hpp"
 #include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
+#include "spark/physics/CollisionFilter2D.hpp"
 #include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
@@ -182,8 +185,14 @@ Platformer2D::BulletProfile Platformer2DDemo::MakePlayerBulletProfile() const no
     profile.halfH = Platformer2D::Config::kPlayerBulletHalfH;
     profile.drawScale = Platformer2D::Config::kPlayerBulletDrawScale;
     profile.lifetime = Platformer2D::Config::kBulletLifetimeSeconds;
+    profile.damage = 1.0F;
     profile.baseTint = {0.35F, 0.88F, 1.0F, 0.94F};
     profile.additiveBlend = true;
+    profile.blockOnSolidHit = true;
+    profile.targetFilter.queryCategoryBits = Platformer2D::Config::kWeaponQueryCategoryBits;
+    profile.targetFilter.queryMaskBits = Platformer2D::Config::kEnemyHurtboxCategoryBits;
+    profile.targetFilter.hitSolids = false;
+    profile.targetFilter.hitTriggers = true;
     return profile;
 }
 
@@ -195,8 +204,14 @@ Platformer2D::BulletProfile Platformer2DDemo::MakeEnemyBulletProfile() const noe
     profile.halfH = Platformer2D::Config::kEnemyBulletHalfH;
     profile.drawScale = Platformer2D::Config::kEnemyBulletDrawScale;
     profile.lifetime = Platformer2D::Config::kBulletLifetimeSeconds;
+    profile.damage = Platformer2D::Config::kEnemyBulletDamage;
     profile.baseTint = {1.0F, 0.62F, 0.28F, 0.90F};
     profile.additiveBlend = true;
+    profile.blockOnSolidHit = true;
+    profile.targetFilter.queryCategoryBits = Platformer2D::Config::kEnemyBulletQueryCategoryBits;
+    profile.targetFilter.queryMaskBits = Platformer2D::Config::kPlayerHurtboxCategoryBits;
+    profile.targetFilter.hitSolids = false;
+    profile.targetFilter.hitTriggers = true;
     return profile;
 }
 
@@ -560,6 +575,17 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerMelee->SetQueryFilter(meleeFilter);
     playerHealth = playerObject->AddComponent<Spark::HealthComponent>(Platformer2D::Config::kPlayerMaxHealth);
     playerDamageable = playerObject->AddComponent<Spark::DamageableComponent>();
+    Spark::GameObject* playerHurtboxGo = w.CreateGameObject();
+    playerHurtboxGo->GetName() = Spark::Utf8String("PlayerHurtbox");
+    playerHurtboxGo->SetParent(playerObject);
+    playerHurtboxGo->AddComponent<Spark::TransformComponent>();
+    auto* playerHurtbox = playerHurtboxGo->AddComponent<Spark::Hurtbox2DComponent>();
+    playerHurtbox->SetShape(Spark::Hurtbox2DShape::Box);
+    playerHurtbox->SetHalfExtents({kPlayerHalfW, kPlayerHalfH});
+    playerHurtbox->SetCategoryBits(Platformer2D::Config::kPlayerHurtboxCategoryBits);
+    playerHurtbox->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
+    playerHurtboxGo->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
+    roots.Track(playerHurtboxGo);
     playerObject->AddComponent<Spark::SoundCueComponent>();
     auto* actionMap = playerObject->AddComponent<Spark::InputActionMapComponent>();
     actionMap->BindAxis1D("MoveX", GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
@@ -688,6 +714,18 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             760,
             Spark::Utf8String("PlatEnemyBullet"),
             roots);
+    enemyBullets.SetTargetHitHandler(
+            [this](Platformer2D::BulletPool::Slot& /*slot*/,
+                   Spark::GameObject& victim,
+                   const float applied) {
+                playerCombat.OnPlayerDamagedByEnemyBullet(
+                        victim,
+                        playerObject,
+                        applied,
+                        playerCharFsm,
+                        playerObject,
+                        sfxHurt);
+            });
     explosions.Initialize(w);
 
     const float spawnY = kGroundSurfaceY + kPlayerHalfH;
@@ -814,7 +852,7 @@ void Platformer2DDemo::Simulate(
     const Platformer2D::BulletProfile enemyBulletProfile = MakeEnemyBulletProfile();
     const bool gameplayActive = gameState == nullptr || gameState->IsState(Spark::GameFlowState::Playing);
 
-    playerCombat.TickCooldown(dt);
+    playerCombat.TickCooldown(dt, playerDamageable);
 
     if (gameplayActive && playerInput != nullptr && playerObject != nullptr) {
         playerInput->Refresh(*playerObject, context);
@@ -857,6 +895,7 @@ void Platformer2DDemo::Simulate(
                 p.x,
                 p.y,
                 facingLeft,
+                playerObject,
                 playerBullets,
                 playerBulletProfile);
         if (fired) {
@@ -868,23 +907,9 @@ void Platformer2DDemo::Simulate(
         }
 
         enemySquad.Tick(dt, sceneTime, p.x, p.y, enemyBullets, enemyBulletProfile);
-        playerBullets.Tick(dt, -18.0F, 54.0F, -14.0F, 12.0F);
-        enemyBullets.Tick(dt, -18.0F, 54.0F, -14.0F, 12.0F);
+        playerBullets.Tick(dt, context, -18.0F, 54.0F, -14.0F, 12.0F);
+        enemyBullets.Tick(dt, context, -18.0F, 54.0F, -14.0F, 12.0F);
 
-        const int killed = enemySquad.ResolvePlayerBulletHits(playerBullets, explosions, world);
-        if (killed > 0 && playerObject != nullptr && sfxExplosion.Get() != nullptr) {
-            DemoAudio::QueueCue(*playerObject, sfxExplosion, 0.92F);
-        }
-
-        playerCombat.ResolveEnemyBulletHits(
-                enemyBullets,
-                p.x,
-                p.y,
-                playerHealth,
-                playerDamageable,
-                playerCharFsm,
-                playerObject,
-                sfxHurt);
         if (playerHealth != nullptr && playerHealth->GetCurrent() < healthBefore) {
             explosions.SpawnPlayerHurt(p.x, p.y);
             if (cameraShake != nullptr) {

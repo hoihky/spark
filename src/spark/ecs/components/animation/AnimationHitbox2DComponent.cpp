@@ -2,8 +2,7 @@
 
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/ecs/components/gameplay/DamageableComponent.hpp"
-#include "spark/ecs/components/gameplay/HealthComponent.hpp"
+#include "spark/gameplay/CombatDamage2D.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/core/GameWorld.hpp"
@@ -102,12 +101,7 @@ void AnimationHitbox2DComponent::TryOverlapHits(GameObject& owner, GameWorld& wo
         if (ArrayContainsObject(hitThisSwing, target)) {
             return;
         }
-        float applied = 0.0F;
-        if (DamageableComponent* damageable = target->GetComponent<DamageableComponent>()) {
-            applied = damageable->ApplyDamage(damagePerHit, &owner);
-        } else if (HealthComponent* health = target->GetComponent<HealthComponent>()) {
-            applied = health->ApplyDamage(damagePerHit, &owner);
-        }
+        const float applied = TryApplyCombatDamage2D(*target, &owner, damagePerHit);
         if (applied > 0.0F) {
             hitThisSwing.PushBack(target);
             ++hitsThisSwing;

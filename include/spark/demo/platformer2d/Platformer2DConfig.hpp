@@ -42,6 +42,8 @@ struct Config {
     static constexpr std::uint16_t kGemHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(1);
     static constexpr std::uint16_t kWeaponQueryCategoryBits = Spark::CollisionFilter2D::LayerBit(2);
     static constexpr std::uint16_t kEnemyHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(3);
+    static constexpr std::uint16_t kPlayerHurtboxCategoryBits = Spark::CollisionFilter2D::LayerBit(4);
+    static constexpr std::uint16_t kEnemyBulletQueryCategoryBits = Spark::CollisionFilter2D::LayerBit(5);
 
     static constexpr float kPlayerMoveSpeed = 11.0F;
     static constexpr float kPlayerJumpSpeed = 13.2F;

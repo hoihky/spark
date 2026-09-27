@@ -2,7 +2,7 @@
 
 #include "spark/demo/platformer2d/Platformer2DCombatMath.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
-#include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/physics/CollisionFilter2D.hpp"
 
@@ -38,10 +38,11 @@ void EnemySquad::Load(
                 Spark::Vector4{1.0F, 1.0F, 1.0F, 1.0F},
                 idleUv,
                 710 + ei);
-        Spark::CircleCollider2DComponent* enemyHit = ego->AddComponent<Spark::CircleCollider2DComponent>(0.68F);
-        enemyHit->SetIsTrigger(true);
-        enemyHit->SetCategoryBits(Config::kEnemyHurtboxCategoryBits);
-        enemyHit->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
+        auto* enemyHurtbox = ego->AddComponent<Spark::Hurtbox2DComponent>();
+        enemyHurtbox->SetShape(Spark::Hurtbox2DShape::Circle);
+        enemyHurtbox->SetRadius(0.68F);
+        enemyHurtbox->SetCategoryBits(Config::kEnemyHurtboxCategoryBits);
+        enemyHurtbox->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
         ego->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
         ego->AddComponent<Spark::HealthComponent>(1.0F);
         enemies[static_cast<std::size_t>(ei)] = {
@@ -92,6 +93,7 @@ bool EnemySquad::TrySpawnEnemyBullet(
             epos.y + dirY * (Config::kEnemyHalfW * 0.35F) + Config::kEnemyHalfH * 0.08F,
             dirX,
             dirY,
+            enemy.go,
             profile);
     if (spawned) {
         enemy.attackFlashTimer = 0.24F;
@@ -184,50 +186,6 @@ void EnemySquad::FlushPendingDestroys(Spark::GameWorld& world) noexcept {
         }
     }
     pendingDestroy.Clear();
-}
-
-int EnemySquad::ResolvePlayerBulletHits(
-        BulletPool& playerBullets,
-        ExplosionFx& explosions,
-        Spark::GameWorld& world) noexcept
-{
-    int killed = 0;
-    for (std::size_t bi = 0; bi < playerBullets.Slots().GetSize(); ++bi) {
-        BulletPool::Slot& bullet = playerBullets.Slots()[bi];
-        if (!bullet.active) {
-            continue;
-        }
-        for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {
-            Enemy& enemy = enemies[ei];
-            if (!enemy.alive || enemy.tr == nullptr) {
-                continue;
-            }
-            const Spark::Vector3 epos = enemy.tr->GetLocalTransform().translation;
-            if (!CombatMath::BoxOverlap(
-                        bullet.cx,
-                        bullet.cy,
-                        bullet.profile.halfW,
-                        bullet.profile.halfH,
-                        epos.x,
-                        epos.y,
-                        Config::kEnemyHalfW,
-                        Config::kEnemyHalfH)) {
-                continue;
-            }
-            BulletPool::DeactivateSlot(bullet);
-
-            explosions.SpawnEnemyDefeat(epos.x, epos.y);
-            enemy.alive = false;
-            world.DestroyGameObject(enemy.go);
-            enemy.go = nullptr;
-            enemy.tr = nullptr;
-            enemy.spr = nullptr;
-            ++defeatedCount;
-            ++killed;
-            break;
-        }
-    }
-    return killed;
 }
 
 }  // namespace Spark::Platformer2D

@@ -688,6 +688,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/rendering/ParallaxLayerComponent.cpp
         src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
         src/spark/ecs/components/physics/2d/TriggerVolume2DComponent.cpp
+        src/spark/ecs/components/physics/2d/Hurtbox2DComponent.cpp
+        src/spark/ecs/components/physics/2d/Projectile2DComponent.cpp
         src/spark/ecs/components/physics/3d/TriggerVolume3DComponent.cpp
         src/spark/animation/Skeleton.cpp
         src/spark/animation/SkeletonPaletteCacheKey.cpp
@@ -974,6 +976,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/TriggerVolume2D.cpp
         src/spark/physics/TriggerVolume3D.cpp
         src/spark/gameplay/Interaction2D.cpp
+        src/spark/gameplay/CombatDamage2D.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp
         src/spark/ai/steering/SteeringBehaviors3D.cpp

@@ -2,6 +2,9 @@
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/demo/platformer2d/Platformer2DCombatMath.hpp"
+#include "spark/demo/platformer2d/Platformer2DConfig.hpp"
+#include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
+#include "spark/physics/CollisionFilter2D.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
@@ -358,8 +361,14 @@ Platformer2D::BulletProfile BroadPhase2DDemo::MakePlayerBulletProfile() const no
     profile.halfH = 0.030F * kCellWorld;
     profile.drawScale = 0.36F * kCellWorld;
     profile.lifetime = 1.8F;
+    profile.damage = 1.0F;
     profile.baseTint = {0.35F, 0.92F, 1.0F, 0.94F};
     profile.additiveBlend = true;
+    profile.blockOnSolidHit = true;
+    profile.targetFilter.queryCategoryBits = Platformer2D::Config::kWeaponQueryCategoryBits;
+    profile.targetFilter.queryMaskBits = Platformer2D::Config::kEnemyHurtboxCategoryBits;
+    profile.targetFilter.hitSolids = false;
+    profile.targetFilter.hitTriggers = true;
     return profile;
 }
 
@@ -371,8 +380,14 @@ Platformer2D::BulletProfile BroadPhase2DDemo::MakeEnemyBulletProfile() const noe
     profile.halfH = 0.032F * kCellWorld;
     profile.drawScale = 0.38F * kCellWorld;
     profile.lifetime = 2.4F;
+    profile.damage = kEnemyBulletDamage;
     profile.baseTint = {1.0F, 0.42F, 0.55F, 0.90F};
     profile.additiveBlend = true;
+    profile.blockOnSolidHit = true;
+    profile.targetFilter.queryCategoryBits = Platformer2D::Config::kEnemyBulletQueryCategoryBits;
+    profile.targetFilter.queryMaskBits = Platformer2D::Config::kPlayerHurtboxCategoryBits;
+    profile.targetFilter.hitSolids = false;
+    profile.targetFilter.hitTriggers = true;
     return profile;
 }
 
@@ -429,6 +444,39 @@ void BroadPhase2DDemo::SpawnEnemies(Spark::GameWorld& world, const Spark::Array<
         ego->AddComponent<Spark::BoxCollider2DComponent>();
         enemy.rb = ego->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Dynamic, 1.0F);
         enemy.rb->SetGravityScale(0.0F);
+        Spark::GameObject* hurtGo = world.CreateGameObject();
+        hurtGo->GetName() = Spark::Utf8String("MazeEnemyHurtbox");
+        hurtGo->SetParent(ego);
+        hurtGo->AddComponent<Spark::TransformComponent>();
+        auto* enemyHurtbox = hurtGo->AddComponent<Spark::Hurtbox2DComponent>();
+        enemyHurtbox->SetShape(Spark::Hurtbox2DShape::Circle);
+        enemyHurtbox->SetRadius(kEnemyHalfW * 0.92F);
+        enemyHurtbox->SetCategoryBits(Platformer2D::Config::kEnemyHurtboxCategoryBits);
+        enemyHurtbox->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
+        hurtGo->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
+        if (Spark::HealthComponent* hp = ego->AddComponent<Spark::HealthComponent>(1.0F)) {
+            hp->SetOnDeath([this](Spark::GameObject& self, Spark::GameObject* /*killer*/) {
+                for (std::size_t i = 0; i < enemies.GetSize(); ++i) {
+                    MazeEnemy& slot = enemies[i];
+                    if (!slot.alive || slot.go != &self) {
+                        continue;
+                    }
+                    const Spark::Vector3 epos =
+                            slot.tr != nullptr ? slot.tr->GetLocalTransform().translation : Spark::Vector3::Zero;
+                    explosions.SpawnEnemyDefeat(epos.x, epos.y);
+                    slot.alive = false;
+                    self.GetWorld().DestroyGameObject(slot.go);
+                    slot.go = nullptr;
+                    slot.tr = nullptr;
+                    slot.rb = nullptr;
+                    ++enemiesDefeated;
+                    if (playerGo != nullptr && sfxExplosion.Get() != nullptr) {
+                        DemoAudio::QueueCue(*playerGo, sfxExplosion, 0.88F);
+                    }
+                    break;
+                }
+            });
+        }
         roots.PushBack(ego);
     }
 }
@@ -469,91 +517,13 @@ void BroadPhase2DDemo::TickEnemies(const float deltaSeconds, const float playerX
                         pos.y + dirY * kEnemyHalfW * 0.9F,
                         dirX,
                         dirY,
+                        enemy.go,
                         MakeEnemyBulletProfile())) {
                 enemy.shootCooldown = 1.45F + 0.25F * static_cast<float>(ei % 3U);
             } else {
                 enemy.shootCooldown = 0.35F;
             }
         }
-    }
-}
-
-void BroadPhase2DDemo::ResolveCombat(
-        Spark::GameWorld& world,
-        Spark::IEngineContext& context,
-        const float playerX,
-        const float playerY)
-{
-    for (std::size_t bi = 0; bi < playerBullets.Slots().GetSize(); ++bi) {
-        Platformer2D::BulletPool::Slot& bullet = playerBullets.Slots()[bi];
-        if (!bullet.active) {
-            continue;
-        }
-        for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {
-            MazeEnemy& enemy = enemies[ei];
-            if (!enemy.alive || enemy.tr == nullptr) {
-                continue;
-            }
-            const Spark::Vector3 epos = enemy.tr->GetLocalTransform().translation;
-            if (!Platformer2D::CombatMath::BoxOverlap(
-                        bullet.cx,
-                        bullet.cy,
-                        bullet.profile.halfW,
-                        bullet.profile.halfH,
-                        epos.x,
-                        epos.y,
-                        kEnemyHalfW,
-                        kEnemyHalfH)) {
-                continue;
-            }
-            Platformer2D::BulletPool::DeactivateSlot(bullet);
-            explosions.SpawnEnemyDefeat(epos.x, epos.y);
-            enemy.alive = false;
-            world.DestroyGameObject(enemy.go);
-            enemy.go = nullptr;
-            enemy.tr = nullptr;
-            enemy.rb = nullptr;
-            ++enemiesDefeated;
-            if (playerGo != nullptr && sfxExplosion.Get() != nullptr) {
-                DemoAudio::QueueCue(*playerGo, sfxExplosion, 0.88F);
-            } else {
-                DemoPlayProceduralClip(context, DemoSfx::ClipInvadersHit(), 0.85F);
-            }
-            break;
-        }
-    }
-
-    if (playerHurtCooldown > 0.0F) {
-        return;
-    }
-    for (std::size_t bi = 0; bi < enemyBullets.Slots().GetSize(); ++bi) {
-        Platformer2D::BulletPool::Slot& bullet = enemyBullets.Slots()[bi];
-        if (!bullet.active) {
-            continue;
-        }
-        if (!Platformer2D::CombatMath::BoxOverlap(
-                    bullet.cx,
-                    bullet.cy,
-                    bullet.profile.halfW,
-                    bullet.profile.halfH,
-                    playerX,
-                    playerY,
-                    kPlayerHalfW,
-                    kPlayerHalfH)) {
-            continue;
-        }
-        Platformer2D::BulletPool::DeactivateSlot(bullet);
-        playerHurtCooldown = kPlayerHurtCooldownSeconds;
-        if (playerDamageable != nullptr) {
-            playerDamageable->ApplyDamage(kEnemyBulletDamage, nullptr);
-        } else if (playerHealth != nullptr) {
-            playerHealth->ApplyDamage(kEnemyBulletDamage, nullptr);
-        }
-        explosions.SpawnPlayerHurt(playerX, playerY);
-        if (playerGo != nullptr && sfxHurt.Get() != nullptr) {
-            DemoAudio::QueueCue(*playerGo, sfxHurt, 0.92F);
-        }
-        break;
     }
 }
 
@@ -694,6 +664,16 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerRb->SetVelocity(Spark::Vector2::Zero);
     playerHealth = playerGo->AddComponent<Spark::HealthComponent>(kPlayerMaxHealth);
     playerDamageable = playerGo->AddComponent<Spark::DamageableComponent>();
+    Spark::GameObject* playerHurtboxGo = w.CreateGameObject();
+    playerHurtboxGo->GetName() = Spark::Utf8String("MazePlayerHurtbox");
+    playerHurtboxGo->SetParent(playerGo);
+    playerHurtboxGo->AddComponent<Spark::TransformComponent>();
+    auto* playerHurtbox = playerHurtboxGo->AddComponent<Spark::Hurtbox2DComponent>();
+    playerHurtbox->SetShape(Spark::Hurtbox2DShape::Box);
+    playerHurtbox->SetHalfExtents({kPlayerHalfW, kPlayerHalfH});
+    playerHurtbox->SetCategoryBits(Platformer2D::Config::kPlayerHurtboxCategoryBits);
+    playerHurtbox->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
+    playerHurtboxGo->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
     playerGo->AddComponent<Spark::SoundCueComponent>();
 
     Array<MazeIJ> floorCells;
@@ -834,6 +814,28 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     for (std::size_t ri = 0; ri < bulletRoots.GetRoots().GetSize(); ++ri) {
         roots.PushBack(bulletRoots.GetRoots()[ri]);
     }
+    enemyBullets.SetTargetHitHandler(
+            [this](Platformer2D::BulletPool::Slot& /*slot*/,
+                   Spark::GameObject& victim,
+                   const float applied) {
+                if (applied <= 0.0F || playerGo == nullptr) {
+                    return;
+                }
+                for (const Spark::GameObject* walk = &victim; walk != nullptr; walk = walk->GetParent()) {
+                    if (walk != playerGo) {
+                        continue;
+                    }
+                    playerHurtCooldown = kPlayerHurtCooldownSeconds;
+                    if (playerTr != nullptr) {
+                        const Spark::Vector3 ppos = playerTr->GetLocalTransform().translation;
+                        explosions.SpawnPlayerHurt(ppos.x, ppos.y);
+                    }
+                    if (sfxHurt.Get() != nullptr) {
+                        DemoAudio::QueueCue(*playerGo, sfxHurt, 0.92F);
+                    }
+                    break;
+                }
+            });
     explosions.Initialize(w);
     SpawnEnemies(w, enemySpawnPoints);
 
@@ -920,6 +922,9 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
     if (playerHurtCooldown > 0.0F) {
         playerHurtCooldown = std::max(0.0F, playerHurtCooldown - dt);
     }
+    if (playerDamageable != nullptr) {
+        playerDamageable->SetInvulnerable(playerHurtCooldown > 0.0F);
+    }
 
     if (playerRb != nullptr && playerTr != nullptr) {
         float mx = 0.0F;
@@ -957,6 +962,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
                         p0.y + aimY * kPlayerHalfW * 0.95F,
                         aimX,
                         aimY,
+                        playerGo,
                         MakePlayerBulletProfile())) {
                 explosions.SpawnMuzzleFlash(
                         p0.x + aimX * kPlayerHalfW * 1.1F, p0.y + aimY * kPlayerHalfW * 1.1F);
@@ -974,9 +980,8 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
         const float cullMaxX = -mazeOriginX + cullPad;
         const float cullMinY = mazeOriginY - cullPad;
         const float cullMaxY = -mazeOriginY + cullPad;
-        playerBullets.Tick(dt, cullMinX, cullMaxX, cullMinY, cullMaxY);
-        enemyBullets.Tick(dt, cullMinX, cullMaxX, cullMinY, cullMaxY);
-        ResolveCombat(world, context, p.x, p.y);
+        playerBullets.Tick(dt, context, cullMinX, cullMaxX, cullMinY, cullMaxY);
+        enemyBullets.Tick(dt, context, cullMinX, cullMaxX, cullMinY, cullMaxY);
 
         if (playerHealth != nullptr && !playerHealth->IsAlive()) {
             playerHealth->ResetToFull();
