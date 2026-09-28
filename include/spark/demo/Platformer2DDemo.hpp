@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/core/Utf8String.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/demo/DemoHelpHud.hpp"
 #include "spark/demo/DemoFoundation.hpp"
@@ -10,6 +11,11 @@
 #include "spark/demo/platformer2d/Platformer2DConfig.hpp"
 #include "spark/demo/platformer2d/Platformer2DEnemySquad.hpp"
 #include "spark/demo/platformer2d/Platformer2DExplosionFx.hpp"
+#include "spark/gameflow/GameFlowCoordinator.hpp"
+#include "spark/gameflow/GameFlowPersistentData.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/core/SceneManager.hpp"
 #include "spark/demo/platformer2d/Platformer2DHealthHud.hpp"
 #include "spark/demo/platformer2d/Platformer2DPlayerCombat.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
@@ -40,7 +46,11 @@ namespace Spark {
  * - **Strategy** — <c>Platformer2D::BulletProfile</c> for player vs enemy shots.
  * - **Observer / presentation** — <c>Platformer2D::HealthHud</c> mirrors <c>HealthComponent</c>.
  */
+class Platformer2DSpawnHost;
+
 class Platformer2DDemo {
+    friend class Platformer2DSpawnHost;
+
 public:
     static constexpr int kPlatformCount = 16;
     static constexpr float kPlayerHalfW = Platformer2D::Config::kPlayerHalfW;
@@ -193,6 +203,16 @@ private:
     float sceneTime = 0.0F;
     float goalPulse = 0.0F;
     char statusHudBuffer[160]{};
+
+    Spark::UniquePtr<Spark::SceneManager> sceneManager{};
+    Spark::UniquePtr<Spark::SceneLoadSession> levelLoadSession{};
+    Spark::SceneInstanceId levelSceneId = Spark::kInvalidSceneInstanceId;
+    Spark::GameObject* levelRoot = nullptr;
+    bool authoredLevelActive = false;
+    Utf8String levelLoadError{};
+
+    GameFlowCoordinator gameFlow{};
+    GameFlowPersistentData persistentData{};
 };
 
 }  // namespace Spark

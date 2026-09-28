@@ -38,6 +38,18 @@ public:
             const Spark::Vector4& idleUv,
             const Spark::Vector4& attackUv);
 
+    void SetSpriteUvs(const Spark::Vector4& idleUvIn, const Spark::Vector4& attackUvIn) noexcept;
+
+    /** Spawns one patrol enemy (tilemap registry path). @return Enemy root object. */
+    [[nodiscard]] Spark::GameObject* SpawnAt(
+            Spark::GameWorld& world,
+            const Spark::SharedPtr<Spark::Texture2D>& enemyAtlas,
+            float worldX,
+            float worldY,
+            float patrolMinX,
+            float patrolMaxX,
+            int sortOrder);
+
     void Unload(Spark::GameWorld& world) noexcept;
 
     void Tick(

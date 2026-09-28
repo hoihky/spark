@@ -38,6 +38,9 @@ function(spark_add_physics_tests)
             tests/scene/GltfVisualParityTest.cpp
             tests/scene/GameplayComponentRoundTripTest.cpp
             tests/scene/SceneDocumentRoundTripTest.cpp
+            tests/scene/PlatformerLevelSceneRoundTripTest.cpp
+            tests/scene/KenneyTinyDungeonSandSpawnTest.cpp
+            tests/save/GameSaveTest.cpp
             tests/scene/SceneEditorSmokeTest.cpp
             tests/scene/ParticleEmitterBurstTest.cpp
             tests/scene/VfxAssetP2Test.cpp

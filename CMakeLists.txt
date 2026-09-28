@@ -556,6 +556,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/TerrainDemo.cpp
         src/spark/demo/VfxShowcaseDemo.cpp
         src/spark/demo/VfxShowcase2DDemo.cpp
+        src/spark/demo/GameFlow2DProductPathDemo.cpp
         src/spark/demo/CharacterCameraDemo.cpp
         src/spark/demo/BroadPhase2DDemo.cpp
         src/spark/demo/Platformer2DDemo.cpp
@@ -564,6 +565,8 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/platformer2d/Platformer2DHealthHud.cpp
         src/spark/demo/platformer2d/Platformer2DEnemySquad.cpp
         src/spark/demo/platformer2d/Platformer2DPlayerCombat.cpp
+        src/spark/demo/platformer2d/Platformer2DLevelPipeline.cpp
+        src/spark/demo/platformer2d/Platformer2DSpawnHost.cpp
         src/spark/demo/Connect3Demo.cpp
         src/spark/demo/Tetris2DDemo.cpp
         src/spark/demo/SpaceInvaders2DDemo.cpp
@@ -643,6 +646,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/tilemap/TilemapFileResolve.cpp
         src/spark/scene/tilemap/TmxImporter.cpp
         src/spark/scene/tilemap/TilemapDocumentApply.cpp
+        src/spark/scene/tilemap/KenneyTinyDungeonGameplay.cpp
         src/spark/scene/tilemap/TilemapDerivedDataRebake.cpp
         src/spark/scene/tilemap/TilemapDocumentCapture.cpp
         src/spark/scene/tilemap/TilemapDocumentSerializer.cpp
@@ -906,7 +910,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersGameplay.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersGameFlow.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersTilemap.cpp
+        src/spark/gameflow/GameFlowCoordinator.cpp
+        src/spark/gameflow/GameFlowPersistentData.cpp
+        src/spark/save/GameSave.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersUi.cpp
         src/spark/scene/serialization/ComponentSnapshotPayload.cpp

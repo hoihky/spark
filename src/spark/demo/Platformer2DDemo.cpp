@@ -1,6 +1,7 @@
 #include "spark/demo/Platformer2DDemo.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
 #include "spark/demo/DemoFoundation.hpp"
+#include "spark/save/GameSave.hpp"
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
@@ -436,6 +437,10 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     phys.jointIterations = 4;
     gemsTotal = kGemCount;
     facingLeft = false;
+    authoredLevelActive = false;
+    levelLoadError.Clear();
+    levelRoot = nullptr;
+    levelSceneId = Spark::kInvalidSceneInstanceId;
     sceneTime = 0.0F;
     playerBaseScaleX = kPlayerHalfW * 2.0F;
     playerBaseScaleY = kPlayerHalfH * 2.0F;
@@ -510,6 +515,8 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             audioEngine->SetBackgroundMusic(bgm, 0.28F, true);
         }
     }
+
+    gameFlow.LoadProgressFromDisk(GameSave::DefaultSlotPath().CStr());
 
     for (int i = 0; i < kPlatformCount; ++i) {
         const float x0 = kPlatforms[i][0];
@@ -648,7 +655,13 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     gameFlowGo = w.CreateGameObject();
     gameFlowGo->GetName() = Spark::Utf8String("PlatGameFlow");
     gameState = gameFlowGo->AddComponent<Spark::GameStateComponent>(Spark::GameFlowState::Playing);
+    gameFlow.Bind(gameState, &persistentData);
     gameState->SetOnTransition([this](Spark::GameFlowState, Spark::GameFlowState next, Spark::GameObject&) {
+        if (next == Spark::GameFlowState::Victory) {
+            gameFlow.SyncProgressFromGameplay(
+                    gemsCollected, gemsTotal, enemySquad.GetDefeatedCount(), true);
+            gameFlow.SaveProgressToDisk(GameSave::DefaultSlotPath().CStr());
+        }
         if (next != Spark::GameFlowState::Victory) {
             return;
         }
@@ -710,8 +723,8 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         pickup->SetItemId("gem");
         pickup->SetOnCollected([this, gem](Spark::GameObject& /*collector*/, const char*, int) {
             if (gem != nullptr) {
-                if (Spark::TransformComponent* gtr = gem->GetComponent<Spark::TransformComponent>()) {
-                    const Spark::Vector3 gpos = gtr->GetLocalTransform().translation;
+                if (Spark::TransformComponent* gtrLocal = gem->GetComponent<Spark::TransformComponent>()) {
+                    const Spark::Vector3 gpos = gtrLocal->GetLocalTransform().translation;
                     explosions.SpawnGemPickup(gpos.x, gpos.y);
                 }
                 for (std::size_t idx = 0; idx < gemObjects.GetSize(); ++idx) {
@@ -860,6 +873,16 @@ void Platformer2DDemo::Unload(Spark::GameWorld& w)
     }
     gemObjects.Clear();
     gemBasePositions.Clear();
+    if (sceneManager != nullptr && levelSceneId != Spark::kInvalidSceneInstanceId) {
+        sceneManager->UnloadScene(levelSceneId);
+        levelSceneId = Spark::kInvalidSceneInstanceId;
+    }
+    levelRoot = nullptr;
+    levelLoadSession.Reset();
+    sceneManager.Reset();
+    authoredLevelActive = false;
+    levelLoadError.Clear();
+
     enemySquad.Unload(w);
     playerBullets.Shutdown(w);
     enemyBullets.Shutdown(w);
@@ -935,6 +958,10 @@ void Platformer2DDemo::Simulate(
     const Platformer2D::BulletProfile playerBulletProfile = MakePlayerBulletProfile();
     const Platformer2D::BulletProfile enemyBulletProfile = MakeEnemyBulletProfile();
     const bool gameplayActive = gameState == nullptr || gameState->IsState(Spark::GameFlowState::Playing);
+
+    if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+        gameFlow.TogglePause();
+    }
 
     playerCombat.TickCooldown(dt, playerDamageable);
 

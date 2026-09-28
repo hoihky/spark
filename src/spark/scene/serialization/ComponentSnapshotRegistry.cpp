@@ -1,5 +1,6 @@
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 
+#include "spark/scene/serialization/ComponentSnapshotHandlersGameFlow.hpp"
 #include "spark/scene/serialization/ComponentSnapshotHandlersGameplay.hpp"
 #include "spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.hpp"
 #include "spark/scene/serialization/ComponentSnapshotHandlersTilemap.hpp"
@@ -1054,6 +1055,7 @@ void RegisterBuiltInHandlers(ComponentSnapshotRegistry& registry) {
     RegisterMoreSnapshotHandlers(registry);
     RegisterRenderingSnapshotHandlers(registry);
     RegisterGameplaySnapshotHandlers(registry);
+    RegisterGameFlowSnapshotHandlers(registry);
     RegisterTilemapSnapshotHandlers(registry);
     RegisterPhysics2DExtendedSnapshotHandlers(registry);
     RegisterUiSnapshotHandlers(registry);

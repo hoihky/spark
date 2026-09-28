@@ -60,6 +60,55 @@ void EnemySquad::Load(
     }
 }
 
+void EnemySquad::SetSpriteUvs(const Spark::Vector4& idleUvIn, const Spark::Vector4& attackUvIn) noexcept {
+    idleUv = idleUvIn;
+    attackUv = attackUvIn;
+}
+
+Spark::GameObject* EnemySquad::SpawnAt(
+        Spark::GameWorld& world,
+        const Spark::SharedPtr<Spark::Texture2D>& enemyAtlas,
+        const float worldX,
+        const float worldY,
+        const float patrolMinX,
+        const float patrolMaxX,
+        const int sortOrder)
+{
+    const std::size_t ei = enemies.GetSize();
+    enemies.PushBack({});
+    const float ey = worldY;
+    Spark::GameObject* ego = world.CreateGameObject();
+    ego->GetName() = Spark::Utf8String("PlatEnemy");
+    Spark::TransformComponent* etr = ego->AddComponent<Spark::TransformComponent>();
+    etr->SetTranslation({worldX, ey, 0.045F + 0.0002F * static_cast<float>(ei)});
+    etr->SetScale({Config::kEnemyDrawScale, Config::kEnemyDrawScale, 1.0F});
+    Spark::SpriteComponent* espr = ego->AddComponent<Spark::SpriteComponent>(
+            enemyAtlas,
+            Spark::Vector4{1.0F, 1.0F, 1.0F, 1.0F},
+            idleUv,
+            sortOrder);
+    auto* enemyHurtbox = ego->AddComponent<Spark::Hurtbox2DComponent>();
+    enemyHurtbox->SetShape(Spark::Hurtbox2DShape::Circle);
+    enemyHurtbox->SetRadius(0.68F);
+    enemyHurtbox->SetCategoryBits(Config::kEnemyHurtboxCategoryBits);
+    enemyHurtbox->SetMaskBits(Spark::CollisionFilter2D::AllLayersMask());
+    ego->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 0.0F);
+    ego->AddComponent<Spark::HealthComponent>(1.0F);
+    enemies[ei] = {
+            true,
+            ego,
+            etr,
+            espr,
+            patrolMinX,
+            patrolMaxX,
+            1.0F,
+            0.85F + 0.4F * static_cast<float>(ei),
+            0.0F,
+            1.7F * static_cast<float>(ei),
+            ey};
+    return ego;
+}
+
 void EnemySquad::Unload(Spark::GameWorld& world) noexcept
 {
     for (std::size_t ei = 0; ei < enemies.GetSize(); ++ei) {

@@ -6,6 +6,7 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TilemapFileResolve.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
+#include "spark/scene/tilemap/KenneyTinyDungeonGameplay.hpp"
 #include "spark/scene/tilemap/TileDefinition.hpp"
 #include "spark/scene/tilemap/Tileset.hpp"
 
@@ -31,57 +32,6 @@ namespace {
 
 [[nodiscard]] bool UsesKenneyPackedGrid(const char* texturePath) noexcept {
     return texturePath != nullptr && std::strstr(texturePath, "tilemap_packed.png") != nullptr;
-}
-
-/**
- * Kenney Tiny Dungeon packed atlas indices used as walkable floor in sampleMap-style dungeon
- * layers. Wall autotiles (e.g. 108–117), hazards, and generic caps (120, 123) are excluded even
- * when they share a row with floor variants in the sheet.
- */
-[[nodiscard]] bool IsKenneyTinyDungeonWalkableFloorTile(const std::uint16_t tileId) noexcept {
-    switch (tileId) {
-        case 72U:
-        case 73U:
-        case 74U:
-        case 75U:
-        case 76U:
-        case 77U:
-        case 81U:
-        case 83U:
-        case 88U:
-        case 121U:
-        case 122U:
-        case 124U:
-        case 125U:
-        case 126U:
-            return true;
-        default:
-            return false;
-    }
-}
-
-void ConfigureKenneyTinyDungeonGameplayTileset(Tileset& tileset) {
-    tileset.EnsureDefinitions();
-    const std::uint32_t cellCount = tileset.GetCellCount();
-    for (std::uint32_t i = 0; i < cellCount; ++i) {
-        TileDefinition& def = tileset.Definition(static_cast<std::uint16_t>(i));
-        def.collisionShape = TileCollisionShape::None;
-        def.flags = TileDefinitionFlags::None;
-        if (!IsKenneyTinyDungeonWalkableFloorTile(static_cast<std::uint16_t>(i))) {
-            def.flags = TileDefinitionFlags::BlocksPathfinding;
-        }
-    }
-}
-
-void ApplyKenneyTinyDungeonGameplayLayerFlags(TilemapComponent& tilemap) {
-    for (std::uint32_t li = 0; li < tilemap.GetLayerCount(); ++li) {
-        TilemapLayer& layer = tilemap.GetLayer(li);
-        const char* name = layer.name.CStr();
-        if (name != nullptr &&
-            (std::strcmp(name, "Objects") == 0 || std::strcmp(name, "Carts") == 0)) {
-            layer.contributeGameplayGrid = false;
-        }
-    }
 }
 
 [[nodiscard]] const TilemapDocumentTileset* PrimaryTileset(const TilemapDocument& document) noexcept {
