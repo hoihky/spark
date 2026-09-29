@@ -84,6 +84,7 @@ void VulkanRenderer::CleanupSwapchain() {
     hdrTonemapPass.DestroyFlightTargets(device());
     opaqueBackground.Destroy(device());
     hdrTonemapPass.DestroyRenderPass(device());
+    offscreenLdrRenderPass.Destroy(device());
     DestroyDepthResources();
 
     presentationFramebuffers.Destroy(device());
@@ -135,6 +136,7 @@ void VulkanRenderer::RecreateSwapchain() {
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
     spritePass.CreateGraphicsPipeline(
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
+    spritePass.CreateOffscreenLdrGraphicsPipeline(device(), offscreenLdrRenderPass.Pass());
     CreateFramebuffers();
     hdrTonemapPass.CreateTonemapPipeline(
             physicalDevice(), device(), presentRenderPass.vkPass, VulkanFrameSync::kMaxFramesInFlight, shaderLoader);
@@ -167,8 +169,14 @@ void VulkanRenderer::RecreateSwapchain() {
 
 void VulkanRenderer::CreateRenderPass() {
     hdrTonemapPass.CreateRenderPass(device(), sceneDepthFormat);
+    offscreenLdrRenderPass.Create(device(), sceneDepthFormat);
     presentRenderPass.Create(device(), presentSwapchain().imageFormat, VK_FORMAT_UNDEFINED);
-    renderTargetRegistry.BindDevice(physicalDevice(), device(), hdrTonemapPass.HdrRenderPass(), sceneDepthFormat);
+    renderTargetRegistry.BindDevice(
+            physicalDevice(),
+            device(),
+            hdrTonemapPass.HdrRenderPass(),
+            offscreenLdrRenderPass.Pass(),
+            sceneDepthFormat);
 }
 
 void VulkanRenderer::RecreateHdrFlightTargets() {

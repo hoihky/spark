@@ -27,6 +27,7 @@
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/scene/VulkanSceneMeshGpu.hpp"
 #include "spark/render/scene/VulkanSceneOpaqueBackground.hpp"
+#include "spark/render/scene/VulkanOffscreenRenderTarget.hpp"
 #include "spark/render/scene/VulkanRenderTargetRegistry.hpp"
 #include "spark/render/scene/VulkanWaterPass.hpp"
 #include "spark/render/scene/VulkanSceneOpaquePass.hpp"
@@ -132,6 +133,7 @@ private:
     VulkanPunctualShadowPass punctualShadow;
     VulkanPunctualShadowFrameState punctualShadowFrameState{};
     VulkanHdrTonemapPass hdrTonemapPass;
+    VulkanOffscreenLdrRenderPass offscreenLdrRenderPass;
     VulkanSceneOpaqueBackground opaqueBackground;
     VulkanScreenSpaceEffectsPass screenSpaceEffectsPass;
     VulkanSceneOpaquePass sceneOpaquePass;

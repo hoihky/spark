@@ -138,6 +138,10 @@ void VulkanSpritePass::DestroyGraphicsPipeline(const VkDevice device) {
             vkDestroyPipeline(device, pipelines[i], nullptr);
             pipelines[i] = VK_NULL_HANDLE;
         }
+        if (ldrOffscreenPipelines[i] != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, ldrOffscreenPipelines[i], nullptr);
+            ldrOffscreenPipelines[i] = VK_NULL_HANDLE;
+        }
     }
     if (pipelineLayout != VK_NULL_HANDLE) {
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -153,16 +157,19 @@ void VulkanSpritePass::DestroyGraphicsPipeline(const VkDevice device) {
     }
 }
 
-VkPipeline VulkanSpritePass::PipelineForBlendMode(const SceneBlendMode mode) const noexcept {
+VkPipeline VulkanSpritePass::PipelineForBlendMode(
+        const SceneBlendMode mode,
+        const bool ldrOffscreenTarget) const noexcept {
+    const VkPipeline* set = ldrOffscreenTarget ? ldrOffscreenPipelines : pipelines;
     const std::size_t index = static_cast<std::size_t>(mode);
     if (index >= kSceneBlendModeCount) {
-        return pipelines[static_cast<std::size_t>(kSceneBlendModeDefault)];
+        return set[static_cast<std::size_t>(kSceneBlendModeDefault)];
     }
-    const VkPipeline pipe = pipelines[index];
+    const VkPipeline pipe = set[index];
     if (pipe != VK_NULL_HANDLE) {
         return pipe;
     }
-    return pipelines[static_cast<std::size_t>(kSceneBlendModeDefault)];
+    return set[static_cast<std::size_t>(kSceneBlendModeDefault)];
 }
 
 void VulkanSpritePass::CreateGraphicsPipeline(
@@ -303,6 +310,125 @@ void VulkanSpritePass::CreateGraphicsPipeline(
     }
 }
 
+void VulkanSpritePass::CreateOffscreenLdrGraphicsPipeline(
+        const VkDevice device,
+        const VkRenderPass ldrRenderPass) {
+    if (device == VK_NULL_HANDLE || ldrRenderPass == VK_NULL_HANDLE || pipelineLayout == VK_NULL_HANDLE ||
+        vertModule == VK_NULL_HANDLE || fragModule == VK_NULL_HANDLE) {
+        return;
+    }
+    for (std::size_t i = 0; i < kSceneBlendModeCount; ++i) {
+        if (ldrOffscreenPipelines[i] != VK_NULL_HANDLE) {
+            vkDestroyPipeline(device, ldrOffscreenPipelines[i], nullptr);
+            ldrOffscreenPipelines[i] = VK_NULL_HANDLE;
+        }
+    }
+
+    VkPipelineShaderStageCreateInfo vertStage{};
+    vertStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertStage.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertStage.module = vertModule;
+    vertStage.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragStage{};
+    fragStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragStage.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragStage.module = fragModule;
+    fragStage.pName = "main";
+
+    const VkPipelineShaderStageCreateInfo stages[] = {vertStage, fragStage};
+
+    using VL = VulkanSceneVertexLayout;
+    constexpr std::uint32_t kStride = VL::kStrideBytes;
+    VkVertexInputBindingDescription bind{};
+    bind.binding = 0;
+    bind.stride = kStride;
+    bind.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription attrs[3]{};
+    attrs[0].binding = 0;
+    attrs[0].location = 0;
+    attrs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attrs[0].offset = sizeof(float) * VL::kOffPosition;
+    attrs[1].binding = 0;
+    attrs[1].location = 1;
+    attrs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attrs[1].offset = sizeof(float) * VL::kOffNormal;
+    attrs[2].binding = 0;
+    attrs[2].location = 2;
+    attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attrs[2].offset = sizeof(float) * VL::kOffTexCoord0;
+
+    VkPipelineVertexInputStateCreateInfo vtxIn{};
+    vtxIn.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vtxIn.vertexBindingDescriptionCount = 1;
+    vtxIn.pVertexBindingDescriptions = &bind;
+    vtxIn.vertexAttributeDescriptionCount = 3;
+    vtxIn.pVertexAttributeDescriptions = attrs;
+
+    VkPipelineInputAssemblyStateCreateInfo ia{};
+    ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+    VkPipelineViewportStateCreateInfo vp{};
+    vp.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    vp.viewportCount = 1;
+    vp.scissorCount = 1;
+
+    VkPipelineRasterizationStateCreateInfo rast{};
+    rast.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rast.polygonMode = VK_POLYGON_MODE_FILL;
+    rast.lineWidth = 1.0F;
+    rast.cullMode = VK_CULL_MODE_NONE;
+    rast.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+    VkPipelineMultisampleStateCreateInfo ms{};
+    ms.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    VkPipelineDepthStencilStateCreateInfo ds{};
+    ds.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    ds.depthTestEnable = VK_TRUE;
+    ds.depthWriteEnable = VK_FALSE;
+    ds.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+    VkPipelineColorBlendAttachmentState blendAtt{};
+    blendAtt.colorWriteMask = kVulkanBlendColorWriteMaskRgb;
+    VkPipelineColorBlendStateCreateInfo blend{};
+    blend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    blend.attachmentCount = 1;
+    blend.pAttachments = &blendAtt;
+
+    const VkDynamicState dynStates[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dyn{};
+    dyn.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dyn.dynamicStateCount = 2u;
+    dyn.pDynamicStates = dynStates;
+
+    VkGraphicsPipelineCreateInfo pipe{};
+    pipe.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipe.stageCount = 2;
+    pipe.pStages = stages;
+    pipe.pVertexInputState = &vtxIn;
+    pipe.pInputAssemblyState = &ia;
+    pipe.pViewportState = &vp;
+    pipe.pRasterizationState = &rast;
+    pipe.pMultisampleState = &ms;
+    pipe.pDepthStencilState = &ds;
+    pipe.pColorBlendState = &blend;
+    pipe.pDynamicState = &dyn;
+    pipe.layout = pipelineLayout;
+    pipe.renderPass = ldrRenderPass;
+    pipe.subpass = 0;
+
+    for (std::size_t mi = 0; mi < kSceneBlendModeCount; ++mi) {
+        const auto mode = static_cast<SceneBlendMode>(mi);
+        if (VulkanCreateGraphicsPipelineForBlendMode(device, pipe, mode, &ldrOffscreenPipelines[mi]) != VK_SUCCESS) {
+            throw std::runtime_error("vkCreateGraphicsPipelines (sprite LDR offscreen) failed");
+        }
+    }
+}
+
 bool VulkanSpritePass::WriteInstances(
         const std::uint32_t frameIndex,
         const SceneRenderParams& scene,
@@ -373,7 +499,10 @@ void VulkanSpritePass::DrawInstancedQuads(
         return;
     }
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, PipelineForBlendMode(blendMode));
+    vkCmdBindPipeline(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            PipelineForBlendMode(blendMode, ctx.ldrOffscreenTarget));
 
     const SpriteBatchPushConstants pc{.instanceBase = instanceBase};
     vkCmdPushConstants(

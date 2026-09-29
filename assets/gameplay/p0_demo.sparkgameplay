@@ -2,3 +2,8 @@ spark_gameplay_v1
 int p0.gems_required 3
 int p0.gem_pool_size 8
 float p0.move_speed_scale 1.0
+int p0.chaser_enabled 1
+float p0.chaser_speed_scale 0.92
+int p0.patrol_enabled 1
+float p0.patrol_speed_scale 0.75
+float p0.gem_dissolve_seconds 0.45

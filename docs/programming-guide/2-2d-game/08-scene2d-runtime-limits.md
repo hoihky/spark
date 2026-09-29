@@ -20,7 +20,7 @@ Spark submits 2D draws through `SceneRenderParams`. External editors should trea
 2. Add `Scene2DCompositeViewComponent` with `Scene2DCompositeFeature` (`Minimap`, `FogOfWarMask`, `SceneOutline`), screen rect, and ortho capture center/extent.
 3. Each frame, `FillStandardLitSceneFromWorld` calls `CollectScene2DCompositeViews` so descriptors ride along with the main submit.
 
-**P0 minimap:** `GameFlow2DProductPathDemo` captures tilemaps/sprites into a `RenderTexture` via `VulkanScene2DCompositeCapture` (orthographic resubmit), copies the color into a HUD `uiTextures` layer, and draws the frame with `PatchScene2DMinimapHud`. CPU walkability tint (`RebuildMinimapTextureFromGameplayGrid`) remains available when GPU capture is disabled.
+**P0 minimap:** `Scene2DCompositeViewComponent` on the flow object (feature `Minimap`, `target` + `hudTexture`) is collected each submit; `VulkanScene2DCompositeCapture` ortho-resubmits tilemaps/sprites, then blits into the HUD `uiTextures` layer. `PatchScene2DMinimapHud` draws the player dot using the same ortho bounds as capture (`ComputeMinimapOrthoBoundsSquare`). CPU walkability tint remains when GPU capture is disabled.
 
 ## Parametric sprite FX
 

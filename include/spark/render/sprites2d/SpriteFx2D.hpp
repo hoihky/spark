@@ -11,10 +11,19 @@ namespace Spark {
 /** Helpers for parametric sprite FX (uses <c>SpriteLighting2DComponent</c> modes 13–15). */
 namespace SpriteFx2D {
 
-inline void ApplyHitFlash(SpriteLighting2DComponent& lighting, const Vector4& flashColor, const float decaySeconds) noexcept {
+/** @p sceneTimeSeconds is written to param1.y (see <c>sprite.frag</c> mode 13). */
+inline void ApplyHitFlashAtSceneTime(
+        SpriteLighting2DComponent& lighting,
+        const Vector4& flashColor,
+        const float decaySeconds,
+        const float sceneTimeSeconds) noexcept {
     lighting.SetMode(SpriteLighting2DMode::HitFlash);
     lighting.SetParam0(flashColor);
-    lighting.SetParam1({std::max(0.01F, decaySeconds), 0.0F, 0.0F, 0.0F});
+    lighting.SetParam1({std::max(0.01F, decaySeconds), sceneTimeSeconds, 0.0F, 0.0F});
+}
+
+inline void ApplyHitFlash(SpriteLighting2DComponent& lighting, const Vector4& flashColor, const float decaySeconds) noexcept {
+    ApplyHitFlashAtSceneTime(lighting, flashColor, decaySeconds, 0.0F);
 }
 
 inline void ApplyOutline(
@@ -35,6 +44,17 @@ inline void ApplyDissolve(
         const float scrollSpeed) noexcept {
     lighting.SetMode(SpriteLighting2DMode::Dissolve);
     lighting.SetParam0({edge, noiseScale, softness, scrollSpeed});
+}
+
+/** @p progress01 0 = visible, 1 = fully dissolved (see <c>sprite.frag</c> mode 15). */
+inline void ApplyDissolveProgress(
+        SpriteLighting2DComponent& lighting,
+        const float progress01,
+        const float noiseScale = 8.0F,
+        const float softness = 0.08F,
+        const float scrollSpeed = 1.5F) noexcept {
+    const float edge = std::clamp(progress01, 0.0F, 1.0F);
+    ApplyDissolve(lighting, edge, noiseScale, softness, scrollSpeed);
 }
 
 }  // namespace SpriteFx2D

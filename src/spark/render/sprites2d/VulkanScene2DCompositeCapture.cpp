@@ -5,6 +5,7 @@
 #include "spark/render/scene/VulkanOffscreenRenderTarget.hpp"
 #include "spark/scene/camera/Camera2D.hpp"
 #include "spark/scene/render/RenderTexture.hpp"
+#include "spark/scene/render/RenderTextureFormat.hpp"
 
 #include <algorithm>
 
@@ -80,9 +81,16 @@ void VulkanScene2DCompositeCapture::Record(VkCommandBuffer commandBuffer, const 
         clears[0].color = {{0.78F, 0.70F, 0.55F, 1.0F}};
         clears[1].depthStencil = {1.0F, 0};
 
+        const bool ldrCapture = rt.GetColorFormat() == RenderTextureFormat::Rgba8Unorm;
+        const VkRenderPass captureRenderPass =
+                ctx.renderTargets != nullptr ? ctx.renderTargets->RenderPassFor(rt) : ctx.hdrRenderPass;
+        if (captureRenderPass == VK_NULL_HANDLE) {
+            continue;
+        }
+
         VkRenderPassBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        beginInfo.renderPass = ctx.hdrRenderPass;
+        beginInfo.renderPass = captureRenderPass;
         beginInfo.framebuffer = gpu->Framebuffer();
         beginInfo.renderArea.offset = {0, 0};
         beginInfo.renderArea.extent = rtExtent;
@@ -100,6 +108,7 @@ void VulkanScene2DCompositeCapture::Record(VkCommandBuffer commandBuffer, const 
                 .quadFirstIndex = ctx.quadFirstIndex,
                 .quadIndexCount = ctx.quadIndexCount,
                 .descriptorSet = ctx.descriptors->DescriptorSet(ctx.frameIndex),
+                .ldrOffscreenTarget = ldrCapture,
         };
         const VulkanSpriteRecordContext spriteCtx{
                 .scene = ctx.scene,
@@ -111,6 +120,7 @@ void VulkanScene2DCompositeCapture::Record(VkCommandBuffer commandBuffer, const 
                 .quadFirstIndex = ctx.quadFirstIndex,
                 .quadIndexCount = ctx.quadIndexCount,
                 .descriptorSet = ctx.descriptors->DescriptorSet(ctx.frameIndex),
+                .ldrOffscreenTarget = ldrCapture,
         };
         ctx.compositePass->Record(commandBuffer, *ctx.tilemapPass, *ctx.spritePass, tilemapCtx, spriteCtx);
 

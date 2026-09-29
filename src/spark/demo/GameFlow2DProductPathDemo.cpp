@@ -35,7 +35,11 @@
 #include "spark/ai/path/IGridWalkability.hpp"
 #include "spark/ecs/components/ai/GridNavAgent2DComponent.hpp"
 #include "spark/render/IRenderTargetService.hpp"
+#include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/render/sprites2d/Scene2DMinimap.hpp"
+#include "spark/render/sprites2d/SpriteFx2D.hpp"
+#include "spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp"
+#include "spark/ecs/components/rendering/SpriteLighting2DComponent.hpp"
 #include "spark/scene/spawn/GameObjectPool.hpp"
 
 #include <algorithm>
@@ -54,6 +58,7 @@ struct ProductPathSpawnBindings {
     GameObject* flowObject = nullptr;
     GameObject** goalObject = nullptr;
     int gemsRequired = 3;
+    float sceneTimeSeconds = 0.0F;
 };
 
 ProductPathSpawnBindings g_bindings{};
@@ -79,6 +84,11 @@ void ConfigureSpawnedGem(
                 Vector4{0.0F, 0.0F, 1.0F, 1.0F},
                 80);
     }
+    if (SpriteLighting2DComponent* lighting = gem.GetComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyOutline(*lighting, {1.0F, 0.92F, 0.25F, 1.0F}, 2.0F, 1.1F);
+    } else if (SpriteLighting2DComponent* added = gem.AddComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyOutline(*added, {1.0F, 0.92F, 0.25F, 1.0F}, 2.0F, 1.1F);
+    }
     if (gem.GetComponent<TriggerVolume2DComponent>() == nullptr) {
         if (TriggerVolume2DComponent* trigger = gem.AddComponent<TriggerVolume2DComponent>(
                     TriggerVolume2DShape::Circle,
@@ -95,16 +105,71 @@ void ConfigureSpawnedGem(
         pickup = gem.AddComponent<PickupComponent>();
     }
     pickup->SetItemId("gem");
+    pickup->SetDestroyOwnerOnCollect(false);
+    pickup->ResetForRespawn();
     pickup->SetOnCollected([&gem](GameObject& /*collector*/, const char*, int) {
         if (g_bindings.demo != nullptr) {
-            g_bindings.demo->OnGemPickedUp();
-        }
-        if (g_bindings.gemPool != nullptr) {
-            g_bindings.gemPool->Release(kP0GemPrefabPath, &gem);
-        } else {
-            gem.SetActive(false);
+            g_bindings.demo->BeginGemPickupDissolve(gem, g_bindings.sceneTimeSeconds);
         }
     });
+}
+
+void BuildPatrolRouteAroundSpawn(
+        const IGridWalkability& walk,
+        const TilemapGridFrame& frame,
+        const GridPathfinder::Cell& spawnCell,
+        const GridPathfinder::Cell& playerCell,
+        Array<GridPathfinder::Cell>& route) noexcept {
+    route.Clear();
+    Array<GridPathfinder::Cell> reachable{};
+    CollectReachableWalkableCells(walk, spawnCell, reachable);
+    if (reachable.GetSize() < 4U) {
+        return;
+    }
+
+    Vector2 centroid{0.0F, 0.0F};
+    for (std::size_t i = 0; i < reachable.GetSize(); ++i) {
+        const Vector2 w = frame.CellCenterToWorldXY(reachable[i]);
+        centroid.x += w.x;
+        centroid.y += w.y;
+    }
+    centroid.x /= static_cast<float>(reachable.GetSize());
+    centroid.y /= static_cast<float>(reachable.GetSize());
+
+    struct ScoredCell {
+        float angle = 0.0F;
+        GridPathfinder::Cell cell{};
+    };
+    Array<ScoredCell> scored{};
+    for (std::size_t i = 0; i < reachable.GetSize(); ++i) {
+        const GridPathfinder::Cell& cell = reachable[i];
+        if (cell.x == playerCell.x && cell.y == playerCell.y) {
+            continue;
+        }
+        const Vector2 w = frame.CellCenterToWorldXY(cell);
+        ScoredCell entry{};
+        entry.angle = std::atan2(w.y - centroid.y, w.x - centroid.x);
+        entry.cell = cell;
+        scored.PushBack(entry);
+    }
+    if (scored.GetSize() < 4U) {
+        return;
+    }
+    for (std::size_t i = 1; i < scored.GetSize(); ++i) {
+        const ScoredCell key = scored[i];
+        std::size_t j = i;
+        while (j > 0U && scored[j - 1U].angle > key.angle) {
+            scored[j] = scored[j - 1U];
+            --j;
+        }
+        scored[j] = key;
+    }
+
+    constexpr std::size_t kPatrolStops = 4U;
+    for (std::size_t k = 0; k < kPatrolStops; ++k) {
+        const std::size_t idx = (k * scored.GetSize()) / kPatrolStops;
+        route.PushBack(scored[idx].cell);
+    }
 }
 
 SharedPtr<Texture2D> MakeGemTexture() {
@@ -362,6 +427,9 @@ void GameFlow2DProductPathDemo::TryCollectNearbyGems(GameWorld& world) noexcept 
         if (object == nullptr || object == playerObject) {
             return;
         }
+        if (IsGemDissolving(*object)) {
+            return;
+        }
         PickupComponent* pickup = object->GetComponent<PickupComponent>();
         if (pickup == nullptr || pickup->IsCollected()) {
             return;
@@ -469,6 +537,335 @@ void GameFlow2DProductPathDemo::RebuildMinimapIfNeeded() noexcept {
     minimapDirty = false;
 }
 
+void GameFlow2DProductPathDemo::SetupMinimapCompositeView(IEngineContext& context) noexcept {
+    if (flowObject == nullptr) {
+        return;
+    }
+    EnsureMinimapGpuResources(context);
+    minimapCompositeView = flowObject->GetComponent<Scene2DCompositeViewComponent>();
+    if (minimapCompositeView == nullptr) {
+        minimapCompositeView = flowObject->AddComponent<Scene2DCompositeViewComponent>();
+    }
+    minimapCompositeView->SetFeature(Scene2DCompositeFeature::Minimap);
+    minimapCompositeView->SetTarget(minimapRenderTexture);
+    minimapCompositeView->SetHudTexture(minimapHudTexture);
+    minimapCompositeView->SetEnabled(useGpuMinimap);
+    SyncMinimapCompositeView();
+}
+
+void GameFlow2DProductPathDemo::SyncMinimapCompositeView() noexcept {
+    if (minimapCompositeView == nullptr || walkGrid == nullptr) {
+        return;
+    }
+    const Scene2DMinimapOrthoBounds ortho = ComputeMinimapOrthoBoundsSquare(walkGrid->GetGridFrame());
+    minimapCompositeView->SetWorldCapture(ortho.worldCenter, ortho.worldHalfHeight);
+    minimapCompositeView->SetTarget(minimapRenderTexture);
+    minimapCompositeView->SetHudTexture(minimapHudTexture);
+    minimapCompositeView->SetEnabled(useGpuMinimap && static_cast<bool>(minimapRenderTexture));
+}
+
+void GameFlow2DProductPathDemo::SetupProductChaser(
+        GameWorld& world,
+        const GridPathfinder::Cell& spawnCell) noexcept {
+    if (!chaserEnabled || levelRoot == nullptr || walkGrid == nullptr || !playerSpawnResolved) {
+        chaserObject = nullptr;
+        chaserNav = nullptr;
+        chaserRb = nullptr;
+        return;
+    }
+
+    const TilemapGridFrame& frame = walkGrid->GetGridFrame();
+    Array<GridPathfinder::Cell> reachable{};
+    CollectReachableWalkableCells(walkGrid->GetWalkability(), spawnCell, reachable);
+    GridPathfinder::Cell chaserCell = spawnCell;
+    float bestDist = -1.0F;
+    const Vector2 spawnWorld = frame.CellCenterToWorldXY(spawnCell);
+    for (std::size_t i = 0; i < reachable.GetSize(); ++i) {
+        const GridPathfinder::Cell& cell = reachable[i];
+        if (cell.x == playerSpawnCell.x && cell.y == playerSpawnCell.y) {
+            continue;
+        }
+        const Vector2 w = frame.CellCenterToWorldXY(cell);
+        const float dx = w.x - spawnWorld.x;
+        const float dy = w.y - spawnWorld.y;
+        const float d2 = dx * dx + dy * dy;
+        if (d2 > bestDist) {
+            bestDist = d2;
+            chaserCell = cell;
+        }
+    }
+
+    if (chaserObject == nullptr) {
+        chaserObject = world.CreateGameObject();
+        chaserObject->GetName() = Utf8String("P0Chaser");
+        roots.Track(chaserObject);
+    }
+
+    const Vector2 center = frame.CellCenterToWorldXY(chaserCell);
+    TransformComponent* tr = chaserObject->GetComponent<TransformComponent>();
+    if (tr == nullptr) {
+        tr = chaserObject->AddComponent<TransformComponent>();
+    }
+    const float scale = std::max(frame.cellSize * 0.65F, 0.55F);
+    tr->SetTranslation({center.x, center.y, 0.07F});
+    tr->SetScale({scale, scale, 1.0F});
+
+    SharedPtr<Texture2D> chaserTex = MakeShared<Texture2D>(Utf8String("P0Chaser"));
+    *chaserTex = Texture2D::CreateSolid(14, 14, Vector3{0.92F, 0.28F, 0.32F}, 1.0F);
+    if (chaserObject->GetComponent<SpriteComponent>() == nullptr) {
+        chaserObject->AddComponent<SpriteComponent>(
+                chaserTex,
+                Vector4{1.0F, 1.0F, 1.0F, 1.0F},
+                Vector4{0.0F, 0.0F, 1.0F, 1.0F},
+                90);
+    }
+    if (SpriteLighting2DComponent* fx = chaserObject->GetComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyOutline(*fx, {0.15F, 0.05F, 0.08F, 1.0F}, 2.5F, 1.0F);
+    } else if (SpriteLighting2DComponent* added = chaserObject->AddComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyOutline(*added, {0.15F, 0.05F, 0.08F, 1.0F}, 2.5F, 1.0F);
+    }
+
+    if (chaserObject->GetComponent<BoxCollider2DComponent>() == nullptr) {
+        auto* col = chaserObject->AddComponent<BoxCollider2DComponent>();
+        col->SetHalfExtents({scale * 0.45F, scale * 0.45F});
+    }
+    chaserRb = chaserObject->GetComponent<Rigidbody2DComponent>();
+    if (chaserRb == nullptr) {
+        chaserRb = chaserObject->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Dynamic, 0.0F);
+        chaserRb->SetGravityScale(0.0F);
+    }
+
+    chaserNav = chaserObject->GetComponent<GridNavAgent2DComponent>();
+    if (chaserNav == nullptr) {
+        chaserNav = chaserObject->AddComponent<GridNavAgent2DComponent>();
+    }
+    chaserNav->SetGridSourceObject(levelRoot);
+    chaserNav->SetGoalMode(GridNavGoalMode2D::TargetObject);
+    chaserNav->SetGoalTarget(playerObject);
+    chaserNav->SetRepathEveryFrame(false);
+    chaserNav->SetRepathIntervalSeconds(0.35F);
+    chaserNav->SetSyncToAiAgent(false);
+    chaserNav->RequestRepath();
+}
+
+bool GameFlow2DProductPathDemo::IsGemDissolving(const GameObject& gem) const noexcept {
+    for (std::size_t i = 0; i < gemDissolvePending.GetSize(); ++i) {
+        if (gemDissolvePending[i].gem == &gem) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void GameFlow2DProductPathDemo::BeginGemPickupDissolve(GameObject& gem, const float sceneTimeSecondsIn) noexcept {
+    if (IsGemDissolving(gem)) {
+        return;
+    }
+    OnGemPickedUp(sceneTimeSecondsIn);
+
+    GemDissolvePending pending{};
+    pending.gem = &gem;
+    pending.startTimeSeconds = sceneTimeSecondsIn;
+    if (const TransformComponent* tr = gem.GetComponent<TransformComponent>()) {
+        const Vector3 scale = tr->GetLocalTransform().scale;
+        pending.baseScale = {scale.x, scale.y};
+    }
+    gemDissolvePending.PushBack(pending);
+
+    if (PickupComponent* pickup = gem.GetComponent<PickupComponent>()) {
+        pickup->SetAutoCollectOnTriggerEnter(false);
+    }
+
+    if (SpriteLighting2DComponent* lighting = gem.GetComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyDissolveProgress(*lighting, 0.0F);
+    } else if (SpriteLighting2DComponent* added = gem.AddComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyDissolveProgress(*added, 0.0F);
+    }
+}
+
+void GameFlow2DProductPathDemo::FinishGemDissolve(GameObject& gem) noexcept {
+    if (g_bindings.gemPool != nullptr) {
+        if (PickupComponent* pickup = gem.GetComponent<PickupComponent>()) {
+            pickup->ResetForRespawn();
+            pickup->SetAutoCollectOnTriggerEnter(true);
+        }
+        if (TransformComponent* tr = gem.GetComponent<TransformComponent>()) {
+            tr->SetScale({1.0F, 1.0F, 1.0F});
+        }
+        if (SpriteLighting2DComponent* lighting = gem.GetComponent<SpriteLighting2DComponent>()) {
+            SpriteFx2D::ApplyOutline(*lighting, {1.0F, 0.92F, 0.25F, 1.0F}, 2.0F, 1.1F);
+        }
+        g_bindings.gemPool->Release(kP0GemPrefabPath, &gem);
+    } else {
+        gem.SetActive(false);
+    }
+}
+
+void GameFlow2DProductPathDemo::TickGemPickupDissolves() noexcept {
+    if (gemDissolvePending.IsEmpty()) {
+        return;
+    }
+    const float duration = std::max(gemDissolveSeconds, 0.05F);
+    std::size_t write = 0U;
+    for (std::size_t i = 0; i < gemDissolvePending.GetSize(); ++i) {
+        GemDissolvePending& pending = gemDissolvePending[i];
+        GameObject* gem = pending.gem;
+        if (gem == nullptr || !gem->IsActiveInHierarchy()) {
+            continue;
+        }
+        const float t = (sceneTimeSeconds - pending.startTimeSeconds) / duration;
+        const float progress = std::clamp(t, 0.0F, 1.0F);
+        if (SpriteLighting2DComponent* lighting = gem->GetComponent<SpriteLighting2DComponent>()) {
+            SpriteFx2D::ApplyDissolveProgress(*lighting, progress);
+        }
+        if (TransformComponent* tr = gem->GetComponent<TransformComponent>()) {
+            const float shrink = 1.0F - progress * 0.35F;
+            tr->SetScale({pending.baseScale.x * shrink, pending.baseScale.y * shrink, 1.0F});
+        }
+        if (t >= 1.0F) {
+            FinishGemDissolve(*gem);
+            continue;
+        }
+        if (write != i) {
+            gemDissolvePending[write] = pending;
+        }
+        ++write;
+    }
+    gemDissolvePending.Resize(write);
+}
+
+void GameFlow2DProductPathDemo::SetupProductPatrol(
+        GameWorld& world,
+        const GridPathfinder::Cell& spawnCell) noexcept {
+    patrolRoute.Clear();
+    patrolWaypointIndex = 0U;
+    patrolAwaitingNextGoal = true;
+
+    if (!patrolEnabled || levelRoot == nullptr || walkGrid == nullptr || !playerSpawnResolved) {
+        if (patrolObject != nullptr) {
+            patrolObject->SetActive(false);
+        }
+        return;
+    }
+
+    const TilemapGridFrame& frame = walkGrid->GetGridFrame();
+    BuildPatrolRouteAroundSpawn(
+            walkGrid->GetWalkability(), frame, spawnCell, playerSpawnCell, patrolRoute);
+    if (patrolRoute.IsEmpty()) {
+        return;
+    }
+
+    if (patrolObject == nullptr) {
+        patrolObject = world.CreateGameObject();
+        patrolObject->GetName() = Utf8String("P0Patrol");
+        roots.Track(patrolObject);
+    }
+
+    const Vector2 start = frame.CellCenterToWorldXY(patrolRoute[0U]);
+    TransformComponent* tr = patrolObject->GetComponent<TransformComponent>();
+    if (tr == nullptr) {
+        tr = patrolObject->AddComponent<TransformComponent>();
+    }
+    const float scale = std::max(frame.cellSize * 0.62F, 0.52F);
+    tr->SetTranslation({start.x, start.y, 0.065F});
+    tr->SetScale({scale, scale, 1.0F});
+
+    SharedPtr<Texture2D> patrolTex = MakeShared<Texture2D>(Utf8String("P0Patrol"));
+    *patrolTex = Texture2D::CreateSolid(14, 14, Vector3{0.32F, 0.78F, 0.55F}, 1.0F);
+    if (patrolObject->GetComponent<SpriteComponent>() == nullptr) {
+        patrolObject->AddComponent<SpriteComponent>(
+                patrolTex,
+                Vector4{1.0F, 1.0F, 1.0F, 1.0F},
+                Vector4{0.0F, 0.0F, 1.0F, 1.0F},
+                85);
+    }
+    if (SpriteLighting2DComponent* fx = patrolObject->GetComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyOutline(*fx, {0.05F, 0.12F, 0.10F, 1.0F}, 2.0F, 1.0F);
+    } else if (SpriteLighting2DComponent* added = patrolObject->AddComponent<SpriteLighting2DComponent>()) {
+        SpriteFx2D::ApplyOutline(*added, {0.05F, 0.12F, 0.10F, 1.0F}, 2.0F, 1.0F);
+    }
+
+    if (patrolObject->GetComponent<BoxCollider2DComponent>() == nullptr) {
+        auto* col = patrolObject->AddComponent<BoxCollider2DComponent>();
+        col->SetHalfExtents({scale * 0.42F, scale * 0.42F});
+    }
+    patrolRb = patrolObject->GetComponent<Rigidbody2DComponent>();
+    if (patrolRb == nullptr) {
+        patrolRb = patrolObject->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Dynamic, 0.0F);
+        patrolRb->SetGravityScale(0.0F);
+    }
+
+    patrolNav = patrolObject->GetComponent<GridNavAgent2DComponent>();
+    if (patrolNav == nullptr) {
+        patrolNav = patrolObject->AddComponent<GridNavAgent2DComponent>();
+    }
+    patrolNav->SetGridSourceObject(levelRoot);
+    patrolNav->SetGoalMode(GridNavGoalMode2D::GridCell);
+    patrolNav->SetRepathEveryFrame(false);
+    patrolNav->SetRepathIntervalSeconds(0.5F);
+    patrolNav->SetSyncToAiAgent(false);
+    patrolObject->SetActive(true);
+    patrolWaypointIndex = 1U % patrolRoute.GetSize();
+    patrolAwaitingNextGoal = true;
+    patrolNav->ClearPath();
+}
+
+void GameFlow2DProductPathDemo::TickProductPatrolAssignGoals() noexcept {
+    if (!patrolEnabled || patrolObject == nullptr || patrolNav == nullptr || patrolRoute.IsEmpty() ||
+        !patrolObject->IsActiveInHierarchy()) {
+        return;
+    }
+    if (!patrolAwaitingNextGoal || patrolNav->HasPath()) {
+        return;
+    }
+    patrolNav->SetGoalMode(GridNavGoalMode2D::GridCell);
+    patrolNav->SetGoalCell(patrolRoute[patrolWaypointIndex]);
+    patrolNav->RequestRepath();
+    patrolAwaitingNextGoal = false;
+}
+
+void GameFlow2DProductPathDemo::TickProductPatrolMotion(const FrameTiming& timing) noexcept {
+    if (!patrolEnabled || patrolObject == nullptr || patrolNav == nullptr || patrolRb == nullptr ||
+        patrolRoute.IsEmpty() || !patrolObject->IsActiveInHierarchy()) {
+        return;
+    }
+    if (!patrolNav->HasPath()) {
+        if (!patrolAwaitingNextGoal) {
+            patrolAwaitingNextGoal = true;
+            patrolWaypointIndex = (patrolWaypointIndex + 1U) % patrolRoute.GetSize();
+        }
+        patrolRb->SetVelocity(Vector2::Zero);
+        return;
+    }
+    TransformComponent* tr = patrolObject->GetComponent<TransformComponent>();
+    if (tr == nullptr) {
+        return;
+    }
+    const float cell = walkGrid != nullptr ? walkGrid->GetGridFrame().cellSize : 1.0F;
+    const float speed = cell * 1.65F * patrolSpeedScale;
+    const float arrive = cell * 0.14F;
+    if (!ApplyGridNavAgent2DRigidbodyMotion(*patrolNav, *tr, *patrolRb, speed, arrive, timing.deltaTimeSeconds)) {
+        patrolRb->SetVelocity(Vector2::Zero);
+    }
+}
+
+void GameFlow2DProductPathDemo::TickProductChaser(const FrameTiming& timing) noexcept {
+    if (!chaserEnabled || chaserObject == nullptr || chaserNav == nullptr || chaserRb == nullptr ||
+        playerObject == nullptr || !chaserObject->IsActiveInHierarchy()) {
+        return;
+    }
+    TransformComponent* tr = chaserObject->GetComponent<TransformComponent>();
+    if (tr == nullptr) {
+        return;
+    }
+    const float cell = walkGrid != nullptr ? walkGrid->GetGridFrame().cellSize : 1.0F;
+    const float speed = cell * 2.1F * chaserSpeedScale;
+    const float arrive = cell * 0.14F;
+    if (!ApplyGridNavAgent2DSteeringMotion(*chaserNav, *tr, *chaserRb, speed, arrive, timing.deltaTimeSeconds)) {
+        chaserRb->SetVelocity(Vector2::Zero);
+    }
+}
+
 void GameFlow2DProductPathDemo::EnsureMinimapGpuResources(IEngineContext& context) noexcept {
     if (!useGpuMinimap) {
         return;
@@ -574,6 +971,8 @@ void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
     physics.GetQueries2D().RebuildStatics(world);
 
     SetupPlayerNavigation();
+    SetupProductChaser(world, playerSpawnCell);
+    SetupProductPatrol(world, playerSpawnCell);
     minimapDirty = true;
     RebuildMinimapIfNeeded();
 
@@ -595,6 +994,7 @@ void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
         physics.SetBroadPhaseCellSize2D(std::max(cell * 0.5F, 0.25F));
     }
     SyncCameraToPlayer(tilemap);
+    SyncMinimapCompositeView();
 
     gemsCollected = persistent.progress.gemsCollected;
     if (gemsCollected >= gemsRequired && goalObject != nullptr) {
@@ -617,7 +1017,14 @@ void GameFlow2DProductPathDemo::SyncCameraToPlayer(const TilemapComponent* tilem
     camera.halfExtentY = cameraHalfExtentY;
 }
 
-void GameFlow2DProductPathDemo::OnGemPickedUp() noexcept {
+void GameFlow2DProductPathDemo::OnGemPickedUp(const float sceneTimeAtPickup) noexcept {
+    if (playerSpriteFx != nullptr) {
+        SpriteFx2D::ApplyHitFlashAtSceneTime(
+                *playerSpriteFx,
+                {1.0F, 0.95F, 0.45F, 1.25F},
+                0.35F,
+                sceneTimeAtPickup);
+    }
     ++gemsCollected;
     persistent.progress.gemsCollected = gemsCollected;
     if (gemsCollected >= gemsRequired && goalObject != nullptr) {
@@ -669,6 +1076,11 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     gemsCollected = 0;
     gemsRequired = 3;
     moveSpeedScale = 1.0F;
+    chaserSpeedScale = 0.92F;
+    chaserEnabled = true;
+    patrolEnabled = true;
+    patrolSpeedScale = 0.75F;
+    gemDissolveSeconds = 0.45F;
     gemPoolSize = 8U;
     persistent = GameFlowPersistentData{};
     flow.LoadProgressFromDisk(GameSave::DefaultSlotPath("p0_demo").CStr());
@@ -681,7 +1093,13 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
         gemsRequired = gameplayTable.GetInt("p0.gems_required", gemsRequired);
         gemPoolSize = static_cast<std::uint32_t>(gameplayTable.GetInt("p0.gem_pool_size", static_cast<int>(gemPoolSize)));
         moveSpeedScale = gameplayTable.GetFloat("p0.move_speed_scale", moveSpeedScale);
+        chaserEnabled = gameplayTable.GetInt("p0.chaser_enabled", chaserEnabled ? 1 : 0) != 0;
+        chaserSpeedScale = gameplayTable.GetFloat("p0.chaser_speed_scale", chaserSpeedScale);
+        patrolEnabled = gameplayTable.GetInt("p0.patrol_enabled", patrolEnabled ? 1 : 0) != 0;
+        patrolSpeedScale = gameplayTable.GetFloat("p0.patrol_speed_scale", patrolSpeedScale);
+        gemDissolveSeconds = gameplayTable.GetFloat("p0.gem_dissolve_seconds", gemDissolveSeconds);
     }
+    sceneTimeSeconds = 0.0F;
 
     sceneManager = MakeUnique<SceneManager>(world);
     loadSession = MakeUnique<SceneLoadSession>(*sceneManager);
@@ -716,14 +1134,16 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     playerCollider->SetHalfExtents({0.35F, 0.35F});
     playerRb = playerObject->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Dynamic, 0.0F);
     playerRb->SetGravityScale(0.0F);
+    playerSpriteFx = playerObject->AddComponent<SpriteLighting2DComponent>();
     roots.Track(playerObject);
 
     RebuildAuthoredLevel(world);
     EnsureMinimapGpuResources(context);
+    SetupMinimapCompositeView(context);
 
     helpHud.Mount(world, "2D P0 product path");
     helpHud.SetControlHints(
-            "WASD move | Left-click path | Wheel/+/- zoom | Enter start | P pause | R reload | F5/F7 save/load");
+            "WASD | click path | green patrol loop | red chaser | gem dissolve+flash | P pause | R reload");
     RefreshHud();
     context.GetInput().SetCursorCaptured(false);
 }
@@ -749,6 +1169,18 @@ void GameFlow2DProductPathDemo::Unload(GameWorld& world) {
     playerCollider = nullptr;
     playerSpawnResolved = false;
     playerNav = nullptr;
+    playerSpriteFx = nullptr;
+    chaserObject = nullptr;
+    chaserNav = nullptr;
+    chaserRb = nullptr;
+    patrolObject = nullptr;
+    patrolNav = nullptr;
+    patrolRb = nullptr;
+    patrolRoute.Clear();
+    patrolWaypointIndex = 0U;
+    patrolAwaitingNextGoal = true;
+    gemDissolvePending.Clear();
+    minimapCompositeView = nullptr;
     minimapTexture.Reset();
     minimapHudTexture.Reset();
     minimapRenderTexture.Reset();
@@ -764,6 +1196,8 @@ void GameFlow2DProductPathDemo::Unload(GameWorld& world) {
 
 void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world) {
     const float dt = timing.deltaTimeSeconds;
+    sceneTimeSeconds += dt;
+    g_bindings.sceneTimeSeconds = sceneTimeSeconds;
     IInput& input = context.GetInput();
 
     const float scroll = input.GetScrollDeltaY();
@@ -825,9 +1259,15 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
         fbH = 1;
     }
 
-    if (canMove && walkGrid != nullptr && playerNav != nullptr) {
+    if (canMove && walkGrid != nullptr) {
+        TickProductPatrolAssignGoals();
         ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
+        TickProductPatrolMotion(timing);
+        TickProductChaser(timing);
+        SyncMinimapCompositeView();
+    }
 
+    if (canMove && walkGrid != nullptr && playerNav != nullptr) {
         if (input.IsMouseButtonPressedThisFrame(GLFW_MOUSE_BUTTON_LEFT)) {
             float mx = 0.0F;
             float my = 0.0F;
@@ -904,6 +1344,7 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
     }
 
     physics.Simulate2D(world, timing);
+    TickGemPickupDissolves();
     CorrectPlayerAgainstBlockedGrid();
     TryCollectNearbyGems(world);
     TryReachGoal();
@@ -944,13 +1385,7 @@ void GameFlow2DProductPathDemo::Render(Scene& /*scene*/, GameWorld& world, IEngi
     SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {
         helpHud.PatchSceneRenderParams(*sceneParams, world);
-        if (useGpuMinimap && minimapRenderTexture && minimapHudTexture && walkGrid != nullptr) {
-            AppendGpuMinimapCompositeCapture(
-                    *sceneParams,
-                    minimapRenderTexture,
-                    minimapHudTexture,
-                    walkGrid->GetGridFrame());
-        } else {
+        if (!useGpuMinimap) {
             RebuildMinimapIfNeeded();
         }
         if (minimapTexture && walkGrid != nullptr && playerTr != nullptr) {

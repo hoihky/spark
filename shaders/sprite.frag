@@ -198,7 +198,9 @@ void main() {
 
     if (vLightingMode == 13) {
         float decay = max(0.01, vLightingB.x);
-        float t = exp(-ubo.timeGlobal.x / decay);
+        float start = vLightingB.y;
+        float age = max(0.0, ubo.timeGlobal.x - start);
+        float t = exp(-age / decay);
         vec3 flash = vLightingA.rgb * max(0.0, vLightingA.w) * t;
         outColor = vec4(base.rgb + flash, base.a);
         return;

@@ -45,6 +45,12 @@ public:
 
     [[nodiscard]] bool IsCollected() const noexcept { return collected; }
 
+    /** Pool / respawn: clears collected state without running callbacks. */
+    void ResetForRespawn() noexcept {
+        collected = false;
+        pendingDestroyOwner = false;
+    }
+
     /** Attempts collection once; returns true on first successful collect. */
     bool TryCollect(GameObject& collector) noexcept;
 

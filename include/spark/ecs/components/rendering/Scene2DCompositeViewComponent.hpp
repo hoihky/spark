@@ -4,6 +4,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/scene/render/RenderTexture.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
 
@@ -19,6 +20,9 @@ public:
 
     void SetTarget(SharedPtr<RenderTexture> texture) noexcept { target = MoveTemp(texture); }
     [[nodiscard]] const SharedPtr<RenderTexture>& GetTarget() const noexcept { return target; }
+
+    void SetHudTexture(SharedPtr<Texture2D> texture) noexcept { hudTexture = MoveTemp(texture); }
+    [[nodiscard]] const SharedPtr<Texture2D>& GetHudTexture() const noexcept { return hudTexture; }
 
     void SetScreenRect(const float x, const float y, const float w, const float h) noexcept {
         screenX = x;
@@ -40,6 +44,7 @@ public:
 private:
     Scene2DCompositeFeature feature = Scene2DCompositeFeature::Minimap;
     SharedPtr<RenderTexture> target{};
+    SharedPtr<Texture2D> hudTexture{};
     float screenX = 0.82F;
     float screenY = 0.02F;
     float screenW = 0.16F;

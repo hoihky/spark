@@ -6,6 +6,7 @@ Scene2DCompositeViewDesc Scene2DCompositeViewComponent::BuildDesc() const noexce
     Scene2DCompositeViewDesc desc{};
     desc.feature = feature;
     desc.target = target;
+    desc.hudTexture = hudTexture;
     desc.screenX = screenX;
     desc.screenY = screenY;
     desc.screenW = screenW;

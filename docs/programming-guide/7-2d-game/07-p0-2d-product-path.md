@@ -15,6 +15,14 @@ This page documents the blessed patterns for shipping a code-first 2D game on Sp
 
 **Reference:** Run shell demo **#26 / hotkey F — “2D P0 product path”** (`GameFlow2DProductPathDemo`). The teaching **platformer** (`Platformer2DDemo`) keeps the classic procedural layout for playability.
 
+## Sprite FX, grid AI, composite minimap
+
+| Topic | P0 demo behavior |
+|--------|------------------|
+| **Sprite FX** | Gems use `ApplyOutline`; pickup runs `ApplyDissolveProgress` then returns to the pool (`p0.gem_dissolve_seconds`). Player gets `ApplyHitFlashAtSceneTime` (`sprite.frag` modes 13–15). |
+| **2D AI** | Green **patrol** loops four walkable waypoints (`GridCell` goals + steering). Red **chaser** pursues the player. Tune `p0.patrol_*`, `p0.chaser_*` in `gameplay/p0_demo.sparkgameplay`. |
+| **Composite view** | `Scene2DCompositeViewComponent` on `P0GameFlow` drives GPU minimap capture (see [runtime limits](08-scene2d-runtime-limits.md)). |
+
 ## Scene flow (title → play → pause → victory → reload)
 
 | Concern | Where it lives |

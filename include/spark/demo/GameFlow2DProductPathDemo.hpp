@@ -16,6 +16,7 @@
 #include "spark/scene/core/SceneManager.hpp"
 #include "spark/scene/core/SceneSpawn.hpp"
 #include "spark/ai/path/GridPathfinder.hpp"
+#include "spark/core/Array.hpp"
 #include "spark/gameplay/GameplayDataTable.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/render/IRenderTarget.hpp"
@@ -31,6 +32,8 @@ class IEngineContext;
 class TilemapComponent;
 class TilemapGameplayGridComponent;
 class GridNavAgent2DComponent;
+class Scene2DCompositeViewComponent;
+class SpriteLighting2DComponent;
 
 /**
  * Teaching demo for P0 2D product path: authored <c>.sparkscene</c> + TMX, object spawn registry,
@@ -43,7 +46,8 @@ public:
     void Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world);
     void Render(Scene& scene, GameWorld& world, IEngineContext& context);
 
-    void OnGemPickedUp() noexcept;
+    void OnGemPickedUp(float sceneTimeSeconds) noexcept;
+    void BeginGemPickupDissolve(GameObject& gem, float sceneTimeSeconds) noexcept;
 
 private:
     void RebuildAuthoredLevel(GameWorld& world);
@@ -59,6 +63,16 @@ private:
     void SetupPlayerNavigation() noexcept;
     void RebuildMinimapIfNeeded() noexcept;
     void EnsureMinimapGpuResources(IEngineContext& context) noexcept;
+    void SetupMinimapCompositeView(IEngineContext& context) noexcept;
+    void SyncMinimapCompositeView() noexcept;
+    void SetupProductChaser(GameWorld& world, const GridPathfinder::Cell& spawnCell) noexcept;
+    void TickProductChaser(const FrameTiming& timing) noexcept;
+    void SetupProductPatrol(GameWorld& world, const GridPathfinder::Cell& spawnCell) noexcept;
+    void TickProductPatrolAssignGoals() noexcept;
+    void TickProductPatrolMotion(const FrameTiming& timing) noexcept;
+    [[nodiscard]] bool IsGemDissolving(const GameObject& gem) const noexcept;
+    void TickGemPickupDissolves() noexcept;
+    void FinishGemDissolve(GameObject& gem) noexcept;
 
     DemoRootCollection roots{};
     UniquePtr<SceneManager> sceneManager{};
@@ -78,6 +92,17 @@ private:
     BoxCollider2DComponent* playerCollider = nullptr;
     TilemapGameplayGridComponent* walkGrid = nullptr;
     GridNavAgent2DComponent* playerNav = nullptr;
+    SpriteLighting2DComponent* playerSpriteFx = nullptr;
+    GameObject* chaserObject = nullptr;
+    GridNavAgent2DComponent* chaserNav = nullptr;
+    Rigidbody2DComponent* chaserRb = nullptr;
+    GameObject* patrolObject = nullptr;
+    GridNavAgent2DComponent* patrolNav = nullptr;
+    Rigidbody2DComponent* patrolRb = nullptr;
+    Array<GridPathfinder::Cell> patrolRoute{};
+    std::size_t patrolWaypointIndex = 0U;
+    bool patrolAwaitingNextGoal = true;
+    Scene2DCompositeViewComponent* minimapCompositeView = nullptr;
     SharedPtr<Texture2D> minimapTexture{};
     SharedPtr<Texture2D> minimapHudTexture{};
     SharedPtr<RenderTexture> minimapRenderTexture{};
@@ -86,7 +111,21 @@ private:
     bool useGpuMinimap = true;
     bool minimapDirty = true;
     float moveSpeedScale = 1.0F;
+    float chaserSpeedScale = 1.0F;
+    bool chaserEnabled = true;
+    bool patrolEnabled = true;
+    float gemDissolveSeconds = 0.45F;
+    float patrolSpeedScale = 0.75F;
     std::uint32_t gemPoolSize = 8U;
+
+    struct GemDissolvePending {
+        GameObject* gem = nullptr;
+        float startTimeSeconds = 0.0F;
+        Vector2 baseScale{1.0F, 1.0F};
+    };
+
+    Array<GemDissolvePending> gemDissolvePending{};
+    float sceneTimeSeconds = 0.0F;
     bool useKeyboardDrive = true;
     Utf8String saveStatus{};
 

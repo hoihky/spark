@@ -25,6 +25,7 @@ public:
             VkPhysicalDevice physicalDeviceIn,
             VkDevice deviceIn,
             VkRenderPass hdrRenderPassIn,
+            VkRenderPass ldrOffscreenRenderPassIn,
             VkFormat depthFormatIn) noexcept;
     void DestroyAll(VkDevice device) noexcept;
 
@@ -34,6 +35,7 @@ public:
 
     [[nodiscard]] VulkanOffscreenRenderTarget* TryGetGpu(const RenderTexture& texture) noexcept;
     [[nodiscard]] const VulkanOffscreenRenderTarget* TryGetGpu(const RenderTexture& texture) const noexcept;
+    [[nodiscard]] VkRenderPass RenderPassFor(const RenderTexture& texture) const noexcept;
 
 private:
     struct Entry {
@@ -73,6 +75,7 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     VkRenderPass hdrRenderPass = VK_NULL_HANDLE;
+    VkRenderPass ldrOffscreenRenderPass = VK_NULL_HANDLE;
     VkFormat depthFormat = VK_FORMAT_UNDEFINED;
     Array<Entry> entries{};
     HashMap<const RenderTexture*, std::size_t, RenderTexturePointerHasher> indexByTexture{};

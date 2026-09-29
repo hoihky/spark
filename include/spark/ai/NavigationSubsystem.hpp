@@ -24,4 +24,13 @@ void ProcessGridNavAgents2D(GameWorld& world, float deltaTimeSeconds) noexcept;
         float arriveRadius,
         float deltaTimeSeconds) noexcept;
 
+/** Path following via <c>SteeringPathFollowing2D</c> (grid nav + 2D steering product path). */
+[[nodiscard]] bool ApplyGridNavAgent2DSteeringMotion(
+        GridNavAgent2DComponent& agent,
+        TransformComponent& transform,
+        Rigidbody2DComponent& rigidbody,
+        float maxSpeed,
+        float arriveRadius,
+        float deltaTimeSeconds) noexcept;
+
 }  // namespace Spark

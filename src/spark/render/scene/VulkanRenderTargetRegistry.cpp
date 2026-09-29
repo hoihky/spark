@@ -1,6 +1,7 @@
 #include "spark/render/scene/VulkanRenderTargetRegistry.hpp"
 
 #include "spark/scene/render/RenderTexture.hpp"
+#include "spark/scene/render/RenderTextureFormat.hpp"
 
 namespace Spark {
 
@@ -23,11 +24,20 @@ void VulkanRenderTargetRegistry::BindDevice(
         const VkPhysicalDevice physicalDeviceIn,
         const VkDevice deviceIn,
         const VkRenderPass hdrRenderPassIn,
+        const VkRenderPass ldrOffscreenRenderPassIn,
         const VkFormat depthFormatIn) noexcept {
     physicalDevice = physicalDeviceIn;
     device = deviceIn;
     hdrRenderPass = hdrRenderPassIn;
+    ldrOffscreenRenderPass = ldrOffscreenRenderPassIn;
     depthFormat = depthFormatIn;
+}
+
+VkRenderPass VulkanRenderTargetRegistry::RenderPassFor(const RenderTexture& texture) const noexcept {
+    if (texture.GetColorFormat() == RenderTextureFormat::Rgba8Unorm && ldrOffscreenRenderPass != VK_NULL_HANDLE) {
+        return ldrOffscreenRenderPass;
+    }
+    return hdrRenderPass;
 }
 
 void VulkanRenderTargetRegistry::DestroyAll(const VkDevice deviceIn) noexcept {
@@ -71,7 +81,7 @@ void VulkanRenderTargetRegistry::AllocateGpuForEntry(Entry& entry) {
     const RenderTexture& texture = *entry.texture;
     if (!gpu.IsAllocated() || gpu.AllocatedToken() != texture.GetGpuAllocationToken() ||
         gpu.Extent().width != texture.GetWidth() || gpu.Extent().height != texture.GetHeight()) {
-        gpu.Create(physicalDevice, device, hdrRenderPass, depthFormat, texture.GetDesc());
+        gpu.Create(physicalDevice, device, RenderPassFor(texture), depthFormat, texture.GetDesc());
         gpu.SetAllocatedToken(texture.GetGpuAllocationToken());
     }
 }

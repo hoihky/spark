@@ -8,6 +8,20 @@
 
 namespace Spark {
 
+/** LDR offscreen render pass (RGBA8) for <c>RenderTextureFormat::Rgba8Unorm</c> composite captures. */
+class VulkanOffscreenLdrRenderPass {
+public:
+    static constexpr VkFormat kColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
+
+    void Create(VkDevice device, VkFormat depthFormat);
+    void Destroy(VkDevice device) noexcept;
+
+    [[nodiscard]] VkRenderPass Pass() const noexcept { return renderPass; }
+
+private:
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+};
+
 /** GPU color (+ optional depth) images and framebuffer for one offscreen target. */
 class VulkanOffscreenRenderTarget {
 public:

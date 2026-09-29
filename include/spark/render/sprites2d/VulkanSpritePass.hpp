@@ -22,6 +22,7 @@ struct VulkanSpriteRecordContext {
     std::uint32_t quadFirstIndex = 0;
     std::uint32_t quadIndexCount = 0;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    bool ldrOffscreenTarget = false;
 };
 
 /** Textured sprite quads rendered into the HDR pass (GPU-instanced batches). */
@@ -35,6 +36,7 @@ public:
             VkRenderPass hdrRenderPass,
             VkDescriptorSetLayout sceneDescriptorSetLayout,
             const VulkanSpvShaderLoader& shaders);
+    void CreateOffscreenLdrGraphicsPipeline(VkDevice device, VkRenderPass ldrRenderPass);
     void DestroyGraphicsPipeline(VkDevice device);
 
     void Record(VkCommandBuffer commandBuffer, const VulkanSpriteRecordContext& ctx) const;
@@ -80,7 +82,7 @@ private:
         std::uint32_t instanceBase = 0;
     };
 
-    [[nodiscard]] VkPipeline PipelineForBlendMode(SceneBlendMode mode) const noexcept;
+    [[nodiscard]] VkPipeline PipelineForBlendMode(SceneBlendMode mode, bool ldrOffscreenTarget) const noexcept;
     [[nodiscard]] bool WriteInstances(
             std::uint32_t frameIndex,
             const SceneRenderParams& scene,
@@ -91,6 +93,7 @@ private:
     VkShaderModule vertModule = VK_NULL_HANDLE;
     VkShaderModule fragModule = VK_NULL_HANDLE;
     VkPipeline pipelines[kSceneBlendModeCount]{};
+    VkPipeline ldrOffscreenPipelines[kSceneBlendModeCount]{};
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
     Array<VkBuffer> instanceBuffers;

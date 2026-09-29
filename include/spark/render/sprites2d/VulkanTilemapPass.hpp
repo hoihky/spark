@@ -23,6 +23,7 @@ struct VulkanTilemapRecordContext {
     std::uint32_t quadFirstIndex = 0;
     std::uint32_t quadIndexCount = 0;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+    bool ldrOffscreenTarget = false;
 };
 
 /** Culled tilemap layers rendered into the HDR pass (GPU-instanced quads, shares sprite shader + instance SSBO). */

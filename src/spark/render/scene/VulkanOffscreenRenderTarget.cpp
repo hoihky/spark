@@ -8,6 +8,78 @@
 
 namespace Spark {
 
+void VulkanOffscreenLdrRenderPass::Create(const VkDevice device, const VkFormat depthFormat) {
+    Destroy(device);
+    if (device == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkAttachmentDescription colorAttachment{};
+    colorAttachment.format = kColorFormat;
+    colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    VkAttachmentDescription depthAttachment{};
+    depthAttachment.format = depthFormat;
+    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentReference colorRef{};
+    colorRef.attachment = 0;
+    colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentReference depthRef{};
+    depthRef.attachment = 1;
+    depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    VkSubpassDescription subpass{};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &colorRef;
+    subpass.pDepthStencilAttachment = &depthRef;
+
+    VkSubpassDependency dep{};
+    dep.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dep.dstSubpass = 0;
+    dep.srcStageMask =
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dep.srcAccessMask = 0;
+    dep.dstStageMask =
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+    const VkAttachmentDescription attachments[] = {colorAttachment, depthAttachment};
+    VkRenderPassCreateInfo rpInfo{};
+    rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    rpInfo.attachmentCount = 2;
+    rpInfo.pAttachments = attachments;
+    rpInfo.subpassCount = 1;
+    rpInfo.pSubpasses = &subpass;
+    rpInfo.dependencyCount = 1;
+    rpInfo.pDependencies = &dep;
+    if (vkCreateRenderPass(device, &rpInfo, nullptr, &renderPass) != VK_SUCCESS) {
+        throw std::runtime_error("VulkanOffscreenLdrRenderPass: vkCreateRenderPass failed");
+    }
+}
+
+void VulkanOffscreenLdrRenderPass::Destroy(const VkDevice device) noexcept {
+    if (device == VK_NULL_HANDLE || renderPass == VK_NULL_HANDLE) {
+        return;
+    }
+    vkDestroyRenderPass(device, renderPass, nullptr);
+    renderPass = VK_NULL_HANDLE;
+}
+
 VkFormat VulkanOffscreenRenderTarget::ColorFormatForDesc(const RenderTextureFormat format) noexcept {
     switch (format) {
     case RenderTextureFormat::HdrRGBA16Float:
@@ -101,6 +173,9 @@ void VulkanOffscreenRenderTarget::Create(
 void VulkanOffscreenRenderTarget::Destroy(const VkDevice device) noexcept {
     if (device == VK_NULL_HANDLE) {
         return;
+    }
+    if (framebuffer != VK_NULL_HANDLE || colorImage != VK_NULL_HANDLE || depthImage != VK_NULL_HANDLE) {
+        vkDeviceWaitIdle(device);
     }
     if (framebuffer != VK_NULL_HANDLE) {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
