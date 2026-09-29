@@ -647,6 +647,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/tilemap/TmxImporter.cpp
         src/spark/scene/tilemap/TilemapDocumentApply.cpp
         src/spark/scene/tilemap/KenneyTinyDungeonGameplay.cpp
+        src/spark/scene/tilemap/TileGameplayProperties.cpp
+        src/spark/scene/tilemap/TilemapGameplayPlacement.cpp
         src/spark/scene/tilemap/TilemapDerivedDataRebake.cpp
         src/spark/scene/tilemap/TilemapDocumentCapture.cpp
         src/spark/scene/tilemap/TilemapDocumentSerializer.cpp
@@ -849,6 +851,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/sprites2d/VulkanParticlePass.cpp
         src/spark/render/gpu/VulkanBlendAttachment.cpp
         src/spark/render/sprites2d/VulkanSpritePass.cpp
+        src/spark/render/sprites2d/Scene2DComposite.cpp
+        src/spark/render/sprites2d/Scene2DMinimap.cpp
+        src/spark/ecs/components/rendering/Scene2DCompositeViewComponent.cpp
+        src/spark/scene/spawn/GameObjectPool.cpp
+        src/spark/gameplay/GameplayDataTable.cpp
         src/spark/render/sprites2d/VulkanTilemapPass.cpp
         src/spark/render/sprites2d/Vulkan2DCompositePass.cpp
         src/spark/render/scene/VulkanSceneMeshDraw.cpp
@@ -1002,6 +1009,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gameplay/CameraBounds2DResolve.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp
+        src/spark/ai/steering/SteeringBehaviors2D.cpp
+        src/spark/ai/GridNavAgent2DMotion.cpp
         src/spark/ai/steering/SteeringBehaviors3D.cpp
         src/spark/ai/path/GridPathfinder.cpp
         src/spark/ai/goap/GoapPlanner.cpp

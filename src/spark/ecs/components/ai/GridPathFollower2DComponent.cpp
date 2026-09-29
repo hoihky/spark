@@ -4,6 +4,7 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
+#include "spark/ai/steering/SteeringBehaviors2D.hpp"
 #include "spark/engine/IEngineContext.hpp"
 
 #include <algorithm>
@@ -72,15 +73,25 @@ void GridPathFollower2DComponent::OnUpdate(
     const float moveScale = std::min(1.0F, step / std::max(dist, 1.0e-4F));
     const Vector2 move{delta.x * moveScale, delta.y * moveScale};
 
-    if (mode == GridPathFollower2DMode::Rigidbody2DVelocity) {
+    if (mode == GridPathFollower2DMode::Rigidbody2DVelocity || mode == GridPathFollower2DMode::Steering2D) {
+        Vector2 velocity{move.x / std::max(timing.deltaTimeSeconds, 1.0e-4F),
+                         move.y / std::max(timing.deltaTimeSeconds, 1.0e-4F)};
+        if (mode == GridPathFollower2DMode::Steering2D) {
+            SteeringEnvironment2D env{};
+            env.pathPoints = &waypoints;
+            env.pathIndex = index;
+            env.maxSteeringSpeed = maxSpeed;
+            env.maxAcceleration = maxSpeed * 4.0F;
+            env.waypointArriveRadius = arrive;
+            SteeringPathFollowing2D pathFollow(1.0F);
+            velocity = pathFollow.ComputeAcceleration(pos, velocity, env);
+        }
         if (Rigidbody2DComponent* rb = owner.GetComponent<Rigidbody2DComponent>()) {
-            const float dt = std::max(timing.deltaTimeSeconds, 1.0e-4F);
-            Vector2 v{move.x / dt, move.y / dt};
             const float cap = std::max(0.0F, maxSpeed);
-            if (v.LengthSquared() > cap * cap) {
-                v = v.Normalized() * cap;
+            if (velocity.LengthSquared() > cap * cap) {
+                velocity = velocity.Normalized() * cap;
             }
-            rb->SetVelocity(v);
+            rb->SetVelocity(velocity);
             return;
         }
     }

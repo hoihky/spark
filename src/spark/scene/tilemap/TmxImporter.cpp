@@ -209,6 +209,47 @@ void ParsePropertiesBlock(const char* blockStart, const char* blockEnd, TilemapP
     }
 }
 
+void ParsePerTileElements(
+        const char* contentStart,
+        const char* contentEnd,
+        Array<TilemapDocumentPerTileProperties>& outTiles) {
+    if (contentStart == nullptr || contentEnd == nullptr) {
+        return;
+    }
+    for (const char* cursor = contentStart; cursor < contentEnd;) {
+        const char* tileTag = FindTag(cursor, "tile");
+        if (tileTag == nullptr || tileTag >= contentEnd) {
+            break;
+        }
+        const char* tileClose = std::strchr(tileTag, '>');
+        if (tileClose == nullptr || tileClose > contentEnd) {
+            break;
+        }
+        std::uint32_t localId = 0U;
+        if (!TryGetAttributeUint(tileTag, tileClose, "id", localId)) {
+            cursor = tileClose + 1;
+            continue;
+        }
+        const char* tileBlockEnd = FindCloseTag(tileTag, "tile");
+        if (tileBlockEnd == nullptr || tileBlockEnd > contentEnd) {
+            tileBlockEnd = tileClose + 1;
+        }
+        TilemapDocumentPerTileProperties entry{};
+        entry.localTileId = localId;
+        const char* props = FindTag(tileTag, "properties");
+        if (props != nullptr && props < tileBlockEnd) {
+            const char* propsEnd = FindCloseTag(props, "properties");
+            if (propsEnd != nullptr) {
+                ParsePropertiesBlock(props, propsEnd, entry.properties);
+            }
+        }
+        if (!entry.properties.IsEmpty()) {
+            outTiles.PushBack(entry);
+        }
+        cursor = tileBlockEnd + 1;
+    }
+}
+
 bool ParseTilesetTag(
         const char* tagOpen,
         const char* tagClose,
@@ -284,6 +325,9 @@ bool ParseTilesetTag(
             ParsePropertiesBlock(props, propsEnd, outSet.properties);
         }
     }
+
+    const char* bodyStart = openTagEnd != nullptr ? openTagEnd + 1 : tagOpen;
+    ParsePerTileElements(bodyStart, contentEnd, outSet.perTileProperties);
     return true;
 }
 

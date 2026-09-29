@@ -12,7 +12,6 @@
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
-#include "spark/scene/tilemap/TilemapLayer.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
@@ -27,11 +26,15 @@
 #include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <GLFW/glfw3.h>
-#include "spark/scene/tilemap/KenneyTinyDungeonGameplay.hpp"
+#include "spark/scene/tilemap/TilemapGameplayPlacement.hpp"
 #include "spark/scene/tilemap/TilemapGameplayWalkRule.hpp"
 #include "spark/scene/tilemap/TilemapObjectSpawnRegistry.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
+#include "spark/ai/NavigationSubsystem.hpp"
 #include "spark/ai/path/GridPathfinder.hpp"
+#include "spark/ai/path/IGridWalkability.hpp"
+#include "spark/ecs/components/ai/GridNavAgent2DComponent.hpp"
+#include "spark/render/sprites2d/Scene2DMinimap.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -155,42 +158,13 @@ void UnregisterSpawnHandlers() {
 constexpr std::int32_t kSampleMapDefaultSpawnCellX = 15;
 constexpr std::int32_t kSampleMapDefaultSpawnCellY = 9;
 
-[[nodiscard]] float CellDistanceSqToWorld(
-        const TilemapGridFrame& frame,
-        const GridPathfinder::Cell& cell,
-        const Vector2& worldXY) noexcept {
-    const Vector2 center = frame.CellCenterToWorldXY(cell);
-    const float dx = center.x - worldXY.x;
-    const float dy = center.y - worldXY.y;
-    return dx * dx + dy * dy;
-}
-
-void SortCellsByDistanceFrom(
-        Array<GridPathfinder::Cell>& cells,
-        const TilemapGridFrame& frame,
-        const Vector2& worldXY) noexcept {
-    for (std::size_t i = 0; i + 1U < cells.GetSize(); ++i) {
-        for (std::size_t j = i + 1U; j < cells.GetSize(); ++j) {
-            const float di = CellDistanceSqToWorld(frame, cells[i], worldXY);
-            const float dj = CellDistanceSqToWorld(frame, cells[j], worldXY);
-            if (dj < di) {
-                const GridPathfinder::Cell tmp = cells[i];
-                cells[i] = cells[j];
-                cells[j] = tmp;
-            }
-        }
-    }
-}
-
-[[nodiscard]] bool TryPlacePlayerOnSandCell(
+[[nodiscard]] bool TryPlacePlayerOnWalkableCell(
         TransformComponent& playerTr,
-        const TilemapComponent& tilemap,
-        const std::uint32_t dungeonLayerIndex,
+        const IGridWalkability& walk,
         const TilemapGridFrame& frame,
         const GridPathfinder::Cell& cell,
         Vector3& lastValidPos) noexcept {
-    if (!frame.IsCellInBounds(cell) ||
-            !IsKenneySandMapCell(tilemap, dungeonLayerIndex, cell.x, cell.y)) {
+    if (!IsWalkableMapCell(walk, frame, cell.x, cell.y)) {
         return false;
     }
     const Vector2 world = frame.CellCenterToWorldXY(cell);
@@ -205,18 +179,12 @@ void GameFlow2DProductPathDemo::ApplyPlayerSpawnCell() noexcept {
     if (playerTr == nullptr || walkGrid == nullptr || levelRoot == nullptr || !playerSpawnResolved) {
         return;
     }
-    const TilemapComponent* tilemap = levelRoot->GetComponent<TilemapComponent>();
-    if (tilemap == nullptr) {
-        return;
-    }
     if (playerRb != nullptr) {
         playerRb->SetVelocity(Vector2::Zero);
     }
-    const std::uint32_t dungeonLayer = FindKenneyDungeonLayerIndex(*tilemap);
-    (void)TryPlacePlayerOnSandCell(
+    (void)TryPlacePlayerOnWalkableCell(
             *playerTr,
-            *tilemap,
-            dungeonLayer,
+            walkGrid->GetWalkability(),
             walkGrid->GetGridFrame(),
             playerSpawnCell,
             lastValidPlayerPos);
@@ -232,25 +200,15 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
     if (objects == nullptr || grid == nullptr || walkGrid == nullptr) {
         return;
     }
-    TilemapComponent* tilemap = levelRoot.GetComponent<TilemapComponent>();
-    if (tilemap == nullptr) {
-        return;
-    }
-
     walkGrid->RebakeIfNeeded(levelRoot);
 
     const TilemapGridFrame& frame = walkGrid->GetGridFrame();
-    const std::uint32_t dungeonLayer = FindKenneyDungeonLayerIndex(*tilemap);
+    const IGridWalkability& walk = walkGrid->GetWalkability();
 
     const std::size_t minPlayableCells = static_cast<std::size_t>(gemsRequired + 2U);
     GridPathfinder::Cell startCell{};
-    if (!PickKenneySandSpawnCell(
-                *tilemap,
-                dungeonLayer,
-                frame,
-                spawnHintWorld,
-                minPlayableCells,
-                startCell)) {
+    if (!PickSpawnInLargestWalkableRegion(
+                walk, frame, spawnHintWorld, minPlayableCells, startCell)) {
         return;
     }
 
@@ -258,7 +216,7 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
     playerSpawnResolved = true;
 
     Array<GridPathfinder::Cell> reachable{};
-    CollectReachableKenneySandCells(*tilemap, dungeonLayer, startCell, reachable);
+    CollectReachableWalkableCells(walk, startCell, reachable);
     if (reachable.GetSize() < minPlayableCells) {
         return;
     }
@@ -282,7 +240,7 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
     }
 
     const Vector2 spawnWorld = frame.CellCenterToWorldXY(playerSpawnCell);
-    SortCellsByDistanceFrom(placements, frame, spawnWorld);
+    SortCellsByDistanceFromWorld(placements, frame, spawnWorld);
 
     auto addMarker = [&](const char* typeId, const GridPathfinder::Cell& cell) {
         TilemapObjectMarker marker{};
@@ -305,26 +263,6 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
     addMarker("p0_goal", placements[goalSlot]);
 }
 
-void GameFlow2DProductPathDemo::ConfigureLevelLayers(GameObject& root) noexcept {
-    TilemapComponent* tilemap = root.GetComponent<TilemapComponent>();
-    if (tilemap == nullptr) {
-        return;
-    }
-    for (std::uint32_t layerIndex = 0U; layerIndex < tilemap->GetLayerCount(); ++layerIndex) {
-        TilemapLayer& layer = tilemap->GetLayer(layerIndex);
-        const char* name = layer.name.CStr();
-        if (name == nullptr) {
-            continue;
-        }
-        if (std::strcmp(name, "Carts") == 0) {
-            layer.contributeCollision = false;
-            layer.contributeGameplayGrid = false;
-        } else if (std::strcmp(name, "Objects") == 0) {
-            layer.contributeGameplayGrid = false;
-        }
-    }
-}
-
 void GameFlow2DProductPathDemo::CorrectPlayerAgainstBlockedGrid() noexcept {
     if (playerTr == nullptr || playerRb == nullptr || playerCollider == nullptr || walkGrid == nullptr) {
         return;
@@ -332,15 +270,9 @@ void GameFlow2DProductPathDemo::CorrectPlayerAgainstBlockedGrid() noexcept {
     const TilemapGameplayGrid& grid = walkGrid->GetGrid();
     const TilemapGridFrame& frame = walkGrid->GetGridFrame();
 
-    const TilemapComponent* tilemap = levelRoot != nullptr ? levelRoot->GetComponent<TilemapComponent>() : nullptr;
-    const std::uint32_t dungeonLayer =
-            tilemap != nullptr ? FindKenneyDungeonLayerIndex(*tilemap) : 0U;
     auto isBlockedAt = [&](const float worldX, const float worldY) noexcept {
         const GridPathfinder::Cell cell = frame.WorldXYToCell({worldX, worldY});
-        if (tilemap != nullptr && cell.x >= 0 && cell.y >= 0) {
-            return !IsKenneySandMapCell(*tilemap, dungeonLayer, cell.x, cell.y);
-        }
-        return !grid.IsWalkable(cell.x, cell.y);
+        return !IsWalkableMapCell(grid, frame, cell.x, cell.y);
     };
 
     CollisionAabb2 playerBox{};
@@ -462,8 +394,45 @@ void GameFlow2DProductPathDemo::LoadProgressNow() noexcept {
     if (gemsCollected >= gemsRequired && goalObject != nullptr) {
         goalObject->SetActive(true);
     }
+    useKeyboardDrive = true;
+    if (playerNav != nullptr) {
+        playerNav->ClearPath();
+    }
+    ApplyPlayerSpawnCell();
+    if (playerRb != nullptr) {
+        playerRb->SetVelocity(Vector2::Zero);
+    }
     saveStatus = Utf8String("Loaded (F7)");
     RefreshHud();
+}
+
+void GameFlow2DProductPathDemo::SetupPlayerNavigation() noexcept {
+    if (playerObject == nullptr || levelRoot == nullptr) {
+        playerNav = nullptr;
+        return;
+    }
+    playerNav = playerObject->GetComponent<GridNavAgent2DComponent>();
+    if (playerNav == nullptr) {
+        playerNav = playerObject->AddComponent<GridNavAgent2DComponent>();
+    }
+    playerNav->SetGridSourceObject(levelRoot);
+    playerNav->SetGoalMode(GridNavGoalMode2D::GridCell);
+    playerNav->SetRepathEveryFrame(false);
+    playerNav->SetRepathIntervalSeconds(0.2F);
+    playerNav->SetSyncToAiAgent(false);
+    playerNav->ClearPath();
+    useKeyboardDrive = true;
+}
+
+void GameFlow2DProductPathDemo::RebuildMinimapIfNeeded() noexcept {
+    if (!minimapDirty || walkGrid == nullptr) {
+        return;
+    }
+    if (!minimapTexture) {
+        minimapTexture = MakeShared<Texture2D>(Utf8String("P0Minimap"));
+    }
+    RebuildMinimapTextureFromGameplayGrid(walkGrid->GetGrid(), *minimapTexture);
+    minimapDirty = false;
 }
 
 void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
@@ -502,8 +471,9 @@ void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
         (void)mapSource->ImportNow(*levelRoot, world);
     }
 
-    ApplyKenneyTinyDungeonGameplayToTilemap(*levelRoot);
-    ConfigureLevelLayers(*levelRoot);
+    if (TilemapComponent* tilemapLayers = levelRoot->GetComponent<TilemapComponent>(); tilemapLayers != nullptr) {
+        ApplyDefaultGameplayLayerFlags(*tilemapLayers);
+    }
 
     walkGrid->SetWalkRule(TilemapGameplayWalkRule::CollisionAligned);
     walkGrid->SetAutoRebake(true);
@@ -545,6 +515,10 @@ void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
     }
 
     physics.GetQueries2D().RebuildStatics(world);
+
+    SetupPlayerNavigation();
+    minimapDirty = true;
+    RebuildMinimapIfNeeded();
 
     ApplyPlayerSpawnCell();
     if (playerTr != nullptr && walkGrid != nullptr && !playerSpawnResolved) {
@@ -678,7 +652,7 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
 
     helpHud.Mount(world, "2D P0 product path");
     helpHud.SetControlHints(
-            "WASD move | Wheel/+/- zoom | Enter start | P pause | R reload | F5 save | F7 load");
+            "WASD move | Left-click path | Wheel/+/- zoom | Enter start | P pause | R reload | F5/F7 save/load");
     RefreshHud();
     context.GetInput().SetCursorCaptured(false);
 }
@@ -702,6 +676,10 @@ void GameFlow2DProductPathDemo::Unload(GameWorld& world) {
     playerRb = nullptr;
     playerCollider = nullptr;
     playerSpawnResolved = false;
+    playerNav = nullptr;
+    minimapTexture.Reset();
+    minimapDirty = true;
+    useKeyboardDrive = true;
     saveStatus.Clear();
     roots.DestroyAll(world);
     physics = PhysicsSubsystem{};
@@ -761,7 +739,46 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
     const bool paused = gameState != nullptr && gameState->IsState(GameFlowState::Paused);
     const bool canMove = gameState != nullptr &&
             (gameState->IsState(GameFlowState::Playing) || gameState->IsState(GameFlowState::Intro)) && !paused;
-    if (canMove && playerRb != nullptr && walkGrid != nullptr) {
+
+    int fbW = 0;
+    int fbH = 0;
+    context.GetFramebufferSize(fbW, fbH);
+    if (fbW <= 0) {
+        fbW = 1;
+    }
+    if (fbH <= 0) {
+        fbH = 1;
+    }
+
+    if (canMove && walkGrid != nullptr && playerNav != nullptr) {
+        ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
+
+        if (input.IsMouseButtonPressedThisFrame(GLFW_MOUSE_BUTTON_LEFT)) {
+            float mx = 0.0F;
+            float my = 0.0F;
+            input.GetCursorFramebufferPixels(mx, my, fbW, fbH);
+            GridPathfinder::Cell goal{};
+            if (TryPickWalkableGridCellFromScreen(
+                        camera,
+                        walkGrid->GetGridFrame(),
+                        walkGrid->GetWalkability(),
+                        static_cast<float>(fbW),
+                        static_cast<float>(fbH),
+                        mx,
+                        my,
+                        goal)) {
+                playerNav->SetGoalMode(GridNavGoalMode2D::GridCell);
+                playerNav->SetGoalCell(goal);
+                playerNav->RequestRepath();
+                useKeyboardDrive = false;
+                if (gameState->IsState(GameFlowState::Intro)) {
+                    flow.RequestPlaying();
+                }
+            }
+        }
+    }
+
+    if (canMove && playerRb != nullptr && walkGrid != nullptr && playerTr != nullptr) {
         float moveX = 0.0F;
         float moveY = 0.0F;
         if (input.IsKeyDown(GLFW_KEY_A) || input.IsKeyDown(GLFW_KEY_LEFT)) {
@@ -776,16 +793,37 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
         if (input.IsKeyDown(GLFW_KEY_S) || input.IsKeyDown(GLFW_KEY_DOWN)) {
             moveY -= 1.0F;
         }
-        if (gameState->IsState(GameFlowState::Intro) && (std::abs(moveX) > 0.01F || std::abs(moveY) > 0.01F)) {
+        const bool keyboardIntent = std::abs(moveX) > 0.01F || std::abs(moveY) > 0.01F;
+        if (keyboardIntent) {
+            useKeyboardDrive = true;
+            if (playerNav != nullptr) {
+                playerNav->ClearPath();
+            }
+        }
+        if (gameState->IsState(GameFlowState::Intro) && keyboardIntent) {
             flow.RequestPlaying();
         }
         const float speed = walkGrid->GetGridFrame().cellSize * 2.75F;
-        if (std::abs(moveX) > 0.01F || std::abs(moveY) > 0.01F) {
+        const float arrive = walkGrid->GetGridFrame().cellSize * 0.12F;
+        if (useKeyboardDrive && keyboardIntent) {
             const float len = std::sqrt(moveX * moveX + moveY * moveY);
             moveX /= len;
             moveY /= len;
+            playerRb->SetVelocity({moveX * speed, moveY * speed});
+        } else if (!useKeyboardDrive && playerNav != nullptr &&
+                   ApplyGridNavAgent2DRigidbodyMotion(
+                           *playerNav,
+                           *playerTr,
+                           *playerRb,
+                           speed,
+                           arrive,
+                           timing.deltaTimeSeconds)) {
+            // path velocity applied
+        } else if (!keyboardIntent && !useKeyboardDrive) {
+            playerRb->SetVelocity(Vector2::Zero);
+        } else if (!keyboardIntent) {
+            playerRb->SetVelocity(Vector2::Zero);
         }
-        playerRb->SetVelocity({moveX * speed, moveY * speed});
     } else if (playerRb != nullptr) {
         playerRb->SetVelocity(Vector2::Zero);
     }
@@ -831,6 +869,18 @@ void GameFlow2DProductPathDemo::Render(Scene& /*scene*/, GameWorld& world, IEngi
     SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {
         helpHud.PatchSceneRenderParams(*sceneParams, world);
+        RebuildMinimapIfNeeded();
+        if (minimapTexture && walkGrid != nullptr && playerTr != nullptr) {
+            const Vector3 p = playerTr->GetLocalTransform().translation;
+            PatchScene2DMinimapHud(
+                    *sceneParams,
+                    world,
+                    minimapTexture,
+                    walkGrid->GetGridFrame(),
+                    {p.x, p.y},
+                    static_cast<float>(fbW),
+                    static_cast<float>(fbH));
+        }
     }
 }
 

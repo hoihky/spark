@@ -16,6 +16,8 @@ enum class GridPathFollower2DMode : std::uint8_t {
     Transform = 0,
     /** Sets <c>Rigidbody2DComponent</c> velocity toward the active waypoint. */
     Rigidbody2DVelocity = 1,
+    /** Uses <c>SteeringPathFollowing2D</c> + optional obstacle avoidance before applying velocity. */
+    Steering2D = 2,
 };
 
 /**

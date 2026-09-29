@@ -29,29 +29,4 @@ void ApplyKenneyTinyDungeonGameplayLayerFlags(TilemapComponent& tilemap) noexcep
 /** Applies Kenney tile definitions and layer flags on the level's <c>TilemapComponent</c>. */
 void ApplyKenneyTinyDungeonGameplayToTilemap(GameObject& levelRoot) noexcept;
 
-[[nodiscard]] std::uint32_t FindKenneyDungeonLayerIndex(const TilemapComponent& tilemap) noexcept;
-
-[[nodiscard]] bool IsKenneySandMapCell(
-        const TilemapComponent& tilemap,
-        const std::uint32_t dungeonLayerIndex,
-        const std::int32_t x,
-        const std::int32_t y) noexcept;
-
-void CollectReachableKenneySandCells(
-        const TilemapComponent& tilemap,
-        const std::uint32_t dungeonLayerIndex,
-        const GridPathfinder::Cell& start,
-        Array<GridPathfinder::Cell>& out) noexcept;
-
-/**
- * Spawn on the largest yellow-sand region, at the cell closest to <c>hintWorldXY</c>.
- */
-[[nodiscard]] bool PickKenneySandSpawnCell(
-        const TilemapComponent& tilemap,
-        const std::uint32_t dungeonLayerIndex,
-        const TilemapGridFrame& frame,
-        const Vector2& hintWorldXY,
-        const std::size_t minReachableCells,
-        GridPathfinder::Cell& outCell) noexcept;
-
 }  // namespace Spark

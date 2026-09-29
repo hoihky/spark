@@ -42,6 +42,7 @@
 #include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/scene/submit/SceneSpriteTileCull.hpp"
 #include "spark/scene/submit/SceneTilemapSubmit.hpp"
+#include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/render/lighting/SceneLightingResolver.hpp"
 #include "spark/scene/volume/RenderVolumes.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -688,6 +689,8 @@ void FillStandardLitSceneFromWorld(
         params.punctualShadowsEnabled = false;
         params.ssaoEnabled = false;
     }
+
+    CollectScene2DCompositeViews(world, params);
 }
 
 void FillStandardLitSceneFromWorld(

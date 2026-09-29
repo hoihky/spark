@@ -39,7 +39,10 @@ function(spark_add_physics_tests)
             tests/scene/GameplayComponentRoundTripTest.cpp
             tests/scene/SceneDocumentRoundTripTest.cpp
             tests/scene/PlatformerLevelSceneRoundTripTest.cpp
-            tests/scene/KenneyTinyDungeonSandSpawnTest.cpp
+            tests/scene/TilemapGameplayPlacementTest.cpp
+            tests/scene/TileGameplayPropertiesTest.cpp
+            tests/gameplay/GameplayDataTableTest.cpp
+            tests/ai/SteeringPathFollowing2DTest.cpp
             tests/save/GameSaveTest.cpp
             tests/scene/SceneEditorSmokeTest.cpp
             tests/scene/ParticleEmitterBurstTest.cpp

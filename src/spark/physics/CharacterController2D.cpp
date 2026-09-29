@@ -237,16 +237,29 @@ void CharacterControllerWorld2D::Prepare(GameWorld& world, const FrameTiming& ti
         }
 
         Vector2 velocity = rb.GetVelocity();
-        velocity.x = controller.GetMoveInputX() * controller.GetMoveSpeed();
-
-        const bool canJump =
-                (controller.grounded || controller.coyoteTimeRemaining > 0.0F) &&
-                controller.jumpBufferRemaining > 0.0F;
-        if (canJump) {
-            velocity.y = controller.GetJumpSpeed();
-            controller.jumpBufferRemaining = 0.0F;
-            controller.coyoteTimeRemaining = 0.0F;
+        if (controller.GetMotorMode() == CharacterController2DMotorMode::TopDown) {
+            const float ix = controller.GetMoveInputX();
+            const float iy = controller.GetMoveInputY();
+            Vector2 wish{ix, iy};
+            if (wish.LengthSquared() > 1.0F) {
+                wish = wish.Normalized();
+            }
+            velocity.x = wish.x * controller.GetMoveSpeed();
+            velocity.y = wish.y * controller.GetMoveSpeed();
+            rb.SetGravityScale(0.0F);
             controller.grounded = false;
+        } else {
+            velocity.x = controller.GetMoveInputX() * controller.GetMoveSpeed();
+
+            const bool canJump =
+                    (controller.grounded || controller.coyoteTimeRemaining > 0.0F) &&
+                    controller.jumpBufferRemaining > 0.0F;
+            if (canJump) {
+                velocity.y = controller.GetJumpSpeed();
+                controller.jumpBufferRemaining = 0.0F;
+                controller.coyoteTimeRemaining = 0.0F;
+                controller.grounded = false;
+            }
         }
 
         rb.SetVelocity(velocity);
@@ -268,6 +281,11 @@ void CharacterControllerWorld2D::Finalize(GameWorld& world, const FrameTiming& t
 
     for (std::size_t i = 0; i < controllers.GetSize(); ++i) {
         ControllerBody2D& body = controllers[i];
+        if (body.controller->GetMotorMode() == CharacterController2DMotorMode::TopDown) {
+            body.controller->grounded = false;
+            body.rigidbody->SetGrounded(false);
+            continue;
+        }
         SnapToGround(body, broadPhase);
         body.controller->grounded = ProbeGrounded(*body.object, *body.controller, colliders, grid, scratch);
         body.rigidbody->SetGrounded(body.controller->grounded);

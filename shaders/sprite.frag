@@ -196,5 +196,41 @@ void main() {
         return;
     }
 
+    if (vLightingMode == 13) {
+        float decay = max(0.01, vLightingB.x);
+        float t = exp(-ubo.timeGlobal.x / decay);
+        vec3 flash = vLightingA.rgb * max(0.0, vLightingA.w) * t;
+        outColor = vec4(base.rgb + flash, base.a);
+        return;
+    }
+
+    if (vLightingMode == 14) {
+        float w = max(1.0, vLightingA.w);
+        float soft = max(0.5, vLightingB.x);
+        vec2 px = vec2(1.0 / 256.0, 1.0 / 256.0) * w;
+        float a0 = base.a;
+        float a1 = textureLod(spriteSceneTextures, vec3(vTex + vec2(px.x, 0.0), float(vLayer)), 0.0).a;
+        float a2 = textureLod(spriteSceneTextures, vec3(vTex - vec2(px.x, 0.0), float(vLayer)), 0.0).a;
+        float a3 = textureLod(spriteSceneTextures, vec3(vTex + vec2(0.0, px.y), float(vLayer)), 0.0).a;
+        float a4 = textureLod(spriteSceneTextures, vec3(vTex - vec2(0.0, px.y), float(vLayer)), 0.0).a;
+        float edge = clamp((a1 + a2 + a3 + a4) - a0 * 4.0, 0.0, 1.0);
+        edge = pow(edge, 1.0 / soft);
+        vec3 col = mix(base.rgb, vLightingA.rgb, edge);
+        outColor = vec4(col, max(base.a, edge * vLightingA.a));
+        return;
+    }
+
+    if (vLightingMode == 15) {
+        float edge = clamp(vLightingA.x, 0.0, 1.0);
+        float noise = fract(sin(dot(vLocalXY * max(1.0, vLightingA.y) + ubo.timeGlobal.x * vLightingA.w, vec2(12.9898, 78.233))) * 43758.5453);
+        float soft = max(0.001, vLightingA.z);
+        float clip = smoothstep(edge - soft, edge + soft, noise);
+        if (clip < 0.5) {
+            discard;
+        }
+        outColor = base;
+        return;
+    }
+
     outColor = base;
 }

@@ -7,6 +7,8 @@
 #include "spark/scene/tilemap/TilemapFileResolve.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/scene/tilemap/KenneyTinyDungeonGameplay.hpp"
+#include "spark/scene/tilemap/TileGameplayProperties.hpp"
+#include "spark/scene/tilemap/TilemapGameplayPlacement.hpp"
 #include "spark/scene/tilemap/TileDefinition.hpp"
 #include "spark/scene/tilemap/Tileset.hpp"
 
@@ -168,9 +170,25 @@ TilemapDocumentApplier::Result TilemapDocumentApplier::Apply(
             primary->tileCount);
     tilemap->SetTileset(tileset);
     SyncTileLayers(*tilemap, document);
-    if (UsesKenneyPackedGrid(texturePath.CStr())) {
-        ConfigureKenneyTinyDungeonGameplayTileset(*tileset);
-        ApplyKenneyTinyDungeonGameplayLayerFlags(*tilemap);
+
+    bool appliedTileGameplay = false;
+    for (std::size_t ti = 0; ti < document.tilesets.GetSize(); ++ti) {
+        if (!document.tilesets[ti].perTileProperties.IsEmpty()) {
+            ApplyTileGameplayPropertiesFromTilesetDocument(*tileset, document.tilesets[ti]);
+            appliedTileGameplay = true;
+        }
+    }
+    if (!appliedTileGameplay) {
+        const char* profile = TilemapPropertyListGetString(
+                primary->properties, "spark_tileset_gameplay", nullptr);
+        const bool kenneyProfile =
+                profile != nullptr && std::strcmp(profile, "kenney_tiny_dungeon") == 0;
+        if (kenneyProfile || UsesKenneyPackedGrid(texturePath.CStr())) {
+            ConfigureKenneyTinyDungeonGameplayTileset(*tileset);
+            ApplyKenneyTinyDungeonGameplayLayerFlags(*tilemap);
+        }
+    } else {
+        ApplyDefaultGameplayLayerFlags(*tilemap);
     }
 
     if (options.applyObjectLayers) {

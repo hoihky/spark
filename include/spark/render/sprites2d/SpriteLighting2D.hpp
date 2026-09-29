@@ -57,6 +57,21 @@ enum class SpriteLighting2DMode : std::int32_t {
     MatcapApprox = 11,
     /** Normal map + sun/points modulated by time flicker. param0.x–z as NormalMapped; param0.w = flicker Hz; param1.x = depth. */
     FlickerLit = 12,
+    /**
+     * Full-sprite hit flash (no normal map). param0.rgb = flash color, param0.w = peak strength;
+     * param1.x = decay seconds (0 = single frame pop).
+     */
+    HitFlash = 13,
+    /**
+     * Screen-space outline around opaque texels. param0.rgb = outline color, param0.w = width in texels;
+     * param1.x = softness.
+     */
+    Outline = 14,
+    /**
+     * Dissolve clip along local Y. param0.x = edge (0–1), param0.y = noise scale, param0.z = edge softness;
+     * param0.w = time scroll speed.
+     */
+    Dissolve = 15,
 };
 
 }  // namespace Spark

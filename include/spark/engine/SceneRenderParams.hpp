@@ -8,6 +8,7 @@
 #include "spark/render/scene/SceneBlendMode.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
+#include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
@@ -504,6 +505,9 @@ struct SceneRenderParams {
     static constexpr std::uint32_t MaxTilemapTiles = 65536;
     Array<SceneTilemapDraw> tilemaps;
     Array<SceneTilemapTileInstance> tilemapTiles;
+
+    /** Optional RT-backed minimap / fog / outline views (see <c>CollectScene2DCompositeViews</c>). */
+    Array<Scene2DCompositeViewDesc> scene2DCompositeViews;
 
     /** Billboard particles (additive pass). Filled from ParticleEmitterComponent. */
     static constexpr std::uint32_t MaxParticles = 8192;

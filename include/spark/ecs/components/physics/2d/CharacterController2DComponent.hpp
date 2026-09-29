@@ -6,6 +6,12 @@
 
 namespace Spark {
 
+/** Platformer (gravity + jump) vs top-down (XY velocity, no ground snap). */
+enum class CharacterController2DMotorMode : std::uint8_t {
+    Platformer = 0,
+    TopDown = 1,
+};
+
 class GameWorld;
 struct FrameTiming;
 struct CharacterController2DSettings;
@@ -56,6 +62,12 @@ public:
     void SetMoveInputX(const float normalized) noexcept { moveInputX = std::clamp(normalized, -1.0F, 1.0F); }
     [[nodiscard]] float GetMoveInputX() const noexcept { return moveInputX; }
 
+    void SetMoveInputY(const float normalized) noexcept { moveInputY = std::clamp(normalized, -1.0F, 1.0F); }
+    [[nodiscard]] float GetMoveInputY() const noexcept { return moveInputY; }
+
+    void SetMotorMode(const CharacterController2DMotorMode mode) noexcept { motorMode = mode; }
+    [[nodiscard]] CharacterController2DMotorMode GetMotorMode() const noexcept { return motorMode; }
+
     /** Queues a jump for the next prepare step (honors coyote time + jump buffer). */
     void RequestJump() noexcept { jumpRequested = true; }
 
@@ -81,6 +93,8 @@ private:
     float slopeLimitDegrees = 50.0F;
     float skinWidth = 0.02F;
     float moveInputX = 0.0F;
+    float moveInputY = 0.0F;
+    CharacterController2DMotorMode motorMode = CharacterController2DMotorMode::Platformer;
     float coyoteTimeRemaining = 0.0F;
     float jumpBufferRemaining = 0.0F;
     bool jumpRequested = false;

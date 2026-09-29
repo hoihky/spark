@@ -16,6 +16,8 @@
 #include "spark/scene/core/SceneManager.hpp"
 #include "spark/scene/core/SceneSpawn.hpp"
 #include "spark/ai/path/GridPathfinder.hpp"
+#include "spark/memory/SharedPtr.hpp"
+#include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
 
@@ -24,6 +26,7 @@ class GameStateComponent;
 class IEngineContext;
 class TilemapComponent;
 class TilemapGameplayGridComponent;
+class GridNavAgent2DComponent;
 
 /**
  * Teaching demo for P0 2D product path: authored <c>.sparkscene</c> + TMX, object spawn registry,
@@ -44,12 +47,13 @@ private:
     void ApplyPlayerSpawnCell() noexcept;
     void RefreshHud() noexcept;
     void SyncCameraToPlayer(const TilemapComponent* tilemap) noexcept;
-    void ConfigureLevelLayers(GameObject& levelRoot) noexcept;
     void TryCollectNearbyGems(GameWorld& world) noexcept;
     void TryReachGoal() noexcept;
     void SaveProgressNow() noexcept;
     void LoadProgressNow() noexcept;
     void CorrectPlayerAgainstBlockedGrid() noexcept;
+    void SetupPlayerNavigation() noexcept;
+    void RebuildMinimapIfNeeded() noexcept;
 
     DemoRootCollection roots{};
     UniquePtr<SceneManager> sceneManager{};
@@ -67,6 +71,10 @@ private:
     Rigidbody2DComponent* playerRb = nullptr;
     BoxCollider2DComponent* playerCollider = nullptr;
     TilemapGameplayGridComponent* walkGrid = nullptr;
+    GridNavAgent2DComponent* playerNav = nullptr;
+    SharedPtr<Texture2D> minimapTexture{};
+    bool minimapDirty = true;
+    bool useKeyboardDrive = true;
     Utf8String saveStatus{};
 
     Camera2D camera{};

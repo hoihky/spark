@@ -13,6 +13,12 @@ namespace Spark {
 /** Custom properties on map, tile layer, or object marker (Tiled / LDtk-style). */
 using TilemapPropertyList = Array<TilemapObjectProperty>;
 
+/** Per-tile custom properties from Tiled TSX <c>&lt;tile id="N"&gt;</c> blocks (local id, not GID). */
+struct TilemapDocumentPerTileProperties {
+    std::uint32_t localTileId = 0U;
+    TilemapPropertyList properties{};
+};
+
 /** Resolved tileset used by a document (single-atlas maps; multiple entries for GID lookup). */
 struct TilemapDocumentTileset {
     Utf8String name{};
@@ -28,6 +34,8 @@ struct TilemapDocumentTileset {
     std::uint32_t imageWidth = 0U;
     std::uint32_t imageHeight = 0U;
     TilemapPropertyList properties{};
+    /** Optional per-local-tile properties from TSX <c>&lt;tile id="N"&gt;</c> blocks. */
+    Array<TilemapDocumentPerTileProperties> perTileProperties{};
 };
 
 struct TilemapDocumentTileLayer {
