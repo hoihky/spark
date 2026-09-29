@@ -106,4 +106,48 @@ SubmitStandardLitSceneFromWorld(
 
 When using `Camera2DRigComponent`, read the rig's resolved `Camera2D` pose for submit (the demo copies rig output into its `Camera2D` struct each frame).
 
+## Minimap (GPU composite view)
+
+For top-down games, prefer `Scene2DCompositeViewComponent` over hand-drawn UI quads:
+
+1. `CreateMinimapRenderTexture()` — offscreen **RGBA8** target (compatible with UI atlas copy).
+2. `CreateMinimapHudPlaceholderTexture()` — registers a layer in `SceneRenderParams::uiTextures`.
+3. `context.TryGetRenderTargetService()->CreateRenderTarget(rt)` — GPU framebuffer when using Vulkan.
+4. On a manager object: set feature `Minimap`, `target`, `hudTexture`, screen rect, and sync `SetWorldCapture(center, halfExtent)` each frame from player + grid bounds.
+5. `PatchScene2DMinimapHud` draws the player dot aligned with capture ortho.
+
+Disable GPU capture to fall back to CPU walkability tint (`RebuildMinimapTextureFromGameplayGrid`).
+
+Details: [Runtime limits — composite views](08-scene2d-runtime-limits.md), [Gameplay API — minimap](09-2d-gameplay-api-guide.md#10-minimap-and-composite-views). Reference: `GameFlow2DProductPathDemo` (**F**).
+
+## `CameraBounds2DComponent`
+
+Clamp the rig so the view never leaves the level:
+
+```cpp
+#include "spark/ecs/components/camera/CameraBounds2DComponent.hpp"
+
+auto* bounds = cameraGo->AddComponent<CameraBounds2DComponent>();
+bounds->SetWorldMin({minX, minY});
+bounds->SetWorldMax({maxX, maxY});
+```
+
+## HUD components
+
+| Component | Use |
+|-----------|-----|
+| `TextOverlayComponent` | Simple strings (gems, state name) |
+| `UiCanvasComponent` | Retained UI layout (menus, inventory shells) |
+| `Scene2DCompositeViewComponent` | Minimap texture in HUD layer |
+
+```cpp
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
+
+menuRoot->AddComponent<UiCanvasComponent>();
+```
+
+Audio: attach `AudioListenerComponent` to the same object as `Camera2DRigComponent` so spatial cues follow the view.
+
+See [10 — Components handbook](10-2d-components-handbook.md#camera2d).
+
 Next: [Polish and Ship](06-polish.md).

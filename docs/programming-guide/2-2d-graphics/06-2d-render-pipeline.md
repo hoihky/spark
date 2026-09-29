@@ -40,7 +40,9 @@ void Platformer2DGame::OnRender(IRenderFrame&, IEngineContext& context) {
 }
 ```
 
-`FillStandardLitSceneFromWorld` walks ECS and fills sprites, tilemaps, text overlays, and optional particles.
+`FillStandardLitSceneFromWorld` walks ECS and fills sprites, tilemaps, text overlays, optional particles, and **`Scene2DCompositeViewComponent`** descriptors (minimap / fog / outline).
+
+On Vulkan, after the main HDR scene pass, `VulkanScene2DCompositeCapture` may ortho-resubmit 2D layers into offscreen `RenderTexture` targets; the UI pass copies RGBA8 captures into `uiTextures` layers. Budgets and formats: [2D runtime limits](../7-2d-game/08-scene2d-runtime-limits.md).
 
 ## GUI Overlay on 2D
 

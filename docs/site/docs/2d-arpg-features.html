@@ -633,13 +633,13 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><strong>P2.3</strong></td>
 <td>Save/load game state</td>
 <td>Partial</td>
-<td>Asset paths and textures cached; no unified save blob API for ECS state.</td>
+<td><code>GameSave</code> + <code>GameFlowPersistentData</code> in P0 demo; not all ECS components snapshotted.</td>
 </tr>
 <tr>
 <td><strong>P2.4</strong></td>
 <td>Minimap / fog</td>
-<td>Missing</td>
-<td>Render targets / secondary camera or UI overlay.</td>
+<td>Partial</td>
+<td><code>Scene2DCompositeViewComponent</code> + GPU ortho capture (<code>VulkanScene2DCompositeCapture</code>); RGBA8 RT + HUD blit. Fog/outline feature enum reserved. See <a href="../../programming-guide/site/7-2d-game/08-scene2d-runtime-limits.html">2D runtime limits</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -650,7 +650,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Interface segregation</strong>: Colliders expose only category/mask accessors used by physics and queries.</li>
 <li><strong>Dependency inversion</strong>: Higher-level combat/trigger systems depend on abstract overlap events, not raw collision internals.</li>
 </ul>
-<p>Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), unified save blob (P2.3).</p>
+<p>| <strong>P1.11</strong> | <strong>2D grid nav ECS</strong> | Implemented | <code>GridNavAgent2DComponent</code> (tilemap A* via <code>TilemapGameplayGridComponent</code>), <code>GridPathFollower2DComponent</code> (transform / rigidbody follow), <code>GridNavTarget2DComponent</code>, <code>ProcessGridNavAgents2D</code> in <code>SimulateGameAi</code>. |</p>
+<p><strong>P0 product path demo:</strong> <code>GameFlow2DProductPathDemo</code> (SparkDemo <strong>F</strong>) — TMX level, gameplay grid, object spawn registry, gem pool, grid nav patrol/chaser, sprite FX dissolve, GPU minimap. API walkthrough: <a href="../../programming-guide/site/7-2d-game/09-2d-gameplay-api-guide.html">2D gameplay API guide</a>.</p>
+<p>Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), broader ECS save blob (P2.3).</p>
       </article>
     </main>
 

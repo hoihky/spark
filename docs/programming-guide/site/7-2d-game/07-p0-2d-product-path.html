@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>01 introduction · Spark Game Engine Programming Guide</title>
+  <title>07 p0 2d product path · Spark Game Engine Programming Guide</title>
   <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -413,7 +413,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1 is-active">
+                        <li class="nav-item depth-1">
                           
                             <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
                             
@@ -707,7 +707,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1">
+                        <li class="nav-item depth-1 is-active">
                           
                             <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
                             
@@ -780,91 +780,139 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <main class="content">
         <article class="doc">
           <header class="doc-header">
-            <h1>01 introduction</h1>
+            <h1>P0 2D product path</h1>
           </header>
-          <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
-<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
-<h2 id="what-you-get">What You Get</h2>
+          <div class="doc-body"><h1 id="p0-2d-product-path">P0 2D product path</h1>
+<p>This page documents the blessed patterns for shipping a code-first 2D game on Spark. Phase D editor UX (palette, chunked maps, TMX export parity) remains on the <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html">tilemap editor roadmap</a>.</p>
+<p><strong>Hands-on reference:</strong> SparkDemo <strong>#26 / hotkey F — “2D P0 product path”</strong> (<code>GameFlow2DProductPathDemo</code>).<br />
+<strong>API catalog:</strong> <a href="09-2d-gameplay-api-guide.html">Gameplay API guide</a> · <a href="10-2d-components-handbook.html">Components handbook</a>.</p>
+<h2 id="level-pipeline-authored-map">Level pipeline (authored map)</h2>
+<ol>
+<li>Author tiles in Tiled (<code>sampleMap.tmx</code>) and check in a minimal <code>platformer_level.sparkscene</code> (or P0-specific scene) with:</li>
+<li><code>Level</code> entity: <code>tilemap_map_source</code> → TMX path, tile size, layers.</li>
+<li><code>PlayerSpawn</code> entity: <code>spawn_point</code> named <code>Player</code>.</li>
+<li>At runtime, load via <code>SceneLevelLoader</code> + <code>SceneLoadSession</code> (same stack as the tilemap showcase).</li>
+<li>On the level root, attach:</li>
+<li><code>TilemapGameplayGridComponent</code> — walkability for nav and spawn validation</li>
+<li><code>TilemapCollider2DComponent</code> — static tile collision</li>
+<li><code>TilemapObjectLayerComponent</code> + <code>TilemapObjectSpawnComponent</code> — marker-driven spawns</li>
+<li>Register handlers on <code>TilemapObjectSpawnRegistry</code> (<code>p0_gem</code>, <code>p0_goal</code> in P0) and call <code>RespawnAll</code>.</li>
+</ol>
+<p><strong>Bridge:</strong> Kenney <code>sampleMap.tmx</code> may lack object layers. P0 seeds markers in code until a companion <code>.sparkmap</code> ships.</p>
+<p><strong>Classic platformer:</strong> <code>Platformer2DDemo</code> (<strong>#6</strong>) keeps procedural sprite platforms for side-view teaching.</p>
+<h2 id="gameplay-data-p0_demosparkgameplay">Gameplay data (<code>p0_demo.sparkgameplay</code>)</h2>
 <table>
 <thead>
 <tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Public API</th>
+<th>Key</th>
+<th>Role</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Window / input</td>
-<td>GLFW</td>
-<td><code>Window</code>, <code>IInput</code></td>
+<td><code>p0.gems_required</code></td>
+<td>Gems to reveal goal</td>
 </tr>
 <tr>
-<td>Rendering</td>
-<td>Vulkan (internal)</td>
-<td><code>SceneRenderParams</code>, <code>IFramePresenter</code></td>
+<td><code>p0.gem_pool_size</code></td>
+<td><code>GameObjectPool</code> warm count</td>
 </tr>
 <tr>
-<td>Simulation</td>
-<td>ECS (<strong>97</strong> built-in components)</td>
-<td><code>GameWorld</code>, <code>GameObject</code>, <code>GameComponent</code></td>
+<td><code>p0.move_speed_scale</code></td>
+<td>Player WASD / path speed</td>
 </tr>
 <tr>
-<td>Physics</td>
-<td>Custom solvers</td>
-<td><code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code></td>
+<td><code>p0.patrol_enabled</code> / <code>p0.patrol_speed_scale</code></td>
+<td>Green patrol NPC</td>
 </tr>
 <tr>
-<td>AI</td>
-<td>FSM, GOAP, steering</td>
-<td><code>SimulateGameAi</code>, <code>AiAgentComponent</code></td>
+<td><code>p0.chaser_enabled</code> / <code>p0.chaser_speed_scale</code></td>
+<td>Red chaser NPC</td>
 </tr>
 <tr>
-<td>Audio</td>
-<td>Software mixer</td>
-<td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
-</tr>
-<tr>
-<td>UI (retained)</td>
-<td><code>IUiElement</code> tree → screen draws</td>
-<td><code>UiCanvasComponent</code>, <code>spark/ui/Ui.hpp</code></td>
-</tr>
-<tr>
-<td>UI (tools, optional)</td>
-<td>Dear ImGui docking + ImGui backend</td>
-<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code></td>
+<td><code>p0.gem_dissolve_seconds</code></td>
+<td>Dissolve duration after pickup</td>
 </tr>
 </tbody>
 </table>
-<h2 id="design-philosophy">Design Philosophy</h2>
+<h2 id="simulation-frame-order-p0-demo">Simulation frame order (P0 demo)</h2>
+<p><code>SparkShellDemo</code> calls <code>GameFlow2DProductPathDemo::Simulate</code> <strong>before</strong> <code>Game::OnUpdate</code>. Inside <code>Simulate</code> when playing:</p>
 <ol>
-<li><strong>Explicit frame contract</strong> — simulation in <code>OnUpdate</code>, rendering as immutable <code>SceneRenderParams</code> in <code>OnRender</code>.</li>
-<li><strong>Dependency inversion</strong> — games depend on <code>IGame</code> / <code>IEngineContext</code>, not <code>VulkanRenderer</code>.</li>
-<li><strong>Composition</strong> — behavior lives in components; <code>GameObject</code> is a lightweight container.</li>
-<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem. <code>Platformer2DDemo</code> (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.</li>
+<li><code>TickProductPatrolAssignGoals</code> → <code>ProcessGridNavAgents2D</code> → patrol/chaser motion helpers</li>
+<li>Player click repath + keyboard or <code>ApplyGridNavAgent2DRigidbodyMotion</code></li>
+<li><code>physics.Simulate2D</code></li>
+<li><code>TickGemPickupDissolves</code> → proximity collect → goal check → camera sync → HUD</li>
 </ol>
-<h2 id="minimal-bootstrap">Minimal Bootstrap</h2>
-<pre><code class="language-cpp">#include &quot;spark/engine/Engine.hpp&quot;
-#include &quot;spark/engine/Game.hpp&quot;
-
-class HelloSpark final : public Spark::Game {
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        auto* go = GetWorld().CreateGameObject();
-        go-&gt;GetName() = Spark::Utf8String(&quot;Root&quot;);
-        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-    }
-};
-
-int main() {
-    Spark::Engine engine(Spark::Engine::NewGame&lt;HelloSpark&gt;());
-    engine.Run();
-    return 0;
-}
-</code></pre>
-<h2 id="default-demo-binary">Default Demo Binary</h2>
-<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher with <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, glTF PBR sample, tilemap showcase, <strong>Dear ImGui docking demo</strong>, and more).</p>
-<p>Next: <a href="02-engine-capabilities.html">Engine Capabilities</a>.</p></div>
+<p>Patrol assigns the next <strong>grid cell goal</strong> and <code>RequestRepath</code> <strong>before</strong> <code>ProcessGridNavAgents2D</code> so paths exist the same frame motion runs.</p>
+<h2 id="sprite-fx-grid-ai-composite-minimap">Sprite FX, grid AI, composite minimap</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>P0 demo behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sprite FX</strong></td>
+<td>Gems: <code>ApplyOutline</code>; on collect: <code>ApplyDissolveProgress</code> + scale shrink, then pool <code>Release</code>. Player: <code>ApplyHitFlashAtSceneTime</code> (<code>sprite.frag</code> modes 13–15).</td>
+</tr>
+<tr>
+<td><strong>2D AI</strong></td>
+<td>Green <strong>patrol</strong> — four walkable waypoints, <code>GridCell</code> goals, <code>ApplyGridNavAgent2DRigidbodyMotion</code>. Red <strong>chaser</strong> — <code>TargetObject</code> = player, steering/rigidbody motion. Tune via gameplay table.</td>
+</tr>
+<tr>
+<td><strong>Composite minimap</strong></td>
+<td><code>Scene2DCompositeViewComponent</code> on flow object; RGBA8 <code>RenderTexture</code>; GPU ortho capture + UI atlas blit. See <a href="../7-2d-game/08-scene2d-runtime-limits.html">runtime limits</a>.</td>
+</tr>
+<tr>
+<td><strong>Pools</strong></td>
+<td><code>prefabs/p0_gem.sparkscene</code>; <code>PickupComponent::SetDestroyOwnerOnCollect(false)</code> for dissolve-then-release.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="scene-flow-title-play-pause-victory-reload">Scene flow (title → play → pause → victory → reload)</h2>
+<table>
+<thead>
+<tr>
+<th>Concern</th>
+<th>Where it lives</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Per-scene state machine</td>
+<td><code>GameStateComponent</code> on a manager entity</td>
+</tr>
+<tr>
+<td>Triggers (goal, death)</td>
+<td><code>GameFlowTriggerComponent</code></td>
+</tr>
+<tr>
+<td>Cross-scene progress</td>
+<td><code>GameFlowPersistentData</code> + <code>GameSave</code> (<code>spark_save_v1</code>)</td>
+</tr>
+<tr>
+<td>Reload / additive scenes</td>
+<td><code>GameFlowCoordinator</code> + <code>SceneManager</code></td>
+</tr>
+</tbody>
+</table>
+<p>Typical loop:</p>
+<ol>
+<li><strong>Title / intro</strong> — <code>GameFlowState::Intro</code> (optional UI scene loaded additively).</li>
+<li><strong>Play</strong> — load level <code>.sparkscene</code>, <code>RequestState(Playing)</code>.</li>
+<li><strong>Pause</strong> — <code>PushState(Paused)</code> (<strong>P</strong> in P0 demo).</li>
+<li><strong>Victory</strong> — goal trigger or script calls <code>Victory</code>; coordinator syncs gems to <code>GameSave</code>.</li>
+<li><strong>Reload</strong> — <strong>R</strong> or <code>GameFlowCoordinator::ReloadActiveLevel</code>.</li>
+</ol>
+<p>Persistent data lives <strong>outside</strong> ECS so entity handles are not saved across reloads.</p>
+<h2 id="serialization">Serialization</h2>
+<p>Handlers for <code>game_state</code>, <code>game_flow_trigger</code>, <code>input_action_map</code>, <code>player_input</code>, and <code>tilemap_object_spawn</code> live in <code>ComponentSnapshotHandlersGameFlow.cpp</code>. Extend this set when new gameplay components join your scene template.</p>
+<p>Integration test: <code>PlatformerLevelSceneRoundTripTest</code> loads <code>platformer_level.sparkscene</code>, captures, and verifies TMX path + player spawn after reload.</p>
+<h2 id="player-progress-settings">Player progress / settings</h2>
+<p>Use <code>GameSave::TryLoad</code> / <code>TrySave</code> with a versioned <code>GameSaveSlot</code>. Hook saves from <code>GameState</code> transitions or <code>GameFlowCoordinator::SyncProgressFromGameplay</code>.</p>
+<p>Default path (demo): <code>GameSave::DefaultSlotPath()</code> under build assets <code>save/slot0.savespark</code>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>
@@ -876,23 +924,19 @@ int main() {
                   <ul>
                     
                         <li class="toc-h1">
-                          <a href="#introduction-to-spark">Introduction to Spark</a>
+                          <a href="#platformer-introduction">Platformer Introduction</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#what-you-get">What You Get</a>
+                          <a href="#class-design">Class Design: </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#design-philosophy">Design Philosophy</a>
+                          <a href="#minimal-external-game-entry-point">Minimal External Game Entry Point</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#minimal-bootstrap">Minimal Bootstrap</a>
-                        </li>
-                        
-                        <li class="toc-h2">
-                          <a href="#default-demo-binary">Default Demo Binary</a>
+                          <a href="#constants-from">Constants (from )</a>
                         </li>
                         
                   </ul>

@@ -276,7 +276,11 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
 | **2D camera struct** | Ortho view-projection helper (non-ECS) | `Camera2D` (`spark/scene/camera/Camera2D.hpp`) |
 | **2D character motor** | Platformer coyote/jump buffer/one-way | `CharacterController2DComponent`, `OneWayPlatform2DComponent`, `SimulateCharacterControllers2D` |
-| **2D grid navigation** | Tilemap A* + click-to-move / chase | `GridNavAgent2DComponent`, `GridPathFollower2DComponent`, `GridNavTarget2DComponent`, `ProcessGridNavAgents2D` |
+| **2D grid navigation** | Tilemap A* + click-to-move / chase / patrol | `GridNavAgent2DComponent`, `GridPathFollower2DComponent`, `GridNavTarget2DComponent`, `ProcessGridNavAgents2D`, `ApplyGridNavAgent2DRigidbodyMotion` |
+| **Object spawn from markers** | Tilemap object layers → prefabs | `TilemapObjectLayerComponent`, `TilemapObjectSpawnComponent`, `TilemapObjectSpawnRegistry` |
+| **Composite views / minimap** | Offscreen ortho capture → HUD texture | `Scene2DCompositeViewComponent`, `VulkanScene2DCompositeCapture`, `RenderTexture` (`Rgba8Unorm` for UI copy) |
+| **Parametric sprite FX** | Outline, hit flash, dissolve | `SpriteFx2D`, `SpriteLighting2DMode` 13–15, `sprite.frag` |
+| **P0 product demo** | End-to-end grid ARPG teaching path | `GameFlow2DProductPathDemo` (SparkDemo **F**); docs: `programming-guide/7-2d-game/09-2d-gameplay-api-guide.md` |
 | **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `PhysicsSubsystem`, `PhysicsQueryWorld2D` (see §11) |
 
 ### 5.6 3D physics and joints

@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -891,7 +921,15 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>2D sprite lighting modes</td>
-<td><code>SpriteLighting2DMode</code> on draw items</td>
+<td><code>SpriteLighting2DMode</code> (incl. normal-mapped + ramp) on <code>SpriteLighting2DComponent</code></td>
+</tr>
+<tr>
+<td>2D sprite-layer particles</td>
+<td><code>ParticleRenderSpace::SpriteLayer</code> on <code>ParticleEmitterComponent</code></td>
+</tr>
+<tr>
+<td>Procedural gameplay SFX</td>
+<td><code>ProceduralSoundPresets</code>, <code>SoundClip::CreateNoiseBurst</code> / sweep / chime</td>
 </tr>
 </tbody>
 </table>
@@ -921,6 +959,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>GameStateComponent</code>, <code>GameFlowTriggerComponent</code></td>
 </tr>
 <tr>
+<td>Grid navigation</td>
+<td><code>GridNavAgent2DComponent</code>, <code>GridPathFollower2DComponent</code>, <code>GridNavTarget2DComponent</code></td>
+</tr>
+<tr>
 <td>Combat vitals</td>
 <td><code>HealthComponent</code>, <code>DamageableComponent</code></td>
 </tr>
@@ -937,7 +979,7 @@ Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flu
 Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 </code></pre>
 <p>Legacy free functions (<code>SimulatePhysics2D</code>, <code>SimulatePhysics3D</code>, …) remain but are <strong>deprecated</strong> — prefer <code>PhysicsSubsystem</code>.</p>
-<p><strong>97 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
+<p><strong>100 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
 <h2 id="asset-loading-on-gameworld">Asset Loading on GameWorld</h2>
 <pre><code class="language-cpp">Spark::GltfAsset asset = world.LoadGltf(&quot;assets/models/Cube.glb&quot;);
 Spark::SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/models/Fox.glb&quot;);

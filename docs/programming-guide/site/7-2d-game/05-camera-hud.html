@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -832,6 +862,54 @@ SubmitStandardLitSceneFromWorld(
     SceneSpriteSortMode::SortOrderThenWorldY);
 </code></pre>
 <p>When using <code>Camera2DRigComponent</code>, read the rig's resolved <code>Camera2D</code> pose for submit (the demo copies rig output into its <code>Camera2D</code> struct each frame).</p>
+<h2 id="minimap-gpu-composite-view">Minimap (GPU composite view)</h2>
+<p>For top-down games, prefer <code>Scene2DCompositeViewComponent</code> over hand-drawn UI quads:</p>
+<ol>
+<li><code>CreateMinimapRenderTexture()</code> — offscreen <strong>RGBA8</strong> target (compatible with UI atlas copy).</li>
+<li><code>CreateMinimapHudPlaceholderTexture()</code> — registers a layer in <code>SceneRenderParams::uiTextures</code>.</li>
+<li><code>context.TryGetRenderTargetService()-&gt;CreateRenderTarget(rt)</code> — GPU framebuffer when using Vulkan.</li>
+<li>On a manager object: set feature <code>Minimap</code>, <code>target</code>, <code>hudTexture</code>, screen rect, and sync <code>SetWorldCapture(center, halfExtent)</code> each frame from player + grid bounds.</li>
+<li><code>PatchScene2DMinimapHud</code> draws the player dot aligned with capture ortho.</li>
+</ol>
+<p>Disable GPU capture to fall back to CPU walkability tint (<code>RebuildMinimapTextureFromGameplayGrid</code>).</p>
+<p>Details: <a href="08-scene2d-runtime-limits.html">Runtime limits — composite views</a>, <a href="09-2d-gameplay-api-guide.html#10-minimap-and-composite-views">Gameplay API — minimap</a>. Reference: <code>GameFlow2DProductPathDemo</code> (<strong>F</strong>).</p>
+<h2 id="camerabounds2dcomponent"><code>CameraBounds2DComponent</code></h2>
+<p>Clamp the rig so the view never leaves the level:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/camera/CameraBounds2DComponent.hpp&quot;
+
+auto* bounds = cameraGo-&gt;AddComponent&lt;CameraBounds2DComponent&gt;();
+bounds-&gt;SetWorldMin({minX, minY});
+bounds-&gt;SetWorldMax({maxX, maxY});
+</code></pre>
+<h2 id="hud-components">HUD components</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TextOverlayComponent</code></td>
+<td>Simple strings (gems, state name)</td>
+</tr>
+<tr>
+<td><code>UiCanvasComponent</code></td>
+<td>Retained UI layout (menus, inventory shells)</td>
+</tr>
+<tr>
+<td><code>Scene2DCompositeViewComponent</code></td>
+<td>Minimap texture in HUD layer</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/ui/UiCanvasComponent.hpp&quot;
+
+menuRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
+</code></pre>
+<p>Audio: attach <code>AudioListenerComponent</code> to the same object as <code>Camera2DRigComponent</code> so spatial cues follow the view.</p>
+<p>See <a href="10-2d-components-handbook.html#camera2d">10 — Components handbook</a>.</p>
 <p>Next: <a href="06-polish.html">Polish and Ship</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

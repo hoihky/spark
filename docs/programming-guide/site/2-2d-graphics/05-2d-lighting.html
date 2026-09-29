@@ -491,6 +491,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-1 is-active">
                           
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -754,14 +784,17 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           </header>
           <div class="doc-body"><h1 id="2d-lighting">2D Lighting</h1>
 <h2 id="spritelighting2dcomponent"><code>SpriteLighting2DComponent</code></h2>
-<p>Attach alongside <code>SpriteComponent</code> to enable per-sprite 2D lighting modes:</p>
+<p>Attach alongside <code>SpriteComponent</code> for per-sprite shading in <code>sprite.frag</code>:</p>
 <pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/SpriteLighting2DComponent.hpp&quot;
 
 go-&gt;AddComponent&lt;SpriteComponent&gt;(tex, tint, uvRect, sortOrder);
-go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(
-    SpriteLighting2DMode::NormalMapped,  // or Ramp, None
-  1.0F,   // normal strength
-  0.0F);  // ramp offset
+auto* lit = go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(
+    SpriteLighting2DMode::NormalMapped,
+    Vector4{1.0F, 0.35F, 0.9F, 1.0F},  // normal strength, ambient, directional, point scale
+    Vector4{});
+lit-&gt;SetNormalMap(normalAtlas);
+lit-&gt;SetSyncNormalUvWithSprite(true);  // follows SpriteAnimator / uvRect each frame
+lit-&gt;SetRampMap(rampTex);              // Ramp mode
 </code></pre>
 <table>
 <thead>
@@ -776,37 +809,99 @@ go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(
 <td>Flat tint only (default)</td>
 </tr>
 <tr>
+<td><code>DirectionalLambert</code></td>
+<td>Fake XY normal from quad center vs sun direction</td>
+</tr>
+<tr>
+<td><code>Rim</code></td>
+<td>Silhouette rim highlight</td>
+</tr>
+<tr>
+<td><code>PulseEmission</code></td>
+<td>Pulsing emissive overlay</td>
+</tr>
+<tr>
+<td><code>PointSoft</code></td>
+<td>Soft point lights from clustered scene lights</td>
+</tr>
+<tr>
 <td><code>NormalMapped</code></td>
-<td>Per-pixel normal lighting</td>
+<td>Tangent normal map + sun + point lights</td>
 </tr>
 <tr>
 <td><code>Ramp</code></td>
-<td>Gradient ramp lookup</td>
+<td>Normal map + 1D ramp lookup (toon-style)</td>
+</tr>
+<tr>
+<td><code>SpecularGloss</code></td>
+<td>Normal map + Blinn specular toward sun</td>
+</tr>
+<tr>
+<td><code>Hemisphere</code></td>
+<td>Normal map + sky/ground hemispheric tint</td>
+</tr>
+<tr>
+<td><code>WrapDiffuse</code></td>
+<td>Normal map + wrapped (soft) sun diffuse</td>
+</tr>
+<tr>
+<td><code>NormalMappedRim</code></td>
+<td>Normal map + sun + view rim (<code>param1.rgb</code> = rim color)</td>
+</tr>
+<tr>
+<td><code>MatcapApprox</code></td>
+<td>Normal map + ramp matcap from normal XY</td>
+</tr>
+<tr>
+<td><code>FlickerLit</code></td>
+<td>Normal map + sun/points with sinusoidal intensity flicker</td>
+</tr>
+<tr>
+<td><code>HitFlash</code> (13)</td>
+<td>Full-sprite flash; <code>param1.y</code> = scene time at flash start</td>
+</tr>
+<tr>
+<td><code>Outline</code> (14)</td>
+<td>Screen-space outline from alpha neighbors</td>
+</tr>
+<tr>
+<td><code>Dissolve</code> (15)</td>
+<td>Noise dissolve; <code>param0.x</code> = progress 0–1</td>
 </tr>
 </tbody>
 </table>
-<p>The submit path copies mode and parameters into each <code>SceneSpriteDraw</code>.</p>
-<h2 id="directional-light-on-2d-scenes">Directional Light on 2D Scenes</h2>
-<p><code>SubmitStandardLitSceneFromWorld</code> accepts a <strong>sun direction</strong> even for sprite-only scenes — tints sprites when lighting mode is enabled:</p>
-<pre><code class="language-cpp">SubmitStandardLitSceneFromWorldWithCamera(
-    world, context,
-    Vector3{0.30F, 0.86F, 0.36F}.Normalized(),  // lightDirectionWorld
-    Vector3{1.0F, 0.98F, 0.95F},                 // lightColor
-    0.85F,                                       // lightIntensity
-    Vector3{0.16F, 0.18F, 0.24F},               // ambientColor
-    false,                                       // particles
-    sceneTime);
+<h3 id="parametric-fx-helpers-spritefx2d">Parametric FX helpers (<code>SpriteFx2D</code>)</h3>
+<p>For gameplay feedback without hand-tuning shader params:</p>
+<pre><code class="language-cpp">#include &quot;spark/render/sprites2d/SpriteFx2D.hpp&quot;
+
+SpriteFx2D::ApplyOutline(lighting, outlineColor, widthTexels, softness);
+SpriteFx2D::ApplyHitFlashAtSceneTime(lighting, flashColor, decaySeconds, sceneTimeSeconds);
+SpriteFx2D::ApplyDissolveProgress(lighting, progress01);
 </code></pre>
-<p>For manual submit with Y-sort:</p>
-<pre><code class="language-cpp">params.spriteSortMode = SceneSpriteSortMode::SortOrderThenWorldY;
+<p>Used by <code>GameFlow2DProductPathDemo</code> for gems and player pickup flash. See <a href="../7-2d-game/08-scene2d-runtime-limits.html">2D runtime limits</a>.</p>
+<h3 id="normal-atlases">Normal atlases</h3>
+<p>Use a second texture with the <strong>same grid layout</strong> as the albedo atlas and keep <code>SetSyncNormalUvWithSprite(true)</code> so animation frames stay aligned. Helpers:</p>
+<ul>
+<li><code>Texture2D::CreateNormalAtlasForUniformGrid(columns, rows, cellW, cellH)</code></li>
+<li><code>Texture2D::CreateFlatNormalMap()</code> for placeholders</li>
+</ul>
+<p>Override UVs with <code>SetSyncNormalUvWithSprite(false)</code> and <code>SetNormalUvRect(...)</code>.</p>
+<h2 id="pointlight2dcomponent"><code>PointLight2DComponent</code></h2>
+<p>2D-oriented punctual light (no shadows). Position = owner transform + <code>localOffset</code>, Z from <code>worldZ</code>. Optional flicker:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/lighting/PointLight2DComponent.hpp&quot;
+
+auto* lamp = go-&gt;AddComponent&lt;PointLight2DComponent&gt;(Vector3{1, 0.9f, 0.7f}, 2.2f, 8.0f);
+lamp-&gt;SetLocalOffset({0.0f, 0.4f});
+lamp-&gt;SetFlicker(true, 0.2f, 10.0f);
 </code></pre>
-<h2 id="y-sort-for-top-down-arpg">Y-Sort for Top-Down ARPG</h2>
-<pre><code class="language-cpp">params.spriteSortMode = SceneSpriteSortMode::SortOrderThenWorldY;
+<p>Collected into <code>SceneRenderParams::pointLights</code> with standard <code>PointLightComponent</code>.</p>
+<h2 id="directional-sun-y-sort">Directional sun + Y-sort</h2>
+<pre><code class="language-cpp">SubmitStandardLitSceneFromWorldWithCamera(world, context, sunDir, sunColor, intensity, ambient, false, sceneTime);
+params.spriteSortMode = SceneSpriteSortMode::SortOrderThenWorldY;
 </code></pre>
-<p>Within the same <code>sortOrder</code>, sprites with <strong>lower world Y</strong> draw on top (southern characters occlude northern). <code>RenderLayers2DDemo</code> and <code>FarmingRpgRenderLayersDemo</code> demonstrate layer + Y-sort combinations.</p>
-<h2 id="fake-point-lights">Fake Point Lights</h2>
-<p>Spawn additive-style sprites at lamp positions with high <code>sortOrder</code> and soft gradient textures, or use <code>PointLightComponent</code> in mixed 2.5D scenes where 3D lighting affects sprites.</p>
-<p>See <code>docs/2D_ARPG_FEATURES.md</code> for ARPG-specific roadmap notes.</p>
+<h2 id="2d-particles-on-the-sprite-layer">2D particles on the sprite layer</h2>
+<p><code>ParticleEmitterComponent::SetRenderSpace(ParticleRenderSpace::SpriteLayer)</code> draws into the sprite composite pass (sorted with sprites/tilemaps). Scene save encodes render space in particle snapshot extension <code>p5</code>.</p>
+<p>Built-in 2D VFX (sprite-layer): <code>hit_spark_2d</code>, <code>coin_pop_2d</code>, <code>jump_ring_2d</code>, <code>lantern_glow_2d</code>, <code>rain_splash_2d</code>, <code>slash_arc_2d</code>, <code>footstep_puff_2d</code>, <code>block_impact_2d</code>, <code>magic_nova_2d</code>, <code>heal_sparkle_2d</code>, <code>poison_bubble_2d</code>, <code>shield_pulse_2d</code>, <code>water_ripple_2d</code>, <code>ember_motif_2d</code> (<code>assets/vfx/*.sparkvfx</code>).</p>
 <p>Next: <a href="06-2d-render-pipeline.html">2D Render Pipeline</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

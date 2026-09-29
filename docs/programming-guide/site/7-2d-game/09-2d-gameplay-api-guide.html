@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>01 introduction · Spark Game Engine Programming Guide</title>
+  <title>09 2d gameplay api guide · Spark Game Engine Programming Guide</title>
   <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -413,7 +413,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1 is-active">
+                        <li class="nav-item depth-1">
                           
                             <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
                             
@@ -719,7 +719,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1">
+                        <li class="nav-item depth-1 is-active">
                           
                             <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
                             
@@ -780,91 +780,509 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <main class="content">
         <article class="doc">
           <header class="doc-header">
-            <h1>01 introduction</h1>
+            <h1>2D gameplay API guide</h1>
           </header>
-          <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
-<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
-<h2 id="what-you-get">What You Get</h2>
+          <div class="doc-body"><h1 id="2d-gameplay-api-guide">2D gameplay API guide</h1>
+<p>This chapter is a <strong>practical catalog</strong> of Spark APIs for 2D games: loading maps, collision, object spawns, camera, grid navigation, NPC behavior, pickups, minimap, and presentation FX. It aligns with <code>GameFlow2DProductPathDemo</code> (shell <strong>F</strong>) and <code>TilemapShowcase2DDemo</code> (<strong>#19</strong>).</p>
+<p>For a <strong>component-by-component</strong> index (all <strong>108</strong> <code>ComponentKind</code> values, 2D vs 3D), use <a href="10-2d-components-handbook.html">10 — Components handbook</a> alongside the <a href="../1-overview-architecture/07-game-component-reference.html">full reference</a>.</p>
+<hr />
+<h2 id="1-loading-a-tilemap-level">1. Loading a tilemap level</h2>
+<h3 id="11-scene-tmx-on-the-level-root">1.1 Scene + TMX on the level root</h3>
+<p>Author a minimal <code>.sparkscene</code> with a <strong>Level</strong> entity that references your TMX:</p>
+<ul>
+<li><code>TilemapMapSourceComponent</code> — path, pixels-per-world-unit, hot reload</li>
+<li><code>TilemapComponent</code> — created or filled by import</li>
+</ul>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp&quot;
+#include &quot;spark/ecs/components/rendering/TilemapComponent.hpp&quot;
+
+GameObject* level = world.CreateGameObject();
+auto* source = level-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
+source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;);
+source-&gt;SetPixelsPerWorldUnit(16.0F);
+source-&gt;SetImportOnAttach(true);
+source-&gt;ImportNow(*level, world);
+</code></pre>
+<p><code>ImportNow</code> runs <code>TmxImporter</code> → <code>ApplyTilemapDocument</code>, which loads tileset textures, builds layers, and (for Kenney dungeon packs) applies gameplay tile definitions and layer flags.</p>
+<p>See <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a> for coordinate conventions (+Y up, cell origin bottom-left).</p>
+<h3 id="12-spawn-point-from-the-scene">1.2 Spawn point from the scene</h3>
+<p>Use a named <code>spawn_point</code> entity in <code>.sparkscene</code> (e.g. <code>PlayerSpawn</code>) or a default cell when the map has no object layer yet. <code>GameFlow2DProductPathDemo</code> resolves <code>PlayerSpawn</code> and falls back to a known walkable cell on <code>sampleMap.tmx</code>.</p>
+<hr />
+<h2 id="2-tile-layers-visuals-vs-gameplay-vs-collision">2. Tile layers: visuals vs gameplay vs collision</h2>
+<p>Each <code>TilemapLayer</code> has flags you set in code or via import rules:</p>
 <table>
 <thead>
 <tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Public API</th>
+<th>Flag</th>
+<th>Effect</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Window / input</td>
-<td>GLFW</td>
-<td><code>Window</code>, <code>IInput</code></td>
+<td><code>contributeCollision</code></td>
+<td><code>TilemapCollider2DComponent</code> bakes static shapes from tile definitions</td>
 </tr>
 <tr>
-<td>Rendering</td>
-<td>Vulkan (internal)</td>
-<td><code>SceneRenderParams</code>, <code>IFramePresenter</code></td>
+<td><code>contributeGameplayGrid</code></td>
+<td>Cell included when baking walkability for pathfinding</td>
 </tr>
 <tr>
-<td>Simulation</td>
-<td>ECS (<strong>97</strong> built-in components)</td>
-<td><code>GameWorld</code>, <code>GameObject</code>, <code>GameComponent</code></td>
-</tr>
-<tr>
-<td>Physics</td>
-<td>Custom solvers</td>
-<td><code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code></td>
-</tr>
-<tr>
-<td>AI</td>
-<td>FSM, GOAP, steering</td>
-<td><code>SimulateGameAi</code>, <code>AiAgentComponent</code></td>
-</tr>
-<tr>
-<td>Audio</td>
-<td>Software mixer</td>
-<td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
-</tr>
-<tr>
-<td>UI (retained)</td>
-<td><code>IUiElement</code> tree → screen draws</td>
-<td><code>UiCanvasComponent</code>, <code>spark/ui/Ui.hpp</code></td>
-</tr>
-<tr>
-<td>UI (tools, optional)</td>
-<td>Dear ImGui docking + ImGui backend</td>
-<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code></td>
+<td><code>orderInLayerOffset</code> / <code>sortMode</code></td>
+<td>Draw order and optional world-Y sort</td>
 </tr>
 </tbody>
 </table>
-<h2 id="design-philosophy">Design Philosophy</h2>
-<ol>
-<li><strong>Explicit frame contract</strong> — simulation in <code>OnUpdate</code>, rendering as immutable <code>SceneRenderParams</code> in <code>OnRender</code>.</li>
-<li><strong>Dependency inversion</strong> — games depend on <code>IGame</code> / <code>IEngineContext</code>, not <code>VulkanRenderer</code>.</li>
-<li><strong>Composition</strong> — behavior lives in components; <code>GameObject</code> is a lightweight container.</li>
-<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem. <code>Platformer2DDemo</code> (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.</li>
-</ol>
-<h2 id="minimal-bootstrap">Minimal Bootstrap</h2>
-<pre><code class="language-cpp">#include &quot;spark/engine/Engine.hpp&quot;
-#include &quot;spark/engine/Game.hpp&quot;
-
-class HelloSpark final : public Spark::Game {
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        auto* go = GetWorld().CreateGameObject();
-        go-&gt;GetName() = Spark::Utf8String(&quot;Root&quot;);
-        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-    }
-};
-
-int main() {
-    Spark::Engine engine(Spark::Engine::NewGame&lt;HelloSpark&gt;());
-    engine.Run();
-    return 0;
-}
+<p><strong>Tileset</strong> (<code>TileDefinition</code> per tile id):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>collisionShape</code></td>
+<td><code>FullCell</code>, <code>HalfCell</code>, <code>None</code>, custom convex</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td>e.g. <code>BlocksPathfinding</code>, <code>ForceWalkable</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">tileset-&gt;Definition(wallId).collisionShape = TileCollisionShape::FullCell;
+tileset-&gt;Definition(wallId).flags = TileDefinitionFlags::BlocksPathfinding;
+tileset-&gt;Definition(floorId).collisionShape = TileCollisionShape::None;
 </code></pre>
-<h2 id="default-demo-binary">Default Demo Binary</h2>
-<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher with <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, glTF PBR sample, tilemap showcase, <strong>Dear ImGui docking demo</strong>, and more).</p>
-<p>Next: <a href="02-engine-capabilities.html">Engine Capabilities</a>.</p></div>
+<p>Decor layers: <code>contributeGameplayGrid = false</code>, <code>contributeCollision = false</code>.</p>
+<hr />
+<h2 id="3-collision-detection-layer-physics">3. Collision detection layer (physics)</h2>
+<h3 id="31-tilemap-static-collision">3.1 Tilemap static collision</h3>
+<p>Attach on the <strong>same</strong> object as <code>TilemapComponent</code>:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp&quot;
+
+auto* tileCollider = level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
+// Uses layers with contributeCollision + tile collision shapes
+</code></pre>
+<p><code>PhysicsSubsystem::Simulate2D</code> resolves dynamic bodies (player, NPCs) against these statics each frame.</p>
+<h3 id="32-per-entity-colliders">3.2 Per-entity colliders</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BoxCollider2DComponent</code></td>
+<td>Player, crates, platforms (manual layout)</td>
+</tr>
+<tr>
+<td><code>CircleCollider2DComponent</code></td>
+<td>Round pickups, projectiles</td>
+</tr>
+<tr>
+<td><code>TriggerVolume2DComponent</code></td>
+<td>Overlap only — gems, goals, zones (<code>Physics2DTriggerEnter</code>)</td>
+</tr>
+<tr>
+<td><code>Rigidbody2DComponent</code></td>
+<td><code>Dynamic</code> (movable), <code>Static</code> (immovable), <code>Kinematic</code> (scripted)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Categories / masks</strong> — set on colliders so enemies do not block pickups, etc. See <a href="../5-physics/03-colliders.html">Colliders</a>.</p>
+<h3 id="33-grid-only-blocking-no-extra-collider">3.3 Grid-only blocking (no extra collider)</h3>
+<p>For top-down grid games you can combine:</p>
+<ul>
+<li><code>TilemapGameplayGridComponent</code> for <strong>logical</strong> walkability (AI + spawn placement)</li>
+<li><code>TilemapCollider2DComponent</code> for <strong>physical</strong> blocking</li>
+</ul>
+<p><code>GameFlow2DProductPathDemo::CorrectPlayerAgainstBlockedGrid</code> shows an extra guard: if the player ends on a blocked cell after physics, snap back to the last valid position.</p>
+<hr />
+<h2 id="4-gameplay-grid-and-walkability">4. Gameplay grid and walkability</h2>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;
+
+auto* walkGrid = level-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
+walkGrid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+walkGrid-&gt;SetAutoRebake(true);
+walkGrid-&gt;RebakeIfNeeded(*level);
+
+const TilemapGridFrame&amp; frame = walkGrid-&gt;GetGridFrame();
+const IGridWalkability&amp; walk = walkGrid-&gt;GetWalkability();
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>TilemapGameplayWalkRule</code></th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OccupiedWalkable</code></td>
+<td>Any painted gameplay-layer cell is walkable</td>
+</tr>
+<tr>
+<td><code>DefinitionAndFlags</code></td>
+<td><strong>Default</strong> — respects tile flags + collision metadata</td>
+</tr>
+<tr>
+<td><code>CollisionAligned</code></td>
+<td>Blocked when tile would contribute physics collision</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Coordinates:</strong> <code>frame.WorldXYToCell</code>, <code>frame.CellCenterToWorldXY</code>, <code>frame.IsCellInBounds</code>.</p>
+<hr />
+<h2 id="5-object-layers-markers-and-spawning">5. Object layers (markers and spawning)</h2>
+<p>Object layers are <strong>not</strong> TMX tile layers; they are logical marker lists used for gameplay spawn.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp&quot;
+#include &quot;spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp&quot;
+#include &quot;spark/scene/tilemap/TilemapObjectSpawnRegistry.hpp&quot;
+
+auto* objects = level-&gt;AddComponent&lt;TilemapObjectLayerComponent&gt;();
+const std::uint32_t layerIndex = objects-&gt;AddObjectLayer(&quot;P0Objects&quot;);
+
+TilemapObjectMarker gem{};
+gem.typeId = Utf8String(&quot;p0_gem&quot;);
+gem.cellX = 12;
+gem.cellY = 8;
+static_cast&lt;void&gt;(objects-&gt;AddMarker(layerIndex, gem));
+
+level-&gt;AddComponent&lt;TilemapObjectSpawnComponent&gt;();
+</code></pre>
+<p>Register a handler per <code>typeId</code>:</p>
+<pre><code class="language-cpp">TilemapObjectSpawnRegistry::Default().Register(&quot;p0_gem&quot;, &amp;SpawnProductGem);
+// Handler signature: GameObject*(GameWorld&amp;, GameObject&amp; mapOwner, const TilemapObjectMarker&amp;, const TilemapGridFrame&amp;)
+</code></pre>
+<p>Call <strong><code>RespawnAll</code></strong> on <code>TilemapObjectSpawnComponent</code> after markers are ready (P0 demo does this in <code>SetupGameplaySpawnAndMarkers</code>).</p>
+<p><strong>Seeding without TMX objects:</strong> demos may call <code>SeedObjectMarkers</code> until a <code>.sparkmap</code> exports object layers from the editor.</p>
+<hr />
+<h2 id="6-camera-control">6. Camera control</h2>
+<h3 id="61-code-driven-camera2d-p0-demo">6.1 Code-driven <code>Camera2D</code> (P0 demo)</h3>
+<pre><code class="language-cpp">#include &quot;spark/scene/camera/Camera2D.hpp&quot;
+
+Camera2D camera{};
+camera.halfExtentY = 8.0F;
+camera.position = playerWorldPosition;
+
+// Each frame after moving the player:
+camera.position.x = playerTr-&gt;GetLocalTransform().translation.x;
+camera.position.y = playerTr-&gt;GetLocalTransform().translation.y;
+
+Matrix4 vp = camera.ViewProjection(fbW, fbH);
+</code></pre>
+<p>Scroll wheel / keys can adjust <code>halfExtentY</code> for zoom (clamped to map scale).</p>
+<h3 id="62-ecs-rig-platformer-polish">6.2 ECS rig (platformer / polish)</h3>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/Camera2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/rendering/Camera2DRigComponent.hpp&quot;
+#include &quot;spark/ecs/components/rendering/ScreenShakeComponent.hpp&quot;
+
+auto* camGo = world.CreateGameObject();
+camGo-&gt;AddComponent&lt;Camera2DComponent&gt;()-&gt;SetHalfExtentY(6.5F);
+auto* rig = camGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;();
+rig-&gt;SetMode(Camera2DRigMode::FollowTarget);
+rig-&gt;SetTarget(playerObject);
+camGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+</code></pre>
+<p>See <a href="../7-2d-game/05-camera-hud.html">Camera and HUD</a>.</p>
+<h3 id="63-screen-world-grid-cell-click-to-move">6.3 Screen → world → grid cell (click-to-move)</h3>
+<p>Use the same ray convention as other Spark 2D demos (framebuffer Y <strong>down</strong>). Unproject with <code>camera.ViewProjection</code>, intersect Z=0 plane, then:</p>
+<pre><code class="language-cpp">GridPathfinder::Cell cell = frame.WorldXYToCell(worldXY);
+if (walk.IsWalkable(cell.x, cell.y)) { /* set nav goal */ }
+</code></pre>
+<p>Helpers: <code>TryPickWalkableGridCellFromScreen</code> patterns in <code>GameFlow2DProductPathDemo</code> / tilemap showcase.</p>
+<hr />
+<h2 id="7-grid-navigation-player-and-npcs">7. Grid navigation (player and NPCs)</h2>
+<h3 id="71-components">7.1 Components</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TilemapGameplayGridComponent</code></td>
+<td>On <strong>map</strong> object — walkability + <code>TilemapGridFrame</code></td>
+</tr>
+<tr>
+<td><code>GridNavAgent2DComponent</code></td>
+<td>On <strong>mover</strong> — A* replan, stores cell path + world waypoints</td>
+</tr>
+<tr>
+<td><code>GridNavTarget2DComponent</code></td>
+<td>On <strong>goal entity</strong> — optional snap for <code>TargetObject</code> mode</td>
+</tr>
+<tr>
+<td><code>GridPathFollower2DComponent</code></td>
+<td>Optional ECS follower (priority 125); demos often use motion helpers instead</td>
+</tr>
+</tbody>
+</table>
+<p><code>GridNavAgent2DComponent</code> settings:</p>
+<pre><code class="language-cpp">nav-&gt;SetGridSourceObject(levelRoot);
+nav-&gt;SetGoalMode(GridNavGoalMode2D::GridCell);       // or WorldPosition, TargetObject
+nav-&gt;SetGoalCell({gx, gy});
+nav-&gt;SetGoalTarget(playerObject);
+nav-&gt;SetRepathEveryFrame(false);
+nav-&gt;SetRepathIntervalSeconds(0.35F);
+nav-&gt;SetSyncToAiAgent(false);  // true copies path into AiAgentComponent for steering showcase
+nav-&gt;RequestRepath();
+</code></pre>
+<h3 id="72-frame-order-critical">7.2 Frame order (critical)</h3>
+<p>Call <strong><code>ProcessGridNavAgents2D(world, deltaTime)</code></strong> so agents rebuild paths <strong>before</strong> you apply velocity from the path.</p>
+<p>Recommended loop (P0 product path):</p>
+<pre><code class="language-text">1. TickPatrolAssignGoals()     // set next waypoint + RequestRepath when leg finished
+2. ProcessGridNavAgents2D()
+3. TickPatrolMotion()          // ApplyGridNavAgent2DRigidbodyMotion
+4. TickChaserMotion()          // same for chase target
+5. Player input / click repath + ApplyGridNavAgent2DRigidbodyMotion
+6. physics.Simulate2D()
+</code></pre>
+<p><code>ApplyGridNavAgent2DRigidbodyMotion</code> and <code>ApplyGridNavAgent2DSteeringMotion</code> live in <code>spark/ai/NavigationSubsystem.hpp</code>.</p>
+<p><code>SimulateGameAi</code> also calls <code>ProcessGridNavAgents2D</code> — if you run custom sim <strong>before</strong> <code>Game::OnUpdate</code>, avoid double-processing or pick one place for nav ticks.</p>
+<h3 id="73-player-keyboard-vs-click-to-move">7.3 Player: keyboard vs click-to-move</h3>
+<ul>
+<li><strong>Keyboard:</strong> clear nav path, set <code>Rigidbody2D</code> velocity directly.</li>
+<li><strong>Click:</strong> <code>SetGoalCell</code> / <code>SetGoalWorldPosition</code>, <code>RequestRepath()</code>, then <code>ApplyGridNavAgent2DRigidbodyMotion</code> when not using keyboard.</li>
+</ul>
+<h3 id="74-npc-patrol-cell-loop">7.4 NPC patrol (cell loop)</h3>
+<p>Pattern used in P0 demo:</p>
+<ol>
+<li>Build <code>Array&lt;GridPathfinder::Cell&gt;</code> route (e.g. four angular samples around spawn).</li>
+<li>Place NPC at <code>route[0]</code>.</li>
+<li>Each finished leg: set goal to <code>route[index]</code>, <code>RequestRepath()</code>, advance index modulo count.</li>
+<li>Use <strong><code>patrolAwaitingNextGoal</code></strong> (or equivalent) so waypoints advance only after the path clears — not every frame <code>!HasPath()</code>.</li>
+</ol>
+<h3 id="75-npc-chase">7.5 NPC chase</h3>
+<pre><code class="language-cpp">chaserNav-&gt;SetGoalMode(GridNavGoalMode2D::TargetObject);
+chaserNav-&gt;SetGoalTarget(playerObject);
+chaserNav-&gt;SetRepathIntervalSeconds(0.35F);
+</code></pre>
+<p>Player should have <code>GridNavTarget2DComponent</code> if you rely on snap rules on the goal entity.</p>
+<hr />
+<h2 id="8-gameplay-data-and-object-pools">8. Gameplay data and object pools</h2>
+<h3 id="81-gameplaydatatable">8.1 <code>GameplayDataTable</code></h3>
+<p>Load tuned constants from <code>assets/gameplay/p0_demo.sparkgameplay</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Example</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>p0.gems_required</code></td>
+<td><code>3</code></td>
+<td>Win condition</td>
+</tr>
+<tr>
+<td><code>p0.gem_pool_size</code></td>
+<td><code>8</code></td>
+<td>Pool capacity</td>
+</tr>
+<tr>
+<td><code>p0.move_speed_scale</code></td>
+<td><code>1.0</code></td>
+<td>Player speed multiplier</td>
+</tr>
+<tr>
+<td><code>p0.patrol_enabled</code></td>
+<td><code>1</code></td>
+<td>Toggle green patrol NPC</td>
+</tr>
+<tr>
+<td><code>p0.patrol_speed_scale</code></td>
+<td><code>0.75</code></td>
+<td>Patrol speed</td>
+</tr>
+<tr>
+<td><code>p0.chaser_enabled</code></td>
+<td><code>1</code></td>
+<td>Toggle red chaser</td>
+</tr>
+<tr>
+<td><code>p0.chaser_speed_scale</code></td>
+<td><code>0.92</code></td>
+<td>Chaser speed</td>
+</tr>
+<tr>
+<td><code>p0.gem_dissolve_seconds</code></td>
+<td><code>0.45</code></td>
+<td>Pickup dissolve duration</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">gameplayTable.LoadFromFile(&quot;gameplay/p0_demo.sparkgameplay&quot;);
+int gemsRequired = gameplayTable.GetInt(&quot;p0.gems_required&quot;, 3);
+</code></pre>
+<h3 id="82-gameobjectpool-prefab">8.2 <code>GameObjectPool</code> + prefab</h3>
+<pre><code class="language-cpp">#include &quot;spark/scene/spawn/GameObjectPool.hpp&quot;
+
+gemPool = MakeUnique&lt;GameObjectPool&gt;();
+gemPool-&gt;Warm(world, sceneManager, &quot;prefabs/p0_gem.sparkscene&quot;, poolSize);
+
+GameObject* gem = gemPool-&gt;Acquire(world, &quot;prefabs/p0_gem.sparkscene&quot;, nullptr);
+ConfigureSpawnedGem(*gem, worldXY, frame);  // reset transform, pickup callback, FX
+
+gemPool-&gt;Release(&quot;prefabs/p0_gem.sparkscene&quot;, gem);
+</code></pre>
+<p>Use pools when collectibles respawn or you want to avoid allocate/destroy churn.</p>
+<hr />
+<h2 id="9-pickups-triggers-and-dissolve-fx">9. Pickups, triggers, and dissolve FX</h2>
+<h3 id="91-pickupcomponent">9.1 <code>PickupComponent</code></h3>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/PickupComponent.hpp&quot;
+
+pickup-&gt;SetItemId(&quot;gem&quot;);
+pickup-&gt;SetDestroyOwnerOnCollect(false);  // true = destroy at end of physics step
+pickup-&gt;SetAutoCollectOnTriggerEnter(true);
+pickup-&gt;SetOnCollected([&amp;](GameObject&amp; collector, const char* id, int qty) {
+    BeginGemPickupDissolve(*gem, sceneTimeSeconds);
+});
+</code></pre>
+<p>Pair with <code>TriggerVolume2DComponent</code> (circle/box) on the gem. Proximity collect can also call <code>TryCollect</code> from game code (P0 uses both trigger and radius check).</p>
+<p><strong>Pool-friendly collect:</strong> disable auto-collect during dissolve; on finish call <code>ResetForRespawn()</code> and <code>Release</code> back to the pool.</p>
+<h3 id="92-sprite-fx-spritefx2d">9.2 Sprite FX (<code>SpriteFx2D</code>)</h3>
+<p>Helpers in <code>spark/render/sprites2d/SpriteFx2D.hpp</code> drive <code>SpriteLighting2DComponent</code> modes consumed by <code>sprite.frag</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Helper</th>
+<th>Mode</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ApplyOutline</code></td>
+<td>14</td>
+<td>Gem highlight, NPC outline</td>
+</tr>
+<tr>
+<td><code>ApplyHitFlashAtSceneTime</code></td>
+<td>13</td>
+<td>Player flash on pickup (<code>param1.y</code> = flash start time)</td>
+</tr>
+<tr>
+<td><code>ApplyDissolveProgress</code></td>
+<td>15</td>
+<td>Gem pickup dissolve (<code>progress</code> 0→1)</td>
+</tr>
+</tbody>
+</table>
+<p>Add or reuse <code>SpriteLighting2DComponent</code> on the sprite entity; scene submit copies mode + params into the GPU instance buffer.</p>
+<hr />
+<h2 id="10-minimap-and-composite-views">10. Minimap and composite views</h2>
+<h3 id="101-authoring-component">10.1 Authoring component</h3>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp&quot;
+#include &quot;spark/render/sprites2d/Scene2DMinimap.hpp&quot;
+
+auto* view = flowObject-&gt;AddComponent&lt;Scene2DCompositeViewComponent&gt;();
+view-&gt;SetFeature(Scene2DCompositeFeature::Minimap);
+view-&gt;SetTarget(minimapRenderTexture);
+view-&gt;SetHudTexture(minimapHudTexture);
+view-&gt;SetWorldCapture(worldCenter, orthoHalfExtent);
+view-&gt;SetScreenRect(0.82F, 0.02F, 0.16F, 0.16F);
+view-&gt;SetEnabled(true);
+</code></pre>
+<p>Each frame, sync ortho bounds with the walkable map (<code>ComputeMinimapOrthoBoundsSquare</code>, <code>SyncMinimapCompositeView</code> in P0 demo).</p>
+<h3 id="102-render-texture-format-gpu-path">10.2 Render texture format (GPU path)</h3>
+<p>Minimap targets use <strong><code>RenderTextureFormat::Rgba8Unorm</code></strong> via <code>CreateMinimapRenderTexture()</code> so the capture can be copied into the UI sprite atlas (RGBA8).</p>
+<p>Composite capture (<code>VulkanScene2DCompositeCapture</code>):</p>
+<ul>
+<li>Ortho resubmit of tilemaps + sprites into the offscreen target</li>
+<li>Uses an <strong>LDR offscreen render pass</strong> (RGBA8) for LDR targets, HDR pass for <code>HdrRGBA16Float</code> targets</li>
+<li>After the main HDR world pass, blit into the HUD <code>uiTextures</code> layer</li>
+</ul>
+<p>CPU fallback: <code>RebuildMinimapTextureFromGameplayGrid</code> tints walkability when GPU capture is disabled.</p>
+<h3 id="103-player-dot-on-hud">10.3 Player dot on HUD</h3>
+<p><code>PatchScene2DMinimapHud</code> draws the player marker in screen space using the <strong>same</strong> ortho bounds as GPU capture (<code>WorldXYToMinimapSquareUv</code>).</p>
+<p>See <a href="08-scene2d-runtime-limits.html">Runtime limits &amp; composite views</a>.</p>
+<hr />
+<h2 id="11-game-flow-saves-and-hud">11. Game flow, saves, and HUD</h2>
+<table>
+<thead>
+<tr>
+<th>Piece</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GameStateComponent</code></td>
+<td>Intro / Playing / Paused / Victory</td>
+</tr>
+<tr>
+<td><code>GameFlowTriggerComponent</code></td>
+<td>Goal trigger → <code>Victory</code></td>
+</tr>
+<tr>
+<td><code>GameFlowCoordinator</code></td>
+<td>Reload level, sync gem count, additive UI scenes</td>
+</tr>
+<tr>
+<td><code>GameFlowPersistentData</code> + <code>GameSave</code></td>
+<td>Cross-session progress (<code>spark_save_v1</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>P0 demo: <strong>P</strong> pause, <strong>R</strong> reload level, <strong>Escape</strong> menu.</p>
+<hr />
+<h2 id="12-component-quick-reference-2d-gameplay">12. Component quick reference (2D gameplay)</h2>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Components</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Map</td>
+<td><code>TilemapMapSource</code>, <code>TilemapComponent</code>, <code>TilemapGameplayGrid</code>, <code>TilemapCollider2D</code>, <code>TilemapObjectLayer</code>, <code>TilemapObjectSpawn</code>, <code>TilemapTileAnimator</code>, <code>TilemapAutotile</code></td>
+</tr>
+<tr>
+<td>Rendering</td>
+<td><code>SpriteComponent</code>, <code>SpriteLighting2D</code>, <code>SpriteAnimator</code>, <code>Scene2DCompositeView</code>, <code>Camera2D</code>, <code>Camera2DRig</code>, <code>ParallaxLayer</code>, <code>ScreenShake</code></td>
+</tr>
+<tr>
+<td>Physics</td>
+<td><code>Rigidbody2D</code>, <code>BoxCollider2D</code>, <code>CircleCollider2D</code>, <code>TriggerVolume2D</code>, <code>CharacterController2D</code></td>
+</tr>
+<tr>
+<td>AI</td>
+<td><code>GridNavAgent2D</code>, <code>GridNavTarget2D</code>, <code>GridPathFollower2D</code>, <code>AiAgent</code> (3D steering plane / legacy)</td>
+</tr>
+<tr>
+<td>Gameplay</td>
+<td><code>Pickup</code>, <code>Interactable</code>, <code>Health</code>, <code>GameState</code>, <code>GameFlowTrigger</code>, <code>PlayerInput</code>, <code>InputActionMap</code></td>
+</tr>
+<tr>
+<td>Input</td>
+<td><code>PlayerInputComponent</code> + <code>InputActionMapComponent</code></td>
+</tr>
+</tbody>
+</table>
+<p>Full signatures and signal IDs: <a href="../1-overview-architecture/07-game-component-reference.html">Game component reference</a>.</p>
+<hr />
+<h2 id="13-checklist-for-a-new-2d-grid-level">13. Checklist for a new 2D grid level</h2>
+<ol>
+<li>Add <code>.sparkscene</code> + TMX reference; load with <code>SceneLevelLoader</code> / <code>SceneLoadSession</code>.</li>
+<li>On level root: <code>TilemapGameplayGridComponent</code>, <code>TilemapCollider2DComponent</code>, object layer + spawn + registry.</li>
+<li>Register spawn handlers; place markers or seed from layout.</li>
+<li>Spawn player with sprite, <code>Rigidbody2D</code>, <code>GridNavAgent2D</code> pointing at level root.</li>
+<li>Each frame: assign nav goals → <code>ProcessGridNavAgents2D</code> → apply motion → <code>Simulate2D</code>.</li>
+<li>Optional: <code>Scene2DCompositeViewComponent</code> minimap, <code>GameplayDataTable</code>, pools for pickups.</li>
+<li>Wire <code>GameState</code> / triggers / save on victory.</li>
+</ol>
+<p>Next: <a href="07-p0-2d-product-path.html">P0 product path</a> · <a href="10-2d-components-handbook.html">Components handbook</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>
@@ -876,23 +1294,19 @@ int main() {
                   <ul>
                     
                         <li class="toc-h1">
-                          <a href="#introduction-to-spark">Introduction to Spark</a>
+                          <a href="#platformer-introduction">Platformer Introduction</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#what-you-get">What You Get</a>
+                          <a href="#class-design">Class Design: </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#design-philosophy">Design Philosophy</a>
+                          <a href="#minimal-external-game-entry-point">Minimal External Game Entry Point</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#minimal-bootstrap">Minimal Bootstrap</a>
-                        </li>
-                        
-                        <li class="toc-h2">
-                          <a href="#default-demo-binary">Default Demo Binary</a>
+                          <a href="#constants-from">Constants (from )</a>
                         </li>
                         
                   </ul>

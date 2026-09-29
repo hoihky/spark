@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -753,13 +783,13 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>07 game component reference</h1>
           </header>
           <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
-<p>Complete reference for all <strong>97</strong> built-in <code>GameComponent</code> types in Spark (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
+<p>Complete reference for all <strong>108</strong> built-in <code>GameComponent</code> types in Spark (<code>ComponentKind</code> in <code>GameComponent.hpp</code>, excluding <code>Unknown</code>) (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
 <p><strong>Includes:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
 <p><strong>Subsystem tick order (typical frame):</strong></p>
 <ol>
 <li><code>UpdateGameObjects</code> — component <code>OnUpdate</code> (billboards, springs, …)</li>
 <li><code>PhysicsSubsystem::Simulate2D</code> / <code>SimulateAll3D</code> (+ character controllers, triggers)</li>
-<li><code>SimulateGameAi</code> — <code>ProcessNavMeshAgents</code>, <code>ProcessPerceptionSensors</code>, then <code>AiAgentComponent</code></li>
+<li><code>SimulateGameAi</code> — <code>ProcessGridNavAgents2D</code>, <code>ProcessNavMeshAgents</code>, <code>ProcessPerceptionSensors</code>, then <code>AiAgentComponent</code></li>
 <li><code>ProcessSoundCues</code> — <code>ProcessAudioListeners</code>, <code>ProcessAmbientZones</code>, cue flush</li>
 <li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
 </ol>
@@ -779,7 +809,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#rendering">Rendering</a></td>
-<td><code>Mesh</code>, <code>Material</code>, <code>SkinnedMesh</code>, <code>Sprite</code>, <code>Tilemap</code>, <code>Sky</code>, <code>Terrain</code>, <code>WaterBody</code>, <code>ParticleEmitter</code>, <code>TextOverlay</code>, <code>Billboard</code>, <code>DecalProjector</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>BlendMode</code>, <code>RenderLayer</code>, <code>SortingGroup</code>, <code>SpriteLighting2D</code>, <code>ParallaxLayer</code></td>
+<td><code>Mesh</code>, <code>Material</code>, <code>SkinnedMesh</code>, <code>Sprite</code>, <code>Tilemap</code>, <code>Sky</code>, <code>Terrain</code>, <code>WaterBody</code>, <code>ParticleEmitter</code>, <code>TextOverlay</code>, <code>Billboard</code>, <code>DecalProjector</code>, <code>FogVolume</code>, <code>PostProcessVolume</code>, <code>BlendMode</code>, <code>RenderLayer</code>, <code>SortingGroup</code>, <code>SpriteLighting2D</code>, <code>Scene2DCompositeView</code>, <code>ParallaxLayer</code></td>
 </tr>
 <tr>
 <td><a href="#tilemap">Tilemap</a></td>
@@ -791,11 +821,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#camera">Camera</a></td>
-<td><code>Camera</code>, <code>Camera2D</code>, <code>Camera2DRig</code>, <code>ScreenShake</code>, <code>CameraFollow3D</code>, <code>SpringArm3D</code></td>
+<td><code>Camera</code>, <code>Camera2D</code>, <code>Camera2DRig</code>, <code>CameraBounds2D</code>, <code>ScreenShake</code>, <code>CameraFollow3D</code>, <code>SpringArm3D</code></td>
 </tr>
 <tr>
 <td><a href="#physics-2d">Physics 2D</a></td>
-<td><code>BoxCollider2D</code>, <code>CircleCollider2D</code>, <code>PolygonCollider2D</code>, <code>Rigidbody2D</code>, <code>CharacterController2D</code>, <code>OneWayPlatform2D</code>, <code>TriggerVolume2D</code>, <code>TilemapCollider2D</code>, <code>PhysicsMaterial2D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code></td>
+<td><code>BoxCollider2D</code>, <code>CircleCollider2D</code>, <code>PolygonCollider2D</code>, <code>Rigidbody2D</code>, <code>CharacterController2D</code>, <code>OneWayPlatform2D</code>, <code>TriggerVolume2D</code>, <code>Hurtbox2D</code>, <code>Projectile2D</code>, <code>TilemapCollider2D</code>, <code>PhysicsMaterial2D</code>, <code>DistanceJoint2D</code>, <code>HingeJoint2D</code></td>
 </tr>
 <tr>
 <td><a href="#physics-3d">Physics 3D</a></td>
@@ -811,7 +841,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#ai">AI</a></td>
-<td><code>AiAgent</code>, <code>NavMeshAgent</code>, <code>PatrolPath</code>, <code>PerceptionSensor</code></td>
+<td><code>AiAgent</code>, <code>NavMeshAgent</code>, <code>GridNavAgent2D</code>, <code>GridPathFollower2D</code>, <code>GridNavTarget2D</code>, <code>PatrolPath</code>, <code>PerceptionSensor</code></td>
 </tr>
 <tr>
 <td><a href="#audio">Audio</a></td>
@@ -823,11 +853,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#world">World</a></td>
-<td><code>SceneSpatialPolicy</code>, <code>TimeOfDayDriver</code>, <code>SpawnPoint</code>, <code>GltfSceneSource</code>, <code>GltfInstanceNode</code></td>
+<td><code>SceneSpatialPolicy</code>, <code>TimeOfDayDriver</code>, <code>SpawnPoint</code>, <code>SpawnPoint2D</code>, <code>GltfSceneSource</code>, <code>GltfInstanceNode</code></td>
 </tr>
 <tr>
 <td><a href="#gameplay">Gameplay</a></td>
-<td><code>Health</code>, <code>Damageable</code>, <code>Interactable</code>, <code>Pickup</code>, <code>GameState</code>, <code>GameFlowTrigger</code></td>
+<td><code>Health</code>, <code>Damageable</code>, <code>DamageZone2D</code>, <code>Interactable</code>, <code>Pickup</code>, <code>GameState</code>, <code>GameFlowTrigger</code></td>
 </tr>
 </tbody>
 </table>
@@ -853,6 +883,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>PlayerInputComponent</code>, <code>BillboardComponent</code></td>
 </tr>
 <tr>
+<td>125</td>
+<td>—</td>
+<td><code>GridPathFollower2DComponent</code></td>
+</tr>
+<tr>
 <td>100</td>
 <td><code>ComponentUpdatePriority::AnimationDriver</code></td>
 <td><code>Character3DAnimFsmComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code></td>
@@ -871,6 +906,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>215</td>
 <td>—</td>
 <td><code>SpriteAnimationEventReceiverComponent</code>, <code>AnimationHitbox2DComponent</code></td>
+</tr>
+<tr>
+<td>220</td>
+<td>—</td>
+<td><code>Projectile2DComponent</code></td>
 </tr>
 <tr>
 <td>250</td>
@@ -1296,6 +1336,15 @@ rig-&gt;SetFollowSmoothRate(7.5F);
 rig-&gt;SetLookAheadScale(0.15F);
 </code></pre>
 <p><code>Camera2DRigComponent::OnUpdate</code> reads <code>ScreenShakeComponent::GetOffset()</code> on the same object and adds it to the final camera translation. Attach shake to the camera rig, not to parallax layers.</p>
+<h3 id="camerabounds2dcomponent"><code>CameraBounds2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>CameraBounds2D</code> · <strong>Consumed by:</strong> <code>TryResolveCameraBounds2DForTarget</code> inside <code>Camera2DRigComponent</code> when <code>useBounds</code> or <code>BoundedFollow</code> is active.</p>
+<p>Place axis-aligned volumes in the level; when the rig follow target lies inside a volume, that volume's min/max override the rig's <code>boundsMin</code> / <code>boundsMax</code> for the frame (highest <code>priority</code> wins).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/camera/CameraBounds2DComponent.hpp&quot;
+
+auto* room = zoneGo-&gt;AddComponent&lt;CameraBounds2DComponent&gt;();
+room-&gt;SetHalfExtents({24.0F, 14.0F});
+room-&gt;SetPriority(1);
+</code></pre>
 <h3 id="screenshakecomponent"><code>ScreenShakeComponent</code></h3>
 <p><strong>Kind:</strong> <code>ScreenShake</code> · <strong>Priority:</strong> 295 · <strong>Sibling:</strong> <code>Camera2DRigComponent</code> on same object<br />
 <strong>Design:</strong> Composite pattern — multiple <code>CameraShakeImpulse</code> instances sum each frame; optional <strong>trauma</strong> accumulator for sustained rumble.</p>
@@ -1439,6 +1488,42 @@ auto* circle = gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;();
 circle-&gt;SetRadius(0.45F);
 </code></pre>
 <p>Signals (<code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code>) are delivered to <strong>sibling</strong> components on the same <code>GameObject</code>. Pair with <code>PickupComponent</code> or <code>GameFlowTriggerComponent</code> instead of wiring lambdas in demo code when possible.</p>
+<h3 id="hurtbox2dcomponent"><code>Hurtbox2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>Hurtbox2D</code> · <strong>Priority:</strong> 40 · <strong>Sibling:</strong> auto-configured <code>CircleCollider2D</code> or <code>BoxCollider2D</code> (trigger)</p>
+<p>Passive damage receiver for query-based weapons. Syncs layer bits to a trigger collider and optional post-hit invulnerability (<code>NotifyDamageReceived</code> via <code>TryApplyCombatDamage2D</code>).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp&quot;
+
+auto* hurt = enemy-&gt;AddComponent&lt;Hurtbox2DComponent&gt;();
+hurt-&gt;SetShape(Hurtbox2DShape::Circle);
+hurt-&gt;SetRadius(0.68F);
+hurt-&gt;SetCategoryBits(1u &lt;&lt; 4);  // hurtbox layer
+hurt-&gt;SetInvulnerabilitySeconds(0.15F);
+enemy-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);
+enemy-&gt;AddComponent&lt;HealthComponent&gt;(3.0F);
+</code></pre>
+<h3 id="projectile2dcomponent"><code>Projectile2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>Projectile2D</code> · <strong>Priority:</strong> 220 · <strong>Damage path:</strong> <code>TryApplyCombatDamage2D</code></p>
+<p>Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; <code>destroyOwnerOnDeactivate</code> queues destroy flushed by <code>Projectile2DComponent::ProcessDeferredDestroys</code> (called from <code>PhysicsSubsystem::Simulate2D</code>).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/Projectile2DComponent.hpp&quot;
+
+auto* shot = bulletGo-&gt;AddComponent&lt;Projectile2DComponent&gt;();
+shot-&gt;SetRadius(0.05F);
+shot-&gt;SetDamage(1.0F);
+shot-&gt;SetTargetFilter(meleeStyleFilter);  // queryCategory + mask vs hurtbox layer
+shot-&gt;SetBlockOnSolidHit(true);
+shot-&gt;SetDestroyOwnerOnDeactivate(false);
+shot-&gt;Activate({originX, originY}, {speedX, speedY}, player);
+</code></pre>
+<h3 id="damagezone2dcomponent"><code>DamageZone2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>DamageZone2D</code> · <strong>Priority:</strong> 215 · <strong>Damage path:</strong> <code>TryApplyCombatDamage2D</code></p>
+<p>Axis-aligned or circular hazard volume. Overlap-queries each frame (<code>damagePerSecond * dt</code>) using the same filter model as projectiles. Optional trigger collider sync for editor visibility.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/DamageZone2DComponent.hpp&quot;
+
+auto* lava = hazard-&gt;AddComponent&lt;DamageZone2DComponent&gt;();
+lava-&gt;SetHalfExtents({4.0F, 1.0F});
+lava-&gt;SetDamagePerSecond(25.0F);
+lava-&gt;SetTargetFilter(hurtboxQueryFilter);
+</code></pre>
 <h3 id="layer-filter">Layer filter</h3>
 <pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
 </code></pre>
@@ -1694,8 +1779,69 @@ agent-&gt;SetMaxSpeed(4.5F);
 agent-&gt;SetSteeringPlane(AiSteeringPlane::XzWorld);
 agent-&gt;SetFsmEnabled(true);
 </code></pre>
+<h3 id="gridnavagent2dcomponent-gridpathfollower2dcomponent-gridnavtarget2dcomponent"><code>GridNavAgent2DComponent</code> + <code>GridPathFollower2DComponent</code> + <code>GridNavTarget2DComponent</code></h3>
+<p><strong>2D tilemap pathfinding</strong> on the XY plane via sibling <code>TilemapGameplayGridComponent</code>. Run <code>ProcessGridNavAgents2D(world, deltaTime)</code> each frame (called automatically from <code>SimulateGameAi</code>).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/ai/GridNavAgent2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/ai/GridPathFollower2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/ai/GridNavTarget2DComponent.hpp&quot;
+#include &quot;spark/ai/NavigationSubsystem.hpp&quot;
+
+// Tilemap board (already has TilemapGameplayGridComponent):
+mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;()-&gt;SetAutoRebake(true);
+
+// Click-to-move player:
+auto* nav = player-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
+nav-&gt;SetGridSourceObject(mapGo);
+nav-&gt;SetGoalMode(GridNavGoalMode2D::WorldPosition);
+nav-&gt;SetGoalWorldPosition({goalX, goalY});
+nav-&gt;SetSyncToAiAgent(false);  // use follower instead of AiAgent steering
+
+auto* follower = player-&gt;AddComponent&lt;GridPathFollower2DComponent&gt;();
+follower-&gt;SetMaxSpeed(7.0F);
+follower-&gt;SetMode(GridPathFollower2DMode::Transform);
+
+// Each frame (before UpdateGameObjects for follower motion):
+ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GridNavAgent2DComponent</code></td>
+<td>A* replan on <code>TilemapGridFrame</code>; stores cell path + world waypoints</td>
+</tr>
+<tr>
+<td><code>GridPathFollower2DComponent</code></td>
+<td>Moves transform or <code>Rigidbody2D</code> along waypoints (priority 125)</td>
+</tr>
+<tr>
+<td><code>GridNavTarget2DComponent</code></td>
+<td>Marker on goal entities; optional snap-to-walkable-cell</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Goal modes</strong> (<code>GridNavGoalMode2D</code>):</p>
+<ul>
+<li><code>TargetObject</code> — follow <code>goalTarget</code> transform (pair with <code>GridNavTarget2DComponent</code>)</li>
+<li><code>WorldPosition</code> — fixed world XY (mouse pick in tilemap demos)</li>
+<li><code>GridCell</code> — explicit <code>{x, y}</code> cell index</li>
+</ul>
+<p>When <code>SetSyncToAiAgent(true)</code> (default), the polyline is copied into <code>AiAgentComponent</code> — use with <code>SetSteeringPlane(AiSteeringPlane::XyRigidbody2D)</code> for steering-based enemies.</p>
+<pre><code class="language-cpp">// Enemy chases player on tilemap grid:
+enemy-&gt;AddComponent&lt;AiAgentComponent&gt;()-&gt;SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);
+auto* chase = enemy-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
+chase-&gt;SetGridSourceObject(mapGo);
+chase-&gt;SetGoalMode(GridNavGoalMode2D::TargetObject);
+chase-&gt;SetGoalTarget(player);
+player-&gt;AddComponent&lt;GridNavTarget2DComponent&gt;();
+</code></pre>
 <h3 id="patrolpathcomponent-navmeshagentcomponent"><code>PatrolPathComponent</code> + <code>NavMeshAgentComponent</code></h3>
-<p><strong>PatrolPath</strong> stores local waypoints; <strong>NavMeshAgent</strong> copies them into <code>AiAgentComponent::pathWorldPolylineXZ</code> each AI tick (or runs grid A* when <code>UseGridPathfinding()</code> is true).</p>
+<p><strong>PatrolPath</strong> stores local waypoints; <strong>NavMeshAgent</strong> copies them into <code>AiAgentComponent::pathWorldPolylineXZ</code> each AI tick (or runs legacy bitmap grid A<em> on the XZ plane when <code>UseGridPathfinding()</code> is true). For </em><em>2D tilemaps</em>*, prefer <code>GridNavAgent2DComponent</code>.</p>
 <pre><code class="language-cpp">// Waypoint object (or same object as agent):
 auto* path = pathObj-&gt;AddComponent&lt;PatrolPathComponent&gt;();
 path-&gt;GetWaypoints().PushBack({0.0F, 0.0F, 0.0F});
@@ -1785,6 +1931,18 @@ tod-&gt;SetDayLengthSeconds(90.0F);
 tod-&gt;SetLooping(true);
 tod-&gt;SetPriority(1);
 </code></pre>
+<h3 id="spawnpoint2dcomponent"><code>SpawnPoint2DComponent</code></h3>
+<p><strong>Kind:</strong> <code>SpawnPoint2D</code> · <strong>Resolved by:</strong> <code>FindSpawnPoint2D</code> / <code>SpawnPoint2DService</code></p>
+<p>2D counterpart to <code>SpawnPointComponent</code>: world XY from the transform, planar facing from local Z rotation (or explicit radians), optional <code>teamId</code>.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/world/SpawnPoint2DComponent.hpp&quot;
+#include &quot;spark/scene/core/SceneSpawn2D.hpp&quot;
+
+auto* spawn = marker-&gt;AddComponent&lt;SpawnPoint2DComponent&gt;();
+spawn-&gt;SetSpawnName(&quot;PlayerStart&quot;);
+spawn-&gt;SetUseTransformFacing(true);
+
+const SceneSpawnPose2D pose = FindSpawnPoint2D(world, &quot;PlayerStart&quot;);
+</code></pre>
 <hr />
 <h2 id="gameplay">Gameplay</h2>
 <h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
@@ -1847,6 +2005,20 @@ pickup-&gt;SetOnCollected([](GameObject&amp; collector, const char* itemId, int 
 // After Simulate2D (flushes deferred destroys):
 PickupComponent::ProcessDeferredDestroys(world);
 </code></pre>
+<p><strong>Pool + dissolve (P0 gems):</strong> set <code>SetDestroyOwnerOnCollect(false)</code>, run dissolve/VFX in <code>SetOnCollected</code>, then <code>ResetForRespawn()</code> and <code>GameObjectPool::Release</code> when the effect finishes. Disable <code>SetAutoCollectOnTriggerEnter</code> during dissolve to avoid re-entry.</p>
+<h3 id="scene2dcompositeviewcomponent"><code>Scene2DCompositeViewComponent</code></h3>
+<p><strong>Kind:</strong> <code>Scene2DCompositeView</code> · <strong>Submit:</strong> <code>CollectScene2DCompositeViews</code> → GPU capture + HUD blit</p>
+<p>Authoring hook for minimap / fog / outline. Pairs <code>RenderTexture</code> (capture) with <code>Texture2D</code> (HUD atlas layer).</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp&quot;
+
+auto* view = flow-&gt;AddComponent&lt;Scene2DCompositeViewComponent&gt;();
+view-&gt;SetFeature(Scene2DCompositeFeature::Minimap);
+view-&gt;SetTarget(minimapRenderTexture);
+view-&gt;SetHudTexture(minimapHudTexture);
+view-&gt;SetWorldCapture(mapCenter, orthoHalfExtent);
+view-&gt;SetScreenRect(0.82F, 0.02F, 0.16F, 0.16F);
+</code></pre>
+<p>Minimap RTs should use <code>RenderTextureFormat::Rgba8Unorm</code> when blitting to the UI atlas. See <a href="../7-2d-game/08-scene2d-runtime-limits.html">2D runtime limits</a>.</p>
 <h3 id="gamestatecomponent"><code>GameStateComponent</code></h3>
 <p><strong>Kind:</strong> <code>GameState</code> · <strong>Design:</strong> State pattern with optional push/pop stack for pause menus.</p>
 <pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameStateComponent.hpp&quot;

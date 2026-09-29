@@ -12,6 +12,10 @@ The platformer demo (`Platformer2DDemo`) uses a **component stack** instead of r
 | `Rigidbody2DComponent` + `BoxCollider2DComponent` | Physics body the motor drives |
 | `Sprite2DCharacterAnimFsmComponent` + `SpriteAnimatorComponent` | Locomotion + attack clips |
 | `AnimationHitbox2DComponent` | Frame-synced melee arc during attack clip |
+| `HealthComponent` + `DamageableComponent` | Player vitals (optional) |
+| `Hurtbox2DComponent` | On enemies — receives melee / projectiles |
+| `Projectile2DComponent` | Ranged attacks (platformer shooting) |
+| `GridNavAgent2DComponent` | Top-down click-to-move (P0 path) |
 
 ## Spawn Player
 
@@ -124,5 +128,54 @@ if (p.y < kFallRespawnY) {
 ```
 
 Use `GameStateComponent` + `GameFlowTriggerComponent` for goal and defeat flow instead of ad-hoc booleans — see [Camera and HUD](05-camera-hud.md).
+
+## Top-down / grid movement (P0 product path)
+
+The platformer uses `CharacterController2DComponent`. For **tilemap grid** games (shell **F**), use `GridNavAgent2DComponent` on the player:
+
+```cpp
+playerNav = playerObject->AddComponent<GridNavAgent2DComponent>();
+playerNav->SetGridSourceObject(levelRoot);
+playerNav->SetGoalMode(GridNavGoalMode2D::GridCell);
+playerNav->SetSyncToAiAgent(false);
+
+// Left-click: pick walkable cell, then:
+playerNav->SetGoalCell(cell);
+playerNav->RequestRepath();
+
+// Each frame (after ProcessGridNavAgents2D):
+ApplyGridNavAgent2DRigidbodyMotion(*playerNav, *playerTr, *playerRb, speed, arriveRadius, dt);
+
+// WASD: ClearPath(), set velocity directly; skip path follower.
+```
+
+Frame order matters: run `ProcessGridNavAgents2D` **after** setting goals / patrol waypoints. See [Pathfinding](../4-ai/05-pathfinding.md) and [Gameplay API](09-2d-gameplay-api-guide.md#7-grid-navigation-player-and-npcs).
+
+## Combat components (melee + hazards)
+
+**Melee** — `AnimationHitbox2DComponent` enables a damage window during an attack clip; overlap queries hit `Hurtbox2DComponent` on enemies.
+
+```cpp
+#include "spark/ecs/components/animation/AnimationHitbox2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
+#include "spark/ecs/components/gameplay/HealthComponent.hpp"
+
+player->AddComponent<AnimationHitbox2DComponent>()->SetAttackClipIndex(2);
+
+auto* hurt = enemy->AddComponent<Hurtbox2DComponent>();
+hurt->SetShape(Hurtbox2DShape::Circle);
+hurt->SetRadius(0.65F);
+enemy->AddComponent<HealthComponent>(3.0F);
+```
+
+**Hazards** — `DamageZone2DComponent` applies DPS inside a volume:
+
+```cpp
+#include "spark/ecs/components/gameplay/DamageZone2DComponent.hpp"
+
+lava->AddComponent<DamageZone2DComponent>()->SetDamagePerSecond(20.0F);
+```
+
+**Projectiles** — see `Projectile2DComponent` in [Components handbook](10-2d-components-handbook.md#projectile2d).
 
 Next: [Camera and HUD](05-camera-hud.md).

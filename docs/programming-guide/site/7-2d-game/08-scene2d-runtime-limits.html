@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>01 introduction · Spark Game Engine Programming Guide</title>
+  <title>08 scene2d runtime limits · Spark Game Engine Programming Guide</title>
   <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -413,7 +413,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1 is-active">
+                        <li class="nav-item depth-1">
                           
                             <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
                             
@@ -713,7 +713,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1">
+                        <li class="nav-item depth-1 is-active">
                           
                             <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
                             
@@ -780,91 +780,134 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <main class="content">
         <article class="doc">
           <header class="doc-header">
-            <h1>01 introduction</h1>
+            <h1>2D runtime limits and composite views</h1>
           </header>
-          <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
-<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
-<h2 id="what-you-get">What You Get</h2>
+          <div class="doc-body"><h1 id="2d-runtime-limits-and-composite-views">2D runtime limits and composite views</h1>
+<p>Spark submits 2D draws through <code>SceneRenderParams</code>. External editors should treat these as <strong>hard per-frame budgets</strong> unless a platform build explicitly raises them.</p>
+<h2 id="caps-scene2druntimelimits">Caps (<code>Scene2DRuntimeLimits</code>)</h2>
 <table>
 <thead>
 <tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Public API</th>
+<th>Limit</th>
+<th style="text-align: right;">Value</th>
+<th>Field</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Window / input</td>
-<td>GLFW</td>
-<td><code>Window</code>, <code>IInput</code></td>
+<td>Sprites</td>
+<td style="text-align: right;">8192</td>
+<td><code>SceneRenderParams::sprites</code></td>
 </tr>
 <tr>
-<td>Rendering</td>
-<td>Vulkan (internal)</td>
-<td><code>SceneRenderParams</code>, <code>IFramePresenter</code></td>
+<td>Tilemap layers</td>
+<td style="text-align: right;">64</td>
+<td><code>SceneRenderParams::tilemaps</code></td>
 </tr>
 <tr>
-<td>Simulation</td>
-<td>ECS (<strong>97</strong> built-in components)</td>
-<td><code>GameWorld</code>, <code>GameObject</code>, <code>GameComponent</code></td>
+<td>Tile instances</td>
+<td style="text-align: right;">65536</td>
+<td><code>SceneRenderParams::tilemapTiles</code></td>
 </tr>
 <tr>
-<td>Physics</td>
-<td>Custom solvers</td>
-<td><code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code></td>
+<td>Particles</td>
+<td style="text-align: right;">8192</td>
+<td><code>SceneRenderParams::particles</code></td>
 </tr>
 <tr>
-<td>AI</td>
-<td>FSM, GOAP, steering</td>
-<td><code>SimulateGameAi</code>, <code>AiAgentComponent</code></td>
+<td>UI textures</td>
+<td style="text-align: right;">16</td>
+<td><code>SceneRenderParams::uiTextures</code></td>
 </tr>
 <tr>
-<td>Audio</td>
-<td>Software mixer</td>
-<td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
+<td>Scene texture layers</td>
+<td style="text-align: right;">16</td>
+<td>GPU sprite array</td>
 </tr>
 <tr>
-<td>UI (retained)</td>
-<td><code>IUiElement</code> tree → screen draws</td>
-<td><code>UiCanvasComponent</code>, <code>spark/ui/Ui.hpp</code></td>
-</tr>
-<tr>
-<td>UI (tools, optional)</td>
-<td>Dear ImGui docking + ImGui backend</td>
-<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code></td>
+<td>Composite views</td>
+<td style="text-align: right;">4</td>
+<td><code>SceneRenderParams::scene2DCompositeViews</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="design-philosophy">Design Philosophy</h2>
+<h2 id="minimap-fog-outline">Minimap / fog / outline</h2>
+<h3 id="authoring-ecs">Authoring (ECS)</h3>
 <ol>
-<li><strong>Explicit frame contract</strong> — simulation in <code>OnUpdate</code>, rendering as immutable <code>SceneRenderParams</code> in <code>OnRender</code>.</li>
-<li><strong>Dependency inversion</strong> — games depend on <code>IGame</code> / <code>IEngineContext</code>, not <code>VulkanRenderer</code>.</li>
-<li><strong>Composition</strong> — behavior lives in components; <code>GameObject</code> is a lightweight container.</li>
-<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem. <code>Platformer2DDemo</code> (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.</li>
+<li>Create a <code>RenderTexture</code> (<code>CreateMinimapRenderTexture()</code> uses <strong>RGBA8</strong> for HUD copy compatibility).</li>
+<li>Create a placeholder <code>Texture2D</code> for the HUD atlas layer (<code>CreateMinimapHudPlaceholderTexture</code>).</li>
+<li><code>IRenderTargetService::CreateRenderTarget</code> / <code>EnsureGpuResources</code> allocates GPU images when the Vulkan backend is active.</li>
+<li>Add <code>Scene2DCompositeViewComponent</code> with <code>Scene2DCompositeFeature</code> (<code>Minimap</code>, <code>FogOfWarMask</code>, <code>SceneOutline</code>), normalized screen rect, and world ortho capture center/extent.</li>
+<li>Each frame, <code>FillStandardLitSceneFromWorld</code> → <code>CollectScene2DCompositeViews</code> appends <code>Scene2DCompositeViewDesc</code> entries to <code>SceneRenderParams</code>.</li>
 </ol>
-<h2 id="minimal-bootstrap">Minimal Bootstrap</h2>
-<pre><code class="language-cpp">#include &quot;spark/engine/Engine.hpp&quot;
-#include &quot;spark/engine/Game.hpp&quot;
-
-class HelloSpark final : public Spark::Game {
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        auto* go = GetWorld().CreateGameObject();
-        go-&gt;GetName() = Spark::Utf8String(&quot;Root&quot;);
-        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-    }
-};
-
-int main() {
-    Spark::Engine engine(Spark::Engine::NewGame&lt;HelloSpark&gt;());
-    engine.Run();
-    return 0;
-}
-</code></pre>
-<h2 id="default-demo-binary">Default Demo Binary</h2>
-<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher with <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, glTF PBR sample, tilemap showcase, <strong>Dear ImGui docking demo</strong>, and more).</p>
-<p>Next: <a href="02-engine-capabilities.html">Engine Capabilities</a>.</p></div>
+<h3 id="gpu-capture-pipeline">GPU capture pipeline</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>System</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Main world</td>
+<td>HDR render pass (scene color <code>R16G16B16A16_SFLOAT</code>)</td>
+</tr>
+<tr>
+<td>Composite capture</td>
+<td><code>VulkanScene2DCompositeCapture</code> — ortho VP, resubmit tilemaps/sprites via <code>Vulkan2DCompositePass</code></td>
+</tr>
+<tr>
+<td>Render pass selection</td>
+<td><code>RenderTextureFormat::Rgba8Unorm</code> → <strong>LDR offscreen render pass</strong> (<code>VulkanOffscreenLdrRenderPass</code>); <code>HdrRGBA16Float</code> → HDR pass</td>
+</tr>
+<tr>
+<td>Pipelines</td>
+<td>Sprite pass maintains <strong>HDR</strong> and <strong>LDR offscreen</strong> pipeline variants (same shaders, compatible subpass layout)</td>
+</tr>
+<tr>
+<td>HUD blit</td>
+<td><code>VulkanScreenUiPass::RecordCompositeRenderTextureBlits</code> — <code>vkCmdCopyImage</code> from offscreen RGBA8 into the UI sprite atlas layer</td>
+</tr>
+<tr>
+<td>Player marker</td>
+<td><code>PatchScene2DMinimapHud</code> — screen-space dot using <code>ComputeMinimapOrthoBoundsSquare</code> / <code>WorldXYToMinimapSquareUv</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why RGBA8 for minimap:</strong> the UI atlas is <code>R8G8B8A8_UNORM</code>. HDR offscreen color cannot be copied with <code>vkCmdCopyImage</code> (texel size mismatch); minimap capture therefore uses LDR targets and the LDR render pass.</p>
+<p>CPU fallback when GPU capture is off: <code>RebuildMinimapTextureFromGameplayGrid</code> fills a walkability tint texture.</p>
+<p><strong>P0 wiring:</strong> <code>Scene2DCompositeViewComponent</code> on the flow object (<code>P0GameFlow</code>) with <code>target</code> + <code>hudTexture</code>; <code>SyncMinimapCompositeView()</code> updates world capture from the player and grid each frame.</p>
+<p>See <a href="09-2d-gameplay-api-guide.html#10-minimap-and-composite-views">2D gameplay API — minimap</a>.</p>
+<h2 id="parametric-sprite-fx">Parametric sprite FX</h2>
+<p>Use <code>SpriteLighting2DMode::HitFlash</code>, <code>Outline</code>, or <code>Dissolve</code> (13–15) or helpers in <code>spark/render/sprites2d/SpriteFx2D.hpp</code>. Params map to <code>SpriteLighting2DComponent::param0/param1</code> and the instance buffer consumed by <code>sprite.frag</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Helper</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13 Hit flash</td>
+<td><code>ApplyHitFlashAtSceneTime</code></td>
+<td><code>param1.y</code> = scene time at flash start</td>
+</tr>
+<tr>
+<td>14 Outline</td>
+<td><code>ApplyOutline</code></td>
+<td>Screen-space edge from alpha neighbors</td>
+</tr>
+<tr>
+<td>15 Dissolve</td>
+<td><code>ApplyDissolveProgress</code></td>
+<td>Noise clip; <code>progress</code> 0 = visible, 1 = gone</td>
+</tr>
+</tbody>
+</table>
+<p>Rebuild shaders (<code>sprite.frag</code> / SPIR-V) after changing FX modes in development builds.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>
@@ -876,23 +919,19 @@ int main() {
                   <ul>
                     
                         <li class="toc-h1">
-                          <a href="#introduction-to-spark">Introduction to Spark</a>
+                          <a href="#platformer-introduction">Platformer Introduction</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#what-you-get">What You Get</a>
+                          <a href="#class-design">Class Design: </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#design-philosophy">Design Philosophy</a>
+                          <a href="#minimal-external-game-entry-point">Minimal External Game Entry Point</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#minimal-bootstrap">Minimal Bootstrap</a>
-                        </li>
-                        
-                        <li class="toc-h2">
-                          <a href="#default-demo-binary">Default Demo Binary</a>
+                          <a href="#constants-from">Constants (from )</a>
                         </li>
                         
                   </ul>

@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -786,6 +816,22 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><code>AnimationHitbox2DComponent</code></td>
 <td>Frame-synced melee arc during attack clip</td>
+</tr>
+<tr>
+<td><code>HealthComponent</code> + <code>DamageableComponent</code></td>
+<td>Player vitals (optional)</td>
+</tr>
+<tr>
+<td><code>Hurtbox2DComponent</code></td>
+<td>On enemies — receives melee / projectiles</td>
+</tr>
+<tr>
+<td><code>Projectile2DComponent</code></td>
+<td>Ranged attacks (platformer shooting)</td>
+</tr>
+<tr>
+<td><code>GridNavAgent2DComponent</code></td>
+<td>Top-down click-to-move (P0 path)</td>
 </tr>
 </tbody>
 </table>
@@ -880,6 +926,42 @@ if (p.y &lt; kFallRespawnY) {
 }
 </code></pre>
 <p>Use <code>GameStateComponent</code> + <code>GameFlowTriggerComponent</code> for goal and defeat flow instead of ad-hoc booleans — see <a href="05-camera-hud.html">Camera and HUD</a>.</p>
+<h2 id="top-down-grid-movement-p0-product-path">Top-down / grid movement (P0 product path)</h2>
+<p>The platformer uses <code>CharacterController2DComponent</code>. For <strong>tilemap grid</strong> games (shell <strong>F</strong>), use <code>GridNavAgent2DComponent</code> on the player:</p>
+<pre><code class="language-cpp">playerNav = playerObject-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
+playerNav-&gt;SetGridSourceObject(levelRoot);
+playerNav-&gt;SetGoalMode(GridNavGoalMode2D::GridCell);
+playerNav-&gt;SetSyncToAiAgent(false);
+
+// Left-click: pick walkable cell, then:
+playerNav-&gt;SetGoalCell(cell);
+playerNav-&gt;RequestRepath();
+
+// Each frame (after ProcessGridNavAgents2D):
+ApplyGridNavAgent2DRigidbodyMotion(*playerNav, *playerTr, *playerRb, speed, arriveRadius, dt);
+
+// WASD: ClearPath(), set velocity directly; skip path follower.
+</code></pre>
+<p>Frame order matters: run <code>ProcessGridNavAgents2D</code> <strong>after</strong> setting goals / patrol waypoints. See <a href="../4-ai/05-pathfinding.html">Pathfinding</a> and <a href="09-2d-gameplay-api-guide.html#7-grid-navigation-player-and-npcs">Gameplay API</a>.</p>
+<h2 id="combat-components-melee-hazards">Combat components (melee + hazards)</h2>
+<p><strong>Melee</strong> — <code>AnimationHitbox2DComponent</code> enables a damage window during an attack clip; overlap queries hit <code>Hurtbox2DComponent</code> on enemies.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/AnimationHitbox2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/gameplay/HealthComponent.hpp&quot;
+
+player-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;()-&gt;SetAttackClipIndex(2);
+
+auto* hurt = enemy-&gt;AddComponent&lt;Hurtbox2DComponent&gt;();
+hurt-&gt;SetShape(Hurtbox2DShape::Circle);
+hurt-&gt;SetRadius(0.65F);
+enemy-&gt;AddComponent&lt;HealthComponent&gt;(3.0F);
+</code></pre>
+<p><strong>Hazards</strong> — <code>DamageZone2DComponent</code> applies DPS inside a volume:</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/DamageZone2DComponent.hpp&quot;
+
+lava-&gt;AddComponent&lt;DamageZone2DComponent&gt;()-&gt;SetDamagePerSecond(20.0F);
+</code></pre>
+<p><strong>Projectiles</strong> — see <code>Projectile2DComponent</code> in <a href="10-2d-components-handbook.html#projectile2d">Components handbook</a>.</p>
 <p>Next: <a href="05-camera-hud.html">Camera and HUD</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

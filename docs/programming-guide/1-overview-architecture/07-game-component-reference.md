@@ -1,6 +1,6 @@
 # Game Component Reference
 
-Complete reference for all **105** built-in `GameComponent` types in Spark (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **108** built-in `GameComponent` types in Spark (`ComponentKind` in `GameComponent.hpp`, excluding `Unknown`) (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -19,7 +19,7 @@ Complete reference for all **105** built-in `GameComponent` types in Spark (`inc
 | Folder | Components |
 |--------|------------|
 | [Core](#core) | `TransformComponent` |
-| [Rendering](#rendering) | `Mesh`, `Material`, `SkinnedMesh`, `Sprite`, `Tilemap`, `Sky`, `Terrain`, `WaterBody`, `ParticleEmitter`, `TextOverlay`, `Billboard`, `DecalProjector`, `FogVolume`, `PostProcessVolume`, `BlendMode`, `RenderLayer`, `SortingGroup`, `SpriteLighting2D`, `ParallaxLayer` |
+| [Rendering](#rendering) | `Mesh`, `Material`, `SkinnedMesh`, `Sprite`, `Tilemap`, `Sky`, `Terrain`, `WaterBody`, `ParticleEmitter`, `TextOverlay`, `Billboard`, `DecalProjector`, `FogVolume`, `PostProcessVolume`, `BlendMode`, `RenderLayer`, `SortingGroup`, `SpriteLighting2D`, `Scene2DCompositeView`, `ParallaxLayer` |
 | [Tilemap](#tilemap) | `TilemapGameplayGrid`, `TilemapTileAnimator`, `TilemapAutotile`, `TilemapObjectLayer`, `TilemapObjectSpawn`, `TilemapObjectGizmo`, `TilemapMapSource` |
 | [Lighting](#lighting) | `DirectionalLight`, `PointLight`, `SpotLight` |
 | [Camera](#camera) | `Camera`, `Camera2D`, `Camera2DRig`, `CameraBounds2D`, `ScreenShake`, `CameraFollow3D`, `SpringArm3D` |
@@ -1385,6 +1385,27 @@ pickup->SetOnCollected([](GameObject& collector, const char* itemId, int qty) {
 // After Simulate2D (flushes deferred destroys):
 PickupComponent::ProcessDeferredDestroys(world);
 ```
+
+**Pool + dissolve (P0 gems):** set `SetDestroyOwnerOnCollect(false)`, run dissolve/VFX in `SetOnCollected`, then `ResetForRespawn()` and `GameObjectPool::Release` when the effect finishes. Disable `SetAutoCollectOnTriggerEnter` during dissolve to avoid re-entry.
+
+### `Scene2DCompositeViewComponent`
+
+**Kind:** `Scene2DCompositeView` · **Submit:** `CollectScene2DCompositeViews` → GPU capture + HUD blit
+
+Authoring hook for minimap / fog / outline. Pairs `RenderTexture` (capture) with `Texture2D` (HUD atlas layer).
+
+```cpp
+#include "spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp"
+
+auto* view = flow->AddComponent<Scene2DCompositeViewComponent>();
+view->SetFeature(Scene2DCompositeFeature::Minimap);
+view->SetTarget(minimapRenderTexture);
+view->SetHudTexture(minimapHudTexture);
+view->SetWorldCapture(mapCenter, orthoHalfExtent);
+view->SetScreenRect(0.82F, 0.02F, 0.16F, 0.16F);
+```
+
+Minimap RTs should use `RenderTextureFormat::Rgba8Unorm` when blitting to the UI atlas. See [2D runtime limits](../7-2d-game/08-scene2d-runtime-limits.md).
 
 ### `GameStateComponent`
 

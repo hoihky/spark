@@ -85,6 +85,41 @@ PaintUiCanvases(GetWorld(), params, fbW, fbH);
 
 Swap `CreateCheckerboard` for `Texture2D::TryLoadFromFile("assets/tiles.png", ...)`.
 
+## Sprite FX (outline, flash, dissolve)
+
+For collectibles and combat feedback without custom shaders per entity:
+
+```cpp
+#include "spark/render/sprites2d/SpriteFx2D.hpp"
+
+SpriteFx2D::ApplyOutline(*lighting, {1.0F, 0.92F, 0.25F, 1.0F}, 2.0F, 1.1F);
+SpriteFx2D::ApplyHitFlashAtSceneTime(*lighting, flashColor, 0.35F, sceneTimeSeconds);
+SpriteFx2D::ApplyDissolveProgress(*lighting, progress01);  // 0 → 1 over pickup
+```
+
+Requires `SpriteLighting2DComponent` on the same object as `SpriteComponent`. P0 demo: gem dissolve + player flash on collect (**F**). See [Runtime limits](08-scene2d-runtime-limits.md).
+
+## `SoundCueComponent` + `AmbientZoneComponent`
+
+```cpp
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
+#include "spark/ecs/components/audio/AmbientZoneComponent.hpp"
+
+pickupCue->AddComponent<SoundCueComponent>()->PlayOneShot("gem", context);
+
+caveZone->AddComponent<AmbientZoneComponent>(dripLoop, 0.5F, 6.0F);
+```
+
+Cues flush during `Game::OnUpdate` → `ProcessSoundCues`. See [Part 6 — Sound](../6-sound/01-sound-engine.md).
+
+## `ParticleEmitterComponent` (sprite layer)
+
+```cpp
+burst->AddComponent<ParticleEmitterComponent>()->SetRenderSpace(ParticleRenderSpace::SpriteLayer);
+```
+
+Built-in 2D effects live under `assets/vfx/*_2d.sparkvfx` ([2D lighting](../2-2d-graphics/05-2d-lighting.md#2d-particles-on-the-sprite-layer)).
+
 ## Ship Checklist
 
 - [ ] Release build (`CMAKE_BUILD_TYPE=Release`)
@@ -92,4 +127,5 @@ Swap `CreateCheckerboard` for `Texture2D::TryLoadFromFile("assets/tiles.png", ..
 - [ ] Test on target DPI / resolution
 - [ ] Verify `SPARK_BUILD_ASSETS_DIR` paths
 
-Part 7 complete → **Part 8**: [FPS Introduction](../8-3d-game/01-fps-intro.md).
+Part 7 complete → **Part 8**: [FPS Introduction](../8-3d-game/01-fps-intro.md).  
+**Grid / ARPG path:** [P0 product path](07-p0-2d-product-path.md) · [Gameplay API](09-2d-gameplay-api-guide.md) · [Components handbook](10-2d-components-handbook.md).

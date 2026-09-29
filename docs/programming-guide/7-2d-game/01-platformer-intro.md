@@ -78,4 +78,6 @@ Study `Platformer2DDemo::Load` for texture registration, parallax layers, and in
 
 **Component reference:** [Game Component Reference](../1-overview-architecture/07-game-component-reference.md).
 
+**Top-down / tilemap grid path:** Start with [Part 7 overview](00-2d-game-systems-map.md) and shell demo **F** (`GameFlow2DProductPathDemo`). Every component type is summarized in [10 — Components handbook](10-2d-components-handbook.md).
+
 Next: [Project Setup](02-project-setup.md).

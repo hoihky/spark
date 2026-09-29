@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -766,7 +796,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li>Vectors, matrices, basic rendering concepts</li>
 <li>Spark repository cloned locally</li>
 </ul>
-<h2 id="eight-parts-47-chapters">Eight Parts (47 Chapters)</h2>
+<h2 id="eight-parts-50-chapters">Eight Parts (50+ Chapters)</h2>
 <table>
 <thead>
 <tr>
@@ -784,7 +814,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><strong>2</strong></td>
 <td><code>2-2d-graphics/</code></td>
-<td>Sprites, cameras, tilemaps, 2D pipeline</td>
+<td>Sprites, cameras, tilemaps, 2D render pipeline</td>
 </tr>
 <tr>
 <td><strong>3</strong></td>
@@ -809,7 +839,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><strong>7</strong></td>
 <td><code>7-2d-game/</code></td>
-<td>Full platformer walkthrough</td>
+<td><strong>2D game (unified)</strong> — platformer walkthrough, tilemap gameplay, nav, minimap, P0 path, <a href="7-2d-game/10-2d-components-handbook.html">components handbook</a></td>
 </tr>
 <tr>
 <td><strong>8</strong></td>
@@ -837,26 +867,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><code>src/spark/demo/Platformer2DDemo.cpp</code></td>
-<td>Full 2D platformer reference (<code>Platformer2DDemo</code> in SparkDemo <strong>#6</strong>)</td>
+<td>2D platformer reference (SparkDemo <strong>#6</strong>)</td>
 </tr>
 <tr>
-<td><code>src/spark/demo/CharacterCameraDemo.cpp</code></td>
-<td>3D character + camera rig reference</td>
+<td><code>src/spark/demo/GameFlow2DProductPathDemo.cpp</code></td>
+<td>P0 grid ARPG path (SparkDemo <strong>#26 / F</strong>)</td>
 </tr>
 <tr>
-<td><code>docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></td>
-<td>Contributor deep-dive</td>
+<td><code>docs/programming-guide/7-2d-game/09-2d-gameplay-api-guide.md</code></td>
+<td>Tilemap + nav + minimap workflow</td>
+</tr>
+<tr>
+<td><code>docs/programming-guide/7-2d-game/10-2d-components-handbook.md</code></td>
+<td>All components with 2D examples</td>
 </tr>
 <tr>
 <td><code>docs/programming-guide/1-overview-architecture/07-game-component-reference.md</code></td>
-<td>All <strong>97</strong> built-in <code>GameComponent</code> types + usage examples (parallax, shake, input, game flow, 2D combat)</td>
+<td>Full <strong>108</strong> <code>GameComponent</code> types (by section)</td>
 </tr>
 </tbody>
 </table>
 <pre><code class="language-bash">cmake -S . -B build -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build build -j
 ./build/SparkDemo
 </code></pre>
-<p>Start with <a href="1-overview-architecture/01-introduction.html">Introduction</a>.</p></div>
+<p>Start with <a href="1-overview-architecture/01-introduction.html">Introduction</a>. For 2D games, open <a href="7-2d-game/00-2d-game-systems-map.html">Part 7 overview</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>

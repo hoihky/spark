@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -787,6 +817,66 @@ AddSolidPlatform(world, roots, tileTex, 11, 2.4, 16.5, 3.05, 22, ...);
 <p>Z offsets separate draw order among platforms.</p>
 <h2 id="tilemaps-alternative-to-sprite-platforms">Tilemaps (alternative to sprite platforms)</h2>
 <p>For grid-based levels, use <code>TilemapComponent</code> with stacked layers, <code>TilemapCollider2DComponent</code>, and optional <code>TilemapGameplayGridComponent</code> for AI pathfinding. SparkDemo <strong>#19</strong> loads Kenney <code>sampleMap.tmx</code> at runtime. See <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a>.</p>
+<h3 id="collision-layer-on-tiles">Collision layer on tiles</h3>
+<p>Enable <code>contributeCollision</code> on terrain layers and set per-tile <code>collisionShape</code> on the <code>Tileset</code>. Add <code>TilemapCollider2DComponent</code> on the map object so <code>PhysicsWorld2D</code> resolves player/NPC bodies against baked statics.</p>
+<h3 id="gameplay-grid-pathfinding-spawn">Gameplay grid (pathfinding / spawn)</h3>
+<pre><code class="language-cpp">auto* grid = levelRoot-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
+grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid-&gt;SetAutoRebake(true);
+</code></pre>
+<p>Use <code>GetGridFrame()</code> for cell ↔ world conversion when placing markers or validating spawn cells.</p>
+<h3 id="object-layers-gems-enemies-goals">Object layers (gems, enemies, goals)</h3>
+<p>Markers live in <code>TilemapObjectLayerComponent</code> (not painted tiles). Register spawn handlers and use <code>TilemapObjectSpawnComponent::RespawnAll</code>:</p>
+<pre><code class="language-cpp">TilemapObjectSpawnRegistry::Default().Register(&quot;p0_gem&quot;, &amp;SpawnGemHandler);
+</code></pre>
+<p>Full walkthrough: <a href="09-2d-gameplay-api-guide.html#5-object-layers-markers-and-spawning">Gameplay API — object layers</a>. P0 demo: shell <strong>F</strong>.</p>
+<h3 id="tilemapautotilecomponent-tilemaptileanimatorcomponent"><code>TilemapAutotileComponent</code> + <code>TilemapTileAnimatorComponent</code></h3>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapAutotileComponent.hpp&quot;
+#include &quot;spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp&quot;
+
+auto* autotile = level-&gt;AddComponent&lt;TilemapAutotileComponent&gt;();
+autotile-&gt;SetTerrainLayerIndex(0U);
+autotile-&gt;RequestRebuild();
+
+auto* anim = level-&gt;AddComponent&lt;TilemapTileAnimatorComponent&gt;();
+anim-&gt;SetAdvanceSceneTime(true);
+</code></pre>
+<h3 id="tilemapobjectgizmocomponent"><code>TilemapObjectGizmoComponent</code></h3>
+<p>Debug-draw markers in editor-style demos:</p>
+<pre><code class="language-cpp">level-&gt;AddComponent&lt;TilemapObjectGizmoComponent&gt;();
+</code></pre>
+<h3 id="component-checklist-level-root">Component checklist (level root)</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Required?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TilemapMapSourceComponent</code></td>
+<td>If loading TMX</td>
+</tr>
+<tr>
+<td><code>TilemapComponent</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>TilemapGameplayGridComponent</code></td>
+<td>For AI / spawn validation</td>
+</tr>
+<tr>
+<td><code>TilemapCollider2DComponent</code></td>
+<td>For physics blocking</td>
+</tr>
+<tr>
+<td><code>TilemapObjectLayer</code> + <code>TilemapObjectSpawn</code></td>
+<td>For registered spawns</td>
+</tr>
+</tbody>
+</table>
+<p>More types: <a href="10-2d-components-handbook.html#tilemapgameplaygrid">10 — Components handbook</a>.</p>
 <p>Next: <a href="04-player-controller.html">Player Controller</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

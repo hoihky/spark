@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -796,11 +826,59 @@ go-&gt;AddComponent&lt;SpriteComponent&gt;(tex, Vector4::One, uvRect, sortOrder)
 }
 </code></pre>
 <p>Or use <code>DemoRootCollection</code> from <code>spark/demo/DemoFoundation.hpp</code>.</p>
+<h2 id="core-components-on-boot">Core components on boot</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Where</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TransformComponent</code></td>
+<td>Every entity</td>
+<td>Position, scale, Z depth</td>
+</tr>
+<tr>
+<td><code>SpawnPoint2DComponent</code></td>
+<td>Level markers</td>
+<td>Named spawn for player reload</td>
+</tr>
+<tr>
+<td><code>SceneSpatialPolicyComponent</code></td>
+<td>Optional root</td>
+<td>Streaming / bounds policy (open worlds)</td>
+</tr>
+<tr>
+<td><code>AudioListenerComponent</code></td>
+<td>Camera rig</td>
+<td>3D positional audio (Z often 0 in 2D)</td>
+</tr>
+<tr>
+<td><code>GameStateComponent</code></td>
+<td>Flow manager</td>
+<td>Intro / playing / paused</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/world/SpawnPoint2DComponent.hpp&quot;
+
+auto* spawn = spawnGo-&gt;AddComponent&lt;SpawnPoint2DComponent&gt;();
+spawn-&gt;SetSpawnName(Utf8String(&quot;Player&quot;));
+
+flowGo-&gt;AddComponent&lt;GameStateComponent&gt;(GameFlowState::Intro);
+mainCamera-&gt;AddComponent&lt;AudioListenerComponent&gt;();
+</code></pre>
+<p>See <a href="10-2d-components-handbook.html">10 — Components handbook</a> for the full catalog.</p>
 <h2 id="frame-order">Frame Order</h2>
 <pre><code class="language-cpp">void OnUpdate(const FrameTiming&amp; t, IEngineContext&amp; ctx) override {
     HandlePlayerInput(t, ctx);
     Game::OnUpdate(t, ctx);       // component ticks + sound cues
     physics.Simulate2D(GetWorld(), t);
+    PickupComponent::ProcessDeferredDestroys(GetWorld());
+    Projectile2DComponent::ProcessDeferredDestroys(GetWorld());
     UpdateEnemies(t);
 }
 

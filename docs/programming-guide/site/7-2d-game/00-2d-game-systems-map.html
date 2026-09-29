@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>01 introduction · Spark Game Engine Programming Guide</title>
+  <title>00 2d game systems map · Spark Game Engine Programming Guide</title>
   <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -413,7 +413,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1 is-active">
+                        <li class="nav-item depth-1">
                           
                             <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
                             
@@ -665,7 +665,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1">
+                        <li class="nav-item depth-1 is-active">
                           
                             <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
                             
@@ -780,91 +780,104 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <main class="content">
         <article class="doc">
           <header class="doc-header">
-            <h1>01 introduction</h1>
+            <h1>Part 7 — 2D game (overview)</h1>
           </header>
-          <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
-<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
-<h2 id="what-you-get">What You Get</h2>
+          <div class="doc-body"><h1 id="part-7-2d-game-overview">Part 7 — 2D game (overview)</h1>
+<p><strong>Part 7</strong> is the single home for <strong>2D gameplay</strong>: side-view platformers, top-down tilemap games, grid navigation, combat, HUD, audio, and the P0 product path. <strong>Part 2</strong> (<code>2-2d-graphics/</code>) covers rendering primitives (sprites, tile drawing, cameras as math).</p>
+<h2 id="sparkdemo-references">SparkDemo references</h2>
 <table>
 <thead>
 <tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Public API</th>
+<th>Demo</th>
+<th>Key</th>
+<th>Focus</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Window / input</td>
-<td>GLFW</td>
-<td><code>Window</code>, <code>IInput</code></td>
+<td><code>Platformer2DDemo</code></td>
+<td><strong>#6</strong></td>
+<td><code>CharacterController2D</code>, combat hitboxes, parallax, game flow</td>
 </tr>
 <tr>
-<td>Rendering</td>
-<td>Vulkan (internal)</td>
-<td><code>SceneRenderParams</code>, <code>IFramePresenter</code></td>
+<td><code>TilemapShowcase2DDemo</code></td>
+<td><strong>#19</strong></td>
+<td>TMX, gameplay grid, click-to-move</td>
 </tr>
 <tr>
-<td>Simulation</td>
-<td>ECS (<strong>97</strong> built-in components)</td>
-<td><code>GameWorld</code>, <code>GameObject</code>, <code>GameComponent</code></td>
-</tr>
-<tr>
-<td>Physics</td>
-<td>Custom solvers</td>
-<td><code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code></td>
-</tr>
-<tr>
-<td>AI</td>
-<td>FSM, GOAP, steering</td>
-<td><code>SimulateGameAi</code>, <code>AiAgentComponent</code></td>
-</tr>
-<tr>
-<td>Audio</td>
-<td>Software mixer</td>
-<td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
-</tr>
-<tr>
-<td>UI (retained)</td>
-<td><code>IUiElement</code> tree → screen draws</td>
-<td><code>UiCanvasComponent</code>, <code>spark/ui/Ui.hpp</code></td>
-</tr>
-<tr>
-<td>UI (tools, optional)</td>
-<td>Dear ImGui docking + ImGui backend</td>
-<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code></td>
+<td><code>GameFlow2DProductPathDemo</code></td>
+<td><strong>#26 / F</strong></td>
+<td><code>.sparkscene</code>, pools, patrol/chaser nav, GPU minimap, sprite FX</td>
 </tr>
 </tbody>
 </table>
-<h2 id="design-philosophy">Design Philosophy</h2>
-<ol>
-<li><strong>Explicit frame contract</strong> — simulation in <code>OnUpdate</code>, rendering as immutable <code>SceneRenderParams</code> in <code>OnRender</code>.</li>
-<li><strong>Dependency inversion</strong> — games depend on <code>IGame</code> / <code>IEngineContext</code>, not <code>VulkanRenderer</code>.</li>
-<li><strong>Composition</strong> — behavior lives in components; <code>GameObject</code> is a lightweight container.</li>
-<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem. <code>Platformer2DDemo</code> (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.</li>
-</ol>
-<h2 id="minimal-bootstrap">Minimal Bootstrap</h2>
-<pre><code class="language-cpp">#include &quot;spark/engine/Engine.hpp&quot;
-#include &quot;spark/engine/Game.hpp&quot;
-
-class HelloSpark final : public Spark::Game {
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        auto* go = GetWorld().CreateGameObject();
-        go-&gt;GetName() = Spark::Utf8String(&quot;Root&quot;);
-        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-    }
-};
-
-int main() {
-    Spark::Engine engine(Spark::Engine::NewGame&lt;HelloSpark&gt;());
-    engine.Run();
-    return 0;
-}
-</code></pre>
-<h2 id="default-demo-binary">Default Demo Binary</h2>
-<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher with <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, glTF PBR sample, tilemap showcase, <strong>Dear ImGui docking demo</strong>, and more).</p>
-<p>Next: <a href="02-engine-capabilities.html">Engine Capabilities</a>.</p></div>
+<h2 id="chapters-in-this-part">Chapters in this part</h2>
+<table>
+<thead>
+<tr>
+<th>Ch.</th>
+<th>Guide</th>
+<th>Topics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="01-platformer-intro.html">01</a></td>
+<td>Platformer intro</td>
+<td>Demo layout, component stack</td>
+</tr>
+<tr>
+<td><a href="02-project-setup.html">02</a></td>
+<td>Project setup</td>
+<td>CMake, frame order, fonts, textures</td>
+</tr>
+<tr>
+<td><a href="03-level-design.html">03</a></td>
+<td>Level design</td>
+<td>Tilemaps, collision, object layers</td>
+</tr>
+<tr>
+<td><a href="04-player-controller.html">04</a></td>
+<td>Player controller</td>
+<td>Input, motor, combat, grid nav</td>
+</tr>
+<tr>
+<td><a href="05-camera-hud.html">05</a></td>
+<td>Camera &amp; HUD</td>
+<td>Rig, shake, parallax, minimap, UI</td>
+</tr>
+<tr>
+<td><a href="06-polish.html">06</a></td>
+<td>Polish</td>
+<td>Juice, animation events, sound, FX</td>
+</tr>
+<tr>
+<td><a href="07-p0-2d-product-path.html">07</a></td>
+<td>P0 product path</td>
+<td>Authored scenes, gameplay table, saves</td>
+</tr>
+<tr>
+<td><a href="08-scene2d-runtime-limits.html">08</a></td>
+<td>Runtime limits</td>
+<td><code>SceneRenderParams</code> caps, composite RT</td>
+</tr>
+<tr>
+<td><a href="09-2d-gameplay-api-guide.html">09</a></td>
+<td>Gameplay API</td>
+<td>End-to-end tilemap + nav + pools</td>
+</tr>
+<tr>
+<td><a href="10-2d-components-handbook.html">10</a></td>
+<td><strong>Components handbook</strong></td>
+<td><strong>Every built-in component</strong> (2D usage + 3D pointers)</td>
+</tr>
+</tbody>
+</table>
+<p>For field-level API detail, keep <a href="../1-overview-architecture/07-game-component-reference.html">Game component reference</a> open; <a href="10-2d-components-handbook.html">chapter 10</a> lists every <code>ComponentKind</code> one-to-one.</p>
+<h2 id="typical-stacks">Typical stacks</h2>
+<p><strong>Side-view platformer:</strong> <code>CharacterController2D</code> + <code>Sprite2DCharacterAnimFsm</code> + <code>AnimationHitbox2D</code> + <code>GameState</code> / <code>GameFlowTrigger</code>.</p>
+<p><strong>Top-down grid:</strong> <code>TilemapGameplayGrid</code> + <code>GridNavAgent2D</code> + <code>Rigidbody2D</code> + <code>Scene2DCompositeView</code> (minimap).</p>
+<p>Next: <a href="01-platformer-intro.html">01 — Platformer introduction</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>
@@ -876,23 +889,19 @@ int main() {
                   <ul>
                     
                         <li class="toc-h1">
-                          <a href="#introduction-to-spark">Introduction to Spark</a>
+                          <a href="#platformer-introduction">Platformer Introduction</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#what-you-get">What You Get</a>
+                          <a href="#class-design">Class Design: </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#design-philosophy">Design Philosophy</a>
+                          <a href="#minimal-external-game-entry-point">Minimal External Game Entry Point</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#minimal-bootstrap">Minimal Bootstrap</a>
-                        </li>
-                        
-                        <li class="toc-h2">
-                          <a href="#default-demo-binary">Default Demo Binary</a>
+                          <a href="#constants-from">Constants (from )</a>
                         </li>
                         
                   </ul>

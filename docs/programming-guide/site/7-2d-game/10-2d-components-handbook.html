@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>10 2d components handbook · Spark Game Engine Programming Guide</title>
+  <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/vendor/atom-one-dark.min.css">
+  <style id="spark-inline-theme">
+:root {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-hover: #4f46e5;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --sidebar-width: 280px;
+  --topbar-height: 56px;
+  --toc-width: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.site { min-height: 100vh; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-height);
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand:hover { color: var(--accent); text-decoration: none; }
+
+.sidebar-toggle {
+  display: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.search-wrap { flex: 1; max-width: 360px; margin-left: auto; }
+
+.search-wrap input {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--topbar-height);
+  height: calc(100vh - var(--topbar-height));
+  overflow-y: auto;
+  padding: 1.25rem 0.75rem 2rem;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item { margin: 0.1rem 0; }
+
+.nav-link,
+.nav-group {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.nav-group {
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nav-link:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.nav-item.is-active > .nav-link {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-item.depth-1 .nav-link,
+.nav-item.depth-1 .nav-group { padding-left: 1.25rem; }
+.nav-item.depth-2 .nav-link,
+.nav-item.depth-2 .nav-group { padding-left: 2rem; }
+.nav-item.depth-3 .nav-link,
+.nav-item.depth-3 .nav-group { padding-left: 2.75rem; }
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--toc-width);
+  gap: 2rem;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1200px;
+}
+
+.doc { min-width: 0; }
+
+.doc-header h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.doc-body h2,
+.doc-body h3,
+.doc-body h4 {
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+  letter-spacing: -0.01em;
+}
+
+.doc-body h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+}
+
+.doc-body h3 { font-size: 1.2rem; margin-top: 1.75rem; }
+
+.doc-body p,
+.doc-body ul,
+.doc-body ol,
+.doc-body blockquote,
+.doc-body pre {
+  margin: 1rem 0;
+}
+
+.doc-body blockquote {
+  margin-left: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  color: #be185d;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.doc-body pre {
+  margin: 1rem 0;
+  padding: 0;
+  background: transparent;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.doc-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.doc-body pre code.hljs {
+  display: block;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  line-height: 1.55;
+  border-radius: var(--radius);
+}
+
+.doc-body .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #1e293b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  color: #e2e8f0;
+}
+
+.doc-body .mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.doc-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.doc-body tr:nth-child(even) td { background: #fafbfc; }
+
+.doc-body img {
+  max-width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.doc-body .task-list-item {
+  list-style: none;
+}
+
+.doc-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1.5rem);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-height) - 3rem);
+  overflow-y: auto;
+  padding-left: 0.5rem;
+}
+
+.toc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li { margin: 0.35rem 0; }
+
+.toc a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+}
+
+.toc a:hover { color: var(--accent); }
+
+.toc-h3 { padding-left: 0.75rem; }
+.toc-h4 { padding-left: 1.25rem; }
+
+.nav-item.is-hidden { display: none; }
+
+@media (max-width: 1100px) {
+  .content { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+@media (max-width: 900px) {
+  .sidebar-toggle { display: block; }
+
+  .layout { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--topbar-height);
+    width: min(var(--sidebar-width), 85vw);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    z-index: 90;
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar.is-open { transform: translateX(0); }
+
+  .content { padding: 1.25rem 1rem 3rem; }
+
+  .doc-header h1 { font-size: 1.75rem; }
+}
+
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#abb2bf;background:#282c34}.hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}.hljs-doctag,.hljs-formula,.hljs-keyword{color:#c678dd}.hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#e06c75}.hljs-literal{color:#56b6c2}.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#98c379}.hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#d19a66}.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#61aeee}.hljs-built_in,.hljs-class .hljs-title,.hljs-title.class_{color:#e6c07b}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}.hljs-link{text-decoration:underline}
+</style>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">☰</button>
+      <a href="../index.html" class="brand">Spark Game Engine Programming Guide</a>
+      <div class="search-wrap">
+        <input type="search" id="search" placeholder="Search docs…" autocomplete="off">
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="nav" aria-label="Documentation">
+          <ul class="nav-list">
+            
+                        <li class="nav-item depth-0">
+                          
+                            <a href="../index.html" class="nav-link">index</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">1 overview architecture</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/02-engine-capabilities.html" class="nav-link">02 engine capabilities</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/03-building-and-running.html" class="nav-link">03 building and running</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/04-engine-loop.html" class="nav-link">04 engine loop</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/05-igame-contract.html" class="nav-link">05 igame contract</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/06-ecs-and-scene.html" class="nav-link">06 ecs and scene</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/07-game-component-reference.html" class="nav-link">07 game component reference</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/08-ui-and-toolkits.html" class="nav-link">08 ui and toolkits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">2 2d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/01-sprites.html" class="nav-link">01 sprites</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/02-camera2d.html" class="nav-link">02 camera2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/03-tilemaps.html" class="nav-link">03 tilemaps</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-2d-animation.html" class="nav-link">04 2d animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">3 3d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/01-meshes-and-materials.html" class="nav-link">01 meshes and materials</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/02-cameras-3d.html" class="nav-link">02 cameras 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/03-lighting.html" class="nav-link">03 lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/04-shadows.html" class="nav-link">04 shadows</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/05-skinned-characters.html" class="nav-link">05 skinned characters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/06-terrain-and-sky.html" class="nav-link">06 terrain and sky</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/07-particles.html" class="nav-link">07 particles</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">4 ai</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/01-ai-overview.html" class="nav-link">01 ai overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/02-steering.html" class="nav-link">02 steering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/03-fsm.html" class="nav-link">03 fsm</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/04-goap.html" class="nav-link">04 goap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">5 physics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/01-physics-overview.html" class="nav-link">01 physics overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/02-rigidbody-2d.html" class="nav-link">02 rigidbody 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/03-colliders.html" class="nav-link">03 colliders</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/04-queries.html" class="nav-link">04 queries</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/05-physics-3d.html" class="nav-link">05 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/06-tips.html" class="nav-link">06 tips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">6 sound</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/01-sound-engine.html" class="nav-link">01 sound engine</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/02-clips.html" class="nav-link">02 clips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/03-cues.html" class="nav-link">03 cues</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">7 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1 is-active">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <article class="doc">
+          <header class="doc-header">
+            <h1>2D components handbook</h1>
+          </header>
+          <div class="doc-body"><h1 id="2d-components-handbook">2D components handbook</h1>
+<p>One <strong><code>###</code> section per <code>ComponentKind</code></strong> value in <code>include/spark/ecs/GameComponent.hpp</code> (<strong>108</strong> kinds, excluding <code>Unknown</code>). Order below matches the enum. Full field-level API: <a href="../1-overview-architecture/07-game-component-reference.html">Game component reference</a>.</p>
+<p><strong>Include:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> or the header listed on each row.</p>
+<p><strong>2D role:</strong> <strong>Primary</strong> — common in pure 2D games; <strong>Optional</strong> — useful in 2.5D or mixed scenes; <strong>3D-only</strong> — skip for flat sprite/tilemap games (see <a href="../3-3d-graphics/01-meshes-and-materials.html">Part 3</a> / <a href="../8-3d-game/01-fps-intro.html">Part 8</a>).</p>
+<h3 id="quick-jumps-part-7-chapters">Quick jumps (Part 7 chapters)</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Anchor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tilemap stack</td>
+<td><a href="#tilemap">#tilemap</a> · <a href="#tilemapgameplaygrid">#tilemapgameplaygrid</a> · <a href="#tilemapobjectspawn">#tilemapobjectspawn</a></td>
+</tr>
+<tr>
+<td>Player / combat</td>
+<td><a href="#charactercontroller2d">#charactercontroller2d</a> · <a href="#animationhitbox2d">#animationhitbox2d</a> · <a href="#projectile2d">#projectile2d</a></td>
+</tr>
+<tr>
+<td>Camera / HUD</td>
+<td><a href="#camera2d">#camera2d</a> · <a href="#parallaxlayer">#parallaxlayer</a> · <a href="#scene2dcompositeview">#scene2dcompositeview</a></td>
+</tr>
+<tr>
+<td>Grid AI</td>
+<td><a href="#gridnavagent2d">#gridnavagent2d</a> · <a href="#aiagent">#aiagent</a></td>
+</tr>
+<tr>
+<td>Input / flow</td>
+<td><a href="#playerinput">#playerinput</a> · <a href="#gamestate">#gamestate</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="master-index-componentkind-order">Master index (<code>ComponentKind</code> order)</h2>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Component</th>
+<th>2D</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transform</code></td>
+<td><code>TransformComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Mesh</code></td>
+<td><code>MeshComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>Collision</code></td>
+<td><code>CollisionComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>Material</code></td>
+<td><code>MaterialComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>MultiMaterial</code></td>
+<td><code>MultiMaterialComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>PointLight</code></td>
+<td><code>PointLightComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>SkinnedMesh</code></td>
+<td><code>SkinnedMeshComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>Animator</code></td>
+<td><code>AnimatorComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>TextOverlay</code></td>
+<td><code>TextOverlayComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>UiCanvas</code></td>
+<td><code>UiCanvasComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Sky</code></td>
+<td><code>SkyComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>ParticleEmitter</code></td>
+<td><code>ParticleEmitterComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>VfxPlayer</code></td>
+<td><code>VfxPlayerComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>Terrain</code></td>
+<td><code>TerrainComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>Sprite</code></td>
+<td><code>SpriteComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Tilemap</code></td>
+<td><code>TilemapComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapCollider2D</code></td>
+<td><code>TilemapCollider2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>BoxCollider2D</code></td>
+<td><code>BoxCollider2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Rigidbody2D</code></td>
+<td><code>Rigidbody2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>CharacterController2D</code></td>
+<td><code>CharacterController2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>OneWayPlatform2D</code></td>
+<td><code>OneWayPlatform2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TriggerVolume2D</code></td>
+<td><code>TriggerVolume2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SpriteAnimator</code></td>
+<td><code>SpriteAnimatorComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>CircleCollider2D</code></td>
+<td><code>CircleCollider2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SpriteLighting2D</code></td>
+<td><code>SpriteLighting2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>BlendMode</code></td>
+<td><code>BlendModeComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>BoxCollider3D</code></td>
+<td><code>BoxCollider3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SphereCollider3D</code></td>
+<td><code>SphereCollider3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>CapsuleCollider3D</code></td>
+<td><code>CapsuleCollider3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>Rigidbody3D</code></td>
+<td><code>Rigidbody3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>PhysicsMaterial3D</code></td>
+<td><code>PhysicsMaterial3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>DistanceJoint3D</code></td>
+<td><code>DistanceJoint3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SceneSpatialPolicy</code></td>
+<td><code>SceneSpatialPolicyComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>AiAgent</code></td>
+<td><code>AiAgentComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SoundCue</code></td>
+<td><code>SoundCueComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Sprite2DCharacterAnimFsm</code></td>
+<td><code>Sprite2DCharacterAnimFsmComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Character3DAnimFsm</code></td>
+<td><code>Character3DAnimFsmComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SpotLight</code></td>
+<td><code>SpotLightComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>DirectionalLight</code></td>
+<td><code>DirectionalLightComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>Camera</code></td>
+<td><code>CameraComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>Camera2D</code></td>
+<td><code>Camera2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Camera2DRig</code></td>
+<td><code>Camera2DRigComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>RenderLayer</code></td>
+<td><code>RenderLayerComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SortingGroup</code></td>
+<td><code>SortingGroupComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>CharacterController3D</code></td>
+<td><code>CharacterController3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>TriggerVolume3D</code></td>
+<td><code>TriggerVolume3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>AudioListener</code></td>
+<td><code>AudioListenerComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Billboard</code></td>
+<td><code>BillboardComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>AnimationEventReceiver</code></td>
+<td><code>AnimationEventReceiverComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>AnimationEventVfx</code></td>
+<td><code>AnimationEventVfxComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>AnimationMeleeHit</code></td>
+<td><code>AnimationMeleeHitComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>RootMotion</code></td>
+<td><code>RootMotionComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>AttachmentSocket</code></td>
+<td><code>AttachmentSocketComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SkeletonDebugDraw</code></td>
+<td><code>SkeletonDebugDrawComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>FootIk</code></td>
+<td><code>FootIkComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>AimIk</code></td>
+<td><code>AimIkComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SkinnedAnimationBudget</code></td>
+<td><code>SkinnedAnimationBudgetComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>CameraFollow3D</code></td>
+<td><code>CameraFollow3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SpringArm3D</code></td>
+<td><code>SpringArm3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>PolygonCollider2D</code></td>
+<td><code>PolygonCollider2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Health</code></td>
+<td><code>HealthComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Damageable</code></td>
+<td><code>DamageableComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Interactable</code></td>
+<td><code>InteractableComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Pickup</code></td>
+<td><code>PickupComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>AnimationHitbox2D</code></td>
+<td><code>AnimationHitbox2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Hurtbox2D</code></td>
+<td><code>Hurtbox2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Projectile2D</code></td>
+<td><code>Projectile2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>DamageZone2D</code></td>
+<td><code>DamageZone2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SpawnPoint2D</code></td>
+<td><code>SpawnPoint2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>CameraBounds2D</code></td>
+<td><code>CameraBounds2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>ParallaxLayer</code></td>
+<td><code>ParallaxLayerComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>ScreenShake</code></td>
+<td><code>ScreenShakeComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SpriteAnimationEventReceiver</code></td>
+<td><code>SpriteAnimationEventReceiverComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>SpriteAnimationEventVfx</code></td>
+<td><code>SpriteAnimationEventVfxComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>InputActionMap</code></td>
+<td><code>InputActionMapComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>PlayerInput</code></td>
+<td><code>PlayerInputComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>GameState</code></td>
+<td><code>GameStateComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>GameFlowTrigger</code></td>
+<td><code>GameFlowTriggerComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>DecalProjector</code></td>
+<td><code>DecalProjectorComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>PhysicsMaterial2D</code></td>
+<td><code>PhysicsMaterial2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>MeshCollider3D</code></td>
+<td><code>MeshCollider3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>NavMeshAgent</code></td>
+<td><code>NavMeshAgentComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>GridNavAgent2D</code></td>
+<td><code>GridNavAgent2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>GridPathFollower2D</code></td>
+<td><code>GridPathFollower2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>GridNavTarget2D</code></td>
+<td><code>GridNavTarget2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>PatrolPath</code></td>
+<td><code>PatrolPathComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>PerceptionSensor</code></td>
+<td><code>PerceptionSensorComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>AmbientZone</code></td>
+<td><code>AmbientZoneComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>FogVolume</code></td>
+<td><code>FogVolumeComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>PostProcessVolume</code></td>
+<td><code>PostProcessVolumeComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>HingeJoint3D</code></td>
+<td><code>HingeJoint3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>SpringJoint3D</code></td>
+<td><code>SpringJoint3DComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>DistanceJoint2D</code></td>
+<td><code>DistanceJoint2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>HingeJoint2D</code></td>
+<td><code>HingeJoint2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapGameplayGrid</code></td>
+<td><code>TilemapGameplayGridComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapTileAnimator</code></td>
+<td><code>TilemapTileAnimatorComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapAutotile</code></td>
+<td><code>TilemapAutotileComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapObjectLayer</code></td>
+<td><code>TilemapObjectLayerComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapObjectSpawn</code></td>
+<td><code>TilemapObjectSpawnComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapObjectGizmo</code></td>
+<td><code>TilemapObjectGizmoComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TilemapMapSource</code></td>
+<td><code>TilemapMapSourceComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>TimeOfDayDriver</code></td>
+<td><code>TimeOfDayDriverComponent</code></td>
+<td>Optional</td>
+</tr>
+<tr>
+<td><code>SpawnPoint</code></td>
+<td><code>SpawnPointComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>GltfSceneSource</code></td>
+<td><code>GltfSceneSourceComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>GltfInstanceNode</code></td>
+<td><code>GltfInstanceNodeComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>WaterBody</code></td>
+<td><code>WaterBodyComponent</code></td>
+<td>3D-only</td>
+</tr>
+<tr>
+<td><code>PointLight2D</code></td>
+<td><code>PointLight2DComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>Scene2DCompositeView</code></td>
+<td><code>Scene2DCompositeViewComponent</code></td>
+<td>Primary</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="catalog-enum-order">Catalog (enum order)</h2>
+<h3 id="transformcomponent-transform"><code>TransformComponent</code> {#transform}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Transform</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/core/TransformComponent.hpp</code> |
+| <strong>2D</strong> | Primary — every drawable / physics object |</p>
+<p>Local TRS; Z translation and sprite <code>sortOrder</code> control draw order.</p>
+<pre><code class="language-cpp">auto* tr = go-&gt;AddComponent&lt;TransformComponent&gt;();
+tr-&gt;SetTranslation({x, y, 0.05F});
+tr-&gt;SetRotation(Quaternion::FromAxisAngle(Vector3::UnitZ, angleRadians));
+</code></pre>
+<h3 id="meshcomponent-mesh"><code>MeshComponent</code> {#mesh}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Mesh</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/MeshComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>Static mesh draw in the lit 3D scene. Not used for sprite/tilemap games.</p>
+<h3 id="collisioncomponent-collision"><code>CollisionComponent</code> {#collision}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Collision</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/CollisionComponent.hpp</code> |
+| <strong>2D</strong> | Optional — legacy world-space sphere bounds |</p>
+<p>Simple sphere probe; prefer <code>BoxCollider2D</code> / <code>CircleCollider2D</code> for gameplay.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;CollisionComponent&gt;(0.5F, Vector3::Zero);
+</code></pre>
+<h3 id="materialcomponent-material"><code>MaterialComponent</code> {#material}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Material</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/MaterialComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>PBR/toon material on <code>MeshComponent</code> / <code>SkinnedMeshComponent</code>.</p>
+<h3 id="multimaterialcomponent-multimaterial"><code>MultiMaterialComponent</code> {#multimaterial}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::MultiMaterial</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/MultiMaterialComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>Per-submesh material slots for multi-material glTF meshes (<code>PopulateFromGltfAsset</code>).</p>
+<h3 id="pointlightcomponent-pointlight"><code>PointLightComponent</code> {#pointlight}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PointLight</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/lighting/PointLightComponent.hpp</code> |
+| <strong>2D</strong> | Optional — lights 3D meshes; sprites use sun + <code>PointLight2D</code> |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;PointLightComponent&gt;(Vector3{1,0.9,0.8}, 4.0F, 12.0F);
+</code></pre>
+<h3 id="skinnedmeshcomponent-skinnedmesh"><code>SkinnedMeshComponent</code> {#skinnedmesh}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SkinnedMesh</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/SkinnedMeshComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>Skeletal mesh + joint palette. Pair with <code>AnimatorComponent</code>.</p>
+<h3 id="animatorcomponent-animator"><code>AnimatorComponent</code> {#animator}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Animator</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AnimatorComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — use <code>SpriteAnimatorComponent</code> for flipbooks |</p>
+<p>Clip playback on skeleton assets (priority 200).</p>
+<h3 id="textoverlaycomponent-textoverlay"><code>TextOverlayComponent</code> {#textoverlay}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TextOverlay</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/TextOverlayComponent.hpp</code> |
+| <strong>2D</strong> | Primary — screen HUD |</p>
+<p>Requires <code>GameWorld::SetUiFont</code>.</p>
+<pre><code class="language-cpp">world.SetUiFont(font);
+auto* hud = hudGo-&gt;AddComponent&lt;TextOverlayComponent&gt;();
+hud-&gt;SetText(&quot;Gems: 3/5&quot;);
+hud-&gt;SetScreenPosition({20.0F, 20.0F});
+</code></pre>
+<h3 id="uicanvascomponent-uicanvas"><code>UiCanvasComponent</code> {#uicanvas}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::UiCanvas</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ui/UiCanvasComponent.hpp</code> |
+| <strong>2D</strong> | Primary — retained UI |</p>
+<p>See <a href="../1-overview-architecture/08-ui-and-toolkits.html">UI and toolkits</a>.</p>
+<pre><code class="language-cpp">auto* canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
+canvas-&gt;SetSortOrder(0);
+</code></pre>
+<h3 id="skycomponent-sky"><code>SkyComponent</code> {#sky}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Sky</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/SkyComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>Skybox mode on a sky mesh. 2D games use parallax sprites instead.</p>
+<h3 id="particleemittercomponent-particleemitter"><code>ParticleEmitterComponent</code> {#particleemitter}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::ParticleEmitter</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/ParticleEmitterComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* burst = go-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
+burst-&gt;SetRenderSpace(ParticleRenderSpace::SpriteLayer);
+burst-&gt;SetEffectId(&quot;hit_spark_2d&quot;);
+burst-&gt;SetEmissionRate(40.0F);
+</code></pre>
+<h3 id="vfxplayercomponent-vfxplayer"><code>VfxPlayerComponent</code> {#vfxplayer}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::VfxPlayer</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/VfxPlayerComponent.hpp</code> |
+| <strong>2D</strong> | Optional — plays <code>VfxAsset</code> (particles / prefab) |</p>
+<pre><code class="language-cpp">auto* vfx = go-&gt;AddComponent&lt;VfxPlayerComponent&gt;();
+vfx-&gt;SetVfxAssetKey(&quot;collect_burst&quot;);
+vfx-&gt;SetPlayOnStartOnce(true);
+</code></pre>
+<h3 id="terraincomponent-terrain"><code>TerrainComponent</code> {#terrain}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Terrain</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/TerrainComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>Heightfield terrain mesh. Use <code>TilemapComponent</code> for 2D levels.</p>
+<h3 id="spritecomponent-sprite"><code>SpriteComponent</code> {#sprite}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Sprite</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/SpriteComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteComponent&gt;(texture, Vector4{1,1,1,1}, uvRect, sortOrder);
+</code></pre>
+<h3 id="tilemapcomponent-tilemap"><code>TilemapComponent</code> {#tilemap}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Tilemap</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/TilemapComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<p>Layer grid + tileset. See <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a>, <a href="03-level-design.html">03 — Level design</a>.</p>
+<pre><code class="language-cpp">auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(tileset, width, height, cellSize, 0);
+tm-&gt;AddLayer(&quot;Ground&quot;);
+tm-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
+</code></pre>
+<h3 id="tilemapcollider2dcomponent-tilemapcollider2d"><code>TilemapCollider2DComponent</code> {#tilemapcollider2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapCollider2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — static collision from painted tiles |</p>
+<p>Sibling on the same object as <code>TilemapComponent</code>.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
+</code></pre>
+<h3 id="boxcollider2dcomponent-boxcollider2d"><code>BoxCollider2DComponent</code> {#boxcollider2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::BoxCollider2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/BoxCollider2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* box = go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{0.5F, 0.5F});
+box-&gt;SetCategoryBits(1u &lt;&lt; 0);
+box-&gt;SetMaskBits(0xFFFF);
+</code></pre>
+<h3 id="rigidbody2dcomponent-rigidbody2d"><code>Rigidbody2DComponent</code> {#rigidbody2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Rigidbody2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<p>Step with <code>PhysicsSubsystem::Simulate2D</code>. Grid-nav NPCs often use dynamic bodies.</p>
+<pre><code class="language-cpp">auto* rb = go-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
+rb-&gt;SetVelocity({vx, vy});
+</code></pre>
+<h3 id="charactercontroller2dcomponent-charactercontroller2d"><code>CharacterController2DComponent</code> {#charactercontroller2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::CharacterController2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/CharacterController2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — platformer motor |</p>
+<p>Set move/jump <strong>before</strong> <code>Simulate2D</code>. See <a href="04-player-controller.html">04 — Player controller</a>.</p>
+<pre><code class="language-cpp">auto* cc = player-&gt;AddComponent&lt;CharacterController2DComponent&gt;();
+cc-&gt;SetMoveInputX(input-&gt;GetActionAxis1D(&quot;MoveX&quot;));
+if (input-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
+    cc-&gt;RequestJump();
+}
+</code></pre>
+<h3 id="onewayplatform2dcomponent-onewayplatform2d"><code>OneWayPlatform2DComponent</code> {#onewayplatform2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::OneWayPlatform2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<p>Marker on static platform colliders; works with <code>CharacterController2D</code>.</p>
+<pre><code class="language-cpp">platform-&gt;AddComponent&lt;OneWayPlatform2DComponent&gt;();
+</code></pre>
+<h3 id="triggervolume2dcomponent-triggervolume2d"><code>TriggerVolume2DComponent</code> {#triggervolume2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TriggerVolume2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — goals, pickups, zones |</p>
+<p>Emits <code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code> to sibling components.</p>
+<pre><code class="language-cpp">gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetRadius(0.45F);
+</code></pre>
+<h3 id="spriteanimatorcomponent-spriteanimator"><code>SpriteAnimatorComponent</code> {#spriteanimator}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpriteAnimator</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/SpriteAnimatorComponent.hpp</code> |
+| <strong>2D</strong> | Primary — flipbook playback (priority 200) |</p>
+<pre><code class="language-cpp">auto* sa = go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
+sa-&gt;SetUniformGrid(4, 4);
+sa-&gt;SetClipIndex(0);
+</code></pre>
+<h3 id="circlecollider2dcomponent-circlecollider2d"><code>CircleCollider2DComponent</code> {#circlecollider2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::CircleCollider2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<p>On a dynamic body, circle shape wins over box if both exist.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;CircleCollider2DComponent&gt;(0.45F);
+</code></pre>
+<h3 id="spritelighting2dcomponent-spritelighting2d"><code>SpriteLighting2DComponent</code> {#spritelighting2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpriteLighting2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/SpriteLighting2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — outline, hit flash, dissolve |</p>
+<p>Same object as <code>SpriteComponent</code>. See <a href="../2-2d-graphics/05-2d-lighting.html">2D lighting</a>, <a href="06-polish.html">06 — Polish</a>.</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;();
+// ApplyDissolveProgress, ApplyHitFlash, etc. from gameplay code
+</code></pre>
+<h3 id="blendmodecomponent-blendmode"><code>BlendModeComponent</code> {#blendmode}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::BlendMode</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/BlendModeComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">fx-&gt;AddComponent&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
+</code></pre>
+<h3 id="boxcollider3dcomponent-boxcollider3d"><code>BoxCollider3DComponent</code> {#boxcollider3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::BoxCollider3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="spherecollider3dcomponent-spherecollider3d"><code>SphereCollider3DComponent</code> {#spherecollider3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SphereCollider3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="capsulecollider3dcomponent-capsulecollider3d"><code>CapsuleCollider3DComponent</code> {#capsulecollider3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::CapsuleCollider3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="rigidbody3dcomponent-rigidbody3d"><code>Rigidbody3DComponent</code> {#rigidbody3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Rigidbody3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="physicsmaterial3dcomponent-physicsmaterial3d"><code>PhysicsMaterial3DComponent</code> {#physicsmaterial3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PhysicsMaterial3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/PhysicsMaterial3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="distancejoint3dcomponent-distancejoint3d"><code>DistanceJoint3DComponent</code> {#distancejoint3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::DistanceJoint3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/DistanceJoint3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="scenespatialpolicycomponent-scenespatialpolicy"><code>SceneSpatialPolicyComponent</code> {#scenespatialpolicy}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SceneSpatialPolicy</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/world/SceneSpatialPolicyComponent.hpp</code> |
+| <strong>2D</strong> | Optional — scene partition for large worlds |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::BoundingVolumeHierarchy);
+</code></pre>
+<h3 id="aiagentcomponent-aiagent"><code>AiAgentComponent</code> {#aiagent}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AiAgent</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/AiAgentComponent.hpp</code> |
+| <strong>2D</strong> | Primary — steering on XY (<code>AiSteeringPlane::XyRigidbody2D</code>) |</p>
+<p>Ticked in <code>SimulateGameAi</code>, not <code>OnUpdate</code>.</p>
+<pre><code class="language-cpp">auto* agent = enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
+agent-&gt;SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);
+agent-&gt;SetMaxSpeed(4.0F);
+</code></pre>
+<h3 id="soundcuecomponent-soundcue"><code>SoundCueComponent</code> {#soundcue}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SoundCue</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/audio/SoundCueComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SoundCueComponent&gt;()-&gt;Queue(clip, 0.8F);
+</code></pre>
+<h3 id="sprite2dcharacteranimfsmcomponent-sprite2dcharacteranimfsm"><code>Sprite2DCharacterAnimFsmComponent</code> {#sprite2dcharacteranimfsm}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Sprite2DCharacterAnimFsm</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp</code> |
+| <strong>2D</strong> | Primary — idle/run/attack FSM (priority 100) |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;()-&gt;RequestAttack();
+</code></pre>
+<h3 id="character3danimfsmcomponent-character3danimfsm"><code>Character3DAnimFsmComponent</code> {#character3danimfsm}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Character3DAnimFsm</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<p>Locomotion/combat driver for <code>AnimatorComponent</code>.</p>
+<h3 id="spotlightcomponent-spotlight"><code>SpotLightComponent</code> {#spotlight}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpotLight</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/lighting/SpotLightComponent.hpp</code> |
+| <strong>2D</strong> | Optional |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpotLightComponent&gt;(Vector3::One, 6.0F, 15.0F, 25.0F, 40.0F);
+</code></pre>
+<h3 id="directionallightcomponent-directionallight"><code>DirectionalLightComponent</code> {#directionallight}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::DirectionalLight</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/lighting/DirectionalLightComponent.hpp</code> |
+| <strong>2D</strong> | Optional — sun vector for lit sprites |</p>
+<p>Direction = owner transform local <strong>+Z</strong> in world space.</p>
+<pre><code class="language-cpp">sunGo-&gt;AddComponent&lt;DirectionalLightComponent&gt;(Vector3{1,0.97,0.9}, 1.2F);
+</code></pre>
+<h3 id="cameracomponent-camera"><code>CameraComponent</code> {#camera}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Camera</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/CameraComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — use <code>Camera2DComponent</code> |</p>
+<p>Perspective / orthographic 3D main camera selection by <code>priority</code>.</p>
+<h3 id="camera2dcomponent-camera2d"><code>Camera2DComponent</code> {#camera2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Camera2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/Camera2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;()-&gt;SetHalfExtentY(6.0F);
+</code></pre>
+<h3 id="camera2drigcomponent-camera2drig"><code>Camera2DRigComponent</code> {#camera2drig}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Camera2DRig</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/Camera2DRigComponent.hpp</code> |
+| <strong>2D</strong> | Primary — follow, look-ahead, shake offset |</p>
+<pre><code class="language-cpp">auto* rig = cameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;();
+rig-&gt;SetTarget(player);
+rig-&gt;SetFollowSmoothRate(7.5F);
+</code></pre>
+<p>See <a href="05-camera-hud.html">05 — Camera and HUD</a>.</p>
+<h3 id="renderlayercomponent-renderlayer"><code>RenderLayerComponent</code> {#renderlayer}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::RenderLayer</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/RenderLayerComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">hero-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
+</code></pre>
+<h3 id="sortinggroupcomponent-sortinggroup"><code>SortingGroupComponent</code> {#sortinggroup}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SortingGroup</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/SortingGroupComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">propsRoot-&gt;AddComponent&lt;SortingGroupComponent&gt;(50);
+</code></pre>
+<h3 id="charactercontroller3dcomponent-charactercontroller3d"><code>CharacterController3DComponent</code> {#charactercontroller3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::CharacterController3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/CharacterController3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="triggervolume3dcomponent-triggervolume3d"><code>TriggerVolume3DComponent</code> {#triggervolume3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TriggerVolume3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/TriggerVolume3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="audiolistenercomponent-audiolistener"><code>AudioListenerComponent</code> {#audiolistener}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AudioListener</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/audio/AudioListenerComponent.hpp</code> |
+| <strong>2D</strong> | Primary — attach to camera rig |</p>
+<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;AudioListenerComponent&gt;()-&gt;SetPriority(10);
+</code></pre>
+<h3 id="billboardcomponent-billboard"><code>BillboardComponent</code> {#billboard}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Billboard</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/BillboardComponent.hpp</code> |
+| <strong>2D</strong> | Optional — 2.5D props face camera |</p>
+<pre><code class="language-cpp">sign-&gt;AddComponent&lt;SpriteComponent&gt;(iconTex);
+sign-&gt;AddComponent&lt;BillboardComponent&gt;();
+</code></pre>
+<h3 id="animationeventreceivercomponent-animationeventreceiver"><code>AnimationEventReceiverComponent</code> {#animationeventreceiver}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AnimationEventReceiver</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AnimationEventReceiverComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — skeletal clip markers (<code>SignalId::AnimationEvent</code>) |</p>
+<h3 id="animationeventvfxcomponent-animationeventvfx"><code>AnimationEventVfxComponent</code> {#animationeventvfx}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AnimationEventVfx</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AnimationEventVfxComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — maps animation events to VFX keys |</p>
+<h3 id="animationmeleehitcomponent-animationmeleehit"><code>AnimationMeleeHitComponent</code> {#animationmeleehit}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AnimationMeleeHit</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AnimationMeleeHitComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — <code>active_start</code> / <code>active_end</code> swing traces |</p>
+<pre><code class="language-cpp">auto* melee = character-&gt;AddComponent&lt;AnimationMeleeHitComponent&gt;();
+melee-&gt;SetStartEventName(&quot;active_start&quot;);
+melee-&gt;SetEndEventName(&quot;active_end&quot;);
+</code></pre>
+<h3 id="rootmotioncomponent-rootmotion"><code>RootMotionComponent</code> {#rootmotion}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::RootMotion</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/RootMotionComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — applies skeletal root motion to transform |</p>
+<h3 id="attachmentsocketcomponent-attachmentsocket"><code>AttachmentSocketComponent</code> {#attachmentsocket}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AttachmentSocket</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AttachmentSocketComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — weapon bone parenting |</p>
+<h3 id="skeletondebugdrawcomponent-skeletondebugdraw"><code>SkeletonDebugDrawComponent</code> {#skeletondebugdraw}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SkeletonDebugDraw</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/SkeletonDebugDrawComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — debug skeleton lines |</p>
+<h3 id="footikcomponent-footik"><code>FootIkComponent</code> {#footik}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::FootIk</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/FootIkComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="aimikcomponent-aimik"><code>AimIkComponent</code> {#aimik}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AimIk</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AimIkComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="skinnedanimationbudgetcomponent-skinnedanimationbudget"><code>SkinnedAnimationBudgetComponent</code> {#skinnedanimationbudget}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SkinnedAnimationBudget</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — LOD / budget for skinned characters |</p>
+<h3 id="camerafollow3dcomponent-camerafollow3d"><code>CameraFollow3DComponent</code> {#camerafollow3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::CameraFollow3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/CameraFollow3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="springarm3dcomponent-springarm3d"><code>SpringArm3DComponent</code> {#springarm3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpringArm3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/SpringArm3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="polygoncollider2dcomponent-polygoncollider2d"><code>PolygonCollider2DComponent</code> {#polygoncollider2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PolygonCollider2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/PolygonCollider2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — convex static ramps (max 16 verts) |</p>
+<pre><code class="language-cpp">auto* poly = ramp-&gt;AddComponent&lt;PolygonCollider2DComponent&gt;();
+poly-&gt;SetVertices(verts);
+</code></pre>
+<h3 id="healthcomponent-health"><code>HealthComponent</code> {#health}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Health</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/HealthComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(5.0F);
+hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
+    self.GetWorld().DestroyGameObject(&amp;self);
+});
+</code></pre>
+<h3 id="damageablecomponent-damageable"><code>DamageableComponent</code> {#damageable}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Damageable</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/DamageableComponent.hpp</code> |
+| <strong>2D</strong> | Primary — damage multiplier / invuln hooks |</p>
+<pre><code class="language-cpp">enemy-&gt;AddComponent&lt;DamageableComponent&gt;()-&gt;SetDamageMultiplier(1.0F);
+</code></pre>
+<h3 id="interactablecomponent-interactable"><code>InteractableComponent</code> {#interactable}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Interactable</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/InteractableComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* chest = chestGo-&gt;AddComponent&lt;InteractableComponent&gt;();
+chest-&gt;SetInteractionRadius(1.2F);
+chest-&gt;SetOnInteract([](GameObject&amp; player) { (void)player; });
+</code></pre>
+<h3 id="pickupcomponent-pickup"><code>PickupComponent</code> {#pickup}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Pickup</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/PickupComponent.hpp</code> |
+| <strong>2D</strong> | Primary — pair with <code>TriggerVolume2D</code> |</p>
+<pre><code class="language-cpp">auto* pickup = gem-&gt;AddComponent&lt;PickupComponent&gt;();
+pickup-&gt;SetItemId(&quot;gem&quot;);
+pickup-&gt;SetAutoCollectOnTriggerEnter(true);
+// After Simulate2D:
+PickupComponent::ProcessDeferredDestroys(world);
+</code></pre>
+<h3 id="animationhitbox2dcomponent-animationhitbox2d"><code>AnimationHitbox2DComponent</code> {#animationhitbox2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AnimationHitbox2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/AnimationHitbox2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — melee windows on sprite frames |</p>
+<pre><code class="language-cpp">auto* hitbox = player-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();
+hitbox-&gt;SetClipIndex(2U);
+hitbox-&gt;SetShape(AnimationHitbox2DShape::Arc);
+hitbox-&gt;SetRadius(1.1F);
+hitbox-&gt;SetDamagePerHit(10.0F);
+</code></pre>
+<h3 id="hurtbox2dcomponent-hurtbox2d"><code>Hurtbox2DComponent</code> {#hurtbox2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Hurtbox2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — trigger receiver for combat queries |</p>
+<pre><code class="language-cpp">enemy-&gt;AddComponent&lt;Hurtbox2DComponent&gt;()-&gt;SetRadius(0.68F);
+enemy-&gt;AddComponent&lt;HealthComponent&gt;(3.0F);
+</code></pre>
+<h3 id="projectile2dcomponent-projectile2d"><code>Projectile2DComponent</code> {#projectile2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Projectile2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/Projectile2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* shot = bulletGo-&gt;AddComponent&lt;Projectile2DComponent&gt;();
+shot-&gt;SetDamage(1.0F);
+shot-&gt;Activate({ox, oy}, {vx, vy}, owner);
+Projectile2DComponent::ProcessDeferredDestroys(world);
+</code></pre>
+<h3 id="damagezone2dcomponent-damagezone2d"><code>DamageZone2DComponent</code> {#damagezone2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::DamageZone2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/DamageZone2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — lava, poison tiles |</p>
+<pre><code class="language-cpp">hazard-&gt;AddComponent&lt;DamageZone2DComponent&gt;()-&gt;SetDamagePerSecond(25.0F);
+</code></pre>
+<h3 id="spawnpoint2dcomponent-spawnpoint2d"><code>SpawnPoint2DComponent</code> {#spawnpoint2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpawnPoint2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/world/SpawnPoint2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">spawn-&gt;AddComponent&lt;SpawnPoint2DComponent&gt;()-&gt;SetSpawnName(&quot;PlayerStart&quot;);
+</code></pre>
+<h3 id="camerabounds2dcomponent-camerabounds2d"><code>CameraBounds2DComponent</code> {#camerabounds2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::CameraBounds2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/CameraBounds2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — room camera boxes |</p>
+<pre><code class="language-cpp">zoneGo-&gt;AddComponent&lt;CameraBounds2DComponent&gt;()-&gt;SetHalfExtents({24.0F, 14.0F});
+</code></pre>
+<h3 id="parallaxlayercomponent-parallaxlayer"><code>ParallaxLayerComponent</code> {#parallaxlayer}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::ParallaxLayer</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/ParallaxLayerComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* parallax = bg-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;SetFactorX(0.04F);
+parallax-&gt;SetCameraReference(cameraGo);
+</code></pre>
+<h3 id="screenshakecomponent-screenshake"><code>ScreenShakeComponent</code> {#screenshake}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::ScreenShake</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/camera/ScreenShakeComponent.hpp</code> |
+| <strong>2D</strong> | Primary — on camera rig with <code>Camera2DRig</code> |</p>
+<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;()-&gt;AddImpulse({0.15F, -0.1F}, 0.2F, 30.0F);
+</code></pre>
+<h3 id="spriteanimationeventreceivercomponent-spriteanimationeventreceiver"><code>SpriteAnimationEventReceiverComponent</code> {#spriteanimationeventreceiver}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpriteAnimationEventReceiver</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp</code> |
+| <strong>2D</strong> | Primary — footstep markers |</p>
+<pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
+recv-&gt;AddMarker(1, 0.25F, &quot;Footstep&quot;);
+</code></pre>
+<h3 id="spriteanimationeventvfxcomponent-spriteanimationeventvfx"><code>SpriteAnimationEventVfxComponent</code> {#spriteanimationeventvfx}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpriteAnimationEventVfx</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteAnimationEventVfxComponent&gt;()-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
+</code></pre>
+<h3 id="inputactionmapcomponent-inputactionmap"><code>InputActionMapComponent</code> {#inputactionmap}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::InputActionMap</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/input/InputActionMapComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* map = player-&gt;AddComponent&lt;InputActionMapComponent&gt;();
+map-&gt;BindAxis1D(&quot;MoveX&quot;, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map-&gt;BindButton(&quot;Jump&quot;, GLFW_KEY_SPACE);
+</code></pre>
+<h3 id="playerinputcomponent-playerinput"><code>PlayerInputComponent</code> {#playerinput}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PlayerInput</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/input/PlayerInputComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* input = player-&gt;AddComponent&lt;PlayerInputComponent&gt;();
+input-&gt;SetActionMap(map);
+input-&gt;WasActionPressedThisFrame(&quot;Jump&quot;);
+</code></pre>
+<h3 id="gamestatecomponent-gamestate"><code>GameStateComponent</code> {#gamestate}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GameState</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/GameStateComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* flow = manager-&gt;AddComponent&lt;GameStateComponent&gt;(GameFlowState::Playing);
+flow-&gt;RequestState(GameFlowState::Victory);
+</code></pre>
+<h3 id="gameflowtriggercomponent-gameflowtrigger"><code>GameFlowTriggerComponent</code> {#gameflowtrigger}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GameFlowTrigger</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp</code> |
+| <strong>2D</strong> | Primary — goal zones, death → defeat |</p>
+<pre><code class="language-cpp">goal-&gt;AddComponent&lt;GameFlowTriggerComponent&gt;();
+goal-&gt;GetComponent&lt;GameFlowTriggerComponent&gt;()-&gt;SetTargetState(GameFlowState::Victory);
+</code></pre>
+<h3 id="decalprojectorcomponent-decalprojector"><code>DecalProjectorComponent</code> {#decalprojector}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::DecalProjector</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/DecalProjectorComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="physicsmaterial2dcomponent-physicsmaterial2d"><code>PhysicsMaterial2DComponent</code> {#physicsmaterial2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PhysicsMaterial2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — friction/restitution on static colliders |</p>
+<pre><code class="language-cpp">ice-&gt;AddComponent&lt;PhysicsMaterial2DComponent&gt;(0.15F, 0.35F);
+</code></pre>
+<h3 id="meshcollider3dcomponent-meshcollider3d"><code>MeshCollider3DComponent</code> {#meshcollider3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::MeshCollider3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/MeshCollider3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="navmeshagentcomponent-navmeshagent"><code>NavMeshAgentComponent</code> {#navmeshagent}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::NavMeshAgent</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/NavMeshAgentComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — for tilemaps use <code>GridNavAgent2D</code> |</p>
+<h3 id="gridnavagent2dcomponent-gridnavagent2d"><code>GridNavAgent2DComponent</code> {#gridnavagent2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GridNavAgent2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/GridNavAgent2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">auto* nav = npc-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
+nav-&gt;SetGridSourceObject(mapGo);
+nav-&gt;SetGoalMode(GridNavGoalMode2D::WorldPosition);
+nav-&gt;SetGoalWorldPosition({gx, gy});
+ProcessGridNavAgents2D(world, dt);
+</code></pre>
+<p>See <a href="../4-ai/05-pathfinding.html">Pathfinding</a>, <a href="09-2d-gameplay-api-guide.html">09 — Gameplay API</a>.</p>
+<h3 id="gridpathfollower2dcomponent-gridpathfollower2d"><code>GridPathFollower2DComponent</code> {#gridpathfollower2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GridPathFollower2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/GridPathFollower2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — moves transform or <code>Rigidbody2D</code> along path |</p>
+<pre><code class="language-cpp">player-&gt;AddComponent&lt;GridPathFollower2DComponent&gt;()-&gt;SetMaxSpeed(7.0F);
+</code></pre>
+<h3 id="gridnavtarget2dcomponent-gridnavtarget2d"><code>GridNavTarget2DComponent</code> {#gridnavtarget2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GridNavTarget2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/GridNavTarget2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — chase target marker |</p>
+<pre><code class="language-cpp">player-&gt;AddComponent&lt;GridNavTarget2DComponent&gt;();
+</code></pre>
+<h3 id="patrolpathcomponent-patrolpath"><code>PatrolPathComponent</code> {#patrolpath}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PatrolPath</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/PatrolPathComponent.hpp</code> |
+| <strong>2D</strong> | Optional — polyline waypoints (P0 demo uses grid goals + custom patrol) |</p>
+<pre><code class="language-cpp">auto* path = pathObj-&gt;AddComponent&lt;PatrolPathComponent&gt;();
+path-&gt;GetWaypoints().PushBack({x0, y0, 0.0F});
+path-&gt;SetLooping(true);
+</code></pre>
+<h3 id="perceptionsensorcomponent-perceptionsensor"><code>PerceptionSensorComponent</code> {#perceptionsensor}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PerceptionSensor</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/ai/PerceptionSensorComponent.hpp</code> |
+| <strong>2D</strong> | Primary — sight/hearing lists |</p>
+<pre><code class="language-cpp">guard-&gt;AddComponent&lt;PerceptionSensorComponent&gt;()-&gt;SetSightRadius(18.0F);
+</code></pre>
+<h3 id="ambientzonecomponent-ambientzone"><code>AmbientZoneComponent</code> {#ambientzone}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::AmbientZone</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/audio/AmbientZoneComponent.hpp</code> |
+| <strong>2D</strong> | Primary |</p>
+<pre><code class="language-cpp">cave-&gt;AddComponent&lt;AmbientZoneComponent&gt;()-&gt;SetVolumeScale(0.7F);
+</code></pre>
+<h3 id="fogvolumecomponent-fogvolume"><code>FogVolumeComponent</code> {#fogvolume}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::FogVolume</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/FogVolumeComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="postprocessvolumecomponent-postprocessvolume"><code>PostProcessVolumeComponent</code> {#postprocessvolume}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PostProcessVolume</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/PostProcessVolumeComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="hingejoint3dcomponent-hingejoint3d"><code>HingeJoint3DComponent</code> {#hingejoint3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::HingeJoint3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/HingeJoint3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="springjoint3dcomponent-springjoint3d"><code>SpringJoint3DComponent</code> {#springjoint3d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpringJoint3D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/3d/SpringJoint3DComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="distancejoint2dcomponent-distancejoint2d"><code>DistanceJoint2DComponent</code> {#distancejoint2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::DistanceJoint2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/DistanceJoint2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — ropes, chains |</p>
+<pre><code class="language-cpp">chainA-&gt;AddComponent&lt;DistanceJoint2DComponent&gt;(chainB, 1.2F);
+</code></pre>
+<h3 id="hingejoint2dcomponent-hingejoint2d"><code>HingeJoint2DComponent</code> {#hingejoint2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::HingeJoint2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/physics/2d/HingeJoint2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — pinned doors |</p>
+<pre><code class="language-cpp">hingeA-&gt;AddComponent&lt;HingeJoint2DComponent&gt;(hingeB);
+</code></pre>
+<h3 id="tilemapgameplaygridcomponent-tilemapgameplaygrid"><code>TilemapGameplayGridComponent</code> {#tilemapgameplaygrid}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapGameplayGrid</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp</code> |
+| <strong>2D</strong> | Primary — walkability bake for A* |</p>
+<pre><code class="language-cpp">auto* grid = mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
+grid-&gt;SetAutoRebake(true);
+grid-&gt;RebakeIfNeeded(*mapGo);
+</code></pre>
+<h3 id="tilemaptileanimatorcomponent-tilemaptileanimator"><code>TilemapTileAnimatorComponent</code> {#tilemaptileanimator}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapTileAnimator</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp</code> |
+| <strong>2D</strong> | Primary — animated tile cells |</p>
+<p>Sibling on tilemap root; drives tileset animation time.</p>
+<h3 id="tilemapautotilecomponent-tilemapautotile"><code>TilemapAutotileComponent</code> {#tilemapautotile}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapAutotile</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapAutotileComponent.hpp</code> |
+| <strong>2D</strong> | Primary — terrain autotile rebuild |</p>
+<h3 id="tilemapobjectlayercomponent-tilemapobjectlayer"><code>TilemapObjectLayerComponent</code> {#tilemapobjectlayer}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapObjectLayer</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp</code> |
+| <strong>2D</strong> | Primary — Tiled object markers |</p>
+<h3 id="tilemapobjectspawncomponent-tilemapobjectspawn"><code>TilemapObjectSpawnComponent</code> {#tilemapobjectspawn}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapObjectSpawn</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp</code> |
+| <strong>2D</strong> | Primary — spawn registry from markers |</p>
+<pre><code class="language-cpp">mapGo-&gt;AddComponent&lt;TilemapObjectSpawnComponent&gt;()-&gt;SetRegistry(&amp;spawnRegistry);
+</code></pre>
+<h3 id="tilemapobjectgizmocomponent-tilemapobjectgizmo"><code>TilemapObjectGizmoComponent</code> {#tilemapobjectgizmo}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapObjectGizmo</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapObjectGizmoComponent.hpp</code> |
+| <strong>2D</strong> | Primary — debug draw for markers |</p>
+<h3 id="tilemapmapsourcecomponent-tilemapmapsource"><code>TilemapMapSourceComponent</code> {#tilemapmapsource}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TilemapMapSource</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp</code> |
+| <strong>2D</strong> | Primary — <code>.tmx</code> / <code>.sparkmap</code> import |</p>
+<pre><code class="language-cpp">auto* source = mapGo-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
+source-&gt;SetTmxPath(&quot;level.tmx&quot;);
+source-&gt;ImportNow(*mapGo, world);
+</code></pre>
+<h3 id="timeofdaydrivercomponent-timeofdaydriver"><code>TimeOfDayDriverComponent</code> {#timeofdaydriver}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::TimeOfDayDriver</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/world/TimeOfDayDriverComponent.hpp</code> |
+| <strong>2D</strong> | Optional — sun color/time for lit sprites |</p>
+<pre><code class="language-cpp">root-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;()-&gt;SetTimeOfDay(0.35F);
+</code></pre>
+<h3 id="spawnpointcomponent-spawnpoint"><code>SpawnPointComponent</code> {#spawnpoint}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::SpawnPoint</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/world/SpawnPointComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — use <code>SpawnPoint2D</code> |</p>
+<h3 id="gltfscenesourcecomponent-gltfscenesource"><code>GltfSceneSourceComponent</code> {#gltfscenesource}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GltfSceneSource</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/GltfSceneSourceComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — serialized glTF scene root |</p>
+<h3 id="gltfinstancenodecomponent-gltfinstancenode"><code>GltfInstanceNodeComponent</code> {#gltfinstancenode}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::GltfInstanceNode</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/GltfInstanceNodeComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only — per-node glTF instance data |</p>
+<h3 id="waterbodycomponent-waterbody"><code>WaterBodyComponent</code> {#waterbody}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::WaterBody</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/water/WaterBodyComponent.hpp</code> |
+| <strong>2D</strong> | 3D-only |</p>
+<h3 id="pointlight2dcomponent-pointlight2d"><code>PointLight2DComponent</code> {#pointlight2d}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::PointLight2D</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/lighting/PointLight2DComponent.hpp</code> |
+| <strong>2D</strong> | Primary — local lamp on sprites |</p>
+<pre><code class="language-cpp">lamp-&gt;AddComponent&lt;PointLight2DComponent&gt;(Vector3{1,0.9,0.7}, 2.0F, 8.0F);
+</code></pre>
+<h3 id="scene2dcompositeviewcomponent-scene2dcompositeview"><code>Scene2DCompositeViewComponent</code> {#scene2dcompositeview}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::Scene2DCompositeView</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp</code> |
+| <strong>2D</strong> | Primary — GPU minimap / composite HUD |</p>
+<pre><code class="language-cpp">auto* view = flow-&gt;AddComponent&lt;Scene2DCompositeViewComponent&gt;();
+view-&gt;SetFeature(Scene2DCompositeFeature::Minimap);
+view-&gt;SetTarget(minimapRenderTexture);
+</code></pre>
+<p>See <a href="08-scene2d-runtime-limits.html">08 — Runtime limits</a>.</p>
+<hr />
+<h2 id="checklist-platformer-entity">Checklist: platformer entity</h2>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th><code>ComponentKind</code> stack</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Player</td>
+<td><code>Transform</code>, <code>Sprite</code>, <code>Sprite2DCharacterAnimFsm</code>, <code>SpriteAnimator</code>, <code>AnimationHitbox2D</code>, <code>BoxCollider2D</code>, <code>Rigidbody2D</code>, <code>CharacterController2D</code>, <code>InputActionMap</code>, <code>PlayerInput</code>, <code>Health</code>, <code>Damageable</code></td>
+</tr>
+<tr>
+<td>Enemy</td>
+<td><code>Transform</code>, <code>Sprite</code>, <code>Hurtbox2D</code>, <code>Health</code>, <code>AiAgent</code></td>
+</tr>
+<tr>
+<td>Gem</td>
+<td><code>Transform</code>, <code>Sprite</code>, <code>SpriteLighting2D</code>, <code>TriggerVolume2D</code>, <code>Pickup</code></td>
+</tr>
+<tr>
+<td>Goal</td>
+<td><code>Transform</code>, <code>TriggerVolume2D</code>, <code>GameFlowTrigger</code>, <code>GameState</code> (on manager)</td>
+</tr>
+<tr>
+<td>Camera</td>
+<td><code>Camera2D</code>, <code>Camera2DRig</code>, <code>ScreenShake</code>, <code>AudioListener</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="checklist-tilemap-p0-path">Checklist: tilemap / P0 path</h2>
+<table>
+<thead>
+<tr>
+<th>Object</th>
+<th><code>ComponentKind</code> stack</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Map</td>
+<td><code>Tilemap</code>, <code>TilemapMapSource</code>, <code>TilemapGameplayGrid</code>, <code>TilemapCollider2D</code>, <code>TilemapObjectLayer</code>, <code>TilemapObjectSpawn</code></td>
+</tr>
+<tr>
+<td>Player</td>
+<td><code>GridNavAgent2D</code>, <code>GridPathFollower2D</code>, <code>Rigidbody2D</code>, <code>Sprite</code>, …</td>
+</tr>
+<tr>
+<td>NPC</td>
+<td><code>GridNavAgent2D</code>, <code>Rigidbody2D</code>, <code>AiAgent</code> (optional)</td>
+</tr>
+<tr>
+<td>HUD</td>
+<td><code>Scene2DCompositeView</code>, <code>TextOverlay</code></td>
+</tr>
+</tbody>
+</table>
+<p>Next: <a href="00-2d-game-systems-map.html">Part 7 overview</a> · <a href="../1-overview-architecture/07-game-component-reference.html">Game component reference</a>.</p></div>
+          <footer class="doc-footer">
+            <p>Generated by <strong>MDWeb</strong></p>
+          </footer>
+        </article>
+
+        
+                <aside class="toc" aria-label="On this page">
+                  <p class="toc-title">On this page</p>
+                  <ul>
+                    
+                        <li class="toc-h1">
+                          <a href="#platformer-introduction">Platformer Introduction</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#class-design">Class Design: </a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#minimal-external-game-entry-point">Minimal External Game Entry Point</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#constants-from">Constants (from )</a>
+                        </li>
+                        
+                  </ul>
+                </aside>
+                
+      </main>
+    </div>
+  </div>
+  <script src="../assets/vendor/mermaid.min.js"></script>
+  <script src="../assets/vendor/highlight.min.js"></script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

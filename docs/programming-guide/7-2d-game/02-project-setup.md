@@ -63,6 +63,28 @@ void OnDetach() override {
 
 Or use `DemoRootCollection` from `spark/demo/DemoFoundation.hpp`.
 
+## Core components on boot
+
+| Component | Where | Purpose |
+|-----------|--------|---------|
+| `TransformComponent` | Every entity | Position, scale, Z depth |
+| `SpawnPoint2DComponent` | Level markers | Named spawn for player reload |
+| `SceneSpatialPolicyComponent` | Optional root | Streaming / bounds policy (open worlds) |
+| `AudioListenerComponent` | Camera rig | 3D positional audio (Z often 0 in 2D) |
+| `GameStateComponent` | Flow manager | Intro / playing / paused |
+
+```cpp
+#include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
+
+auto* spawn = spawnGo->AddComponent<SpawnPoint2DComponent>();
+spawn->SetSpawnName(Utf8String("Player"));
+
+flowGo->AddComponent<GameStateComponent>(GameFlowState::Intro);
+mainCamera->AddComponent<AudioListenerComponent>();
+```
+
+See [10 — Components handbook](10-2d-components-handbook.md) for the full catalog.
+
 ## Frame Order
 
 ```cpp
@@ -70,6 +92,8 @@ void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
     HandlePlayerInput(t, ctx);
     Game::OnUpdate(t, ctx);       // component ticks + sound cues
     physics.Simulate2D(GetWorld(), t);
+    PickupComponent::ProcessDeferredDestroys(GetWorld());
+    Projectile2DComponent::ProcessDeferredDestroys(GetWorld());
     UpdateEnemies(t);
 }
 

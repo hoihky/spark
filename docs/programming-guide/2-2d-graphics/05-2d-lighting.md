@@ -32,6 +32,23 @@ lit->SetRampMap(rampTex);              // Ramp mode
 | `NormalMappedRim` | Normal map + sun + view rim (`param1.rgb` = rim color) |
 | `MatcapApprox` | Normal map + ramp matcap from normal XY |
 | `FlickerLit` | Normal map + sun/points with sinusoidal intensity flicker |
+| `HitFlash` (13) | Full-sprite flash; `param1.y` = scene time at flash start |
+| `Outline` (14) | Screen-space outline from alpha neighbors |
+| `Dissolve` (15) | Noise dissolve; `param0.x` = progress 0–1 |
+
+### Parametric FX helpers (`SpriteFx2D`)
+
+For gameplay feedback without hand-tuning shader params:
+
+```cpp
+#include "spark/render/sprites2d/SpriteFx2D.hpp"
+
+SpriteFx2D::ApplyOutline(lighting, outlineColor, widthTexels, softness);
+SpriteFx2D::ApplyHitFlashAtSceneTime(lighting, flashColor, decaySeconds, sceneTimeSeconds);
+SpriteFx2D::ApplyDissolveProgress(lighting, progress01);
+```
+
+Used by `GameFlow2DProductPathDemo` for gems and player pickup flash. See [2D runtime limits](../7-2d-game/08-scene2d-runtime-limits.md).
 
 ### Normal atlases
 

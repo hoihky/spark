@@ -115,6 +115,27 @@ SimulateGameAi(world, timing, context);  // includes ProcessGridNavAgents2D + Ai
 
 `GridNavAgent2DComponent` snaps start/goal to the nearest walkable cell when blocked. `GridNavTarget2DComponent::SetSnapToWalkableCell` controls goal snapping.
 
+### Motion without `GridPathFollower2D`
+
+Demos often call helpers from `NavigationSubsystem.hpp` directly on `Rigidbody2D`:
+
+```cpp
+#include "spark/ai/NavigationSubsystem.hpp"
+
+ProcessGridNavAgents2D(world, deltaTime);
+ApplyGridNavAgent2DRigidbodyMotion(nav, transform, rigidbody, maxSpeed, arriveRadius, deltaTime);
+// or ApplyGridNavAgent2DSteeringMotion for smoother acceleration
+```
+
+### Patrol + chase (P0 product path)
+
+| NPC | Goal mode | Notes |
+|-----|-----------|-------|
+| Patrol | `GridCell` | Cycle waypoints; assign goal + `RequestRepath` **before** `ProcessGridNavAgents2D` |
+| Chaser | `TargetObject` | `SetGoalTarget(player)`; repath interval ~0.35s |
+
+See `GameFlow2DProductPathDemo` and [2D gameplay API — grid navigation](../7-2d-game/09-2d-gameplay-api-guide.md#7-grid-navigation-player-and-npcs).
+
 ---
 
 ## Manual `GridBitmapWalkability`

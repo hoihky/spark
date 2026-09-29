@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>01 introduction · Spark Game Engine Programming Guide</title>
+  <title>04 tilemap editor roadmap · Spark Game Engine Programming Guide</title>
   <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -413,7 +413,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1 is-active">
+                        <li class="nav-item depth-1">
                           
                             <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
                             
@@ -491,7 +491,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-1">
+                        <li class="nav-item depth-1 is-active">
                           
                             <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
                             
@@ -780,91 +780,214 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <main class="content">
         <article class="doc">
           <header class="doc-header">
-            <h1>01 introduction</h1>
+            <h1>Tilemap editor roadmap</h1>
           </header>
-          <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
-<p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
-<h2 id="what-you-get">What You Get</h2>
+          <div class="doc-body"><h1 id="tilemap-editor-roadmap">Tilemap editor roadmap</h1>
+<p>Spark tilemaps already support rendering, TMX/<code>.sparkmap</code> import (<code>TilemapMapSourceComponent</code>), gameplay grid, collision bake, autotile, animation, and object markers. This document is the plan for <strong>editor-ready APIs</strong> without coupling to ImGui or the scene editor shell.</p>
+<p><strong>Related:</strong> <a href="03-tilemaps.html">Tilemaps</a>, <code>TilemapDocument</code>, <code>ApplyTilemapDocument</code>.</p>
+<h2 id="design-principles">Design principles</h2>
 <table>
 <thead>
 <tr>
-<th>Layer</th>
-<th>Technology</th>
-<th>Public API</th>
+<th>Principle</th>
+<th>Application</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Window / input</td>
-<td>GLFW</td>
-<td><code>Window</code>, <code>IInput</code></td>
+<td><strong>Document as serialization truth</strong></td>
+<td><code>TilemapDocument</code> is the portable format; ECS components are the runtime view.</td>
 </tr>
 <tr>
-<td>Rendering</td>
-<td>Vulkan (internal)</td>
-<td><code>SceneRenderParams</code>, <code>IFramePresenter</code></td>
+<td><strong>Edit session</strong></td>
+<td>Mutations go through <code>TilemapEditSession</code> commands + revision bumps, not ad-hoc component pokes.</td>
 </tr>
 <tr>
-<td>Simulation</td>
-<td>ECS (<strong>97</strong> built-in components)</td>
-<td><code>GameWorld</code>, <code>GameObject</code>, <code>GameComponent</code></td>
+<td><strong>Derived data sinks</strong></td>
+<td>Gameplay grid, collider bake, and autotile subscribe to <code>TilemapEditRevision</code> regions (<code>TilemapDerivedDataRebaker</code>, optional auto-rebake on session).</td>
 </tr>
 <tr>
-<td>Physics</td>
-<td>Custom solvers</td>
-<td><code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code></td>
-</tr>
-<tr>
-<td>AI</td>
-<td>FSM, GOAP, steering</td>
-<td><code>SimulateGameAi</code>, <code>AiAgentComponent</code></td>
-</tr>
-<tr>
-<td>Audio</td>
-<td>Software mixer</td>
-<td><code>SoundEngine</code>, <code>SoundCueComponent</code></td>
-</tr>
-<tr>
-<td>UI (retained)</td>
-<td><code>IUiElement</code> tree → screen draws</td>
-<td><code>UiCanvasComponent</code>, <code>spark/ui/Ui.hpp</code></td>
-</tr>
-<tr>
-<td>UI (tools, optional)</td>
-<td>Dear ImGui docking + ImGui backend</td>
-<td><code>IImGuiLayer</code>, <code>Ui::UiToolkitSettings</code></td>
+<td><strong>Coordinates in one place</strong></td>
+<td><code>TilemapGridFrame</code> + pick helpers; editors never re-derive floor math.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="design-philosophy">Design Philosophy</h2>
-<ol>
-<li><strong>Explicit frame contract</strong> — simulation in <code>OnUpdate</code>, rendering as immutable <code>SceneRenderParams</code> in <code>OnRender</code>.</li>
-<li><strong>Dependency inversion</strong> — games depend on <code>IGame</code> / <code>IEngineContext</code>, not <code>VulkanRenderer</code>.</li>
-<li><strong>Composition</strong> — behavior lives in components; <code>GameObject</code> is a lightweight container.</li>
-<li><strong>Demos as documentation</strong> — <code>src/spark/demo/</code> and <code>SparkDemo</code> showcase every subsystem. <code>Platformer2DDemo</code> (#6) demonstrates parallax, screen shake, semantic input, character controller, pickups, and game-flow state components end-to-end.</li>
-</ol>
-<h2 id="minimal-bootstrap">Minimal Bootstrap</h2>
-<pre><code class="language-cpp">#include &quot;spark/engine/Engine.hpp&quot;
-#include &quot;spark/engine/Game.hpp&quot;
+<h2 id="phases">Phases</h2>
+<h3 id="phase-a-capture-pick-revision-implemented">Phase A — Capture, pick, revision (implemented)</h3>
+<ul>
+<li><strong><code>CaptureTilemapDocument</code></strong> — <code>TilemapComponent</code> (+ optional object layers) → <code>TilemapDocument</code>.</li>
+<li><strong><code>TilemapPick</code></strong> — world position → cell / top-most tile / object marker.</li>
+<li><strong><code>TilemapEditRevision</code> + <code>TilemapRevisionTracker</code></strong> — monotonic revision id and dirty cell regions for incremental rebake.</li>
+</ul>
+<h3 id="phase-b-edit-session-brushes-implemented">Phase B — Edit session &amp; brushes (implemented)</h3>
+<ul>
+<li><code>TilemapEditSession</code> with undoable commands (paint, erase, fill, line, rect, resize map).</li>
+<li>Brush types: single tile, stamp, random palette, terrain paint id (<code>TilemapBrush</code>).</li>
+<li><code>BeginGesture</code> / <code>EndGesture</code> coalesce drag strokes; revision tracker bumps after each committed command.</li>
+</ul>
+<h3 id="phase-c-incremental-derived-data-implemented">Phase C — Incremental derived data (implemented)</h3>
+<ul>
+<li><code>TilemapCellRegion::FromRevision</code> — dirty rect + neighbor margin for autotile.</li>
+<li><code>BakeTilemapGameplayGridRegion</code>, <code>RebuildTilemapAutotileLayerRegion</code>.</li>
+<li><code>RebakeTilemapDerivedData</code> / <code>TilemapEditSession::RebakeDerivedDataForLastEdit</code> (optional <code>PhysicsSubsystem</code> query static rebuild).</li>
+<li><strong><code>TilemapEditValidator</code></strong> — orphan tile/paint ids, missing atlas paths, layer cell count vs map size, object markers off-map. Run after TMX import (<code>TilemapMapSourceComponent</code>), before <code>.sparkmap</code> save (<code>TilemapSparkMapExporter</code>), and optionally after <code>TilemapEditSession::EndGesture</code> (<code>validateAfterCommit</code>).</li>
+</ul>
+<h3 id="phase-d-editor-ux-pipeline">Phase D — Editor UX &amp; pipeline</h3>
+<ul>
+<li>Palette / tile metadata batch edit, object move with stable marker ids.</li>
+<li>TMX export parity, optional chunked maps, debug overlay geometry API.</li>
+</ul>
+<h2 id="phase-a-api-reference">Phase A API reference</h2>
+<pre><code class="language-cpp">#include &quot;spark/scene/tilemap/TilemapServices.hpp&quot;
 
-class HelloSpark final : public Spark::Game {
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        auto* go = GetWorld().CreateGameObject();
-        go-&gt;GetName() = Spark::Utf8String(&quot;Root&quot;);
-        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-    }
-};
+// Runtime → document (save, diff, editor model)
+const TilemapDocumentCapturer capturer{};
+const auto captured = capturer.CaptureFromOwner(*mapGo);
 
-int main() {
-    Spark::Engine engine(Spark::Engine::NewGame&lt;HelloSpark&gt;());
-    engine.Run();
-    return 0;
-}
+// Mouse / tool hit testing
+const TilemapPicker picker{};
+const TilemapCellPick cellPick = picker.PickTopmostTile(*mapGo, *tilemap, {worldX, worldY});
+
+// After editor mutations (Phase B will call this automatically)
+TilemapRevisionTracker revisions;
+const TilemapEditRevision rev = revisions.RecordCellChange(layerIndex, cellX, cellY);
+gameplayGrid-&gt;RebakeRegion(rev);  // Phase C
 </code></pre>
-<h2 id="default-demo-binary">Default Demo Binary</h2>
-<p><code>src/main.cpp</code> constructs <code>Engine</code> with <code>NewShellDemoGame()</code> — an interactive launcher with <strong>21</strong> built-in modes (3D fly scenes, maze, 2D games, scene editor prototype, material showcase, glTF PBR sample, tilemap showcase, <strong>Dear ImGui docking demo</strong>, and more).</p>
-<p>Next: <a href="02-engine-capabilities.html">Engine Capabilities</a>.</p></div>
+<h2 id="phase-c-api-reference">Phase C API reference</h2>
+<pre><code class="language-cpp">#include &quot;spark/scene/tilemap/TilemapServices.hpp&quot;
+
+TilemapDerivedDataRebaker::Options opts{};
+opts.neighborMargin = 1U;
+opts.physicsQueryStatics = true; // immediate broad-phase queries after edit
+
+const auto rebaked = session.RebakeDerivedDataForLastEdit(*mapGo, opts, &amp;world, &amp;physics);
+// rebaked.rebakedRegion — cells touched (margin included)
+</code></pre>
+<p><code>PhysicsWorld2D</code> already rebakes tilemap collision each simulation step; <code>physicsQueryStatics</code> is for overlap/raycast query caches.</p>
+<pre><code class="language-cpp">TilemapEditSessionOptions opts{};
+opts.autoRebakePolicy = TilemapEditAutoRebakePolicy::AfterGestureOnly;
+opts.validateAfterCommit = true;
+session.Attach(*mapGo, opts);
+session.SetDerivedRebakeContext(&amp;world, &amp;physics);
+
+TilemapSparkMapExporter exporter{};
+const auto saved = exporter.Save(*mapGo, &quot;levels/my_level.sparkmap&quot;);
+</code></pre>
+<h2 id="phase-b-api-reference">Phase B API reference</h2>
+<pre><code class="language-cpp">#include &quot;spark/scene/tilemap/TilemapEditSession.hpp&quot;
+#include &quot;spark/scene/tilemap/TilemapBrush.hpp&quot;
+
+TilemapEditSession session;
+session.Attach(*mapGo);
+
+TilemapBrush brush{};
+brush.mode = TilemapBrushMode::Single;
+brush.single = TileCell::FromTileId(wallTileId);
+session.SetBrush(brush);
+
+session.BeginGesture();
+PickTopmostTileCell(...); // Phase A
+session.PaintCell(cell.x, cell.y);
+session.EndGesture();
+
+if (session.CanUndo()) {
+    session.Undo();
+}
+const TilemapEditRevision&amp; rev = session.GetLastRevision();
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Paint / erase</td>
+<td><code>PaintCell</code>, <code>EraseCell</code></td>
+</tr>
+<tr>
+<td>Line / rect</td>
+<td><code>PaintLine</code>, <code>PaintRect</code> (outline or filled)</td>
+</tr>
+<tr>
+<td>Fill</td>
+<td><code>FloodFill</code> (matches full <code>TileCell</code> at seed)</td>
+</tr>
+<tr>
+<td>Map size</td>
+<td><code>ResizeMap</code> (preserves overlapping cells, undoable)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="file-layout">File layout</h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TilemapServices.hpp</code></td>
+<td>Facade include for editor services</td>
+</tr>
+<tr>
+<td><code>TilemapDocumentCapturer</code></td>
+<td>ECS → document</td>
+</tr>
+<tr>
+<td><code>TilemapPicker</code> / <code>TilemapObjectQuery</code></td>
+<td>Hit testing &amp; object queries</td>
+</tr>
+<tr>
+<td><code>TilemapEditRevision</code> / <code>TilemapRevisionTracker</code></td>
+<td>Dirty regions</td>
+</tr>
+<tr>
+<td><code>TilemapBrush</code></td>
+<td>Brush resolution (<code>ResolveCell</code>)</td>
+</tr>
+<tr>
+<td><code>TilemapEditSession</code></td>
+<td>Undo + tools (composes capturer + rebaker)</td>
+</tr>
+<tr>
+<td><code>TilemapDocumentApplier</code></td>
+<td>Document → ECS</td>
+</tr>
+<tr>
+<td><code>TilemapGameplayGridBaker</code> / <code>TilemapAutotileBaker</code></td>
+<td>Derived data</td>
+</tr>
+<tr>
+<td><code>TilemapDerivedDataRebaker</code></td>
+<td>Revision-driven partial rebake</td>
+</tr>
+<tr>
+<td><code>TilemapDocumentSerializer</code> / <code>TilemapSparkMapExporter</code></td>
+<td><code>.sparkmap</code> I/O + validate-before-save</td>
+</tr>
+<tr>
+<td><code>TilemapEditValidator</code></td>
+<td>Document consistency checks</td>
+</tr>
+<tr>
+<td><code>TmxImporter</code> (+ nested <code>Gid</code>)</td>
+<td>Tiled <code>.tmx</code> → <code>TilemapDocument</code></td>
+</tr>
+<tr>
+<td><code>TileAnimationResolver</code></td>
+<td>Animated tile id at submit time</td>
+</tr>
+<tr>
+<td><code>TilemapObjectSpawnRegistry</code></td>
+<td>Object <code>typeId</code> → spawn handler (<code>Default()</code>)</td>
+</tr>
+</tbody>
+</table></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>
@@ -876,23 +999,31 @@ int main() {
                   <ul>
                     
                         <li class="toc-h1">
-                          <a href="#introduction-to-spark">Introduction to Spark</a>
+                          <a href="#sprites">Sprites</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#what-you-get">What You Get</a>
+                          <a href="#class-design">Class Design: </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#design-philosophy">Design Philosophy</a>
+                          <a href="#class-design">Class Design: </a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#minimal-bootstrap">Minimal Bootstrap</a>
+                          <a href="#spawn-a-sprite">Spawn a Sprite</a>
                         </li>
                         
                         <li class="toc-h2">
-                          <a href="#default-demo-binary">Default Demo Binary</a>
+                          <a href="#atlas-uv-animation">Atlas UV Animation</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#manual-draw-item-advanced">Manual Draw Item (Advanced)</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#coordinate-system">Coordinate System</a>
                         </li>
                         
                   </ul>

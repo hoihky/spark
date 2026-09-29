@@ -44,4 +44,62 @@ Z offsets separate draw order among platforms.
 
 For grid-based levels, use `TilemapComponent` with stacked layers, `TilemapCollider2DComponent`, and optional `TilemapGameplayGridComponent` for AI pathfinding. SparkDemo **#19** loads Kenney `sampleMap.tmx` at runtime. See [Tilemaps](../2-2d-graphics/03-tilemaps.md).
 
+### Collision layer on tiles
+
+Enable `contributeCollision` on terrain layers and set per-tile `collisionShape` on the `Tileset`. Add `TilemapCollider2DComponent` on the map object so `PhysicsWorld2D` resolves player/NPC bodies against baked statics.
+
+### Gameplay grid (pathfinding / spawn)
+
+```cpp
+auto* grid = levelRoot->AddComponent<TilemapGameplayGridComponent>();
+grid->SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid->SetAutoRebake(true);
+```
+
+Use `GetGridFrame()` for cell ↔ world conversion when placing markers or validating spawn cells.
+
+### Object layers (gems, enemies, goals)
+
+Markers live in `TilemapObjectLayerComponent` (not painted tiles). Register spawn handlers and use `TilemapObjectSpawnComponent::RespawnAll`:
+
+```cpp
+TilemapObjectSpawnRegistry::Default().Register("p0_gem", &SpawnGemHandler);
+```
+
+Full walkthrough: [Gameplay API — object layers](09-2d-gameplay-api-guide.md#5-object-layers-markers-and-spawning). P0 demo: shell **F**.
+
+### `TilemapAutotileComponent` + `TilemapTileAnimatorComponent`
+
+```cpp
+#include "spark/ecs/components/tilemap/TilemapAutotileComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp"
+
+auto* autotile = level->AddComponent<TilemapAutotileComponent>();
+autotile->SetTerrainLayerIndex(0U);
+autotile->RequestRebuild();
+
+auto* anim = level->AddComponent<TilemapTileAnimatorComponent>();
+anim->SetAdvanceSceneTime(true);
+```
+
+### `TilemapObjectGizmoComponent`
+
+Debug-draw markers in editor-style demos:
+
+```cpp
+level->AddComponent<TilemapObjectGizmoComponent>();
+```
+
+### Component checklist (level root)
+
+| Component | Required? |
+|-----------|-----------|
+| `TilemapMapSourceComponent` | If loading TMX |
+| `TilemapComponent` | Yes |
+| `TilemapGameplayGridComponent` | For AI / spawn validation |
+| `TilemapCollider2DComponent` | For physics blocking |
+| `TilemapObjectLayer` + `TilemapObjectSpawn` | For registered spawns |
+
+More types: [10 — Components handbook](10-2d-components-handbook.md#tilemapgameplaygrid).
+
 Next: [Player Controller](04-player-controller.md).

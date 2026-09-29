@@ -5,9 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-python3 site/build-docs.py
-python3 programming-guide/patch-site-from-md.py
-python3 ensure-html-theme.py
+python3 programming-guide/rebuild-site.py
 
 echo ""
 echo "Docs built. Preview locally:"

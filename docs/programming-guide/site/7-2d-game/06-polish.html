@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1 is-active">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -773,9 +803,13 @@ vfx-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
 </code></pre>
 <p>See <a href="../2-2d-graphics/04-2d-animation.html#sprite-animation-events">2D Animation</a>.</p>
 <h2 id="sound">Sound</h2>
-<pre><code class="language-cpp">auto* cue = playerObject-&gt;AddComponent&lt;SoundCueComponent&gt;();
-if (justJumped) cue-&gt;Queue(SoundClip::CreateToneBlip(520, 0.07F, 0.5F));
+<pre><code class="language-cpp">#include &quot;spark/audio/ProceduralSoundPresets.hpp&quot;
+
+if (justJumped) {
+    DemoPlayProceduralClip(context, ProceduralSoundPresets::Get(ProceduralSoundPreset::Jump), 0.5F);
+}
 </code></pre>
+<p>Lower-level generators: <code>SoundClip::CreateToneSweep</code>, <code>CreateNoiseBurst</code>, <code>CreateLayeredChime</code> (see <a href="../6-sound/02-clips.html">Clips</a>).</p>
 <p>Land dust SFX pairs well with <code>CharacterController2DComponent::WasGroundedLastFrame()</code> transition detection.</p>
 <h2 id="pause-menu-ui">Pause Menu (UI)</h2>
 <pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
@@ -811,6 +845,28 @@ PaintUiCanvases(GetWorld(), params, fbW, fbH);
 </code></pre>
 <h2 id="replace-procedural-art">Replace Procedural Art</h2>
 <p>Swap <code>CreateCheckerboard</code> for <code>Texture2D::TryLoadFromFile("assets/tiles.png", ...)</code>.</p>
+<h2 id="sprite-fx-outline-flash-dissolve">Sprite FX (outline, flash, dissolve)</h2>
+<p>For collectibles and combat feedback without custom shaders per entity:</p>
+<pre><code class="language-cpp">#include &quot;spark/render/sprites2d/SpriteFx2D.hpp&quot;
+
+SpriteFx2D::ApplyOutline(*lighting, {1.0F, 0.92F, 0.25F, 1.0F}, 2.0F, 1.1F);
+SpriteFx2D::ApplyHitFlashAtSceneTime(*lighting, flashColor, 0.35F, sceneTimeSeconds);
+SpriteFx2D::ApplyDissolveProgress(*lighting, progress01);  // 0 → 1 over pickup
+</code></pre>
+<p>Requires <code>SpriteLighting2DComponent</code> on the same object as <code>SpriteComponent</code>. P0 demo: gem dissolve + player flash on collect (<strong>F</strong>). See <a href="08-scene2d-runtime-limits.html">Runtime limits</a>.</p>
+<h2 id="soundcuecomponent-ambientzonecomponent"><code>SoundCueComponent</code> + <code>AmbientZoneComponent</code></h2>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/audio/SoundCueComponent.hpp&quot;
+#include &quot;spark/ecs/components/audio/AmbientZoneComponent.hpp&quot;
+
+pickupCue-&gt;AddComponent&lt;SoundCueComponent&gt;()-&gt;PlayOneShot(&quot;gem&quot;, context);
+
+caveZone-&gt;AddComponent&lt;AmbientZoneComponent&gt;(dripLoop, 0.5F, 6.0F);
+</code></pre>
+<p>Cues flush during <code>Game::OnUpdate</code> → <code>ProcessSoundCues</code>. See <a href="../6-sound/01-sound-engine.html">Part 6 — Sound</a>.</p>
+<h2 id="particleemittercomponent-sprite-layer"><code>ParticleEmitterComponent</code> (sprite layer)</h2>
+<pre><code class="language-cpp">burst-&gt;AddComponent&lt;ParticleEmitterComponent&gt;()-&gt;SetRenderSpace(ParticleRenderSpace::SpriteLayer);
+</code></pre>
+<p>Built-in 2D effects live under <code>assets/vfx/*_2d.sparkvfx</code> (<a href="../2-2d-graphics/05-2d-lighting.html#2d-particles-on-the-sprite-layer">2D lighting</a>).</p>
 <h2 id="ship-checklist">Ship Checklist</h2>
 <ul>
 <li>[ ] Release build (<code>CMAKE_BUILD_TYPE=Release</code>)</li>
@@ -818,7 +874,8 @@ PaintUiCanvases(GetWorld(), params, fbW, fbH);
 <li>[ ] Test on target DPI / resolution</li>
 <li>[ ] Verify <code>SPARK_BUILD_ASSETS_DIR</code> paths</li>
 </ul>
-<p>Part 7 complete → <strong>Part 8</strong>: <a href="../8-3d-game/01-fps-intro.html">FPS Introduction</a>.</p></div>
+<p>Part 7 complete → <strong>Part 8</strong>: <a href="../8-3d-game/01-fps-intro.html">FPS Introduction</a>.<br />
+<strong>Grid / ARPG path:</strong> <a href="07-p0-2d-product-path.html">P0 product path</a> · <a href="09-2d-gameplay-api-guide.html">Gameplay API</a> · <a href="10-2d-components-handbook.html">Components handbook</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>

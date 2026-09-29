@@ -1048,6 +1048,31 @@ Spark::LitSceneBuilder(world, context)
 <td><code>CharacterController2DComponent</code>, <code>OneWayPlatform2DComponent</code>, <code>SimulateCharacterControllers2D</code></td>
 </tr>
 <tr>
+<td><strong>2D grid navigation</strong></td>
+<td>Tilemap A* + click-to-move / chase / patrol</td>
+<td><code>GridNavAgent2DComponent</code>, <code>GridPathFollower2DComponent</code>, <code>GridNavTarget2DComponent</code>, <code>ProcessGridNavAgents2D</code>, <code>ApplyGridNavAgent2DRigidbodyMotion</code></td>
+</tr>
+<tr>
+<td><strong>Object spawn from markers</strong></td>
+<td>Tilemap object layers → prefabs</td>
+<td><code>TilemapObjectLayerComponent</code>, <code>TilemapObjectSpawnComponent</code>, <code>TilemapObjectSpawnRegistry</code></td>
+</tr>
+<tr>
+<td><strong>Composite views / minimap</strong></td>
+<td>Offscreen ortho capture → HUD texture</td>
+<td><code>Scene2DCompositeViewComponent</code>, <code>VulkanScene2DCompositeCapture</code>, <code>RenderTexture</code> (<code>Rgba8Unorm</code> for UI copy)</td>
+</tr>
+<tr>
+<td><strong>Parametric sprite FX</strong></td>
+<td>Outline, hit flash, dissolve</td>
+<td><code>SpriteFx2D</code>, <code>SpriteLighting2DMode</code> 13–15, <code>sprite.frag</code></td>
+</tr>
+<tr>
+<td><strong>P0 product demo</strong></td>
+<td>End-to-end grid ARPG teaching path</td>
+<td><code>GameFlow2DProductPathDemo</code> (SparkDemo <strong>F</strong>); docs: <code>programming-guide/7-2d-game/09-2d-gameplay-api-guide.md</code></td>
+</tr>
+<tr>
 <td><strong>2D physics &amp; queries</strong></td>
 <td>Grid broad-phase, overlaps, raycasts, arcs</td>
 <td><code>PhysicsSubsystem</code>, <code>PhysicsQueryWorld2D</code> (see §11)</td>
@@ -1759,7 +1784,7 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 </tr>
 </tbody>
 </table>
-<p>The authoritative list of kinds is <strong><code>enum class ComponentKind</code></strong> in <code>spark/ecs/GameComponent.hpp</code> (<strong>97</strong> concrete types + <code>Unknown</code>).</p>
+<p>The authoritative list of kinds is <strong><code>enum class ComponentKind</code></strong> in <code>spark/ecs/GameComponent.hpp</code> (<strong>100</strong> concrete types + <code>Unknown</code>).</p>
 <p><strong>Full usage reference:</strong> <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>docs/programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</p>
 <p>Include umbrella <strong><code>spark/ecs/Ecs.hpp</code></strong> in tooling if you want a single include for registration patterns (headers still remain modular).</p>
 <h3 id="81-component-storage-model-mental-diagram">8.1 Component storage model (mental diagram)</h3>

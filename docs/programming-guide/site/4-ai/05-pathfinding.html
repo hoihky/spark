@@ -493,6 +493,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
                             
                         </li>
@@ -661,6 +667,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
                             <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
                             
                         </li>
@@ -692,6 +704,30 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
                             
                         </li>
                         
@@ -733,13 +769,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">Extending the FPS</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-0">
-                          
-                            <span class="nav-group">site</span>
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
                             
                         </li>
                         
@@ -768,8 +798,9 @@ struct Cell { int x = 0; int y = 0; };
 static bool FindPath4(const IGridWalkability&amp; grid, const Cell&amp; start,
                       const Cell&amp; goal, Array&lt;Cell&gt;&amp; outCells);
 </code></pre>
-<p>4-connected A<em> on a grid abstraction. </em><em>Start and goal must both be walkable</em>* or <code>FindPath4</code> returns false.</p>
-<h2 id="tilemap-gameplay-grid-recommended">Tilemap gameplay grid (recommended)</h2>
+<p>4-connected A<em> on a grid abstraction. </em><em>Start and goal must both be walkable</em>* (or resolved to the nearest walkable cell by your caller) or <code>FindPath4</code> returns false.</p>
+<hr />
+<h2 id="tilemap-gameplay-grid-data-source">Tilemap gameplay grid (data source)</h2>
 <p>Prefer baking from <code>TilemapComponent</code> instead of hand-maintaining a bitmap:</p>
 <pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;
 #include &quot;spark/scene/tilemap/TilemapGridCoordinates.hpp&quot;
@@ -797,6 +828,104 @@ if (GridPathfinder::FindPath4(gridComp-&gt;GetWalkability(), start, goal, cells)
 <pre><code class="language-cpp">TilemapGameplayGrid grid;
 tilemap-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 </code></pre>
+<hr />
+<h2 id="ecs-2d-grid-navigation-components-recommended">ECS: 2D grid navigation components (recommended)</h2>
+<p>For gameplay code, use the dedicated 2D nav stack instead of manual <code>FindPath4</code> loops:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TilemapGameplayGridComponent</code></td>
+<td>Walkability source + <code>TilemapGridFrame</code> (on tilemap object)</td>
+</tr>
+<tr>
+<td><code>GridNavAgent2DComponent</code></td>
+<td>Replans A* path each tick / interval</td>
+</tr>
+<tr>
+<td><code>GridPathFollower2DComponent</code></td>
+<td>Moves owner along agent waypoints</td>
+</tr>
+<tr>
+<td><code>GridNavTarget2DComponent</code></td>
+<td>Marks a goal entity for <code>TargetObject</code> mode</td>
+</tr>
+</tbody>
+</table>
+<h3 id="click-to-move-setup">Click-to-move setup</h3>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/ai/GridNavAgent2DComponent.hpp&quot;
+#include &quot;spark/ecs/components/ai/GridPathFollower2DComponent.hpp&quot;
+#include &quot;spark/ai/NavigationSubsystem.hpp&quot;
+
+boardGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;()-&gt;SetAutoRebake(true);
+
+playerGo-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
+auto* nav = playerGo-&gt;GetComponent&lt;GridNavAgent2DComponent&gt;();
+nav-&gt;SetGridSourceObject(boardGo);
+nav-&gt;SetGoalMode(GridNavGoalMode2D::WorldPosition);
+nav-&gt;SetSyncToAiAgent(false);
+
+playerGo-&gt;AddComponent&lt;GridPathFollower2DComponent&gt;()-&gt;SetMaxSpeed(6.5F);
+
+// On mouse pick (world XY from screen):
+nav-&gt;SetGoalWorldPosition(pickedWorldXY);
+nav-&gt;RequestRepath();
+
+// Each frame:
+ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
+world.UpdateGameObjects(timing, context);  // GridPathFollower2D OnUpdate @ priority 125
+</code></pre>
+<h3 id="chase-target-on-grid">Chase target on grid</h3>
+<pre><code class="language-cpp">playerGo-&gt;AddComponent&lt;GridNavTarget2DComponent&gt;();
+enemyGo-&gt;AddComponent&lt;AiAgentComponent&gt;()-&gt;SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);
+
+auto* chase = enemyGo-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
+chase-&gt;SetGridSourceObject(boardGo);
+chase-&gt;SetGoalMode(GridNavGoalMode2D::TargetObject);
+chase-&gt;SetGoalTarget(playerGo);
+chase-&gt;SetRepathIntervalSeconds(0.2F);
+chase-&gt;SetRepathEveryFrame(false);
+
+SimulateGameAi(world, timing, context);  // includes ProcessGridNavAgents2D + AiAgent steering
+</code></pre>
+<p><code>GridNavAgent2DComponent</code> snaps start/goal to the nearest walkable cell when blocked. <code>GridNavTarget2DComponent::SetSnapToWalkableCell</code> controls goal snapping.</p>
+<h3 id="motion-without-gridpathfollower2d">Motion without <code>GridPathFollower2D</code></h3>
+<p>Demos often call helpers from <code>NavigationSubsystem.hpp</code> directly on <code>Rigidbody2D</code>:</p>
+<pre><code class="language-cpp">#include &quot;spark/ai/NavigationSubsystem.hpp&quot;
+
+ProcessGridNavAgents2D(world, deltaTime);
+ApplyGridNavAgent2DRigidbodyMotion(nav, transform, rigidbody, maxSpeed, arriveRadius, deltaTime);
+// or ApplyGridNavAgent2DSteeringMotion for smoother acceleration
+</code></pre>
+<h3 id="patrol-chase-p0-product-path">Patrol + chase (P0 product path)</h3>
+<table>
+<thead>
+<tr>
+<th>NPC</th>
+<th>Goal mode</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Patrol</td>
+<td><code>GridCell</code></td>
+<td>Cycle waypoints; assign goal + <code>RequestRepath</code> <strong>before</strong> <code>ProcessGridNavAgents2D</code></td>
+</tr>
+<tr>
+<td>Chaser</td>
+<td><code>TargetObject</code></td>
+<td><code>SetGoalTarget(player)</code>; repath interval ~0.35s</td>
+</tr>
+</tbody>
+</table>
+<p>See <code>GameFlow2DProductPathDemo</code> and <a href="../7-2d-game/09-2d-gameplay-api-guide.html#7-grid-navigation-player-and-npcs">2D gameplay API — grid navigation</a>.</p>
+<hr />
 <h2 id="manual-gridbitmapwalkability">Manual <code>GridBitmapWalkability</code></h2>
 <pre><code class="language-cpp">GridBitmapWalkability walk;
 walk.Resize(mapW, mapH);
@@ -814,10 +943,13 @@ TilemapGameplayGrid::CellsToWorldPolylineXY(
 // Legacy XZ naming (same math, Y stored in Vector2::y):
 GridPathfinder::CellsToWorldPolyline(cells, gridOriginXZ, cellSize, outWorldXZ);
 </code></pre>
-<h2 id="navmesh-agents-3d-hybrid">NavMesh agents (3D / hybrid)</h2>
-<p>Or use <strong>NavMeshAgentComponent</strong> + <strong>PatrolPathComponent</strong> — <code>ProcessNavMeshAgents</code> fills the polyline before steering runs (see <a href="../1-overview-architecture/07-game-component-reference.html#patrolpathcomponent--navmeshagentcomponent">Game Component Reference</a>).</p>
-<h2 id="follow-polyline">Follow polyline</h2>
-<p>Advance <code>pathIndex</code> when within <code>arriveRadius</code> of each waypoint; steer toward <code>poly[pathIndex]</code>.</p>
+<hr />
+<h2 id="navmesh-agents-3d-xz-patrol">NavMesh agents (3D / XZ patrol)</h2>
+<p><strong>NavMeshAgentComponent</strong> + <strong>PatrolPathComponent</strong> — <code>ProcessNavMeshAgents</code> fills the polyline before 3D steering runs. The built-in <code>UseGridPathfinding()</code> mode uses a flat <code>GridBitmapWalkability</code> on the <strong>XZ</strong> plane (blackboard slots 0/1 for goal). For <strong>tilemap XY</strong> games, use <strong>GridNavAgent2DComponent</strong> instead.</p>
+<p>See <a href="../1-overview-architecture/07-game-component-reference.html#gridnavagent2dcomponent--gridpathfollower2dcomponent--gridnavtarget2dcomponent">Game Component Reference</a>.</p>
+<hr />
+<h2 id="follow-polyline-manually">Follow polyline manually</h2>
+<p>Advance <code>pathIndex</code> when within <code>arriveRadius</code> of each waypoint; steer toward <code>poly[pathIndex]</code>. <code>GridPathFollower2DComponent</code> encapsulates this for transform and rigidbody modes.</p>
 <h2 id="fuzzy-logic-optional">Fuzzy logic (optional)</h2>
 <p><code>FuzzyAdvisoryModule</code> (<code>spark/ai/fuzzy/FuzzyLogic.hpp</code>) blends continuous inputs (health, distance) into action weights — enable via <code>agent-&gt;SetFuzzyEnabled(true)</code>.</p>
 <p>Part 4 complete → <strong>Part 5</strong>: <a href="../5-physics/01-physics-overview.html">Physics Overview</a>.</p></div>

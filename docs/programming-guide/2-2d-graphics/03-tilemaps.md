@@ -147,4 +147,6 @@ For manual platforms (no tilemap), use scaled sprites + `BoxCollider2DComponent`
 
 **Editor APIs:** service classes (`TilemapDocumentCapturer`, `TilemapPicker`, `TilemapEditSession`, `TilemapDerivedDataRebaker`, …) — include `spark/scene/tilemap/TilemapServices.hpp` and see [Tilemap editor roadmap](04-tilemap-editor-roadmap.md).
 
+For a full **gameplay** walkthrough (collision layers, object spawn, nav, minimap), see [2D gameplay API guide](../7-2d-game/09-2d-gameplay-api-guide.md).
+
 Next: [2D Animation](04-2d-animation.md).

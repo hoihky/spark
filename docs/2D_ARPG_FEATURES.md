@@ -32,8 +32,8 @@ Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`
 |----------|---------|--------|--------|
 | **P2.1** | Inventory / equipment | Missing | UI + save + item defs (often game-specific). |
 | **P2.2** | Dialogue / quests | Missing | Data-driven quests + UI; optional scripting hooks. |
-| **P2.3** | Save/load game state | Partial | Asset paths and textures cached; no unified save blob API for ECS state. |
-| **P2.4** | Minimap / fog | Missing | Render targets / secondary camera or UI overlay. |
+| **P2.3** | Save/load game state | Partial | `GameSave` + `GameFlowPersistentData` in P0 demo; not all ECS components snapshotted. |
+| **P2.4** | Minimap / fog | Partial | `Scene2DCompositeViewComponent` + GPU ortho capture (`VulkanScene2DCompositeCapture`); RGBA8 RT + HUD blit. Fog/outline feature enum reserved. See [2D runtime limits](programming-guide/7-2d-game/08-scene2d-runtime-limits.md). |
 
 ## Design principles (SOLID + ECS)
 
@@ -44,4 +44,6 @@ Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`
 
 | **P1.11** | **2D grid nav ECS** | Implemented | `GridNavAgent2DComponent` (tilemap A* via `TilemapGameplayGridComponent`), `GridPathFollower2DComponent` (transform / rigidbody follow), `GridNavTarget2DComponent`, `ProcessGridNavAgents2D` in `SimulateGameAi`. |
 
-Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), unified save blob (P2.3).
+**P0 product path demo:** `GameFlow2DProductPathDemo` (SparkDemo **F**) — TMX level, gameplay grid, object spawn registry, gem pool, grid nav patrol/chaser, sprite FX dissolve, GPU minimap. API walkthrough: [2D gameplay API guide](programming-guide/7-2d-game/09-2d-gameplay-api-guide.md).
+
+Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), broader ECS save blob (P2.3).
