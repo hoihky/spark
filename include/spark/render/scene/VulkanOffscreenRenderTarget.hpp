@@ -28,6 +28,12 @@ public:
     [[nodiscard]] VkImageLayout DepthLayout() const noexcept { return depthLayout; }
     [[nodiscard]] std::uint64_t AllocatedToken() const noexcept { return allocatedToken; }
     void SetAllocatedToken(std::uint64_t token) noexcept { allocatedToken = token; }
+    [[nodiscard]] VkImage ColorImage() const noexcept { return colorImage; }
+
+    void TransitionColorImage(VkCommandBuffer commandBuffer, VkImageLayout newLayout) noexcept;
+    void TransitionDepthImage(VkCommandBuffer commandBuffer, VkImageLayout newLayout) noexcept;
+    /** Call after <c>vkCmdEndRenderPass</c> on the HDR render pass (color finalLayout = shader read). */
+    void SyncColorLayoutAfterHdrRenderPassEnd() noexcept;
 
 private:
     [[nodiscard]] static VkFormat ColorFormatForDesc(RenderTextureFormat format) noexcept;

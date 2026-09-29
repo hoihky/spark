@@ -12,6 +12,7 @@
 namespace Spark {
 
 class Font;
+class VulkanRenderTargetRegistry;
 
 /** Host-owned Vulkan handles required for font atlas upload. */
 struct VulkanScreenUiHostContext {
@@ -59,6 +60,12 @@ public:
     void RecordUiTextureUpload(VkCommandBuffer commandBuffer, VkDevice device);
     void ReleaseRetiredUiTextureAtlases(VkDevice device, std::uint64_t frameCounter);
     void UpdateUiSpriteDescriptorImages(VkDevice device);
+
+    /** Copies captured <c>RenderTexture</c> colors into matching <c>uiTextures</c> layers (GPU path). */
+    void RecordCompositeRenderTextureBlits(
+            VkCommandBuffer commandBuffer,
+            const SceneRenderParams& scene,
+            VulkanRenderTargetRegistry& renderTargets);
 
     void Record(
             VkCommandBuffer commandBuffer,

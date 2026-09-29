@@ -858,6 +858,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gameplay/GameplayDataTable.cpp
         src/spark/render/sprites2d/VulkanTilemapPass.cpp
         src/spark/render/sprites2d/Vulkan2DCompositePass.cpp
+        src/spark/render/sprites2d/VulkanScene2DCompositeCapture.cpp
         src/spark/render/scene/VulkanSceneMeshDraw.cpp
         src/spark/render/scene/VulkanSceneOpaquePass.cpp
         src/spark/render/scene/VulkanScenePipeline.cpp

@@ -136,4 +136,80 @@ void VulkanOffscreenRenderTarget::Destroy(const VkDevice device) noexcept {
     allocatedToken = 0;
 }
 
+namespace {
+
+void TransitionAttachment(
+        VkCommandBuffer commandBuffer,
+        VkImage image,
+        VkImageLayout& trackedLayout,
+        const VkImageAspectFlags aspect,
+        const VkImageLayout newLayout) noexcept {
+    if (image == VK_NULL_HANDLE || trackedLayout == newLayout) {
+        return;
+    }
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = 0;
+    if (trackedLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
+        barrier.srcAccessMask = 0;
+    } else if (trackedLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    } else if (trackedLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    } else if (trackedLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    }
+    if (newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    } else if (newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    } else if (newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    } else if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    }
+    barrier.oldLayout = trackedLayout;
+    barrier.newLayout = newLayout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = aspect;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.layerCount = 1;
+    vkCmdPipelineBarrier(
+            commandBuffer,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            0,
+            0,
+            nullptr,
+            0,
+            nullptr,
+            1,
+            &barrier);
+    trackedLayout = newLayout;
+}
+
+}  // namespace
+
+void VulkanOffscreenRenderTarget::TransitionColorImage(
+        VkCommandBuffer commandBuffer,
+        const VkImageLayout newLayout) noexcept {
+    TransitionAttachment(commandBuffer, colorImage, colorLayout, VK_IMAGE_ASPECT_COLOR_BIT, newLayout);
+}
+
+void VulkanOffscreenRenderTarget::TransitionDepthImage(
+        VkCommandBuffer commandBuffer,
+        const VkImageLayout newLayout) noexcept {
+    if (depthImage == VK_NULL_HANDLE) {
+        return;
+    }
+    TransitionAttachment(commandBuffer, depthImage, depthLayout, VK_IMAGE_ASPECT_DEPTH_BIT, newLayout);
+}
+
+void VulkanOffscreenRenderTarget::SyncColorLayoutAfterHdrRenderPassEnd() noexcept {
+    colorLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+}
+
 }  // namespace Spark

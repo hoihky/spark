@@ -16,12 +16,16 @@
 #include "spark/scene/core/SceneManager.hpp"
 #include "spark/scene/core/SceneSpawn.hpp"
 #include "spark/ai/path/GridPathfinder.hpp"
+#include "spark/gameplay/GameplayDataTable.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/render/IRenderTarget.hpp"
+#include "spark/scene/spawn/GameObjectPool.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {
 
 class GameObject;
+class RenderTexture;
 class GameStateComponent;
 class IEngineContext;
 class TilemapComponent;
@@ -54,9 +58,11 @@ private:
     void CorrectPlayerAgainstBlockedGrid() noexcept;
     void SetupPlayerNavigation() noexcept;
     void RebuildMinimapIfNeeded() noexcept;
+    void EnsureMinimapGpuResources(IEngineContext& context) noexcept;
 
     DemoRootCollection roots{};
     UniquePtr<SceneManager> sceneManager{};
+    UniquePtr<GameObjectPool> gemPool{};
     UniquePtr<SceneLoadSession> loadSession{};
     SceneInstanceId levelInstanceId = kInvalidSceneInstanceId;
     GameObject* levelRoot = nullptr;
@@ -73,7 +79,14 @@ private:
     TilemapGameplayGridComponent* walkGrid = nullptr;
     GridNavAgent2DComponent* playerNav = nullptr;
     SharedPtr<Texture2D> minimapTexture{};
+    SharedPtr<Texture2D> minimapHudTexture{};
+    SharedPtr<RenderTexture> minimapRenderTexture{};
+    SharedPtr<IRenderTarget> minimapRenderTargetView{};
+    GameplayDataTable gameplayTable{};
+    bool useGpuMinimap = true;
     bool minimapDirty = true;
+    float moveSpeedScale = 1.0F;
+    std::uint32_t gemPoolSize = 8U;
     bool useKeyboardDrive = true;
     Utf8String saveStatus{};
 

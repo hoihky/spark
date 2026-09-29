@@ -3,7 +3,9 @@
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
+#include "spark/scene/render/RenderTexture.hpp"
 
 namespace Spark {
 
@@ -38,6 +40,20 @@ void PatchScene2DMinimapHud(
         const TilemapGridFrame& frame,
         const Vector2& playerWorldXY,
         float framebufferWidth,
-        float framebufferHeight) noexcept;
+        float framebufferHeight,
+        bool orthoAlignedWithGpuCapture = true) noexcept;
+
+/** Allocates an RGBA8 offscreen target sized for GPU minimap capture. */
+[[nodiscard]] SharedPtr<RenderTexture> CreateMinimapRenderTexture(std::uint32_t sizePixels = 384U) noexcept;
+
+/** Placeholder UI layer overwritten each frame from the RT blit (see <c>VulkanScene2DCompositeCapture</c>). */
+[[nodiscard]] SharedPtr<Texture2D> CreateMinimapHudPlaceholderTexture(std::uint32_t sizePixels = 384U) noexcept;
+
+/** Appends one minimap composite capture descriptor (call after scene submit). */
+void AppendGpuMinimapCompositeCapture(
+        SceneRenderParams& params,
+        const SharedPtr<RenderTexture>& target,
+        const SharedPtr<Texture2D>& hudTexture,
+        const TilemapGridFrame& frame) noexcept;
 
 }  // namespace Spark

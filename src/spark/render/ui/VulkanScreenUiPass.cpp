@@ -4,6 +4,8 @@
 #include "spark/render/scene/SceneBlendMode.hpp"
 
 #include "spark/render/core/VulkanRendererGpu.hpp"
+#include "spark/render/scene/VulkanOffscreenRenderTarget.hpp"
+#include "spark/render/scene/VulkanRenderTargetRegistry.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/text/Font.hpp"
@@ -1870,6 +1872,86 @@ void VulkanScreenUiPass::RecordUiTextureUpload(const VkCommandBuffer commandBuff
     pendingUiTexturePointers.Clear();
 
     UpdateUiSpriteDescriptorImages(device);
+}
+
+void VulkanScreenUiPass::RecordCompositeRenderTextureBlits(
+        const VkCommandBuffer commandBuffer,
+        const SceneRenderParams& scene,
+        VulkanRenderTargetRegistry& renderTargets) {
+    if (commandBuffer == VK_NULL_HANDLE || activeUiSpriteAtlas.image == VK_NULL_HANDLE ||
+        scene.scene2DCompositeViews.IsEmpty()) {
+        return;
+    }
+
+    for (std::size_t vi = 0; vi < scene.scene2DCompositeViews.GetSize(); ++vi) {
+        const Scene2DCompositeViewDesc& view = scene.scene2DCompositeViews[vi];
+        if (!view.enabled || !view.target || !view.hudTexture) {
+            continue;
+        }
+        std::int32_t layer = -1;
+        for (std::size_t i = 0; i < scene.uiTextures.GetSize(); ++i) {
+            if (scene.uiTextures[i].Get() == view.hudTexture.Get()) {
+                layer = static_cast<std::int32_t>(i);
+                break;
+            }
+        }
+        if (layer < 0) {
+            continue;
+        }
+
+        VulkanOffscreenRenderTarget* srcGpu = renderTargets.TryGetGpu(*view.target);
+        if (srcGpu == nullptr || !srcGpu->IsAllocated()) {
+            continue;
+        }
+
+        const VkExtent2D srcExtent = srcGpu->Extent();
+        const std::uint32_t copyW = std::min(srcExtent.width, activeUiSpriteAtlas.width);
+        const std::uint32_t copyH = std::min(srcExtent.height, activeUiSpriteAtlas.height);
+        if (copyW == 0U || copyH == 0U) {
+            continue;
+        }
+
+        VulkanRendererGpu::SceneTexBarrierRegion(
+                commandBuffer,
+                activeUiSpriteAtlas.image,
+                static_cast<std::uint32_t>(layer),
+                1U,
+                0U,
+                1U,
+                activeUiSpriteAtlas.layout,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        activeUiSpriteAtlas.layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+
+        VkImageCopy region{};
+        region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.srcSubresource.mipLevel = 0;
+        region.srcSubresource.baseArrayLayer = 0;
+        region.srcSubresource.layerCount = 1;
+        region.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.dstSubresource.mipLevel = 0;
+        region.dstSubresource.baseArrayLayer = static_cast<std::uint32_t>(layer);
+        region.dstSubresource.layerCount = 1;
+        region.extent = {copyW, copyH, 1};
+        vkCmdCopyImage(
+                commandBuffer,
+                srcGpu->ColorImage(),
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                activeUiSpriteAtlas.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &region);
+
+        VulkanRendererGpu::SceneTexBarrierRegion(
+                commandBuffer,
+                activeUiSpriteAtlas.image,
+                static_cast<std::uint32_t>(layer),
+                1U,
+                0U,
+                1U,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        activeUiSpriteAtlas.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
 }
 
 void VulkanScreenUiPass::ReleaseRetiredUiTextureAtlases(const VkDevice device, const std::uint64_t frameCounter) {

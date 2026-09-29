@@ -34,7 +34,9 @@
 #include "spark/ai/path/GridPathfinder.hpp"
 #include "spark/ai/path/IGridWalkability.hpp"
 #include "spark/ecs/components/ai/GridNavAgent2DComponent.hpp"
+#include "spark/render/IRenderTargetService.hpp"
 #include "spark/render/sprites2d/Scene2DMinimap.hpp"
+#include "spark/scene/spawn/GameObjectPool.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -47,6 +49,7 @@ namespace {
 
 struct ProductPathSpawnBindings {
     GameFlow2DProductPathDemo* demo = nullptr;
+    GameObjectPool* gemPool = nullptr;
     SharedPtr<Texture2D> gemTexture{};
     GameObject* flowObject = nullptr;
     GameObject** goalObject = nullptr;
@@ -54,6 +57,55 @@ struct ProductPathSpawnBindings {
 };
 
 ProductPathSpawnBindings g_bindings{};
+
+constexpr const char* kP0GemPrefabPath = "prefabs/p0_gem.sparkscene";
+
+void ConfigureSpawnedGem(
+        GameObject& gem,
+        const Vector2& centerWorld,
+        const TilemapGridFrame& frame) {
+    gem.GetName() = Utf8String("P0Gem");
+    TransformComponent* tr = gem.GetComponent<TransformComponent>();
+    if (tr == nullptr) {
+        tr = gem.AddComponent<TransformComponent>();
+    }
+    tr->SetTranslation({centerWorld.x, centerWorld.y, 0.06F});
+    const float gemScale = std::max(frame.cellSize * 0.55F, 0.5F);
+    tr->SetScale({gemScale, gemScale, 1.0F});
+    if (gem.GetComponent<SpriteComponent>() == nullptr && g_bindings.gemTexture) {
+        gem.AddComponent<SpriteComponent>(
+                g_bindings.gemTexture,
+                Vector4{1.0F, 1.0F, 1.0F, 1.0F},
+                Vector4{0.0F, 0.0F, 1.0F, 1.0F},
+                80);
+    }
+    if (gem.GetComponent<TriggerVolume2DComponent>() == nullptr) {
+        if (TriggerVolume2DComponent* trigger = gem.AddComponent<TriggerVolume2DComponent>(
+                    TriggerVolume2DShape::Circle,
+                    Vector2{0.5F, 0.5F},
+                    Vector2::Zero)) {
+            trigger->SetRadius(std::max(frame.cellSize * 0.35F, 0.35F));
+        }
+    }
+    if (gem.GetComponent<Rigidbody2DComponent>() == nullptr) {
+        gem.AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
+    }
+    PickupComponent* pickup = gem.GetComponent<PickupComponent>();
+    if (pickup == nullptr) {
+        pickup = gem.AddComponent<PickupComponent>();
+    }
+    pickup->SetItemId("gem");
+    pickup->SetOnCollected([&gem](GameObject& /*collector*/, const char*, int) {
+        if (g_bindings.demo != nullptr) {
+            g_bindings.demo->OnGemPickedUp();
+        }
+        if (g_bindings.gemPool != nullptr) {
+            g_bindings.gemPool->Release(kP0GemPrefabPath, &gem);
+        } else {
+            gem.SetActive(false);
+        }
+    });
+}
 
 SharedPtr<Texture2D> MakeGemTexture() {
     Texture2D tex(Utf8String("P0Gem"));
@@ -77,32 +129,14 @@ GameObject* SpawnProductGem(
     }
     const GridPathfinder::Cell cell{marker.cellX, marker.cellY};
     const Vector2 center = frame.CellCenterToWorldXY(cell);
-    GameObject* gem = world.CreateGameObject();
-    gem->GetName() = Utf8String("P0Gem");
-    TransformComponent* tr = gem->AddComponent<TransformComponent>();
-    tr->SetTranslation({center.x, center.y, 0.06F});
-    const float gemScale = std::max(frame.cellSize * 0.55F, 0.5F);
-    tr->SetScale({gemScale, gemScale, 1.0F});
-    gem->AddComponent<SpriteComponent>(
-            g_bindings.gemTexture,
-            Vector4{1.0F, 1.0F, 1.0F, 1.0F},
-            Vector4{0.0F, 0.0F, 1.0F, 1.0F},
-            80);
-    if (TriggerVolume2DComponent* trigger =
-                gem->AddComponent<TriggerVolume2DComponent>(TriggerVolume2DShape::Circle, Vector2{0.5F, 0.5F}, Vector2::Zero)) {
-        trigger->SetRadius(std::max(frame.cellSize * 0.35F, 0.35F));
+    GameObject* gem = nullptr;
+    if (g_bindings.gemPool != nullptr) {
+        gem = g_bindings.gemPool->Acquire(world, kP0GemPrefabPath, nullptr);
     }
-    gem->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
-    auto* pickup = gem->AddComponent<PickupComponent>();
-    pickup->SetItemId("gem");
-    pickup->SetOnCollected([gem](GameObject& /*collector*/, const char*, int) {
-        if (g_bindings.demo != nullptr) {
-            g_bindings.demo->OnGemPickedUp();
-        }
-        if (gem != nullptr) {
-            gem->SetActive(false);
-        }
-    });
+    if (gem == nullptr) {
+        gem = world.CreateGameObject();
+    }
+    ConfigureSpawnedGem(*gem, center, frame);
     return gem;
 }
 
@@ -425,7 +459,7 @@ void GameFlow2DProductPathDemo::SetupPlayerNavigation() noexcept {
 }
 
 void GameFlow2DProductPathDemo::RebuildMinimapIfNeeded() noexcept {
-    if (!minimapDirty || walkGrid == nullptr) {
+    if (useGpuMinimap || !minimapDirty || walkGrid == nullptr) {
         return;
     }
     if (!minimapTexture) {
@@ -433,6 +467,24 @@ void GameFlow2DProductPathDemo::RebuildMinimapIfNeeded() noexcept {
     }
     RebuildMinimapTextureFromGameplayGrid(walkGrid->GetGrid(), *minimapTexture);
     minimapDirty = false;
+}
+
+void GameFlow2DProductPathDemo::EnsureMinimapGpuResources(IEngineContext& context) noexcept {
+    if (!useGpuMinimap) {
+        return;
+    }
+    if (!minimapRenderTexture) {
+        minimapRenderTexture = CreateMinimapRenderTexture(384U);
+    }
+    if (!minimapHudTexture) {
+        minimapHudTexture = CreateMinimapHudPlaceholderTexture(384U);
+        minimapTexture = minimapHudTexture;
+    }
+    if (!minimapRenderTargetView && minimapRenderTexture) {
+        if (IRenderTargetService* targets = context.TryGetRenderTargetService()) {
+            minimapRenderTargetView = targets->CreateRenderTarget(minimapRenderTexture);
+        }
+    }
 }
 
 void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
@@ -502,12 +554,17 @@ void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
     }
 
     g_bindings.demo = this;
+    g_bindings.gemPool = gemPool.Get();
     g_bindings.gemTexture = MakeGemTexture();
     g_bindings.flowObject = flowObject;
     g_bindings.goalObject = &goalObject;
     g_bindings.gemsRequired = gemsRequired;
     goalObject = nullptr;
     RegisterSpawnHandlers();
+
+    if (gemPool != nullptr) {
+        gemPool->Prewarm(world, kP0GemPrefabPath, gemPoolSize, levelRoot);
+    }
 
     if (TilemapObjectSpawnComponent* spawn = levelRoot->GetComponent<TilemapObjectSpawnComponent>()) {
         spawn->SetSpawnOnAttach(false);
@@ -611,11 +668,24 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     Unload(world);
     gemsCollected = 0;
     gemsRequired = 3;
+    moveSpeedScale = 1.0F;
+    gemPoolSize = 8U;
     persistent = GameFlowPersistentData{};
     flow.LoadProgressFromDisk(GameSave::DefaultSlotPath("p0_demo").CStr());
 
+    Utf8String gameplayPath = ScenePathResolver::ResolveReadablePath("gameplay/p0_demo.sparkgameplay");
+    if (gameplayPath.IsEmpty()) {
+        gameplayPath = ScenePathResolver::BuildRuntimePath("gameplay", "p0_demo.sparkgameplay");
+    }
+    if (gameplayTable.TryLoad(gameplayPath.CStr())) {
+        gemsRequired = gameplayTable.GetInt("p0.gems_required", gemsRequired);
+        gemPoolSize = static_cast<std::uint32_t>(gameplayTable.GetInt("p0.gem_pool_size", static_cast<int>(gemPoolSize)));
+        moveSpeedScale = gameplayTable.GetFloat("p0.move_speed_scale", moveSpeedScale);
+    }
+
     sceneManager = MakeUnique<SceneManager>(world);
     loadSession = MakeUnique<SceneLoadSession>(*sceneManager);
+    gemPool = MakeUnique<GameObjectPool>(*sceneManager);
 
     flowObject = world.CreateGameObject();
     flowObject->GetName() = Utf8String("P0GameFlow");
@@ -649,6 +719,7 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     roots.Track(playerObject);
 
     RebuildAuthoredLevel(world);
+    EnsureMinimapGpuResources(context);
 
     helpHud.Mount(world, "2D P0 product path");
     helpHud.SetControlHints(
@@ -668,6 +739,7 @@ void GameFlow2DProductPathDemo::Unload(GameWorld& world) {
     levelRoot = nullptr;
     walkGrid = nullptr;
     loadSession.Reset();
+    gemPool.Reset();
     sceneManager.Reset();
     flowObject = nullptr;
     gameState = nullptr;
@@ -678,6 +750,9 @@ void GameFlow2DProductPathDemo::Unload(GameWorld& world) {
     playerSpawnResolved = false;
     playerNav = nullptr;
     minimapTexture.Reset();
+    minimapHudTexture.Reset();
+    minimapRenderTexture.Reset();
+    minimapRenderTargetView.Reset();
     minimapDirty = true;
     useKeyboardDrive = true;
     saveStatus.Clear();
@@ -803,7 +878,7 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
         if (gameState->IsState(GameFlowState::Intro) && keyboardIntent) {
             flow.RequestPlaying();
         }
-        const float speed = walkGrid->GetGridFrame().cellSize * 2.75F;
+        const float speed = walkGrid->GetGridFrame().cellSize * 2.75F * moveSpeedScale;
         const float arrive = walkGrid->GetGridFrame().cellSize * 0.12F;
         if (useKeyboardDrive && keyboardIntent) {
             const float len = std::sqrt(moveX * moveX + moveY * moveY);
@@ -869,7 +944,15 @@ void GameFlow2DProductPathDemo::Render(Scene& /*scene*/, GameWorld& world, IEngi
     SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {
         helpHud.PatchSceneRenderParams(*sceneParams, world);
-        RebuildMinimapIfNeeded();
+        if (useGpuMinimap && minimapRenderTexture && minimapHudTexture && walkGrid != nullptr) {
+            AppendGpuMinimapCompositeCapture(
+                    *sceneParams,
+                    minimapRenderTexture,
+                    minimapHudTexture,
+                    walkGrid->GetGridFrame());
+        } else {
+            RebuildMinimapIfNeeded();
+        }
         if (minimapTexture && walkGrid != nullptr && playerTr != nullptr) {
             const Vector3 p = playerTr->GetLocalTransform().translation;
             PatchScene2DMinimapHud(
@@ -879,7 +962,8 @@ void GameFlow2DProductPathDemo::Render(Scene& /*scene*/, GameWorld& world, IEngi
                     walkGrid->GetGridFrame(),
                     {p.x, p.y},
                     static_cast<float>(fbW),
-                    static_cast<float>(fbH));
+                    static_cast<float>(fbH),
+                    useGpuMinimap);
         }
     }
 }

@@ -1,0 +1,4 @@
+spark_gameplay_v1
+int p0.gems_required 3
+int p0.gem_pool_size 8
+float p0.move_speed_scale 1.0

@@ -419,6 +419,32 @@ void VulkanRenderer::RecordSceneCommandBuffer(
 
     vkCmdEndRenderPass(commandBuffer);
 
+    if (sceneParamsValid && frameIndex < sceneDescriptors.DescriptorSetCount()) {
+        scene2DCompositeCapture.Record(
+                commandBuffer,
+                VulkanScene2DCompositeCapture::RecordContext{
+                        .scene = &pendingScene,
+                        .sceneParamsValid = sceneParamsValid,
+                        .frameIndex = frameIndex,
+                        .hdrRenderPass = hdrTonemapPass.HdrRenderPass(),
+                        .renderTargets = &renderTargetRegistry,
+                        .descriptors = &sceneDescriptors,
+                        .uniformWriter = &sceneUniformWriter,
+                        .lighting = &resolvedLighting,
+                        .directionalShadow = &directionalShadow,
+                        .shadowFrameState = &shadowFrameState,
+                        .tilemapPass = &tilemapPass,
+                        .spritePass = &spritePass,
+                        .compositePass = &composite2DPass,
+                        .vertexBuffer = vertexBuffer,
+                        .indexBuffer = indexBuffer,
+                        .quadFirstIndex = spriteQuadFirstIndex,
+                        .quadIndexCount = spriteQuadIndexCount,
+                        .presentExtent = presentSwapchain().extent,
+                });
+        screenUi.RecordCompositeRenderTextureBlits(commandBuffer, pendingScene, renderTargetRegistry);
+    }
+
     hdrTonemapPass.TransitionColorToShaderRead(commandBuffer, frameIndex);
 
     const bool ssaoActive = sceneParamsValid && pendingScene.ssaoEnabled;
