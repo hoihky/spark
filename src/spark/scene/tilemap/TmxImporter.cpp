@@ -501,6 +501,9 @@ void ParseObjectGroup(
         } else {
             TryGetAttribute(objTag, objClose, "class", marker.typeId);
         }
+        if (marker.typeId.IsEmpty() && !marker.name.IsEmpty()) {
+            marker.typeId = marker.name;
+        }
         float x = 0.0F;
         float y = 0.0F;
         float w = static_cast<float>(tileWidth);

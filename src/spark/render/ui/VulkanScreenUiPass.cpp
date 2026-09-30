@@ -1594,7 +1594,6 @@ void VulkanScreenUiPass::Record(
         RecordSolidRectsFor(commandBuffer, frameIndex, extent, scene.screenRects);
     }
     if (!scene.screenSprites.IsEmpty()) {
-        UpdateUiSpriteDescriptorImages(this->device);
         RecordSpritesFor(commandBuffer, frameIndex, extent, scene, scene.screenSprites);
     }
     if (fontCpuOk && canText && !scene.screenTexts.IsEmpty()) {
@@ -1604,7 +1603,6 @@ void VulkanScreenUiPass::Record(
         RecordSolidRectsFor(commandBuffer, frameIndex, extent, scene.screenOverlayRects);
     }
     if (!scene.screenOverlaySprites.IsEmpty()) {
-        UpdateUiSpriteDescriptorImages(this->device);
         RecordSpritesFor(commandBuffer, frameIndex, extent, scene, scene.screenOverlaySprites);
     }
     if (fontCpuOk && canText && !scene.screenOverlayTexts.IsEmpty()) {
@@ -1614,7 +1612,6 @@ void VulkanScreenUiPass::Record(
         RecordSolidRectsFor(commandBuffer, frameIndex, extent, scene.screenLateRects);
     }
     if (!scene.screenLateSprites.IsEmpty()) {
-        UpdateUiSpriteDescriptorImages(this->device);
         RecordSpritesFor(commandBuffer, frameIndex, extent, scene, scene.screenLateSprites);
     }
     if (fontCpuOk && canText && !scene.screenLateTexts.IsEmpty()) {
@@ -1678,12 +1675,92 @@ bool SameSpriteBatch(const ScreenSpriteDraw& a, const ScreenSpriteDraw& b) noexc
 
 }  // namespace
 
+namespace {
+
+void WriteUiSpriteStagingLayers(
+        std::uint8_t* stagingBytes,
+        const VkDeviceSize layerBytes,
+        const SceneRenderParams& scene,
+        const std::uint32_t maxW,
+        const std::uint32_t maxH) noexcept {
+    for (std::size_t li = 0; li < scene.uiTextures.GetSize(); ++li) {
+        const Texture2D* tex = scene.uiTextures[li].Get();
+        std::uint8_t* layerBase = stagingBytes + static_cast<std::size_t>(layerBytes) * static_cast<std::size_t>(li);
+        const std::size_t layerPixels = static_cast<std::size_t>(maxW) * static_cast<std::size_t>(maxH);
+        std::memset(layerBase, 0, layerPixels * 4U);
+        if (tex == nullptr) {
+            continue;
+        }
+        const Array<std::uint8_t>& rgba = tex->GetRgba();
+        const std::uint32_t tw = tex->GetWidth();
+        const std::uint32_t th = tex->GetHeight();
+        for (std::uint32_t y = 0; y < th; ++y) {
+            const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(tw) * 4U;
+            const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(maxW) * 4U;
+            const std::size_t copyBytes = static_cast<std::size_t>(tw) * 4U;
+            if (srcRow + copyBytes <= rgba.GetSize()) {
+                std::memcpy(layerBase + dstRow, rgba.GetData() + srcRow, copyBytes);
+            }
+        }
+    }
+}
+
+[[nodiscard]] bool CanRefreshUiSpriteAtlasInPlace(
+        const VkImageView activeView,
+        const VkImage activeImage,
+        const std::uint32_t activeWidth,
+        const std::uint32_t activeHeight,
+        const Array<const Texture2D*>& uploadedPointers,
+        const SceneRenderParams& scene,
+        const std::uint32_t maxW,
+        const std::uint32_t maxH,
+        const std::uint32_t layerCount) noexcept {
+    if (activeView == VK_NULL_HANDLE || activeImage == VK_NULL_HANDLE) {
+        return false;
+    }
+    if (activeWidth != maxW || activeHeight != maxH) {
+        return false;
+    }
+    if (uploadedPointers.GetSize() != static_cast<std::size_t>(layerCount)) {
+        return false;
+    }
+    if (scene.uiTextures.GetSize() != static_cast<std::size_t>(layerCount)) {
+        return false;
+    }
+    for (std::uint32_t i = 0; i < layerCount; ++i) {
+        if (scene.uiTextures[i].Get() != uploadedPointers[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void CommitUploadedUiTextureFingerprints(
+        const Array<const Texture2D*>& pointers,
+        Array<std::uint64_t>& outFingerprints) noexcept {
+    outFingerprints.Clear();
+    for (std::size_t i = 0; i < pointers.GetSize(); ++i) {
+        const Texture2D* tex = pointers[i];
+        outFingerprints.PushBack(tex != nullptr ? tex->GetContentFingerprint() : 0U);
+    }
+}
+
+}  // namespace
+
 bool VulkanScreenUiPass::NeedsUiTextureUpload(const SceneRenderParams& scene) const noexcept {
     if (scene.uiTextures.GetSize() != uploadedUiTexturePointers.GetSize()) {
         return true;
     }
+    if (scene.uiTextures.GetSize() != uploadedUiTextureFingerprints.GetSize()) {
+        return true;
+    }
     for (std::size_t i = 0; i < scene.uiTextures.GetSize(); ++i) {
         if (scene.uiTextures[i].Get() != uploadedUiTexturePointers[i]) {
+            return true;
+        }
+        const Texture2D* tex = scene.uiTextures[i].Get();
+        const std::uint64_t fingerprint = tex != nullptr ? tex->GetContentFingerprint() : 0U;
+        if (uploadedUiTextureFingerprints[i] != fingerprint) {
             return true;
         }
     }
@@ -1697,6 +1774,7 @@ void VulkanScreenUiPass::PrepareUiTextureUpload(
         const std::uint64_t frameCounter,
         const std::uint32_t maxFramesInFlight) {
     uiSpriteUploadPending = false;
+    uiSpriteUploadInPlace = false;
     if (device == VK_NULL_HANDLE) {
         return;
     }
@@ -1715,6 +1793,7 @@ void VulkanScreenUiPass::PrepareUiTextureUpload(
         pendingUiSpriteLayerCount = 0;
         return;
     }
+    uiSpriteUploadClearsAtlas = false;
 
     std::uint32_t maxW = 1U;
     std::uint32_t maxH = 1U;
@@ -1760,26 +1839,22 @@ void VulkanScreenUiPass::PrepareUiTextureUpload(
     }
 
     auto* bytes = static_cast<std::uint8_t*>(uiSpriteStagingMapped);
-    for (std::size_t li = 0; li < scene.uiTextures.GetSize(); ++li) {
-        const Texture2D* tex = scene.uiTextures[li].Get();
-        std::uint8_t* layerBase =
-                bytes + static_cast<std::size_t>(pendingUiSpriteLayerBytes) * static_cast<std::size_t>(li);
-        const std::size_t layerPixels = static_cast<std::size_t>(maxW) * static_cast<std::size_t>(maxH);
-        std::memset(layerBase, 0, layerPixels * 4U);
-        if (tex == nullptr) {
-            continue;
-        }
-        const Array<std::uint8_t>& rgba = tex->GetRgba();
-        const std::uint32_t tw = tex->GetWidth();
-        const std::uint32_t th = tex->GetHeight();
-        for (std::uint32_t y = 0; y < th; ++y) {
-            const std::size_t srcRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(tw) * 4U;
-            const std::size_t dstRow = static_cast<std::size_t>(y) * static_cast<std::size_t>(maxW) * 4U;
-            const std::size_t copyBytes = static_cast<std::size_t>(tw) * 4U;
-            if (srcRow + copyBytes <= rgba.GetSize()) {
-                std::memcpy(layerBase + dstRow, rgba.GetData() + srcRow, copyBytes);
-            }
-        }
+    WriteUiSpriteStagingLayers(bytes, pendingUiSpriteLayerBytes, scene, maxW, maxH);
+
+    pendingUiSpriteLayerCount = layerCount;
+    if (CanRefreshUiSpriteAtlasInPlace(
+                activeUiSpriteAtlas.view,
+                activeUiSpriteAtlas.image,
+                activeUiSpriteAtlas.width,
+                activeUiSpriteAtlas.height,
+                uploadedUiTexturePointers,
+                scene,
+                maxW,
+                maxH,
+                layerCount)) {
+        uiSpriteUploadInPlace = true;
+        uiSpriteUploadPending = true;
+        return;
     }
 
     VulkanRendererGpu::CreateImage2DArray(
@@ -1799,8 +1874,6 @@ void VulkanScreenUiPass::PrepareUiTextureUpload(
     pendingUiSpriteAtlas.layout = VK_IMAGE_LAYOUT_UNDEFINED;
     pendingUiSpriteAtlas.width = maxW;
     pendingUiSpriteAtlas.height = maxH;
-    pendingUiSpriteLayerCount = layerCount;
-    uiSpriteUploadClearsAtlas = false;
     uiSpriteUploadPending = true;
     pendingUiTexturePointers.Clear();
     for (std::size_t i = 0; i < scene.uiTextures.GetSize(); ++i) {
@@ -1821,6 +1894,52 @@ void VulkanScreenUiPass::RecordUiTextureUpload(const VkCommandBuffer commandBuff
         retiredUiSpriteAtlases.PushBack(retired);
         activeUiSpriteAtlas = {};
         uploadedUiTexturePointers.Clear();
+        uploadedUiTextureFingerprints.Clear();
+        uiSpriteUploadInPlace = false;
+        return;
+    }
+
+    if (uiSpriteUploadInPlace) {
+        uiSpriteUploadInPlace = false;
+        if (activeUiSpriteAtlas.image == VK_NULL_HANDLE || pendingUiSpriteLayerCount == 0U) {
+            return;
+        }
+
+        VulkanRendererGpu::SceneTexBarrier(
+                commandBuffer,
+                activeUiSpriteAtlas.image,
+                pendingUiSpriteLayerCount,
+                activeUiSpriteAtlas.layout,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+        Array<VkBufferImageCopy> regions;
+        regions.Resize(pendingUiSpriteLayerCount);
+        for (std::uint32_t i = 0; i < pendingUiSpriteLayerCount; ++i) {
+            VkBufferImageCopy& region = regions[i];
+            region.bufferOffset = static_cast<VkDeviceSize>(pendingUiSpriteLayerBytes) * static_cast<VkDeviceSize>(i);
+            region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.imageSubresource.mipLevel = 0;
+            region.imageSubresource.baseArrayLayer = i;
+            region.imageSubresource.layerCount = 1;
+            region.imageExtent = {activeUiSpriteAtlas.width, activeUiSpriteAtlas.height, 1};
+        }
+        vkCmdCopyBufferToImage(
+                commandBuffer,
+                uiSpriteStagingBuffer,
+                activeUiSpriteAtlas.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                pendingUiSpriteLayerCount,
+                regions.GetData());
+
+        VulkanRendererGpu::SceneTexBarrier(
+                commandBuffer,
+                activeUiSpriteAtlas.image,
+                pendingUiSpriteLayerCount,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        activeUiSpriteAtlas.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        CommitUploadedUiTextureFingerprints(uploadedUiTexturePointers, uploadedUiTextureFingerprints);
         return;
     }
 
@@ -1870,6 +1989,7 @@ void VulkanScreenUiPass::RecordUiTextureUpload(const VkCommandBuffer commandBuff
     pendingUiSpriteAtlas = {};
     uploadedUiTexturePointers = pendingUiTexturePointers;
     pendingUiTexturePointers.Clear();
+    CommitUploadedUiTextureFingerprints(uploadedUiTexturePointers, uploadedUiTextureFingerprints);
 
     UpdateUiSpriteDescriptorImages(device);
 }

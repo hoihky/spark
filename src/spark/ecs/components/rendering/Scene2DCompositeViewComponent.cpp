@@ -14,6 +14,7 @@ Scene2DCompositeViewDesc Scene2DCompositeViewComponent::BuildDesc() const noexce
     desc.worldCenter = worldCenter;
     desc.worldOrthoHalfExtent = worldOrthoHalfExtent;
     desc.enabled = enabled;
+    desc.useCpuHudTextureOnly = feature == Scene2DCompositeFeature::FogOfWarMask;
     return desc;
 }
 

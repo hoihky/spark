@@ -702,6 +702,14 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/gameplay/DamageZone2DComponent.cpp
         src/spark/ecs/components/input/InputActionMapComponent.cpp
         src/spark/ecs/components/input/PlayerInputComponent.cpp
+        src/spark/input/InputAction.cpp
+        src/spark/input/KeyboardInputBindings.cpp
+        src/spark/input/GamepadInputBindings.cpp
+        src/spark/ecs/components/gameplay/FogOfWar2DComponent.cpp
+        src/spark/gameplay/fog/FogOfWarExplorationMap.cpp
+        src/spark/gameplay/fog/FogOfWarMaskTextureBuilder.cpp
+        src/spark/gameplay/fog/FogOfWarScreenPresenter.cpp
+        src/spark/scene/tilemap/TilemapObjectLayerCatalog.cpp
         src/spark/ecs/components/rendering/ParallaxLayerComponent.cpp
         src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
         src/spark/ecs/components/physics/2d/TriggerVolume2DComponent.cpp

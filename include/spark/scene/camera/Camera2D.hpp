@@ -39,6 +39,18 @@ struct Camera2D {
 
     /** World-space axes for billboards / particles when using this camera (normalized, right × up = +Z). */
     void BillboardBasisWorld(Vector3& outRight, Vector3& outUp) const noexcept;
+
+    /**
+     * Maps a world XY point to framebuffer pixels (origin top-left, Y down).
+     * Returns false if the homogeneous clip w is near zero.
+     */
+    [[nodiscard]] bool TryWorldXYToScreen(
+            float worldX,
+            float worldY,
+            float framebufferWidth,
+            float framebufferHeight,
+            float& outScreenX,
+            float& outScreenY) const noexcept;
 };
 
 /** Z-axis rotation (radians) encoded in a quaternion (matches <c>Camera2D::rotationRad</c> sign convention). */

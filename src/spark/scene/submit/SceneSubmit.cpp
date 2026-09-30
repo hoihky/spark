@@ -40,6 +40,8 @@
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
 #include "spark/scene/submit/DrawableSortResolver.hpp"
+#include "spark/ecs/components/gameplay/FogOfWar2DComponent.hpp"
+#include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 #include "spark/scene/submit/SceneSpriteTileCull.hpp"
 #include "spark/scene/submit/SceneTilemapSubmit.hpp"
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
@@ -689,6 +691,22 @@ void FillStandardLitSceneFromWorld(
         params.punctualShadowsEnabled = false;
         params.ssaoEnabled = false;
     }
+
+    world.ForEachActiveGameObject([&](GameObject* object) {
+        if (object == nullptr) {
+            return;
+        }
+        const FogOfWar2DComponent* fog = object->GetComponent<FogOfWar2DComponent>();
+        if (fog == nullptr) {
+            return;
+        }
+        const TilemapGameplayGridComponent* grid = object->GetComponent<TilemapGameplayGridComponent>();
+        if (grid == nullptr) {
+            return;
+        }
+        fog->SubmitSceneDraw(params, world, grid->GetGridFrame(), findOrAddTexture);
+    });
+    SceneSubmitDetail::StableSortSprites(params.sprites, params.spriteSortMode);
 
     CollectScene2DCompositeViews(world, params);
 }

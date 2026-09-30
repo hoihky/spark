@@ -80,6 +80,56 @@ void GlfwInput::BeginFrame() {
         lastMouseX = mx;
         lastMouseY = my;
     }
+    PollGamepad();
+}
+
+void GlfwInput::PollGamepad() {
+    for (int b = 0; b <= GLFW_GAMEPAD_BUTTON_LAST; ++b) {
+        gamepadButtonsPrev[static_cast<unsigned>(b)] = gamepadButtonsCurr[static_cast<unsigned>(b)];
+    }
+    GLFWgamepadstate state{};
+    gamepadPresent = glfwGetGamepadState(GLFW_JOYSTICK_1, &state) == GLFW_TRUE;
+    if (!gamepadPresent) {
+        for (int b = 0; b <= GLFW_GAMEPAD_BUTTON_LAST; ++b) {
+            gamepadButtonsCurr[static_cast<unsigned>(b)] = 0;
+        }
+        for (int a = 0; a <= GLFW_GAMEPAD_AXIS_LAST; ++a) {
+            gamepadAxes[static_cast<unsigned>(a)] = 0.0F;
+        }
+        return;
+    }
+    for (int b = 0; b <= GLFW_GAMEPAD_BUTTON_LAST; ++b) {
+        gamepadButtonsCurr[static_cast<unsigned>(b)] = state.buttons[b];
+    }
+    for (int a = 0; a <= GLFW_GAMEPAD_AXIS_LAST; ++a) {
+        gamepadAxes[static_cast<unsigned>(a)] = state.axes[a];
+    }
+}
+
+bool GlfwInput::IsGamepadPresent() const {
+    return gamepadPresent;
+}
+
+bool GlfwInput::IsGamepadButtonDown(const int gamepadButton) const {
+    if (!gamepadPresent || gamepadButton < 0 || gamepadButton > GLFW_GAMEPAD_BUTTON_LAST) {
+        return false;
+    }
+    return gamepadButtonsCurr[static_cast<unsigned>(gamepadButton)] == GLFW_PRESS;
+}
+
+bool GlfwInput::WasGamepadButtonPressedThisFrame(const int gamepadButton) const {
+    if (!gamepadPresent || gamepadButton < 0 || gamepadButton > GLFW_GAMEPAD_BUTTON_LAST) {
+        return false;
+    }
+    const unsigned u = static_cast<unsigned>(gamepadButton);
+    return gamepadButtonsCurr[u] == GLFW_PRESS && gamepadButtonsPrev[u] != GLFW_PRESS;
+}
+
+float GlfwInput::GetGamepadAxis(const int gamepadAxis) const {
+    if (!gamepadPresent || gamepadAxis < 0 || gamepadAxis > GLFW_GAMEPAD_AXIS_LAST) {
+        return 0.0F;
+    }
+    return gamepadAxes[static_cast<unsigned>(gamepadAxis)];
 }
 
 bool GlfwInput::IsKeyDown(int keyCode) const {

@@ -67,6 +67,7 @@
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Projectile2DComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageZone2DComponent.hpp"
+#include "spark/ecs/components/gameplay/FogOfWar2DComponent.hpp"
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"

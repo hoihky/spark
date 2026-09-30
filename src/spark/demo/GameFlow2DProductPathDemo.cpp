@@ -29,6 +29,8 @@
 #include "spark/scene/tilemap/TilemapGameplayPlacement.hpp"
 #include "spark/scene/tilemap/TilemapGameplayWalkRule.hpp"
 #include "spark/scene/tilemap/TilemapObjectSpawnRegistry.hpp"
+#include "spark/scene/tilemap/TilemapObjectLayerCatalog.hpp"
+#include "spark/ecs/components/gameplay/FogOfWar2DComponent.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
 #include "spark/ai/NavigationSubsystem.hpp"
 #include "spark/ai/path/GridPathfinder.hpp"
@@ -297,6 +299,20 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
     TilemapObjectLayerComponent* objects = levelRoot.GetComponent<TilemapObjectLayerComponent>();
     TilemapGameplayGridComponent* grid = levelRoot.GetComponent<TilemapGameplayGridComponent>();
     if (objects == nullptr || grid == nullptr || walkGrid == nullptr) {
+        return;
+    }
+    const TilemapObjectLayerCatalog authoredMarkers(*objects);
+    if (authoredMarkers.CountMarkersByTypeId("p0_gem") >= static_cast<std::size_t>(gemsRequired) &&
+        authoredMarkers.ContainsTypeId("p0_goal")) {
+        walkGrid->RebakeIfNeeded(levelRoot);
+        const TilemapGridFrame& frame = walkGrid->GetGridFrame();
+        const IGridWalkability& walk = walkGrid->GetWalkability();
+        GridPathfinder::Cell startCell{};
+        if (PickSpawnInLargestWalkableRegion(
+                    walk, frame, spawnHintWorld, static_cast<std::size_t>(gemsRequired + 2U), startCell)) {
+            playerSpawnCell = startCell;
+            playerSpawnResolved = true;
+        }
         return;
     }
     walkGrid->RebakeIfNeeded(levelRoot);
@@ -973,6 +989,12 @@ void GameFlow2DProductPathDemo::RebuildAuthoredLevel(GameWorld& world) {
     SetupPlayerNavigation();
     SetupProductChaser(world, playerSpawnCell);
     SetupProductPatrol(world, playerSpawnCell);
+    fogOfWar = levelRoot->GetComponent<FogOfWar2DComponent>();
+    if (fogOfWar == nullptr) {
+        fogOfWar = levelRoot->AddComponent<FogOfWar2DComponent>();
+    }
+    fogOfWar->SetRevealTarget(playerObject);
+    fogOfWar->SyncGridFromOwner(*levelRoot);
     minimapDirty = true;
     RebuildMinimapIfNeeded();
 
@@ -1308,6 +1330,10 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
         if (input.IsKeyDown(GLFW_KEY_S) || input.IsKeyDown(GLFW_KEY_DOWN)) {
             moveY -= 1.0F;
         }
+        if (input.IsGamepadPresent()) {
+            moveX += input.GetGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X);
+            moveY -= input.GetGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_Y);
+        }
         const bool keyboardIntent = std::abs(moveX) > 0.01F || std::abs(moveY) > 0.01F;
         if (keyboardIntent) {
             useKeyboardDrive = true;
@@ -1343,8 +1369,14 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
         playerRb->SetVelocity(Vector2::Zero);
     }
 
-    physics.Simulate2D(world, timing);
-    TickGemPickupDissolves();
+    if (canMove) {
+        physics.Simulate2D(world, timing);
+        if (fogOfWar != nullptr && walkGrid != nullptr && playerObject != nullptr) {
+            const Vector3 playerPos = playerObject->GetWorldMatrix().TransformPoint(Vector3::Zero);
+            fogOfWar->RevealAtWorldPosition({playerPos.x, playerPos.y}, walkGrid->GetGridFrame());
+        }
+        TickGemPickupDissolves();
+    }
     CorrectPlayerAgainstBlockedGrid();
     TryCollectNearbyGems(world);
     TryReachGoal();

@@ -69,6 +69,21 @@ public:
     virtual void DrainTypedCodepoints(Array<std::uint32_t>& outCodepoints) {
         outCodepoints.Clear();
     }
+
+    /** GLFW gamepad layout (joystick 1). Button/axis indices match <c>GLFW_GAMEPAD_*</c>. */
+    [[nodiscard]] virtual bool IsGamepadPresent() const { return false; }
+    [[nodiscard]] virtual bool IsGamepadButtonDown(int gamepadButton) const {
+        (void)gamepadButton;
+        return false;
+    }
+    [[nodiscard]] virtual bool WasGamepadButtonPressedThisFrame(int gamepadButton) const {
+        (void)gamepadButton;
+        return false;
+    }
+    [[nodiscard]] virtual float GetGamepadAxis(int gamepadAxis) const {
+        (void)gamepadAxis;
+        return 0.0F;
+    }
 };
 
 }  // namespace Spark

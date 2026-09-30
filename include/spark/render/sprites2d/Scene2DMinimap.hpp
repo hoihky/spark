@@ -30,7 +30,7 @@ void RebuildMinimapTextureFromGameplayGrid(
         const Scene2DMinimapColors& colors = {}) noexcept;
 
 /**
- * Draws minimap in the top-right overlay and a player marker dot.
+ * Draws minimap in the top-right late UI layer (above fog and other overlays) and a player marker dot.
  * Registers @p texture in @p world when needed.
  */
 void PatchScene2DMinimapHud(

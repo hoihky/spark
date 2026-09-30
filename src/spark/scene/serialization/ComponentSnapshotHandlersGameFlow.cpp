@@ -4,6 +4,7 @@
 #include "spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp"
 #include "spark/ecs/components/gameplay/GameStateComponent.hpp"
 #include "spark/ecs/components/input/InputActionMapComponent.hpp"
+#include "spark/input/InputAction.hpp"
 #include "spark/ecs/components/input/PlayerInputComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp"
 #include "spark/memory/UniquePtr.hpp"
@@ -139,24 +140,27 @@ public:
             return false;
         }
         Utf8String payload{};
-        const Array<InputActionDefinition>& actions = map->GetActions();
+        const Array<UniquePtr<InputAction>>& actions = map->GetActions();
         char line[256]{};
         std::snprintf(line, sizeof(line), "%zu", actions.GetSize());
         payload.AppendUtf8(line);
         for (std::size_t i = 0; i < actions.GetSize(); ++i) {
-            const InputActionDefinition& action = actions[i];
+            if (actions[i] == nullptr) {
+                continue;
+            }
+            const InputAction& action = *actions[i];
             std::snprintf(
                     line,
                     sizeof(line),
                     " \"%s\" %u %d %d %d %d %d %d",
-                    action.name.CStr(),
-                    static_cast<unsigned>(action.type),
-                    action.primaryKey,
-                    action.secondaryKey,
-                    action.negativeKey,
-                    action.positiveKey,
-                    action.secondaryNegativeKey,
-                    action.secondaryPositiveKey);
+                    action.GetName().CStr(),
+                    static_cast<unsigned>(action.GetType()),
+                    action.GetLegacyPrimaryKey(),
+                    action.GetLegacySecondaryKey(),
+                    action.GetLegacyNegativeKey(),
+                    action.GetLegacyPositiveKey(),
+                    action.GetLegacySecondaryNegativeKey(),
+                    action.GetLegacySecondaryPositiveKey());
             payload.AppendUtf8(line);
         }
         out.kind = Utf8String(GetKindTag());

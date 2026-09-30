@@ -3,19 +3,31 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/input/InputActionTypes.hpp"
-
-#include <cstdint>
 
 namespace Spark {
 
 class GameObject;
 class IInput;
+class InputAction;
 class InputActionMapComponent;
 
 /** Per-action runtime state updated each frame by <c>PlayerInputComponent</c>. */
-struct InputActionRuntimeState {
-    Utf8String name;
+class InputActionRuntimeState final {
+public:
+    [[nodiscard]] const Utf8String& GetName() const noexcept { return name; }
+    void SetName(const Utf8String& value) noexcept { name = value; }
+
+    [[nodiscard]] bool IsPressed() const noexcept { return isPressed; }
+    [[nodiscard]] bool WasPressedThisFrame() const noexcept { return wasPressedThisFrame; }
+    [[nodiscard]] bool WasReleasedThisFrame() const noexcept { return wasReleasedThisFrame; }
+    [[nodiscard]] float GetAxisValue() const noexcept { return axisValue; }
+
+    void ApplySample(const class InputActionSample& sample) noexcept;
+
+private:
+    friend class PlayerInputComponent;
+
+    Utf8String name{};
     bool isPressed = false;
     bool wasPressedThisFrame = false;
     bool wasReleasedThisFrame = false;
@@ -54,11 +66,7 @@ private:
     [[nodiscard]] InputActionRuntimeState* FindRuntimeState(const char* actionName) noexcept;
     [[nodiscard]] const InputActionRuntimeState* FindRuntimeState(const char* actionName) const noexcept;
     void SyncRuntimeStates(const InputActionMapComponent& map);
-    void PollAction(
-            GameObject& owner,
-            const InputActionDefinition& definition,
-            InputActionRuntimeState& state,
-            IInput& input) noexcept;
+    void PollAction(GameObject& owner, const InputAction& action, InputActionRuntimeState& state, IInput& input) noexcept;
 };
 
 }  // namespace Spark

@@ -73,4 +73,11 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="6" name="P0Objects">
+  <object id="1" name="gem_a" type="p0_gem" x="144" y="112" width="16" height="16"/>
+  <object id="2" name="gem_b" type="p0_gem" x="304" y="176" width="16" height="16"/>
+  <object id="3" name="gem_c" type="p0_gem" x="368" y="96" width="16" height="16"/>
+  <object id="4" name="goal" type="p0_goal" x="416" y="272" width="16" height="16"/>
+  <object id="5" name="PlayerSpawn" type="spawn_player" x="240" y="144" width="16" height="16"/>
+ </objectgroup>
 </map>

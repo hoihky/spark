@@ -2,7 +2,9 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/input/InputAction.hpp"
 #include "spark/input/InputActionTypes.hpp"
+#include "spark/memory/UniquePtr.hpp"
 
 namespace Spark {
 
@@ -16,8 +18,8 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
-    [[nodiscard]] const Array<InputActionDefinition>& GetActions() const noexcept { return actions; }
-    Array<InputActionDefinition>& GetActions() noexcept { return actions; }
+    [[nodiscard]] const Array<UniquePtr<InputAction>>& GetActions() const noexcept { return actions; }
+    Array<UniquePtr<InputAction>>& GetActions() noexcept { return actions; }
 
     void ClearActions() noexcept { actions.Clear(); }
 
@@ -29,10 +31,32 @@ public:
             int secondaryNegativeKey = -1,
             int secondaryPositiveKey = -1);
 
-    [[nodiscard]] const InputActionDefinition* FindAction(const char* actionName) const noexcept;
+    void BindGamepadButton(const char* actionName, int gamepadButton);
+    void BindGamepadAxis1D(const char* actionName, int gamepadAxis, float axisScale = 1.0F);
+
+    /** Keyboard + gamepad on the same semantic action (common for MoveX / Jump). */
+    void BindAxis1DWithGamepadStick(
+            const char* actionName,
+            int negativeKey,
+            int positiveKey,
+            int gamepadAxis,
+            int secondaryNegativeKey = -1,
+            int secondaryPositiveKey = -1,
+            float gamepadScale = 1.0F);
+
+    void BindButtonWithGamepad(
+            const char* actionName,
+            int primaryKey,
+            int gamepadButton,
+            int secondaryKey = -1);
+
+    [[nodiscard]] const InputAction* FindAction(const char* actionName) const noexcept;
+    [[nodiscard]] InputAction* FindAction(const char* actionName) noexcept;
 
 private:
-    Array<InputActionDefinition> actions{};
+    InputAction& EmplaceAction(const char* actionName, InputActionType type);
+
+    Array<UniquePtr<InputAction>> actions{};
 };
 
 }  // namespace Spark

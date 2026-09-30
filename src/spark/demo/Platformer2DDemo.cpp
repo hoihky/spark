@@ -644,10 +644,16 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     roots.Track(playerHurtboxGo);
     playerObject->AddComponent<Spark::SoundCueComponent>();
     auto* actionMap = playerObject->AddComponent<Spark::InputActionMapComponent>();
-    actionMap->BindAxis1D("MoveX", GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
-    actionMap->BindButton("Jump", GLFW_KEY_SPACE);
-    actionMap->BindButton("Drop", GLFW_KEY_S, GLFW_KEY_DOWN);
-    actionMap->BindButton("Attack", GLFW_KEY_J);
+    actionMap->BindAxis1DWithGamepadStick(
+            "MoveX",
+            GLFW_KEY_A,
+            GLFW_KEY_D,
+            GLFW_GAMEPAD_AXIS_LEFT_X,
+            GLFW_KEY_LEFT,
+            GLFW_KEY_RIGHT);
+    actionMap->BindButtonWithGamepad("Jump", GLFW_KEY_SPACE, GLFW_GAMEPAD_BUTTON_A);
+    actionMap->BindButtonWithGamepad("Drop", GLFW_KEY_S, GLFW_GAMEPAD_BUTTON_B, GLFW_KEY_DOWN);
+    actionMap->BindButtonWithGamepad("Attack", GLFW_KEY_J, GLFW_GAMEPAD_BUTTON_X);
     playerInput = playerObject->AddComponent<Spark::PlayerInputComponent>();
     playerInput->SetActionMap(actionMap);
     roots.Track(playerObject);

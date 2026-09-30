@@ -6,8 +6,10 @@
 #include "spark/ecs/Signal.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/IInput.hpp"
+#include "spark/input/InputAction.hpp"
+#include "spark/input/InputActionSample.hpp"
+#include "spark/input/InputActionTypes.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -22,29 +24,32 @@ namespace {
     return std::strcmp(a, b) == 0;
 }
 
-[[nodiscard]] bool IsKeyPressed(const IInput& input, const int keyCode) noexcept {
-    return keyCode >= 0 && input.IsKeyDown(keyCode);
-}
-
-[[nodiscard]] bool WasKeyPressedThisFrame(const IInput& input, const int keyCode) noexcept {
-    return keyCode >= 0 && input.IsKeyPressedThisFrame(keyCode);
-}
-
 }  // namespace
+
+void InputActionRuntimeState::ApplySample(const InputActionSample& sample) noexcept {
+    const bool wasPressed = isPressed;
+    isPressed = sample.IsButtonHeld();
+    axisValue = sample.GetAxis1D();
+    wasPressedThisFrame = sample.WasButtonPressedThisFrame();
+    wasReleasedThisFrame = !isPressed && wasPressed;
+}
 
 void PlayerInputComponent::SyncRuntimeStates(const InputActionMapComponent& map) {
     runtimeStates.Clear();
     runtimeStates.Reserve(map.GetActions().GetSize());
     for (std::size_t i = 0; i < map.GetActions().GetSize(); ++i) {
+        if (map.GetActions()[i] == nullptr) {
+            continue;
+        }
         InputActionRuntimeState state{};
-        state.name = map.GetActions()[i].name;
+        state.SetName(map.GetActions()[i]->GetName());
         runtimeStates.PushBack(MoveTemp(state));
     }
 }
 
 InputActionRuntimeState* PlayerInputComponent::FindRuntimeState(const char* const actionName) noexcept {
     for (std::size_t i = 0; i < runtimeStates.GetSize(); ++i) {
-        if (NamesEqual(runtimeStates[i].name.CStr(), actionName)) {
+        if (NamesEqual(runtimeStates[i].GetName().CStr(), actionName)) {
             return &runtimeStates[i];
         }
     }
@@ -53,7 +58,7 @@ InputActionRuntimeState* PlayerInputComponent::FindRuntimeState(const char* cons
 
 const InputActionRuntimeState* PlayerInputComponent::FindRuntimeState(const char* const actionName) const noexcept {
     for (std::size_t i = 0; i < runtimeStates.GetSize(); ++i) {
-        if (NamesEqual(runtimeStates[i].name.CStr(), actionName)) {
+        if (NamesEqual(runtimeStates[i].GetName().CStr(), actionName)) {
             return &runtimeStates[i];
         }
     }
@@ -62,49 +67,25 @@ const InputActionRuntimeState* PlayerInputComponent::FindRuntimeState(const char
 
 void PlayerInputComponent::PollAction(
         GameObject& owner,
-        const InputActionDefinition& definition,
+        const InputAction& action,
         InputActionRuntimeState& state,
         IInput& input) noexcept {
-    const bool wasPressed = state.isPressed;
-    bool isPressed = false;
-    float axis = 0.0F;
+    const InputActionSample sample = action.Evaluate(input);
+    state.ApplySample(sample);
 
-    if (definition.type == InputActionType::Button) {
-        isPressed = IsKeyPressed(input, definition.primaryKey) || IsKeyPressed(input, definition.secondaryKey);
-        axis = isPressed ? 1.0F : 0.0F;
-    } else {
-        const bool neg = IsKeyPressed(input, definition.negativeKey) ||
-                IsKeyPressed(input, definition.secondaryNegativeKey);
-        const bool pos = IsKeyPressed(input, definition.positiveKey) ||
-                IsKeyPressed(input, definition.secondaryPositiveKey);
-        if (neg) {
-            axis -= 1.0F;
-        }
-        if (pos) {
-            axis += 1.0F;
-        }
-        axis = std::clamp(axis, -1.0F, 1.0F);
-        isPressed = std::fabs(axis) > 0.001F;
-    }
-
-    state.wasPressedThisFrame = isPressed && !wasPressed;
-    state.wasReleasedThisFrame = !isPressed && wasPressed;
-    state.isPressed = isPressed;
-    state.axisValue = axis;
-
-    if (state.wasPressedThisFrame) {
+    if (state.WasPressedThisFrame()) {
         SignalPayload payload{};
-        payload.ptr = definition.name.CStr();
+        payload.ptr = action.GetName().CStr();
         payload.a = static_cast<std::uint64_t>(InputActionPhase::Started);
         owner.EmitSignal(SignalId::InputActionTriggered, payload, this);
-    } else if (state.wasReleasedThisFrame) {
+    } else if (state.WasReleasedThisFrame()) {
         SignalPayload payload{};
-        payload.ptr = definition.name.CStr();
+        payload.ptr = action.GetName().CStr();
         payload.a = static_cast<std::uint64_t>(InputActionPhase::Canceled);
         owner.EmitSignal(SignalId::InputActionTriggered, payload, this);
-    } else if (isPressed) {
+    } else if (state.IsPressed()) {
         SignalPayload payload{};
-        payload.ptr = definition.name.CStr();
+        payload.ptr = action.GetName().CStr();
         payload.a = static_cast<std::uint64_t>(InputActionPhase::Performed);
         owner.EmitSignal(SignalId::InputActionTriggered, payload, this);
     }
@@ -124,7 +105,13 @@ void PlayerInputComponent::Refresh(GameObject& owner, IEngineContext& context) {
 
     IInput& input = context.GetInput();
     for (std::size_t i = 0; i < actionMap->GetActions().GetSize(); ++i) {
-        PollAction(owner, actionMap->GetActions()[i], runtimeStates[i], input);
+        if (actionMap->GetActions()[i] == nullptr) {
+            continue;
+        }
+        if (i >= runtimeStates.GetSize()) {
+            break;
+        }
+        PollAction(owner, *actionMap->GetActions()[i], runtimeStates[i], input);
     }
 }
 
@@ -137,22 +124,22 @@ void PlayerInputComponent::OnUpdate(
 
 bool PlayerInputComponent::IsActionPressed(const char* const actionName) const noexcept {
     const InputActionRuntimeState* state = FindRuntimeState(actionName);
-    return state != nullptr && state->isPressed;
+    return state != nullptr && state->IsPressed();
 }
 
 bool PlayerInputComponent::WasActionPressedThisFrame(const char* const actionName) const noexcept {
     const InputActionRuntimeState* state = FindRuntimeState(actionName);
-    return state != nullptr && state->wasPressedThisFrame;
+    return state != nullptr && state->WasPressedThisFrame();
 }
 
 bool PlayerInputComponent::WasActionReleasedThisFrame(const char* const actionName) const noexcept {
     const InputActionRuntimeState* state = FindRuntimeState(actionName);
-    return state != nullptr && state->wasReleasedThisFrame;
+    return state != nullptr && state->WasReleasedThisFrame();
 }
 
 float PlayerInputComponent::GetActionAxis1D(const char* const actionName) const noexcept {
     const InputActionRuntimeState* state = FindRuntimeState(actionName);
-    return state != nullptr ? state->axisValue : 0.0F;
+    return state != nullptr ? state->GetAxisValue() : 0.0F;
 }
 
 }  // namespace Spark

@@ -60,6 +60,8 @@ struct Scene2DCompositeViewDesc {
     Vector3 worldCenter{0.0F, 0.0F, 0.0F};
     float worldOrthoHalfExtent = 24.0F;
     bool enabled = true;
+    /** When true, skip GPU ortho capture (CPU <c>hudTexture</c> pixels only — fog mask). */
+    bool useCpuHudTextureOnly = false;
 };
 
 /** Builds orthographic capture center / half-extent that frames a tilemap grid in world XY. */

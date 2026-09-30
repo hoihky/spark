@@ -33,8 +33,14 @@ public:
     void SetClipboardUtf8(const Utf8String& text) const override;
     void DrainTypedCodepoints(Array<std::uint32_t>& outCodepoints) override;
 
+    [[nodiscard]] bool IsGamepadPresent() const override;
+    [[nodiscard]] bool IsGamepadButtonDown(int gamepadButton) const override;
+    [[nodiscard]] bool WasGamepadButtonPressedThisFrame(int gamepadButton) const override;
+    [[nodiscard]] float GetGamepadAxis(int gamepadAxis) const override;
+
 private:
     void Clear();
+    void PollGamepad();
 
     GLFWwindow* window = nullptr;
     bool curr[GLFW_KEY_LAST + 1U]{};
@@ -51,6 +57,10 @@ private:
     double scrollAccumY = 0.0;
     float scrollDeltaThisFrame = 0.0F;
     Array<std::uint32_t> typedCodepoints{};
+    bool gamepadPresent = false;
+    unsigned char gamepadButtonsCurr[GLFW_GAMEPAD_BUTTON_LAST + 1U]{};
+    unsigned char gamepadButtonsPrev[GLFW_GAMEPAD_BUTTON_LAST + 1U]{};
+    float gamepadAxes[GLFW_GAMEPAD_AXIS_LAST + 1U]{};
 };
 
 }  // namespace Spark

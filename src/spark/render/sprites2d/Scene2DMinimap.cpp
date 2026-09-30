@@ -76,16 +76,26 @@ void PatchScene2DMinimapHud(
     const float x = framebufferWidth - margin - size;
     const float y = margin;
 
+    ScreenRectDraw border{};
+    border.x = x - 2.0F;
+    border.y = y - 2.0F;
+    border.width = size + 4.0F;
+    border.height = size + 4.0F;
+    border.color = {0.05F, 0.05F, 0.08F};
+    border.alpha = 0.85F;
+    border.paintOrder = params.NextUiPaintOrder();
+    params.screenLateRects.PushBack(border);
+
     ScreenSpriteDraw sprite{};
     sprite.x = x;
     sprite.y = y;
     sprite.width = size;
     sprite.height = size;
-    sprite.uvRect = {0.0F, 0.0F, 1.0F, 1.0F};
+    sprite.uvRect = params.UiAtlasLayerUvRect(*texture);
     sprite.textureLayer = layer;
     sprite.alpha = 1.0F;
     sprite.paintOrder = params.NextUiPaintOrder();
-    params.screenOverlaySprites.PushBack(sprite);
+    params.screenLateSprites.PushBack(sprite);
 
     float u = 0.5F;
     float v = 0.5F;
@@ -111,17 +121,7 @@ void PatchScene2DMinimapHud(
     dotRect.color = {0.35F, 0.85F, 1.0F};
     dotRect.alpha = 1.0F;
     dotRect.paintOrder = params.NextUiPaintOrder();
-    params.screenOverlayRects.PushBack(dotRect);
-
-    ScreenRectDraw border{};
-    border.x = x - 2.0F;
-    border.y = y - 2.0F;
-    border.width = size + 4.0F;
-    border.height = size + 4.0F;
-    border.color = {0.05F, 0.05F, 0.08F};
-    border.alpha = 0.85F;
-    border.paintOrder = params.NextUiPaintOrder() - 2U;
-    params.screenOverlayRects.PushBack(border);
+    params.screenLateRects.PushBack(dotRect);
 }
 
 SharedPtr<RenderTexture> CreateMinimapRenderTexture(const std::uint32_t sizePixels) noexcept {

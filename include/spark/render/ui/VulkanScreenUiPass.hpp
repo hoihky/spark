@@ -197,10 +197,13 @@ private:
     VkDeviceSize pendingUiSpriteLayerBytes = 0;
     std::uint32_t pendingUiSpriteLayerCount = 0;
     bool uiSpriteUploadPending = false;
+    /** When true, refresh staging into <c>activeUiSpriteAtlas</c> (same image view; no descriptor update). */
+    bool uiSpriteUploadInPlace = false;
     bool uiSpriteUploadClearsAtlas = false;
     std::uint64_t uiSpriteRetireAfterFrame = 0;
     Array<RetiredFontAtlas> retiredUiSpriteAtlases{};
     Array<const Texture2D*> uploadedUiTexturePointers{};
+    Array<std::uint64_t> uploadedUiTextureFingerprints{};
     Array<const Texture2D*> pendingUiTexturePointers{};
     VkDevice device = VK_NULL_HANDLE;
 

@@ -34,6 +34,7 @@ class TilemapGameplayGridComponent;
 class GridNavAgent2DComponent;
 class Scene2DCompositeViewComponent;
 class SpriteLighting2DComponent;
+class FogOfWar2DComponent;
 
 /**
  * Teaching demo for P0 2D product path: authored <c>.sparkscene</c> + TMX, object spawn registry,
@@ -103,6 +104,7 @@ private:
     std::size_t patrolWaypointIndex = 0U;
     bool patrolAwaitingNextGoal = true;
     Scene2DCompositeViewComponent* minimapCompositeView = nullptr;
+    FogOfWar2DComponent* fogOfWar = nullptr;
     SharedPtr<Texture2D> minimapTexture{};
     SharedPtr<Texture2D> minimapHudTexture{};
     SharedPtr<RenderTexture> minimapRenderTexture{};

@@ -568,6 +568,35 @@ struct SceneRenderParams {
     [[nodiscard]] std::uint32_t NextUiPaintOrder() noexcept { return ++uiPaintOrderNext; }
 
     /**
+     * Normalized UV rectangle for sampling one layer of the UI sprite atlas.
+     * Layers are padded to the max width/height among <c>uiTextures</c>; smaller textures only occupy the
+     * top-left of their layer (see <c>VulkanScreenUiPass::PrepareUiTextureUpload</c>).
+     */
+    [[nodiscard]] Vector4 UiAtlasLayerUvRect(const Texture2D& tex) const noexcept {
+        std::uint32_t atlasW = 1U;
+        std::uint32_t atlasH = 1U;
+        for (std::size_t i = 0; i < uiTextures.GetSize(); ++i) {
+            const Texture2D* layer = uiTextures[i].Get();
+            if (layer == nullptr) {
+                continue;
+            }
+            if (layer->GetWidth() > atlasW) {
+                atlasW = layer->GetWidth();
+            }
+            if (layer->GetHeight() > atlasH) {
+                atlasH = layer->GetHeight();
+            }
+        }
+        const std::uint32_t tw = tex.GetWidth() > 0U ? tex.GetWidth() : 1U;
+        const std::uint32_t th = tex.GetHeight() > 0U ? tex.GetHeight() : 1U;
+        return Vector4{
+                0.0F,
+                0.0F,
+                static_cast<float>(tw) / static_cast<float>(atlasW),
+                static_cast<float>(th) / static_cast<float>(atlasH)};
+    }
+
+    /**
      * Clamps lighting, shadow, SSAO, fog, and time-of-day fields to safe GPU ranges.
      * Call after manual edits or before submit when params are assembled outside scene submit.
      */

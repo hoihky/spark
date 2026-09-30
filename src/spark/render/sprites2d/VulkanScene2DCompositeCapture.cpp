@@ -34,7 +34,10 @@ void VulkanScene2DCompositeCapture::Record(VkCommandBuffer commandBuffer, const 
 
     for (std::size_t vi = 0; vi < scene.scene2DCompositeViews.GetSize(); ++vi) {
         const Scene2DCompositeViewDesc& view = scene.scene2DCompositeViews[vi];
-        if (!view.enabled || !view.target) {
+        if (!view.enabled) {
+            continue;
+        }
+        if (view.useCpuHudTextureOnly || !view.target) {
             continue;
         }
         RenderTexture& rt = *view.target;

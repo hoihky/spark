@@ -1,6 +1,7 @@
 #include "spark/scene/camera/Camera2D.hpp"
 
 #include "spark/math/Constants.hpp"
+#include "spark/math/Vector4.hpp"
 
 #include <cmath>
 
@@ -35,6 +36,29 @@ void Camera2D::BillboardBasisWorld(Vector3& outRight, Vector3& outUp) const noex
     const float s = std::sin(rotationRad);
     outRight = {c, s, 0.0F};
     outUp = {-s, c, 0.0F};
+}
+
+bool Camera2D::TryWorldXYToScreen(
+        const float worldX,
+        const float worldY,
+        const float framebufferWidth,
+        const float framebufferHeight,
+        float& outScreenX,
+        float& outScreenY) const noexcept {
+    if (framebufferWidth < Epsilon || framebufferHeight < Epsilon) {
+        return false;
+    }
+    const Matrix4 viewProj = ViewProjection(framebufferWidth, framebufferHeight);
+    const Vector4 clip = viewProj * Vector4(worldX, worldY, 0.0F, 1.0F);
+    if (std::fabs(clip.w) < Epsilon) {
+        return false;
+    }
+    const float invW = 1.0F / clip.w;
+    const float ndcX = clip.x * invW;
+    const float ndcY = clip.y * invW;
+    outScreenX = (ndcX + 1.0F) * 0.5F * framebufferWidth;
+    outScreenY = (ndcY + 1.0F) * 0.5F * framebufferHeight;
+    return true;
 }
 
 float RotationZRadFromQuaternion(const Quaternion& q) noexcept {
