@@ -12,13 +12,15 @@
 #include "spark/render/scene/VulkanSceneUniformGpu.hpp"
 #include "spark/render/sprites2d/VulkanSpriteInstanceGpu.hpp"
 #include "spark/render/sprites2d/VulkanSpritePass.hpp"
+#include "spark/render/foliage/VulkanFoliageInstanceGpu.hpp"
+#include "spark/render/foliage/VulkanFoliageInstancedPass.hpp"
 
 #include <stdexcept>
 
 namespace Spark {
 
 void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
-    VkDescriptorSetLayoutBinding bindings[15]{};
+    VkDescriptorSetLayoutBinding bindings[16]{};
     bindings[0].binding = 0;
     bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     bindings[0].descriptorCount = 1;
@@ -94,9 +96,14 @@ void VulkanSceneDescriptors::CreateSetLayout(VkDevice device) {
     bindings[14].descriptorCount = 1;
     bindings[14].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    bindings[15].binding = 15;
+    bindings[15].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    bindings[15].descriptorCount = 1;
+    bindings[15].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+
     VkDescriptorSetLayoutCreateInfo layoutInfo{};
     layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 15;
+    layoutInfo.bindingCount = 16;
     layoutInfo.pBindings = bindings;
     if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("vkCreateDescriptorSetLayout failed");
@@ -168,7 +175,7 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     poolSizes[1].descriptorCount = framesInFlight * 9;
     poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSizes[2].descriptorCount = framesInFlight * 5;
+    poolSizes[2].descriptorCount = framesInFlight * 6;
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -338,6 +345,20 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
         spriteInstanceWrite.descriptorCount = 1;
         spriteInstanceWrite.pBufferInfo = &spriteInstanceInfo;
 
+        VkDescriptorBufferInfo foliageInstanceInfo{};
+        foliageInstanceInfo.buffer = sources.foliagePass.InstanceBuffer(static_cast<std::uint32_t>(i));
+        foliageInstanceInfo.offset = 0;
+        foliageInstanceInfo.range = static_cast<VkDeviceSize>(kFoliageInstanceSsboBytes);
+
+        VkWriteDescriptorSet foliageInstanceWrite{};
+        foliageInstanceWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        foliageInstanceWrite.dstSet = descriptorSets[i];
+        foliageInstanceWrite.dstBinding = 15;
+        foliageInstanceWrite.dstArrayElement = 0;
+        foliageInstanceWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        foliageInstanceWrite.descriptorCount = 1;
+        foliageInstanceWrite.pBufferInfo = &foliageInstanceInfo;
+
         const std::size_t shadowFlight = i;
         const bool hasSunShadow =
                 sources.directionalShadow.HasFlightDepthView(static_cast<std::uint32_t>(shadowFlight));
@@ -403,8 +424,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     spriteInstanceWrite,
                     spriteTexWrite,
                     hdrTexWrite,
-                    brdfLutWrite};
-            vkUpdateDescriptorSets(device, 13, writes, 0, nullptr);
+                    brdfLutWrite,
+                    foliageInstanceWrite};
+            vkUpdateDescriptorSets(device, 14, writes, 0, nullptr);
         } else if (hasSunShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -416,8 +438,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     spriteInstanceWrite,
                     spriteTexWrite,
                     hdrTexWrite,
-                    brdfLutWrite};
-            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
+                    brdfLutWrite,
+                    foliageInstanceWrite};
+            vkUpdateDescriptorSets(device, 12, writes, 0, nullptr);
         } else if (hasPunctualShadow) {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -430,8 +453,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     spriteInstanceWrite,
                     spriteTexWrite,
                     hdrTexWrite,
-                    brdfLutWrite};
-            vkUpdateDescriptorSets(device, 12, writes, 0, nullptr);
+                    brdfLutWrite,
+                    foliageInstanceWrite};
+            vkUpdateDescriptorSets(device, 13, writes, 0, nullptr);
         } else {
             const VkWriteDescriptorSet writes[] = {descriptorWrite,
                     texWrite,
@@ -442,8 +466,9 @@ void VulkanSceneDescriptors::CreatePoolAndSets(
                     spriteInstanceWrite,
                     spriteTexWrite,
                     hdrTexWrite,
-                    brdfLutWrite};
-            vkUpdateDescriptorSets(device, 10, writes, 0, nullptr);
+                    brdfLutWrite,
+                    foliageInstanceWrite};
+            vkUpdateDescriptorSets(device, 11, writes, 0, nullptr);
         }
     }
 }

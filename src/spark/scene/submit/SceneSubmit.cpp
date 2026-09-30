@@ -41,6 +41,8 @@
 #include "spark/scene/core/ScenePartitionKind.hpp"
 #include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/ecs/components/gameplay/FogOfWar2DComponent.hpp"
+#include "spark/scene/foliage/FoliageSceneCollector.hpp"
+#include "spark/scene/foliage/WindSubsystem.hpp"
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 #include "spark/scene/submit/SceneSpriteTileCull.hpp"
 #include "spark/scene/submit/SceneTilemapSubmit.hpp"
@@ -293,6 +295,8 @@ void FillStandardLitSceneFromWorld(
     params.sprites.Clear();
     params.tilemaps.Clear();
     params.tilemapTiles.Clear();
+    params.foliageBatches.Clear();
+    params.foliageInstances.Clear();
     params.uiFont = world.GetUiFont();
     params.uiBoldFont = world.GetUiBoldFont();
     params.draws.Reserve(32);
@@ -691,6 +695,10 @@ void FillStandardLitSceneFromWorld(
         params.punctualShadowsEnabled = false;
         params.ssaoEnabled = false;
     }
+
+    world.GetWindSubsystem().WriteFrameToSceneRenderParams(params);
+    FoliageSceneCollector foliageCollector{};
+    foliageCollector.CollectInto(world, params, findOrAddTexture);
 
     world.ForEachActiveGameObject([&](GameObject* object) {
         if (object == nullptr) {

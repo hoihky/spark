@@ -30,7 +30,9 @@ void VulkanSceneUniformWriter::Write(
     static_assert(offsetof(Ubo, shadowParams) == 592);
     static_assert(offsetof(Ubo, clusterGrid) == 608);
     static_assert(offsetof(Ubo, iblParams) == 640);
-    static_assert(sizeof(Ubo) == 656);
+    static_assert(offsetof(Ubo, windDirectionSpeed) == 656);
+    static_assert(offsetof(Ubo, windGustParams) == 672);
+    static_assert(sizeof(Ubo) == 688);
     if (mappedUbo == nullptr) {
         return;
     }
@@ -162,6 +164,16 @@ void VulkanSceneUniformWriter::Write(
     u.iblParams[1] = iblIntensity;
     u.iblParams[2] = scene.iblEnvironmentIsHdr ? 1.0F : 0.0F;
     u.iblParams[3] = scene.iblEnabled ? 1.0F : 0.0F;
+
+    const Vector3 windDir = scene.windDirectionXZ.Normalized();
+    u.windDirectionSpeed[0] = windDir.x;
+    u.windDirectionSpeed[1] = 0.0F;
+    u.windDirectionSpeed[2] = windDir.z;
+    u.windDirectionSpeed[3] = scene.windActive ? scene.windEffectiveSpeed : 0.0F;
+    u.windGustParams[0] = scene.windGustAmplitude;
+    u.windGustParams[1] = scene.windGustFrequency;
+    u.windGustParams[2] = scene.windTurbulence;
+    u.windGustParams[3] = scene.windSimulationTimeSeconds;
 
     std::memcpy(mappedUbo, &u, sizeof(SceneUniformGpu));
 }

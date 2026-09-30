@@ -230,6 +230,14 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
         }
     }
     if (!hasCustomDraw) {
+        for (std::size_t i = 0; i < scene.foliageBatches.GetSize(); ++i) {
+            if (scene.foliageBatches[i].GetSourceMesh()) {
+                hasCustomDraw = true;
+                break;
+            }
+        }
+    }
+    if (!hasCustomDraw) {
         ClearKnownMeshes();
         return;
     }
@@ -282,6 +290,23 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
     for (std::size_t i = 0; i < scene.waterDraws.GetSize(); ++i) {
         ingest(scene.waterDraws[i].item);
     }
+    for (std::size_t i = 0; i < scene.foliageBatches.GetSize(); ++i) {
+        const SharedPtr<Mesh>& foliageMesh = scene.foliageBatches[i].GetSourceMesh();
+        if (foliageMesh) {
+            tryAddRigid(foliageMesh.Get());
+        }
+    }
+}
+
+CustomMeshGpuSlice VulkanCustomMeshPool::TryGetRigidMeshSlice(const Mesh* mesh) const noexcept {
+    if (mesh == nullptr) {
+        return CustomMeshGpuSlice{};
+    }
+    const CustomMeshGpuSlice* base = rigidSlices.Find(mesh);
+    if (base == nullptr) {
+        return CustomMeshGpuSlice{};
+    }
+    return *base;
 }
 
 std::uint64_t VulkanCustomMeshPool::ComputeKnownFingerprint() const {

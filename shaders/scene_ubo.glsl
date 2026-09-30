@@ -21,6 +21,10 @@ layout(std140, set = 0, binding = 0) uniform SceneUBO {
     vec4 clusterDepth;
     /** x = env equirect layer (-1 = procedural sky); y = intensity; z = HDR env (1); w = enabled (1). */
     vec4 iblParams;
+    /** xyz = wind direction (XZ); w = effective speed (0 = calm). */
+    vec4 windDirectionSpeed;
+    /** x = gust amplitude; y = gust frequency; z = turbulence; w = simulation time. */
+    vec4 windGustParams;
 } ubo;
 
 #endif

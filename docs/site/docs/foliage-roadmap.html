@@ -570,23 +570,23 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Global wind / gust system</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Done (F0 v1)</strong> — <code>WindSubsystem</code>, <code>WindEnvironmentComponent</code>, scene UBO (<code>windDirectionSpeed</code> / <code>windGustParams</code>), <code>shaders/wind.glsl</code></td>
 </tr>
 <tr>
-<td><strong>3D mesh GPU instancing</strong></td>
-<td><strong>Not started</strong> — <code>vkCmdDrawIndexed</code> uses <code>instanceCount = 1</code> today</td>
+<td><strong>3D mesh GPU instancing (foliage)</strong></td>
+<td><strong>Done (F1)</strong> — <code>VulkanFoliageInstancedPass</code>, SSBO binding 15, <code>FoliageSceneCollector</code></td>
 </tr>
 <tr>
-<td><strong>Grass field / chunked scatter</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Grass meadow (prototype)</strong></td>
+<td><strong>Partial</strong> — <code>FoliageInstancedMeshComponent</code> grid + <code>GrassBladeMesh</code>; terrain chunks / slope scatter (F2) not started</td>
 </tr>
 <tr>
 <td><strong>Tree instancing + LOD</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Not started</strong> (F3–F4)</td>
 </tr>
 <tr>
 <td><strong>Foliage wind vertex shader</strong></td>
-<td><strong>Not started</strong></td>
+<td><strong>Done</strong> — <code>sparkWindBendLocalPosition</code> in <code>foliage.vert</code></td>
 </tr>
 <tr>
 <td><strong>Mesh LOD metadata in submit</strong></td>
@@ -595,6 +595,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><strong>Impostor / baked tree cards</strong></td>
 <td><strong>Not started</strong></td>
+</tr>
+<tr>
+<td><strong>Foliage wind demo</strong></td>
+<td><strong>Done</strong> — <code>FoliageWindDemo</code> (launcher #27, hotkey <strong>G</strong>)</td>
 </tr>
 </tbody>
 </table>
@@ -644,13 +648,13 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </thead>
 <tbody>
 <tr>
-<td><strong>F0</strong></td>
+<td><strong>F0</strong> ✓</td>
 <td>Wind subsystem + foliage UBO on <code>SceneRenderParams</code></td>
 <td>—</td>
 <td>D6 weather/wind</td>
 </tr>
 <tr>
-<td><strong>F1</strong></td>
+<td><strong>F1</strong> ✓</td>
 <td>3D GPU instancing + foliage shading model</td>
 <td>F0</td>
 <td>A2 budgets, C4 culling</td>
@@ -694,7 +698,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <p><strong>Recommended order:</strong> F0 → F1 → F2 and F3 in parallel → F4 → F5; F6/F7 when core visuals land.</p>
-<p><strong>First vertical slice:</strong> windy grass on <code>TerrainDemo</code> + a ring of instanced <code>Tree_1_C</code> — proves F0–F3 without impostors.</p>
+<p><strong>First vertical slice:</strong> <code>FoliageWindDemo</code> proves <strong>F0 + F1</strong> (windy instanced grass). Remaining slice: terrain-linked grass on <code>TerrainDemo</code> + instanced <code>Tree_1_C</code> ring (F2–F3).</p>
 <hr />
 <h2 id="f0-wind-subsystem">F0 — Wind subsystem</h2>
 <p><strong>Exit criteria:</strong> One global wind vector + gust parameters uploaded each frame; grass and tree foliage shaders read the same UBO; optional <code>WindVolumeComponent</code> data path (GPU may use global only in v1).</p>
@@ -712,25 +716,25 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>FOLIAGE-F0-01</td>
 <td><strong><code>WindSettings</code> struct</strong> — direction (XZ), base speed, gust amplitude, gust frequency, turbulence</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F0-02</td>
 <td><strong><code>WindSubsystem</code> per <code>GameWorld</code></strong> — advances time, combines volumes, writes frame state</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F0-03</td>
 <td><strong><code>SceneRenderParams::wind</code></strong> + GPU UBO slot in scene descriptor set (document binding)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F0-04</td>
 <td><strong><code>WindVolumeComponent</code></strong> — box/sphere override: local direction, strength multiplier (data path)</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[ ] — v1 uses global <strong><code>WindEnvironmentComponent</code></strong> only</td>
 </tr>
 <tr>
 <td>FOLIAGE-F0-05</td>
@@ -790,31 +794,31 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 <td>FOLIAGE-F1-01</td>
 <td><strong><code>FoliageInstanceGpu</code></strong> — model matrix or pos/rotY/scale, tint, random phase (std430 SSBO)</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F1-02</td>
 <td><strong><code>SceneRenderParams::foliageBatches</code></strong> — <code>{mesh, material, instances[]}</code> or chunked ranges</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F1-03</td>
 <td><strong><code>VulkanFoliageInstancedPass</code></strong> — <code>vkCmdDrawIndexed</code> with <code>instanceCount &gt; 1</code>; mirror tilemap instance reserve pattern</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F1-04</td>
 <td><strong><code>shaders/foliage.vert</code> / <code>foliage.frag</code></strong> — alpha test, double-sided, wind include, lit PBR simplified</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F1-05</td>
 <td><strong>Submit collection</strong> — <code>FillFoliageBatchesFromWorld</code> or extend <code>SceneSubmit</code></td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x] — <code>FoliageSceneCollector</code> from <code>SceneSubmit</code></td>
 </tr>
 <tr>
 <td>FOLIAGE-F1-06</td>
@@ -877,13 +881,13 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 <td>FOLIAGE-F2-05</td>
 <td><strong>Blade mesh</strong> — crossed quads or 3-triangle strip; single albedo + optional alpha</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x] — <code>GrassBladeMesh</code>, <code>GrassFoliageAlbedoTexture</code></td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-06</td>
 <td><strong>Vertex wind</strong> — bend tip along wind; stiffness by height; per-instance phase offset</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x] — <code>wind.glsl</code> + per-instance <code>windPhase</code></td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-07</td>
@@ -907,7 +911,7 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 <td>FOLIAGE-F2-10</td>
 <td><strong>Demo</strong> — extend <code>TerrainDemo</code> or <code>FoliageMeadowDemo</code> with grass + wind hotkeys</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x] — <code>FoliageWindDemo</code> (flat meadow; terrain hookup deferred)</td>
 </tr>
 </tbody>
 </table>
@@ -1397,6 +1401,22 @@ done
 <td>Per-entity tree placement (to replace)</td>
 </tr>
 <tr>
+<td><code>src/spark/demo/FoliageWindDemo.cpp</code></td>
+<td>F0+F1 vertical slice (grass + wind)</td>
+</tr>
+<tr>
+<td><code>include/spark/scene/foliage/WindSubsystem.hpp</code></td>
+<td>Global wind simulation</td>
+</tr>
+<tr>
+<td><code>src/spark/render/foliage/VulkanFoliageInstancedPass.cpp</code></td>
+<td>Instanced foliage draw</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp</code></td>
+<td>Meadow grid instances</td>
+</tr>
+<tr>
 <td><code>assets/models/Tree_1_C_Color1.gltf</code></td>
 <td>Sample tree asset</td>
 </tr>
@@ -1419,7 +1439,7 @@ done
 </tbody>
 </table>
 <hr />
-<p><em>Last updated: Foliage roadmap — milestones F0–F7. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
+<p><em>Last updated: 2026-09-30 — F0 and F1 complete; F2 grass prototype items (blade mesh, vertex wind, demo) landed in <code>FoliageWindDemo</code>. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
       </article>
     </main>
 

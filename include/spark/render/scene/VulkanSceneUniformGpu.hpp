@@ -28,10 +28,14 @@ struct SceneUniformGpu {
     float clusterDepth[4]{};
     /** x = env equirect layer (-1 = procedural); y = IBL intensity; w = enabled (1). */
     float iblParams[4]{};
+    /** xyz = wind direction (XZ); w = effective speed (0 = calm). */
+    float windDirectionSpeed[4]{};
+    /** x = gust amplitude; y = gust frequency; z = turbulence; w = wind simulation time. */
+    float windGustParams[4]{};
 };
 
-static_assert(sizeof(SceneUniformGpu) == 656);
+static_assert(sizeof(SceneUniformGpu) == 688);
 
-inline constexpr std::uint32_t kSceneUniformGpuBytes = 656;
+inline constexpr std::uint32_t kSceneUniformGpuBytes = 688;
 
 }  // namespace Spark

@@ -42,6 +42,7 @@ enum class DemoStorageId : std::uint8_t {
     WaterLake,
     VfxShowcase2D,
     GameFlow2DProductPath,
+    FoliageWind,
 #if SPARK_HAS_EDITOR
     SparkEditor,
 #endif

@@ -13,6 +13,7 @@
 #include "spark/demo/VfxShowcaseDemo.hpp"
 #include "spark/demo/VfxShowcase2DDemo.hpp"
 #include "spark/demo/GameFlow2DProductPathDemo.hpp"
+#include "spark/demo/FoliageWindDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
 #include "spark/demo/CharacterCameraDemo.hpp"
 #include "spark/demo/Tetris2DDemo.hpp"
@@ -283,6 +284,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::FoliageWind) {
+            foliageWindDemo.Simulate(timing, context);
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Simulate(timing, GetScene(), context);
@@ -348,6 +354,8 @@ public:
             vfxShowcase2DDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::GameFlow2DProductPath) {
             gameFlow2DProductPathDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::FoliageWind) {
+            foliageWindDemo.Render(GetScene(), GetWorld(), context);
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Render(GetScene(), context);
@@ -550,6 +558,16 @@ public:
         gameFlow2DProductPathLoaded = true;
         mode = DemoMode::GameFlow2DProductPath;
         context.GetInput().SetCursorCaptured(false);
+    }
+
+    void EnterFoliageWindDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        if (!foliageWindDemoLoaded) {
+            foliageWindDemo.Load(GetWorld(), context);
+            foliageWindDemoLoaded = true;
+        }
+        mode = DemoMode::FoliageWind;
+        context.GetInput().SetCursorCaptured(true);
     }
 
     void EnterMaze3DDemo(IEngineContext& context) {
@@ -832,6 +850,10 @@ private:
             gameFlow2DProductPathDemo.Unload(GetWorld());
             gameFlow2DProductPathLoaded = false;
         }
+        if (foliageWindDemoLoaded) {
+            foliageWindDemo.Unload(GetWorld());
+            foliageWindDemoLoaded = false;
+        }
 #if SPARK_HAS_EDITOR
         if (sparkEditorDemoLoaded) {
             sparkEditorDemo.Unload(GetScene());
@@ -887,6 +909,7 @@ private:
                 &ShellGame::EnterWaterLakeDemo,
                 &ShellGame::EnterVfxShowcase2DDemo,
                 &ShellGame::EnterGameFlow2DProductPathDemo,
+                &ShellGame::EnterFoliageWindDemo,
 #if SPARK_HAS_EDITOR
                 &ShellGame::EnterSparkEditorDemo,
 #endif
@@ -1094,6 +1117,8 @@ private:
     bool vfxShowcase2DLoaded = false;
     GameFlow2DProductPathDemo gameFlow2DProductPathDemo{};
     bool gameFlow2DProductPathLoaded = false;
+    FoliageWindDemo foliageWindDemo{};
+    bool foliageWindDemoLoaded = false;
 #if SPARK_HAS_EDITOR
     SparkEditorDemo sparkEditorDemo{};
     bool sparkEditorDemoLoaded = false;

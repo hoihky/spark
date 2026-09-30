@@ -38,13 +38,14 @@ Copy the **Issue body** block under each task when filing issues (see [§9](#9-b
 | 2D GPU instancing (sprites / tilemaps) | Done — `VulkanSpritePass`, `VulkanTilemapPass` |
 | glTF tree props (single entity each) | Done — `CharacterCameraDemo`, `GltfSceneGraphTest` |
 | `BillboardComponent` | Done — camera-facing quads (impostor precursor) |
-| **Global wind / gust system** | **Not started** |
-| **3D mesh GPU instancing** | **Not started** — `vkCmdDrawIndexed` uses `instanceCount = 1` today |
-| **Grass field / chunked scatter** | **Not started** |
-| **Tree instancing + LOD** | **Not started** |
-| **Foliage wind vertex shader** | **Not started** |
+| **Global wind / gust system** | **Done (F0 v1)** — `WindSubsystem`, `WindEnvironmentComponent`, scene UBO (`windDirectionSpeed` / `windGustParams`), `shaders/wind.glsl` |
+| **3D mesh GPU instancing (foliage)** | **Done (F1)** — `VulkanFoliageInstancedPass`, SSBO binding 15, `FoliageSceneCollector` |
+| **Grass meadow (prototype)** | **Partial** — `FoliageInstancedMeshComponent` grid + `GrassBladeMesh`; terrain chunks / slope scatter (F2) not started |
+| **Tree instancing + LOD** | **Not started** (F3–F4) |
+| **Foliage wind vertex shader** | **Done** — `sparkWindBendLocalPosition` in `foliage.vert` |
 | **Mesh LOD metadata in submit** | **Not started** — gap in `SCENE_AND_RENDERING_GAPS.md` |
 | **Impostor / baked tree cards** | **Not started** |
+| **Foliage wind demo** | **Done** — `FoliageWindDemo` (launcher #27, hotkey **G**) |
 
 ---
 
@@ -64,8 +65,8 @@ Milestones below target **Tier B** (action-game realistic) with optional **Tier 
 
 | Milestone | Goal | Depends on | Maps to open-world |
 |-----------|------|------------|-------------------|
-| **F0** | Wind subsystem + foliage UBO on `SceneRenderParams` | — | D6 weather/wind |
-| **F1** | 3D GPU instancing + foliage shading model | F0 | A2 budgets, C4 culling |
+| **F0** ✓ | Wind subsystem + foliage UBO on `SceneRenderParams` | — | D6 weather/wind |
+| **F1** ✓ | 3D GPU instancing + foliage shading model | F0 | A2 budgets, C4 culling |
 | **F2** | Grass fields — chunks, scatter, vertex wind, fade | F0, F1 | C4, biome content |
 | **F3** | Tree instancing — trunk/foliage split, wind leaves | F0, F1 | C1 mesh LOD precursor |
 | **F4** | Mesh LOD + impostors / billboards | F3 | C1, C2, C3 |
@@ -75,7 +76,7 @@ Milestones below target **Tier B** (action-game realistic) with optional **Tier 
 
 **Recommended order:** F0 → F1 → F2 and F3 in parallel → F4 → F5; F6/F7 when core visuals land.
 
-**First vertical slice:** windy grass on `TerrainDemo` + a ring of instanced `Tree_1_C` — proves F0–F3 without impostors.
+**First vertical slice:** `FoliageWindDemo` proves **F0 + F1** (windy instanced grass). Remaining slice: terrain-linked grass on `TerrainDemo` + instanced `Tree_1_C` ring (F2–F3).
 
 ---
 
@@ -85,10 +86,10 @@ Milestones below target **Tier B** (action-game realistic) with optional **Tier 
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| FOLIAGE-F0-01 | **`WindSettings` struct** — direction (XZ), base speed, gust amplitude, gust frequency, turbulence | P0 | [ ] |
-| FOLIAGE-F0-02 | **`WindSubsystem` per `GameWorld`** — advances time, combines volumes, writes frame state | P0 | [ ] |
-| FOLIAGE-F0-03 | **`SceneRenderParams::wind`** + GPU UBO slot in scene descriptor set (document binding) | P0 | [ ] |
-| FOLIAGE-F0-04 | **`WindVolumeComponent`** — box/sphere override: local direction, strength multiplier (data path) | P1 | [ ] |
+| FOLIAGE-F0-01 | **`WindSettings` struct** — direction (XZ), base speed, gust amplitude, gust frequency, turbulence | P0 | [x] |
+| FOLIAGE-F0-02 | **`WindSubsystem` per `GameWorld`** — advances time, combines volumes, writes frame state | P0 | [x] |
+| FOLIAGE-F0-03 | **`SceneRenderParams::wind`** + GPU UBO slot in scene descriptor set (document binding) | P0 | [x] |
+| FOLIAGE-F0-04 | **`WindVolumeComponent`** — box/sphere override: local direction, strength multiplier (data path) | P1 | [ ] — v1 uses global **`WindEnvironmentComponent`** only |
 | FOLIAGE-F0-05 | **CPU `WindSampleAt(worldPos)`** — for gameplay VFX/audio (leaves rustle trigger) | P2 | [ ] |
 | FOLIAGE-F0-06 | **Unit test** — gust envelope periodicity; volume blend at boundary | P2 | [ ] |
 
@@ -126,11 +127,11 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| FOLIAGE-F1-01 | **`FoliageInstanceGpu`** — model matrix or pos/rotY/scale, tint, random phase (std430 SSBO) | P0 | [ ] |
-| FOLIAGE-F1-02 | **`SceneRenderParams::foliageBatches`** — `{mesh, material, instances[]}` or chunked ranges | P0 | [ ] |
-| FOLIAGE-F1-03 | **`VulkanFoliageInstancedPass`** — `vkCmdDrawIndexed` with `instanceCount > 1`; mirror tilemap instance reserve pattern | P0 | [ ] |
-| FOLIAGE-F1-04 | **`shaders/foliage.vert` / `foliage.frag`** — alpha test, double-sided, wind include, lit PBR simplified | P0 | [ ] |
-| FOLIAGE-F1-05 | **Submit collection** — `FillFoliageBatchesFromWorld` or extend `SceneSubmit` | P0 | [ ] |
+| FOLIAGE-F1-01 | **`FoliageInstanceGpu`** — model matrix or pos/rotY/scale, tint, random phase (std430 SSBO) | P0 | [x] |
+| FOLIAGE-F1-02 | **`SceneRenderParams::foliageBatches`** — `{mesh, material, instances[]}` or chunked ranges | P0 | [x] |
+| FOLIAGE-F1-03 | **`VulkanFoliageInstancedPass`** — `vkCmdDrawIndexed` with `instanceCount > 1`; mirror tilemap instance reserve pattern | P0 | [x] |
+| FOLIAGE-F1-04 | **`shaders/foliage.vert` / `foliage.frag`** — alpha test, double-sided, wind include, lit PBR simplified | P0 | [x] |
+| FOLIAGE-F1-05 | **Submit collection** — `FillFoliageBatchesFromWorld` or extend `SceneSubmit` | P0 | [x] — `FoliageSceneCollector` from `SceneSubmit` |
 | FOLIAGE-F1-06 | **Shadow pass instancing** — foliage casts shadows optional; default grass **no cast** | P1 | [ ] |
 | FOLIAGE-F1-07 | **Frame order** — instanced foliage after opaque rigid, before water/transparent; document in LIGHTING_AND_SHADOWS | P1 | [ ] |
 | FOLIAGE-F1-08 | **Headless test** — build batch with 100 instances, submit without validation error | P2 | [ ] |
@@ -147,12 +148,12 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 | FOLIAGE-F2-02 | **Chunk grid** (e.g. 32 m) — activate 3×3 or 5×5 neighborhood around camera | P0 | [ ] |
 | FOLIAGE-F2-03 | **Scatter algorithm** — jitter XZ in chunk; sample terrain height + normal; reject slope > threshold | P0 | [ ] |
 | FOLIAGE-F2-04 | **Density / exclusion mask** — optional R8 texture (paint or procedural); zero = no blades | P1 | [ ] |
-| FOLIAGE-F2-05 | **Blade mesh** — crossed quads or 3-triangle strip; single albedo + optional alpha | P0 | [ ] |
-| FOLIAGE-F2-06 | **Vertex wind** — bend tip along wind; stiffness by height; per-instance phase offset | P0 | [ ] |
+| FOLIAGE-F2-05 | **Blade mesh** — crossed quads or 3-triangle strip; single albedo + optional alpha | P0 | [x] — `GrassBladeMesh`, `GrassFoliageAlbedoTexture` |
+| FOLIAGE-F2-06 | **Vertex wind** — bend tip along wind; stiffness by height; per-instance phase offset | P0 | [x] — `wind.glsl` + per-instance `windPhase` |
 | FOLIAGE-F2-07 | **Distance fade** — dither or alpha at far radius; hard cull beyond `maxDistance` | P0 | [ ] |
 | FOLIAGE-F2-08 | **`maxGrassInstancesPerFrame` budget** — drop farthest chunks first (A2 alignment) | P1 | [ ] |
 | FOLIAGE-F2-09 | **Fake subsurface** — wrap diffuse / back-light tint for sunset readability | P1 | [ ] |
-| FOLIAGE-F2-10 | **Demo** — extend `TerrainDemo` or `FoliageMeadowDemo` with grass + wind hotkeys | P1 | [ ] |
+| FOLIAGE-F2-10 | **Demo** — extend `TerrainDemo` or `FoliageMeadowDemo` with grass + wind hotkeys | P1 | [x] — `FoliageWindDemo` (flat meadow; terrain hookup deferred) |
 
 ---
 
@@ -384,6 +385,10 @@ done
 | `src/spark/render/scene/VulkanSceneOpaquePass.cpp` | Opaque draw path |
 | `include/spark/ecs/components/rendering/BillboardComponent.hpp` | Impostor precursor |
 | `src/spark/demo/CharacterCameraDemo.cpp` | Per-entity tree placement (to replace) |
+| `src/spark/demo/FoliageWindDemo.cpp` | F0+F1 vertical slice (grass + wind) |
+| `include/spark/scene/foliage/WindSubsystem.hpp` | Global wind simulation |
+| `src/spark/render/foliage/VulkanFoliageInstancedPass.cpp` | Instanced foliage draw |
+| `include/spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp` | Meadow grid instances |
 | `assets/models/Tree_1_C_Color1.gltf` | Sample tree asset |
 | `tests/scene/GltfSceneGraphTest.cpp` | Tree load validation |
 | `docs/WATER_ROADMAP.md` | Shared wind field |
@@ -392,4 +397,4 @@ done
 
 ---
 
-*Last updated: Foliage roadmap — milestones F0–F7. Revise task status via PR checkbox edits or linked GitHub issues.*
+*Last updated: 2026-09-30 — F0 and F1 complete; F2 grass prototype items (blade mesh, vertex wind, demo) landed in `FoliageWindDemo`. Revise task status via PR checkbox edits or linked GitHub issues.*

@@ -41,6 +41,7 @@
 #include "spark/render/sprites2d/VulkanScene2DCompositeCapture.hpp"
 #include "spark/render/sprites2d/VulkanSpritePass.hpp"
 #include "spark/render/sprites2d/VulkanTilemapPass.hpp"
+#include "spark/render/foliage/VulkanFoliageInstancedPass.hpp"
 #include "spark/render/platform/Window.hpp"
 
 #include "spark/imgui/IImGuiLayer.hpp"
@@ -146,6 +147,7 @@ private:
     VulkanParticlePass particlePass;
     VulkanTilemapPass tilemapPass;
     VulkanSpritePass spritePass;
+    VulkanFoliageInstancedPass foliagePass;
     Vulkan2DCompositePass composite2DPass;
     VulkanScene2DCompositeCapture scene2DCompositeCapture;
     VulkanRenderTargetRegistry renderTargetRegistry;

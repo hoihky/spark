@@ -95,6 +95,7 @@ void VulkanRenderer::CleanupSwapchain() {
     particlePass.DestroyGraphicsPipeline(device());
     tilemapPass.DestroyGraphicsPipeline(device());
     spritePass.DestroyGraphicsPipeline(device());
+    foliagePass.DestroyGraphicsPipeline(device());
     presentRenderPass.Destroy(device());
     deviceContext.DestroySwapchain();
 }
@@ -135,6 +136,8 @@ void VulkanRenderer::RecreateSwapchain() {
     tilemapPass.CreateGraphicsPipeline(
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
     spritePass.CreateGraphicsPipeline(
+            device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
+    foliagePass.CreateGraphicsPipeline(
             device(), hdrTonemapPass.HdrRenderPass(), sceneDescriptors.Layout(), shaderLoader);
     spritePass.CreateOffscreenLdrGraphicsPipeline(device(), offscreenLdrRenderPass.Pass());
     CreateFramebuffers();
@@ -335,6 +338,20 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                 .maxSkinJoints = VulkanSceneDescriptors::kMaxSkinJoints,
         };
         sceneOpaquePass.Record(commandBuffer, opaqueCtx);
+
+        if (sceneParamsValid && !pendingScene.foliageBatches.IsEmpty()) {
+            const VulkanFoliageRecordContext foliageCtx{
+                    .scene = &pendingScene,
+                    .sceneParamsValid = sceneParamsValid,
+                    .frameIndex = frameIndex,
+                    .extent = presentSwapchain().extent,
+                    .descriptorSet = sceneDescriptors.DescriptorSet(frameIndex),
+                    .customMeshPool = &customMeshPool,
+                    .customVertexBuffer = customMesh.vertexBuffer,
+                    .customIndexBuffer = customMesh.indexBuffer,
+            };
+            foliagePass.Record(commandBuffer, foliageCtx);
+        }
 
         const bool hasWaterDraws = sceneParamsValid && !pendingScene.waterDraws.IsEmpty();
         const bool hasTransparentDraws = sceneParamsValid && !pendingScene.transparentDraws.IsEmpty();
@@ -754,9 +771,11 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
     particlePass.DestroyGraphicsPipeline(device());
     tilemapPass.DestroyGraphicsPipeline(device());
     spritePass.DestroyGraphicsPipeline(device());
+    foliagePass.DestroyGraphicsPipeline(device());
     screenUi.DestroyPipelines(device());
     particlePass.DestroyGpuResources(device());
     spritePass.DestroyGpuResources(device());
+    foliagePass.DestroyGpuResources(device());
     screenUi.DestroyResources(device());
 }
 
@@ -775,6 +794,7 @@ void VulkanRenderer::CreatePersistentSceneResources() {
     sceneDescriptors.CreateIblBrdfLut(physicalDevice(), device(), commandPool, graphicsQueue());
     clusteredForwardLights.CreateBuffers(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     spritePass.CreateGpuResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
+    foliagePass.CreateGpuResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     sceneDescriptors.CreatePoolAndSets(
             device(),
             VulkanFrameSync::kMaxFramesInFlight,
@@ -785,6 +805,7 @@ void VulkanRenderer::CreatePersistentSceneResources() {
                     .directionalShadow = directionalShadow,
                     .punctualShadow = punctualShadow,
                     .spritePass = spritePass,
+                    .foliagePass = foliagePass,
             });
     CreateSceneGeometry();
     screenUi.CreateResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight, shaderLoader);

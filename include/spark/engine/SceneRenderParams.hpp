@@ -21,6 +21,8 @@
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/text/Font.hpp"
+#include "spark/scene/foliage/FoliageInstanceRecord.hpp"
+#include "spark/scene/foliage/SceneFoliageInstancedBatch.hpp"
 
 #include <cstdint>
 
@@ -478,6 +480,21 @@ struct SceneRenderParams {
 
     /** Authoritative scene time (seconds) for animated sprite lighting; set by SubmitStandardLitSceneFromWorld. */
     float sceneTimeSeconds = 0.0F;
+
+    /** Global wind (F0); filled from <c>WindSubsystem</c> during scene submit. */
+    bool windActive = false;
+    Vector3 windDirectionXZ{1.0F, 0.0F, 0.0F};
+    float windEffectiveSpeed = 0.0F;
+    float windGustAmplitude = 0.0F;
+    float windGustFrequency = 0.0F;
+    float windTurbulence = 0.0F;
+    float windSimulationTimeSeconds = 0.0F;
+
+    /** GPU-instanced foliage batches (F1); rendered after opaque meshes. */
+    static constexpr std::uint32_t MaxFoliageInstances = 16384;
+    static constexpr std::uint32_t MaxFoliageBatches = 32;
+    Array<SceneFoliageInstancedBatch> foliageBatches;
+    Array<FoliageInstanceRecord> foliageInstances;
 
     /**
      * Sprite pass ordering. <c>SortOrderThenWorldY</c> uses each draw’s model translation world Y (<c>m[13]</c>) as a

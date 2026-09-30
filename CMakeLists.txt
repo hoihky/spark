@@ -424,6 +424,8 @@ set(SHADER_SOURCES
         ${SHADER_DIR}/post_process.frag
         ${SHADER_DIR}/water.vert
         ${SHADER_DIR}/water.frag
+        ${SHADER_DIR}/foliage.vert
+        ${SHADER_DIR}/foliage.frag
 )
 set(SPV_FILES "")
 foreach (SHADER ${SHADER_SOURCES})
@@ -435,7 +437,7 @@ foreach (SHADER ${SHADER_SOURCES})
             OUTPUT ${SPV}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SPV_DIR}
             COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0 -I${SHADER_DIR} ${SHADER} -o ${SPV}
-            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/scene_screen.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_screen.glsl ${SHADER_DIR}/water_background.glsl ${SHADER_DIR}/water_detail.glsl ${SHADER_DIR}/water_foam.glsl ${SHADER_DIR}/water_ssr.glsl ${SHADER_DIR}/water_reflection.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl
+            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/scene_screen.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_screen.glsl ${SHADER_DIR}/water_background.glsl ${SHADER_DIR}/water_detail.glsl ${SHADER_DIR}/water_foam.glsl ${SHADER_DIR}/water_ssr.glsl ${SHADER_DIR}/water_reflection.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl ${SHADER_DIR}/foliage_instance.glsl ${SHADER_DIR}/wind.glsl
             COMMENT "SPIR-V: ${NAME_WE}.${EXT_NO_DOT}"
             VERBATIM
     )
@@ -557,6 +559,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/VfxShowcaseDemo.cpp
         src/spark/demo/VfxShowcase2DDemo.cpp
         src/spark/demo/GameFlow2DProductPathDemo.cpp
+        src/spark/demo/FoliageWindDemo.cpp
         src/spark/demo/CharacterCameraDemo.cpp
         src/spark/demo/BroadPhase2DDemo.cpp
         src/spark/demo/Platformer2DDemo.cpp
@@ -730,6 +733,14 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/camera/Camera.cpp
         src/spark/scene/camera/CharacterCameraRig.cpp
         src/spark/scene/core/GameWorld.cpp
+        src/spark/scene/foliage/WindSettings.cpp
+        src/spark/scene/foliage/WindFrameState.cpp
+        src/spark/scene/foliage/WindSubsystem.cpp
+        src/spark/scene/foliage/GrassBladeMesh.cpp
+        src/spark/scene/foliage/GrassFoliageAlbedoTexture.cpp
+        src/spark/scene/foliage/FoliageSceneCollector.cpp
+        src/spark/ecs/components/foliage/WindEnvironmentComponent.cpp
+        src/spark/ecs/components/foliage/FoliageInstancedMeshComponent.cpp
         src/spark/scene/assets/GameWorldAssetCache.cpp
         src/spark/scene/query/SpatialMath.cpp
         src/spark/scene/submit/SceneSpatialCull.cpp
@@ -865,6 +876,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/spawn/GameObjectPool.cpp
         src/spark/gameplay/GameplayDataTable.cpp
         src/spark/render/sprites2d/VulkanTilemapPass.cpp
+        src/spark/render/foliage/VulkanFoliageInstancedPass.cpp
         src/spark/render/sprites2d/Vulkan2DCompositePass.cpp
         src/spark/render/sprites2d/VulkanScene2DCompositeCapture.cpp
         src/spark/render/scene/VulkanSceneMeshDraw.cpp

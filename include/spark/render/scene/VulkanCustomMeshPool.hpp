@@ -53,6 +53,8 @@ public:
             Array<CustomMeshGpuSlice>& outTransparentPacked,
             Array<CustomMeshGpuSlice>& outWaterPacked) const;
 
+    [[nodiscard]] CustomMeshGpuSlice TryGetRigidMeshSlice(const Mesh* mesh) const noexcept;
+
 private:
     struct BufferSet {
         VkBuffer vertexBuffer = VK_NULL_HANDLE;

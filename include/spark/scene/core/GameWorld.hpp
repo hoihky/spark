@@ -16,6 +16,7 @@
 #include "spark/scene/submit/SkinnedAnimationService.hpp"
 #include "spark/scene/submit/SkinnedIkService.hpp"
 #include "spark/scene/vfx/VfxSubsystem.hpp"
+#include "spark/scene/foliage/WindSubsystem.hpp"
 
 namespace Spark {
 
@@ -146,6 +147,8 @@ public:
     }
     [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return vfxSubsystem; }
     [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return vfxSubsystem; }
+    [[nodiscard]] WindSubsystem& GetWindSubsystem() noexcept { return windSubsystem; }
+    [[nodiscard]] const WindSubsystem& GetWindSubsystem() const noexcept { return windSubsystem; }
     [[nodiscard]] SkinnedAnimationService& GetSkinnedAnimationService() noexcept { return skinnedAnimationService; }
     [[nodiscard]] const SkinnedAnimationService& GetSkinnedAnimationService() const noexcept {
         return skinnedAnimationService;
@@ -320,6 +323,7 @@ private:
     GameWorldAssetCache assetCache;
     GameWorldAssetLoader assetLoader;
     VfxSubsystem vfxSubsystem{};
+    WindSubsystem windSubsystem{};
     SkinnedAnimationService skinnedAnimationService{};
     SkinnedIkService skinnedIkService{};
     SharedPtr<Font> uiFont{};

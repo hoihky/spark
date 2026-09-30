@@ -119,6 +119,8 @@ enum class ComponentKind : std::uint32_t {
     PointLight2D,
     FogOfWar2D,
     Scene2DCompositeView,
+    WindEnvironment,
+    FoliageInstancedMesh,
 };
 
 /**

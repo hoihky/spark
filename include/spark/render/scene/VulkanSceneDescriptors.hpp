@@ -17,11 +17,12 @@ class VulkanPunctualShadowPass;
 class VulkanSceneHdrTextureUploader;
 class VulkanSceneTextureUploader;
 class VulkanSpritePass;
+class VulkanFoliageInstancedPass;
 
 /**
  * Scene descriptor set layout, per-flight uniform/skin SSBOs, pool, and bound descriptor sets.
- * Binding slots 0–14 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR, IBL LUT,
- * opaque background color, opaque scene depth for water/refraction).
+ * Binding slots 0–15 match the lit-scene shader layout (UBO, textures, lights, shadows, sprites, HDR, IBL LUT,
+ * opaque background color, opaque scene depth for water/refraction, foliage instances).
  */
 class VulkanSceneDescriptors {
 public:
@@ -36,6 +37,7 @@ public:
         const VulkanDirectionalShadowPass& directionalShadow;
         const VulkanPunctualShadowPass& punctualShadow;
         const VulkanSpritePass& spritePass;
+        const VulkanFoliageInstancedPass& foliagePass;
     };
 
     void CreateSetLayout(VkDevice device);
