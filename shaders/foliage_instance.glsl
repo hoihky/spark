@@ -20,8 +20,8 @@ layout(push_constant) uniform FoliageBatchPush {
     float alphaCutoff;
     float bladeHeight;
     float windBendScale;
-    float padding0;
-    float padding1;
+    float fadeStartDistance;
+    float fadeEndDistance;
     vec4 albedoTint;
 } foliageBatch;
 

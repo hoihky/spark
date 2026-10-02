@@ -43,6 +43,7 @@ enum class DemoStorageId : std::uint8_t {
     VfxShowcase2D,
     GameFlow2DProductPath,
     FoliageWind,
+    GrassFieldTerrain,
 #if SPARK_HAS_EDITOR
     SparkEditor,
 #endif

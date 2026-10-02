@@ -70,6 +70,7 @@
 #include "spark/ecs/components/gameplay/FogOfWar2DComponent.hpp"
 #include "spark/ecs/components/foliage/WindEnvironmentComponent.hpp"
 #include "spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp"
+#include "spark/ecs/components/foliage/GrassFieldComponent.hpp"
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"

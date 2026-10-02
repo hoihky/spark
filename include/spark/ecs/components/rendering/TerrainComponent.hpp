@@ -70,6 +70,16 @@ public:
             float worldZ,
             float& outWorldY) const;
 
+    /**
+     * Bilinear height + upward-facing normal in world space (for grass grounding / slope tests).
+     */
+    [[nodiscard]] bool TrySampleSurfaceWorld(
+            const GameObject& owner,
+            float worldX,
+            float worldZ,
+            float& outWorldY,
+            Vector3& outNormalWorld) const;
+
 private:
     void EnsureHeightBuffer(GameObject& owner);
     [[nodiscard]] static bool RayTriangle(

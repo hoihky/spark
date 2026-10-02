@@ -31,12 +31,12 @@ public:
     [[nodiscard]] virtual IUiElement* HitTest(const float x, const float y) = 0;
     [[nodiscard]] virtual const IUiElement* HitTest(const float x, const float y) const = 0;
 
-    virtual void OnPointerDown(const UiFrameInput& input, UiCanvasComponent& canvas) {}
-    virtual void OnPointerUp(const UiFrameInput& input, UiCanvasComponent& canvas) {}
-    virtual void OnPointerDrag(const UiFrameInput& input, UiCanvasComponent& canvas) {}
-    virtual void OnScroll(const float deltaX, const float deltaY) {}
-    virtual bool OnKey(const int key, const bool pressed) { return false; }
-    virtual void ProcessKeyInput(IInput& input) {}
+    virtual void OnPointerDown(const UiFrameInput& /*input*/, UiCanvasComponent& /*canvas*/) {}
+    virtual void OnPointerUp(const UiFrameInput& /*input*/, UiCanvasComponent& /*canvas*/) {}
+    virtual void OnPointerDrag(const UiFrameInput& /*input*/, UiCanvasComponent& /*canvas*/) {}
+    virtual void OnScroll(const float /*deltaX*/, const float /*deltaY*/) {}
+    virtual bool OnKey(const int /*key*/, const bool /*pressed*/) { return false; }
+    virtual void ProcessKeyInput(IInput& /*input*/) {}
 
     [[nodiscard]] virtual IUiElement* GetParent() noexcept { return nullptr; }
     [[nodiscard]] virtual const IUiElement* GetParent() const noexcept { return nullptr; }

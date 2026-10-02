@@ -14,6 +14,7 @@
 #include "spark/demo/VfxShowcase2DDemo.hpp"
 #include "spark/demo/GameFlow2DProductPathDemo.hpp"
 #include "spark/demo/FoliageWindDemo.hpp"
+#include "spark/demo/GrassFieldTerrainDemo.hpp"
 #include "spark/demo/TerrainDemo.hpp"
 #include "spark/demo/CharacterCameraDemo.hpp"
 #include "spark/demo/Tetris2DDemo.hpp"
@@ -138,6 +139,9 @@ public:
                 EnterDemoByStorageId(hotkeyId);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_G) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_G, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_H) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_H, hotkeyId)) {
                 EnterDemoByStorageId(hotkeyId);
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_Q) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_Q, hotkeyId)) {
@@ -289,6 +293,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::GrassFieldTerrain) {
+            grassFieldTerrainDemo.Simulate(timing, context);
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Simulate(timing, GetScene(), context);
@@ -356,6 +365,8 @@ public:
             gameFlow2DProductPathDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::FoliageWind) {
             foliageWindDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::GrassFieldTerrain) {
+            grassFieldTerrainDemo.Render(GetScene(), GetWorld(), context);
 #if SPARK_HAS_EDITOR
         } else if (mode == DemoMode::SparkEditor) {
             sparkEditorDemo.Render(GetScene(), context);
@@ -567,6 +578,16 @@ public:
             foliageWindDemoLoaded = true;
         }
         mode = DemoMode::FoliageWind;
+        context.GetInput().SetCursorCaptured(true);
+    }
+
+    void EnterGrassFieldTerrainDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        if (!grassFieldTerrainDemoLoaded) {
+            grassFieldTerrainDemo.Load(GetWorld(), context);
+            grassFieldTerrainDemoLoaded = true;
+        }
+        mode = DemoMode::GrassFieldTerrain;
         context.GetInput().SetCursorCaptured(true);
     }
 
@@ -854,6 +875,10 @@ private:
             foliageWindDemo.Unload(GetWorld());
             foliageWindDemoLoaded = false;
         }
+        if (grassFieldTerrainDemoLoaded) {
+            grassFieldTerrainDemo.Unload(GetWorld());
+            grassFieldTerrainDemoLoaded = false;
+        }
 #if SPARK_HAS_EDITOR
         if (sparkEditorDemoLoaded) {
             sparkEditorDemo.Unload(GetScene());
@@ -910,6 +935,7 @@ private:
                 &ShellGame::EnterVfxShowcase2DDemo,
                 &ShellGame::EnterGameFlow2DProductPathDemo,
                 &ShellGame::EnterFoliageWindDemo,
+                &ShellGame::EnterGrassFieldTerrainDemo,
 #if SPARK_HAS_EDITOR
                 &ShellGame::EnterSparkEditorDemo,
 #endif
@@ -1119,6 +1145,8 @@ private:
     bool gameFlow2DProductPathLoaded = false;
     FoliageWindDemo foliageWindDemo{};
     bool foliageWindDemoLoaded = false;
+    GrassFieldTerrainDemo grassFieldTerrainDemo{};
+    bool grassFieldTerrainDemoLoaded = false;
 #if SPARK_HAS_EDITOR
     SparkEditorDemo sparkEditorDemo{};
     bool sparkEditorDemoLoaded = false;

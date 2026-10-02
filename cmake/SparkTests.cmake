@@ -71,6 +71,7 @@ function(spark_add_physics_tests)
             tests/scene/TilemapEditValidatorTest.cpp
             tests/audio/ProceduralSoundTest.cpp
             tests/scene/TerrainHeightSampleTest.cpp
+            tests/scene/GrassFieldScatterTest.cpp
             tests/scene/RenderTextureTest.cpp
             tests/scene/WaterScreenSpaceReflectionTest.cpp
             tests/scene/WaterWaveDirectionTest.cpp

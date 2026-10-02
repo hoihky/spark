@@ -293,4 +293,57 @@ bool TerrainComponent::TrySampleHeightWorld(
     return true;
 }
 
+bool TerrainComponent::TrySampleSurfaceWorld(
+        const GameObject& owner,
+        const float worldX,
+        const float worldZ,
+        float& outWorldY,
+        Vector3& outNormalWorld) const {
+    if (!TrySampleHeightWorld(owner, worldX, worldZ, outWorldY)) {
+        return false;
+    }
+
+    const Matrix4 world = owner.GetWorldMatrix();
+    Matrix4 inv{};
+    if (!world.TryInvert(inv)) {
+        outNormalWorld = Vector3::UnitY;
+        return true;
+    }
+
+    const std::int32_t nx = TerrainMeshGenerator::GridVertexCountX(settings);
+    const std::int32_t nz = TerrainMeshGenerator::GridVertexCountZ(settings);
+    const float hx = settings.halfExtentX;
+    const float hz = settings.halfExtentZ;
+    const float cellLocalX = (nx > 1) ? (2.0F * hx) / static_cast<float>(nx - 1) : hx;
+    const float cellLocalZ = (nz > 1) ? (2.0F * hz) / static_cast<float>(nz - 1) : hz;
+    const float epsX = cellLocalX * 0.5F;
+    const float epsZ = cellLocalZ * 0.5F;
+
+    const Vector3 local = inv.TransformPoint({worldX, outWorldY, worldZ});
+    const Vector3 localXp = {local.x + epsX, local.y, local.z};
+    const Vector3 localZp = {local.x, local.y, local.z + epsZ};
+    const Vector3 worldXp = world.TransformPoint(localXp);
+    const Vector3 worldZp = world.TransformPoint(localZp);
+
+    float yXp = outWorldY;
+    float yZp = outWorldY;
+    if (!TrySampleHeightWorld(owner, worldXp.x, worldXp.z, yXp) ||
+        !TrySampleHeightWorld(owner, worldZp.x, worldZp.z, yZp)) {
+        outNormalWorld = Vector3::UnitY;
+        return true;
+    }
+
+    const float dxWorld = worldXp.x - worldX;
+    const float dzWorld = worldZp.z - worldZ;
+    const float dydx = (std::fabs(dxWorld) > 1.0e-5F) ? (yXp - outWorldY) / dxWorld : 0.0F;
+    const float dydz = (std::fabs(dzWorld) > 1.0e-5F) ? (yZp - outWorldY) / dzWorld : 0.0F;
+    Vector3 normal{-dydx, 1.0F, -dydz};
+    const float len = normal.Length();
+    outNormalWorld = (len > 1.0e-5F) ? normal * (1.0F / len) : Vector3::UnitY;
+    if (outNormalWorld.y < 0.0F) {
+        outNormalWorld = -outNormalWorld;
+    }
+    return true;
+}
+
 }  // namespace Spark

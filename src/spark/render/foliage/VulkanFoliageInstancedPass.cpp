@@ -307,6 +307,8 @@ void VulkanFoliageInstancedPass::Record(
         push.alphaCutoff = batch.GetAlphaCutoff();
         push.bladeHeight = batch.GetBladeHeight();
         push.windBendScale = batch.GetWindBendScale();
+        push.fadeStartDistance = batch.GetFadeStartDistanceMeters();
+        push.fadeEndDistance = batch.GetFadeEndDistanceMeters();
         vkCmdPushConstants(
                 commandBuffer,
                 pipelineLayout,

@@ -10,7 +10,7 @@
 
 namespace Spark {
 
-class Camera2D;
+struct Camera2D;
 class TilemapComponent;
 
 /** Layer flags used by Kenney sample maps and similar TMX (Objects off grid, Carts decorative). */

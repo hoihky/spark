@@ -30,6 +30,14 @@ public:
     void SetWindBendScale(float scale) noexcept { windBendScale = scale; }
     [[nodiscard]] float GetWindBendScale() const noexcept { return windBendScale; }
 
+    /** World XZ distance fade (F2-07); set <c>end &lt;= start</c> to disable. */
+    void SetDistanceFadeMeters(float fadeStart, float fadeEnd) noexcept {
+        fadeStartDistance = fadeStart;
+        fadeEndDistance = fadeEnd;
+    }
+    [[nodiscard]] float GetFadeStartDistanceMeters() const noexcept { return fadeStartDistance; }
+    [[nodiscard]] float GetFadeEndDistanceMeters() const noexcept { return fadeEndDistance; }
+
     void SetInstanceRange(std::uint32_t begin, std::uint32_t count) noexcept {
         instanceBegin = begin;
         instanceCount = count;
@@ -44,6 +52,8 @@ private:
     float alphaCutoff = 0.35F;
     float bladeHeight = 0.68F;
     float windBendScale = 0.28F;
+    float fadeStartDistance = 0.0F;
+    float fadeEndDistance = 0.0F;
     std::uint32_t instanceBegin = 0;
     std::uint32_t instanceCount = 0;
 };

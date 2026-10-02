@@ -560,6 +560,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/VfxShowcase2DDemo.cpp
         src/spark/demo/GameFlow2DProductPathDemo.cpp
         src/spark/demo/FoliageWindDemo.cpp
+        src/spark/demo/GrassFieldTerrainDemo.cpp
         src/spark/demo/CharacterCameraDemo.cpp
         src/spark/demo/BroadPhase2DDemo.cpp
         src/spark/demo/Platformer2DDemo.cpp
@@ -739,8 +740,20 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/foliage/GrassBladeMesh.cpp
         src/spark/scene/foliage/GrassFoliageAlbedoTexture.cpp
         src/spark/scene/foliage/FoliageSceneCollector.cpp
+        src/spark/scene/foliage/GrassChunkCoordinate.cpp
+        src/spark/scene/foliage/GrassFieldBounds.cpp
+        src/spark/scene/foliage/GrassTerrainSurfaceProbe.cpp
+        src/spark/scene/foliage/GrassChunkNeighborhood.cpp
+        src/spark/scene/foliage/GrassChunkScatterBuilder.cpp
+        src/spark/scene/foliage/GrassChunkScatterSettings.cpp
+        src/spark/scene/foliage/GrassFieldChunkCache.cpp
+        src/spark/scene/foliage/GrassFieldChunkDistanceSort.cpp
+        src/spark/scene/foliage/GrassFieldStreamingPolicy.cpp
+        src/spark/scene/foliage/GrassFieldInstanceDistanceSort.cpp
+        src/spark/scene/foliage/GrassInstanceTintGenerator.cpp
         src/spark/ecs/components/foliage/WindEnvironmentComponent.cpp
         src/spark/ecs/components/foliage/FoliageInstancedMeshComponent.cpp
+        src/spark/ecs/components/foliage/GrassFieldComponent.cpp
         src/spark/scene/assets/GameWorldAssetCache.cpp
         src/spark/scene/query/SpatialMath.cpp
         src/spark/scene/submit/SceneSpatialCull.cpp

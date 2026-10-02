@@ -43,16 +43,19 @@ public:
     [[nodiscard]] VkPipelineLayout GetPipelineLayout() const noexcept { return pipelineLayout; }
 
 private:
+    /** Matches <c>foliage_instance.glsl</c> <c>FoliageBatchPush</c> (std430: <c>vec4</c> at offset 32). */
     struct FoliageBatchPushConstants {
         std::uint32_t instanceBase = 0;
         std::int32_t textureLayer = -1;
         float alphaCutoff = 0.35F;
         float bladeHeight = 0.72F;
         float windBendScale = 0.55F;
-        float padding0 = 0.0F;
-        float padding1 = 0.0F;
-        float albedoTint[4]{1.0F, 1.0F, 1.0F, 1.0F};
+        float fadeStartDistance = 0.0F;
+        float fadeEndDistance = 0.0F;
+        alignas(16) float albedoTint[4]{1.0F, 1.0F, 1.0F, 1.0F};
     };
+
+    static_assert(sizeof(FoliageBatchPushConstants) == 48U);
 
     [[nodiscard]] bool UploadInstances(std::uint32_t frameIndex, const SceneRenderParams& scene) const;
 

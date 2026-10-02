@@ -60,6 +60,11 @@ void SceneRenderParams::Sanitize() noexcept {
         worldViewportScissorW = std::max(worldViewportScissorW, 0.0F);
         worldViewportScissorH = std::max(worldViewportScissorH, 0.0F);
     }
+
+    if (maxGrassInstancesPerFrame == 0U) {
+        maxGrassInstancesPerFrame = DefaultMaxGrassInstancesPerFrame;
+    }
+    maxGrassInstancesPerFrame = std::min(maxGrassInstancesPerFrame, MaxFoliageInstances);
 }
 
 }  // namespace Spark

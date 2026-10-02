@@ -16,7 +16,7 @@
 
 namespace Spark {
 
-class SceneRenderParams;
+struct SceneRenderParams;
 
 /** Records orthographic 2D composite resubmits into <c>RenderTexture</c> targets (minimap, etc.). */
 class VulkanScene2DCompositeCapture final {

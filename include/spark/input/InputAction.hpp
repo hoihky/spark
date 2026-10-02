@@ -4,12 +4,12 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/input/InputActionSample.hpp"
 #include "spark/input/InputActionTypes.hpp"
+#include "spark/input/IInputBinding.hpp"
 #include "spark/memory/UniquePtr.hpp"
 
 namespace Spark {
 
 class IInput;
-class IInputBinding;
 
 /** Named semantic action aggregating one or more <c>IInputBinding</c> instances (Composite). */
 class InputAction final {

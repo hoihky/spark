@@ -41,7 +41,7 @@ public:
     [[nodiscard]] virtual bool WantsCaptureMouse() const noexcept = 0;
     [[nodiscard]] virtual bool WantsCaptureKeyboard() const noexcept = 0;
 
-    virtual void OnEnginePreRender(Window& window, IInput& input, float deltaTimeSeconds) {}
+    virtual void OnEnginePreRender(Window& /*window*/, IInput& /*input*/, float /*deltaTimeSeconds*/) {}
     virtual void OnEnginePostRender() {}
 };
 

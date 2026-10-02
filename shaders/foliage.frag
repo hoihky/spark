@@ -15,6 +15,10 @@ layout(set = 0, binding = 1) uniform sampler2DArray sceneTextures;
 
 layout(location = 0) out vec4 outColor;
 
+float sparkFoliageInterleavedGradientNoise(vec2 screenPx) {
+    return fract(52.9829189 * fract(dot(screenPx, vec2(0.06711056, 0.00583715))));
+}
+
 void main() {
     vec3 albedo = vTint.rgb;
     float alpha = 1.0;
@@ -31,6 +35,18 @@ void main() {
     float baseDarken = mix(0.5, 1.05, vHeight01);
     albedo *= baseDarken;
 
+    float viewDist = length(vWorldPos.xz - ubo.cameraPos.xz);
+    float fadeStart = foliageBatch.fadeStartDistance;
+    float fadeEnd = foliageBatch.fadeEndDistance;
+    if (fadeEnd > fadeStart + 0.25) {
+        float viewFade = 1.0 - smoothstep(fadeStart, fadeEnd, viewDist);
+        float dither = sparkFoliageInterleavedGradientNoise(gl_FragCoord.xy);
+        if (viewFade < dither) {
+            discard;
+        }
+        alpha *= viewFade;
+    }
+
     if (alpha < foliageBatch.alphaCutoff) {
         discard;
     }
@@ -38,12 +54,13 @@ void main() {
     vec3 n = normalize(vNormal);
     vec3 lightDir = normalize(-ubo.lightDir.xyz);
     float ndl = abs(dot(n, lightDir));
-    float wrap = max(dot(n, lightDir), 0.0) * 0.55 + 0.4;
+    float wrap = max(dot(n, lightDir), 0.0) * 0.58 + 0.42;
+    float backScatter = max(dot(n, -lightDir), 0.0) * 0.14;
     vec3 viewDir = normalize(ubo.cameraPos.xyz - vWorldPos);
-    float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 2.2) * 0.18;
+    float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 2.2) * 0.2;
 
-    vec3 sun = ubo.lightColor.rgb * ubo.lightColor.w * (ndl * 0.75 + wrap * 0.3);
+    vec3 sun = ubo.lightColor.rgb * ubo.lightColor.w * (ndl * 0.72 + wrap * 0.32 + backScatter);
     vec3 ambient = ubo.ambientColor.rgb * 1.25;
-    vec3 color = albedo * (ambient + sun) + rim * vec3(0.45, 0.65, 0.35);
+    vec3 color = albedo * (ambient + sun) + rim * vec3(0.48, 0.68, 0.38);
     outColor = vec4(color, 1.0);
 }

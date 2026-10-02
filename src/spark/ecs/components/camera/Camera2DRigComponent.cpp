@@ -101,7 +101,7 @@ void Camera2DRigComponent::Tick(
         Vector2 boundsMin = rig.boundsMin;
         Vector2 boundsMax = rig.boundsMax;
         if (world != nullptr && followTarget != nullptr) {
-            TryResolveCameraBounds2DForTarget(*world, *followTarget, boundsMin, boundsMax);
+            (void)TryResolveCameraBounds2DForTarget(*world, *followTarget, boundsMin, boundsMax);
         }
         ClampCenterToBounds(
                 current,

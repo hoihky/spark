@@ -493,6 +493,12 @@ struct SceneRenderParams {
     /** GPU-instanced foliage batches (F1); rendered after opaque meshes. */
     static constexpr std::uint32_t MaxFoliageInstances = 16384;
     static constexpr std::uint32_t MaxFoliageBatches = 32;
+    /**
+     * Grass field merged instance cap per frame (F2-08, open-world A2 alignment).
+     * Clamped in <c>Sanitize()</c>; grass fields also respect per-field <c>maxVisibleInstances</c>.
+     */
+    static constexpr std::uint32_t DefaultMaxGrassInstancesPerFrame = 2400U;
+    std::uint32_t maxGrassInstancesPerFrame = DefaultMaxGrassInstancesPerFrame;
     Array<SceneFoliageInstancedBatch> foliageBatches;
     Array<FoliageInstanceRecord> foliageInstances;
 

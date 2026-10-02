@@ -12,7 +12,7 @@
 namespace Spark {
 
 class Texture2D;
-struct TilemapGridFrame;
+class TilemapGridFrame;
 
 /** Offscreen 2D views your game composites (minimap, fog mask, full-scene outline). */
 enum class Scene2DCompositeFeature : std::uint8_t {

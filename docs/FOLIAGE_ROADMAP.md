@@ -40,12 +40,14 @@ Copy the **Issue body** block under each task when filing issues (see [§9](#9-b
 | `BillboardComponent` | Done — camera-facing quads (impostor precursor) |
 | **Global wind / gust system** | **Done (F0 v1)** — `WindSubsystem`, `WindEnvironmentComponent`, scene UBO (`windDirectionSpeed` / `windGustParams`), `shaders/wind.glsl` |
 | **3D mesh GPU instancing (foliage)** | **Done (F1)** — `VulkanFoliageInstancedPass`, SSBO binding 15, `FoliageSceneCollector` |
-| **Grass meadow (prototype)** | **Partial** — `FoliageInstancedMeshComponent` grid + `GrassBladeMesh`; terrain chunks / slope scatter (F2) not started |
+| **Grass meadow (prototype)** | **Done** — `FoliageWindDemo` flat grid (`FoliageInstancedMeshComponent`) |
+| **Grass field on terrain (F2)** | **Mostly done** — `GrassFieldComponent`, chunk streaming, `GrassFieldTerrainDemo` (#28, **H**) |
 | **Tree instancing + LOD** | **Not started** (F3–F4) |
 | **Foliage wind vertex shader** | **Done** — `sparkWindBendLocalPosition` in `foliage.vert` |
 | **Mesh LOD metadata in submit** | **Not started** — gap in `SCENE_AND_RENDERING_GAPS.md` |
 | **Impostor / baked tree cards** | **Not started** |
 | **Foliage wind demo** | **Done** — `FoliageWindDemo` (launcher #27, hotkey **G**) |
+| **Grass field terrain demo** | **Done** — `GrassFieldTerrainDemo` (launcher #28, hotkey **H**) |
 
 ---
 
@@ -144,16 +146,16 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 
 | ID | Task | P | Status |
 |----|------|---|--------|
-| FOLIAGE-F2-01 | **`GrassFieldComponent`** — bounds, blade mesh ref, density, max distance, terrain object link | P0 | [ ] |
-| FOLIAGE-F2-02 | **Chunk grid** (e.g. 32 m) — activate 3×3 or 5×5 neighborhood around camera | P0 | [ ] |
-| FOLIAGE-F2-03 | **Scatter algorithm** — jitter XZ in chunk; sample terrain height + normal; reject slope > threshold | P0 | [ ] |
+| FOLIAGE-F2-01 | **`GrassFieldComponent`** — bounds, blade mesh ref, density, max distance, terrain object link | P0 | [x] |
+| FOLIAGE-F2-02 | **Chunk grid** (e.g. 32 m) — activate 3×3 or 5×5 neighborhood around camera | P0 | [x] — 3×3 default, ring configurable |
+| FOLIAGE-F2-03 | **Scatter algorithm** — jitter XZ in chunk; sample terrain height + normal; reject slope > threshold | P0 | [x] — `GrassChunkScatterBuilder` |
 | FOLIAGE-F2-04 | **Density / exclusion mask** — optional R8 texture (paint or procedural); zero = no blades | P1 | [ ] |
 | FOLIAGE-F2-05 | **Blade mesh** — crossed quads or 3-triangle strip; single albedo + optional alpha | P0 | [x] — `GrassBladeMesh`, `GrassFoliageAlbedoTexture` |
 | FOLIAGE-F2-06 | **Vertex wind** — bend tip along wind; stiffness by height; per-instance phase offset | P0 | [x] — `wind.glsl` + per-instance `windPhase` |
-| FOLIAGE-F2-07 | **Distance fade** — dither or alpha at far radius; hard cull beyond `maxDistance` | P0 | [ ] |
-| FOLIAGE-F2-08 | **`maxGrassInstancesPerFrame` budget** — drop farthest chunks first (A2 alignment) | P1 | [ ] |
-| FOLIAGE-F2-09 | **Fake subsurface** — wrap diffuse / back-light tint for sunset readability | P1 | [ ] |
-| FOLIAGE-F2-10 | **Demo** — extend `TerrainDemo` or `FoliageMeadowDemo` with grass + wind hotkeys | P1 | [x] — `FoliageWindDemo` (flat meadow; terrain hookup deferred) |
+| FOLIAGE-F2-07 | **Distance fade** — dither or alpha at far radius; hard cull beyond `maxDistance` | P0 | [x] — IG dither in `foliage.frag`, push fade range per batch |
+| FOLIAGE-F2-08 | **`maxGrassInstancesPerFrame` budget** — drop farthest chunks first (A2 alignment) | P1 | [x] — `SceneRenderParams::maxGrassInstancesPerFrame` + per-field cap |
+| FOLIAGE-F2-09 | **Fake subsurface** — wrap diffuse / back-light tint for sunset readability | P1 | [x] — wrap + back-scatter + rim in `foliage.frag` (v1) |
+| FOLIAGE-F2-10 | **Demo** — extend `TerrainDemo` or `FoliageMeadowDemo` with grass + wind hotkeys | P1 | [x] — `FoliageWindDemo` (**G**); terrain: `GrassFieldTerrainDemo` (**H**) |
 
 ---
 
@@ -397,4 +399,6 @@ done
 
 ---
 
-*Last updated: 2026-09-30 — F0 and F1 complete; F2 grass prototype items (blade mesh, vertex wind, demo) landed in `FoliageWindDemo`. Revise task status via PR checkbox edits or linked GitHub issues.*
+*Last updated: 2026-10-03 — F0/F1 complete; F2 grass fields on terrain (`GrassFieldComponent`, `GrassFieldTerrainDemo`), distance fade, frame budget, perf-oriented streaming merge. Remaining F2: F2-04 density mask (P1).*
+
+**F2 demo baseline (playtest):** `DefaultMaxGrassInstancesPerFrame` = **2400**, view **38 m**, density **5/m²**, chunk cache **720** — see `GrassFieldTerrainDemo.cpp`.

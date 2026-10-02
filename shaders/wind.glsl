@@ -38,8 +38,8 @@ vec3 sparkWindBendLocalPosition(vec3 localPos, float bladeHeight, float bendScal
     vec3 windDir = sparkWindDirectionXZ();
     vec3 side = normalize(vec3(-windDir.z, 0.0, windDir.x));
 
-    float leanMeters = bendScale * min(strength * 0.11, 0.42) * height01 * height01;
-    float swayMeters = sin(ubo.windGustParams.w * 2.6 + instancePhase) * bendScale * 0.06 * height01;
+    float leanMeters = bendScale * min(strength * 0.14, 0.55) * height01 * height01;
+    float swayMeters = sin(ubo.windGustParams.w * 3.1 + instancePhase) * bendScale * 0.11 * height01;
 
     localPos.x += windDir.x * leanMeters + side.x * swayMeters;
     localPos.z += windDir.z * leanMeters + side.z * swayMeters;
