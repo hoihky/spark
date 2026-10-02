@@ -34,6 +34,27 @@ bool GrassChunkScatterBuilder::TryPlaceBlade(
         return false;
     }
 
+    const float placementRadius = settings.GetPlacementRadiusMeters();
+    if (placementRadius > 0.0F) {
+        const float localX = worldX - fieldOriginWorld.x;
+        const float localZ = worldZ - fieldOriginWorld.z;
+        const float distSq = localX * localX + localZ * localZ;
+        const float radiusSq = placementRadius * placementRadius;
+        if (distSq > radiusSq) {
+            return false;
+        }
+        const float dist = std::sqrt(distSq);
+        const float innerRadius = placementRadius * 0.76F;
+        if (dist > innerRadius) {
+            const float edgeT = (dist - innerRadius) / (placementRadius - innerRadius);
+            const float keepChance = 1.0F - edgeT * edgeT;
+            const float edgeRoll = Hash01(chunkSeed + placementSeed * 29U + 307U);
+            if (edgeRoll > keepChance) {
+                return false;
+            }
+        }
+    }
+
     GrassTerrainSurfaceHit hit{};
     if (!terrainProbe.ProbeWorld(worldX, worldZ, hit)) {
         return false;

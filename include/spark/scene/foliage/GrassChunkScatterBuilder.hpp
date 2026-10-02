@@ -60,6 +60,15 @@ public:
         return maxCachedInstancesPerChunk;
     }
 
+    /**
+     * When &gt; 0, blades only spawn within this XZ radius from the field origin (soft edge toward the rim).
+     * Use with tight <c>GrassFieldBounds</c> to keep meadows localized (F2-04 precursor).
+     */
+    void SetPlacementRadiusMeters(float meters) noexcept {
+        placementRadiusMeters = meters > 0.0F ? meters : 0.0F;
+    }
+    [[nodiscard]] float GetPlacementRadiusMeters() const noexcept { return placementRadiusMeters; }
+
 private:
     float densityPerSquareMeter = 8.0F;
     int samplesPerCell = 1;
@@ -69,6 +78,7 @@ private:
     float maxViewDistanceMeters = 72.0F;
     float distanceFadeOuterFraction = 0.28F;
     float chunkSizeMeters = 32.0F;
+    float placementRadiusMeters = 0.0F;
     Vector3 albedoTint{0.52F, 0.92F, 0.38F};
 };
 

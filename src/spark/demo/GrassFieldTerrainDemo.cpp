@@ -23,11 +23,17 @@ constexpr float kTerrainHalfExtent = 96.0F;
 constexpr float kGrassPatchCenterX = 8.0F;
 constexpr float kGrassPatchCenterZ = 12.0F;
 
+/** Local meadow patch (not full terrain). */
+constexpr float kGrassPatchHalfExtentX = 22.0F;
+constexpr float kGrassPatchHalfExtentZ = 20.0F;
+constexpr float kGrassPlacementRadiusMeters = 18.0F;
+
 /** Locked F2 playtest baseline (coverage vs FPS). */
-constexpr float kGrassMaxViewMeters = 38.0F;
+constexpr float kGrassMaxViewMeters = 24.0F;
 constexpr std::uint32_t kGrassFrameInstanceBudget = SceneRenderParams::DefaultMaxGrassInstancesPerFrame;
-constexpr float kGrassDensityPerSqM = 5.0F;
-constexpr std::uint32_t kGrassMaxCachedPerChunk = 720U;
+constexpr float kGrassDensityPerSqM = 9.0F;
+constexpr std::uint32_t kGrassMaxCachedPerChunk = 880U;
+constexpr float kGrassChunkSizeMeters = 16.0F;
 
 void SetupDemoCameraNearGrass(FlyCamera& flyCamera, const TerrainComponent& terrain, const GameObject& terrainObject) {
     flyCamera.moveSpeed = 10.0F;
@@ -104,7 +110,9 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
 
     GameObject* grassRoot = world.CreateGameObject();
     grassRoot->GetName() = Utf8String("TerrainGrassField");
-    grassRoot->AddComponent<TransformComponent>();
+    if (TransformComponent* grassTr = grassRoot->AddComponent<TransformComponent>()) {
+        grassTr->SetTranslation({kGrassPatchCenterX, 0.0F, kGrassPatchCenterZ});
+    }
     grassFieldComponent = grassRoot->AddComponent<GrassFieldComponent>();
     GrassFieldComponent* grassField = grassFieldComponent;
     grassField->SetTerrainObject(terrainObject);
@@ -114,9 +122,10 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     grassField->SetWindBendScale(0.44F);
     grassField->SetAlphaCutoff(0.36F);
     grassField->SetNeighborhoodRingRadius(1);
-    grassField->GetBounds().SetHalfExtentsMeters(kTerrainHalfExtent - 2.0F, kTerrainHalfExtent - 2.0F);
+    grassField->GetBounds().SetHalfExtentsMeters(kGrassPatchHalfExtentX, kGrassPatchHalfExtentZ);
     GrassChunkScatterSettings& scatter = grassField->GetScatterSettings();
-    scatter.SetChunkSizeMeters(32.0F);
+    scatter.SetChunkSizeMeters(kGrassChunkSizeMeters);
+    scatter.SetPlacementRadiusMeters(kGrassPlacementRadiusMeters);
     scatter.SetDensityPerSquareMeter(kGrassDensityPerSqM);
     scatter.SetSamplesPerCell(1);
     scatter.SetMaxViewDistanceMeters(kGrassMaxViewMeters);
@@ -134,8 +143,8 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     grassField->PrepareForRender(*grassRoot, camera.position, kGrassFrameInstanceBudget);
 
     helpHud.Mount(world, "Grass field terrain");
-    helpHud.SetControlHints("F1 mouse | WASD fly | +/- wind | 3×3 grass chunks");
-    helpHud.SetDetail("F2 chunked scatter on heightfield · slope cull");
+    helpHud.SetControlHints("F1 mouse | WASD fly | +/- wind | local grass meadow");
+    helpHud.SetDetail("Grass only in ~38 m patch near spawn · fly out to bare hills");
     context.GetInput().SetCursorCaptured(true);
 }
 
