@@ -4,6 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -29,20 +30,29 @@ public:
     /** Destroys owners that collected during the last trigger step (safe after <c>Simulate2D</c>). */
     static void ProcessDeferredDestroys(GameWorld& world) noexcept;
 
+    SPARK_SCRIPT_BIND(set_item_id)
     void SetItemId(const char* id) noexcept;
+    SPARK_SCRIPT_BIND(get_item_id)
     [[nodiscard]] const char* GetItemId() const noexcept { return itemId.CStr(); }
 
+    SPARK_SCRIPT_BIND(set_quantity)
     void SetQuantity(const int value) noexcept { quantity = (value > 0) ? value : 1; }
+    SPARK_SCRIPT_BIND(get_quantity)
     [[nodiscard]] int GetQuantity() const noexcept { return quantity; }
 
+    SPARK_SCRIPT_BIND(set_auto_collect_on_trigger_enter)
     void SetAutoCollectOnTriggerEnter(const bool value) noexcept { autoCollectOnTriggerEnter = value; }
+    SPARK_SCRIPT_BIND(get_auto_collect_on_trigger_enter)
     [[nodiscard]] bool GetAutoCollectOnTriggerEnter() const noexcept { return autoCollectOnTriggerEnter; }
 
+    SPARK_SCRIPT_BIND(set_destroy_owner_on_collect)
     void SetDestroyOwnerOnCollect(const bool value) noexcept { destroyOwnerOnCollect = value; }
+    SPARK_SCRIPT_BIND(get_destroy_owner_on_collect)
     [[nodiscard]] bool GetDestroyOwnerOnCollect() const noexcept { return destroyOwnerOnCollect; }
 
     void SetOnCollected(CollectedCallback callback) { onCollected = MoveTemp(callback); }
 
+    SPARK_SCRIPT_BIND(is_collected)
     [[nodiscard]] bool IsCollected() const noexcept { return collected; }
 
     /** Pool / respawn: clears collected state without running callbacks. */
@@ -52,6 +62,7 @@ public:
     }
 
     /** Attempts collection once; returns true on first successful collect. */
+    SPARK_SCRIPT_BIND(is_try_collect)
     bool TryCollect(GameObject& collector) noexcept;
 
 private:

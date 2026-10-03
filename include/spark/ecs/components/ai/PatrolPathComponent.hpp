@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -16,10 +17,14 @@ public:
     [[nodiscard]] const Array<Vector3>& GetWaypoints() const noexcept { return waypoints; }
     [[nodiscard]] Array<Vector3>& GetWaypoints() noexcept { return waypoints; }
 
+    SPARK_SCRIPT_BIND(is_looping)
     [[nodiscard]] bool IsLooping() const noexcept { return loop; }
+    SPARK_SCRIPT_BIND(set_looping)
     void SetLooping(const bool l) noexcept { loop = l; }
 
+    SPARK_SCRIPT_BIND(get_wait_seconds_per_point)
     [[nodiscard]] float GetWaitSecondsPerPoint() const noexcept { return waitSeconds; }
+    SPARK_SCRIPT_BIND(set_wait_seconds_per_point)
     void SetWaitSecondsPerPoint(const float s) noexcept { waitSeconds = s; }
 
 private:

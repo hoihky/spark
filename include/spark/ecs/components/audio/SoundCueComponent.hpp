@@ -1,10 +1,12 @@
 #pragma once
 
+#include "spark/audio/ProceduralSoundPresets.hpp"
 #include "spark/audio/SoundClip.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -34,6 +36,19 @@ public:
     /** Queues a spatial cue using the owner's world position at flush time. */
     void QueueAtWorld(
             const SharedPtr<SoundClip>& clip,
+            float volume,
+            const Vector3& worldPosition,
+            float spatialBlend = 1.0F,
+            float minDistance = 1.0F,
+            float maxDistance = 48.0F);
+
+    /** Queues a built-in procedural clip (see <c>ProceduralSoundPreset</c>). */
+    SPARK_SCRIPT_BIND(queue_preset)
+    void QueuePreset(ProceduralSoundPreset preset, float volume = 1.0F);
+
+    SPARK_SCRIPT_BIND(queue_at_world_preset)
+    void QueueAtWorldPreset(
+            ProceduralSoundPreset preset,
             float volume,
             const Vector3& worldPosition,
             float spatialBlend = 1.0F,

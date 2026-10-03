@@ -4,6 +4,7 @@
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -20,13 +21,19 @@ public:
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
     [[nodiscard]] const SharedPtr<Texture2D>& GetTexture() const noexcept { return texture; }
+    SPARK_SCRIPT_BIND(get_size)
     [[nodiscard]] const Vector3& GetSize() const noexcept { return size; }
+    SPARK_SCRIPT_BIND(get_opacity)
     [[nodiscard]] float GetOpacity() const noexcept { return opacity; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
     void SetTexture(const SharedPtr<Texture2D>& tex) noexcept { texture = tex; }
+    SPARK_SCRIPT_BIND(set_size)
     void SetSize(const Vector3& s) noexcept { size = s; }
+    SPARK_SCRIPT_BIND(set_opacity)
     void SetOpacity(float o) noexcept { opacity = o; }
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool e) noexcept { enabled = e; }
 
 private:

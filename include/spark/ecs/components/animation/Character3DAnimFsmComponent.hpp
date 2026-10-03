@@ -8,6 +8,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -36,11 +37,13 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_locomotion_clips)
     void SetLocomotionClips(std::uint32_t idleClipIndex, std::uint32_t walkClipIndex, std::uint32_t runClipIndex) noexcept;
     /**
      * Resolves locomotion and combat clips from <c>skeleton</c> clip names and applies them on this FSM.
      * <c>walkClipFallback</c> is used when no walk-named clip exists.
      */
+    SPARK_SCRIPT_BIND(configure_locomotion_from_skeleton)
     void ConfigureLocomotionFromSkeleton(const Skeleton& skeleton, std::uint32_t walkClipFallback = 0) noexcept;
 
     /** Pass index >= clip count to disable that overlay. Non-looping clips work best for combat. */
@@ -50,62 +53,97 @@ public:
             std::uint32_t staggerClipIndex = kInvalidAnimClipIndex,
             std::uint32_t deathClipIndex = kInvalidAnimClipIndex) noexcept;
     /** Pass index >= clip count to disable attack overlay. */
+    SPARK_SCRIPT_BIND(set_attack_clip)
     void SetAttackClip(std::uint32_t attackClipIndex) noexcept;
+    SPARK_SCRIPT_BIND(set_hurt_clip)
     void SetHurtClip(std::uint32_t hurtClipIndex) noexcept;
+    SPARK_SCRIPT_BIND(set_stagger_clip)
     void SetStaggerClip(std::uint32_t staggerClipIndex) noexcept;
+    SPARK_SCRIPT_BIND(set_death_clip)
     void SetDeathClip(std::uint32_t deathClipIndex) noexcept;
 
+    SPARK_SCRIPT_BIND(set_walk_speed_threshold)
     void SetWalkSpeedThreshold(float metersPerSecond) noexcept;
+    SPARK_SCRIPT_BIND(set_run_speed_threshold)
     void SetRunSpeedThreshold(float metersPerSecond) noexcept;
+    SPARK_SCRIPT_BIND(set_crossfade_duration)
     void SetCrossfadeDuration(float seconds) noexcept;
 
     /** When true (default), walk↔run uses a 1D speed blend tree instead of discrete clip switches. */
+    SPARK_SCRIPT_BIND(set_locomotion_blend_enabled)
     void SetLocomotionBlendEnabled(bool enabled) noexcept { locomotionBlendEnabled = enabled; }
+    SPARK_SCRIPT_BIND(is_locomotion_blend_enabled)
     [[nodiscard]] bool IsLocomotionBlendEnabled() const noexcept { return locomotionBlendEnabled; }
 
     /** When not <c>SIZE_MAX</c>, reads/writes <c>AiAgentComponent::GetBlackboard()</c> int at this slot. */
+    SPARK_SCRIPT_BIND(set_combat_blackboard_int_slot)
     void SetCombatBlackboardIntSlot(std::size_t slotOrMax) noexcept { combatBbSlot = slotOrMax; }
+    SPARK_SCRIPT_BIND(get_combat_blackboard_int_slot)
     [[nodiscard]] std::size_t GetCombatBlackboardIntSlot() const noexcept { return combatBbSlot; }
 
+    SPARK_SCRIPT_BIND(request_hurt)
     void RequestHurt() noexcept;
+    SPARK_SCRIPT_BIND(request_attack)
     void RequestAttack() noexcept;
+    SPARK_SCRIPT_BIND(request_stagger)
     void RequestStagger() noexcept;
+    SPARK_SCRIPT_BIND(request_death)
     void RequestDeath() noexcept;
 
     /** When false, locomotion clips are not applied (manual <c>AnimatorComponent</c> control or combat overlay only). */
+    SPARK_SCRIPT_BIND(set_locomotion_driving_enabled)
     void SetLocomotionDrivingEnabled(bool enabled) noexcept { locomotionDrivingEnabled = enabled; }
+    SPARK_SCRIPT_BIND(is_locomotion_driving_enabled)
     [[nodiscard]] bool IsLocomotionDrivingEnabled() const noexcept { return locomotionDrivingEnabled; }
 
     /** Pins a clip until <c>ClearManualClip</c> or locomotion is re-enabled via input in demos. */
+    SPARK_SCRIPT_BIND(set_manual_clip)
     void SetManualClip(std::uint32_t clipIndex, AnimLoopMode loopMode) noexcept;
+    SPARK_SCRIPT_BIND(clear_manual_clip)
     void ClearManualClip() noexcept;
+    SPARK_SCRIPT_BIND(is_manual_clip_active)
     [[nodiscard]] bool IsManualClipActive() const noexcept { return manualClipActive; }
 
     /**
      * Optional per-frame gait from gameplay input (e.g. WASD + Shift). When not set before <c>OnUpdate</c>,
      * locomotion falls back to horizontal speed thresholds.
      */
+    SPARK_SCRIPT_BIND(set_locomotion_input)
     void SetLocomotionInput(bool moving, bool sprint) noexcept;
 
     /**
      * Analog locomotion speed in meters/second (0 = idle). Feeds the 1D blend tree when
      * <c>SetLocomotionBlendEnabled(true)</c>.
      */
+    SPARK_SCRIPT_BIND(set_locomotion_analog_speed)
     void SetLocomotionAnalogSpeed(float speedMetersPerSecond) noexcept;
 
+    SPARK_SCRIPT_BIND(get_idle_clip_index)
     [[nodiscard]] std::uint32_t GetIdleClipIndex() const noexcept { return idleClip; }
+    SPARK_SCRIPT_BIND(get_walk_clip_index)
     [[nodiscard]] std::uint32_t GetWalkClipIndex() const noexcept { return walkClip; }
+    SPARK_SCRIPT_BIND(get_run_clip_index)
     [[nodiscard]] std::uint32_t GetRunClipIndex() const noexcept { return runClip; }
+    SPARK_SCRIPT_BIND(get_attack_clip_index)
     [[nodiscard]] std::uint32_t GetAttackClipIndex() const noexcept { return attackClip; }
+    SPARK_SCRIPT_BIND(get_hurt_clip_index)
     [[nodiscard]] std::uint32_t GetHurtClipIndex() const noexcept { return hurtClip; }
+    SPARK_SCRIPT_BIND(get_stagger_clip_index)
     [[nodiscard]] std::uint32_t GetStaggerClipIndex() const noexcept { return staggerClip; }
+    SPARK_SCRIPT_BIND(get_death_clip_index)
     [[nodiscard]] std::uint32_t GetDeathClipIndex() const noexcept { return deathClip; }
+    SPARK_SCRIPT_BIND(get_walk_speed_threshold)
     [[nodiscard]] float GetWalkSpeedThreshold() const noexcept { return walkThresh; }
+    SPARK_SCRIPT_BIND(get_run_speed_threshold)
     [[nodiscard]] float GetRunSpeedThreshold() const noexcept { return runThresh; }
+    SPARK_SCRIPT_BIND(get_crossfade_duration)
     [[nodiscard]] float GetCrossfadeDuration() const noexcept { return crossfadeDuration; }
+    SPARK_SCRIPT_BIND(get_manual_clip_index)
     [[nodiscard]] std::uint32_t GetManualClipIndex() const noexcept { return manualClip; }
+    SPARK_SCRIPT_BIND(get_manual_clip_loop_mode)
     [[nodiscard]] AnimLoopMode GetManualClipLoopMode() const noexcept { return manualLoop; }
     /** True after a death clip has finished playing (character stays in death pose). */
+    SPARK_SCRIPT_BIND(is_dead)
     [[nodiscard]] bool IsDead() const noexcept { return deathLocked; }
 
 private:

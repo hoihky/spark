@@ -104,6 +104,16 @@ void GrassFieldComponent::PrepareForRender(
     RefreshActiveChunks(owner, viewWorldPosition, StreamingUpdatePass::ScatterAndMerge);
 }
 
+void GrassFieldComponent::PrepareForRenderInterop(
+        GameObject* owner,
+        const Vector3& viewWorldPosition,
+        const std::uint32_t sceneMaxGrassInstancesPerFrame) noexcept {
+    if (owner == nullptr) {
+        return;
+    }
+    PrepareForRender(*owner, viewWorldPosition, sceneMaxGrassInstancesPerFrame);
+}
+
 void GrassFieldComponent::OnUpdate(
         const FrameTiming& timing,
         GameObject& owner,

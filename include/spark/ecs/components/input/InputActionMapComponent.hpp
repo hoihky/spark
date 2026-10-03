@@ -2,6 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 #include "spark/input/InputAction.hpp"
 #include "spark/input/InputActionTypes.hpp"
 #include "spark/memory/UniquePtr.hpp"
@@ -21,9 +22,13 @@ public:
     [[nodiscard]] const Array<UniquePtr<InputAction>>& GetActions() const noexcept { return actions; }
     Array<UniquePtr<InputAction>>& GetActions() noexcept { return actions; }
 
+    SPARK_SCRIPT_BIND(clear)
     void ClearActions() noexcept { actions.Clear(); }
 
+    SPARK_SCRIPT_BIND(bind_button)
     void BindButton(const char* actionName, int primaryKey, int secondaryKey = -1);
+
+    SPARK_SCRIPT_BIND(bind_axis1d)
     void BindAxis1D(
             const char* actionName,
             int negativeKey,

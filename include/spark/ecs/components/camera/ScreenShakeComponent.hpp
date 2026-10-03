@@ -2,6 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 #include "spark/math/Vector2.hpp"
 
 #include <cstdint>
@@ -34,14 +35,18 @@ public:
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
     /** Queue a directional shake burst. Amplitude is peak world-unit offset. */
-    void AddImpulse(Vector2 amplitude, float durationSeconds, float frequencyHz = 28.0F) noexcept;
+    SPARK_SCRIPT_BIND(add_impulse)
+    void AddImpulse(Vector2 amplitude, float durationSeconds, float frequencyHz) noexcept;
 
     /** Trauma-based shake (0..1); each call adds energy that decays over time. */
+    SPARK_SCRIPT_BIND(add_trauma)
     void AddTrauma(float amount) noexcept;
 
+    SPARK_SCRIPT_BIND(get_offset)
     [[nodiscard]] const Vector2& GetOffset() const noexcept { return currentOffset; }
     [[nodiscard]] float GetTrauma() const noexcept { return trauma; }
 
+    SPARK_SCRIPT_BIND(clear)
     void Clear() noexcept;
 
     /** Advances simulation and returns the offset to apply this frame. */

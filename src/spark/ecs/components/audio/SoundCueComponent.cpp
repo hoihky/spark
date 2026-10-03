@@ -15,6 +15,26 @@ void SoundCueComponent::Queue(const SharedPtr<SoundClip>& clip, const float volu
     pending.PushBack(MoveTemp(r));
 }
 
+void SoundCueComponent::QueuePreset(const ProceduralSoundPreset preset, const float volume) {
+    Queue(ProceduralSoundPresets::Get(preset), volume);
+}
+
+void SoundCueComponent::QueueAtWorldPreset(
+        const ProceduralSoundPreset preset,
+        const float volume,
+        const Vector3& worldPosition,
+        const float spatialBlend,
+        const float minDistance,
+        const float maxDistance) {
+    QueueAtWorld(
+            ProceduralSoundPresets::Get(preset),
+            volume,
+            worldPosition,
+            spatialBlend,
+            minDistance,
+            maxDistance);
+}
+
 void SoundCueComponent::QueueAtWorld(
         const SharedPtr<SoundClip>& clip,
         const float volume,

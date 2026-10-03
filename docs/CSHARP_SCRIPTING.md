@@ -31,7 +31,7 @@ flowchart LR
 |-------|------|
 | **SparkScriptHost** | Executable: loads `nethost` → `hostfxr` → game `.dll`, runs `Engine::Run()` |
 | **SparkInterop** | Shared library: stable C exports (`spark_*`) implemented with real C++ types |
-| **Spark.Bindings.Generator** | ClangSharp tool: parses `SparkInterop.h`, emits `Native.g.cs` + `CppMirrors.g.cs` |
+| **Spark.Bindings.Generator** | ClangSharp → `Native.g.cs`; **ComponentMirrorCodegen** → `Components/FromInterop/*.g.cs` |
 | **Spark.Scripting** | SDK: `ScriptHostEntry`, `GameBootstrap`, wires managed `Game` to native loop |
 | **HelloCsGame** | Sample game assembly |
 
@@ -45,7 +45,7 @@ flowchart LR
 | `Spark::IEngineContext` | `Spark.Bindings.IEngineContext` |
 | `Spark::IInput` | `Spark.Bindings.IInput` |
 | `Spark::Scene` / `GameWorld` / `GameObject` | Same names under `Spark.Bindings` |
-| `ComponentKind` | `SparkComponentKind` (from `SparkInterop.h`, ClangSharp) |
+| `ComponentKind` | `SparkComponentKind` — **must match** `GameComponent.hpp` via `SparkInteropComponentKinds.h` |
 
 Virtual C++ APIs are mirrored as C# classes that call `spark_*` exports. Plain structs/enums come from ClangSharp with sequential layout matching the headers.
 
@@ -62,7 +62,9 @@ dotnet tool restore
 ./tools/generate-csharp-bindings.sh
 ```
 
-This writes **`scripting/bindings/generated/Spark.Bindings/Native.g.cs`** (ClangSharp P/Invoke from `SparkInteropTypes.h` + `SparkInterop.h`). Companion files **`CppMirrors.g.cs`**, **`ComponentMirrors.g.cs`**, **`InteropPtr.cs`** are hand-maintained ergonomic wrappers.
+This writes **`scripting/bindings/generated/Spark.Bindings/Native.g.cs`** (ClangSharp P/Invoke from `SparkInteropTypes.h` + `SparkInterop.h`). See **[COMPONENT_SCRIPT_CODEGEN.md](COMPONENT_SCRIPT_CODEGEN.md)** for the full C++ → interop → C# pipeline.
+
+Companion files **`CppMirrors.g.cs`**, **`ComponentMirrors.g.cs`**, **`InteropPtr.cs`** are hand-maintained (legacy mirrors shrinking as `FromInterop` grows).
 
 CI (`.github/workflows/csharp-bindings.yml`) regenerates and fails if `Native.g.cs` drifts from the headers.
 
@@ -131,7 +133,25 @@ internal static void Init() => GameBootstrap.Factory = static () => new MyGame()
 | **2D physics queries** | `spark_physics_query_overlap_circle_world_2d`, `spark_physics_query_overlap_arc_world_statics_2d`, `spark_collision_filter_2d_*` |
 | **2D collider layers** | `spark_box_collider_2d_set_category_bits`, `spark_circle_collider_2d_set_is_trigger`, … |
 
-C# mirrors: `CppMirrors.g.cs` (engine types) + `ComponentMirrors.g.cs` (sample component wrappers). Regenerate P/Invoke with `./tools/generate-csharp-bindings.sh` after header changes.
+C# mirrors:
+- `CppMirrors.g.cs` — engine types (`Game`, `GameWorld`, …)
+- `Components/*.cs` — one file per component (preferred for new work)
+- `ComponentMirrors.g.cs` — legacy bundled mirrors (migrating to `Components/`)
+
+After changing `ComponentKind` in C++, update `SparkInteropComponentKinds.h`, then run `./tools/generate-csharp-bindings.sh` (syncs `SparkComponentKind.g.cs` and regenerates per-kind handles).
+
+**Component surface:**
+
+| Layer | Location |
+|-------|----------|
+| Enum parity | `SparkComponentKind.g.cs` ↔ `SparkInteropComponentKinds.h` |
+| One file per kind | `Components/Generated/*Component.cs` (handles) + hand-maintained `Components/*.cs` (full API) |
+| `GameObject` accessors | `GameObject.ComponentAccess.g.cs` (generated), plus `GameObject.Foliage.g.cs`, `GameObject.Gameplay.g.cs`, `CppMirrors.g.cs` |
+| Default add | `spark_object_get_or_add_default_component` + `GetOrAdd*` on `GameObject` (default-constructible kinds only) |
+
+**Foliage (F0–F2):** `WindEnvironmentComponent`, `FoliageInstancedMeshComponent`, `GrassFieldComponent` in `Components/`; `GameObject.AddGrassField()` in `GameObject.Foliage.g.cs`.
+
+**Gameplay / editor:** `ParallaxLayer`, `ScreenShake`, `InputActionMap`, `PlayerInput`, `GameState`, `GameFlowTrigger` — C++ `SparkInteropGameplay.cpp` + matching `Components/*.cs`.
 
 ### HelloCsGame (2D platformer sample)
 

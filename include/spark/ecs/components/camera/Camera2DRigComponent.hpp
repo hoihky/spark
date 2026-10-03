@@ -5,6 +5,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -36,28 +37,50 @@ public:
 
     Camera2DRigComponent() = default;
 
+    SPARK_SCRIPT_BIND(get_mode)
     [[nodiscard]] Camera2DRigMode GetMode() const noexcept { return mode; }
+    SPARK_SCRIPT_BIND(get_target)
     [[nodiscard]] GameObject* GetTarget() const noexcept { return target; }
+    SPARK_SCRIPT_BIND(get_target_offset)
     [[nodiscard]] const Vector3& GetTargetOffset() const noexcept { return targetOffset; }
+    SPARK_SCRIPT_BIND(get_follow_smooth_rate)
     [[nodiscard]] float GetFollowSmoothRate() const noexcept { return followSmoothRate; }
+    SPARK_SCRIPT_BIND(get_look_ahead_scale)
     [[nodiscard]] float GetLookAheadScale() const noexcept { return lookAheadScale; }
+    SPARK_SCRIPT_BIND(get_use_bounds)
     [[nodiscard]] bool GetUseBounds() const noexcept { return useBounds; }
+    SPARK_SCRIPT_BIND(get_bounds_min)
     [[nodiscard]] const Vector2& GetBoundsMin() const noexcept { return boundsMin; }
+    SPARK_SCRIPT_BIND(get_bounds_max)
     [[nodiscard]] const Vector2& GetBoundsMax() const noexcept { return boundsMax; }
+    SPARK_SCRIPT_BIND(get_use_zoom_limits)
     [[nodiscard]] bool GetUseZoomLimits() const noexcept { return useZoomLimits; }
+    SPARK_SCRIPT_BIND(get_zoom_min_half_extent_y)
     [[nodiscard]] float GetZoomMinHalfExtentY() const noexcept { return zoomMinHalfExtentY; }
+    SPARK_SCRIPT_BIND(get_zoom_max_half_extent_y)
     [[nodiscard]] float GetZoomMaxHalfExtentY() const noexcept { return zoomMaxHalfExtentY; }
 
+    SPARK_SCRIPT_BIND(set_mode)
     void SetMode(Camera2DRigMode m) noexcept { mode = m; }
+    SPARK_SCRIPT_BIND(set_target)
     void SetTarget(GameObject* o) noexcept { target = o; }
+    SPARK_SCRIPT_BIND(set_target_offset)
     void SetTargetOffset(const Vector3& o) noexcept { targetOffset = o; }
+    SPARK_SCRIPT_BIND(set_follow_smooth_rate)
     void SetFollowSmoothRate(float r) noexcept { followSmoothRate = r; }
+    SPARK_SCRIPT_BIND(set_look_ahead_scale)
     void SetLookAheadScale(float s) noexcept { lookAheadScale = s; }
+    SPARK_SCRIPT_BIND(set_use_bounds)
     void SetUseBounds(bool b) noexcept { useBounds = b; }
+    SPARK_SCRIPT_BIND(set_bounds_min)
     void SetBoundsMin(const Vector2& v) noexcept { boundsMin = v; }
+    SPARK_SCRIPT_BIND(set_bounds_max)
     void SetBoundsMax(const Vector2& v) noexcept { boundsMax = v; }
+    SPARK_SCRIPT_BIND(set_use_zoom_limits)
     void SetUseZoomLimits(bool b) noexcept { useZoomLimits = b; }
+    SPARK_SCRIPT_BIND(set_zoom_min_half_extent_y)
     void SetZoomMinHalfExtentY(float h) noexcept { zoomMinHalfExtentY = h; }
+    SPARK_SCRIPT_BIND(set_zoom_max_half_extent_y)
     void SetZoomMaxHalfExtentY(float h) noexcept { zoomMaxHalfExtentY = h; }
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;

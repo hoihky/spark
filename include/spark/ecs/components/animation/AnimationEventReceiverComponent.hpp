@@ -5,6 +5,7 @@
 #include "spark/ecs/GameComponent.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -41,9 +42,12 @@ public:
     [[nodiscard]] const Array<AnimationEventMarker>& GetMarkers() const noexcept { return markers; }
     Array<AnimationEventMarker>& GetMarkers() noexcept { return markers; }
 
+    SPARK_SCRIPT_BIND(clear_markers)
     void ClearMarkers() noexcept { markers.Clear(); firedMask.Clear(); }
+    SPARK_SCRIPT_BIND(add_marker)
     void AddMarker(std::uint32_t clipIndex, float normalizedTime, const char* eventName);
     /** Replaces markers with absolute-time events from <c>skeleton</c>, converted to normalized times. */
+    SPARK_SCRIPT_BIND(import_from_skeleton)
     void ImportFromSkeleton(const Skeleton& skeleton);
 
     /** Optional managed/script callback (invoked after sibling <c>OnSignal</c> dispatch). */

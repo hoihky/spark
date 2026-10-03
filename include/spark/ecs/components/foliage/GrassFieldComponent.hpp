@@ -14,6 +14,9 @@
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
+
+#include <cstdint>
 
 namespace Spark {
 
@@ -33,16 +36,22 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool value) noexcept { enabled = value; }
+
+    SPARK_SCRIPT_BIND(get_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
+    SPARK_SCRIPT_BIND(set_terrain_object)
     void SetTerrainObject(GameObject* object) noexcept { terrainProbe.BindTerrainObject(object); }
     [[nodiscard]] GameObject* GetTerrainObject() const noexcept { return terrainProbe.GetTerrainObject(); }
 
+    SPARK_SCRIPT_BIND(set_view_target_object)
     void SetViewTargetObject(GameObject* object) noexcept { viewTargetObject = object; }
     [[nodiscard]] GameObject* GetViewTargetObject() const noexcept { return viewTargetObject; }
 
     /** Preferred streaming anchor (fly camera world position); overrides view-target object when set. */
+    SPARK_SCRIPT_BIND(set_streaming_view_world)
     void SetStreamingViewWorld(const Vector3& worldPosition) noexcept;
 
     /** Rebuilds visible instances for the current render camera (call from demo <c>Render</c> before submit). */
@@ -50,6 +59,12 @@ public:
             GameObject& owner,
             const Vector3& viewWorldPosition,
             std::uint32_t sceneMaxGrassInstancesPerFrame = 0U);
+
+    SPARK_SCRIPT_BIND(prepare_for_render)
+    void PrepareForRenderInterop(
+            GameObject* owner,
+            const Vector3& viewWorldPosition,
+            std::uint32_t sceneMaxGrassInstancesPerFrame) noexcept;
 
     void SetBladeMesh(const SharedPtr<Mesh>& mesh) noexcept { bladeMesh = mesh; }
     [[nodiscard]] const SharedPtr<Mesh>& GetBladeMesh() const noexcept { return bladeMesh; }
@@ -63,14 +78,71 @@ public:
     GrassChunkScatterSettings& GetScatterSettings() noexcept { return scatterSettings; }
     [[nodiscard]] const GrassChunkScatterSettings& GetScatterSettings() const noexcept { return scatterSettings; }
 
+    SPARK_SCRIPT_BIND(set_neighborhood_ring_radius)
     void SetNeighborhoodRingRadius(int radiusChunks) noexcept { neighborhood.SetRingRadiusChunks(radiusChunks); }
+
+    SPARK_SCRIPT_BIND(get_neighborhood_ring_radius)
     [[nodiscard]] int GetNeighborhoodRingRadius() const noexcept { return neighborhood.GetRingRadiusChunks(); }
 
+    SPARK_SCRIPT_BIND(set_alpha_cutoff)
     void SetAlphaCutoff(float value) noexcept { alphaCutoff = value; }
+
+    SPARK_SCRIPT_BIND(get_alpha_cutoff)
     [[nodiscard]] float GetAlphaCutoff() const noexcept { return alphaCutoff; }
 
+    SPARK_SCRIPT_BIND(set_wind_bend_scale)
     void SetWindBendScale(float scale) noexcept { windBendScale = scale; }
+
+    SPARK_SCRIPT_BIND(get_wind_bend_scale)
     [[nodiscard]] float GetWindBendScale() const noexcept { return windBendScale; }
+
+    SPARK_SCRIPT_BIND(bounds_set_half_extents)
+    void BoundsSetHalfExtents(float halfX, float halfZ) noexcept { bounds.SetHalfExtentsMeters(halfX, halfZ); }
+
+    SPARK_SCRIPT_BIND(scatter_set_chunk_size_meters)
+    void ScatterSetChunkSizeMeters(float meters) noexcept { scatterSettings.SetChunkSizeMeters(meters); }
+
+    SPARK_SCRIPT_BIND(scatter_set_density_per_square_meter)
+    void ScatterSetDensityPerSquareMeter(float density) noexcept
+    {
+        scatterSettings.SetDensityPerSquareMeter(density);
+    }
+
+    SPARK_SCRIPT_BIND(scatter_set_max_view_distance_meters)
+    void ScatterSetMaxViewDistanceMeters(float meters) noexcept
+    {
+        scatterSettings.SetMaxViewDistanceMeters(meters);
+    }
+
+    SPARK_SCRIPT_BIND(scatter_set_max_visible_instances)
+    void ScatterSetMaxVisibleInstances(std::uint32_t count) noexcept
+    {
+        scatterSettings.SetMaxVisibleInstances(count);
+    }
+
+    SPARK_SCRIPT_BIND(scatter_set_max_cached_instances_per_chunk)
+    void ScatterSetMaxCachedInstancesPerChunk(std::uint32_t count) noexcept
+    {
+        scatterSettings.SetMaxCachedInstancesPerChunk(count);
+    }
+
+    SPARK_SCRIPT_BIND(scatter_set_max_slope_degrees)
+    void ScatterSetMaxSlopeDegrees(float degrees) noexcept { scatterSettings.SetMaxSlopeDegrees(degrees); }
+
+    SPARK_SCRIPT_BIND(scatter_set_placement_radius_meters)
+    void ScatterSetPlacementRadiusMeters(float meters) noexcept
+    {
+        scatterSettings.SetPlacementRadiusMeters(meters);
+    }
+
+    SPARK_SCRIPT_BIND(scatter_set_distance_fade_outer_fraction)
+    void ScatterSetDistanceFadeOuterFraction(float fraction) noexcept
+    {
+        scatterSettings.SetDistanceFadeOuterFraction(fraction);
+    }
+
+    SPARK_SCRIPT_BIND(scatter_set_albedo_tint)
+    void ScatterSetAlbedoTint(const Vector3& rgb) noexcept { scatterSettings.SetAlbedoTint(rgb); }
 
     void AppendInstanceRecords(Array<FoliageInstanceRecord>& outInstances) const;
 

@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/memory/SharedPtr.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -22,9 +23,15 @@ public:
     [[nodiscard]] const SharedPtr<SkinnedMesh>& GetMesh() const noexcept { return mesh; }
     void SetMesh(SharedPtr<SkinnedMesh> m);
 
+    SPARK_SCRIPT_BIND(is_mesh_loaded)
+    [[nodiscard]] bool IsMeshLoaded() const noexcept { return static_cast<bool>(mesh); }
+
     /** Rest/bind skeleton for palette when no <c>AnimatorComponent</c> is present. */
     [[nodiscard]] const SharedPtr<Skeleton>& GetSkeleton() const noexcept { return skeleton; }
     void SetSkeleton(SharedPtr<Skeleton> sk);
+
+    SPARK_SCRIPT_BIND(is_skeleton_loaded)
+    [[nodiscard]] bool IsSkeletonLoaded() const noexcept { return static_cast<bool>(skeleton); }
 
 private:
     SharedPtr<SkinnedMesh> mesh;

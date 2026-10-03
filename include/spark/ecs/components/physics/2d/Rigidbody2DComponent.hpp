@@ -4,6 +4,7 @@
 #include "spark/math/Vector2.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -30,18 +31,28 @@ public:
             float gravityScaleIn = 1.0F) noexcept
             : bodyType(bodyType), gravityScale(gravityScaleIn) {}
 
+    SPARK_SCRIPT_BIND(get_body_type)
     [[nodiscard]] RigidbodyBodyType2D GetBodyType() const noexcept { return bodyType; }
+    SPARK_SCRIPT_BIND(set_body_type)
     void SetBodyType(RigidbodyBodyType2D t) noexcept { bodyType = t; }
 
+    SPARK_SCRIPT_BIND(get_gravity_scale)
     [[nodiscard]] float GetGravityScale() const noexcept { return gravityScale; }
+    SPARK_SCRIPT_BIND(set_gravity_scale)
     void SetGravityScale(float g) noexcept { gravityScale = g; }
 
+    SPARK_SCRIPT_BIND(get_velocity)
     [[nodiscard]] const Vector2& GetVelocity() const noexcept { return velocity; }
+    SPARK_SCRIPT_BIND(set_velocity)
     void SetVelocity(const Vector2& v) noexcept { velocity = v; }
+    SPARK_SCRIPT_BIND(set_velocity_x)
     void SetVelocityX(float x) noexcept { velocity.x = x; }
+    SPARK_SCRIPT_BIND(set_velocity_y)
     void SetVelocityY(float y) noexcept { velocity.y = y; }
 
+    SPARK_SCRIPT_BIND(is_grounded)
     [[nodiscard]] bool IsGrounded() const noexcept { return grounded; }
+    SPARK_SCRIPT_BIND(set_grounded)
     void SetGrounded(bool g) noexcept { grounded = g; }
 
 private:

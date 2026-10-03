@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -33,16 +34,24 @@ public:
             Vector3 localOffset = Vector3::Zero) noexcept
             : radius(radiusIn), height(heightIn), direction(directionIn), offset(localOffset) {}
 
+    SPARK_SCRIPT_BIND(get_radius)
     [[nodiscard]] float GetRadius() const noexcept { return radius; }
+    SPARK_SCRIPT_BIND(set_radius)
     void SetRadius(const float r) noexcept { radius = std::max(0.01F, r); }
 
+    SPARK_SCRIPT_BIND(get_height)
     [[nodiscard]] float GetHeight() const noexcept { return height; }
+    SPARK_SCRIPT_BIND(set_height)
     void SetHeight(const float h) noexcept { height = std::max(0.01F, h); }
 
+    SPARK_SCRIPT_BIND(get_direction)
     [[nodiscard]] CapsuleDirection3D GetDirection() const noexcept { return direction; }
+    SPARK_SCRIPT_BIND(set_direction)
     void SetDirection(const CapsuleDirection3D axis) noexcept { direction = axis; }
 
+    SPARK_SCRIPT_BIND(get_offset)
     [[nodiscard]] const Vector3& GetOffset() const noexcept { return offset; }
+    SPARK_SCRIPT_BIND(set_offset)
     void SetOffset(const Vector3& o) noexcept { offset = o; }
 
 private:

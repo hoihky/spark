@@ -9,10 +9,18 @@ GENERATOR="${ROOT}/scripting/bindings/generator/Spark.Bindings.Generator.csproj"
 OUT="${ROOT}/scripting/bindings/generated/Spark.Bindings"
 
 cd "${ROOT}"
+python3 "${ROOT}/tools/inject_spark_script_bind.py"
+python3 "${ROOT}/tools/spark_script_bindgen.py"
+python3 "${ROOT}/tools/generate_interop_manifest.py"
 dotnet tool restore >/dev/null
 export PATH="${PATH}:${HOME}/.dotnet/tools"
 
 dotnet run --project "${GENERATOR}" -- "${CONFIG}"
+
+"${ROOT}/tools/sync-component-kind-bindings.sh"
+python3 "${ROOT}/tools/scan-cpp-component-api.py" || true
+python3 "${ROOT}/tools/generate_native_pinvoke_companion.py"
+python3 "${ROOT}/tools/generate-csharp-component-registry.py"
 
 if [[ ! -f "${OUT}/Native.g.cs" ]]; then
   echo "error: Native.g.cs was not generated" >&2

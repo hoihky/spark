@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -17,10 +18,14 @@ public:
 
     explicit MeshCollider3DComponent(Vector3 localOffset = Vector3::Zero) noexcept : offset(localOffset) {}
 
+    SPARK_SCRIPT_BIND(get_local_offset)
     [[nodiscard]] const Vector3& GetLocalOffset() const noexcept { return offset; }
+    SPARK_SCRIPT_BIND(set_local_offset)
     void SetLocalOffset(const Vector3& o) noexcept { offset = o; }
 
+    SPARK_SCRIPT_BIND(is_trigger)
     [[nodiscard]] bool IsTrigger() const noexcept { return isTrigger; }
+    SPARK_SCRIPT_BIND(set_is_trigger)
     void SetIsTrigger(const bool t) noexcept { isTrigger = t; }
 
 private:

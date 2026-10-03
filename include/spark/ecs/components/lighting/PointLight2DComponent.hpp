@@ -3,6 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -21,24 +22,41 @@ public:
     PointLight2DComponent() = default;
     PointLight2DComponent(Vector3 colorIn, float intensityIn, float rangeIn) noexcept;
 
+    SPARK_SCRIPT_BIND(get_local_offset)
     [[nodiscard]] const Vector2& GetLocalOffset() const noexcept { return localOffset; }
+    SPARK_SCRIPT_BIND(get_world_z)
     [[nodiscard]] float GetWorldZ() const noexcept { return worldZ; }
+    SPARK_SCRIPT_BIND(get_color)
     [[nodiscard]] const Vector3& GetColor() const noexcept { return color; }
+    SPARK_SCRIPT_BIND(get_intensity)
     [[nodiscard]] float GetIntensity() const noexcept { return intensity; }
+    SPARK_SCRIPT_BIND(get_effective_intensity)
     [[nodiscard]] float GetEffectiveIntensity() const noexcept { return effectiveIntensity; }
+    SPARK_SCRIPT_BIND(get_range)
     [[nodiscard]] float GetRange() const noexcept { return range; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
+    SPARK_SCRIPT_BIND(set_local_offset)
     void SetLocalOffset(const Vector2& offset) noexcept { localOffset = offset; }
+    SPARK_SCRIPT_BIND(set_world_z)
     void SetWorldZ(const float z) noexcept { worldZ = z; }
+    SPARK_SCRIPT_BIND(set_color)
     void SetColor(const Vector3& c) noexcept { color = c; }
+    SPARK_SCRIPT_BIND(set_intensity)
     void SetIntensity(const float v) noexcept { intensity = v; }
+    SPARK_SCRIPT_BIND(set_range)
     void SetRange(const float r) noexcept { range = r; }
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(const bool e) noexcept { enabled = e; }
 
+    SPARK_SCRIPT_BIND(set_flicker)
     void SetFlicker(const bool on, const float amount, const float frequencyHz) noexcept;
+    SPARK_SCRIPT_BIND(get_flicker_enabled)
     [[nodiscard]] bool GetFlickerEnabled() const noexcept { return flickerEnabled; }
+    SPARK_SCRIPT_BIND(get_flicker_amount)
     [[nodiscard]] float GetFlickerAmount() const noexcept { return flickerAmount; }
+    SPARK_SCRIPT_BIND(get_flicker_hz)
     [[nodiscard]] float GetFlickerHz() const noexcept { return flickerHz; }
 
 private:

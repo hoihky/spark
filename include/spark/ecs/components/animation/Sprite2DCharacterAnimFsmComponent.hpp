@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -42,20 +43,27 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_locomotion_clips)
     void SetLocomotionClips(std::uint32_t idleClipIndex, std::uint32_t moveClipIndex) noexcept;
     /**
      * Pass indices >= clip count to disable that overlay. Non-looping clips work best so the driver can clear
      * blackboard commands when playback finishes.
      */
+    SPARK_SCRIPT_BIND(set_combat_clips)
     void SetCombatClips(std::uint32_t attackClipIndex, std::uint32_t hurtClipIndex) noexcept;
 
+    SPARK_SCRIPT_BIND(set_move_speed_threshold)
     void SetMoveSpeedThreshold(float worldUnits) noexcept;
+    SPARK_SCRIPT_BIND(set_locomotion_source)
     void SetLocomotionSource(Sprite2DAnimLocomotionSource s) noexcept { locomotionSource = s; }
 
     /** When not <c>SIZE_MAX</c>, reads/writes <c>AiAgentComponent::GetBlackboard()</c> int at this slot. */
+    SPARK_SCRIPT_BIND(set_combat_blackboard_int_slot)
     void SetCombatBlackboardIntSlot(std::size_t slotOrMax) noexcept { combatBbSlot = slotOrMax; }
 
+    SPARK_SCRIPT_BIND(request_hurt)
     void RequestHurt() noexcept;
+    SPARK_SCRIPT_BIND(request_attack)
     void RequestAttack() noexcept;
 
 private:

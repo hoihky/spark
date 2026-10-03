@@ -436,7 +436,7 @@ public sealed class GameWorld
     }
 }
 
-public sealed class GameObject
+public sealed partial class GameObject
 {
     public nint Handle { get; init; }
 
@@ -450,16 +450,7 @@ public sealed class GameObject
         }
     }
 
-    public TransformComponent? GetTransform() =>
-        GetComponent(SparkComponentKind.SparkComponentKind_Transform, static h => new TransformComponent(h));
-
-    public SpriteAnimatorComponent? GetSpriteAnimator() =>
-        GetComponent(SparkComponentKind.SparkComponentKind_SpriteAnimator, static h => new SpriteAnimatorComponent(h));
-
-    public Rigidbody2DComponent? GetRigidbody2D() =>
-        GetComponent(SparkComponentKind.SparkComponentKind_Rigidbody2D, static h => new Rigidbody2DComponent(h));
-
-    private T? GetComponent<T>(SparkComponentKind kind, Func<nint, T> factory) where T : class
+    internal T? GetComponent<T>(SparkComponentKind kind, Func<nint, T> factory) where T : class
     {
         unsafe
         {

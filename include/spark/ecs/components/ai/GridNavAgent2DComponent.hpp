@@ -6,6 +6,7 @@
 #include "spark/math/Vector2.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -33,39 +34,62 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(const bool value) noexcept { enabled = value; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
+    SPARK_SCRIPT_BIND(set_grid_source_object)
     void SetGridSourceObject(GameObject* object) noexcept { gridSourceObject = object; }
+    SPARK_SCRIPT_BIND(get_grid_source_object)
     [[nodiscard]] GameObject* GetGridSourceObject() const noexcept { return gridSourceObject; }
 
+    SPARK_SCRIPT_BIND(set_goal_mode)
     void SetGoalMode(const GridNavGoalMode2D mode) noexcept { goalMode = mode; }
+    SPARK_SCRIPT_BIND(get_goal_mode)
     [[nodiscard]] GridNavGoalMode2D GetGoalMode() const noexcept { return goalMode; }
 
+    SPARK_SCRIPT_BIND(set_goal_target)
     void SetGoalTarget(GameObject* object) noexcept { goalTarget = object; }
+    SPARK_SCRIPT_BIND(get_goal_target)
     [[nodiscard]] GameObject* GetGoalTarget() const noexcept { return goalTarget; }
 
+    SPARK_SCRIPT_BIND(set_goal_world_position)
     void SetGoalWorldPosition(const Vector2& position) noexcept { goalWorldPosition = position; }
+    SPARK_SCRIPT_BIND(get_goal_world_position)
     [[nodiscard]] const Vector2& GetGoalWorldPosition() const noexcept { return goalWorldPosition; }
 
+    SPARK_SCRIPT_BIND(set_goal_cell)
     void SetGoalCell(const GridPathfinder::Cell& cell) noexcept { goalCell = cell; }
+    SPARK_SCRIPT_BIND(get_goal_cell)
     [[nodiscard]] const GridPathfinder::Cell& GetGoalCell() const noexcept { return goalCell; }
 
+    SPARK_SCRIPT_BIND(set_repath_every_frame)
     void SetRepathEveryFrame(const bool value) noexcept { repathEveryFrame = value; }
+    SPARK_SCRIPT_BIND(get_repath_every_frame)
     [[nodiscard]] bool GetRepathEveryFrame() const noexcept { return repathEveryFrame; }
 
+    SPARK_SCRIPT_BIND(set_repath_interval_seconds)
     void SetRepathIntervalSeconds(const float seconds) noexcept { repathIntervalSeconds = seconds; }
+    SPARK_SCRIPT_BIND(get_repath_interval_seconds)
     [[nodiscard]] float GetRepathIntervalSeconds() const noexcept { return repathIntervalSeconds; }
 
     /** When true, copies the path into <c>AiAgentComponent::GetPathWorldPolylineXZ()</c> if present. */
+    SPARK_SCRIPT_BIND(set_sync_to_ai_agent)
     void SetSyncToAiAgent(const bool value) noexcept { syncToAiAgent = value; }
+    SPARK_SCRIPT_BIND(get_sync_to_ai_agent)
     [[nodiscard]] bool GetSyncToAiAgent() const noexcept { return syncToAiAgent; }
 
+    SPARK_SCRIPT_BIND(request_repath)
     void RequestRepath() noexcept { repathRequested = true; }
+    SPARK_SCRIPT_BIND(clear_path)
     void ClearPath() noexcept;
 
+    SPARK_SCRIPT_BIND(has_s_path)
     [[nodiscard]] bool HasPath() const noexcept { return hasPath; }
+    SPARK_SCRIPT_BIND(get_path_index)
     [[nodiscard]] int GetPathIndex() const noexcept { return pathIndex; }
+    SPARK_SCRIPT_BIND(set_path_index)
     void SetPathIndex(const int index) noexcept { pathIndex = index; }
 
     [[nodiscard]] const Array<GridPathfinder::Cell>& GetPathCells() const noexcept { return pathCells; }

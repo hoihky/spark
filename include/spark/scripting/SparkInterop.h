@@ -43,46 +43,7 @@ typedef struct SparkFrameTiming {
     uint64_t frameIndex;
 } SparkFrameTiming;
 
-typedef enum SparkComponentKind {
-    SparkComponentKind_Unknown = 0,
-    SparkComponentKind_Transform,
-    SparkComponentKind_Mesh,
-    SparkComponentKind_Collision,
-    SparkComponentKind_Material,
-    SparkComponentKind_PointLight,
-    SparkComponentKind_SkinnedMesh,
-    SparkComponentKind_Animator,
-    SparkComponentKind_TextOverlay,
-    SparkComponentKind_UiCanvas,
-    SparkComponentKind_Sky,
-    SparkComponentKind_ParticleEmitter,
-    SparkComponentKind_Terrain,
-    SparkComponentKind_Sprite,
-    SparkComponentKind_Tilemap,
-    SparkComponentKind_BoxCollider2D,
-    SparkComponentKind_Rigidbody2D,
-    SparkComponentKind_SpriteAnimator,
-    SparkComponentKind_CircleCollider2D,
-    SparkComponentKind_SpriteLighting2D,
-    SparkComponentKind_BoxCollider3D,
-    SparkComponentKind_SphereCollider3D,
-    SparkComponentKind_Rigidbody3D,
-    SparkComponentKind_PhysicsMaterial3D,
-    SparkComponentKind_DistanceJoint3D,
-    SparkComponentKind_SceneSpatialPolicy,
-    SparkComponentKind_AiAgent,
-    SparkComponentKind_SoundCue,
-    SparkComponentKind_Sprite2DCharacterAnimFsm,
-    SparkComponentKind_Character3DAnimFsm,
-    SparkComponentKind_SpotLight,
-    SparkComponentKind_DirectionalLight,
-    SparkComponentKind_Camera,
-    SparkComponentKind_Camera2D,
-    SparkComponentKind_Camera2DRig,
-    SparkComponentKind_BlendMode,
-    SparkComponentKind_RenderLayer,
-    SparkComponentKind_SortingGroup,
-} SparkComponentKind;
+#include "spark/scripting/SparkInteropComponentKinds.h"
 
 typedef void (*SparkGameOnAttachFn)(void* userData, SparkEngineContext* context);
 typedef void (*SparkGameOnDetachFn)(void* userData);
@@ -259,6 +220,11 @@ SPARK_SCRIPT_API uint64_t spark_object_get_id(const SparkGameObject* object);
 SPARK_SCRIPT_API int spark_object_get_name(const SparkGameObject* object, char* outUtf8, uint32_t outCapacity);
 SPARK_SCRIPT_API void spark_object_set_name(SparkGameObject* object, const char* utf8Name);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_try_get_component_by_kind(
+        SparkGameObject* object,
+        SparkComponentKind kind);
+SPARK_SCRIPT_API SparkComponentKind spark_component_get_kind(const SparkGameComponent* component);
+/** Adds a default-constructed component when supported for @p kind; otherwise returns null. */
+SPARK_SCRIPT_API SparkGameComponent* spark_object_get_or_add_default_component(
         SparkGameObject* object,
         SparkComponentKind kind);
 SPARK_SCRIPT_API SparkGameComponent* spark_object_get_or_add_transform(SparkGameObject* object);
@@ -674,6 +640,49 @@ SPARK_SCRIPT_API void spark_vfx_player_set_asset_key(SparkGameComponent* player,
 SPARK_SCRIPT_API void spark_vfx_player_play(SparkGameObject* object, SparkGameComponent* player);
 SPARK_SCRIPT_API void spark_vfx_player_play_once(SparkGameObject* object, SparkGameComponent* player);
 SPARK_SCRIPT_API void spark_vfx_player_stop(SparkGameObject* object, SparkGameComponent* player);
+
+/* --- Wind / foliage (F0–F2) --- */
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_wind_environment(SparkGameObject* object);
+
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_foliage_instanced_mesh(SparkGameObject* object);
+SPARK_SCRIPT_API void spark_foliage_instanced_set_enabled(SparkGameComponent* foliage, int enabled);
+SPARK_SCRIPT_API int spark_foliage_instanced_get_enabled(const SparkGameComponent* foliage);
+SPARK_SCRIPT_API int spark_foliage_instanced_set_blade_mesh_key(
+        SparkGameComponent* foliage,
+        SparkGameWorld* world,
+        const char* meshKeyOrPath);
+SPARK_SCRIPT_API int spark_foliage_instanced_set_albedo_texture_key(
+        SparkGameComponent* foliage,
+        SparkGameWorld* world,
+        const char* textureKeyOrPath);
+SPARK_SCRIPT_API void spark_foliage_instanced_get_albedo_tint(const SparkGameComponent* foliage, SparkVector3* outRgb);
+SPARK_SCRIPT_API void spark_foliage_instanced_set_albedo_tint(SparkGameComponent* foliage, const SparkVector3* rgb);
+SPARK_SCRIPT_API float spark_foliage_instanced_get_alpha_cutoff(const SparkGameComponent* foliage);
+SPARK_SCRIPT_API void spark_foliage_instanced_set_alpha_cutoff(SparkGameComponent* foliage, float value);
+SPARK_SCRIPT_API float spark_foliage_instanced_get_wind_bend_scale(const SparkGameComponent* foliage);
+SPARK_SCRIPT_API void spark_foliage_instanced_set_wind_bend_scale(SparkGameComponent* foliage, float scale);
+SPARK_SCRIPT_API void spark_foliage_instanced_configure_grid(
+        SparkGameComponent* foliage,
+        int columns,
+        int rows,
+        float spacingMeters);
+SPARK_SCRIPT_API void spark_foliage_instanced_configure_grid_within_square(
+        SparkGameComponent* foliage,
+        float halfExtentMeters,
+        float spacingMeters,
+        float edgeMarginMeters);
+
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_grass_field(SparkGameObject* object);
+SPARK_SCRIPT_API int spark_grass_field_set_blade_mesh_key(
+        SparkGameComponent* grass,
+        SparkGameWorld* world,
+        const char* meshKeyOrPath);
+SPARK_SCRIPT_API int spark_grass_field_set_albedo_texture_key(
+        SparkGameComponent* grass,
+        SparkGameWorld* world,
+        const char* textureKeyOrPath);
+
+#include "spark/scripting/SparkInteropComponentBindings.generated.h"
 
 #ifdef __cplusplus
 }

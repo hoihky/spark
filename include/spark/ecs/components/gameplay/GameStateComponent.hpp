@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Function.hpp"
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 #include <cstdint>
 
@@ -34,18 +35,23 @@ public:
     explicit GameStateComponent(GameFlowState initialState = GameFlowState::Playing) noexcept
             : currentState(initialState), previousState(initialState) {}
 
+    SPARK_SCRIPT_BIND(get_state)
     [[nodiscard]] GameFlowState GetState() const noexcept { return currentState; }
+
     [[nodiscard]] GameFlowState GetPreviousState() const noexcept { return previousState; }
 
     [[nodiscard]] bool IsState(const GameFlowState state) const noexcept { return currentState == state; }
 
     /** Changes state when different; returns true when a transition occurred. */
+    SPARK_SCRIPT_BIND(request_state)
     bool RequestState(GameFlowState nextState) noexcept;
 
     /** Pushes current state and enters <c>nextState</c> (e.g. pause menu). */
+    SPARK_SCRIPT_BIND(push_state)
     void PushState(GameFlowState nextState) noexcept;
 
     /** Restores the last pushed state when the stack is non-empty. */
+    SPARK_SCRIPT_BIND(pop_state)
     bool PopState() noexcept;
 
     void SetOnTransition(TransitionCallback callback) { onTransition = MoveTemp(callback); }

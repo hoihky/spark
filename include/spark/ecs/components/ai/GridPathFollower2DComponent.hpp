@@ -4,6 +4,7 @@
 #include "spark/math/Vector2.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -36,23 +37,35 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(const bool value) noexcept { enabled = value; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
+    SPARK_SCRIPT_BIND(set_nav_agent)
     void SetNavAgent(GridNavAgent2DComponent* agent) noexcept { navAgent = agent; }
+    SPARK_SCRIPT_BIND(get_nav_agent)
     [[nodiscard]] GridNavAgent2DComponent* GetNavAgent() const noexcept { return navAgent; }
 
+    SPARK_SCRIPT_BIND(set_mode)
     void SetMode(const GridPathFollower2DMode value) noexcept { mode = value; }
+    SPARK_SCRIPT_BIND(get_mode)
     [[nodiscard]] GridPathFollower2DMode GetMode() const noexcept { return mode; }
 
+    SPARK_SCRIPT_BIND(set_max_speed)
     void SetMaxSpeed(const float speed) noexcept { maxSpeed = speed; }
+    SPARK_SCRIPT_BIND(get_max_speed)
     [[nodiscard]] float GetMaxSpeed() const noexcept { return maxSpeed; }
 
+    SPARK_SCRIPT_BIND(set_arrive_radius)
     void SetArriveRadius(const float radius) noexcept { arriveRadius = radius; }
+    SPARK_SCRIPT_BIND(get_arrive_radius)
     [[nodiscard]] float GetArriveRadius() const noexcept { return arriveRadius; }
 
     /** Stops following and clears the linked agent path when the final waypoint is reached. */
+    SPARK_SCRIPT_BIND(set_stop_on_path_end)
     void SetStopOnPathEnd(const bool value) noexcept { stopOnPathEnd = value; }
+    SPARK_SCRIPT_BIND(get_stop_on_path_end)
     [[nodiscard]] bool GetStopOnPathEnd() const noexcept { return stopOnPathEnd; }
 
 private:

@@ -7,6 +7,7 @@
 #include "spark/scene/texture/Texture2D.hpp"
 
 #include "spark/scene/tilemap/TilemapObject.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -24,6 +25,7 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
+    SPARK_SCRIPT_BIND(get_draw_gizmos)
     [[nodiscard]] bool GetDrawGizmos() const noexcept { return drawGizmos; }
     void SetDrawGizmos(const bool enabled) noexcept {
         drawGizmos = enabled;
@@ -31,6 +33,7 @@ public:
     }
 
     /** When true, also draws non-gizmo markers (useful in editor-style views). */
+    SPARK_SCRIPT_BIND(get_draw_runtime_markers)
     [[nodiscard]] bool GetDrawRuntimeMarkers() const noexcept { return drawRuntimeMarkers; }
     void SetDrawRuntimeMarkers(const bool enabled) noexcept {
         drawRuntimeMarkers = enabled;
@@ -47,6 +50,7 @@ public:
         visualsDirty = true;
     }
 
+    SPARK_SCRIPT_BIND(set_gizmo_tint)
     void SetGizmoTint(const Vector4& rgba) noexcept { gizmoTint = rgba; }
 
     void RebuildVisuals(GameObject& owner, GameWorld& world) noexcept;

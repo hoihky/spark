@@ -3,6 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/engine/FrameTiming.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -20,7 +21,9 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
+    SPARK_SCRIPT_BIND(get_spawn_on_attach)
     [[nodiscard]] bool GetSpawnOnAttach() const noexcept { return spawnOnAttach; }
+    SPARK_SCRIPT_BIND(set_spawn_on_attach)
     void SetSpawnOnAttach(const bool enabled) noexcept { spawnOnAttach = enabled; }
 
     /** Destroys prior spawns and runs spawn pass again. */

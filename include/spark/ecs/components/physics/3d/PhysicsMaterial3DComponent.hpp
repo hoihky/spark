@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -21,14 +22,20 @@ public:
             float restitutionIn = 0.22F) noexcept
             : staticFriction(staticFrictionIn), dynamicFriction(dynamicFrictionIn), restitution(restitutionIn) {}
 
+    SPARK_SCRIPT_BIND(get_static_friction)
     [[nodiscard]] float GetStaticFriction() const noexcept { return staticFriction; }
+    SPARK_SCRIPT_BIND(set_static_friction)
     void SetStaticFriction(const float v) noexcept { staticFriction = v; }
 
+    SPARK_SCRIPT_BIND(get_dynamic_friction)
     [[nodiscard]] float GetDynamicFriction() const noexcept { return dynamicFriction; }
+    SPARK_SCRIPT_BIND(set_dynamic_friction)
     void SetDynamicFriction(const float v) noexcept { dynamicFriction = v; }
 
     /** Normal-direction elasticity in [0,1]. */
+    SPARK_SCRIPT_BIND(get_restitution)
     [[nodiscard]] float GetRestitution() const noexcept { return restitution; }
+    SPARK_SCRIPT_BIND(set_restitution)
     void SetRestitution(const float v) noexcept { restitution = v; }
 
 private:

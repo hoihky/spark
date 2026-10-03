@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -33,37 +34,58 @@ public:
     void OnAttach(GameObject& owner) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(const bool value) noexcept { enabled = value; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
+    SPARK_SCRIPT_BIND(set_shape)
     void SetShape(DamageZone2DShape value) noexcept { shape = value; }
+    SPARK_SCRIPT_BIND(get_shape)
     [[nodiscard]] DamageZone2DShape GetShape() const noexcept { return shape; }
 
+    SPARK_SCRIPT_BIND(set_local_offset)
     void SetLocalOffset(const Vector2& offset) noexcept { localOffset = offset; }
+    SPARK_SCRIPT_BIND(get_local_offset)
     [[nodiscard]] const Vector2& GetLocalOffset() const noexcept { return localOffset; }
 
+    SPARK_SCRIPT_BIND(set_radius)
     void SetRadius(float value) noexcept;
+    SPARK_SCRIPT_BIND(get_radius)
     [[nodiscard]] float GetRadius() const noexcept { return radius; }
 
+    SPARK_SCRIPT_BIND(set_half_extents)
     void SetHalfExtents(const Vector2& value) noexcept;
+    SPARK_SCRIPT_BIND(get_half_extents)
     [[nodiscard]] const Vector2& GetHalfExtents() const noexcept { return halfExtents; }
 
+    SPARK_SCRIPT_BIND(set_damage_per_second)
     void SetDamagePerSecond(const float value) noexcept { damagePerSecond = std::max(0.0F, value); }
+    SPARK_SCRIPT_BIND(get_damage_per_second)
     [[nodiscard]] float GetDamagePerSecond() const noexcept { return damagePerSecond; }
 
+    SPARK_SCRIPT_BIND(set_target_filter)
     void SetTargetFilter(const PhysicsQueryFilter2D& filter) noexcept { targetFilter = filter; }
+    SPARK_SCRIPT_BIND(get_target_filter)
     [[nodiscard]] const PhysicsQueryFilter2D& GetTargetFilter() const noexcept { return targetFilter; }
 
+    SPARK_SCRIPT_BIND(set_category_bits)
     void SetCategoryBits(std::uint16_t bits) noexcept;
+    SPARK_SCRIPT_BIND(get_category_bits)
     [[nodiscard]] std::uint16_t GetCategoryBits() const noexcept { return categoryBits; }
 
+    SPARK_SCRIPT_BIND(set_mask_bits)
     void SetMaskBits(std::uint16_t bits) noexcept;
+    SPARK_SCRIPT_BIND(get_mask_bits)
     [[nodiscard]] std::uint16_t GetMaskBits() const noexcept { return maskBits; }
 
     /** Optional instigator passed to damage routing (defaults to zone owner). */
+    SPARK_SCRIPT_BIND(set_instigator)
     void SetInstigator(GameObject* object) noexcept { instigator = object; }
+    SPARK_SCRIPT_BIND(get_instigator)
     [[nodiscard]] GameObject* GetInstigator() const noexcept { return instigator; }
 
+    SPARK_SCRIPT_BIND(sync_collider)
     void SyncCollider(GameObject& owner) noexcept;
 
 private:

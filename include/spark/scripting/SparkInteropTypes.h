@@ -61,6 +61,34 @@ typedef enum SparkSpriteSortMode {
     SparkSpriteSortMode_SortOrderThenWorldY = 1,
 } SparkSpriteSortMode;
 
+/** Mirrors Spark::GameFlowState. */
+typedef enum SparkGameFlowState {
+    SparkGameFlowState_Intro = 0,
+    SparkGameFlowState_Playing = 1,
+    SparkGameFlowState_Paused = 2,
+    SparkGameFlowState_Victory = 3,
+    SparkGameFlowState_Defeat = 4,
+} SparkGameFlowState;
+
+/** Mirrors Spark::GameFlowTriggerSource. */
+typedef enum SparkGameFlowTriggerSource {
+    SparkGameFlowTriggerSource_TriggerEnter = 0,
+    SparkGameFlowTriggerSource_Died = 1,
+    SparkGameFlowTriggerSource_OnGameState = 2,
+} SparkGameFlowTriggerSource;
+
+/** Mirrors Spark::ParallaxAxisMode. */
+typedef enum SparkParallaxAxisMode {
+    SparkParallaxAxisMode_Horizontal = 0,
+    SparkParallaxAxisMode_Both = 1,
+} SparkParallaxAxisMode;
+
+/** Mirrors Spark::ParallaxDriftMode. */
+typedef enum SparkParallaxDriftMode {
+    SparkParallaxDriftMode_None = 0,
+    SparkParallaxDriftMode_SineHorizontal = 1,
+} SparkParallaxDriftMode;
+
 /** Mirrors RigidbodyBodyType2D. */
 typedef enum SparkRigidbodyBodyType2D {
     SparkRigidbodyBodyType2D_Kinematic = 0,

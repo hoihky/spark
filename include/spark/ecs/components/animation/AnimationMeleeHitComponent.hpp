@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -27,19 +28,31 @@ public:
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_start_event_name)
     void SetStartEventName(const char* name) noexcept;
+    SPARK_SCRIPT_BIND(set_end_event_name)
     void SetEndEventName(const char* name) noexcept;
+    SPARK_SCRIPT_BIND(set_facing_object)
     void SetFacingObject(GameObject* object) noexcept { facingObject = object; }
+    SPARK_SCRIPT_BIND(set_origin_local_offset)
     void SetOriginLocalOffset(const Vector3& offset) noexcept { originLocalOffset = offset; }
+    SPARK_SCRIPT_BIND(set_trace_distance)
     void SetTraceDistance(float meters) noexcept;
+    SPARK_SCRIPT_BIND(set_hit_radius)
     void SetHitRadius(float meters) noexcept;
+    SPARK_SCRIPT_BIND(set_damage_per_hit)
     void SetDamagePerHit(float amount) noexcept { damagePerHit = amount; }
 
+    SPARK_SCRIPT_BIND(clear_targets)
     void ClearTargets() noexcept { targets.Clear(); }
+    SPARK_SCRIPT_BIND(add_target)
     void AddTarget(GameObject* target) noexcept;
 
+    SPARK_SCRIPT_BIND(is_hit_window_active)
     [[nodiscard]] bool IsHitWindowActive() const noexcept { return hitWindowActive; }
+    SPARK_SCRIPT_BIND(get_hits_this_swing)
     [[nodiscard]] std::uint32_t GetHitsThisSwing() const noexcept { return hitsThisSwing; }
+    SPARK_SCRIPT_BIND(get_total_hits)
     [[nodiscard]] std::uint32_t GetTotalHits() const noexcept { return totalHits; }
 
 private:

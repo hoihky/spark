@@ -4,6 +4,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -19,17 +20,28 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
+    SPARK_SCRIPT_BIND(get_source_object)
     [[nodiscard]] GameObject* GetSourceObject() const noexcept { return sourceObject; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
+    SPARK_SCRIPT_BIND(get_line_color)
     [[nodiscard]] const Vector3& GetLineColor() const noexcept { return lineColor; }
+    SPARK_SCRIPT_BIND(get_bone_thickness)
     [[nodiscard]] float GetBoneThickness() const noexcept { return boneThickness; }
+    SPARK_SCRIPT_BIND(get_joint_marker_scale)
     [[nodiscard]] float GetJointMarkerScale() const noexcept { return jointMarkerScale; }
 
+    SPARK_SCRIPT_BIND(set_source_object)
     void SetSourceObject(GameObject* object) noexcept { sourceObject = object; }
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool value) noexcept { enabled = value; }
+    SPARK_SCRIPT_BIND(toggle_enabled)
     void ToggleEnabled() noexcept { enabled = !enabled; }
+    SPARK_SCRIPT_BIND(set_line_color)
     void SetLineColor(const Vector3& rgb) noexcept { lineColor = rgb; }
+    SPARK_SCRIPT_BIND(set_bone_thickness)
     void SetBoneThickness(float thickness) noexcept { boneThickness = thickness; }
+    SPARK_SCRIPT_BIND(set_joint_marker_scale)
     void SetJointMarkerScale(float scale) noexcept { jointMarkerScale = scale; }
 
     void AppendSceneDraws(Array<SceneDrawItem>& out) const;

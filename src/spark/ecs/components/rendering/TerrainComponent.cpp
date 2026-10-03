@@ -34,6 +34,49 @@ void TerrainComponent::ResetHeightsToProcedural(GameObject& owner) {
     RegenerateMesh(owner);
 }
 
+void TerrainComponent::ResetHeightsToProceduralOn(GameObject* owner) {
+    if (owner != nullptr) {
+        ResetHeightsToProcedural(*owner);
+    }
+}
+
+void TerrainComponent::RegenerateMeshOn(GameObject* owner) {
+    if (owner != nullptr) {
+        RegenerateMesh(*owner);
+    }
+}
+
+void TerrainComponent::ApplyHeightBrushLocalOn(
+        GameObject* owner,
+        const Vector2& centerXZ,
+        const float radiusXZ,
+        const float deltaY) {
+    if (owner != nullptr) {
+        ApplyHeightBrushLocal(*owner, centerXZ, radiusXZ, deltaY);
+    }
+}
+
+void TerrainComponent::ApplyHeightBrushWorldOn(
+        GameObject* owner,
+        const Vector3& centerWorld,
+        const float radiusWorld,
+        const float deltaY) {
+    if (owner != nullptr) {
+        ApplyHeightBrushWorld(*owner, centerWorld, radiusWorld, deltaY);
+    }
+}
+
+bool TerrainComponent::TrySampleHeightWorldOn(
+        const GameObject* owner,
+        const float worldX,
+        const float worldZ,
+        float* outWorldY) const {
+    if (owner == nullptr || outWorldY == nullptr) {
+        return false;
+    }
+    return TrySampleHeightWorld(*owner, worldX, worldZ, *outWorldY);
+}
+
 void TerrainComponent::RegenerateMesh(GameObject& owner) {
     EnsureHeightBuffer(owner);
     SharedPtr<Mesh> mesh = MakeShared<Mesh>(Utf8String("ProceduralTerrain"));

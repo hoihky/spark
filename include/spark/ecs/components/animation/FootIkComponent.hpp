@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -31,21 +32,32 @@ public:
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
     [[nodiscard]] int UpdatePriority() const noexcept override { return 215; }
 
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
+    SPARK_SCRIPT_BIND(get_weight)
     [[nodiscard]] float GetWeight() const noexcept { return weight; }
+    SPARK_SCRIPT_BIND(get_ray_origin_lift)
     [[nodiscard]] float GetRayOriginLift() const noexcept { return rayOriginLift; }
+    SPARK_SCRIPT_BIND(get_ray_max_distance)
     [[nodiscard]] float GetRayMaxDistance() const noexcept { return rayMaxDistance; }
     [[nodiscard]] const Array<Limb>& GetLimbs() const noexcept { return limbs; }
 
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool value) noexcept { enabled = value; }
+    SPARK_SCRIPT_BIND(set_weight)
     void SetWeight(float value) noexcept { weight = value; }
+    SPARK_SCRIPT_BIND(set_ray_origin_lift)
     void SetRayOriginLift(float value) noexcept { rayOriginLift = value; }
+    SPARK_SCRIPT_BIND(set_ray_max_distance)
     void SetRayMaxDistance(float value) noexcept { rayMaxDistance = value; }
 
     /** Resolves left/right foot chains from joint name patterns on the skeleton. */
+    SPARK_SCRIPT_BIND(is_configure_from_skeleton)
     bool ConfigureFromSkeleton(const Skeleton& skeleton);
 
+    SPARK_SCRIPT_BIND(set_left_foot_patterns)
     void SetLeftFootPatterns(const char* rootPattern, const char* midPattern, const char* endPattern);
+    SPARK_SCRIPT_BIND(set_right_foot_patterns)
     void SetRightFootPatterns(const char* rootPattern, const char* midPattern, const char* endPattern);
 
 private:

@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -41,7 +42,9 @@ public:
     /** Destroys owners queued during the last update step (after physics / combat tick). */
     static void ProcessDeferredDestroys(GameWorld& world) noexcept;
 
+    SPARK_SCRIPT_BIND(set_active)
     void SetActive(const bool value) noexcept { active = value; }
+    SPARK_SCRIPT_BIND(is_active)
     [[nodiscard]] bool IsActive() const noexcept { return active; }
 
     void Activate(
@@ -49,38 +52,59 @@ public:
             const Vector2& velocity,
             GameObject* instigatorIn) noexcept;
 
+    SPARK_SCRIPT_BIND(deactivate)
     void Deactivate() noexcept;
 
+    SPARK_SCRIPT_BIND(set_shape)
     void SetShape(Projectile2DShape value) noexcept { shape = value; }
+    SPARK_SCRIPT_BIND(get_shape)
     [[nodiscard]] Projectile2DShape GetShape() const noexcept { return shape; }
 
+    SPARK_SCRIPT_BIND(set_radius)
     void SetRadius(const float value) noexcept;
+    SPARK_SCRIPT_BIND(set_half_extents)
     void SetHalfExtents(const Vector2& value) noexcept;
 
+    SPARK_SCRIPT_BIND(set_damage)
     void SetDamage(const float value) noexcept { damage = std::max(0.0F, value); }
+    SPARK_SCRIPT_BIND(get_damage)
     [[nodiscard]] float GetDamage() const noexcept { return damage; }
 
+    SPARK_SCRIPT_BIND(set_lifetime_seconds)
     void SetLifetimeSeconds(const float seconds) noexcept { lifetimeSeconds = std::max(0.0F, seconds); }
+    SPARK_SCRIPT_BIND(get_lifetime_seconds)
     [[nodiscard]] float GetLifetimeSeconds() const noexcept { return lifetimeSeconds; }
 
+    SPARK_SCRIPT_BIND(set_instigator)
     void SetInstigator(GameObject* object) noexcept { instigator = object; }
+    SPARK_SCRIPT_BIND(get_instigator)
     [[nodiscard]] GameObject* GetInstigator() const noexcept { return instigator; }
 
+    SPARK_SCRIPT_BIND(set_target_filter)
     void SetTargetFilter(const PhysicsQueryFilter2D& filter) noexcept { targetFilter = filter; }
+    SPARK_SCRIPT_BIND(get_target_filter)
     [[nodiscard]] const PhysicsQueryFilter2D& GetTargetFilter() const noexcept { return targetFilter; }
 
+    SPARK_SCRIPT_BIND(set_block_on_solid_hit)
     void SetBlockOnSolidHit(const bool value) noexcept { blockOnSolidHit = value; }
+    SPARK_SCRIPT_BIND(get_block_on_solid_hit)
     [[nodiscard]] bool GetBlockOnSolidHit() const noexcept { return blockOnSolidHit; }
 
+    SPARK_SCRIPT_BIND(set_destroy_owner_on_deactivate)
     void SetDestroyOwnerOnDeactivate(const bool value) noexcept { destroyOwnerOnDeactivate = value; }
+    SPARK_SCRIPT_BIND(get_destroy_owner_on_deactivate)
     [[nodiscard]] bool GetDestroyOwnerOnDeactivate() const noexcept { return destroyOwnerOnDeactivate; }
 
+    SPARK_SCRIPT_BIND(set_deactivate_on_first_hit)
     void SetDeactivateOnFirstHit(const bool value) noexcept { deactivateOnFirstHit = value; }
+    SPARK_SCRIPT_BIND(get_deactivate_on_first_hit)
     [[nodiscard]] bool GetDeactivateOnFirstHit() const noexcept { return deactivateOnFirstHit; }
 
     void SetOnHit(Projectile2DHitCallback callback) { onHit = MoveTemp(callback); }
 
+    SPARK_SCRIPT_BIND(get_velocity)
     [[nodiscard]] const Vector2& GetVelocity() const noexcept { return velocity; }
+    SPARK_SCRIPT_BIND(set_velocity)
     void SetVelocity(const Vector2& value) noexcept { velocity = value; }
 
 private:

@@ -9,6 +9,7 @@
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/material/MaterialLibraryBinding.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -62,13 +63,20 @@ public:
 
     void OnDetach(GameObject& owner) override;
 
+    SPARK_SCRIPT_BIND(clear)
     void Clear() noexcept;
+    SPARK_SCRIPT_BIND(resize_slots)
     void ResizeSlots(std::size_t count);
+    SPARK_SCRIPT_BIND(get_slot_count)
     [[nodiscard]] std::size_t GetSlotCount() const noexcept { return slots.GetSize(); }
+    SPARK_SCRIPT_BIND(get_slot)
     [[nodiscard]] Slot& GetSlot(std::size_t index) { return slots[index]; }
+    SPARK_SCRIPT_BIND(get_slot)
     [[nodiscard]] const Slot& GetSlot(std::size_t index) const { return slots[index]; }
 
+    SPARK_SCRIPT_BIND(get_slot_material_asset_key)
     [[nodiscard]] const Utf8String& GetSlotMaterialAssetKey(std::size_t index) const;
+    SPARK_SCRIPT_BIND(is_slot_has_material_asset)
     [[nodiscard]] bool SlotHasMaterialAsset(std::size_t index) const noexcept;
 
     void SetSlotMaterialAsset(GameWorld& world, std::size_t index, const char* key);
@@ -76,17 +84,23 @@ public:
     void ClearAllMaterialAssets(GameWorld& world);
     void TryApplyMaterialAssets(GameWorld& world);
 
+    SPARK_SCRIPT_BIND(get_active_variant_index)
     [[nodiscard]] std::uint32_t GetActiveVariantIndex() const noexcept { return activeVariantIndex; }
     [[nodiscard]] const Array<Utf8String>& GetVariantNames() const noexcept { return variantNames; }
+    SPARK_SCRIPT_BIND(has_s_material_variants)
     [[nodiscard]] bool HasMaterialVariants() const noexcept { return variantNames.GetSize() > 1U; }
     void SetVariantNames(const Array<Utf8String>& names);
+    SPARK_SCRIPT_BIND(set_active_variant_index)
     void SetActiveVariantIndex(const std::uint32_t index);
+    SPARK_SCRIPT_BIND(cycle_active_variant)
     void CycleActiveVariant();
 
     /** Advances variant index once and applies it to every variant-capable slot on <c>root</c> and descendants. */
+    SPARK_SCRIPT_BIND(cycle_variants_on_object_tree)
     static void CycleVariantsOnObjectTree(GameObject* root);
 
     /** Sizes slots to the glTF material table and copies textures/factors from the asset. */
+    SPARK_SCRIPT_BIND(populate_from_gltf_asset)
     void PopulateFromGltfAsset(const GltfAsset& asset);
 
     /**
@@ -94,6 +108,7 @@ public:
      * otherwise falls back to <c>PopulateFromGltfAsset</c>.
      */
     void BindFromGltfAsset(GameWorld& world, const char* gltfPath, const GltfAsset& asset);
+    SPARK_SCRIPT_BIND(populate_from_skinned_gltf_asset)
     void PopulateFromSkinnedGltfAsset(const SkinnedGltfAsset& asset);
     void BindFromSkinnedGltfAsset(GameWorld& world, const char* gltfPath, const SkinnedGltfAsset& asset);
 

@@ -23,8 +23,11 @@ internal static class Program
 
     public static int Main(string[] args)
     {
-        var configPath = args.Length > 0
-            ? Path.GetFullPath(args[0])
+        var mirrorsOnly = args.Contains("--mirrors-only", StringComparer.Ordinal);
+        var filteredArgs = args.Where(static a => a != "--mirrors-only").ToArray();
+
+        var configPath = filteredArgs.Length > 0
+            ? Path.GetFullPath(filteredArgs[0])
             : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "bindings.config.json"));
 
         if (!File.Exists(configPath))
@@ -61,6 +64,12 @@ internal static class Program
 
         var headerDir = Path.GetDirectoryName(headerPaths[0])!;
         var nativeOut = Path.Combine(outputDir, "Native.g.cs");
+
+        if (mirrorsOnly)
+        {
+            RunComponentMirrorCodegen(configDir, outputDir, headerPaths);
+            return 0;
+        }
 
         var cliArgs = BuildClangSharpArgs(config, headerPaths, headerDir, includeDirs, nativeOut);
 
@@ -128,7 +137,40 @@ internal static class Program
             Console.Error.WriteLine($"ClangSharpPInvokeGenerator reported warnings (exit {process.ExitCode}); bindings were still written");
         }
 
+        RunComponentMirrorCodegen(configDir, outputDir, headerPaths);
+
         return 0;
+    }
+
+    private static void RunComponentMirrorCodegen(string configDir, string outputDir, List<string> headerPaths)
+    {
+        var interopHeader = headerPaths.FirstOrDefault(static p => p.EndsWith("SparkInterop.h", StringComparison.Ordinal));
+        if (interopHeader is null || !File.Exists(interopHeader))
+        {
+            Console.Error.WriteLine("SparkInterop.h not found — skipping component mirror codegen");
+            return;
+        }
+
+        var manifestPath = Path.Combine(configDir, "spark-interop-bindings.json");
+        if (!File.Exists(manifestPath))
+        {
+            Console.Error.WriteLine($"Manifest not found: {manifestPath}");
+            return;
+        }
+
+        var manifest = ComponentBindingManifest.Load(manifestPath);
+        var functions = new List<InteropFunction>();
+        functions.AddRange(InteropHeaderParser.ParseFile(interopHeader));
+        var generatedHeader = Path.Combine(
+            Path.GetDirectoryName(interopHeader)!,
+            "SparkInteropComponentBindings.generated.h");
+        if (File.Exists(generatedHeader))
+        {
+            functions.AddRange(InteropHeaderParser.ParseFile(generatedHeader));
+        }
+
+        var mirrorOut = Path.Combine(outputDir, "Components", "FromInterop");
+        ComponentMirrorCodegen.Generate(functions, manifest, mirrorOut);
     }
 
     private static List<string> BuildClangSharpArgs(

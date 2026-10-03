@@ -1,0 +1,371 @@
+{
+  "componentsWithPublicMethods": 64,
+  "interopPrefixes": [
+    "anim",
+    "animator",
+    "attachment",
+    "box",
+    "camera",
+    "camera2d",
+    "char",
+    "circle",
+    "collision",
+    "component",
+    "context",
+    "foliage",
+    "grass",
+    "input",
+    "mat4",
+    "material",
+    "mesh",
+    "object",
+    "particle",
+    "physics",
+    "platformer2d",
+    "point",
+    "render",
+    "rigidbody",
+    "scene",
+    "script",
+    "sky",
+    "sorting",
+    "spot",
+    "sprite",
+    "text",
+    "tilemap",
+    "transform",
+    "ui",
+    "vfx",
+    "world"
+  ],
+  "gaps": [
+    {
+      "kind": "AiAgent",
+      "methodCount": 5,
+      "sampleMethods": [
+        "ClearPath",
+        "SPARK_SCRIPT_BIND",
+        "SetFsm",
+        "SetFuzzyModule",
+        "SubsystemTick"
+      ]
+    },
+    {
+      "kind": "AimIk",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "AnimationEventReceiver",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "AnimationEventVfx",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "AnimationHitbox2D",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "AnimationMeleeHit",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "CapsuleCollider3D",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "CharacterController2D",
+      "methodCount": 4,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetSlopeLimitDegrees",
+        "SetSnapToGroundDistance",
+        "SimulateCharacterControllers2D"
+      ]
+    },
+    {
+      "kind": "CharacterController3D",
+      "methodCount": 3,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetSlopeLimitDegrees",
+        "SimulateCharacterControllers3D"
+      ]
+    },
+    {
+      "kind": "DamageZone2D",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "Damageable",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "DirectionalLight",
+      "methodCount": 2,
+      "sampleMethods": [
+        "DirectionalLightComponent",
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "FootIk",
+      "methodCount": 6,
+      "sampleMethods": [
+        "FindJointMatchingPatternOnChainToEnd",
+        "IsJointAncestorOf",
+        "MatchesJointNamePattern",
+        "ResolvePoleBiasX",
+        "SPARK_SCRIPT_BIND",
+        "TryResolveLimb"
+      ]
+    },
+    {
+      "kind": "GameState",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SetOnTransition"
+      ]
+    },
+    {
+      "kind": "GltfSceneSource",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "Health",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetOnDeath"
+      ]
+    },
+    {
+      "kind": "Interactable",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetOnInteract"
+      ]
+    },
+    {
+      "kind": "MultiMaterial",
+      "methodCount": 11,
+      "sampleMethods": [
+        "BindFromGltfAsset",
+        "BindFromSkinnedGltfAsset",
+        "ClearAllMaterialAssets",
+        "ClearSlotMaterialAsset",
+        "EnsureSlotAuxSize",
+        "NotifyMaterialChanged",
+        "ReleaseSlotBinding",
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "NavMeshAgent",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SubsystemTick"
+      ]
+    },
+    {
+      "kind": "ParallaxLayer",
+      "methodCount": 5,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetDriftAmplitude",
+        "SetDriftFrequencyHz",
+        "SetDriftPhase",
+        "SetFactorY"
+      ]
+    },
+    {
+      "kind": "PerceptionSensor",
+      "methodCount": 2,
+      "sampleMethods": [
+        "AddDetected",
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "Pickup",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetOnCollected"
+      ]
+    },
+    {
+      "kind": "PlayerInput",
+      "methodCount": 2,
+      "sampleMethods": [
+        "Refresh",
+        "SyncRuntimeStates"
+      ]
+    },
+    {
+      "kind": "PolygonCollider2D",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetVertices"
+      ]
+    },
+    {
+      "kind": "Projectile2D",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetOnHit"
+      ]
+    },
+    {
+      "kind": "Rigidbody3D",
+      "methodCount": 1,
+      "sampleMethods": [
+        "Rigidbody3DComponent"
+      ]
+    },
+    {
+      "kind": "RootMotion",
+      "methodCount": 4,
+      "sampleMethods": [
+        "RootMotionComponent",
+        "SPARK_SCRIPT_BIND",
+        "SetCustomApplicator",
+        "SetCustomJointResolver"
+      ]
+    },
+    {
+      "kind": "Scene2DCompositeView",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SetHudTexture",
+        "SetTarget"
+      ]
+    },
+    {
+      "kind": "SkeletonDebugDraw",
+      "methodCount": 3,
+      "sampleMethods": [
+        "AppendBoneSegment",
+        "AppendJointMarker",
+        "AppendSceneDraws"
+      ]
+    },
+    {
+      "kind": "SkinnedMesh",
+      "methodCount": 3,
+      "sampleMethods": [
+        "SetMesh",
+        "SetSkeleton",
+        "SkinnedMeshComponent"
+      ]
+    },
+    {
+      "kind": "SoundCue",
+      "methodCount": 2,
+      "sampleMethods": [
+        "Queue",
+        "QueueAtWorld"
+      ]
+    },
+    {
+      "kind": "SpawnPoint",
+      "methodCount": 2,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
+        "SetDefaultPrefabPath"
+      ]
+    },
+    {
+      "kind": "SpawnPoint2D",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    },
+    {
+      "kind": "Terrain",
+      "methodCount": 4,
+      "sampleMethods": [
+        "ApplyIslandFalloff",
+        "EnsureHeightBuffer",
+        "SPARK_SCRIPT_BIND",
+        "TerrainComponent"
+      ]
+    },
+    {
+      "kind": "TriggerVolume2D",
+      "methodCount": 9,
+      "sampleMethods": [
+        "NotifyEnter",
+        "NotifyExit",
+        "NotifyStay",
+        "SPARK_SCRIPT_BIND",
+        "SetOnEnter",
+        "SetOnExit",
+        "SetOnStay",
+        "SetOverlappingIds"
+      ]
+    },
+    {
+      "kind": "TriggerVolume3D",
+      "methodCount": 7,
+      "sampleMethods": [
+        "NotifyEnter",
+        "NotifyExit",
+        "SPARK_SCRIPT_BIND",
+        "SetOnEnter",
+        "SetOnExit",
+        "SetOverlappingIds",
+        "SimulateTriggerVolumes3D"
+      ]
+    },
+    {
+      "kind": "WaterBody",
+      "methodCount": 4,
+      "sampleMethods": [
+        "ApplyMeshToOwner",
+        "SPARK_SCRIPT_BIND",
+        "SyncTransformToSurface",
+        "WaterBodyComponent"
+      ]
+    },
+    {
+      "kind": "WindEnvironment",
+      "methodCount": 1,
+      "sampleMethods": [
+        "SPARK_SCRIPT_BIND"
+      ]
+    }
+  ]
+}

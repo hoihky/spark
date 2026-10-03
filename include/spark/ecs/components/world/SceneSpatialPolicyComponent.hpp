@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -17,9 +18,12 @@ public:
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
     explicit SceneSpatialPolicyComponent(ScenePartitionKind initial = ScenePartitionKind::None) noexcept
+        SPARK_SCRIPT_BIND(partition)
         : partition(initial) {}
 
+    SPARK_SCRIPT_BIND(get_partition_kind)
     [[nodiscard]] ScenePartitionKind GetPartitionKind() const noexcept { return partition; }
+    SPARK_SCRIPT_BIND(set_partition_kind)
     void SetPartitionKind(ScenePartitionKind k) noexcept { partition = k; }
 
 private:

@@ -4,6 +4,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <algorithm>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -30,27 +31,38 @@ public:
             Vector3 centerOffsetIn = Vector3{0.0F, 0.4F, 0.0F}) noexcept
             : radius(radiusIn), centerOffset(centerOffsetIn) {}
 
+    SPARK_SCRIPT_BIND(get_radius)
     [[nodiscard]] float GetRadius() const noexcept { return radius; }
+    SPARK_SCRIPT_BIND(set_radius)
     void SetRadius(const float r) noexcept { radius = std::max(0.05F, r); }
 
     /** Sphere center in object local space (feet-at-origin convention: Y = radius). */
+    SPARK_SCRIPT_BIND(get_center_offset)
     [[nodiscard]] const Vector3& GetCenterOffset() const noexcept { return centerOffset; }
+    SPARK_SCRIPT_BIND(set_center_offset)
     void SetCenterOffset(const Vector3& o) noexcept { centerOffset = o; }
 
     /** Max walkable slope in degrees (0 = vertical wall only, 90 = any surface counts as ground). */
+    SPARK_SCRIPT_BIND(get_slope_limit_degrees)
     [[nodiscard]] float GetSlopeLimitDegrees() const noexcept { return slopeLimitDegrees; }
     void SetSlopeLimitDegrees(const float degrees) noexcept {
         slopeLimitDegrees = std::clamp(degrees, 0.0F, 89.0F);
     }
 
     /** Auto-step height for small static ledges (meters). */
+    SPARK_SCRIPT_BIND(get_step_offset)
     [[nodiscard]] float GetStepOffset() const noexcept { return stepOffset; }
+    SPARK_SCRIPT_BIND(set_step_offset)
     void SetStepOffset(const float meters) noexcept { stepOffset = std::max(0.0F, meters); }
 
+    SPARK_SCRIPT_BIND(get_skin_width)
     [[nodiscard]] float GetSkinWidth() const noexcept { return skinWidth; }
+    SPARK_SCRIPT_BIND(set_skin_width)
     void SetSkinWidth(const float w) noexcept { skinWidth = std::max(0.0F, w); }
 
+    SPARK_SCRIPT_BIND(get_gravity_scale)
     [[nodiscard]] float GetGravityScale() const noexcept { return gravityScale; }
+    SPARK_SCRIPT_BIND(set_gravity_scale)
     void SetGravityScale(const float g) noexcept { gravityScale = g; }
 
     /**
@@ -62,11 +74,14 @@ public:
         moveInput.z = worldVelocity.z;
     }
 
+    SPARK_SCRIPT_BIND(get_move_input)
     [[nodiscard]] const Vector3& GetMoveInput() const noexcept { return moveInput; }
 
     /** Integrated velocity after the last <c>SimulateCharacterControllers3D</c> step. */
+    SPARK_SCRIPT_BIND(get_velocity)
     [[nodiscard]] const Vector3& GetVelocity() const noexcept { return velocity; }
 
+    SPARK_SCRIPT_BIND(is_grounded)
     [[nodiscard]] bool IsGrounded() const noexcept { return grounded; }
 
 private:

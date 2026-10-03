@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -51,12 +52,17 @@ public:
     /** Polls hardware input immediately (call before gameplay when update order is custom). */
     void Refresh(GameObject& owner, IEngineContext& context);
 
+    SPARK_SCRIPT_BIND(set_action_map)
     void SetActionMap(InputActionMapComponent* mapIn) noexcept { actionMap = mapIn; }
     [[nodiscard]] InputActionMapComponent* GetActionMap() const noexcept { return actionMap; }
 
+    SPARK_SCRIPT_BIND(is_action_pressed)
     [[nodiscard]] bool IsActionPressed(const char* actionName) const noexcept;
+
+    SPARK_SCRIPT_BIND(was_action_pressed_this_frame)
     [[nodiscard]] bool WasActionPressedThisFrame(const char* actionName) const noexcept;
     [[nodiscard]] bool WasActionReleasedThisFrame(const char* actionName) const noexcept;
+    SPARK_SCRIPT_BIND(get_action_axis1d)
     [[nodiscard]] float GetActionAxis1D(const char* actionName) const noexcept;
 
 private:

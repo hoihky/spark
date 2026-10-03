@@ -7,6 +7,7 @@
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -25,7 +26,9 @@ public:
     void OnAttach(GameObject& owner) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool value) noexcept { enabled = value; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
     void SetBladeMesh(const SharedPtr<Mesh>& mesh) noexcept;
@@ -34,21 +37,29 @@ public:
     void SetAlbedoTexture(const SharedPtr<Texture2D>& texture) noexcept { albedoTexture = texture; }
     [[nodiscard]] const SharedPtr<Texture2D>& GetAlbedoTexture() const noexcept { return albedoTexture; }
 
+    SPARK_SCRIPT_BIND(set_albedo_tint)
     void SetAlbedoTint(const Vector3& rgb) noexcept { albedoTint = rgb; }
+    SPARK_SCRIPT_BIND(get_albedo_tint)
     [[nodiscard]] Vector3 GetAlbedoTint() const noexcept { return albedoTint; }
 
+    SPARK_SCRIPT_BIND(set_alpha_cutoff)
     void SetAlphaCutoff(float value) noexcept { alphaCutoff = value; }
+    SPARK_SCRIPT_BIND(get_alpha_cutoff)
     [[nodiscard]] float GetAlphaCutoff() const noexcept { return alphaCutoff; }
 
+    SPARK_SCRIPT_BIND(set_wind_bend_scale)
     void SetWindBendScale(float scale) noexcept { windBendScale = scale; }
+    SPARK_SCRIPT_BIND(get_wind_bend_scale)
     [[nodiscard]] float GetWindBendScale() const noexcept { return windBendScale; }
 
+    SPARK_SCRIPT_BIND(configure_grid)
     void ConfigureGrid(int columns, int rows, float spacingMeters) noexcept;
 
     /**
      * Fills a square patch centered on the owner, inset by <c>edgeMarginMeters</c> from
      * <c>±halfExtentMeters</c> on XZ (matches a ground plane from <c>Mesh::CreateGroundPlane</c>).
      */
+    SPARK_SCRIPT_BIND(configure_grid_within_square)
     void ConfigureGridWithinSquare(float halfExtentMeters, float spacingMeters, float edgeMarginMeters = 0.4F) noexcept;
 
     void AppendInstanceRecords(Array<FoliageInstanceRecord>& outInstances, const Matrix4& ownerWorld) const;

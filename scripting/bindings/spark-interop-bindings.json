@@ -1,0 +1,633 @@
+{
+  "skipMirrorCodegenClasses": [
+    "AnimationEventReceiverComponent"
+  ],
+  "classOverrides": {
+    "sprite_2d_fsm": "Sprite2DCharacterAnimFsmComponent",
+    "char_3d_fsm": "Character3DAnimFsmComponent",
+    "anim_event_receiver": "AnimationEventReceiverComponent",
+    "foliage_instanced": "FoliageInstancedMeshComponent",
+    "parallax": "ParallaxLayerComponent",
+    "grass_field_scatter": "GrassFieldComponent",
+    "grass_field_bounds": "GrassFieldComponent",
+    "input_action_map": "InputActionMapComponent",
+    "player_input": "PlayerInputComponent",
+    "screen_shake": "ScreenShakeComponent",
+    "game_state": "GameStateComponent",
+    "game_flow_trigger": "GameFlowTriggerComponent",
+    "wind_environment": "WindEnvironmentComponent",
+    "rigidbody_2d": "Rigidbody2DComponent",
+    "rigidbody_3d": "Rigidbody3DComponent",
+    "box_collider_2d": "BoxCollider2DComponent",
+    "circle_collider_2d": "CircleCollider2DComponent",
+    "camera_2d": "Camera2DComponent",
+    "camera_2d_rig": "Camera2DRigComponent",
+    "one_way_platform_2d": "OneWayPlatform2DComponent",
+    "one_way_platform2_d": "OneWayPlatform2DComponent",
+    "skinned_mesh": "SkinnedMeshComponent",
+    "sound_cue": "SoundCueComponent",
+    "terrain": "TerrainComponent"
+  },
+  "prefixToClass": {
+    "ai_agent": {
+      "class": "AiAgentComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "aim_ik": {
+      "class": "AimIkComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "ambient_zone": {
+      "class": "AmbientZoneComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "anim_event_receiver": {
+      "class": "AnimationEventReceiverComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "animation_event_vfx": {
+      "class": "AnimationEventVfxComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "animation_hitbox2_d": {
+      "class": "AnimationHitbox2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "animation_melee_hit": {
+      "class": "AnimationMeleeHitComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "animator": {
+      "class": "AnimatorComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "attachment_socket": {
+      "class": "AttachmentSocketComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "audio_listener": {
+      "class": "AudioListenerComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "billboard": {
+      "class": "BillboardComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "blend_mode": {
+      "class": "BlendModeComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "box_collider3_d": {
+      "class": "BoxCollider3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "box_collider_2d": {
+      "class": "BoxCollider2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "camera": {
+      "class": "CameraComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "camera_2d": {
+      "class": "Camera2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "camera_2d_rig": {
+      "class": "Camera2DRigComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "camera_2d_rig_set": {
+      "class": "Camera2dRigSetComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "camera_bounds2_d": {
+      "class": "CameraBounds2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "camera_follow3_d": {
+      "class": "CameraFollow3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "capsule_collider3_d": {
+      "class": "CapsuleCollider3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "char_3d_fsm": {
+      "class": "Character3DAnimFsmComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "character_controller2_d": {
+      "class": "CharacterController2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "character_controller3_d": {
+      "class": "CharacterController3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "circle_collider_2d": {
+      "class": "CircleCollider2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "collision": {
+      "class": "CollisionComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "context": {
+      "class": "ContextComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "context_try": {
+      "class": "ContextTryComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "damage_zone2_d": {
+      "class": "DamageZone2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "damageable": {
+      "class": "DamageableComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "decal_projector": {
+      "class": "DecalProjectorComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "directional_light": {
+      "class": "DirectionalLightComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "distance_joint2_d": {
+      "class": "DistanceJoint2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "distance_joint3_d": {
+      "class": "DistanceJoint3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "fog_of_war2_d": {
+      "class": "FogOfWar2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "fog_volume": {
+      "class": "FogVolumeComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "foliage_instanced": {
+      "class": "FoliageInstancedMeshComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "foot_ik": {
+      "class": "FootIkComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "game_flow_trigger": {
+      "class": "GameFlowTriggerComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "game_state": {
+      "class": "GameStateComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "gltf_instance_node": {
+      "class": "GltfInstanceNodeComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "gltf_scene_source": {
+      "class": "GltfSceneSourceComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grass_field": {
+      "class": "GrassFieldComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grass_field_bounds": {
+      "class": "GrassFieldComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grass_field_bounds_bounds": {
+      "class": "GrassFieldBoundsBoundsComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grass_field_bounds_scatter": {
+      "class": "GrassFieldBoundsScatterComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grid_nav_agent2_d": {
+      "class": "GridNavAgent2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grid_nav_target2_d": {
+      "class": "GridNavTarget2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "grid_path_follower2_d": {
+      "class": "GridPathFollower2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "health": {
+      "class": "HealthComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "hinge_joint2_d": {
+      "class": "HingeJoint2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "hinge_joint3_d": {
+      "class": "HingeJoint3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "hurtbox2_d": {
+      "class": "Hurtbox2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "input": {
+      "class": "InputComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "input_action_map": {
+      "class": "InputActionMapComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "interactable": {
+      "class": "InteractableComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "material": {
+      "class": "MaterialComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "mesh": {
+      "class": "MeshComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "mesh_collider3_d": {
+      "class": "MeshCollider3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "multi_material": {
+      "class": "MultiMaterialComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "nav_mesh_agent": {
+      "class": "NavMeshAgentComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "one_way_platform_2d": {
+      "class": "OneWayPlatform2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "parallax": {
+      "class": "ParallaxLayerComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "particle_emitter": {
+      "class": "ParticleEmitterComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "patrol_path": {
+      "class": "PatrolPathComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "perception_sensor": {
+      "class": "PerceptionSensorComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "physics_material2_d": {
+      "class": "PhysicsMaterial2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "physics_material3_d": {
+      "class": "PhysicsMaterial3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "pickup": {
+      "class": "PickupComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "player_input": {
+      "class": "PlayerInputComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "point_light": {
+      "class": "PointLightComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "point_light2_d": {
+      "class": "PointLight2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "polygon_collider2_d": {
+      "class": "PolygonCollider2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "post_process_volume": {
+      "class": "PostProcessVolumeComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "projectile2_d": {
+      "class": "Projectile2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "render_layer": {
+      "class": "RenderLayerComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "rigidbody_2d": {
+      "class": "Rigidbody2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "rigidbody_3d": {
+      "class": "Rigidbody3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "root_motion": {
+      "class": "RootMotionComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "scene": {
+      "class": "SceneComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "scene2_d_composite_view": {
+      "class": "Scene2DCompositeViewComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "scene_spatial_policy": {
+      "class": "SceneSpatialPolicyComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "screen_shake": {
+      "class": "ScreenShakeComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "skeleton_debug_draw": {
+      "class": "SkeletonDebugDrawComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "skinned_animation_budget": {
+      "class": "SkinnedAnimationBudgetComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "skinned_mesh": {
+      "class": "SkinnedMeshComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sky": {
+      "class": "SkyComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sorting_group": {
+      "class": "SortingGroupComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sound_cue": {
+      "class": "SoundCueComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "spawn_point": {
+      "class": "SpawnPointComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "spawn_point2_d": {
+      "class": "SpawnPoint2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sphere_collider3_d": {
+      "class": "SphereCollider3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "spot_light": {
+      "class": "SpotLightComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "spring_arm3_d": {
+      "class": "SpringArm3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "spring_joint3_d": {
+      "class": "SpringJoint3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sprite": {
+      "class": "SpriteComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sprite_2d_fsm": {
+      "class": "Sprite2DCharacterAnimFsmComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sprite_animation_event_receiver": {
+      "class": "SpriteAnimationEventReceiverComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sprite_animation_event_vfx": {
+      "class": "SpriteAnimationEventVfxComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sprite_animator": {
+      "class": "SpriteAnimatorComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "sprite_lighting2_d": {
+      "class": "SpriteLighting2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "terrain": {
+      "class": "TerrainComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "text_overlay": {
+      "class": "TextOverlayComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap": {
+      "class": "TilemapComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_autotile": {
+      "class": "TilemapAutotileComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_collider2_d": {
+      "class": "TilemapCollider2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_gameplay_grid": {
+      "class": "TilemapGameplayGridComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_map_source": {
+      "class": "TilemapMapSourceComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_object_gizmo": {
+      "class": "TilemapObjectGizmoComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_object_layer": {
+      "class": "TilemapObjectLayerComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_object_spawn": {
+      "class": "TilemapObjectSpawnComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "tilemap_tile_animator": {
+      "class": "TilemapTileAnimatorComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "time_of_day_driver": {
+      "class": "TimeOfDayDriverComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "transform": {
+      "class": "TransformComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "trigger_volume2_d": {
+      "class": "TriggerVolume2DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "trigger_volume3_d": {
+      "class": "TriggerVolume3DComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "ui_canvas": {
+      "class": "UiCanvasComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "vfx_player": {
+      "class": "VfxPlayerComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "water_body": {
+      "class": "WaterBodyComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    },
+    "wind_environment": {
+      "class": "WindEnvironmentComponent",
+      "namespace": "Spark.Bindings.Components",
+      "base": "GameComponentHandle"
+    }
+  }
+}
