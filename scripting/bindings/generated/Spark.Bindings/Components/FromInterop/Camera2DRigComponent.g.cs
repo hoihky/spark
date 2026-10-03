@@ -9,23 +9,25 @@ public sealed partial class Camera2DRigComponent : GameComponentHandle
     internal Camera2DRigComponent(nint handle)
         : base(handle) { }
 
-    public void Tick(GameObject owner, float deltaSeconds, float framebufferAspect)
+    public int Mode
     {
-        unsafe
+        get
         {
-                Native.spark_camera_2d_rig_tick(InteropPtr.Component(Handle), InteropPtr.Object(owner.Handle), deltaSeconds, framebufferAspect);
-        }
-    }
-
-    public int GetMode()
-    {
-        unsafe
-        {
+            unsafe
+            {
                 return Native.spark_camera_2d_rig_get_mode(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_mode(InteropPtr.Component(Handle), value);
+            }
         }
     }
 
-    public Vector3 Taroffset
+    public Vector3 TargetOffset
     {
         get
         {
@@ -36,29 +38,67 @@ public sealed partial class Camera2DRigComponent : GameComponentHandle
                 return Vector3.FromNative(v);
             }
         }
+        set
+        {
+            unsafe
+            {
+                var v = value.ToNative();
+                Native.spark_camera_2d_rig_set_target_offset(InteropPtr.Component(Handle), &v);
+            }
+        }
     }
 
-    public float GetFollowSmoothRate()
+    public float FollowSmoothRate
     {
-        unsafe
+        get
         {
+            unsafe
+            {
                 return Native.spark_camera_2d_rig_get_follow_smooth_rate(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_follow_smooth_rate(InteropPtr.Component(Handle), value);
+            }
         }
     }
 
-    public float GetLookAheadScale()
+    public float LookAheadScale
     {
-        unsafe
+        get
         {
+            unsafe
+            {
                 return Native.spark_camera_2d_rig_get_look_ahead_scale(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_look_ahead_scale(InteropPtr.Component(Handle), value);
+            }
         }
     }
 
-    public int GetUseBounds()
+    public int UseBounds
     {
-        unsafe
+        get
         {
+            unsafe
+            {
                 return Native.spark_camera_2d_rig_get_use_bounds(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_use_bounds(InteropPtr.Component(Handle), value);
+            }
         }
     }
 
@@ -71,6 +111,14 @@ public sealed partial class Camera2DRigComponent : GameComponentHandle
                 SparkVector2 v;
                 Native.spark_camera_2d_rig_get_bounds_min(InteropPtr.Component(Handle), &v);
                 return Vector2.FromNative(v);
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                var v = value.ToNative();
+                Native.spark_camera_2d_rig_set_bounds_min(InteropPtr.Component(Handle), &v);
             }
         }
     }
@@ -86,29 +134,93 @@ public sealed partial class Camera2DRigComponent : GameComponentHandle
                 return Vector2.FromNative(v);
             }
         }
+        set
+        {
+            unsafe
+            {
+                var v = value.ToNative();
+                Native.spark_camera_2d_rig_set_bounds_max(InteropPtr.Component(Handle), &v);
+            }
+        }
     }
 
-    public int GetUseZoomLimits()
+    public int UseZoomLimits
     {
-        unsafe
+        get
         {
+            unsafe
+            {
                 return Native.spark_camera_2d_rig_get_use_zoom_limits(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_use_zoom_limits(InteropPtr.Component(Handle), value);
+            }
         }
     }
 
-    public float GetZoomMinHalfExtentY()
+    public float ZoomMinHalfExtentY
     {
-        unsafe
+        get
         {
+            unsafe
+            {
                 return Native.spark_camera_2d_rig_get_zoom_min_half_extent_y(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_zoom_min_half_extent_y(InteropPtr.Component(Handle), value);
+            }
         }
     }
 
-    public float GetZoomMaxHalfExtentY()
+    public float ZoomMaxHalfExtentY
+    {
+        get
+        {
+            unsafe
+            {
+                return Native.spark_camera_2d_rig_get_zoom_max_half_extent_y(InteropPtr.Component(Handle));
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                Native.spark_camera_2d_rig_set_zoom_max_half_extent_y(InteropPtr.Component(Handle), value);
+            }
+        }
+    }
+
+    public void SetTarget(GameObject target)
     {
         unsafe
         {
-                return Native.spark_camera_2d_rig_get_zoom_max_half_extent_y(InteropPtr.Component(Handle));
+                Native.spark_camera_2d_rig_set_target(InteropPtr.Component(Handle), InteropPtr.Object(target.Handle));
+        }
+    }
+
+    public void SetBounds(int useBounds, in Vector2 boundsMin, in Vector2 boundsMax)
+    {
+        unsafe
+        {
+            var boundsMinNative = boundsMin.ToNative();
+            var boundsMaxNative = boundsMax.ToNative();
+                Native.spark_camera_2d_rig_set_bounds(InteropPtr.Component(Handle), useBounds, &boundsMinNative, &boundsMaxNative);
+        }
+    }
+
+    public void Tick(GameObject owner, float deltaSeconds, float framebufferAspect)
+    {
+        unsafe
+        {
+                Native.spark_camera_2d_rig_tick(InteropPtr.Component(Handle), InteropPtr.Object(owner.Handle), deltaSeconds, framebufferAspect);
         }
     }
 }

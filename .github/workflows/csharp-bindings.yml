@@ -1,0 +1,50 @@
+name: C# bindings
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "include/spark/scripting/**"
+      - "include/spark/ecs/components/**"
+      - "src/spark/scripting/**"
+      - "scripting/**"
+      - "tools/spark_script_bindgen.py"
+      - "tools/generate-csharp-bindings.sh"
+      - "tools/generate_interop_manifest.py"
+      - "tools/generate_native_pinvoke_companion.py"
+      - "tools/generate-csharp-component-registry.py"
+  pull_request:
+    paths:
+      - "include/spark/scripting/**"
+      - "include/spark/ecs/components/**"
+      - "src/spark/scripting/**"
+      - "scripting/**"
+      - "tools/**"
+
+jobs:
+  bindings:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Regenerate C# bindings
+        run: ./tools/generate-csharp-bindings.sh
+
+      - name: Build Spark.Bindings + Spark.Scripting + sample
+        run: |
+          dotnet build scripting/bindings/generated/Spark.Bindings/Spark.Bindings.csproj -c Release -p:NuGetAudit=false
+          dotnet build scripting/Spark.Scripting/Spark.Scripting.csproj -c Release -p:NuGetAudit=false
+          dotnet build scripting/samples/HelloCsGame/HelloCsGame.csproj -c Release -p:NuGetAudit=false
+
+      - name: Build SparkInterop + SparkScriptHost (CMake)
+        run: |
+          cmake -B build -DSPARK_BUILD_INTEROP=ON -DSPARK_BUILD_SCRIPT_HOST=ON
+          cmake --build build --target SparkScriptingBuild SparkScriptHost -j4

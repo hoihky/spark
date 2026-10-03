@@ -7,6 +7,15 @@ namespace Spark.Bindings;
 public static unsafe partial class Native
 {
     [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern SparkGameComponent* spark_object_add_terrain(SparkGameObject* @object, int subdivX, int subdivZ, float halfExtentX, float halfExtentZ, float heightScale, SparkVector3* meshAlbedoRgb);
+
+    [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern SparkGameComponent* spark_object_add_directional_light(SparkGameObject* @object, SparkVector3* colorRgb, float intensity);
+
+    [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern SparkGameComponent* spark_object_add_sound_cue(SparkGameObject* @object);
+
+    [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     public static extern int spark_ai_agent_is_enabled(SparkGameComponent* component);
 
     [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -605,6 +614,12 @@ public static unsafe partial class Native
 
     [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     public static extern void spark_sound_cue_queue_at_world_preset(SparkGameComponent* component, int preset, float volume, SparkVector3* worldPosition, float spatialBlend, float minDistance, float maxDistance);
+
+    [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern void spark_sound_cue_queue_bundled_clip(SparkGameComponent* component, sbyte* bundledAssetPathUtf8, float volume);
+
+    [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern void spark_sound_cue_queue_at_world_bundled_clip(SparkGameComponent* component, sbyte* bundledAssetPathUtf8, float volume, SparkVector3* worldPosition, float spatialBlend, float minDistance, float maxDistance);
 
     [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     public static extern float spark_camera_2d_get_half_extent_y(SparkGameComponent* component);

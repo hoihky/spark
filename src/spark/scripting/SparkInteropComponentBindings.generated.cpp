@@ -2758,6 +2758,24 @@ void spark_sound_cue_queue_at_world_preset(SparkGameComponent* component, int pr
     self->QueueAtWorldPreset(static_cast<Spark::ProceduralSoundPreset>(static_cast<std::uint8_t>(preset)), volume, Spark::Scripting::ToVector3(*worldPosition), spatialBlend, minDistance, maxDistance);
 }
 
+void spark_sound_cue_queue_bundled_clip(SparkGameComponent* component, const char* bundledAssetPathUtf8, float volume) {
+    auto self = AsSoundCueComponent(component);
+    if (self == nullptr) {
+        return;
+
+    }
+    self->QueueBundledClip(bundledAssetPathUtf8, volume);
+}
+
+void spark_sound_cue_queue_at_world_bundled_clip(SparkGameComponent* component, const char* bundledAssetPathUtf8, float volume, const SparkVector3* worldPosition, float spatialBlend, float minDistance, float maxDistance) {
+    auto self = AsSoundCueComponent(component);
+    if (self == nullptr) {
+        return;
+
+    }
+    self->QueueAtWorldBundledClip(bundledAssetPathUtf8, volume, Spark::Scripting::ToVector3(*worldPosition), spatialBlend, minDistance, maxDistance);
+}
+
 float spark_camera_2d_get_half_extent_y(const SparkGameComponent* component) {
     auto* self = AsCamera2DComponent(component);
     if (self == nullptr) {

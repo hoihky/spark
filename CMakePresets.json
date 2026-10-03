@@ -14,7 +14,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "SPARK_BUILD_DEMO": "ON",
-        "SPARK_BUILD_INTEROP": "ON"
+        "SPARK_BUILD_INTEROP": "ON",
+        "SPARK_BUILD_SCRIPT_HOST": "ON"
       }
     }
   ],

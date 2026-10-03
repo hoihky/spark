@@ -283,8 +283,9 @@
     },
     {
       "kind": "SkinnedMesh",
-      "methodCount": 3,
+      "methodCount": 4,
       "sampleMethods": [
+        "SPARK_SCRIPT_BIND",
         "SetMesh",
         "SetSkeleton",
         "SkinnedMeshComponent"
@@ -292,10 +293,11 @@
     },
     {
       "kind": "SoundCue",
-      "methodCount": 2,
+      "methodCount": 3,
       "sampleMethods": [
         "Queue",
-        "QueueAtWorld"
+        "QueueAtWorld",
+        "SPARK_SCRIPT_BIND"
       ]
     },
     {
@@ -315,10 +317,14 @@
     },
     {
       "kind": "Terrain",
-      "methodCount": 4,
+      "methodCount": 8,
       "sampleMethods": [
+        "ApplyHeightBrushLocal",
+        "ApplyHeightBrushWorld",
         "ApplyIslandFalloff",
         "EnsureHeightBuffer",
+        "RegenerateMesh",
+        "ResetHeightsToProcedural",
         "SPARK_SCRIPT_BIND",
         "TerrainComponent"
       ]

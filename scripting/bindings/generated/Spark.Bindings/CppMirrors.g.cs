@@ -583,6 +583,93 @@ public sealed partial class GameObject
                 Native.spark_object_add_text_overlay(InteropPtr.Object(Handle))));
         }
     }
+
+    public Components.TerrainComponent AddTerrain(
+        int subdivX = 96,
+        int subdivZ = 96,
+        float halfExtentX = 56f,
+        float halfExtentZ = 56f,
+        float heightScale = 14f)
+        => AddTerrain(subdivX, subdivZ, halfExtentX, halfExtentZ, heightScale, new Vector3 { X = 0.42f, Y = 0.55f, Z = 0.36f });
+
+    public Components.TerrainComponent AddTerrain(
+        int subdivX,
+        int subdivZ,
+        float halfExtentX,
+        float halfExtentZ,
+        float heightScale,
+        in Vector3 meshAlbedoRgb)
+    {
+        unsafe
+        {
+            var native = meshAlbedoRgb.ToNative();
+            return new Components.TerrainComponent(InteropPtr.From(
+                Native.spark_object_add_terrain(
+                    InteropPtr.Object(Handle),
+                    subdivX,
+                    subdivZ,
+                    halfExtentX,
+                    halfExtentZ,
+                    heightScale,
+                    &native)));
+        }
+    }
+
+    public Components.DirectionalLightComponent AddDirectionalLight(in Vector3 colorRgb, float intensity = 1f)
+    {
+        unsafe
+        {
+            var c = colorRgb.ToNative();
+            return new Components.DirectionalLightComponent(InteropPtr.From(
+                Native.spark_object_add_directional_light(InteropPtr.Object(Handle), &c, intensity)));
+        }
+    }
+
+    public Components.SoundCueComponent AddSoundCue()
+    {
+        unsafe
+        {
+            return new Components.SoundCueComponent(InteropPtr.From(
+                Native.spark_object_add_sound_cue(InteropPtr.Object(Handle))));
+        }
+    }
+
+    public Components.PointLightComponent AddPointLight(in Vector3 color, float intensity, float range)
+    {
+        unsafe
+        {
+            var c = color.ToNative();
+            return new Components.PointLightComponent(InteropPtr.From(
+                Native.spark_object_add_point_light(InteropPtr.Object(Handle), &c, intensity, range)));
+        }
+    }
+
+    public Camera2DComponent AddCamera2D(float halfExtentY = 5f, int priority = 0)
+    {
+        unsafe
+        {
+            return new Camera2DComponent(InteropPtr.From(
+                Native.spark_object_add_camera_2d(InteropPtr.Object(Handle), halfExtentY, priority)));
+        }
+    }
+
+    public Components.GrassFieldComponent AddGrassField()
+    {
+        unsafe
+        {
+            return new Components.GrassFieldComponent(InteropPtr.From(
+                Native.spark_object_add_grass_field(InteropPtr.Object(Handle))));
+        }
+    }
+
+    public Components.WindEnvironmentComponent AddWindEnvironment()
+    {
+        unsafe
+        {
+            return new Components.WindEnvironmentComponent(InteropPtr.From(
+                Native.spark_object_add_wind_environment(InteropPtr.Object(Handle))));
+        }
+    }
 }
 
 /// <summary>Registered texture keys + Kenney file paths used by <see cref="GameWorld.RegisterPlatformer2DDemoTextures"/>.</summary>

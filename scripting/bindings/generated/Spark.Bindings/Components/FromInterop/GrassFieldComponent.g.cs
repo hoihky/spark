@@ -141,7 +141,15 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetChunkSizeMeters(float meters)
+    public void SetHalfExtents(float halfX, float halfZ)
+    {
+        unsafe
+        {
+                Native.spark_grass_field_bounds_set_half_extents(InteropPtr.Component(Handle), halfX, halfZ);
+        }
+    }
+
+    public void SetChunkSizeMeters(float meters)
     {
         unsafe
         {
@@ -149,7 +157,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetDensityPerSquareMeter(float density)
+    public void SetDensityPerSquareMeter(float density)
     {
         unsafe
         {
@@ -157,7 +165,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetMaxViewDistanceMeters(float meters)
+    public void SetMaxViewDistanceMeters(float meters)
     {
         unsafe
         {
@@ -165,7 +173,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetMaxVisibleInstances(uint count)
+    public void SetMaxVisibleInstances(uint count)
     {
         unsafe
         {
@@ -173,7 +181,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetMaxCachedInstancesPerChunk(uint count)
+    public void SetMaxCachedInstancesPerChunk(uint count)
     {
         unsafe
         {
@@ -181,7 +189,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetMaxSlopeDegrees(float degrees)
+    public void SetMaxSlopeDegrees(float degrees)
     {
         unsafe
         {
@@ -189,7 +197,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetPlacementRadiusMeters(float meters)
+    public void SetPlacementRadiusMeters(float meters)
     {
         unsafe
         {
@@ -197,7 +205,7 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetDistanceFadeOuterFraction(float fraction)
+    public void SetDistanceFadeOuterFraction(float fraction)
     {
         unsafe
         {
@@ -205,20 +213,12 @@ public sealed partial class GrassFieldComponent : GameComponentHandle
         }
     }
 
-    public void ScatterSetAlbedoTint(in Vector3 rgb)
+    public void SetAlbedoTint(in Vector3 rgb)
     {
         unsafe
         {
             var rgbNative = rgb.ToNative();
                 Native.spark_grass_field_scatter_set_albedo_tint(InteropPtr.Component(Handle), &rgbNative);
-        }
-    }
-
-    public void SetHalfExtents(float halfX, float halfZ)
-    {
-        unsafe
-        {
-                Native.spark_grass_field_bounds_set_half_extents(InteropPtr.Component(Handle), halfX, halfZ);
         }
     }
 }

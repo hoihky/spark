@@ -37,7 +37,7 @@ public sealed partial class Sprite2DCharacterAnimFsmComponent : GameComponentHan
     {
         unsafe
         {
-                Native.spark_sprite_2d_fsm_set_locomotion_source(InteropPtr.Component(Handle), source);
+                Native.spark_sprite_2d_fsm_set_locomotion_source(InteropPtr.Component(Handle), (SparkSprite2DAnimLocomotionSource)source);
         }
     }
 

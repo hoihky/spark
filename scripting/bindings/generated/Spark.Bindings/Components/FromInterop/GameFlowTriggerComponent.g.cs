@@ -13,7 +13,7 @@ public sealed partial class GameFlowTriggerComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_game_flow_trigger_set_source(InteropPtr.Component(Handle), value);
+                Native.spark_game_flow_trigger_set_source(InteropPtr.Component(Handle), (SparkGameFlowTriggerSource)value);
         }
     }
 
@@ -21,7 +21,7 @@ public sealed partial class GameFlowTriggerComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_game_flow_trigger_set_target_state(InteropPtr.Component(Handle), state);
+                Native.spark_game_flow_trigger_set_target_state(InteropPtr.Component(Handle), (SparkGameFlowState)state);
         }
     }
 

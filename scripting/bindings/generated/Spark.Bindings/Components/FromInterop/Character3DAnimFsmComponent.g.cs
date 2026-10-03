@@ -163,7 +163,7 @@ public sealed partial class Character3DAnimFsmComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_char_3d_fsm_set_combat_blackboard_int_slot(InteropPtr.Component(Handle), slotOrMax);
+                Native.spark_char_3d_fsm_set_combat_blackboard_int_slot(InteropPtr.Component(Handle), (nuint)slotOrMax);
         }
     }
 

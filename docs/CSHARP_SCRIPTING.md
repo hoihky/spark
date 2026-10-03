@@ -2,7 +2,7 @@
 
 Spark exposes a stable **C ABI** (`SparkInterop`) for managed editors and tools. C# P/Invoke types are **generated** from `include/spark/scripting/SparkInterop.h` with **ClangSharp**.
 
-> **Note:** The CoreCLR game host (`SparkScriptHost`, `Spark.Scripting` SDK, HelloCsGame) is not built in the current tree. Enable `-DSPARK_BUILD_INTEROP=ON` for `SparkInterop` + `Spark.Bindings` only.
+> **Note:** Enable `-DSPARK_BUILD_INTEROP=ON` for `SparkInterop` + managed bindings. Add `-DSPARK_BUILD_SCRIPT_HOST=ON` to build `SparkScriptHost` (loads `HelloCsGame.dll` via CoreCLR). Both are ON in the `debug` CMake preset.
 
 ## Architecture
 
@@ -85,8 +85,8 @@ If your build directory is not `cmake-build-debug`, edit `DYLD_LIBRARY_PATH` / `
 ### Command line
 
 ```bash
-cmake -B build
-cmake --build build --target SparkScriptHost SparkScriptingBuild
+cmake -B build -DSPARK_BUILD_INTEROP=ON -DSPARK_BUILD_SCRIPT_HOST=ON
+cmake --build build --target SparkScriptHost
 ```
 
 Copy `libSparkInterop.dylib` (or `.so`) next to `SparkScriptHost` and managed outputs, then:
@@ -106,15 +106,23 @@ SparkScriptHost <runtimeconfig> <assembly.dll> <TypeName> <MethodName>
 ## Writing a game
 
 1. Class library targeting `net8.0`, reference `Spark.Scripting`.
-2. Subclass `Game` (same hooks as C++ `Spark::Game`).
-3. Register in `[ModuleInitializer]`:
+2. Subclass `SparkGame` or `Game` (same hooks as C++ `Spark::Game`). `SparkGame` adds helpers such as `PlayPresetSound` / `PlayBundledSound`.
+3. Components blocked from `GetOrAdd*` factories (terrain, directional light, sound cue, …) are added via `GameObject.AddTerrain()`, `AddDirectionalLight()`, `AddSoundCue()`, etc. on `CppMirrors.g.cs`.
+4. Bundled WAV/OGG paths: `soundCue.QueueBundledClip("audio/foo.wav")`. Procedural presets: `ProceduralSoundPreset` + `QueuePreset`.
+5. Register in `[ModuleInitializer]` when using the CoreCLR host:
 
 ```csharp
 [ModuleInitializer]
 internal static void Init() => GameBootstrap.Factory = static () => new MyGame();
 ```
 
-4. Expose native entry (sample uses `HelloCsGame.GameEntry.Initialize`).
+6. Expose native entry (sample uses `HelloCsGame.GameEntry.Initialize` when the host is enabled).
+
+Compile-check without the host:
+
+```bash
+dotnet build scripting/samples/HelloCsGame/HelloCsGame.csproj -c Release
+```
 
 ## Interop surface (expanded)
 

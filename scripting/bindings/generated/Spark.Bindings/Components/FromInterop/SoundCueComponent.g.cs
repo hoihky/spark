@@ -25,4 +25,36 @@ public sealed partial class SoundCueComponent : GameComponentHandle
                 Native.spark_sound_cue_queue_at_world_preset(InteropPtr.Component(Handle), preset, volume, &worldPositionNative, spatialBlend, minDistance, maxDistance);
         }
     }
+
+    public void QueueBundledClip(string bundledAssetPathUtf8, float volume)
+    {
+        unsafe
+        {
+            InteropUtf8.WithUtf8(bundledAssetPathUtf8, ptr =>
+            {
+                Native.spark_sound_cue_queue_bundled_clip(InteropPtr.Component(Handle), (sbyte*)ptr, volume);
+            });
+        }
+    }
+
+    public void QueueAtWorldBundledClip(string bundledAssetPathUtf8, float volume, in Vector3 worldPosition, float spatialBlend, float minDistance, float maxDistance)
+    {
+        unsafe
+        {
+            var worldPositionNative = worldPosition.ToNative();
+            if (bundledAssetPathUtf8 is null)
+            {
+                Native.spark_sound_cue_queue_at_world_bundled_clip(InteropPtr.Component(Handle), (sbyte*)0, volume, &worldPositionNative, spatialBlend, minDistance, maxDistance);
+                return;
+            }
+
+            var bundledAssetPathUtf8ByteCount = System.Text.Encoding.UTF8.GetByteCount(bundledAssetPathUtf8);
+            var bundledAssetPathUtf8Buffer = new byte[bundledAssetPathUtf8ByteCount + 1];
+            System.Text.Encoding.UTF8.GetBytes(bundledAssetPathUtf8, 0, bundledAssetPathUtf8.Length, bundledAssetPathUtf8Buffer, 0);
+            fixed (byte* bundledAssetPathUtf8Ptr = bundledAssetPathUtf8Buffer)
+            {
+                Native.spark_sound_cue_queue_at_world_bundled_clip(InteropPtr.Component(Handle), (sbyte*)bundledAssetPathUtf8Ptr, volume, &worldPositionNative, spatialBlend, minDistance, maxDistance);
+            }
+        }
+    }
 }

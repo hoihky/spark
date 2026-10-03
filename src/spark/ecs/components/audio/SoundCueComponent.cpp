@@ -1,6 +1,7 @@
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 
 #include "spark/audio/SoundEngine.hpp"
+#include "spark/audio/SoundFileLoader.hpp"
 #include "spark/math/Vector3.hpp"
 
 namespace Spark {
@@ -17,6 +18,26 @@ void SoundCueComponent::Queue(const SharedPtr<SoundClip>& clip, const float volu
 
 void SoundCueComponent::QueuePreset(const ProceduralSoundPreset preset, const float volume) {
     Queue(ProceduralSoundPresets::Get(preset), volume);
+}
+
+void SoundCueComponent::QueueBundledClip(const char* bundledAssetPathUtf8, const float volume) {
+    Queue(TryLoadSoundClipFromBundledAsset(bundledAssetPathUtf8), volume);
+}
+
+void SoundCueComponent::QueueAtWorldBundledClip(
+        const char* bundledAssetPathUtf8,
+        const float volume,
+        const Vector3& worldPosition,
+        const float spatialBlend,
+        const float minDistance,
+        const float maxDistance) {
+    QueueAtWorld(
+            TryLoadSoundClipFromBundledAsset(bundledAssetPathUtf8),
+            volume,
+            worldPosition,
+            spatialBlend,
+            minDistance,
+            maxDistance);
 }
 
 void SoundCueComponent::QueueAtWorldPreset(

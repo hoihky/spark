@@ -13,7 +13,7 @@ public sealed partial class SkyComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_sky_set_mode(InteropPtr.Component(Handle), mode);
+                Native.spark_sky_set_mode(InteropPtr.Component(Handle), (SparkSceneSkyMode)mode);
         }
     }
 

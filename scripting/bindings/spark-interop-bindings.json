@@ -114,11 +114,6 @@
       "namespace": "Spark.Bindings.Components",
       "base": "GameComponentHandle"
     },
-    "camera_2d_rig_set": {
-      "class": "Camera2dRigSetComponent",
-      "namespace": "Spark.Bindings.Components",
-      "base": "GameComponentHandle"
-    },
     "camera_bounds2_d": {
       "class": "CameraBounds2DComponent",
       "namespace": "Spark.Bindings.Components",
@@ -249,13 +244,8 @@
       "namespace": "Spark.Bindings.Components",
       "base": "GameComponentHandle"
     },
-    "grass_field_bounds_bounds": {
-      "class": "GrassFieldBoundsBoundsComponent",
-      "namespace": "Spark.Bindings.Components",
-      "base": "GameComponentHandle"
-    },
-    "grass_field_bounds_scatter": {
-      "class": "GrassFieldBoundsScatterComponent",
+    "grass_field_scatter": {
+      "class": "GrassFieldComponent",
       "namespace": "Spark.Bindings.Components",
       "base": "GameComponentHandle"
     },

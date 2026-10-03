@@ -117,7 +117,7 @@ public sealed partial class ParallaxLayerComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_parallax_set_drift(InteropPtr.Component(Handle), mode, amplitude, frequencyHz, phase);
+                Native.spark_parallax_set_drift(InteropPtr.Component(Handle), (SparkParallaxDriftMode)mode, amplitude, frequencyHz, phase);
         }
     }
 
@@ -125,7 +125,7 @@ public sealed partial class ParallaxLayerComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_parallax_set_drift_mode(InteropPtr.Component(Handle), mode);
+                Native.spark_parallax_set_drift_mode(InteropPtr.Component(Handle), (SparkParallaxDriftMode)mode);
         }
     }
 

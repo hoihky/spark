@@ -528,10 +528,40 @@ internal static class ComponentMirrorCodegen
                     sb.AppendLine($"            {returnType} result = default;");
                 }
 
-                sb.AppendLine($"            InteropUtf8.WithUtf8({stringName}, ptr =>");
-                sb.AppendLine("            {");
-                EmitMethodCallBody(sb, ptr, parameters, stringName, "ptr", needsBool || needsValue, needsValue);
-                sb.AppendLine("            });");
+                var blitParams = parameters
+                    .Where(p => ToCamelCase(p.Name) != stringName
+                                && (NeedsNativeBlit(p.Type) || p.Type.Contains("SparkQuaternion", StringComparison.Ordinal)))
+                    .ToList();
+                foreach (var p in blitParams)
+                {
+                    if (p.Type.Contains("SparkQuaternion", StringComparison.Ordinal))
+                    {
+                        sb.AppendLine($"            var {ToCamelCase(p.Name)}Native = {ToCamelCase(p.Name)};");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"            var {ToCamelCase(p.Name)}Native = {ToCamelCase(p.Name)}.ToNative();");
+                    }
+                }
+
+                if (blitParams.Count > 0)
+                {
+                    EmitInlineUtf8WithNativeBlits(
+                        sb,
+                        ptr,
+                        parameters,
+                        stringName,
+                        blitParams,
+                        needsBool || needsValue,
+                        needsValue);
+                }
+                else
+                {
+                    sb.AppendLine($"            InteropUtf8.WithUtf8({stringName}, ptr =>");
+                    sb.AppendLine("            {");
+                    EmitMethodCallBody(sb, ptr, parameters, stringName, "ptr", needsBool || needsValue, needsValue);
+                    sb.AppendLine("            });");
+                }
                 if (needsBool)
                 {
                     sb.AppendLine("            return result != 0;");
@@ -573,6 +603,77 @@ internal static class ComponentMirrorCodegen
             return sb.ToString();
         }
 
+        private void EmitInlineUtf8WithNativeBlits(
+            StringBuilder sb,
+            string ptr,
+            List<InteropParameter> parameters,
+            string stringName,
+            List<InteropParameter> blitParams,
+            bool assignResult,
+            bool assignTypedResult)
+        {
+            sb.AppendLine($"            if ({stringName} is null)");
+            sb.AppendLine("            {");
+            EmitMethodCallBody(
+                sb,
+                ptr,
+                parameters,
+                stringName,
+                "null",
+                assignResult,
+                assignTypedResult,
+                useNullUtf8: true,
+                useFixedPtrs: false,
+                indent: "                ");
+            if (assignResult)
+            {
+                if (assignTypedResult)
+                {
+                    sb.AppendLine("                return result;");
+                }
+                else
+                {
+                    sb.AppendLine("                return result != 0;");
+                }
+            }
+            else
+            {
+                sb.AppendLine("                return;");
+            }
+
+            sb.AppendLine("            }");
+            sb.AppendLine();
+            sb.AppendLine($"            var {stringName}ByteCount = System.Text.Encoding.UTF8.GetByteCount({stringName});");
+            sb.AppendLine($"            var {stringName}Buffer = new byte[{stringName}ByteCount + 1];");
+            sb.AppendLine(
+                $"            System.Text.Encoding.UTF8.GetBytes({stringName}, 0, {stringName}.Length, {stringName}Buffer, 0);");
+            sb.AppendLine($"            fixed (byte* {stringName}Ptr = {stringName}Buffer)");
+            sb.AppendLine("            {");
+            EmitMethodCallBody(
+                sb,
+                ptr,
+                parameters,
+                stringName,
+                $"{stringName}Ptr",
+                assignResult,
+                assignTypedResult,
+                useFixedPtrs: false,
+                indent: "                ");
+            if (assignResult)
+            {
+                if (assignTypedResult)
+                {
+                    sb.AppendLine("                return result;");
+                }
+                else
+                {
+                    sb.AppendLine("                return result != 0;");
+                }
+            }
+
+            sb.AppendLine("            }");
+        }
+
         private void EmitMethodCallBody(
             StringBuilder sb,
             string ptr,
@@ -580,14 +681,17 @@ internal static class ComponentMirrorCodegen
             string? stringParamName,
             string? utf8PtrName,
             bool assignResult = false,
-            bool assignTypedResult = false)
+            bool assignTypedResult = false,
+            bool useFixedPtrs = false,
+            bool useNullUtf8 = false,
+            string indent = "                ")
         {
             var args = new List<string> { ptr };
             foreach (var p in parameters)
             {
                 if (stringParamName is not null && ToCamelCase(p.Name) == stringParamName)
                 {
-                    args.Add($"(sbyte*){utf8PtrName}");
+                    args.Add(useNullUtf8 ? "(sbyte*)0" : $"(sbyte*){utf8PtrName}");
                 }
                 else
                 {
@@ -597,15 +701,15 @@ internal static class ComponentMirrorCodegen
 
             if (assignResult)
             {
-                sb.AppendLine($"                result = Native.{_fn.Name}({string.Join(", ", args)});");
+                sb.AppendLine($"{indent}result = Native.{_fn.Name}({string.Join(", ", args)});");
             }
             else if (_fn.ReturnType == "void")
             {
-                sb.AppendLine($"                Native.{_fn.Name}({string.Join(", ", args)});");
+                sb.AppendLine($"{indent}Native.{_fn.Name}({string.Join(", ", args)});");
             }
             else
             {
-                sb.AppendLine($"                return Native.{_fn.Name}({string.Join(", ", args)});");
+                sb.AppendLine($"{indent}return Native.{_fn.Name}({string.Join(", ", args)});");
             }
         }
     }
@@ -616,9 +720,39 @@ internal static class ComponentMirrorCodegen
         || type.Contains("SparkVector4", StringComparison.Ordinal)
         || type.Contains("SparkQuaternion", StringComparison.Ordinal);
 
+    private static string MapNativeBlitType(string type)
+    {
+        if (type.Contains("SparkVector3", StringComparison.Ordinal))
+        {
+            return "SparkVector3";
+        }
+
+        if (type.Contains("SparkVector2", StringComparison.Ordinal))
+        {
+            return "SparkVector2";
+        }
+
+        if (type.Contains("SparkVector4", StringComparison.Ordinal))
+        {
+            return "SparkVector4";
+        }
+
+        if (type.Contains("SparkQuaternion", StringComparison.Ordinal))
+        {
+            return "SparkQuaternion";
+        }
+
+        return "SparkVector3";
+    }
+
     private static string EmitSetValue(InteropFunction set, string ptr, string valueExpr)
     {
         var valueParam = set.Parameters[1];
+        if (IsSparkEnumType(valueParam.Type))
+        {
+            return $"                Native.{set.Name}({ptr}, {valueExpr});";
+        }
+
         if (valueParam.Type.Contains("SparkVector3", StringComparison.Ordinal))
         {
             return $"                var native = {valueExpr}.ToNative();\n                Native.{set.Name}({ptr}, &native);";
@@ -692,6 +826,16 @@ internal static class ComponentMirrorCodegen
         if (p.Type.Contains("SparkGameComponent", StringComparison.Ordinal))
         {
             return $"InteropPtr.Component({ToCamelCase(p.Name)}.Handle)";
+        }
+
+        if (IsSparkEnumType(p.Type))
+        {
+            return $"({p.Type}){ToCamelCase(p.Name)}";
+        }
+
+        if (p.Type == "size_t")
+        {
+            return $"(nuint){ToCamelCase(p.Name)}";
         }
 
         return ToCamelCase(p.Name);

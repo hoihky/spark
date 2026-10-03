@@ -224,6 +224,8 @@ SPARK_SCRIPT_API void spark_audio_listener_set_enabled(SparkGameComponent* compo
 
 SPARK_SCRIPT_API void spark_sound_cue_queue_preset(SparkGameComponent* component, int preset, float volume);
 SPARK_SCRIPT_API void spark_sound_cue_queue_at_world_preset(SparkGameComponent* component, int preset, float volume, const SparkVector3* worldPosition, float spatialBlend, float minDistance, float maxDistance);
+SPARK_SCRIPT_API void spark_sound_cue_queue_bundled_clip(SparkGameComponent* component, const char* bundledAssetPathUtf8, float volume);
+SPARK_SCRIPT_API void spark_sound_cue_queue_at_world_bundled_clip(SparkGameComponent* component, const char* bundledAssetPathUtf8, float volume, const SparkVector3* worldPosition, float spatialBlend, float minDistance, float maxDistance);
 
 SPARK_SCRIPT_API float spark_camera_2d_get_half_extent_y(const SparkGameComponent* component);
 SPARK_SCRIPT_API float spark_camera_2d_get_clip_near_z(const SparkGameComponent* component);

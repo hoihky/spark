@@ -672,6 +672,20 @@ SPARK_SCRIPT_API void spark_foliage_instanced_configure_grid_within_square(
         float spacingMeters,
         float edgeMarginMeters);
 
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_terrain(
+        SparkGameObject* object,
+        int subdivX,
+        int subdivZ,
+        float halfExtentX,
+        float halfExtentZ,
+        float heightScale,
+        const SparkVector3* meshAlbedoRgb);
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_directional_light(
+        SparkGameObject* object,
+        const SparkVector3* colorRgb,
+        float intensity);
+SPARK_SCRIPT_API SparkGameComponent* spark_object_add_sound_cue(SparkGameObject* object);
+
 SPARK_SCRIPT_API SparkGameComponent* spark_object_add_grass_field(SparkGameObject* object);
 SPARK_SCRIPT_API int spark_grass_field_set_blade_mesh_key(
         SparkGameComponent* grass,

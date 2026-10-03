@@ -33,6 +33,9 @@
 #include "spark/ecs/components/rendering/RenderLayerComponent.hpp"
 #include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
+#include "spark/ecs/components/rendering/TerrainComponent.hpp"
+#include "spark/ecs/components/lighting/DirectionalLightComponent.hpp"
+#include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/rendering/TextOverlayComponent.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
@@ -1624,6 +1627,45 @@ void spark_vfx_player_stop(SparkGameObject* object, SparkGameComponent* player) 
     if (go != nullptr && vfx != nullptr) {
         vfx->Stop(*go);
     }
+}
+
+SparkGameComponent* spark_object_add_terrain(
+        SparkGameObject* object,
+        const int subdivX,
+        const int subdivZ,
+        const float halfExtentX,
+        const float halfExtentZ,
+        const float heightScale,
+        const SparkVector3* meshAlbedoRgb) {
+    if (object == nullptr || meshAlbedoRgb == nullptr) {
+        return nullptr;
+    }
+    Spark::TerrainGeneratorSettings settings{};
+    settings.subdivX = subdivX;
+    settings.subdivZ = subdivZ;
+    settings.halfExtentX = halfExtentX;
+    settings.halfExtentZ = halfExtentZ;
+    settings.heightScale = heightScale;
+    return reinterpret_cast<SparkGameComponent*>(ToObject(object)->AddComponent<Spark::TerrainComponent>(
+            settings, ToVector3(*meshAlbedoRgb)));
+}
+
+SparkGameComponent* spark_object_add_directional_light(
+        SparkGameObject* object,
+        const SparkVector3* colorRgb,
+        const float intensity) {
+    if (object == nullptr || colorRgb == nullptr) {
+        return nullptr;
+    }
+    return reinterpret_cast<SparkGameComponent*>(ToObject(object)->AddComponent<Spark::DirectionalLightComponent>(
+            ToVector3(*colorRgb), intensity));
+}
+
+SparkGameComponent* spark_object_add_sound_cue(SparkGameObject* object) {
+    if (object == nullptr) {
+        return nullptr;
+    }
+    return reinterpret_cast<SparkGameComponent*>(ToObject(object)->AddComponent<Spark::SoundCueComponent>());
 }
 
 }  // extern "C"

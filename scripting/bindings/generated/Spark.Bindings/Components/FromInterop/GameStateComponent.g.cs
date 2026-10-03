@@ -21,7 +21,7 @@ public sealed partial class GameStateComponent : GameComponentHandle
     {
         unsafe
         {
-                return Native.spark_game_state_request_state(InteropPtr.Component(Handle), nextState);
+                return Native.spark_game_state_request_state(InteropPtr.Component(Handle), (SparkGameFlowState)nextState);
         }
     }
 
@@ -29,7 +29,7 @@ public sealed partial class GameStateComponent : GameComponentHandle
     {
         unsafe
         {
-                Native.spark_game_state_push_state(InteropPtr.Component(Handle), nextState);
+                Native.spark_game_state_push_state(InteropPtr.Component(Handle), (SparkGameFlowState)nextState);
         }
     }
 

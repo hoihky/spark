@@ -55,7 +55,21 @@ public:
             float minDistance = 1.0F,
             float maxDistance = 48.0F);
 
+    /** Loads from bundled assets (e.g. <c>assets/audio/jump.wav</c>) and queues a one-shot. */
+    SPARK_SCRIPT_BIND(queue_bundled_clip)
+    void QueueBundledClip(const char* bundledAssetPathUtf8, float volume = 1.0F);
+
+    SPARK_SCRIPT_BIND(queue_at_world_bundled_clip)
+    void QueueAtWorldBundledClip(
+            const char* bundledAssetPathUtf8,
+            float volume,
+            const Vector3& worldPosition,
+            float spatialBlend = 1.0F,
+            float minDistance = 1.0F,
+            float maxDistance = 48.0F);
+
     /** Plays all pending cues and clears the queue (called by audio subsystem). */
+    SPARK_SCRIPT_BIND(flush_to)
     void FlushTo(SoundEngine* engine) noexcept;
 
 private:
