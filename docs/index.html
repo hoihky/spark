@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spark Game Engine — C++23 Vulkan Game Engine</title>
-  <meta name="description" content="Spark is a C++23 desktop game engine with Vulkan forward rendering, ECS scene model, 2D and 3D physics, AI, audio, retained-mode GUI, and optional Dear ImGui tools.">
+  <meta name="description" content="Spark is a C++23 Vulkan game engine with ECS, 2D/3D physics, AI, and audio. Optional C# gameplay via SparkInterop, generated Spark.Bindings, and SparkScriptHost (CoreCLR + HelloCsGame).">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -507,13 +507,16 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>Spark Game Engine</h1>
             <p class="hero-tagline">
               A desktop-focused <strong>C++23</strong> game engine combining GLFW, a Vulkan forward renderer,
-              entity–component simulation, custom 2D/3D physics, AI modules, audio mixing, a retained-mode GUI
-              toolkit, and optional <strong>Dear ImGui</strong> for editor and debug tooling.
+              entity–component simulation, custom 2D/3D physics, AI modules, and audio. Optional
+              <strong>C#</strong> gameplay uses a stable <code>SparkInterop</code> C ABI, generated
+              <code>Spark.Bindings</code>, and <code>SparkScriptHost</code> (CoreCLR). Retained-mode GUI plus
+              optional <strong>Dear ImGui</strong> for editor and debug tooling.
             </p>
             <div class="hero-links">
               <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub repository ↗</a>
               <a href="#quick-start">Quick start</a>
               <a href="programming-guide/site/index.html">Programming guide</a>
+              <a href="site/docs/csharp-scripting.html">C# scripting</a>
               <a href="site/docs/architecture-and-developer-guide.html">Architecture docs</a>
             </div>
           </div>
@@ -560,6 +563,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <li>GOAP &amp; FSM AI</li>
             <li>Dear ImGui</li>
             <li>CMake</li>
+            <li>.NET 8 / C#</li>
           </ul>
         </section>
 
@@ -937,7 +941,7 @@ int main() {
 
         <section id="quick-start">
           <h2 class="section-title">Quick start</h2>
-          <p><strong>Requirements:</strong> CMake ≥ 3.28, C++23, <a href="https://vulkan.lunarg.com/">Vulkan SDK</a> (<code>glslangValidator</code> on <code>PATH</code>), network on first configure.</p>
+          <p><strong>Requirements:</strong> CMake ≥ 3.28, C++23, <a href="https://vulkan.lunarg.com/">Vulkan SDK</a> (<code>glslangValidator</code> on <code>PATH</code>), network on first configure. C# host and bindings need the <a href="https://dotnet.microsoft.com/download">.NET 8 SDK</a>.</p>
           <pre><code>cmake --preset debug
 cmake --build cmake-build-debug -j
 ./cmake-build-debug/SparkDemo</code></pre>
@@ -949,14 +953,16 @@ cmake --build cmake-build-debug -j
             <tbody>
               <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 22 built-in demo modes</td></tr>
               <tr><td><code>SparkEditor</code></td><td>3D editor shell with dock UI (<code>editor-debug</code> preset)</td></tr>
-              <tr><td><code>SparkScriptHost</code></td><td>C# scripting host via CoreCLR (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td></tr>
+              <tr><td><code>SparkInterop</code></td><td>C ABI shared library for managed code (<code>-DSPARK_BUILD_INTEROP=ON</code>, ON in <code>debug</code> preset)</td></tr>
+              <tr><td><code>SparkScriptHost</code></td><td>CoreCLR executable loading <code>HelloCsGame.dll</code> (<code>-DSPARK_BUILD_SCRIPT_HOST=ON</code>)</td></tr>
             </tbody>
           </table>
 
-          <blockquote>
-            External games can link Spark as a library — see <code>game_template/</code> and <code>samples/</code>
-            with <code>SPARK_ROOT</code> pointing at this repository.
-          </blockquote>
+          <p>
+            Managed sample: <code>cmake --build cmake-build-debug --target SparkScriptHost</code>, then run from repo root with
+            <code>DYLD_LIBRARY_PATH=cmake-build-debug/scripting</code>. Details in
+            <a href="site/docs/csharp-scripting.html">C# scripting</a>.
+          </p>
         </section>
 
         <section id="documentation">
@@ -973,6 +979,18 @@ cmake --build cmake-build-debug -j
               <tr>
                 <td><a href="site/docs/architecture-and-developer-guide.html">Architecture &amp; Developer Guide</a></td>
                 <td>Engine loop, ECS, rendering data path, feature catalog</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/csharp-scripting.html">C# scripting</a></td>
+                <td><code>SparkInterop</code>, generated <code>Spark.Bindings</code>, <code>Spark.Scripting</code>, <code>SparkScriptHost</code>, HelloCsGame, regen workflow</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/component-script-codegen.html">Component script bindings</a></td>
+                <td><code>SPARK_SCRIPT_BIND</code> pipeline, <code>FromInterop</code> mirrors, <code>binding-coverage.json</code>, registry codegen</td>
+              </tr>
+              <tr>
+                <td><a href="site/docs/clion.html">CLion</a></td>
+                <td>CMake presets, SparkEditor and SparkScriptHost run configurations</td>
               </tr>
               <tr>
                 <td><a href="site/docs/lighting-and-shadows.html">Lighting &amp; Shadows</a></td>
@@ -1042,6 +1060,8 @@ cmake --build cmake-build-debug -j
           <li><a href="#showcase">Showcase</a></li>
           <li><a href="#quick-start">Quick start</a></li>
           <li><a href="#documentation">Further reading</a></li>
+          <li class="toc-h3"><a href="site/docs/csharp-scripting.html">C# scripting</a></li>
+          <li class="toc-h3"><a href="site/docs/component-script-codegen.html">Component bindgen</a></li>
         </ul>
       </aside>
     </main>

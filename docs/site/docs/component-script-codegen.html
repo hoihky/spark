@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Component script bindings · Spark Game Engine</title>
+  <meta name="description" content="SPARK_SCRIPT_BIND pipeline from C++ components to Spark.Bindings C# mirrors.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/site.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a href="../../index.html" class="brand">Spark Game Engine</a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="../../index.html#documentation">Documentation</a>
+        <a href="csharp-scripting.html">C# scripting</a>
+        <a href="../../programming-guide/site/index.html">Programming guide</a>
+        <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main class="doc-page">
+      <article class="doc-body">
+        <h1 id="component-script-bindings">Component script bindings — architecture</h1>
+        <p>C# cannot call C++ <code>GameComponent</code> methods directly. The pipeline treats <strong><code>SparkInterop.h</code></strong> as the stable C ABI contract. Component headers are the source of truth for what should exist; interop exports define what C# can call today.</p>
+        <p>See also <a href="csharp-scripting.html">C# interop (ClangSharp + SparkInterop)</a> for building and running <code>SparkScriptHost</code>.</p>
+
+        <h2 id="layers">Layers</h2>
+        <table>
+          <thead><tr><th>Layer</th><th>Artifact</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><code>SparkInterop.h</code> + <code>SparkInterop*.cpp</code></td><td>C ABI + manual thunks</td></tr>
+            <tr><td>1b</td><td><code>SparkInteropComponentBindings.generated.*</code></td><td>Auto thunks from <code>SPARK_SCRIPT_BIND</code></td></tr>
+            <tr><td>2</td><td><code>Native.g.cs</code>, <code>Native.Interop.g.cs</code></td><td>P/Invoke</td></tr>
+            <tr><td>3</td><td><code>Components/FromInterop/*.g.cs</code></td><td>Usable component mirrors</td></tr>
+            <tr><td>4</td><td><code>GameObject.ComponentAccess.g.cs</code></td><td><code>GetOrAdd*</code> accessors</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="regenerate">Regenerate</h2>
+        <pre><code class="language-bash">./tools/generate-csharp-bindings.sh</code></pre>
+        <p>Runs bindgen, ClangSharp, mirror codegen, <code>binding-coverage.json</code>, and the component registry. CMake also runs <code>spark_script_bindgen.py</code> when building <code>SparkInterop</code>.</p>
+
+        <h2 id="closing-gaps">Closing gaps</h2>
+        <ol>
+          <li><code>python3 tools/scan-cpp-component-api.py</code> → <code>scripting/bindings/binding-coverage.json</code></li>
+          <li>Add <code>SPARK_SCRIPT_BIND</code> on <code>*Component.hpp</code>, then regen</li>
+          <li>Re-run <code>./tools/generate-csharp-bindings.sh</code></li>
+        </ol>
+        <p>Kinds that need constructor args use <code>spark_object_add_*</code> in <code>SparkInterop.h</code> and <code>GameObject.Add*</code> in <code>CppMirrors.g.cs</code> (not <code>GetOrAdd*</code>).</p>
+        <p>Canonical source: <code>docs/COMPONENT_SCRIPT_CODEGEN.md</code> in the repository.</p>
+      </article>
+    </main>
+
+    <footer class="site-footer doc-page-footer">
+      <p>
+        <a href="../../index.html">← Back to Spark home</a>
+        · <a href="csharp-scripting.html">C# scripting</a>
+        · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

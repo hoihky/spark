@@ -1352,7 +1352,7 @@ Spark::LitSceneBuilder(world, context)
 </table>
 <p>Call <strong><code>SimulateGameAi(world, timing, context)</code></strong> from your game tick when you want ECS-driven AI to run.</p>
 <h3 id="513-c-scripting">5.13 C# scripting</h3>
-<p>Native <strong>CoreCLR</strong> hosting (<code>SparkScriptHost</code> via <strong>nethost</strong> + <strong>hostfxr</strong>) loads managed games; <strong>ClangSharp</strong> generates C# from <code>include/spark/scripting/SparkInterop.h</code>. See <strong><code>docs/CSHARP_SCRIPTING.md</code></strong>. Enabled by default (<code>SPARK_BUILD_SCRIPT_HOST=ON</code>; set <code>OFF</code> to skip). Gameplay without scripting remains <strong>C++</strong> via <code>IGame</code> / <code>GameComponent</code>.</p>
+<p><strong>SparkInterop</strong> C ABI + generated <strong>Spark.Bindings</strong>; optional <strong>SparkScriptHost</strong> (CoreCLR via <strong>nethost</strong> / <strong>hostfxr</strong>). See <strong><code>docs/CSHARP_SCRIPTING.md</code></strong> and <strong><code>docs/COMPONENT_SCRIPT_CODEGEN.md</code></strong>. The <code>debug</code> CMake preset enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>. Gameplay without scripting remains <strong>C++</strong> via <code>IGame</code> / <code>GameComponent</code>.</p>
 <hr />
 <h2 id="6-runtime-lifecycle-igame">6. Runtime Lifecycle (<code>IGame</code>)</h2>
 <p>Your game implements <code>spark/engine/IGame.hpp</code>:</p>

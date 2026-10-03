@@ -1,6 +1,6 @@
 # Kenney Simplified Platformer Pack (optional)
 
-`HelloCsGame` and the C++ `Platformer2DDemo` load textures from this tree when PNGs are present. Without them, the engine registers procedural checkerboard / atlas fallbacks.
+The C++ `Platformer2DDemo` loads textures from this tree when PNGs are present. The C# `HelloCsGame` sample is a minimal host smoke test and does not require these assets. Without them, the engine registers procedural checkerboard / atlas fallbacks.
 
 Expected layout (from [Kenney](https://kenney.nl/assets)):
 

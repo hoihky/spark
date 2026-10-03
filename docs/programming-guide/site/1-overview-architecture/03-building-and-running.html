@@ -837,9 +837,14 @@ cmake --build build -j
 <td>Dear ImGui (docking) + Vulkan/GLFW backends for tool UI</td>
 </tr>
 <tr>
+<td><code>SPARK_BUILD_INTEROP</code></td>
+<td>OFF (ON in <code>debug</code> preset)</td>
+<td><code>SparkInterop</code> + <code>SparkBindingsBuild</code></td>
+</tr>
+<tr>
 <td><code>SPARK_BUILD_SCRIPT_HOST</code></td>
-<td>OFF</td>
-<td>CoreCLR C# scripting host</td>
+<td>OFF (ON in <code>debug</code> preset)</td>
+<td><code>SparkScriptHost</code> + HelloCsGame; requires interop</td>
 </tr>
 <tr>
 <td><code>SPARK_BUILD_TESTS</code></td>

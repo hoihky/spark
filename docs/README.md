@@ -20,7 +20,8 @@
 | [**FOLIAGE_ROADMAP.md**](FOLIAGE_ROADMAP.md) | Rendering / world | Grass, trees, wind, instancing, LOD |
 | [**ANIMATION_SAMPLE_ASSETS.md**](ANIMATION_SAMPLE_ASSETS.md) | Animation | Fox / CesiumMan clip tables, FSM resolve, test matrix |
 | [**BLENDER_GLTF_ANIMATION_EXPORT.md**](BLENDER_GLTF_ANIMATION_EXPORT.md) | Artists | Blender export checklist for skinned glTF |
-| [**CSHARP_SCRIPTING.md**](CSHARP_SCRIPTING.md) | Scripting | CoreCLR host, C# bindings |
+| [**CSHARP_SCRIPTING.md**](CSHARP_SCRIPTING.md) | Scripting | `SparkInterop`, generated `Spark.Bindings`, `SparkScriptHost`, HelloCsGame |
+| [**COMPONENT_SCRIPT_CODEGEN.md**](COMPONENT_SCRIPT_CODEGEN.md) | Scripting | `SPARK_SCRIPT_BIND` pipeline, regen, coverage |
 | [**OPEN_WORLD_ACTION_ROADMAP.md**](OPEN_WORLD_ACTION_ROADMAP.md) | Long-term | Streaming, combat, AI phases |
 | [**2D_ARPG_FEATURES.md**](2D_ARPG_FEATURES.md) | 2D gameplay | Physics, queries, anim FSM backlog |
 

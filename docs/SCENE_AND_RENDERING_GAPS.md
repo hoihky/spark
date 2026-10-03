@@ -256,7 +256,7 @@ Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_L
 | **No render abstraction enum** | Games include `SceneRenderParams` Vulkan-specific comments (clip Y, shadow flip) |
 | **No job system** | All load, cull, submit on main thread |
 | **No event bus** | `EmitSignal` is per-object only; no world-level `Subscribe<CollisionEvent>` |
-| **C++ scripting surface** | `SparkInterop.h` C ABI exists; not all `ComponentKind` values exposed to C# |
+| **C# scripting surface** | Most gameplay components have `FromInterop` mirrors; see `binding-coverage.json` for remaining gaps |
 | **Error reporting** | `LoadMesh` returns empty `SharedPtr`; no `LoadResult` with error code / message |
 | **Thread safety** | `GameWorld` is main-thread only; not documented on public headers |
 

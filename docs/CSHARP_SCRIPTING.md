@@ -1,8 +1,20 @@
 # C# interop (ClangSharp + SparkInterop)
 
-Spark exposes a stable **C ABI** (`SparkInterop`) for managed editors and tools. C# P/Invoke types are **generated** from `include/spark/scripting/SparkInterop.h` with **ClangSharp**.
+Spark exposes a stable **C ABI** (`SparkInterop`) for managed games, editors, and tools. C# P/Invoke and component mirrors are **generated** from `include/spark/scripting/SparkInterop.h` (and generated component bindings) via **ClangSharp** and **ComponentMirrorCodegen**.
 
-> **Note:** Enable `-DSPARK_BUILD_INTEROP=ON` for `SparkInterop` + managed bindings. Add `-DSPARK_BUILD_SCRIPT_HOST=ON` to build `SparkScriptHost` (loads `HelloCsGame.dll` via CoreCLR). Both are ON in the `debug` CMake preset.
+> **CMake:** `-DSPARK_BUILD_INTEROP=ON` builds `libSparkInterop` + optional `SparkBindingsBuild`. Add `-DSPARK_BUILD_SCRIPT_HOST=ON` for **`SparkScriptHost`** (CoreCLR + `HelloCsGame`). Both interop flags are **ON** in the `debug` preset ([`CMakePresets.json`](../CMakePresets.json)).
+
+## Repository layout (`scripting/`)
+
+| Path | Role |
+|------|------|
+| `bindings/generated/Spark.Bindings/` | Generated + companion C# (`Native.g.cs`, `Components/FromInterop/*.g.cs`, `CppMirrors.g.cs`, …) |
+| `bindings/generator/` | `Spark.Bindings.Generator` (ClangSharp + mirror codegen) |
+| `Spark.Scripting/` | Thin SDK: `ScriptHostEntry`, `GameBootstrap`, `SparkGame` helpers |
+| `samples/HelloCsGame/` | Sample game DLL wired to `SparkScriptHost` |
+| `cmake/DotNetHost.cmake` | Locates SDK **nethost** when building the host |
+
+Native implementation: `src/spark/scripting/SparkInterop*.cpp`, `SparkScriptHost.cpp`, `CoreClrHost.cpp`, `ManagedGameBridge.cpp`.
 
 ## Architecture
 
@@ -19,7 +31,7 @@ flowchart LR
   subgraph managed [.NET 8]
     Entry[GameEntry / ScriptHostEntry]
     Game[YourGame : Game]
-    Bindings[Spark.Bindings generated]
+    Bindings[Spark.Bindings]
     Entry --> Game
     Game --> Bindings
   end
@@ -29,146 +41,151 @@ flowchart LR
 
 | Piece | Role |
 |-------|------|
-| **SparkScriptHost** | Executable: loads `nethost` → `hostfxr` → game `.dll`, runs `Engine::Run()` |
-| **SparkInterop** | Shared library: stable C exports (`spark_*`) implemented with real C++ types |
+| **SparkScriptHost** | Executable: **nethost** → **hostfxr** → game `.dll` → `Engine::Run()` with `ManagedGameBridge` |
+| **SparkInterop** | Shared library: stable `spark_*` exports backed by C++ engine types |
 | **Spark.Bindings.Generator** | ClangSharp → `Native.g.cs`; **ComponentMirrorCodegen** → `Components/FromInterop/*.g.cs` |
-| **Spark.Scripting** | SDK: `ScriptHostEntry`, `GameBootstrap`, wires managed `Game` to native loop |
-| **HelloCsGame** | Sample game assembly |
+| **Spark.Scripting** | `ScriptHostEntry.Initialize`, `GameBootstrap`, optional `SparkGame` base |
+| **HelloCsGame** | Minimal sample (`HelloGame` + `GameEntry`) — compile-check and host smoke test |
 
 ## One-to-one C++ ↔ C# mapping
 
 | C++ | C# |
 |-----|-----|
 | `Spark::FrameTiming` | `Spark.Bindings.FrameTiming` |
-| `Spark::IGame` | `Spark.Bindings.IGame` |
-| `Spark::Game` | `Spark.Bindings.Game` |
-| `Spark::IEngineContext` | `Spark.Bindings.IEngineContext` |
-| `Spark::IInput` | `Spark.Bindings.IInput` |
+| `Spark::IGame` / `Spark::Game` | `Spark.Bindings.IGame` / `Game` |
+| `Spark::IEngineContext` / `IInput` | `Spark.Bindings.IEngineContext` / `IInput` |
 | `Spark::Scene` / `GameWorld` / `GameObject` | Same names under `Spark.Bindings` |
-| `ComponentKind` | `SparkComponentKind` — **must match** `GameComponent.hpp` via `SparkInteropComponentKinds.h` |
+| `ComponentKind` | `SparkComponentKind` — must match `GameComponent.hpp` via `SparkInteropComponentKinds.h` |
 
-Virtual C++ APIs are mirrored as C# classes that call `spark_*` exports. Plain structs/enums come from ClangSharp with sequential layout matching the headers.
+Virtual gameplay APIs are mirrored as C# types that call `spark_*`. Structs/enums in `SparkInteropTypes.h` are emitted by ClangSharp with sequential layout.
 
-**When C++ changes:** extend `SparkInterop.h` (and C++ engine if needed), then regenerate:
+**Pipeline details:** **[COMPONENT_SCRIPT_CODEGEN.md](COMPONENT_SCRIPT_CODEGEN.md)** (`SPARK_SCRIPT_BIND`, manifest, registry, coverage).
+
+### Regenerate bindings
 
 ```bash
+dotnet tool restore   # once, uses .config/dotnet-tools.json
 ./tools/generate-csharp-bindings.sh
 ```
 
-From the repo root (uses [.config/dotnet-tools.json](../.config/dotnet-tools.json)):
+Outputs (under `scripting/bindings/generated/Spark.Bindings/`):
 
-```bash
-dotnet tool restore
-./tools/generate-csharp-bindings.sh
-```
+| Artifact | Source |
+|----------|--------|
+| `Native.g.cs` | ClangSharp on `SparkInteropTypes.h` + `SparkInterop.h` |
+| `Native.Interop.g.cs` | Companion P/Invoke for symbols ClangSharp misses |
+| `Components/FromInterop/*.g.cs` | `ComponentMirrorCodegen` from interop manifest |
+| `GameObject.ComponentAccess.g.cs` | `generate-csharp-component-registry.py` |
+| `SparkComponentKind.g.cs` | Synced from `SparkInteropComponentKinds.h` |
 
-This writes **`scripting/bindings/generated/Spark.Bindings/Native.g.cs`** (ClangSharp P/Invoke from `SparkInteropTypes.h` + `SparkInterop.h`). See **[COMPONENT_SCRIPT_CODEGEN.md](COMPONENT_SCRIPT_CODEGEN.md)** for the full C++ → interop → C# pipeline.
+Hand-maintained companions (not overwritten by ClangSharp): **`CppMirrors.g.cs`**, **`InteropPtr.cs`**, **`InteropUtf8.cs`**, occasional `*.Extensions.g.cs` (e.g. `ProceduralSoundPreset`, typed `QueuePreset`).
 
-Companion files **`CppMirrors.g.cs`**, **`ComponentMirrors.g.cs`**, **`InteropPtr.cs`** are hand-maintained (legacy mirrors shrinking as `FromInterop` grows).
+**CI:** [`.github/workflows/csharp-bindings.yml`](../.github/workflows/csharp-bindings.yml) regenerates bindings, builds `Spark.Bindings` / `Spark.Scripting` / `HelloCsGame`, and builds `SparkInterop` + `SparkScriptHost` on macOS.
 
-CI (`.github/workflows/csharp-bindings.yml`) regenerates and fails if `Native.g.cs` drifts from the headers.
+## CMake targets
 
-## Build
+| Option | Default (repo) | Targets |
+|--------|----------------|---------|
+| `SPARK_BUILD_INTEROP` | OFF globally; **ON** in `debug` preset | `SparkInterop`, `SparkBindingsBuild` |
+| `SPARK_BUILD_SCRIPT_HOST` | OFF globally; **ON** in `debug` preset | `SparkScriptHost`, `SparkScriptingBuild` (HelloCsGame Release) |
 
-Prerequisites: **.NET 8 SDK**, **CMake 3.28+**, Vulkan/GLFW (same as engine).
+`SPARK_BUILD_SCRIPT_HOST` requires `SPARK_BUILD_INTEROP=ON`.
+
+## Build & run
+
+Prerequisites: **.NET 8 SDK**, **CMake ≥ 3.28**, Vulkan/GLFW (same as engine).
 
 ### CLion
 
-A shared run configuration is at [`.run/SparkScriptHost.run.xml`](../.run/SparkScriptHost.run.xml). See [`.run/README.md`](../.run/README.md) if **Target** / **Executable** show **Not found**.
+Run configuration: [`.run/SparkScriptHost.run.xml`](../.run/SparkScriptHost.run.xml). See [`.run/README.md`](../.run/README.md).
 
-1. Enable scripting in CMake: **`-DSPARK_BUILD_SCRIPT_HOST=ON`** (also set in [CMakePresets.json](../CMakePresets.json) preset `debug`).
-2. **Reload CMake Project** — **SparkScriptHost** must appear in the CMake targets list.
-3. Run **SparkScriptHost (HelloCsGame)**.
+1. Load CMake preset **debug** (interop + script host ON).
+2. Build **SparkScriptHost** (depends on **SparkScriptingBuild**).
+3. Run **SparkScriptHost (HelloCsGame)** from repo root (`assets/` resolution).
 
-If your build directory is not `cmake-build-debug`, edit `DYLD_LIBRARY_PATH` / `LD_LIBRARY_PATH` in the `.run.xml` file.
+Set `DYLD_LIBRARY_PATH` / `LD_LIBRARY_PATH` to `<build-dir>/scripting` (done in the run config for `cmake-build-debug`).
 
 ### Command line
 
 ```bash
-cmake -B build -DSPARK_BUILD_INTEROP=ON -DSPARK_BUILD_SCRIPT_HOST=ON
-cmake --build build --target SparkScriptHost
+cmake -B cmake-build-debug -DSPARK_BUILD_INTEROP=ON -DSPARK_BUILD_SCRIPT_HOST=ON
+cmake --build cmake-build-debug --target SparkScriptHost
 ```
 
-Copy `libSparkInterop.dylib` (or `.so`) next to `SparkScriptHost` and managed outputs, then:
+From repo root (defaults point at HelloCsGame Release output):
 
 ```bash
-./build/SparkScriptHost \
+DYLD_LIBRARY_PATH=cmake-build-debug/scripting ./cmake-build-debug/scripting/SparkScriptHost
+```
+
+Explicit paths:
+
+```bash
+./cmake-build-debug/scripting/SparkScriptHost \
   scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.runtimeconfig.json \
   scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.dll
 ```
 
-Optional entry override:
+Optional entry override (default type/method: `HelloCsGame.GameEntry.Initialize`):
 
 ```bash
 SparkScriptHost <runtimeconfig> <assembly.dll> <TypeName> <MethodName>
 ```
 
-## Writing a game
-
-1. Class library targeting `net8.0`, reference `Spark.Scripting`.
-2. Subclass `SparkGame` or `Game` (same hooks as C++ `Spark::Game`). `SparkGame` adds helpers such as `PlayPresetSound` / `PlayBundledSound`.
-3. Components blocked from `GetOrAdd*` factories (terrain, directional light, sound cue, …) are added via `GameObject.AddTerrain()`, `AddDirectionalLight()`, `AddSoundCue()`, etc. on `CppMirrors.g.cs`.
-4. Bundled WAV/OGG paths: `soundCue.QueueBundledClip("audio/foo.wav")`. Procedural presets: `ProceduralSoundPreset` + `QueuePreset`.
-5. Register in `[ModuleInitializer]` when using the CoreCLR host:
-
-```csharp
-[ModuleInitializer]
-internal static void Init() => GameBootstrap.Factory = static () => new MyGame();
-```
-
-6. Expose native entry (sample uses `HelloCsGame.GameEntry.Initialize` when the host is enabled).
-
-Compile-check without the host:
+### Managed-only compile check
 
 ```bash
-dotnet build scripting/samples/HelloCsGame/HelloCsGame.csproj -c Release
+dotnet build scripting/samples/HelloCsGame/HelloCsGame.csproj -c Release -p:NuGetAudit=false
 ```
 
-## Interop surface (expanded)
+Game libraries need **`GenerateRuntimeConfigurationFiles`** (see `HelloCsGame.csproj`) so hostfxr can load them.
 
-`SparkInterop.h` now exports bindings for:
+## Writing a game
 
-| Area | Examples |
-|------|----------|
-| **Components** | `spark_transform_*`, `spark_mesh_*`, `spark_material_*`, `spark_sprite_*`, lights, colliders, rigidbodies |
-| **Add component** | `spark_object_add_mesh`, `spark_object_add_skinned_character_from_gltf`, … |
-| **Scene** | `spark_scene_submit_standard_lit_from_world`, `spark_scene_fill_standard_lit_from_world` |
-| **UI** | `spark_ui_process_canvases_input`, `spark_ui_paint_canvases`, `spark_context_process_ui_input` |
-| **Animation** | `spark_animator_*` — clip index/time/speed, `loop_mode`, `is_clip_finished`, `set_clip_index_with_crossfade`, `find_clip_index_by_name`, `get_clip_name`; C# `AnimatorComponent` mirror |
-| **Physics / AI** | `spark_world_physics_simulate_2d`, `spark_world_simulate_game_ai` |
-| **Math** | `spark_mat4_perspective_vulkan`, `spark_mat4_mul`, … |
-| **2D platformer** | `spark_world_register_platformer2d_demo_textures`, `spark_world_mount_platformer_ui_font`, `spark_platformer2d_kenney_tile_uv`, `spark_sprite_2d_fsm_*`, `spark_object_add_sprite_2d_character_anim_fsm` |
-| **2D physics queries** | `spark_physics_query_overlap_circle_world_2d`, `spark_physics_query_overlap_arc_world_statics_2d`, `spark_collision_filter_2d_*` |
-| **2D collider layers** | `spark_box_collider_2d_set_category_bits`, `spark_circle_collider_2d_set_is_trigger`, … |
+1. **Class library** `net8.0`, project reference **`Spark.Scripting`** (pulls in `Spark.Bindings`).
+2. Subclass **`SparkGame`** or **`Game`** (same hooks as C++ `Spark::Game`). `SparkGame` adds `PlayBundledSound` / `PlayPresetSound`.
+3. **Factory-only components** (terrain, directional light, sound cue, …): use `GameObject.AddTerrain()`, `AddDirectionalLight()`, `AddSoundCue()`, etc. in **`CppMirrors.g.cs`** — not `GetOrAdd*` (see registry `FACTORY_DENY`).
+4. **Audio:** `soundCue.QueueBundledClip("path/under/assets")`; procedural SFX via `ProceduralSoundPreset` + `QueuePreset`.
+5. **Host entry** in your game assembly:
 
-C# mirrors:
-- `CppMirrors.g.cs` — engine types (`Game`, `GameWorld`, …)
-- `Components/*.cs` — one file per component (preferred for new work)
-- `ComponentMirrors.g.cs` — legacy bundled mirrors (migrating to `Components/`)
+```csharp
+// GameEntry.cs
+[ModuleInitializer]
+internal static void Register() => GameBootstrap.Factory = static () => new MyGame();
 
-After changing `ComponentKind` in C++, update `SparkInteropComponentKinds.h`, then run `./tools/generate-csharp-bindings.sh` (syncs `SparkComponentKind.g.cs` and regenerates per-kind handles).
+[UnmanagedCallersOnly]
+public static int Initialize(IntPtr hostApiPtr) => ScriptHostEntry.InitializeCore(hostApiPtr);
+```
 
-**Component surface:**
+6. Build Release; point `SparkScriptHost` at your `.runtimeconfig.json` + `.dll` (or pass custom `TypeName` / `MethodName`).
+
+## Component surface (C#)
 
 | Layer | Location |
 |-------|----------|
 | Enum parity | `SparkComponentKind.g.cs` ↔ `SparkInteropComponentKinds.h` |
-| One file per kind | `Components/Generated/*Component.cs` (handles) + hand-maintained `Components/*.cs` (full API) |
-| `GameObject` accessors | `GameObject.ComponentAccess.g.cs` (generated), plus `GameObject.Foliage.g.cs`, `GameObject.Gameplay.g.cs`, `CppMirrors.g.cs` |
-| Default add | `spark_object_get_or_add_default_component` + `GetOrAdd*` on `GameObject` (default-constructible kinds only) |
+| Full mirrors | `Components/FromInterop/*Component.g.cs` (from `spark_<prefix>_*`) |
+| Handle stubs | `Components/Generated/` — only kinds **without** interop prefix yet (often empty) |
+| `GameObject` accessors | `GameObject.ComponentAccess.g.cs` + `CppMirrors.g.cs` factories |
+| Default add | `spark_object_get_or_add_default_component` + `GetOrAdd*` for allowed kinds |
 
-**Foliage (F0–F2):** `WindEnvironmentComponent`, `FoliageInstancedMeshComponent`, `GrassFieldComponent` in `Components/`; `GameObject.AddGrassField()` in `GameObject.Foliage.g.cs`.
+**Coverage:** `python3 tools/scan-cpp-component-api.py` → `scripting/bindings/binding-coverage.json`.
 
-**Gameplay / editor:** `ParallaxLayer`, `ScreenShake`, `InputActionMap`, `PlayerInput`, `GameState`, `GameFlowTrigger` — C++ `SparkInteropGameplay.cpp` + matching `Components/*.cs`.
+**Manual interop** (non-`SPARK_SCRIPT_BIND`): creation helpers `spark_object_add_terrain`, `spark_object_add_directional_light`, `spark_object_add_sound_cue`, platformer texture registration, physics queries — in `SparkInterop.h` / `SparkInterop*.cpp`.
 
-### HelloCsGame (2D platformer sample)
+## HelloCsGame (sample)
 
-`HelloCsGame` registers Kenney tilesheet + player atlas + gem texture via `GameWorld.RegisterPlatformer2DDemoTextures`, mounts UI fonts for `TextOverlayComponent`, drives locomotion/combat through `Sprite2DCharacterAnimFsmComponent` + `SpriteAnimatorComponent`, collects gems by proximity and **J** attack arc (`QueryOverlapArcWorldStatics2D` + layer masks), and implements fall respawn + summit goal. See `assets/sprites/kenney_simplified-platformer-pack/README.md` for optional PNG paths.
+Minimal loop to validate bindings + host wiring (not a full Kenney platformer clone):
+
+- `OnAttach`: creates `CsPlayer`, transform, `SoundCue`, `GameState` → Playing.
+- `OnUpdate`: **Space** queues `ProceduralSoundPreset.Jump`.
+
+For the full 2D platformer reference, use C++ **`Platformer2DDemo`** and optional Kenney assets ([`assets/sprites/kenney_simplified-platformer-pack/README.md`](../assets/sprites/kenney_simplified-platformer-pack/README.md)).
 
 ## Roadmap
 
-- SpriteAnimator, Terrain, AiAgent, SoundCue, GUI widget builders (old `spark_shell_*` helpers).
-- Parse additional engine headers directly once ClangSharp config includes `compile_commands.json`.
-- In-editor `dotnet build` + hot reload (GUI roadmap E5).
+- Hot reload / in-editor `dotnet build` (GUI roadmap E5).
+- Broader header-driven ClangSharp (beyond `SparkInterop.h`).
+- Remaining `binding-coverage.json` gaps — prefer `SPARK_SCRIPT_BIND` + regen.
 
-Legacy **P/Invoke / SparkNative** remains removed; this stack replaces it.
+Legacy **SparkNative** P/Invoke stack is removed; **`SparkInterop` + generated `Spark.Bindings`** replace it.

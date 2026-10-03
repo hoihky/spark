@@ -846,7 +846,7 @@ if (world.IsGltfReady(&quot;assets/models/Fox.glb&quot;)) {
 }
 </code></pre>
 <h2 id="c-scripting">C# Scripting</h2>
-<p>Spark supports CoreCLR scripting (<code>SPARK_BUILD_SCRIPT_HOST</code>) — see <code>docs/CSHARP_SCRIPTING.md</code>.</p>
+<p>Spark exposes <code>SparkInterop</code> and generated <code>Spark.Bindings</code>; optional <code>SparkScriptHost</code> (<code>SPARK_BUILD_SCRIPT_HOST</code>, ON in the <code>debug</code> preset) runs managed games. See <code>docs/CSHARP_SCRIPTING.md</code> and <code>docs/COMPONENT_SCRIPT_CODEGEN.md</code>.</p>
 <hr />
 <p><strong>Congratulations!</strong> You have completed all eight parts. Explore <code>SparkDemo</code> demos and <code>docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code> for advanced topics: scene editor, serialization, tilemaps, and the open-world roadmap.</p></div>
           <footer class="doc-footer">

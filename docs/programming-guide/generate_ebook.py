@@ -224,7 +224,8 @@ cmake --build build -j
 | Option | Default | Effect |
 |--------|---------|--------|
 | `SPARK_BUILD_DEMO` | ON | Builds `SparkDemo` launcher |
-| `SPARK_BUILD_SCRIPT_HOST` | OFF | CoreCLR C# scripting host |
+| `SPARK_BUILD_INTEROP` | OFF (ON in `debug` preset) | `SparkInterop` + `SparkBindingsBuild` |
+| `SPARK_BUILD_SCRIPT_HOST` | OFF (ON in `debug` preset) | `SparkScriptHost` + HelloCsGame; requires interop |
 | `SPARK_BUILD_TESTS` | OFF | Unit tests |
 
 ## Generated Config
@@ -2621,7 +2622,7 @@ SkinnedGltfAsset arms = world.LoadSkinnedGltf("assets/models/arms.glb");
 
 ## C# Scripting
 
-Spark supports CoreCLR scripting (`SPARK_BUILD_SCRIPT_HOST`) — see `docs/CSHARP_SCRIPTING.md`.
+Spark exposes `SparkInterop` and generated `Spark.Bindings`; optional `SparkScriptHost` (`SPARK_BUILD_SCRIPT_HOST`) runs managed games. See `docs/CSHARP_SCRIPTING.md` and `docs/COMPONENT_SCRIPT_CODEGEN.md`.
 
 ---
 

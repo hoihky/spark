@@ -24,7 +24,8 @@ cmake --build build -j
 |--------|---------|--------|
 | `SPARK_BUILD_DEMO` | ON | Builds `SparkDemo` launcher |
 | `SPARK_ENABLE_IMGUI` | ON | Dear ImGui (docking) + Vulkan/GLFW backends for tool UI |
-| `SPARK_BUILD_SCRIPT_HOST` | OFF | CoreCLR C# scripting host |
+| `SPARK_BUILD_INTEROP` | OFF (ON in `debug` preset) | `SparkInterop` + `SparkBindingsBuild` |
+| `SPARK_BUILD_SCRIPT_HOST` | OFF (ON in `debug` preset) | `SparkScriptHost` + `HelloCsGame` build; requires interop |
 | `SPARK_BUILD_TESTS` | OFF | Unit tests |
 
 ## Generated Config

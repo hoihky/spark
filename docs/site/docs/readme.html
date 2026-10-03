@@ -565,7 +565,12 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>SparkInterop</strong></td>
 <td><code>cmake-build-debug/scripting/libSparkInterop.dylib</code></td>
-<td>C ABI for managed tools (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td>
+<td>C ABI for C# (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td>
+</tr>
+<tr>
+<td><strong>SparkScriptHost</strong></td>
+<td><code>cmake-build-debug/scripting/SparkScriptHost</code></td>
+<td>CoreCLR host + HelloCsGame (<code>-DSPARK_BUILD_SCRIPT_HOST=ON</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -640,7 +645,7 @@ docs/              Design docs and roadmaps
 scripting/         SparkInterop C ABI + ClangSharp C# bindings (`Spark.Bindings`)
 spark_editor/      SparkEditor executable
 </code></pre>
-<p><strong>C# bindings:</strong> After changing <code>include/spark/scripting/SparkInterop.h</code>, run <code>./tools/generate-csharp-bindings.sh</code> and build with <code>-DSPARK_BUILD_INTEROP=ON</code> (enabled in the <code>debug</code> CMake preset).</p>
+<p><strong>C# bindings:</strong> See <a href="csharp-scripting.html"><code>docs/CSHARP_SCRIPTING.md</code></a>. After interop changes, run <code>./tools/generate-csharp-bindings.sh</code>. Preset <code>debug</code> enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>.</p>
 <p><strong>Render headers</strong> live under <code>include/spark/render/</code> in stage subfolders (not flat <code>render/*.hpp</code>):</p>
 <table>
 <thead>

@@ -84,7 +84,7 @@ if (world.IsGltfReady("assets/models/Fox.glb")) {
 
 ## C# Scripting
 
-Spark supports CoreCLR scripting (`SPARK_BUILD_SCRIPT_HOST`) — see `docs/CSHARP_SCRIPTING.md`.
+Spark exposes gameplay through **`SparkInterop`** and generated **`Spark.Bindings`**. Optional **`SparkScriptHost`** (`SPARK_BUILD_SCRIPT_HOST`, ON in the `debug` CMake preset) runs managed `Game` subclasses via CoreCLR. Authoring flow, regen, and `HelloCsGame`: **`docs/CSHARP_SCRIPTING.md`**; bindgen pipeline: **`docs/COMPONENT_SCRIPT_CODEGEN.md`**.
 
 ---
 

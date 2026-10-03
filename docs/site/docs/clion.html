@@ -508,7 +508,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><strong>debug</strong></td>
 <td><code>cmake-build-debug/</code></td>
-<td>SparkDemo + SparkEditor (default dev)</td>
+<td>SparkDemo, SparkEditor, SparkInterop, SparkScriptHost (debug preset)</td>
 </tr>
 <tr>
 <td><strong>editor-debug</strong></td>
@@ -536,6 +536,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 -DSPARK_BUILD_SPARK_EDITOR=ON
 -DSPARK_BUILD_DEMO=OFF
 </code></pre>
+<h2 id="sparkscripthost-c-sample">SparkScriptHost (C# sample)</h2>
+<p>Preset <strong>debug</strong> sets <code>SPARK_BUILD_INTEROP=ON</code> and <code>SPARK_BUILD_SCRIPT_HOST=ON</code>. Build <strong>SparkScriptHost</strong>, run <strong>SparkScriptHost (HelloCsGame)</strong>. See <a href="csharp-scripting.html"><code>CSHARP_SCRIPTING.md</code></a> and <code>.run/README.md</code> in the repo.</p>
 <p>See also <a href="readme.html"><code>.run/README.md</code></a>.</p>
       </article>
     </main>
