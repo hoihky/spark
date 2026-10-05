@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Spark Game Engine — C++23 Vulkan Game Engine</title>
-  <meta name="description" content="Spark is a C++23 Vulkan game engine with ECS, 2D/3D physics, AI, and audio. Optional C# gameplay via SparkInterop, generated Spark.Bindings, and SparkScriptHost (CoreCLR + HelloCsGame).">
+  <title>Spark Game Engine — C++23, Vulkan, optional C#</title>
+  <meta name="description" content="Spark is a desktop game engine for learning and prototyping: C++23, Vulkan forward rendering, entity–component gameplay, 2D/3D physics, AI, and audio—with optional C# scripting over a stable native interop API.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -506,11 +506,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           <div class="hero-text">
             <h1>Spark Game Engine</h1>
             <p class="hero-tagline">
-              A desktop-focused <strong>C++23</strong> game engine combining GLFW, a Vulkan forward renderer,
-              entity–component simulation, custom 2D/3D physics, AI modules, and audio. Optional
-              <strong>C#</strong> gameplay uses a stable <code>SparkInterop</code> C ABI, generated
-              <code>Spark.Bindings</code>, and <code>SparkScriptHost</code> (CoreCLR). Retained-mode GUI plus
-              optional <strong>Dear ImGui</strong> for editor and debug tooling.
+              Spark is a desktop game engine built on <strong>C++23</strong> and <strong>Vulkan</strong>, organized
+              around explicit simulation and render phases, composable components, and interfaces that keep gameplay
+              code independent of the renderer. It includes 2D and 3D physics, navigation and AI, audio, a retained-mode
+              UI toolkit, and optional <strong>Dear ImGui</strong> for tools. Extend titles in <strong>C#</strong> when you
+              want managed gameplay, with generated bindings over a stable C interop layer and a CoreCLR host.
             </p>
             <div class="hero-links">
               <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub repository ↗</a>
@@ -525,12 +525,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
         <section id="overview">
           <h2 class="section-title">Overview</h2>
           <p>
-            Spark is an experimental, education-oriented engine prototype built to explore modern C++ game
-            architecture: explicit frame contracts, dependency inversion over concrete Vulkan types, and
-            composition via components rather than deep inheritance hierarchies. The default binary
-            <code>SparkDemo</code> ships an interactive launcher with <strong>22 built-in modes</strong> —
-            from 3D fly scenes and a scene editor prototype to 2D platformers, tilemap showcases, a 3D model viewer,
-            and classic arcade demos. Recommended entries are marked with <code>*</code> in the menu.
+            Spark is an open, education-oriented engine intended to demonstrate modern C++ game architecture:
+            clear frame contracts, dependency inversion instead of tight coupling to Vulkan, and behavior expressed
+            through components rather than deep inheritance. The reference application <code>SparkDemo</code> provides
+            an interactive launcher with <strong>22 built-in modes</strong>—from 3D scenes and editor prototypes to
+            2D platformers, tilemap systems, glTF viewing, and classic arcade samples—so each major subsystem ships
+            with runnable context. Entries marked <code>*</code> in the menu are good starting points.
           </p>
 
           <div class="pillar-grid">
