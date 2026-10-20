@@ -3,6 +3,7 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/Signal.hpp"
+#include "spark/gameplay/GameplayPickupDelivery.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
@@ -55,6 +56,8 @@ bool PickupComponent::TryCollect(GameObject& collector) noexcept {
     collected = true;
     if (onCollected) {
         onCollected(collector, itemId.CStr(), quantity);
+    } else {
+        GameplayPickupDelivery::TryDeliverToCollector(collector, itemId.CStr(), quantity, GetOwner());
     }
     return true;
 }

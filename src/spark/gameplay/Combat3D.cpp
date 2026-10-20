@@ -2,16 +2,39 @@
 
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 #include "spark/ecs/components/character/Character3DBodyComponent.hpp"
-#include "spark/ecs/components/gameplay/DamageableComponent.hpp"
-#include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/physics/3d/Hurtbox3DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
+#include "spark/gameplay/GameplayDamageApplier.hpp"
+#include "spark/gameplay/GameplayDamageDeal.hpp"
+#include "spark/gameplay/GameplayTeamPolicy.hpp"
 #include "spark/physics/core/ColliderFilter.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <cmath>
 
 namespace Spark {
+
+namespace {
+
+class Hurtbox3DNotifier final : public GameplayDamageApplier::IHurtboxNotifier {
+public:
+    explicit Hurtbox3DNotifier(Hurtbox3DComponent* hurtboxIn) noexcept : hurtbox(hurtboxIn) {}
+    void NotifyDamageReceived() noexcept override {
+        if (hurtbox != nullptr) {
+            hurtbox->NotifyDamageReceived();
+        }
+    }
+
+private:
+    Hurtbox3DComponent* hurtbox = nullptr;
+};
+
+const GameplayTeamPolicy& DefaultTeamPolicy() noexcept {
+    static const GameplayTeamPolicy policy{};
+    return policy;
+}
+
+}  // namespace
 
 float Combat3DTarget::ApplyDamage(GameObject* instigator, const float rawDamage) noexcept {
     if (target == nullptr || rawDamage <= 0.0F || !target->IsActiveInHierarchy()) {
@@ -25,29 +48,12 @@ float Combat3DTarget::ApplyDamage(GameObject* instigator, const float rawDamage)
         }
     }
 
-    GameObject* damageReceiver = target;
-    while (damageReceiver != nullptr) {
-        if (damageReceiver->GetComponent<DamageableComponent>() != nullptr ||
-            damageReceiver->GetComponent<HealthComponent>() != nullptr) {
-            break;
-        }
-        damageReceiver = damageReceiver->GetParent();
-    }
-    if (damageReceiver == nullptr) {
-        return 0.0F;
-    }
-
-    float applied = 0.0F;
-    if (DamageableComponent* damageable = damageReceiver->GetComponent<DamageableComponent>()) {
-        applied = damageable->ApplyDamage(rawDamage, instigator);
-    } else if (HealthComponent* health = damageReceiver->GetComponent<HealthComponent>()) {
-        applied = health->ApplyDamage(rawDamage, instigator);
-    }
-
-    if (applied > 0.0F && hurtbox != nullptr) {
-        hurtbox->NotifyDamageReceived();
-    }
-    return applied;
+    GameplayDamageDeal deal{*target};
+    deal.SetInstigator(instigator);
+    deal.SetTeamPolicy(teamPolicy != nullptr ? teamPolicy : &DefaultTeamPolicy());
+    Hurtbox3DNotifier notifier{hurtbox};
+    deal.SetHurtboxNotifier(hurtbox != nullptr ? &notifier : nullptr);
+    return deal.Apply(rawDamage);
 }
 
 void Combat3DTarget::ApplyKnockback(const Vector3& worldDirection, const float meters) noexcept {

@@ -118,6 +118,8 @@
 #include "spark/ecs/components/audio/AudioListenerComponent.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/gameplay/CombatHurtFlash3DComponent.hpp"
+#include "spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp"
+#include "spark/ecs/components/gameplay/GameplayTeamComponent.hpp"
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/gameplay/InteractableComponent.hpp"

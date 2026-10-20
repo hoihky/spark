@@ -6,6 +6,7 @@
 #include "spark/ecs/components/character/Character3DVisualComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsLayer3DComponent.hpp"
 #include "spark/ecs/components/gameplay/CombatHurtFlash3DComponent.hpp"
+#include "spark/ecs/components/gameplay/GameplayTeamComponent.hpp"
 #include "spark/ecs/components/physics/3d/Hurtbox3DComponent.hpp"
 #include "spark/physics/CollisionFilter3D.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
@@ -274,6 +275,9 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
                 | Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Enemy));
         characterBody = characterRoot->AddComponent<Spark::Character3DBodyComponent>();
         characterBody->SetArbitrationMode(Spark::MotionArbitrationMode::GameplayDriven);
+        if (auto* playerTeam = characterRoot->AddComponent<Spark::GameplayTeamComponent>()) {
+            playerTeam->SetTeamId(1);
+        }
         roots.PushBack(characterRoot);
 
         characterVisualFootOffsetY = 0.0F;
@@ -1288,6 +1292,9 @@ void CharacterCameraDemo::SpawnMeleeTrainingDummies(Spark::GameWorld& w) {
                 | Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Projectile));
         dummy->AddComponent<Spark::DamageableComponent>();
         dummy->AddComponent<Spark::CombatHurtFlash3DComponent>();
+        if (auto* enemyTeam = dummy->AddComponent<Spark::GameplayTeamComponent>()) {
+            enemyTeam->SetTeamId(2);
+        }
         hp->SetOnDeath([](Spark::GameObject& self, Spark::GameObject* /*instigator*/) {
             if (Spark::TransformComponent* t = self.GetComponent<Spark::TransformComponent>()) {
                 t->SetUniformScale(0.65F);

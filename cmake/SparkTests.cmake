@@ -49,6 +49,7 @@ function(spark_add_physics_tests)
             tests/scene/TilemapGameplayPlacementTest.cpp
             tests/scene/TileGameplayPropertiesTest.cpp
             tests/gameplay/GameplayDataTableTest.cpp
+            tests/gameplay/GameplayKitTest.cpp
             tests/ai/SteeringPathFollowing2DTest.cpp
             tests/save/GameSaveTest.cpp
             tests/scene/SceneEditorSmokeTest.cpp

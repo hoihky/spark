@@ -704,6 +704,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/gameplay/GameStateComponent.cpp
         src/spark/ecs/components/gameplay/GameFlowTriggerComponent.cpp
         src/spark/ecs/components/gameplay/CombatHurtFlash3DComponent.cpp
+        src/spark/ecs/components/gameplay/GameplayTeamComponent.cpp
+        src/spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.cpp
         src/spark/ecs/components/gameplay/DamageZone2DComponent.cpp
         src/spark/ecs/components/input/InputActionMapComponent.cpp
         src/spark/ecs/components/input/PlayerInputComponent.cpp
@@ -1064,6 +1066,14 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gameplay/Interaction2D.cpp
         src/spark/gameplay/Combat2D.cpp
         src/spark/gameplay/Combat3D.cpp
+        src/spark/gameplay/GameplayDamageEvent.cpp
+        src/spark/gameplay/GameplayDamageApplier.cpp
+        src/spark/gameplay/GameplayDamageDeal.cpp
+        src/spark/gameplay/GameplayInteractionQuery.cpp
+        src/spark/gameplay/GameplayInteractionProcessor.cpp
+        src/spark/gameplay/GameplayPickupDelivery.cpp
+        src/spark/gameplay/GameplayTeamAffiliation.cpp
+        src/spark/gameplay/GameplayTeamPolicy.cpp
         src/spark/ecs/components/physics/3d/Hurtbox3DComponent.cpp
         src/spark/gameplay/CameraBounds2DResolve.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp

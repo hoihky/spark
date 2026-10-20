@@ -56,6 +56,11 @@ enum class SignalId : std::uint32_t {
      * <c>ptr</c> = owner <c>GameObject*</c>, <c>a</c> = new state, <c>b</c> = previous state.
      */
     GameStateChanged = 15,
+    /**
+     * Item delivered to <c>GameplayInventoryCollectorComponent</c>.
+     * <c>ptr</c> = <c>GameplayItemCollectedPayload*</c>, valid only for synchronous dispatch.
+     */
+    ItemCollected = 16,
     UserBase = 0x10000,
 };
 

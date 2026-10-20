@@ -128,6 +128,8 @@ enum class ComponentKind : std::uint32_t {
     AnimationLayerStack,
     PhysicsLayer3D,
     CombatHurtFlash3D,
+    GameplayTeam,
+    GameplayInventoryCollector,
 };
 
 /**

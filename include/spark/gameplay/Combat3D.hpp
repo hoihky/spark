@@ -8,6 +8,7 @@ namespace Spark {
 
 class GameObject;
 class GameWorld;
+class GameplayTeamPolicy;
 class Hurtbox3DComponent;
 
 /** One hurtbox hit from a combat overlap query. */
@@ -32,6 +33,8 @@ class Combat3DTarget final {
 public:
     explicit Combat3DTarget(GameObject& target) noexcept : target(&target) {}
 
+    void SetTeamPolicy(const GameplayTeamPolicy* policy) noexcept { teamPolicy = policy; }
+
     /**
      * Applies damage through hurtbox rules and damageable/health on the hierarchy.
      * @return Applied damage (0 when blocked or no receiver).
@@ -43,6 +46,7 @@ public:
 
 private:
     GameObject* target = nullptr;
+    const GameplayTeamPolicy* teamPolicy = nullptr;
 };
 
 /** Layer-filtered hurtbox overlap against world objects. */
