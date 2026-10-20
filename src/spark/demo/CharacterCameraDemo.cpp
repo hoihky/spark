@@ -525,6 +525,10 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             }
             charAnimFsm->SetLocomotionBlendEnabled(true);
             charAnimFsm->SetLocomotionAnalogSpeed(speedParam);
+            const float wishYaw = rig.mode == Spark::CharacterCameraMode::ThirdPerson
+                    ? (rig.characterVisualYaw + rig.characterFacingYawOffset)
+                    : rig.cameraYaw;
+            charAnimFsm->SetWishFacingYawRadians(wishYaw);
         }
         if (useSkinnedAvatar && playerAnimator != nullptr && charAnimFsm != nullptr) {
             const std::uint32_t clipCount = playerAnimator->GetClipCount();
@@ -1126,6 +1130,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         charAnimFsm->SetWalkSpeedThreshold(0.35F);
         charAnimFsm->SetRunSpeedThreshold(2.5F);
         charAnimFsm->SetLocomotionBlendEnabled(true);
+        charAnimFsm->SetLocomotionDriverMode(Spark::LocomotionController::DriverMode::Directional);
         if (asset.skeleton) {
             const char* attackHint = isFox ? "run" : "walk";
             if (const std::int32_t attackIdx = asset.skeleton->FindClipIndexIfNameContains(attackHint); attackIdx >= 0) {

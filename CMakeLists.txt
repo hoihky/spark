@@ -727,6 +727,19 @@ set(SPARK_ENGINE_SOURCES
         src/spark/animation/SkeletonPaletteCache.cpp
         src/spark/animation/LocomotionClipSet.cpp
         src/spark/animation/AnimBlend1D.cpp
+        src/spark/animation/locomotion/LocomotionPlanarSample.cpp
+        src/spark/animation/locomotion/PlanarLocomotionKinematicsProvider.cpp
+        src/spark/animation/locomotion/DirectionalLocomotionClipCatalog.cpp
+        src/spark/animation/locomotion/SpeedOnlyLocomotionStrategy.cpp
+        src/spark/animation/locomotion/CardinalDirectionMixer.cpp
+        src/spark/animation/locomotion/DirectionalLocomotionStrategy.cpp
+        src/spark/animation/locomotion/TurnInPlaceController.cpp
+        src/spark/animation/locomotion/LocomotionPlaybackApplicator.cpp
+        src/spark/animation/locomotion/LocomotionController.cpp
+        src/spark/animation/combat/CombatActionTimeline.cpp
+        src/spark/animation/combat/CombatGraphTransitionPolicy.cpp
+        src/spark/animation/combat/CombatGraphRunner.cpp
+        src/spark/animation/combat/Character3DCombatGraphDriver.cpp
         src/spark/animation/RootMotionJointResolver.cpp
         src/spark/animation/RootMotionApplicator.cpp
         src/spark/animation/RootMotionSampler.cpp

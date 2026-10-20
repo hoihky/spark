@@ -30,6 +30,8 @@ function(spark_add_physics_tests)
             tests/physics/MotionArbitratorTest.cpp
             tests/physics/PhysicsCollider3DFilterTest.cpp
             tests/animation/AnimationJointMaskTest.cpp
+            tests/animation/CombatGraphRunnerTest.cpp
+            tests/animation/CardinalDirectionMixerTest.cpp
             tests/physics/Level2DComponentsTest.cpp
             tests/scene/MaterialLibraryRoundTripTest.cpp
             tests/scene/GltfDisplayCompatibilityTest.cpp

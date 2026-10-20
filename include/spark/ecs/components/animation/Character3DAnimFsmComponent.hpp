@@ -1,7 +1,10 @@
 #pragma once
 
 #include "spark/animation/AnimLoopMode.hpp"
+#include "spark/animation/combat/CombatActionKind.hpp"
+#include "spark/animation/combat/Character3DCombatGraphDriver.hpp"
 #include "spark/animation/LocomotionClipSet.hpp"
+#include "spark/animation/locomotion/LocomotionController.hpp"
 #include "spark/animation/Skeleton.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
@@ -153,10 +156,20 @@ public:
     void SetUseUpperBodyAttackOverlay(const bool enabled) noexcept { SetUseUpperBodyCombatOverlay(enabled); }
     [[nodiscard]] bool GetUseUpperBodyAttackOverlay() const noexcept { return GetUseUpperBodyCombatOverlay(); }
 
+    /** Speed-only (default) or directional strafe when catalog clips exist. */
+    void SetLocomotionDriverMode(LocomotionController::DriverMode mode) noexcept {
+        locomotionController.SetDriverMode(mode);
+    }
+    void SetWishFacingYawRadians(const float radians) noexcept { locomotionController.SetWishFacingYawRadians(radians); }
+
     /** Depth-first search on <c>root</c> and descendants for a 3D animation FSM. */
     [[nodiscard]] static Character3DAnimFsmComponent* FindInHierarchy(GameObject& root) noexcept;
 
+    void NotifyCombatBlackboardCleared(GameObject& owner, CombatActionKind action) noexcept;
+
 private:
+    friend class Character3DCombatGraphDriver;
+
     enum class CombatCommand : std::uint8_t { None = 0, Hurt = 1, Attack = 2, Stagger = 3, Death = 4 };
 
     class CombatClipPlayback {
@@ -182,34 +195,13 @@ private:
         bool active = false;
     };
 
-    class UpperBodyCombatOverlay {
-    public:
-        explicit UpperBodyCombatOverlay(Character3DAnimFsmComponent& ownerIn) noexcept : owner(ownerIn) {}
-
-        void Update(AnimatorComponent& anim, GameObject& visual, CombatCommand& pendingCommand) noexcept;
-        [[nodiscard]] bool IsPlaying() const noexcept;
-
-    private:
-        [[nodiscard]] static int InterruptPriority(CombatCommand command) noexcept;
-        void StartClip(
-                AnimationLayerStackComponent& stack,
-                AnimatorComponent& anim,
-                GameObject& visual,
-                std::uint32_t clip,
-                CombatCommand command,
-                bool useAttackRootMotion) noexcept;
-        void EndRootMotion(GameObject& visual) noexcept;
-
-        Character3DAnimFsmComponent& owner;
-        CombatCommand playingCommand = CombatCommand::None;
-    };
-
     [[nodiscard]] static CombatCommand ToCombatCommand(int value) noexcept;
+    [[nodiscard]] static CombatActionKind ToCombatActionKind(CombatCommand command) noexcept;
+    [[nodiscard]] static CombatCommand FromCombatActionKind(CombatActionKind action) noexcept;
     [[nodiscard]] static int ToBlackboardInt(CombatCommand command) noexcept;
 
     [[nodiscard]] bool ClipValid_(const AnimatorComponent& anim, std::uint32_t clip) const noexcept;
     void ApplyClip_(AnimatorComponent& anim, std::uint32_t want, AnimLoopMode loopMode) noexcept;
-    void ApplyLocomotionBlend_(AnimatorComponent& anim, float speedMetersPerSecond) noexcept;
     void ApplyLocomotionDiscrete_(AnimatorComponent& anim, bool moving, bool wantSprint) noexcept;
     [[nodiscard]] CombatClipPlayback ResolveCombat_(
             AnimatorComponent& anim,
@@ -250,7 +242,9 @@ private:
     Vector3 lastWorldPos{Vector3::Zero};
     std::size_t combatBbSlot = static_cast<std::size_t>(-1);
     bool useUpperBodyCombatOverlay = true;
-    UpperBodyCombatOverlay upperBodyOverlay_{*this};
+    bool useLocomotionController = true;
+    Character3DCombatGraphDriver combatGraphDriver_{*this};
+    LocomotionController locomotionController{};
 };
 
 }  // namespace Spark

@@ -1,8 +1,6 @@
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 
-#include "spark/animation/AnimBlend1D.hpp"
 #include "spark/ecs/components/animation/AnimationLayerStackComponent.hpp"
-#include "spark/ecs/components/character/Character3DBodyComponent.hpp"
 #include "spark/animation/AnimLoopMode.hpp"
 #include "spark/animation/LocomotionClipSet.hpp"
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
@@ -83,6 +81,21 @@ int Character3DAnimFsmComponent::ToBlackboardInt(const CombatCommand command) no
     return static_cast<int>(command);
 }
 
+CombatActionKind Character3DAnimFsmComponent::ToCombatActionKind(const CombatCommand command) noexcept {
+    return CombatActionKind::FromInt(static_cast<int>(command));
+}
+
+Character3DAnimFsmComponent::CombatCommand Character3DAnimFsmComponent::FromCombatActionKind(
+        const CombatActionKind action) noexcept {
+    return static_cast<CombatCommand>(action.ToInt());
+}
+
+void Character3DAnimFsmComponent::NotifyCombatBlackboardCleared(
+        GameObject& owner,
+        const CombatActionKind action) noexcept {
+    MaybeClearBlackboardCombat_(owner, FromCombatActionKind(action));
+}
+
 void Character3DAnimFsmComponent::SetLocomotionClips(
         const std::uint32_t idleClipIndex,
         const std::uint32_t walkClipIndex,
@@ -90,6 +103,7 @@ void Character3DAnimFsmComponent::SetLocomotionClips(
     idleClip = idleClipIndex;
     walkClip = walkClipIndex;
     runClip = runClipIndex;
+    locomotionController.ConfigureSpeedClips(idleClip, walkClip, runClip);
 }
 
 void Character3DAnimFsmComponent::ConfigureLocomotionFromSkeleton(
@@ -98,6 +112,12 @@ void Character3DAnimFsmComponent::ConfigureLocomotionFromSkeleton(
     const LocomotionClipSet clips = ResolveLocomotionClipsFromSkeleton(skeleton, walkClipFallback);
     SetLocomotionClips(clips.idle, clips.walk, clips.run);
     SetCombatClips(clips.attack, clips.hurt, clips.stagger, clips.death);
+    locomotionController.ConfigureSpeedClips(clips.idle, clips.walk, clips.run);
+    locomotionController.ConfigureDirectionalFromSkeleton(skeleton, clips);
+    locomotionController.SetWalkSpeedThreshold(walkThresh);
+    locomotionController.SetRunSpeedThreshold(runThresh);
+    locomotionController.SetCrossfadeDuration(crossfadeDuration);
+    combatGraphDriver_.RebuildActionSpecs();
 }
 
 void Character3DAnimFsmComponent::SetCombatClips(
@@ -109,6 +129,7 @@ void Character3DAnimFsmComponent::SetCombatClips(
     hurtClip = hurtClipIndex;
     staggerClip = staggerClipIndex;
     deathClip = deathClipIndex;
+    combatGraphDriver_.RebuildActionSpecs();
 }
 
 void Character3DAnimFsmComponent::SetAttackClip(const std::uint32_t attackClipIndex) noexcept {
@@ -129,14 +150,17 @@ void Character3DAnimFsmComponent::SetDeathClip(const std::uint32_t deathClipInde
 
 void Character3DAnimFsmComponent::SetWalkSpeedThreshold(const float metersPerSecond) noexcept {
     walkThresh = (metersPerSecond > 1.0e-6F) ? metersPerSecond : 0.35F;
+    locomotionController.SetWalkSpeedThreshold(walkThresh);
 }
 
 void Character3DAnimFsmComponent::SetRunSpeedThreshold(const float metersPerSecond) noexcept {
     runThresh = (metersPerSecond > walkThresh) ? metersPerSecond : walkThresh + 0.5F;
+    locomotionController.SetRunSpeedThreshold(runThresh);
 }
 
 void Character3DAnimFsmComponent::SetCrossfadeDuration(const float seconds) noexcept {
     crossfadeDuration = (seconds > 1.0e-4F) ? seconds : 0.18F;
+    locomotionController.SetCrossfadeDuration(crossfadeDuration);
 }
 
 void Character3DAnimFsmComponent::RequestHurt() noexcept {
@@ -216,44 +240,6 @@ void Character3DAnimFsmComponent::ApplyClip_(
         anim.RestartCurrentClip();
         anim.SetLoopMode(AnimLoopMode::Once);
     }
-}
-
-void Character3DAnimFsmComponent::ApplyLocomotionBlend_(
-        AnimatorComponent& anim,
-        const float speedMetersPerSecond) noexcept {
-    AnimBlend1DKeyframe keyframes[3]{};
-    std::size_t keyframeCount = 0;
-
-    const bool idleOk = ClipValid_(anim, idleClip);
-    const bool walkOk = ClipValid_(anim, walkClip);
-    const bool runOk = ClipValid_(anim, runClip);
-
-    if (idleOk) {
-        keyframes[keyframeCount++] = {0.0F, idleClip};
-    }
-    if (walkOk) {
-        keyframes[keyframeCount++] = {walkThresh, walkClip};
-    }
-    if (runOk) {
-        keyframes[keyframeCount++] = {runThresh, runClip};
-    }
-
-    if (keyframeCount == 0) {
-        return;
-    }
-
-    const AnimBlend1DSample sample = EvaluateAnimBlend1D(keyframes, keyframeCount, speedMetersPerSecond);
-    if (!sample.valid) {
-        return;
-    }
-
-    anim.SetLoopMode(AnimLoopMode::Loop);
-    if (sample.clipA == sample.clipB) {
-        ApplyClip_(anim, sample.clipA, AnimLoopMode::Loop);
-        return;
-    }
-
-    anim.SetLocomotionBlend(sample.clipA, sample.clipB, sample.blend01);
 }
 
 void Character3DAnimFsmComponent::ApplyLocomotionDiscrete_(
@@ -392,114 +378,6 @@ float Character3DAnimFsmComponent::MeasureLocomotionSpeed_(
     return MeasureLocomotionSpeedInHierarchy(owner, timing, lastWorldPos, hasLastWorldPos);
 }
 
-int Character3DAnimFsmComponent::UpperBodyCombatOverlay::InterruptPriority(
-        const CombatCommand command) noexcept {
-    switch (command) {
-        case CombatCommand::Attack:
-            return 1;
-        case CombatCommand::Hurt:
-            return 2;
-        case CombatCommand::Stagger:
-            return 3;
-        default:
-            return 0;
-    }
-}
-
-void Character3DAnimFsmComponent::UpperBodyCombatOverlay::EndRootMotion(GameObject& visual) noexcept {
-    if (Character3DBodyComponent* body = Character3DBodyComponent::FindOnAncestors(visual)) {
-        body->EndAttackRootMotionWindow();
-    }
-}
-
-void Character3DAnimFsmComponent::UpperBodyCombatOverlay::StartClip(
-        AnimationLayerStackComponent& stack,
-        AnimatorComponent& anim,
-        GameObject& visual,
-        const std::uint32_t clip,
-        const CombatCommand command,
-        const bool useAttackRootMotion) noexcept {
-    stack.PlayOverlay(clip, AnimLoopMode::Once);
-    playingCommand = command;
-    if (useAttackRootMotion) {
-        if (Character3DBodyComponent* body = Character3DBodyComponent::FindOnAncestors(visual)) {
-            body->BeginAttackRootMotionWindow();
-        }
-    } else {
-        EndRootMotion(visual);
-    }
-    owner.MaybeClearBlackboardCombat_(visual, command);
-}
-
-bool Character3DAnimFsmComponent::UpperBodyCombatOverlay::IsPlaying() const noexcept {
-    return playingCommand != CombatCommand::None;
-}
-
-void Character3DAnimFsmComponent::UpperBodyCombatOverlay::Update(
-        AnimatorComponent& anim,
-        GameObject& visual,
-        CombatCommand& pendingCommand) noexcept {
-    if (!owner.useUpperBodyCombatOverlay) {
-        return;
-    }
-    AnimationLayerStackComponent* stack = visual.GetComponent<AnimationLayerStackComponent>();
-    if (stack == nullptr) {
-        return;
-    }
-
-    if (stack->IsOverlayActive() && stack->IsOverlayFinished()) {
-        stack->ClearOverlay();
-        EndRootMotion(visual);
-        if (playingCommand != CombatCommand::None) {
-            owner.MaybeClearBlackboardCombat_(visual, playingCommand);
-        }
-        playingCommand = CombatCommand::None;
-    }
-
-    if (pendingCommand == CombatCommand::Death) {
-        if (stack->IsOverlayActive()) {
-            stack->ClearOverlay();
-        }
-        playingCommand = CombatCommand::None;
-        EndRootMotion(visual);
-        return;
-    }
-
-    const bool overlayActive = stack->IsOverlayActive() && !stack->IsOverlayFinished();
-
-    if (overlayActive && pendingCommand != CombatCommand::None) {
-        const int newPriority = InterruptPriority(pendingCommand);
-        const int activePriority = InterruptPriority(playingCommand);
-        if (newPriority > activePriority) {
-            if (pendingCommand == CombatCommand::Stagger && owner.ClipValid_(anim, owner.staggerClip)) {
-                StartClip(*stack, anim, visual, owner.staggerClip, CombatCommand::Stagger, false);
-                pendingCommand = CombatCommand::None;
-                return;
-            }
-            if (pendingCommand == CombatCommand::Hurt && owner.ClipValid_(anim, owner.hurtClip)) {
-                StartClip(*stack, anim, visual, owner.hurtClip, CombatCommand::Hurt, false);
-                pendingCommand = CombatCommand::None;
-                return;
-            }
-        }
-        pendingCommand = CombatCommand::None;
-        return;
-    }
-
-    if (!overlayActive) {
-        if (pendingCommand == CombatCommand::Attack && owner.ClipValid_(anim, owner.attackClip)) {
-            StartClip(*stack, anim, visual, owner.attackClip, CombatCommand::Attack, true);
-            pendingCommand = CombatCommand::None;
-        } else if (pendingCommand == CombatCommand::Hurt && owner.ClipValid_(anim, owner.hurtClip)) {
-            StartClip(*stack, anim, visual, owner.hurtClip, CombatCommand::Hurt, false);
-            pendingCommand = CombatCommand::None;
-        } else if (pendingCommand == CombatCommand::Stagger && owner.ClipValid_(anim, owner.staggerClip)) {
-            StartClip(*stack, anim, visual, owner.staggerClip, CombatCommand::Stagger, false);
-            pendingCommand = CombatCommand::None;
-        }
-    }
-}
-
 float Character3DAnimFsmComponent::ResolveLocomotionSpeedParam_(
         const GameObject& owner,
         const FrameTiming& timing,
@@ -540,9 +418,11 @@ void Character3DAnimFsmComponent::OnUpdate(
         }
     }
 
-    upperBodyOverlay_.Update(*anim, owner, combatCommand);
+    CombatActionKind graphPending = ToCombatActionKind(combatCommand);
+    combatGraphDriver_.ProcessFrame(*anim, owner, graphPending);
 
-    const bool upperCombatOverlayPlaying = useUpperBodyCombatOverlay && upperBodyOverlay_.IsPlaying();
+    const bool upperCombatOverlayPlaying =
+            useUpperBodyCombatOverlay && combatGraphDriver_.IsOverlayPresenting();
     const auto shouldApplyCombatClip = [&](const CombatClipPlayback& playback) {
         if (!playback.IsActive()) {
             return false;
@@ -577,12 +457,6 @@ void Character3DAnimFsmComponent::OnUpdate(
     }
 
     const bool runOk = ClipValid_(*anim, runClip);
-    if (hasLocomotionAnalog) {
-        ApplyLocomotionBlend_(*anim, locomotionAnalogSpeed);
-        hasLocomotionAnalog = false;
-        return;
-    }
-
     bool moving = false;
     bool wantSprint = false;
     const bool usedLocomotionInput = hasLocomotionInput;
@@ -596,9 +470,22 @@ void Character3DAnimFsmComponent::OnUpdate(
     }
     hasLocomotionInput = false;
 
+    locomotionController.NotifyAnimatorAdvanced(*anim);
+
+    if (useLocomotionController && locomotionBlendEnabled) {
+        const bool analog = hasLocomotionAnalog;
+        float analogSpeed = locomotionAnalogSpeed;
+        if (!analog && !usedLocomotionInput) {
+            analogSpeed = ResolveLocomotionSpeedParam_(owner, timing, moving, wantSprint);
+        }
+        locomotionController.Drive(owner, *anim, wantSprint, analog || !usedLocomotionInput, analogSpeed);
+        hasLocomotionAnalog = false;
+        return;
+    }
+
     if (locomotionBlendEnabled && !usedLocomotionInput) {
         const float speedParam = ResolveLocomotionSpeedParam_(owner, timing, moving, wantSprint);
-        ApplyLocomotionBlend_(*anim, speedParam);
+        locomotionController.Drive(owner, *anim, wantSprint, true, speedParam);
         return;
     }
 
