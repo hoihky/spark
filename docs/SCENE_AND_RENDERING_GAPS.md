@@ -102,11 +102,11 @@ C <kind> <payload>
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Stable handles** | `GameObject*` only | `EntityId` or opaque handle surviving reorder; no dangling-pointer-safe lookup |
+| **Stable handles** | `EntityId` on `GameObject`, `TryGetGameObject` / `IsGameObjectAlive` | Weak handles or generational IDs so stale `GameObject*` cannot alias a new entity |
 | **Multi-scene** | `SceneManager` additive load/unload on one `GameWorld` | Named scene registry, cross-scene references, persistent “manager” world separate from gameplay |
 | **Prefab API** | `PrefabInstantiator::Instantiate`, `SceneManager::InstantiatePrefab` | Component override map on load; editor persists glTF overrides via `gltf_scene` v2 |
 | **Tags / layers** | Name string on `GameObject` | `Tag`, `LayerMask`, query by tag/layer on `Scene` |
-| **Deferred destroy** | `DestroyGameObject` immediate | `DestroyAtEndOfFrame` to avoid iterator invalidation during `OnUpdate` |
+| **Deferred destroy** | `DestroyGameObject` defers during `UpdateGameObjects`; `DestroyGameObjectAtEndOfFrame` | Same deferral when destroying from physics/AI ticks outside `UpdateGameObjects` |
 | **Component queries** | Per-object `GetComponent<T>` | World queries: `ForEach<MeshComponent>`, archetype-style iteration |
 | **Enable/disable** | Per-component visibility flags vary | Uniform `GameObject::SetEnabled` affecting update + render submit |
 

@@ -38,6 +38,7 @@ function(spark_add_physics_tests)
             tests/scene/GltfVisualParityTest.cpp
             tests/scene/GameplayComponentRoundTripTest.cpp
             tests/scene/SceneDocumentRoundTripTest.cpp
+            tests/scene/GameWorldDestroyQueueTest.cpp
             tests/scene/PlatformerLevelSceneRoundTripTest.cpp
             tests/scene/TilemapGameplayPlacementTest.cpp
             tests/scene/TileGameplayPropertiesTest.cpp

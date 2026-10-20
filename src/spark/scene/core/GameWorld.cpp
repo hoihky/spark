@@ -26,7 +26,7 @@ GameWorld::~GameWorld() {
         }
     }
     for (std::size_t i = 0; i < roots.GetSize(); ++i) {
-        DestroyGameObject(roots[i]);
+        DestroyGameObjectImmediate(roots[i]);
     }
 }
 
@@ -34,6 +34,26 @@ GameObject* GameWorld::CreateGameObject() {
     const std::uint64_t oid = nextObjectId++;
     objects.PushBack(UniquePtr<GameObject>(new GameObject(*this, oid)));
     return objects.GetLast().Get();
+}
+
+void GameWorld::MarkSubtreePendingDestroy(GameObject* root) {
+    if (root == nullptr || root->pendingDestroy) {
+        return;
+    }
+    Array<GameObject*> order;
+    CollectSubtreePostOrder(root, order);
+    for (std::size_t i = 0; i < order.GetSize(); ++i) {
+        order[i]->pendingDestroy = true;
+    }
+}
+
+bool GameWorld::HasPendingDestroyAncestor(const GameObject* object) {
+    for (const GameObject* p = object != nullptr ? object->parent : nullptr; p != nullptr; p = p->parent) {
+        if (p->pendingDestroy) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void GameWorld::CollectSubtreePostOrder(GameObject* root, Array<GameObject*>& out) {
@@ -46,7 +66,7 @@ void GameWorld::CollectSubtreePostOrder(GameObject* root, Array<GameObject*>& ou
     out.PushBack(root);
 }
 
-void GameWorld::DestroyGameObject(GameObject* object) {
+void GameWorld::DestroyGameObjectImmediateInternal(GameObject* object) {
     if (object == nullptr || object->world != this) {
         return;
     }
@@ -54,6 +74,7 @@ void GameWorld::DestroyGameObject(GameObject* object) {
     CollectSubtreePostOrder(object, order);
     for (std::size_t i = 0; i < order.GetSize(); ++i) {
         GameObject* n = order[i];
+        n->pendingDestroy = false;
         if (n->parent != nullptr) {
             n->parent->InternalRemoveChild(n);
         }
@@ -63,6 +84,61 @@ void GameWorld::DestroyGameObject(GameObject* object) {
     }
 }
 
+void GameWorld::DestroyGameObjectImmediate(GameObject* object) {
+    DestroyGameObjectImmediateInternal(object);
+}
+
+void GameWorld::EnqueueDestroyGameObject(GameObject* object) {
+    if (object == nullptr || object->world != this) {
+        return;
+    }
+    if (object->pendingDestroy || HasPendingDestroyAncestor(object)) {
+        return;
+    }
+
+    for (std::size_t i = pendingDestroyRoots.GetSize(); i > 0; --i) {
+        GameObject* queuedRoot = pendingDestroyRoots[i - 1];
+        if (queuedRoot == nullptr) {
+            continue;
+        }
+        for (const GameObject* p = object; p != nullptr; p = p->parent) {
+            if (p == queuedRoot) {
+                pendingDestroyRoots.RemoveAt(i - 1);
+                break;
+            }
+        }
+    }
+
+    MarkSubtreePendingDestroy(object);
+    pendingDestroyRoots.PushBack(object);
+}
+
+void GameWorld::DestroyGameObjectAtEndOfFrame(GameObject* object) {
+    EnqueueDestroyGameObject(object);
+    if (!updatingGameObjects) {
+        FlushPendingDestroyGameObjects();
+    }
+}
+
+void GameWorld::FlushPendingDestroyGameObjects() {
+    const Array<GameObject*> roots = pendingDestroyRoots;
+    pendingDestroyRoots.Clear();
+    for (std::size_t i = 0; i < roots.GetSize(); ++i) {
+        DestroyGameObjectImmediateInternal(roots[i]);
+    }
+}
+
+void GameWorld::DestroyGameObject(GameObject* object) {
+    if (object == nullptr || object->world != this) {
+        return;
+    }
+    if (updatingGameObjects) {
+        EnqueueDestroyGameObject(object);
+        return;
+    }
+    DestroyGameObjectImmediateInternal(object);
+}
+
 void GameWorld::EraseGameObjectStorage(GameObject* pointer) {
     for (std::size_t i = 0; i < objects.GetSize(); ++i) {
         if (objects[i].Get() == pointer) {
@@ -70,6 +146,18 @@ void GameWorld::EraseGameObjectStorage(GameObject* pointer) {
             return;
         }
     }
+}
+
+bool GameWorld::IsGameObjectAlive(const GameObject* object) const noexcept {
+    if (object == nullptr || object->world != this || object->pendingDestroy) {
+        return false;
+    }
+    for (std::size_t i = 0; i < objects.GetSize(); ++i) {
+        if (objects[i].Get() == object) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool GameWorld::SetParent(GameObject* child, GameObject* newParent) {
@@ -101,9 +189,10 @@ bool GameWorld::SetParent(GameObject* child, GameObject* newParent) {
 
 void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& context) {
     assetLoader.Pump(*this);
+    updatingGameObjects = true;
     for (std::size_t i = 0; i < objects.GetSize(); ++i) {
         GameObject* o = objects[i].Get();
-        if (o == nullptr) {
+        if (o == nullptr || o->pendingDestroy) {
             continue;
         }
         if (MaterialComponent* material = o->GetComponent<MaterialComponent>()) {
@@ -114,6 +203,8 @@ void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& con
         }
         o->UpdateComponents(timing, context);
     }
+    updatingGameObjects = false;
+    FlushPendingDestroyGameObjects();
 }
 
 bool GameWorld::AwaitGltf(const char* path, GltfAsset& out) {

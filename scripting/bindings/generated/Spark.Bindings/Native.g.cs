@@ -289,6 +289,15 @@ namespace Spark.Bindings
         public static extern void spark_world_destroy_game_object(SparkGameWorld* world, SparkGameObject* @object);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void spark_world_destroy_game_object_at_end_of_frame(SparkGameWorld* world, SparkGameObject* @object);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern SparkGameObject* spark_world_try_get_game_object_by_id(SparkGameWorld* world, ulong entityId);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int spark_world_is_game_object_alive(SparkGameWorld* world, SparkGameObject* @object);
+
+        [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int spark_world_load_gltf(SparkGameWorld* world, sbyte* path);
 
         [DllImport("SparkInterop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]

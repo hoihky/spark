@@ -8,6 +8,7 @@
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
+#include "spark/scene/core/EntityId.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/assets/AssetLoadEvents.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
@@ -38,7 +39,21 @@ public:
     ~GameWorld();
 
     [[nodiscard]] GameObject* CreateGameObject();
+
+    /**
+     * Removes <c>object</c> and its descendants. During <c>UpdateGameObjects</c> this is deferred to end-of-frame;
+     * otherwise destruction is immediate. Prefer <c>DestroyGameObjectAtEndOfFrame</c> from gameplay callbacks.
+     */
     void DestroyGameObject(GameObject* object);
+
+    /** Queues destruction at the end of the current frame (flushes immediately if not inside <c>UpdateGameObjects</c>). */
+    void DestroyGameObjectAtEndOfFrame(GameObject* object);
+
+    /** Forces immediate removal (editor teardown, world shutdown). Avoid during component <c>OnUpdate</c>. */
+    void DestroyGameObjectImmediate(GameObject* object);
+
+    /** Applies all queued end-of-frame destroys (called automatically at the end of <c>UpdateGameObjects</c>). */
+    void FlushPendingDestroyGameObjects();
 
     /**
      * child and newParent must belong to this world. newParent may be nullptr (root).
@@ -302,6 +317,10 @@ public:
     }
 
     [[nodiscard]] GameObject* FindGameObjectById(std::uint64_t id) const noexcept;
+    [[nodiscard]] GameObject* TryGetGameObject(EntityId id) const noexcept { return FindGameObjectById(id); }
+
+    /** Pointer is non-null, belongs to this world, and is not queued for end-of-frame destroy. */
+    [[nodiscard]] bool IsGameObjectAlive(const GameObject* object) const noexcept;
     [[nodiscard]] GameObject* FindGameObjectByName(const char* name, const GameObjectQueryFilter& filter = {}) const;
     [[nodiscard]] GameObject* FindGameObjectWithTag(const char* tag, const GameObjectQueryFilter& filter = {}) const;
 
@@ -318,8 +337,14 @@ private:
 
     void EraseGameObjectStorage(GameObject* pointer);
     static void CollectSubtreePostOrder(GameObject* root, Array<GameObject*>& out);
+    void EnqueueDestroyGameObject(GameObject* object);
+    void DestroyGameObjectImmediateInternal(GameObject* object);
+    static void MarkSubtreePendingDestroy(GameObject* root);
+    static bool HasPendingDestroyAncestor(const GameObject* object);
 
     Array<UniquePtr<GameObject>> objects;
+    Array<GameObject*> pendingDestroyRoots;
+    bool updatingGameObjects = false;
     GameWorldAssetCache assetCache;
     GameWorldAssetLoader assetLoader;
     VfxSubsystem vfxSubsystem{};

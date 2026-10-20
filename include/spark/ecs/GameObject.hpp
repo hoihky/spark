@@ -2,6 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
+#include "spark/scene/core/EntityId.hpp"
 #include "spark/scene/core/SceneInstanceId.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameComponent.hpp"
@@ -29,7 +30,11 @@ public:
     ~GameObject();
 
     [[nodiscard]] GameWorld& GetWorld() const noexcept { return *world; }
-    [[nodiscard]] std::uint64_t GetId() const noexcept { return id; }
+    [[nodiscard]] EntityId GetId() const noexcept { return id; }
+    [[nodiscard]] EntityId GetEntityId() const noexcept { return id; }
+
+    /** True after <c>DestroyGameObjectAtEndOfFrame</c> until the object is removed (still safe to use until flush). */
+    [[nodiscard]] bool IsPendingDestroy() const noexcept { return pendingDestroy; }
 
     [[nodiscard]] Utf8String& GetName() noexcept { return name; }
     [[nodiscard]] const Utf8String& GetName() const noexcept { return name; }
@@ -124,6 +129,7 @@ private:
     Utf8String name;
     Utf8String tag;
     bool activeSelf = true;
+    bool pendingDestroy = false;
     GameObject* parent = nullptr;
     Array<GameObject*> children;
     Array<UniquePtr<GameComponent>> components;

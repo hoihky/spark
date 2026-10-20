@@ -230,6 +230,33 @@ void spark_world_destroy_game_object(SparkGameWorld* world, SparkGameObject* obj
             reinterpret_cast<Spark::GameObject*>(object));
 }
 
+void spark_world_destroy_game_object_at_end_of_frame(SparkGameWorld* world, SparkGameObject* object) {
+    if (world == nullptr || object == nullptr) {
+        return;
+    }
+    reinterpret_cast<Spark::GameWorld*>(world)->DestroyGameObjectAtEndOfFrame(
+            reinterpret_cast<Spark::GameObject*>(object));
+}
+
+SparkGameObject* spark_world_try_get_game_object_by_id(SparkGameWorld* world, const std::uint64_t entityId) {
+    if (world == nullptr) {
+        return nullptr;
+    }
+    Spark::GameObject* object =
+            reinterpret_cast<Spark::GameWorld*>(world)->TryGetGameObject(static_cast<Spark::EntityId>(entityId));
+    return reinterpret_cast<SparkGameObject*>(object);
+}
+
+int spark_world_is_game_object_alive(SparkGameWorld* world, SparkGameObject* object) {
+    if (world == nullptr || object == nullptr) {
+        return 0;
+    }
+    return reinterpret_cast<Spark::GameWorld*>(world)->IsGameObjectAlive(
+                   reinterpret_cast<Spark::GameObject*>(object))
+            ? 1
+            : 0;
+}
+
 std::uint64_t spark_object_get_id(const SparkGameObject* object) {
     if (object == nullptr) {
         return 0;

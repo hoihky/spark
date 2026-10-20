@@ -117,6 +117,11 @@ SPARK_SCRIPT_API void spark_world_physics_simulate_3d(SparkGameWorld* world, con
 
 SPARK_SCRIPT_API SparkGameObject* spark_world_create_game_object(SparkGameWorld* world, const char* utf8Name);
 SPARK_SCRIPT_API void spark_world_destroy_game_object(SparkGameWorld* world, SparkGameObject* object);
+SPARK_SCRIPT_API void spark_world_destroy_game_object_at_end_of_frame(
+        SparkGameWorld* world,
+        SparkGameObject* object);
+SPARK_SCRIPT_API SparkGameObject* spark_world_try_get_game_object_by_id(SparkGameWorld* world, uint64_t entityId);
+SPARK_SCRIPT_API int spark_world_is_game_object_alive(SparkGameWorld* world, SparkGameObject* object);
 SPARK_SCRIPT_API int spark_world_load_gltf(SparkGameWorld* world, const char* path);
 SPARK_SCRIPT_API int spark_world_load_skinned_gltf(SparkGameWorld* world, const char* path);
 SPARK_SCRIPT_API int spark_world_load_texture(SparkGameWorld* world, const char* path);

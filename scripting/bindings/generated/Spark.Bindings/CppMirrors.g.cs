@@ -256,6 +256,35 @@ public sealed class GameWorld
         }
     }
 
+    public void DestroyGameObjectAtEndOfFrame(GameObject obj)
+    {
+        unsafe
+        {
+            Native.spark_world_destroy_game_object_at_end_of_frame(
+                InteropPtr.World(Handle),
+                InteropPtr.Object(obj.Handle));
+        }
+    }
+
+    public GameObject? TryGetGameObject(ulong entityId)
+    {
+        unsafe
+        {
+            var found = Native.spark_world_try_get_game_object_by_id(InteropPtr.World(Handle), entityId);
+            return found == null ? null : new GameObject(InteropPtr.From(found));
+        }
+    }
+
+    public bool IsGameObjectAlive(GameObject obj)
+    {
+        unsafe
+        {
+            return Native.spark_world_is_game_object_alive(
+                       InteropPtr.World(Handle),
+                       InteropPtr.Object(obj.Handle)) != 0;
+        }
+    }
+
     public bool RegisterCheckerboardTexture(
         string cacheKey,
         uint size,
