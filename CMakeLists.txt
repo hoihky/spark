@@ -1036,6 +1036,12 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/PhysicsWorld3D.cpp
         src/spark/physics/CharacterController2D.cpp
         src/spark/physics/CharacterController3D.cpp
+        src/spark/character/KinematicCharacterMotor.cpp
+        src/spark/character/MotionArbitrator.cpp
+        src/spark/character/CharacterRootMotionApplicator.cpp
+        src/spark/character/CharacterSimulationPipeline.cpp
+        src/spark/ecs/components/character/Character3DBodyComponent.cpp
+        src/spark/ecs/components/character/Character3DVisualComponent.cpp
         src/spark/physics/TriggerVolume2D.cpp
         src/spark/physics/TriggerVolume3D.cpp
         src/spark/gameplay/Interaction2D.cpp

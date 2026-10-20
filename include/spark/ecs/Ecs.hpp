@@ -96,6 +96,8 @@
 #include "spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
+#include "spark/ecs/components/character/Character3DBodyComponent.hpp"
+#include "spark/ecs/components/character/Character3DVisualComponent.hpp"
 #include "spark/ecs/components/animation/Sprite2DCharacterAnimFsmComponent.hpp"
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp"

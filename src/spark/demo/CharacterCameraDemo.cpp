@@ -1,4 +1,9 @@
 #include "spark/demo/CharacterCameraDemo.hpp"
+
+#include "spark/character/CharacterIntent.hpp"
+#include "spark/character/CharacterSimulationPipeline.hpp"
+#include "spark/character/MotionArbitrationMode.hpp"
+#include "spark/ecs/components/character/Character3DVisualComponent.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 
@@ -153,6 +158,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         characterVisual = nullptr;
         characterVisualTr = nullptr;
         characterController = nullptr;
+        characterBody = nullptr;
         playerAnimator = nullptr;
         useSkinnedAvatar = false;
         skyTransform = nullptr;
@@ -241,6 +247,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         roots.PushBack(ground);
 
         SpawnForestTrees(w);
+        characterPhysics.GetQueries3D().RebuildStatics(w);
 
         characterRoot = w.CreateGameObject();
         characterRoot->GetName() = Spark::Utf8String("Player");
@@ -252,6 +259,8 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
                 0.36F, Spark::Vector3{0.0F, 0.88F, 0.0F});
         characterController->SetGravityScale(0.0F);
         characterController->SetStepOffset(0.2F);
+        characterBody = characterRoot->AddComponent<Spark::Character3DBodyComponent>();
+        characterBody->SetArbitrationMode(Spark::MotionArbitrationMode::GameplayDriven);
         roots.PushBack(characterRoot);
 
         characterVisualFootOffsetY = 0.0F;
@@ -367,6 +376,7 @@ void CharacterCameraDemo::Unload(Spark::GameWorld& w)
         characterVisual = nullptr;
         characterVisualTr = nullptr;
         characterController = nullptr;
+        characterBody = nullptr;
         playerAnimator = nullptr;
         charAnimFsm = nullptr;
         animEventReceiver = nullptr;
@@ -430,14 +440,30 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
         }
         rig.characterPosition = posBeforeWalk;
 
-        if (characterController != nullptr && characterRoot != nullptr && characterRootTr != nullptr) {
+        const bool moving = in.IsKeyDown(GLFW_KEY_W) || in.IsKeyDown(GLFW_KEY_S) || in.IsKeyDown(GLFW_KEY_A)
+                || in.IsKeyDown(GLFW_KEY_D);
+        const bool sprint = moving
+                && (in.IsKeyDown(GLFW_KEY_LEFT_SHIFT) || in.IsKeyDown(GLFW_KEY_RIGHT_SHIFT));
+
+        if (characterBody != nullptr && characterController != nullptr && characterRoot != nullptr
+                && characterRootTr != nullptr) {
             characterRootTr->SetTranslation(rig.characterPosition);
-            characterController->SetMoveInput(wishVel);
-            Spark::CharacterController3DSettings ccSettings{};
-            ccSettings.gravityY = 0.0F;
-            ccSettings.maxFallSpeed = 0.0F;
-            ccSettings.broadPhaseCellSize = 4.0F;
-            Spark::SimulateCharacterControllers3D(characterRoot->GetWorld(), timing, ccSettings);
+            Spark::CharacterIntent intent{};
+            intent.wishVelocityWorld = wishVel;
+            intent.sprint = sprint;
+            Spark::CharacterSimulationPipelineConfig pipelineConfig{};
+            pipelineConfig.controllerSettings.gravityY = 0.0F;
+            pipelineConfig.controllerSettings.maxFallSpeed = 0.0F;
+            pipelineConfig.controllerSettings.broadPhaseCellSize = 4.0F;
+            Spark::CharacterSimulationPreAnimationParams preAnim{
+                    characterRoot->GetWorld(),
+                    timing,
+                    *characterBody,
+                    intent,
+                    pipelineConfig,
+                    &characterPhysics.GetQueries3D(),
+            };
+            Spark::RunPreAnimationControllerFirst(preAnim);
             const Spark::Vector3 resolved = characterRootTr->GetLocalTransform().translation;
             rig.characterPosition.x = resolved.x;
             rig.characterPosition.y = rig.groundY;
@@ -449,10 +475,6 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             rig.characterPosition.y = rig.groundY;
         }
 
-        const bool moving = in.IsKeyDown(GLFW_KEY_W) || in.IsKeyDown(GLFW_KEY_S) || in.IsKeyDown(GLFW_KEY_A)
-                || in.IsKeyDown(GLFW_KEY_D);
-        const bool sprint = moving
-                && (in.IsKeyDown(GLFW_KEY_LEFT_SHIFT) || in.IsKeyDown(GLFW_KEY_RIGHT_SHIFT));
         if (useSkinnedAvatar && aimIk != nullptr && aimIk->IsEnabled()) {
             aimIk->SetUseMainCamera(false);
             aimIk->SetWorldTarget(rig.CameraWorldPosition());
@@ -532,8 +554,13 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             if (in.IsKeyPressedThisFrame(GLFW_KEY_H)) {
                 charAnimFsm->RequestHurt();
             }
-            if (in.IsKeyPressedThisFrame(GLFW_KEY_R) && rootMotion != nullptr) {
-                rootMotion->SetInPlace(!rootMotion->IsInPlace());
+            if (in.IsKeyPressedThisFrame(GLFW_KEY_R) && rootMotion != nullptr && characterBody != nullptr) {
+                const bool rootMotionDrive =
+                        characterBody->GetArbitrationMode() != Spark::MotionArbitrationMode::RootMotionExclusive;
+                characterBody->SetArbitrationMode(
+                        rootMotionDrive ? Spark::MotionArbitrationMode::RootMotionExclusive
+                                        : Spark::MotionArbitrationMode::GameplayDriven);
+                rootMotion->SetInPlace(!rootMotionDrive);
             }
             if (in.IsKeyPressedThisFrame(GLFW_KEY_B) && skeletonDebugDraw != nullptr) {
                 skeletonDebugDraw->ToggleEnabled();
@@ -1045,6 +1072,8 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         characterVisual->GetName() = Spark::Utf8String("PlayerVisual");
         characterVisual->SetParent(characterRoot);
         characterVisualTr = characterVisual->AddComponent<Spark::TransformComponent>();
+        auto* visualTag = characterVisual->AddComponent<Spark::Character3DVisualComponent>();
+        visualTag->SetBodyObject(characterRoot);
         characterSkinnedMesh = characterVisual->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
         characterSkinnedMesh->SetSkeleton(asset.skeleton);
         charAnimFsm = characterVisual->AddComponent<Spark::Character3DAnimFsmComponent>();
@@ -1085,6 +1114,13 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
             if (const std::int32_t attackIdx = asset.skeleton->FindClipIndexIfNameContains(attackHint); attackIdx >= 0) {
                 charAnimFsm->SetAttackClip(static_cast<std::uint32_t>(attackIdx));
             }
+        }
+    }
+
+    if (characterBody != nullptr && characterVisual != nullptr) {
+        characterBody->SetVisualObject(characterVisual);
+        if (auto* visualTag = characterVisual->GetComponent<Spark::Character3DVisualComponent>()) {
+            visualTag->SetBodyObject(characterRoot);
         }
     }
 
@@ -1188,6 +1224,9 @@ void CharacterCameraDemo::SetupRootMotionComponent() {
     rootMotion->SetEnabled(true);
     if (characterVisualTr != nullptr) {
         rootMotion->SetSkeletonSpaceScale(characterVisualTr->GetLocalTransform().scale.x);
+    }
+    if (characterBody != nullptr) {
+        characterBody->WireRootMotion(*rootMotion);
     }
 }
 

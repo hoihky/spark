@@ -15,7 +15,9 @@
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
+#include "spark/ecs/components/character/Character3DBodyComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 
 namespace Spark {
 
@@ -115,6 +117,8 @@ private:
     Spark::Quaternion humanModelBindFix;
     Spark::Utf8String characterAvatarHudName{};
     Spark::CharacterController3DComponent* characterController = nullptr;
+    Spark::Character3DBodyComponent* characterBody = nullptr;
+    Spark::PhysicsSubsystem characterPhysics{};
     DemoHelpHud helpHud{};
     Spark::SoundEngine* audioEngine = nullptr;
 
