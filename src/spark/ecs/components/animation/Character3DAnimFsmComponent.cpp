@@ -1,6 +1,8 @@
 #include "spark/ecs/components/animation/Character3DAnimFsmComponent.hpp"
 
 #include "spark/animation/AnimBlend1D.hpp"
+#include "spark/ecs/components/animation/AnimationLayerStackComponent.hpp"
+#include "spark/ecs/components/character/Character3DBodyComponent.hpp"
 #include "spark/animation/AnimLoopMode.hpp"
 #include "spark/animation/LocomotionClipSet.hpp"
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
@@ -17,11 +19,6 @@
 namespace Spark {
 
 namespace {
-
-constexpr int kCombatCmdHurt = 1;
-constexpr int kCombatCmdAttack = 2;
-constexpr int kCombatCmdStagger = 3;
-constexpr int kCombatCmdDeath = 4;
 
 [[nodiscard]] float HorizontalSpeedXZ(const Vector3& velocity) noexcept {
     return std::sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
@@ -62,6 +59,29 @@ constexpr int kCombatCmdDeath = 4;
 }
 
 }  // namespace
+
+Character3DAnimFsmComponent* Character3DAnimFsmComponent::FindInHierarchy(GameObject& root) noexcept {
+    if (Character3DAnimFsmComponent* fsm = root.GetComponent<Character3DAnimFsmComponent>()) {
+        return fsm;
+    }
+    for (std::size_t i = 0; i < root.GetChildren().GetSize(); ++i) {
+        if (GameObject* child = root.GetChildren()[i]) {
+            if (Character3DAnimFsmComponent* fsm = FindInHierarchy(*child)) {
+                return fsm;
+            }
+        }
+    }
+    return nullptr;
+}
+
+Character3DAnimFsmComponent::CombatCommand Character3DAnimFsmComponent::ToCombatCommand(
+        const int value) noexcept {
+    return static_cast<CombatCommand>(value);
+}
+
+int Character3DAnimFsmComponent::ToBlackboardInt(const CombatCommand command) noexcept {
+    return static_cast<int>(command);
+}
 
 void Character3DAnimFsmComponent::SetLocomotionClips(
         const std::uint32_t idleClipIndex,
@@ -120,19 +140,19 @@ void Character3DAnimFsmComponent::SetCrossfadeDuration(const float seconds) noex
 }
 
 void Character3DAnimFsmComponent::RequestHurt() noexcept {
-    pendingCombat = static_cast<std::uint8_t>(kCombatCmdHurt);
+    pendingCombat = static_cast<std::uint8_t>(CombatCommand::Hurt);
 }
 
 void Character3DAnimFsmComponent::RequestAttack() noexcept {
-    pendingCombat = static_cast<std::uint8_t>(kCombatCmdAttack);
+    pendingCombat = static_cast<std::uint8_t>(CombatCommand::Attack);
 }
 
 void Character3DAnimFsmComponent::RequestStagger() noexcept {
-    pendingCombat = static_cast<std::uint8_t>(kCombatCmdStagger);
+    pendingCombat = static_cast<std::uint8_t>(CombatCommand::Stagger);
 }
 
 void Character3DAnimFsmComponent::RequestDeath() noexcept {
-    pendingCombat = static_cast<std::uint8_t>(kCombatCmdDeath);
+    pendingCombat = static_cast<std::uint8_t>(CombatCommand::Death);
 }
 
 void Character3DAnimFsmComponent::SetManualClip(const std::uint32_t clipIndex, const AnimLoopMode loopMode) noexcept {
@@ -265,24 +285,26 @@ void Character3DAnimFsmComponent::ApplyLocomotionDiscrete_(
     ApplyClip_(anim, want, AnimLoopMode::Loop);
 }
 
-void Character3DAnimFsmComponent::MaybeClearBlackboardCombat_(GameObject& owner, const int playingCmd) noexcept {
-    if (combatBbSlot == static_cast<std::size_t>(-1) || playingCmd == 0) {
+void Character3DAnimFsmComponent::MaybeClearBlackboardCombat_(
+        GameObject& owner,
+        const CombatCommand playingCommand) noexcept {
+    if (combatBbSlot == static_cast<std::size_t>(-1) || playingCommand == CombatCommand::None) {
         return;
     }
     AiAgentComponent* ai = owner.GetComponent<AiAgentComponent>();
     if (ai == nullptr || !ai->IsEnabled()) {
         return;
     }
-    if (ai->GetBlackboard().GetInt(combatBbSlot) == playingCmd) {
+    if (ai->GetBlackboard().GetInt(combatBbSlot) == ToBlackboardInt(playingCommand)) {
         ai->GetBlackboard().SetInt(combatBbSlot, 0);
     }
 }
 
-Character3DAnimFsmComponent::CombatSelection Character3DAnimFsmComponent::ResolveCombat_(
+Character3DAnimFsmComponent::CombatClipPlayback Character3DAnimFsmComponent::ResolveCombat_(
         AnimatorComponent& anim,
         GameObject& owner,
-        const int combatCmd) noexcept {
-    CombatSelection out{};
+        const CombatCommand combatCommand) noexcept {
+    CombatClipPlayback out{};
 
     const bool hurtOk = ClipValid_(anim, hurtClip);
     const bool attackOk = ClipValid_(anim, attackClip);
@@ -292,112 +314,73 @@ Character3DAnimFsmComponent::CombatSelection Character3DAnimFsmComponent::Resolv
 
     if (deathLocked) {
         if (deathOk) {
-            out.clip = deathClip;
-            out.loopMode = AnimLoopMode::Hold;
-            out.active = true;
-            out.playingCmd = kCombatCmdDeath;
+            out.Activate(deathClip, AnimLoopMode::Hold, CombatCommand::Death);
         }
         return out;
     }
 
     if (deathOk && cur == deathClip && !anim.IsClipFinished()) {
-        out.clip = deathClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdDeath;
+        out.Activate(deathClip, AnimLoopMode::Once, CombatCommand::Death);
         return out;
     }
     if (deathOk && cur == deathClip && anim.IsClipFinished()) {
         deathLocked = true;
-        MaybeClearBlackboardCombat_(owner, kCombatCmdDeath);
-        out.clip = deathClip;
-        out.loopMode = AnimLoopMode::Hold;
-        out.active = true;
-        out.playingCmd = kCombatCmdDeath;
+        MaybeClearBlackboardCombat_(owner, CombatCommand::Death);
+        out.Activate(deathClip, AnimLoopMode::Hold, CombatCommand::Death);
         return out;
     }
 
     if (hurtOk && cur == hurtClip && !anim.IsClipFinished()
             && anim.GetLoopMode() == AnimLoopMode::Once) {
-        MaybeClearBlackboardCombat_(owner, kCombatCmdHurt);
-        out.clip = hurtClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdHurt;
+        MaybeClearBlackboardCombat_(owner, CombatCommand::Hurt);
+        out.Activate(hurtClip, AnimLoopMode::Once, CombatCommand::Hurt);
         return out;
     }
     if (hurtOk && cur == hurtClip && anim.IsClipFinished()) {
-        MaybeClearBlackboardCombat_(owner, kCombatCmdHurt);
+        MaybeClearBlackboardCombat_(owner, CombatCommand::Hurt);
     }
 
     if (staggerOk && cur == staggerClip && !anim.IsClipFinished()
             && anim.GetLoopMode() == AnimLoopMode::Once) {
-        MaybeClearBlackboardCombat_(owner, kCombatCmdStagger);
-        out.clip = staggerClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdStagger;
+        MaybeClearBlackboardCombat_(owner, CombatCommand::Stagger);
+        out.Activate(staggerClip, AnimLoopMode::Once, CombatCommand::Stagger);
         return out;
     }
     if (staggerOk && cur == staggerClip && anim.IsClipFinished()) {
-        MaybeClearBlackboardCombat_(owner, kCombatCmdStagger);
+        MaybeClearBlackboardCombat_(owner, CombatCommand::Stagger);
     }
 
     // Locomotion clips may share the same index as attack (e.g. Fox Run). Only treat Once playback as combat.
     const bool holdingAttack = attackOk && cur == attackClip && !anim.IsClipFinished()
             && anim.GetLoopMode() == AnimLoopMode::Once;
     if (holdingAttack) {
-        if (combatCmd == kCombatCmdDeath && deathOk) {
-            out.clip = deathClip;
-            out.loopMode = AnimLoopMode::Once;
-            out.active = true;
-            out.playingCmd = kCombatCmdDeath;
+        if (combatCommand == CombatCommand::Death && deathOk) {
+            out.Activate(deathClip, AnimLoopMode::Once, CombatCommand::Death);
             return out;
         }
-        if (combatCmd == kCombatCmdHurt && hurtOk) {
-            out.clip = hurtClip;
-            out.loopMode = AnimLoopMode::Once;
-            out.active = true;
-            out.playingCmd = kCombatCmdHurt;
+        if (combatCommand == CombatCommand::Hurt && hurtOk) {
+            out.Activate(hurtClip, AnimLoopMode::Once, CombatCommand::Hurt);
             return out;
         }
-        if (combatCmd == kCombatCmdStagger && staggerOk) {
-            out.clip = staggerClip;
-            out.loopMode = AnimLoopMode::Once;
-            out.active = true;
-            out.playingCmd = kCombatCmdStagger;
+        if (combatCommand == CombatCommand::Stagger && staggerOk) {
+            out.Activate(staggerClip, AnimLoopMode::Once, CombatCommand::Stagger);
             return out;
         }
-        out.clip = attackClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdAttack;
+        out.Activate(attackClip, AnimLoopMode::Once, CombatCommand::Attack);
         return out;
     }
     if (attackOk && cur == attackClip && anim.IsClipFinished()) {
-        MaybeClearBlackboardCombat_(owner, kCombatCmdAttack);
+        MaybeClearBlackboardCombat_(owner, CombatCommand::Attack);
     }
 
-    if (combatCmd == kCombatCmdDeath && deathOk) {
-        out.clip = deathClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdDeath;
-    } else if (combatCmd == kCombatCmdHurt && hurtOk) {
-        out.clip = hurtClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdHurt;
-    } else if (combatCmd == kCombatCmdStagger && staggerOk) {
-        out.clip = staggerClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdStagger;
-    } else if (combatCmd == kCombatCmdAttack && attackOk) {
-        out.clip = attackClip;
-        out.loopMode = AnimLoopMode::Once;
-        out.active = true;
-        out.playingCmd = kCombatCmdAttack;
+    if (combatCommand == CombatCommand::Death && deathOk) {
+        out.Activate(deathClip, AnimLoopMode::Once, CombatCommand::Death);
+    } else if (combatCommand == CombatCommand::Hurt && hurtOk) {
+        out.Activate(hurtClip, AnimLoopMode::Once, CombatCommand::Hurt);
+    } else if (combatCommand == CombatCommand::Stagger && staggerOk) {
+        out.Activate(staggerClip, AnimLoopMode::Once, CombatCommand::Stagger);
+    } else if (combatCommand == CombatCommand::Attack && attackOk) {
+        out.Activate(attackClip, AnimLoopMode::Once, CombatCommand::Attack);
     }
 
     return out;
@@ -407,6 +390,114 @@ float Character3DAnimFsmComponent::MeasureLocomotionSpeed_(
         const GameObject& owner,
         const FrameTiming& timing) noexcept {
     return MeasureLocomotionSpeedInHierarchy(owner, timing, lastWorldPos, hasLastWorldPos);
+}
+
+int Character3DAnimFsmComponent::UpperBodyCombatOverlay::InterruptPriority(
+        const CombatCommand command) noexcept {
+    switch (command) {
+        case CombatCommand::Attack:
+            return 1;
+        case CombatCommand::Hurt:
+            return 2;
+        case CombatCommand::Stagger:
+            return 3;
+        default:
+            return 0;
+    }
+}
+
+void Character3DAnimFsmComponent::UpperBodyCombatOverlay::EndRootMotion(GameObject& visual) noexcept {
+    if (Character3DBodyComponent* body = Character3DBodyComponent::FindOnAncestors(visual)) {
+        body->EndAttackRootMotionWindow();
+    }
+}
+
+void Character3DAnimFsmComponent::UpperBodyCombatOverlay::StartClip(
+        AnimationLayerStackComponent& stack,
+        AnimatorComponent& anim,
+        GameObject& visual,
+        const std::uint32_t clip,
+        const CombatCommand command,
+        const bool useAttackRootMotion) noexcept {
+    stack.PlayOverlay(clip, AnimLoopMode::Once);
+    playingCommand = command;
+    if (useAttackRootMotion) {
+        if (Character3DBodyComponent* body = Character3DBodyComponent::FindOnAncestors(visual)) {
+            body->BeginAttackRootMotionWindow();
+        }
+    } else {
+        EndRootMotion(visual);
+    }
+    owner.MaybeClearBlackboardCombat_(visual, command);
+}
+
+bool Character3DAnimFsmComponent::UpperBodyCombatOverlay::IsPlaying() const noexcept {
+    return playingCommand != CombatCommand::None;
+}
+
+void Character3DAnimFsmComponent::UpperBodyCombatOverlay::Update(
+        AnimatorComponent& anim,
+        GameObject& visual,
+        CombatCommand& pendingCommand) noexcept {
+    if (!owner.useUpperBodyCombatOverlay) {
+        return;
+    }
+    AnimationLayerStackComponent* stack = visual.GetComponent<AnimationLayerStackComponent>();
+    if (stack == nullptr) {
+        return;
+    }
+
+    if (stack->IsOverlayActive() && stack->IsOverlayFinished()) {
+        stack->ClearOverlay();
+        EndRootMotion(visual);
+        if (playingCommand != CombatCommand::None) {
+            owner.MaybeClearBlackboardCombat_(visual, playingCommand);
+        }
+        playingCommand = CombatCommand::None;
+    }
+
+    if (pendingCommand == CombatCommand::Death) {
+        if (stack->IsOverlayActive()) {
+            stack->ClearOverlay();
+        }
+        playingCommand = CombatCommand::None;
+        EndRootMotion(visual);
+        return;
+    }
+
+    const bool overlayActive = stack->IsOverlayActive() && !stack->IsOverlayFinished();
+
+    if (overlayActive && pendingCommand != CombatCommand::None) {
+        const int newPriority = InterruptPriority(pendingCommand);
+        const int activePriority = InterruptPriority(playingCommand);
+        if (newPriority > activePriority) {
+            if (pendingCommand == CombatCommand::Stagger && owner.ClipValid_(anim, owner.staggerClip)) {
+                StartClip(*stack, anim, visual, owner.staggerClip, CombatCommand::Stagger, false);
+                pendingCommand = CombatCommand::None;
+                return;
+            }
+            if (pendingCommand == CombatCommand::Hurt && owner.ClipValid_(anim, owner.hurtClip)) {
+                StartClip(*stack, anim, visual, owner.hurtClip, CombatCommand::Hurt, false);
+                pendingCommand = CombatCommand::None;
+                return;
+            }
+        }
+        pendingCommand = CombatCommand::None;
+        return;
+    }
+
+    if (!overlayActive) {
+        if (pendingCommand == CombatCommand::Attack && owner.ClipValid_(anim, owner.attackClip)) {
+            StartClip(*stack, anim, visual, owner.attackClip, CombatCommand::Attack, true);
+            pendingCommand = CombatCommand::None;
+        } else if (pendingCommand == CombatCommand::Hurt && owner.ClipValid_(anim, owner.hurtClip)) {
+            StartClip(*stack, anim, visual, owner.hurtClip, CombatCommand::Hurt, false);
+            pendingCommand = CombatCommand::None;
+        } else if (pendingCommand == CombatCommand::Stagger && owner.ClipValid_(anim, owner.staggerClip)) {
+            StartClip(*stack, anim, visual, owner.staggerClip, CombatCommand::Stagger, false);
+            pendingCommand = CombatCommand::None;
+        }
+    }
 }
 
 float Character3DAnimFsmComponent::ResolveLocomotionSpeedParam_(
@@ -435,31 +526,44 @@ void Character3DAnimFsmComponent::OnUpdate(
         return;
     }
 
-    int combatCmd = static_cast<int>(pendingCombat);
+    CombatCommand combatCommand = ToCombatCommand(static_cast<int>(pendingCombat));
     pendingCombat = 0;
 
     if (combatBbSlot != static_cast<std::size_t>(-1)) {
         if (AiAgentComponent* ai = owner.GetComponent<AiAgentComponent>()) {
             if (ai->IsEnabled()) {
-                const int bbCmd = ai->GetBlackboard().GetInt(combatBbSlot);
-                if (bbCmd > combatCmd) {
-                    combatCmd = bbCmd;
+                const CombatCommand bbCommand = ToCombatCommand(ai->GetBlackboard().GetInt(combatBbSlot));
+                if (ToBlackboardInt(bbCommand) > ToBlackboardInt(combatCommand)) {
+                    combatCommand = bbCommand;
                 }
             }
         }
     }
 
+    upperBodyOverlay_.Update(*anim, owner, combatCommand);
+
+    const bool upperCombatOverlayPlaying = useUpperBodyCombatOverlay && upperBodyOverlay_.IsPlaying();
+    const auto shouldApplyCombatClip = [&](const CombatClipPlayback& playback) {
+        if (!playback.IsActive()) {
+            return false;
+        }
+        if (!upperCombatOverlayPlaying) {
+            return true;
+        }
+        return playback.GetPlayingCommand() == CombatCommand::Death;
+    };
+
     if (deathLocked) {
-        const CombatSelection combat = ResolveCombat_(*anim, owner, combatCmd);
-        if (combat.active) {
-            ApplyClip_(*anim, combat.clip, combat.loopMode);
+        const CombatClipPlayback combat = ResolveCombat_(*anim, owner, combatCommand);
+        if (shouldApplyCombatClip(combat)) {
+            ApplyClip_(*anim, combat.GetClip(), combat.GetLoopMode());
         }
         return;
     }
 
-    const CombatSelection combat = ResolveCombat_(*anim, owner, combatCmd);
-    if (combat.active) {
-        ApplyClip_(*anim, combat.clip, combat.loopMode);
+    const CombatClipPlayback combat = ResolveCombat_(*anim, owner, combatCommand);
+    if (shouldApplyCombatClip(combat)) {
+        ApplyClip_(*anim, combat.GetClip(), combat.GetLoopMode());
         return;
     }
 

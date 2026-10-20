@@ -2,8 +2,12 @@
 
 #include "spark/character/CharacterIntent.hpp"
 #include "spark/character/CharacterSimulationPipeline.hpp"
-#include "spark/character/MotionArbitrationMode.hpp"
+#include "spark/ecs/components/animation/AnimationLayerStackComponent.hpp"
 #include "spark/ecs/components/character/Character3DVisualComponent.hpp"
+#include "spark/ecs/components/physics/3d/PhysicsLayer3DComponent.hpp"
+#include "spark/ecs/components/gameplay/CombatHurtFlash3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/Hurtbox3DComponent.hpp"
+#include "spark/physics/CollisionFilter3D.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 
@@ -244,6 +248,10 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         }
         ground->AddComponent<Spark::SceneSpatialPolicyComponent>(
                 Spark::ScenePartitionKind::BoundingVolumeHierarchy);
+        if (auto* envLayer = ground->AddComponent<Spark::PhysicsLayer3DComponent>()) {
+            envLayer->SetCategoryBits(Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Environment));
+            envLayer->SetMaskBits(Spark::CollisionFilter3D::AllLayersMask());
+        }
         roots.PushBack(ground);
 
         SpawnForestTrees(w);
@@ -259,6 +267,11 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
                 0.36F, Spark::Vector3{0.0F, 0.88F, 0.0F});
         characterController->SetGravityScale(0.0F);
         characterController->SetStepOffset(0.2F);
+        characterController->SetCategoryBits(
+                Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Player));
+        characterController->SetMaskBits(
+                Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Environment)
+                | Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Enemy));
         characterBody = characterRoot->AddComponent<Spark::Character3DBodyComponent>();
         characterBody->SetArbitrationMode(Spark::MotionArbitrationMode::GameplayDriven);
         roots.PushBack(characterRoot);
@@ -553,14 +566,6 @@ void CharacterCameraDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             }
             if (in.IsKeyPressedThisFrame(GLFW_KEY_H)) {
                 charAnimFsm->RequestHurt();
-            }
-            if (in.IsKeyPressedThisFrame(GLFW_KEY_R) && rootMotion != nullptr && characterBody != nullptr) {
-                const bool rootMotionDrive =
-                        characterBody->GetArbitrationMode() != Spark::MotionArbitrationMode::RootMotionExclusive;
-                characterBody->SetArbitrationMode(
-                        rootMotionDrive ? Spark::MotionArbitrationMode::RootMotionExclusive
-                                        : Spark::MotionArbitrationMode::GameplayDriven);
-                rootMotion->SetInPlace(!rootMotionDrive);
             }
             if (in.IsKeyPressedThisFrame(GLFW_KEY_B) && skeletonDebugDraw != nullptr) {
                 skeletonDebugDraw->ToggleEnabled();
@@ -1077,6 +1082,8 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         characterSkinnedMesh = characterVisual->AddComponent<Spark::SkinnedMeshComponent>(asset.mesh);
         characterSkinnedMesh->SetSkeleton(asset.skeleton);
         charAnimFsm = characterVisual->AddComponent<Spark::Character3DAnimFsmComponent>();
+        auto* animLayers = characterVisual->AddComponent<Spark::AnimationLayerStackComponent>();
+        animLayers->ConfigureUpperBodyMaskFromSpine(*asset.skeleton, "spine");
         playerAnimator = characterVisual->AddComponent<Spark::AnimatorComponent>(
                 asset.skeleton, asset.walkClipIndex, 1.0F);
         if (asset.material.HasAnyTexture() || asset.baseColorTexture) {
@@ -1103,8 +1110,18 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         characterVisualTr->SetRotation(Spark::Quaternion::Identity);
     }
 
+    Spark::AnimationLayerStackComponent* animLayers =
+            characterVisual->GetComponent<Spark::AnimationLayerStackComponent>();
+    if (animLayers == nullptr) {
+        animLayers = characterVisual->AddComponent<Spark::AnimationLayerStackComponent>();
+    }
+    if (asset.skeleton) {
+        animLayers->ConfigureUpperBodyMaskFromSpine(*asset.skeleton, "spine");
+    }
+
     if (charAnimFsm != nullptr) {
         charAnimFsm->ClearManualClip();
+        charAnimFsm->SetUseUpperBodyAttackOverlay(true);
         charAnimFsm->ConfigureLocomotionFromSkeleton(*asset.skeleton, asset.walkClipIndex);
         charAnimFsm->SetWalkSpeedThreshold(0.35F);
         charAnimFsm->SetRunSpeedThreshold(2.5F);
@@ -1246,12 +1263,26 @@ void CharacterCameraDemo::SpawnMeleeTrainingDummies(Spark::GameWorld& w) {
         tr->SetUniformScale(1.0F);
         dummy->AddComponent<Spark::MeshComponent>(
                 unitCubeAsset, Spark::SceneMeshSlot::UnitCube, Spark::Vector3{0.85F, 1.75F, 0.85F});
+        if (auto* enemyLayer = dummy->AddComponent<Spark::PhysicsLayer3DComponent>()) {
+            enemyLayer->SetCategoryBits(Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Enemy));
+            enemyLayer->SetMaskBits(
+                    Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Player)
+                    | Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Environment));
+        }
         if (Spark::MaterialComponent* mat = dummy->AddComponent<Spark::MaterialComponent>()) {
             mat->SetTint(Spark::Vector3(0.82F, 0.28F, 0.24F));
             mat->SetRoughness(0.62F);
         }
         Spark::HealthComponent* hp = dummy->AddComponent<Spark::HealthComponent>(100.0F);
+        auto* hurtbox = dummy->AddComponent<Spark::Hurtbox3DComponent>();
+        hurtbox->SetRadius(0.6F);
+        hurtbox->SetLocalOffset({0.0F, 0.9F, 0.0F});
+        hurtbox->SetCategoryBits(Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Enemy));
+        hurtbox->SetMaskBits(
+                Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Player)
+                | Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Projectile));
         dummy->AddComponent<Spark::DamageableComponent>();
+        dummy->AddComponent<Spark::CombatHurtFlash3DComponent>();
         hp->SetOnDeath([](Spark::GameObject& self, Spark::GameObject* /*instigator*/) {
             if (Spark::TransformComponent* t = self.GetComponent<Spark::TransformComponent>()) {
                 t->SetUniformScale(0.65F);
@@ -1286,6 +1317,14 @@ void CharacterCameraDemo::SetupMeleeCombatComponents(const Spark::SkinnedGltfAss
         meleeHit->SetOriginLocalOffset({0.0F, 1.1F, 0.15F});
         meleeHit->SetTraceDistance(isFox ? 2.0F : 2.4F);
         meleeHit->SetDamagePerHit(34.0F);
+        meleeHit->SetWorldHurtboxQueryEnabled(true);
+        meleeHit->SetKnockbackMeters(0.25F);
+        Spark::PhysicsQueryFilter3D meleeFilter{};
+        meleeFilter.queryCategoryBits = Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Player);
+        meleeFilter.queryMaskBits = Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Enemy);
+        meleeFilter.hitSolids = true;
+        meleeFilter.hitTriggers = true;
+        meleeHit->SetQueryFilter(meleeFilter);
     }
     meleeHit->ClearTargets();
     for (std::size_t i = 0; i < meleeTargets.GetSize(); ++i) {

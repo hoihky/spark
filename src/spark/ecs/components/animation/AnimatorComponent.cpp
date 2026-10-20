@@ -1,5 +1,8 @@
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 
+#include "spark/ecs/components/animation/AnimationLayerStackComponent.hpp"
+#include "spark/ecs/GameObject.hpp"
+
 #include "spark/animation/AnimTime.hpp"
 #include "spark/core/Utility.hpp"
 
@@ -219,6 +222,31 @@ bool AnimatorComponent::TryComputeEvaluatedPose(Array<Transform>& outPose) const
     const float dur = skeleton->GetClipDuration(c);
     const float sampleT = EvaluateAnimSampleTime(timeSeconds, dur, loopMode);
     skeleton->SampleClipPose(c, sampleT, outPose);
+
+    if (GameObject* owner = GetOwner()) {
+        const AnimationLayerStackComponent* stack = owner->GetComponent<AnimationLayerStackComponent>();
+        if (stack != nullptr && stack->IsOverlayActive() && stack->GetOverlayClipIndex() < skeleton->GetClipCount()) {
+            const std::uint32_t overlayClip = stack->GetOverlayClipIndex();
+            const float overlayDur = skeleton->GetClipDuration(overlayClip);
+            AnimLoopMode overlayLoop = stack->GetOverlayLoopMode();
+            if (stack->IsOverlayFinished() && overlayLoop == AnimLoopMode::Once) {
+                overlayLoop = AnimLoopMode::Hold;
+            }
+            const float overlaySample = EvaluateAnimSampleTime(
+                    stack->GetOverlayTimeSeconds(), overlayDur, overlayLoop);
+            Array<Transform> overlayPose;
+            skeleton->SampleClipPose(overlayClip, overlaySample, overlayPose);
+            Array<Transform> basePose;
+            basePose = outPose;
+            const Array<float>& mask = stack->GetJointMask().GetWeights();
+            if (mask.GetSize() >= skeleton->GetJointCount()) {
+                skeleton->BlendPosesWithPerJointWeight(basePose, overlayPose, mask, outPose);
+            } else {
+                skeleton->LerpClipPoses(basePose, overlayPose, 1.0F, outPose);
+            }
+        }
+    }
+
     return outPose.GetSize() >= skeleton->GetJointCount();
 }
 

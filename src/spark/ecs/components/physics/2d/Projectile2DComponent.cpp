@@ -3,7 +3,7 @@
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/gameplay/CombatDamage2D.hpp"
+#include "spark/gameplay/Combat2D.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/physics/Collision2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
@@ -201,7 +201,7 @@ void Projectile2DComponent::QueryAndApplyHits(GameObject& owner) noexcept {
             return false;
         }
         Hurtbox2DComponent* hurtbox = victim->GetComponent<Hurtbox2DComponent>();
-        const float applied = TryApplyCombatDamage2D(*victim, instigator, damage);
+        const float applied = Combat2DTarget{*victim}.ApplyDamage(instigator, damage);
         if (applied <= 0.0F) {
             if (!deactivateOnFirstHit || hurtbox == nullptr || !hurtbox->IsEnabled()) {
                 return false;

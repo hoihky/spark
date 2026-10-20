@@ -11,6 +11,21 @@
 
 namespace Spark {
 
+Sprite2DCharacterAnimFsmComponent* Sprite2DCharacterAnimFsmComponent::FindInHierarchy(
+        GameObject& root) noexcept {
+    if (Sprite2DCharacterAnimFsmComponent* fsm = root.GetComponent<Sprite2DCharacterAnimFsmComponent>()) {
+        return fsm;
+    }
+    for (std::size_t i = 0; i < root.GetChildren().GetSize(); ++i) {
+        if (GameObject* child = root.GetChildren()[i]) {
+            if (Sprite2DCharacterAnimFsmComponent* fsm = FindInHierarchy(*child)) {
+                return fsm;
+            }
+        }
+    }
+    return nullptr;
+}
+
 void Sprite2DCharacterAnimFsmComponent::SetLocomotionClips(
         const std::uint32_t idleClipIndex, const std::uint32_t moveClipIndex) noexcept {
     idleClip = idleClipIndex;

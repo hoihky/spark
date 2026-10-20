@@ -10,7 +10,7 @@
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/gameplay/CombatDamage2D.hpp"
+#include "spark/gameplay/Combat2D.hpp"
 #include "spark/physics/PhysicsQueries2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
@@ -44,7 +44,7 @@ TEST(Combat2DComponents, HurtboxInvulnerabilityBlocksDamage) {
     hurtbox->NotifyDamageReceived();
 
     EXPECT_TRUE(hurtbox->IsInvulnerable());
-    const float blocked = Spark::TryApplyCombatDamage2D(*victim, nullptr, 3.0F);
+    const float blocked = Spark::Combat2DTarget{*victim}.ApplyDamage(nullptr, 3.0F);
     EXPECT_FLOAT_EQ(blocked, 0.0F);
 
     Spark::FrameTiming timing{};
@@ -52,7 +52,7 @@ TEST(Combat2DComponents, HurtboxInvulnerabilityBlocksDamage) {
     hurtbox->OnUpdate(timing, *victim, gTestEngineContext);
 
     EXPECT_FALSE(hurtbox->IsInvulnerable());
-    const float applied = Spark::TryApplyCombatDamage2D(*victim, nullptr, 3.0F);
+    const float applied = Spark::Combat2DTarget{*victim}.ApplyDamage(nullptr, 3.0F);
     EXPECT_GT(applied, 0.0F);
 }
 

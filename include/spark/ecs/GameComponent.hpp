@@ -76,6 +76,7 @@ enum class ComponentKind : std::uint32_t {
     Pickup,
     AnimationHitbox2D,
     Hurtbox2D,
+    Hurtbox3D,
     Projectile2D,
     DamageZone2D,
     SpawnPoint2D,
@@ -124,6 +125,9 @@ enum class ComponentKind : std::uint32_t {
     GrassField,
     Character3DBody,
     Character3DVisual,
+    AnimationLayerStack,
+    PhysicsLayer3D,
+    CombatHurtFlash3D,
 };
 
 /**

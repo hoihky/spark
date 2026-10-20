@@ -19,7 +19,7 @@ enum class Hurtbox2DShape : std::uint8_t {
 /**
  * Configures a sibling trigger collider as a damage receiver (layer mask + optional i-frames).
  * Attack systems (<c>AnimationHitbox2DComponent</c>, <c>Projectile2DComponent</c>) should apply damage
- * via <c>TryApplyCombatDamage2D</c> so invulnerability is honored consistently.
+ * via <c>Combat2DTarget::ApplyDamage</c> so invulnerability is honored consistently.
  */
 class Hurtbox2DComponent final : public GameComponent {
 public:
@@ -75,7 +75,7 @@ public:
     SPARK_SCRIPT_BIND(is_invulnerable)
     [[nodiscard]] bool IsInvulnerable() const noexcept { return invulnerabilityRemaining > 0.0F; }
 
-    /** Called by <c>TryApplyCombatDamage2D</c> after successful damage. */
+    /** Called by <c>Combat2DTarget::ApplyDamage</c> after successful damage. */
     SPARK_SCRIPT_BIND(notify_damage_received)
     void NotifyDamageReceived() noexcept;
 

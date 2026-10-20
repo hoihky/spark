@@ -44,7 +44,14 @@ public:
     /** Routes <c>RootMotionComponent</c> deltas through the arbitrator (call once after creating root motion). */
     void WireRootMotion(RootMotionComponent& rootMotion);
 
+    /** Souls-like attack lunge: brief <c>RootMotionExclusive</c> while upper-body overlay plays. */
+    void BeginAttackRootMotionWindow() noexcept;
+    void EndAttackRootMotionWindow() noexcept;
+
     [[nodiscard]] bool ValidateHierarchy() const noexcept;
+
+    /** Walks <c>from</c> and its parents for a <c>Character3DBodyComponent</c>. */
+    [[nodiscard]] static Character3DBodyComponent* FindOnAncestors(GameObject& from) noexcept;
 
 private:
     GameObject* visualObject = nullptr;
@@ -52,6 +59,9 @@ private:
     KinematicCharacterMotor motor{};
     CharacterController3DComponent* controller = nullptr;
     TransformComponent* bodyTransform = nullptr;
+    RootMotionComponent* rootMotion = nullptr;
+    MotionArbitrationMode savedArbitrationMode = MotionArbitrationMode::GameplayDriven;
+    bool attackRootMotionWindowActive = false;
 };
 
 }  // namespace Spark

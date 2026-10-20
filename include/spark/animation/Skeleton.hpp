@@ -114,6 +114,16 @@ public:
             Array<Transform>& outPose) const;
 
     /**
+     * Per-joint blend: weight[j] in [0,1] selects overlay pose; 0 keeps base, 1 uses overlay.
+     * Arrays must be at least jointCount; mask may be empty (no-op).
+     */
+    void BlendPosesWithPerJointWeight(
+            const Array<Transform>& basePose,
+            const Array<Transform>& overlayPose,
+            const Array<float>& overlayWeightPerJoint,
+            Array<Transform>& outPose) const;
+
+    /**
      * Joint world matrix in skeleton space (before owner world transform).
      * Returns false when clip/joint indices are out of range.
      */

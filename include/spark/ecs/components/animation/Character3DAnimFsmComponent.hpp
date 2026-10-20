@@ -12,6 +12,7 @@
 
 namespace Spark {
 
+class AnimationLayerStackComponent;
 class AnimatorComponent;
 class GameObject;
 class IEngineContext;
@@ -146,23 +147,75 @@ public:
     SPARK_SCRIPT_BIND(is_dead)
     [[nodiscard]] bool IsDead() const noexcept { return deathLocked; }
 
+    /** When true (default), attack/hurt/stagger use <c>AnimationLayerStackComponent</c> on the upper body. */
+    void SetUseUpperBodyCombatOverlay(const bool enabled) noexcept { useUpperBodyCombatOverlay = enabled; }
+    [[nodiscard]] bool GetUseUpperBodyCombatOverlay() const noexcept { return useUpperBodyCombatOverlay; }
+    void SetUseUpperBodyAttackOverlay(const bool enabled) noexcept { SetUseUpperBodyCombatOverlay(enabled); }
+    [[nodiscard]] bool GetUseUpperBodyAttackOverlay() const noexcept { return GetUseUpperBodyCombatOverlay(); }
+
+    /** Depth-first search on <c>root</c> and descendants for a 3D animation FSM. */
+    [[nodiscard]] static Character3DAnimFsmComponent* FindInHierarchy(GameObject& root) noexcept;
+
 private:
-    struct CombatSelection {
+    enum class CombatCommand : std::uint8_t { None = 0, Hurt = 1, Attack = 2, Stagger = 3, Death = 4 };
+
+    class CombatClipPlayback {
+    public:
+        [[nodiscard]] bool IsActive() const noexcept { return active; }
+        [[nodiscard]] std::uint32_t GetClip() const noexcept { return clip; }
+        [[nodiscard]] AnimLoopMode GetLoopMode() const noexcept { return loopMode; }
+        [[nodiscard]] CombatCommand GetPlayingCommand() const noexcept { return playingCommand; }
+
+        void Activate(std::uint32_t clipIn, AnimLoopMode loopIn, CombatCommand commandIn) noexcept {
+            clip = clipIn;
+            loopMode = loopIn;
+            playingCommand = commandIn;
+            active = true;
+        }
+
+        void Clear() noexcept { active = false; }
+
+    private:
         std::uint32_t clip = 0;
         AnimLoopMode loopMode = AnimLoopMode::Loop;
+        CombatCommand playingCommand = CombatCommand::None;
         bool active = false;
-        int playingCmd = 0;
     };
+
+    class UpperBodyCombatOverlay {
+    public:
+        explicit UpperBodyCombatOverlay(Character3DAnimFsmComponent& ownerIn) noexcept : owner(ownerIn) {}
+
+        void Update(AnimatorComponent& anim, GameObject& visual, CombatCommand& pendingCommand) noexcept;
+        [[nodiscard]] bool IsPlaying() const noexcept;
+
+    private:
+        [[nodiscard]] static int InterruptPriority(CombatCommand command) noexcept;
+        void StartClip(
+                AnimationLayerStackComponent& stack,
+                AnimatorComponent& anim,
+                GameObject& visual,
+                std::uint32_t clip,
+                CombatCommand command,
+                bool useAttackRootMotion) noexcept;
+        void EndRootMotion(GameObject& visual) noexcept;
+
+        Character3DAnimFsmComponent& owner;
+        CombatCommand playingCommand = CombatCommand::None;
+    };
+
+    [[nodiscard]] static CombatCommand ToCombatCommand(int value) noexcept;
+    [[nodiscard]] static int ToBlackboardInt(CombatCommand command) noexcept;
 
     [[nodiscard]] bool ClipValid_(const AnimatorComponent& anim, std::uint32_t clip) const noexcept;
     void ApplyClip_(AnimatorComponent& anim, std::uint32_t want, AnimLoopMode loopMode) noexcept;
     void ApplyLocomotionBlend_(AnimatorComponent& anim, float speedMetersPerSecond) noexcept;
     void ApplyLocomotionDiscrete_(AnimatorComponent& anim, bool moving, bool wantSprint) noexcept;
-    [[nodiscard]] CombatSelection ResolveCombat_(
+    [[nodiscard]] CombatClipPlayback ResolveCombat_(
             AnimatorComponent& anim,
             GameObject& owner,
-            int combatCmd) noexcept;
-    void MaybeClearBlackboardCombat_(GameObject& owner, int playingCmd) noexcept;
+            CombatCommand combatCommand) noexcept;
+    void MaybeClearBlackboardCombat_(GameObject& owner, CombatCommand playingCommand) noexcept;
     [[nodiscard]] float MeasureLocomotionSpeed_(const GameObject& owner, const FrameTiming& timing) noexcept;
     [[nodiscard]] float ResolveLocomotionSpeedParam_(
             const GameObject& owner,
@@ -196,6 +249,8 @@ private:
     bool hasLastWorldPos = false;
     Vector3 lastWorldPos{Vector3::Zero};
     std::size_t combatBbSlot = static_cast<std::size_t>(-1);
+    bool useUpperBodyCombatOverlay = true;
+    UpperBodyCombatOverlay upperBodyOverlay_{*this};
 };
 
 }  // namespace Spark

@@ -25,7 +25,7 @@ using Projectile2DHitCallback = Function<void(GameObject& projectile, GameObject
 
 /**
  * Kinematic projectile: moves each frame, overlap-queries targets, applies damage through
- * <c>TryApplyCombatDamage2D</c>. Optional solid collision deactivates the shot.
+ * <c>Combat2DTarget::ApplyDamage</c>. Optional solid collision deactivates the shot.
  *
  * Deactivate with <c>Deactivate()</c> for pools; set <c>destroyOwnerOnDeactivate</c> for one-shot spawns.
  */

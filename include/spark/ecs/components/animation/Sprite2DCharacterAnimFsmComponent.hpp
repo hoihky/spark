@@ -66,6 +66,8 @@ public:
     SPARK_SCRIPT_BIND(request_attack)
     void RequestAttack() noexcept;
 
+    [[nodiscard]] static Sprite2DCharacterAnimFsmComponent* FindInHierarchy(GameObject& root) noexcept;
+
 private:
     [[nodiscard]] bool ClipValid_(const SpriteAnimatorComponent& anim, std::uint32_t clip) const noexcept;
     void MaybeClearBlackboardCombat_(GameObject& owner, int playingCmd) noexcept;

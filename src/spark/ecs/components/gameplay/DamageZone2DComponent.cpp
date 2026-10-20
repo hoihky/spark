@@ -4,7 +4,7 @@
 #include "spark/ecs/components/physics/2d/BoxCollider2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/CircleCollider2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/gameplay/CombatDamage2D.hpp"
+#include "spark/gameplay/Combat2D.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/physics/Collision2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
@@ -164,7 +164,7 @@ void DamageZone2DComponent::ApplyDamageInVolume(GameObject& owner, const float d
     }
 
     for (std::size_t i = 0; i < victims.GetSize(); ++i) {
-        TryApplyCombatDamage2D(*victims[i], damageInstigator, tickDamage);
+        Combat2DTarget{*victims[i]}.ApplyDamage(damageInstigator, tickDamage);
     }
 }
 

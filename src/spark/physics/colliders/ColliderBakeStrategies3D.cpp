@@ -8,6 +8,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/physics/colliders/ColliderBake3D.hpp"
 #include "spark/physics/colliders/ColliderBakeHelpers3D.hpp"
+#include "spark/physics/colliders/PhysicsCollider3DFilter.hpp"
 #include "spark/physics/colliders/IColliderBakeStrategy3D.hpp"
 #include "spark/physics/MeshCollider3D.hpp"
 #include "spark/physics/shapes/ShapeFactory3D.hpp"
@@ -51,7 +52,11 @@ public:
         PushCollider3D(
                 context.colliders,
                 context.grid,
-                Collider3D::Create(MoveTemp(shape), ColliderFilter{}, MaterialFromGameObject3D(object), &object));
+                Collider3D::Create(
+                        MoveTemp(shape),
+                        PhysicsCollider3DFilter::Resolve(object),
+                        MaterialFromGameObject3D(object),
+                        &object));
     }
 };
 
@@ -73,7 +78,11 @@ public:
         PushCollider3D(
                 context.colliders,
                 context.grid,
-                Collider3D::Create(MoveTemp(shape), ColliderFilter{}, MaterialFromGameObject3D(object), &object));
+                Collider3D::Create(
+                        MoveTemp(shape),
+                        PhysicsCollider3DFilter::Resolve(object),
+                        MaterialFromGameObject3D(object),
+                        &object));
     }
 };
 
@@ -94,7 +103,11 @@ public:
         PushCollider3D(
                 context.colliders,
                 context.grid,
-                Collider3D::Create(MoveTemp(shape), ColliderFilter{}, MaterialFromGameObject3D(object), &object));
+                Collider3D::Create(
+                        MoveTemp(shape),
+                        PhysicsCollider3DFilter::Resolve(object),
+                        MaterialFromGameObject3D(object),
+                        &object));
     }
 };
 

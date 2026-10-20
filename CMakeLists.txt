@@ -703,6 +703,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/gameplay/PickupComponent.cpp
         src/spark/ecs/components/gameplay/GameStateComponent.cpp
         src/spark/ecs/components/gameplay/GameFlowTriggerComponent.cpp
+        src/spark/ecs/components/gameplay/CombatHurtFlash3DComponent.cpp
         src/spark/ecs/components/gameplay/DamageZone2DComponent.cpp
         src/spark/ecs/components/input/InputActionMapComponent.cpp
         src/spark/ecs/components/input/PlayerInputComponent.cpp
@@ -1042,10 +1043,15 @@ set(SPARK_ENGINE_SOURCES
         src/spark/character/CharacterSimulationPipeline.cpp
         src/spark/ecs/components/character/Character3DBodyComponent.cpp
         src/spark/ecs/components/character/Character3DVisualComponent.cpp
+        src/spark/animation/AnimationJointMask.cpp
+        src/spark/ecs/components/animation/AnimationLayerStackComponent.cpp
+        src/spark/physics/colliders/PhysicsCollider3DFilter.cpp
         src/spark/physics/TriggerVolume2D.cpp
         src/spark/physics/TriggerVolume3D.cpp
         src/spark/gameplay/Interaction2D.cpp
-        src/spark/gameplay/CombatDamage2D.cpp
+        src/spark/gameplay/Combat2D.cpp
+        src/spark/gameplay/Combat3D.cpp
+        src/spark/ecs/components/physics/3d/Hurtbox3DComponent.cpp
         src/spark/gameplay/CameraBounds2DResolve.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp

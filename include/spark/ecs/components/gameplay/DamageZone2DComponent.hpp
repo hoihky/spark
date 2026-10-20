@@ -21,7 +21,7 @@ enum class DamageZone2DShape : std::uint8_t {
 
 /**
  * Area that applies continuous damage to overlapping hurtboxes / health each frame.
- * Uses physics overlap queries (same pipeline as projectiles) and <c>TryApplyCombatDamage2D</c>.
+ * Uses physics overlap queries (same pipeline as projectiles) and <c>Combat2DTarget::ApplyDamage</c>.
  */
 class DamageZone2DComponent final : public GameComponent {
 public:

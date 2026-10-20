@@ -1,14 +1,15 @@
 #include "spark/ecs/components/animation/AnimationMeleeHitComponent.hpp"
 
 #include "spark/animation/AnimLoopMode.hpp"
+#include "spark/ecs/components/animation/AnimationLayerStackComponent.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/ecs/components/gameplay/DamageableComponent.hpp"
-#include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/Signal.hpp"
+#include "spark/gameplay/Combat3D.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/mesh/MeshRaycast.hpp"
 
 #include <cmath>
@@ -97,11 +98,52 @@ Vector3 AnimationMeleeHitComponent::ResolveOrigin_(const GameObject& owner) cons
     return world.TranslationVector() + world.TransformVector(originLocalOffset);
 }
 
+void AnimationMeleeHitComponent::RegisterHit_(GameObject& owner, GameObject& target) noexcept {
+    if (ArrayContainsObject(hitThisSwing, &target)) {
+        return;
+    }
+    Combat3DTarget combatTarget{target};
+    const float applied = combatTarget.ApplyDamage(&owner, damagePerHit);
+    if (applied <= 0.0F) {
+        return;
+    }
+    if (applyHurtReaction) {
+        combatTarget.RequestHurtReaction();
+    }
+    if (knockbackMeters > 0.0F) {
+        combatTarget.ApplyKnockback(ResolveForward_(owner), knockbackMeters);
+    }
+    hitThisSwing.PushBack(&target);
+    ++hitsThisSwing;
+    ++totalHits;
+}
+
+void AnimationMeleeHitComponent::TryQueryWorldHurtboxes_(
+        GameObject& owner,
+        const Vector3& sampleCenter) noexcept {
+    CombatHurtboxSphereQuery hurtboxQuery{owner.GetWorld()};
+    hurtboxQuery.SetFilter(queryFilter);
+    Array<CombatHurtboxOverlap> hits{};
+    hurtboxQuery.CollectOverlaps(sampleCenter, hitRadius, hits);
+    for (std::size_t i = 0; i < hits.GetSize(); ++i) {
+        if (hits[i].GetOwner() == nullptr) {
+            continue;
+        }
+        RegisterHit_(owner, *hits[i].GetOwner());
+    }
+}
+
 void AnimationMeleeHitComponent::TryTraceHits(GameObject& owner) noexcept {
     const Vector3 origin = ResolveOrigin_(owner);
     const Vector3 forward = ResolveForward_(owner);
     const Vector3 mid = origin + forward * (traceDistance * 0.5F);
     const Vector3 tip = origin + forward * traceDistance;
+
+    if (worldHurtboxQueryEnabled) {
+        TryQueryWorldHurtboxes_(owner, origin);
+        TryQueryWorldHurtboxes_(owner, mid);
+        TryQueryWorldHurtboxes_(owner, tip);
+    }
 
     for (std::size_t i = 0; i < targets.GetSize(); ++i) {
         GameObject* target = targets[i];
@@ -135,18 +177,7 @@ void AnimationMeleeHitComponent::TryTraceHits(GameObject& owner) noexcept {
         if (!hit) {
             continue;
         }
-
-        float applied = 0.0F;
-        if (DamageableComponent* damageable = target->GetComponent<DamageableComponent>()) {
-            applied = damageable->ApplyDamage(damagePerHit, &owner);
-        } else if (HealthComponent* health = target->GetComponent<HealthComponent>()) {
-            applied = health->ApplyDamage(damagePerHit, &owner);
-        }
-        if (applied > 0.0F) {
-            hitThisSwing.PushBack(target);
-            ++hitsThisSwing;
-            ++totalHits;
-        }
+        RegisterHit_(owner, *target);
     }
 }
 
@@ -154,7 +185,20 @@ void AnimationMeleeHitComponent::OnUpdate(
         const FrameTiming& /*timing*/,
         GameObject& owner,
         IEngineContext& /*context*/) {
-    if (!hitWindowActive) {
+    if (const AnimationLayerStackComponent* stack = owner.GetComponent<AnimationLayerStackComponent>()) {
+        if (stack->IsOverlayActive() && !stack->IsOverlayFinished()) {
+            if (!overlayHitWindow) {
+                overlayHitWindow = true;
+                ResetSwingHits();
+            }
+        } else {
+            overlayHitWindow = false;
+        }
+    } else {
+        overlayHitWindow = false;
+    }
+
+    if (!hitWindowActive && !overlayHitWindow) {
         return;
     }
     if (const AnimatorComponent* animator = owner.GetComponent<AnimatorComponent>()) {

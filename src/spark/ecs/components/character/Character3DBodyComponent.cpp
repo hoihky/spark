@@ -26,9 +26,42 @@ void Character3DBodyComponent::OnUpdate(
     ApplyPostAnimationMotion(*this);
 }
 
-void Character3DBodyComponent::WireRootMotion(RootMotionComponent& rootMotion) {
+void Character3DBodyComponent::WireRootMotion(RootMotionComponent& rootMotionIn) {
+    rootMotion = &rootMotionIn;
     auto applicator = MakeUnique<CharacterRootMotionApplicator>(arbitrator);
-    rootMotion.SetCustomApplicator(UniquePtr<IRootMotionApplicator>(applicator.Release()));
+    rootMotionIn.SetCustomApplicator(UniquePtr<IRootMotionApplicator>(applicator.Release()));
+}
+
+void Character3DBodyComponent::BeginAttackRootMotionWindow() noexcept {
+    if (attackRootMotionWindowActive) {
+        return;
+    }
+    savedArbitrationMode = arbitrator.GetMode();
+    arbitrator.SetMode(MotionArbitrationMode::RootMotionExclusive);
+    if (rootMotion != nullptr) {
+        rootMotion->SetInPlace(false);
+    }
+    attackRootMotionWindowActive = true;
+}
+
+void Character3DBodyComponent::EndAttackRootMotionWindow() noexcept {
+    if (!attackRootMotionWindowActive) {
+        return;
+    }
+    arbitrator.SetMode(savedArbitrationMode);
+    if (rootMotion != nullptr) {
+        rootMotion->SetInPlace(true);
+    }
+    attackRootMotionWindowActive = false;
+}
+
+Character3DBodyComponent* Character3DBodyComponent::FindOnAncestors(GameObject& from) noexcept {
+    for (GameObject* walk = &from; walk != nullptr; walk = walk->GetParent()) {
+        if (GameComponent* component = walk->TryGetComponentByKind(ComponentKind::Character3DBody)) {
+            return static_cast<Character3DBodyComponent*>(component);
+        }
+    }
+    return nullptr;
 }
 
 bool Character3DBodyComponent::ValidateHierarchy() const noexcept {

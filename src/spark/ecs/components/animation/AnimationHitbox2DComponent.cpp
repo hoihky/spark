@@ -2,7 +2,7 @@
 
 #include "spark/ecs/components/animation/SpriteAnimatorComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/gameplay/CombatDamage2D.hpp"
+#include "spark/gameplay/Combat2D.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/core/GameWorld.hpp"
@@ -81,19 +81,6 @@ void AnimationHitbox2DComponent::TryOverlapHits(GameObject& owner, GameWorld& wo
     const float dirX = facing;
     const float dirY = 0.0F;
 
-    Array<PhysicsQueryHitDynamic2D> dynamicHits;
-    Array<PhysicsQueryHit2D> staticHits;
-
-    if (shape == AnimationHitbox2DShape::Arc) {
-        QueryOverlapArcWorldDynamics2D(
-                world, originX, originY, radius, dirX, dirY, arcHalfAngleRadians, queryFilter, &owner, dynamicHits);
-        QueryOverlapArcWorldStatics2D(
-                world, originX, originY, radius, dirX, dirY, arcHalfAngleRadians, queryFilter, staticHits);
-    } else {
-        QueryOverlapCircleDynamics2D(world, originX, originY, radius, queryFilter, &owner, dynamicHits);
-        QueryOverlapCircleWorld2D(world, originX, originY, radius, queryFilter, staticHits);
-    }
-
     auto tryDamageTarget = [&](GameObject* target) {
         if (target == nullptr || target == &owner || !target->IsActiveInHierarchy()) {
             return;
@@ -101,7 +88,7 @@ void AnimationHitbox2DComponent::TryOverlapHits(GameObject& owner, GameWorld& wo
         if (ArrayContainsObject(hitThisSwing, target)) {
             return;
         }
-        const float applied = TryApplyCombatDamage2D(*target, &owner, damagePerHit);
+        const float applied = Combat2DTarget{*target}.ApplyDamage(&owner, damagePerHit);
         if (applied > 0.0F) {
             hitThisSwing.PushBack(target);
             ++hitsThisSwing;
@@ -112,12 +99,26 @@ void AnimationHitbox2DComponent::TryOverlapHits(GameObject& owner, GameWorld& wo
         tryDamageTarget(targets[i]);
     }
 
-    for (std::size_t i = 0; i < dynamicHits.GetSize(); ++i) {
-        tryDamageTarget(dynamicHits[i].owner);
+    CombatHurtboxWorldQuery2D hurtboxQuery{};
+    Array<CombatHurtboxOverlap2D> overlaps{};
+    if (shape == AnimationHitbox2DShape::Arc) {
+        hurtboxQuery.CollectArcOverlaps(
+                world,
+                originX,
+                originY,
+                radius,
+                dirX,
+                dirY,
+                arcHalfAngleRadians,
+                queryFilter,
+                &owner,
+                overlaps);
+    } else {
+        hurtboxQuery.CollectCircleOverlaps(
+                world, originX, originY, radius, queryFilter, &owner, overlaps);
     }
-
-    for (std::size_t i = 0; i < staticHits.GetSize(); ++i) {
-        tryDamageTarget(staticHits[i].owner);
+    for (std::size_t i = 0; i < overlaps.GetSize(); ++i) {
+        tryDamageTarget(overlaps[i].GetOwner());
     }
 }
 

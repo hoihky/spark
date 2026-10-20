@@ -4,6 +4,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
@@ -84,6 +85,16 @@ public:
     SPARK_SCRIPT_BIND(is_grounded)
     [[nodiscard]] bool IsGrounded() const noexcept { return grounded; }
 
+    SPARK_SCRIPT_BIND(get_category_bits)
+    [[nodiscard]] std::uint16_t GetCategoryBits() const noexcept { return categoryBits; }
+    SPARK_SCRIPT_BIND(set_category_bits)
+    void SetCategoryBits(const std::uint16_t bits) noexcept { categoryBits = bits; }
+
+    SPARK_SCRIPT_BIND(get_mask_bits)
+    [[nodiscard]] std::uint16_t GetMaskBits() const noexcept { return maskBits; }
+    SPARK_SCRIPT_BIND(set_mask_bits)
+    void SetMaskBits(const std::uint16_t bits) noexcept { maskBits = bits; }
+
 private:
     friend void SimulateCharacterControllers3D(
             GameWorld& world,
@@ -100,6 +111,8 @@ private:
     Vector3 moveInput{Vector3::Zero};
     Vector3 velocity{Vector3::Zero};
     bool grounded = false;
+    std::uint16_t categoryBits = 1u;
+    std::uint16_t maskBits = 0xFFFFu;
 };
 
 }  // namespace Spark

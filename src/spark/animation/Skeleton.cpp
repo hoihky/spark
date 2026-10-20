@@ -393,6 +393,43 @@ void Skeleton::SampleBlendedClipPose(
     LerpClipPoses(poseA, poseB, w, outPose);
 }
 
+void Skeleton::BlendPosesWithPerJointWeight(
+        const Array<Transform>& basePose,
+        const Array<Transform>& overlayPose,
+        const Array<float>& overlayWeightPerJoint,
+        Array<Transform>& outPose) const {
+    if (jointCount == 0 || basePose.GetSize() < jointCount || overlayPose.GetSize() < jointCount) {
+        outPose.Clear();
+        return;
+    }
+    const bool useMask = overlayWeightPerJoint.GetSize() >= jointCount;
+    outPose.Resize(jointCount);
+    for (std::uint32_t j = 0; j < jointCount; ++j) {
+        const float w = useMask ? overlayWeightPerJoint[j] : 1.0F;
+        const float clamped = (w < 0.0F) ? 0.0F : (w > 1.0F ? 1.0F : w);
+        if (clamped <= 1.0e-6F) {
+            outPose[j] = basePose[j];
+            continue;
+        }
+        if (clamped >= 1.0F - 1.0e-6F) {
+            outPose[j] = overlayPose[j];
+            continue;
+        }
+        const float wA = 1.0F - clamped;
+        const Transform& a = basePose[j];
+        const Transform& b = overlayPose[j];
+        outPose[j].translation = {
+                a.translation.x * wA + b.translation.x * clamped,
+                a.translation.y * wA + b.translation.y * clamped,
+                a.translation.z * wA + b.translation.z * clamped};
+        outPose[j].scale = {
+                a.scale.x * wA + b.scale.x * clamped,
+                a.scale.y * wA + b.scale.y * clamped,
+                a.scale.z * wA + b.scale.z * clamped};
+        outPose[j].rotation = Quaternion::Slerp(a.rotation, b.rotation, clamped);
+    }
+}
+
 void Skeleton::LerpClipPoses(
         const Array<Transform>& poseA,
         const Array<Transform>& poseB,
