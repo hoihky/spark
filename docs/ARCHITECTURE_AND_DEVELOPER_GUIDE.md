@@ -273,6 +273,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Semantic input** | Action maps + runtime polling | `InputActionMapComponent`, `PlayerInputComponent`, `InputActionTypes.hpp` |
 | **Game flow** | Win/lose/pause state machine | `GameStateComponent`, `GameFlowTriggerComponent` |
 | **Interact / pickup** | Triggers, collectibles, deferred destroy | `TriggerVolume2DComponent`, `InteractableComponent`, `PickupComponent` |
+| **Gameplay kit** | Shared teams, damage routing, interaction, inventory hooks | `spark/gameplay/GameplayKit.hpp`, `GameplayDamageDeal`, `GameplayInteractionProcessor`, `GameplayInventoryCollectorComponent` — see [`programming-guide/1-overview-architecture/09-gameplay-kit.md`](programming-guide/1-overview-architecture/09-gameplay-kit.md) |
 | **Tilemaps** | Multi-layer grids, `Tileset` definitions, TMX import, gameplay grid | `TilemapComponent`, `TilemapGameplayGridComponent`, `TilemapMapSourceComponent`, `TmxImporter`, `ApplyTilemapDocument` |
 | **2D camera struct** | Ortho view-projection helper (non-ECS) | `Camera2D` (`spark/scene/camera/Camera2D.hpp`) |
 | **2D character motor** | Platformer coyote/jump buffer/one-way | `CharacterController2DComponent`, `OneWayPlatform2DComponent`, `SimulateCharacterControllers2D` |
@@ -521,7 +522,9 @@ Representative **3D / rendering** components:
 | `SoundCueComponent` | Queues one-shots; drained by `ProcessSoundCues`. |
 | `AudioListenerComponent` | Spatial audio listener pose (priority-based). |
 | `HealthComponent` / `DamageableComponent` | Hit points, damage routing, `DamageApplied` / `Died` signals. |
-| `InteractableComponent` / `PickupComponent` | Use prompts and auto-collect triggers; deferred destroy after physics. |
+| `GameplayTeamComponent` | Team id for friendly-fire / hostility (`GameplayTeamPolicy` + combat targets). |
+| `GameplayInventoryCollectorComponent` | Default `IGameplayInventorySink`; `ItemCollected` signal + optional callback. |
+| `InteractableComponent` / `PickupComponent` | Use prompts and auto-collect triggers; deferred destroy after physics; pickup can auto-deliver to collector. |
 | `GameStateComponent` / `GameFlowTriggerComponent` | High-level flow states; mediator from triggers/death to state transitions. |
 | `InputActionMapComponent` / `PlayerInputComponent` | Semantic input bindings and per-frame action state. |
 | `BillboardComponent` | Orients transform toward main camera (priority 50). |
@@ -834,7 +837,8 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDem
 9. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
 9. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
 10. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
-11. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
+11. `docs/programming-guide/1-overview-architecture/09-gameplay-kit.md` — teams, damage, interaction, inventory conventions
+12. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
 ---
 
 ## 15. Extending the Engine Safely

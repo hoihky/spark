@@ -461,6 +461,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/09-gameplay-kit.html" class="nav-link">09 gameplay kit</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -784,7 +790,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           </header>
           <div class="doc-body"><h1 id="2d-gameplay-api-guide">2D gameplay API guide</h1>
 <p>This chapter is a <strong>practical catalog</strong> of Spark APIs for 2D games: loading maps, collision, object spawns, camera, grid navigation, NPC behavior, pickups, minimap, and presentation FX. It aligns with <code>GameFlow2DProductPathDemo</code> (shell <strong>F</strong>) and <code>TilemapShowcase2DDemo</code> (<strong>#19</strong>).</p>
-<p>For a <strong>component-by-component</strong> index (all <strong>108</strong> <code>ComponentKind</code> values, 2D vs 3D), use <a href="10-2d-components-handbook.html">10 — Components handbook</a> alongside the <a href="../1-overview-architecture/07-game-component-reference.html">full reference</a>.</p>
+<p>For a <strong>component-by-component</strong> index (all <strong>120</strong> <code>ComponentKind</code> values, 2D vs 3D), use <a href="10-2d-components-handbook.html">10 — Components handbook</a> alongside the <a href="../1-overview-architecture/07-game-component-reference.html">full reference</a>. Cross-cutting teams, damage, interaction, and inventory conventions: <a href="../1-overview-architecture/09-gameplay-kit.html">Gameplay kit</a>.</p>
 <hr />
 <h2 id="1-loading-a-tilemap-level">1. Loading a tilemap level</h2>
 <h3 id="11-scene-tmx-on-the-level-root">1.1 Scene + TMX on the level root</h3>
@@ -1262,7 +1268,7 @@ view-&gt;SetEnabled(true);
 </tr>
 <tr>
 <td>Gameplay</td>
-<td><code>Pickup</code>, <code>Interactable</code>, <code>Health</code>, <code>GameState</code>, <code>GameFlowTrigger</code>, <code>PlayerInput</code>, <code>InputActionMap</code></td>
+<td><code>Pickup</code>, <code>Interactable</code>, <code>Health</code>, <code>GameplayTeam</code>, <code>GameplayInventoryCollector</code>, <code>GameState</code>, <code>GameFlowTrigger</code>, <code>PlayerInput</code>, <code>InputActionMap</code></td>
 </tr>
 <tr>
 <td>Input</td>

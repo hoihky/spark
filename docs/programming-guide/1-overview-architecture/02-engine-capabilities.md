@@ -65,6 +65,20 @@ Full guide: [UI and Toolkits](08-ui-and-toolkits.md).
 | Game flow | `GameStateComponent`, `GameFlowTriggerComponent` |
 | Grid navigation | `GridNavAgent2DComponent`, `GridPathFollower2DComponent`, `GridNavTarget2DComponent` |
 | Combat vitals | `HealthComponent`, `DamageableComponent` |
+| Teams / friendly fire | `GameplayTeamComponent`, `GameplayTeamPolicy` |
+| Inventory hook | `GameplayInventoryCollectorComponent`, `GameplayPickupDelivery` |
+
+## Gameplay kit (`spark/gameplay/`)
+
+| Feature | Types |
+|---------|-------|
+| Umbrella include | `GameplayKit.hpp` |
+| Damage routing | `GameplayDamageDeal`, `GameplayDamageApplier`, `GameplayDamageEvent` |
+| Combat targets | `Combat2DTarget`, `Combat3DTarget`, `CombatHurtboxWorldQuery2D`, `CombatHurtboxSphereQuery` |
+| Interaction | `GameplayInteractionProcessor`, `ProcessInteractables2D` |
+| Items | `GameplayItemStack`, `IGameplayInventorySink` |
+
+Full walkthrough: [Gameplay kit](09-gameplay-kit.md).
 
 ## Simulation & Tools
 
@@ -81,7 +95,7 @@ Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 
 Legacy free functions (`SimulatePhysics2D`, `SimulatePhysics3D`, …) remain but are **deprecated** — prefer `PhysicsSubsystem`.
 
-**100 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
+**120 built-in components** — full reference: [Game Component Reference](07-game-component-reference.md).
 
 ## Asset Loading on GameWorld
 

@@ -1033,6 +1033,11 @@ Spark::LitSceneBuilder(world, context)
 <td><code>TriggerVolume2DComponent</code>, <code>InteractableComponent</code>, <code>PickupComponent</code></td>
 </tr>
 <tr>
+<td><strong>Gameplay kit</strong></td>
+<td>Shared teams, damage routing, interaction, inventory hooks</td>
+<td><code>spark/gameplay/GameplayKit.hpp</code>, <code>GameplayDamageDeal</code>, <code>GameplayInteractionProcessor</code>, <code>GameplayInventoryCollectorComponent</code> — see <a href="../../programming-guide/site/1-overview-architecture/09-gameplay-kit.html"><code>programming-guide/1-overview-architecture/09-gameplay-kit.md</code></a></td>
+</tr>
+<tr>
 <td><strong>Tilemaps</strong></td>
 <td>Multi-layer grids, <code>Tileset</code> definitions, TMX import, gameplay grid</td>
 <td><code>TilemapComponent</code>, <code>TilemapGameplayGridComponent</code>, <code>TilemapMapSourceComponent</code>, <code>TmxImporter</code>, <code>ApplyTilemapDocument</code></td>
@@ -1352,7 +1357,7 @@ Spark::LitSceneBuilder(world, context)
 </table>
 <p>Call <strong><code>SimulateGameAi(world, timing, context)</code></strong> from your game tick when you want ECS-driven AI to run.</p>
 <h3 id="513-c-scripting">5.13 C# scripting</h3>
-<p><strong>SparkInterop</strong> C ABI + generated <strong>Spark.Bindings</strong>; optional <strong>SparkScriptHost</strong> (CoreCLR via <strong>nethost</strong> / <strong>hostfxr</strong>). See <strong><code>docs/CSHARP_SCRIPTING.md</code></strong> and <strong><code>docs/COMPONENT_SCRIPT_CODEGEN.md</code></strong>. The <code>debug</code> CMake preset enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>. Gameplay without scripting remains <strong>C++</strong> via <code>IGame</code> / <code>GameComponent</code>.</p>
+<p><strong>SparkInterop</strong> exposes a C ABI (<code>spark_*</code>); <strong>ClangSharp</strong> + mirror codegen produce <strong><code>Spark.Bindings</code></strong>. Optional <strong>CoreCLR</strong> hosting (<code>SparkScriptHost</code>, <strong>nethost</strong> + <strong>hostfxr</strong>) loads managed games (<code>HelloCsGame</code>, <code>Spark.Scripting</code>). See <strong><code>docs/CSHARP_SCRIPTING.md</code></strong> and <strong><code>docs/COMPONENT_SCRIPT_CODEGEN.md</code></strong>. The <strong><code>debug</code></strong> CMake preset enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>; disable either for slimmer builds. Gameplay without scripting remains <strong>C++</strong> via <code>IGame</code> / <code>GameComponent</code>.</p>
 <hr />
 <h2 id="6-runtime-lifecycle-igame">6. Runtime Lifecycle (<code>IGame</code>)</h2>
 <p>Your game implements <code>spark/engine/IGame.hpp</code>:</p>
@@ -1590,8 +1595,16 @@ if (sceneManager_.IsSceneReady(levelId)) { /* play */ }
 <td>Hit points, damage routing, <code>DamageApplied</code> / <code>Died</code> signals.</td>
 </tr>
 <tr>
+<td><code>GameplayTeamComponent</code></td>
+<td>Team id for friendly-fire / hostility (<code>GameplayTeamPolicy</code> + combat targets).</td>
+</tr>
+<tr>
+<td><code>GameplayInventoryCollectorComponent</code></td>
+<td>Default <code>IGameplayInventorySink</code>; <code>ItemCollected</code> signal + optional callback.</td>
+</tr>
+<tr>
 <td><code>InteractableComponent</code> / <code>PickupComponent</code></td>
-<td>Use prompts and auto-collect triggers; deferred destroy after physics.</td>
+<td>Use prompts and auto-collect triggers; deferred destroy after physics; pickup can auto-deliver to collector.</td>
 </tr>
 <tr>
 <td><code>GameStateComponent</code> / <code>GameFlowTriggerComponent</code></td>
@@ -2107,6 +2120,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <li><code>include/spark/demo/PhysicsBallThrow3DDemo.hpp</code> — minimal <strong>3D physics</strong> usage</li>
 <li><code>spark/ui/runtime/UiScene.hpp</code> + <code>spark/ui/Ui.hpp</code> — retained UI input/paint and factory controls</li>
 <li><code>docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code> — retained GUI vs Dear ImGui</li>
+<li><code>docs/programming-guide/1-overview-architecture/09-gameplay-kit.md</code> — teams, damage, interaction, inventory conventions</li>
 <li><a href="scene-and-rendering-gaps.html"><code>docs/SCENE_AND_RENDERING_GAPS.md</code></a> — C++ public API gaps for scene management and 3D rendering</li>
 </ol>
 <hr />

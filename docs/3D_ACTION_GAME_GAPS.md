@@ -20,6 +20,7 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 | **Animation** | M1 done, M2 partial | Locomotion works; combat depth (blend trees, hurt/stagger, root motion, IK, events) is missing |
 | **Textures / materials** | PBR pipeline exists | Mipmapped scene arrays; BC7/ASTC (KTX2 + runtime BC7); 32×1024² budget |
 | **Scene management** | Core load/save works | No prefabs, 3D spawn points, transitions, physics layers, or streaming |
+| **Gameplay conventions** | `GameplayKit.hpp` (teams, damage deal, interaction, inventory hooks) | No weapon data schema, status effects, or full inventory UI |
 
 ---
 
@@ -181,13 +182,41 @@ DIY LevelManager
 
 ---
 
+## 4. Gameplay kit (`include/spark/gameplay/`)
+
+### What exists
+
+| Capability | Evidence |
+|------------|----------|
+| Team ids + friendly-fire policy | `GameplayTeamComponent`, `GameplayTeamPolicy`, `GameplayTeamAffiliation` |
+| Shared damage routing | `GameplayDamageApplier`, `GameplayDamageDeal`, `Combat2DTarget` / `Combat3DTarget` |
+| Damage signal helper | `GameplayDamageEvent` + `DamageSignalPayload` / `SignalId::DamageApplied` |
+| Nearest interactable | `GameplayInteractionProcessor`, `ProcessInteractables2D` |
+| Inventory collector hook | `GameplayInventoryCollectorComponent`, `IGameplayInventorySink`, `GameplayPickupDelivery`, `SignalId::ItemCollected` |
+| Umbrella include | `include/spark/gameplay/GameplayKit.hpp` |
+| Tests | `tests/gameplay/GameplayKitTest.cpp` |
+
+### Gaps for 3D action
+
+| Priority | Gap | Why it matters |
+|----------|-----|----------------|
+| **P0** | **No weapon / ability data schema** | Designers still author damage in code or ad-hoc component fields |
+| **P1** | **No status effects / buff stack rules** | Poison, stun, i-frame stacks are DIY |
+| **P1** | **Team / collector not in all save snapshots** | Mid-combat save may lose affiliation unless you extend serializers |
+| **P2** | **No hitstop / camera shake combat helpers** | Use `ScreenShakeComponent` / game code |
+
+**Guide:** [`programming-guide/1-overview-architecture/09-gameplay-kit.md`](programming-guide/1-overview-architecture/09-gameplay-kit.md).
+
+---
+
 ## Cross-system gaps
 
 | Need | Animation | Materials | Scenes | Status |
 |------|-----------|-----------|--------|--------|
 | Player locomotion + combat | Partial FSM | — | — | Walk/run/attack only |
 | Enemy wave spawn | Playback OK | Material budget tight | No prefabs | Manual duplication |
-| Hit detection on anim frame | Manual markers only | — | — | No glTF event pipeline |
+| Hit detection on anim frame | Manual markers + `Combat3DTarget` | — | — | No glTF event pipeline |
+| Friendly-fire / teams | `GameplayTeamPolicy` on combat targets | — | — | No faction reputation layer |
 | Weapon on hand bone | Socket by index | — | — | No joint-by-name |
 | Arena load/unload | — | — | Async load works | No transition layer |
 | Checkpoint respawn | — | — | No 3D spawn component | Code constants only |

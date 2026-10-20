@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 gameplay kit · Spark Game Engine Programming Guide</title>
+  <meta name="description" content="Learn to build 2D and 3D games with the Spark Game Engine in C++23">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/site.css">
+  <link rel="stylesheet" href="../assets/vendor/atom-one-dark.min.css">
+  <style id="spark-inline-theme">
+:root {
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --accent: #6366f1;
+  --accent-soft: #eef2ff;
+  --accent-hover: #4f46e5;
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --sidebar-width: 280px;
+  --topbar-height: 56px;
+  --toc-width: 220px;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.site { min-height: 100vh; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--topbar-height);
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand:hover { color: var(--accent); text-decoration: none; }
+
+.sidebar-toggle {
+  display: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.search-wrap { flex: 1; max-width: 360px; margin-left: auto; }
+
+.search-wrap input {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: calc(100vh - var(--topbar-height));
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--topbar-height);
+  height: calc(100vh - var(--topbar-height));
+  overflow-y: auto;
+  padding: 1.25rem 0.75rem 2rem;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item { margin: 0.1rem 0; }
+
+.nav-link,
+.nav-group {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.nav-group {
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nav-link:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.nav-item.is-active > .nav-link {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-item.depth-1 .nav-link,
+.nav-item.depth-1 .nav-group { padding-left: 1.25rem; }
+.nav-item.depth-2 .nav-link,
+.nav-item.depth-2 .nav-group { padding-left: 2rem; }
+.nav-item.depth-3 .nav-link,
+.nav-item.depth-3 .nav-group { padding-left: 2.75rem; }
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--toc-width);
+  gap: 2rem;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1200px;
+}
+
+.doc { min-width: 0; }
+
+.doc-header h1 {
+  margin: 0 0 1.5rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.doc-body h2,
+.doc-body h3,
+.doc-body h4 {
+  scroll-margin-top: calc(var(--topbar-height) + 1rem);
+  letter-spacing: -0.01em;
+}
+
+.doc-body h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.5rem;
+}
+
+.doc-body h3 { font-size: 1.2rem; margin-top: 1.75rem; }
+
+.doc-body p,
+.doc-body ul,
+.doc-body ol,
+.doc-body blockquote,
+.doc-body pre {
+  margin: 1rem 0;
+}
+
+.doc-body blockquote {
+  margin-left: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.doc-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  color: #be185d;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.doc-body pre {
+  margin: 1rem 0;
+  padding: 0;
+  background: transparent;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.doc-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+.doc-body pre code.hljs {
+  display: block;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  line-height: 1.55;
+  border-radius: var(--radius);
+}
+
+.doc-body .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #1e293b;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  color: #e2e8f0;
+}
+
+.doc-body .mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.doc-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.doc-body th,
+.doc-body td {
+  border: 1px solid var(--border);
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+}
+
+.doc-body th {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.doc-body tr:nth-child(even) td { background: #fafbfc; }
+
+.doc-body img {
+  max-width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.doc-body .task-list-item {
+  list-style: none;
+}
+
+.doc-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.toc {
+  position: sticky;
+  top: calc(var(--topbar-height) + 1.5rem);
+  align-self: start;
+  max-height: calc(100vh - var(--topbar-height) - 3rem);
+  overflow-y: auto;
+  padding-left: 0.5rem;
+}
+
+.toc-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.toc li { margin: 0.35rem 0; }
+
+.toc a {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: block;
+  line-height: 1.4;
+}
+
+.toc a:hover { color: var(--accent); }
+
+.toc-h3 { padding-left: 0.75rem; }
+.toc-h4 { padding-left: 1.25rem; }
+
+.nav-item.is-hidden { display: none; }
+
+@media (max-width: 1100px) {
+  .content { grid-template-columns: 1fr; }
+  .toc { display: none; }
+}
+
+@media (max-width: 900px) {
+  .sidebar-toggle { display: block; }
+
+  .layout { grid-template-columns: 1fr; }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: var(--topbar-height);
+    width: min(var(--sidebar-width), 85vw);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    z-index: 90;
+    box-shadow: var(--shadow);
+  }
+
+  .sidebar.is-open { transform: translateX(0); }
+
+  .content { padding: 1.25rem 1rem 3rem; }
+
+  .doc-header h1 { font-size: 1.75rem; }
+}
+
+pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5px}.hljs{color:#abb2bf;background:#282c34}.hljs-comment,.hljs-quote{color:#5c6370;font-style:italic}.hljs-doctag,.hljs-formula,.hljs-keyword{color:#c678dd}.hljs-deletion,.hljs-name,.hljs-section,.hljs-selector-tag,.hljs-subst{color:#e06c75}.hljs-literal{color:#56b6c2}.hljs-addition,.hljs-attribute,.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#98c379}.hljs-attr,.hljs-number,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-pseudo,.hljs-template-variable,.hljs-type,.hljs-variable{color:#d19a66}.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-symbol,.hljs-title{color:#61aeee}.hljs-built_in,.hljs-class .hljs-title,.hljs-title.class_{color:#e6c07b}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:700}.hljs-link{text-decoration:underline}
+</style>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle navigation">☰</button>
+      <a href="../index.html" class="brand">Spark Game Engine Programming Guide</a>
+      <div class="search-wrap">
+        <input type="search" id="search" placeholder="Search docs…" autocomplete="off">
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <nav class="nav" aria-label="Documentation">
+          <ul class="nav-list">
+            
+                        <li class="nav-item depth-0">
+                          
+                            <a href="../index.html" class="nav-link">index</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">1 overview architecture</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/01-introduction.html" class="nav-link">01 introduction</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/02-engine-capabilities.html" class="nav-link">02 engine capabilities</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/03-building-and-running.html" class="nav-link">03 building and running</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/04-engine-loop.html" class="nav-link">04 engine loop</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/05-igame-contract.html" class="nav-link">05 igame contract</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/06-ecs-and-scene.html" class="nav-link">06 ecs and scene</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/07-game-component-reference.html" class="nav-link">07 game component reference</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/08-ui-and-toolkits.html" class="nav-link">08 ui and toolkits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1 is-active">
+                          
+                            <a href="../1-overview-architecture/09-gameplay-kit.html" class="nav-link">09 gameplay kit</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">2 2d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/01-sprites.html" class="nav-link">01 sprites</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/02-camera2d.html" class="nav-link">02 camera2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/03-tilemaps.html" class="nav-link">03 tilemaps</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-2d-animation.html" class="nav-link">04 2d animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/04-tilemap-editor-roadmap.html" class="nav-link">04 tilemap editor roadmap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/05-2d-lighting.html" class="nav-link">05 2d lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">3 3d graphics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/01-meshes-and-materials.html" class="nav-link">01 meshes and materials</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/02-cameras-3d.html" class="nav-link">02 cameras 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/03-lighting.html" class="nav-link">03 lighting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/04-shadows.html" class="nav-link">04 shadows</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/05-skinned-characters.html" class="nav-link">05 skinned characters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/06-terrain-and-sky.html" class="nav-link">06 terrain and sky</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/07-particles.html" class="nav-link">07 particles</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">4 ai</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/01-ai-overview.html" class="nav-link">01 ai overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/02-steering.html" class="nav-link">02 steering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/03-fsm.html" class="nav-link">03 fsm</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/04-goap.html" class="nav-link">04 goap</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">5 physics</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/01-physics-overview.html" class="nav-link">01 physics overview</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/02-rigidbody-2d.html" class="nav-link">02 rigidbody 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/03-colliders.html" class="nav-link">03 colliders</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/04-queries.html" class="nav-link">04 queries</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/05-physics-3d.html" class="nav-link">05 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/06-tips.html" class="nav-link">06 tips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">6 sound</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/01-sound-engine.html" class="nav-link">01 sound engine</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/02-clips.html" class="nav-link">02 clips</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../6-sound/03-cues.html" class="nav-link">03 cues</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">7 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <article class="doc">
+          <header class="doc-header">
+            <h1>Gameplay kit (`spark/gameplay/`)</h1>
+          </header>
+          <div class="doc-body"><h1 id="gameplay-kit-sparkgameplay">Gameplay kit (<code>spark/gameplay/</code>)</h1>
+<p>Spark ships a small <strong>public gameplay kit</strong> so demos and games share the same conventions for <strong>teams</strong>, <strong>damage</strong>, <strong>interaction</strong>, and <strong>inventory hooks</strong>. Components still own data (<code>HealthComponent</code>, <code>PickupComponent</code>, …); the kit provides <strong>routing</strong> and <strong>policy</strong> in plain C++ (no separate scripting layer required).</p>
+<p><strong>Umbrella include:</strong> <code>#include "spark/gameplay/GameplayKit.hpp"</code></p>
+<p><strong>Tests:</strong> <code>tests/gameplay/GameplayKitTest.cpp</code> (teams, damage events, interaction, pickup delivery).</p>
+<hr />
+<h2 id="teams">Teams</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GameplayTeamId</code></td>
+<td>Stable <code>int32</code> team id (<code>0</code> = neutral / unassigned).</td>
+</tr>
+<tr>
+<td><code>GameplayTeamComponent</code></td>
+<td>Team id on a <code>GameObject</code> (walk parents via <code>GameplayTeamAffiliation::Resolve</code>).</td>
+</tr>
+<tr>
+<td><code>GameplayTeamPolicy</code></td>
+<td>Friendly-fire and hostility rules (<code>AllowsHostileAction</code>).</td>
+</tr>
+<tr>
+<td><code>GameplayTeamRelation</code></td>
+<td><code>Self</code>, <code>Ally</code>, <code>Enemy</code>, <code>Neutral</code> classification.</td>
+</tr>
+</tbody>
+</table>
+<p><code>Combat2DTarget</code> and <code>Combat3DTarget</code> apply damage through <code>GameplayDamageDeal</code> with a default team policy (friendly fire <strong>off</strong>). Override with <code>SetTeamPolicy()</code> when your game needs custom rules.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameplayTeamComponent.hpp&quot;
+#include &quot;spark/gameplay/Combat3D.hpp&quot;
+
+player-&gt;AddComponent&lt;GameplayTeamComponent&gt;()-&gt;SetTeamId(1);
+enemy-&gt;AddComponent&lt;GameplayTeamComponent&gt;()-&gt;SetTeamId(2);
+
+Combat3DTarget target{*enemy};
+const float applied = target.ApplyDamage(player, 25.0F);  // 0 if same team
+</code></pre>
+<p><strong>Demo:</strong> <code>CharacterCameraDemo</code> — player team <code>1</code>, melee dummies team <code>2</code>.</p>
+<hr />
+<h2 id="damage-pipeline">Damage pipeline</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GameplayDamageApplier</code></td>
+<td>Walks hierarchy for <code>DamageableComponent</code> / <code>HealthComponent</code>; optional hurtbox notifier.</td>
+</tr>
+<tr>
+<td><code>GameplayDamageDeal</code></td>
+<td>Instigator + optional <code>GameplayTeamPolicy</code> + raw damage → applied amount.</td>
+</tr>
+<tr>
+<td><code>GameplayDamageEvent</code></td>
+<td>Read-only view of <code>SignalId::DamageApplied</code> (<code>DamageSignalPayload</code>).</td>
+</tr>
+<tr>
+<td><code>Combat2DTarget</code> / <code>Combat3DTarget</code></td>
+<td>Combat entry points (hurtbox invulnerability, then <code>GameplayDamageDeal</code>).</td>
+</tr>
+</tbody>
+</table>
+<p>Components still emit <strong><code>SignalId::DamageApplied</code></strong> and <strong><code>SignalId::Died</code></strong> as before (<code>spark/gameplay/DamageTypes.hpp</code>).</p>
+<pre><code class="language-cpp">#include &quot;spark/gameplay/GameplayDamageEvent.hpp&quot;
+
+void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
+    GameplayDamageEvent evt{};
+    if (GameplayDamageEvent::TryFromSignal(id, payload, evt)) {
+        // evt.GetAppliedAmount(), GetInstigator(), GetTarget()
+    }
+}
+</code></pre>
+<p><strong>Not in the kit (game-specific):</strong> damage types, armor curves, crit tables, hitstop, status effects — build on top of <code>GameplayDamageDeal</code> or component multipliers.</p>
+<hr />
+<h2 id="interaction">Interaction</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GameplayInteractionQuery</code></td>
+<td>Nearest <code>InteractableComponent</code> that <code>CanInteract(instigator)</code> (3D distance on transforms).</td>
+</tr>
+<tr>
+<td><code>GameplayInteractionProcessor</code></td>
+<td><code>ProcessInteractPress(world, instigator)</code> → <code>TryInteract</code> on best candidate.</td>
+</tr>
+<tr>
+<td><code>ProcessInteractables2D</code></td>
+<td>Thin wrapper used by 2D demos (<code>Interaction2D.hpp</code>).</td>
+</tr>
+</tbody>
+</table>
+<p>Pair <code>InteractableComponent</code> with <code>TriggerVolume2DComponent</code> for overlap-based range, or rely on <code>SetInteractionRadius</code>.</p>
+<hr />
+<h2 id="inventory-hooks">Inventory hooks</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>IGameplayInventorySink</code></td>
+<td>Game backend (<code>TryReceive(GameplayItemStack)</code>).</td>
+</tr>
+<tr>
+<td><code>GameplayInventoryCollectorComponent</code></td>
+<td>Default collector on player; emits <strong><code>SignalId::ItemCollected</code></strong> (<code>GameplayItemCollectedPayload</code>).</td>
+</tr>
+<tr>
+<td><code>GameplayItemStack</code></td>
+<td><code>itemId</code> + <code>quantity</code>.</td>
+</tr>
+<tr>
+<td><code>GameplayPickupDelivery</code></td>
+<td>Finds collector on collector hierarchy.</td>
+</tr>
+</tbody>
+</table>
+<p><code>PickupComponent::TryCollect</code> calls your <code>SetOnCollected</code> callback when set; otherwise it delivers through <code>GameplayPickupDelivery</code>.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp&quot;
+#include &quot;spark/ecs/components/gameplay/PickupComponent.hpp&quot;
+
+player-&gt;AddComponent&lt;GameplayInventoryCollectorComponent&gt;();
+player-&gt;GetComponent&lt;GameplayInventoryCollectorComponent&gt;()-&gt;SetOnItemReceived(
+        [](GameObject&amp; owner, const GameplayItemStack&amp; stack) {
+            // push into bag UI, stats, quests…
+        });
+
+// Pickup without custom callback auto-delivers to collector on hierarchy.
+gem-&gt;AddComponent&lt;PickupComponent&gt;()-&gt;SetItemId(&quot;gem&quot;);
+</code></pre>
+<hr />
+<h2 id="related-combat-headers">Related combat headers</h2>
+<p>The kit re-exports common combat helpers:</p>
+<ul>
+<li><strong>2D:</strong> <code>Combat2D.hpp</code>, <code>Interaction2D.hpp</code>, hurtbox queries, <code>DamageZone2DComponent</code> callers.</li>
+<li><strong>3D:</strong> <code>Combat3D.hpp</code>, <code>Hurtbox3DComponent</code>, <code>AnimationMeleeHitComponent</code> → <code>Combat3DTarget</code>.</li>
+</ul>
+<p>See also <a href="07-game-component-reference.html#gameplay">Game component reference — Gameplay</a> and <a href="../7-2d-game/09-2d-gameplay-api-guide.html">2D gameplay API guide</a>.</p></div>
+          <footer class="doc-footer">
+            <p>Generated by <strong>MDWeb</strong></p>
+          </footer>
+        </article>
+
+        
+                <aside class="toc" aria-label="On this page">
+                  <p class="toc-title">On this page</p>
+                  <ul>
+                    
+                        <li class="toc-h1">
+                          <a href="#introduction-to-spark">Introduction to Spark</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#what-you-get">What You Get</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#design-philosophy">Design Philosophy</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#minimal-bootstrap">Minimal Bootstrap</a>
+                        </li>
+                        
+                        <li class="toc-h2">
+                          <a href="#default-demo-binary">Default Demo Binary</a>
+                        </li>
+                        
+                  </ul>
+                </aside>
+                
+      </main>
+    </div>
+  </div>
+  <script src="../assets/vendor/mermaid.min.js"></script>
+  <script src="../assets/vendor/highlight.min.js"></script>
+  <script src="../assets/js/site.js"></script>
+</body>
+</html>

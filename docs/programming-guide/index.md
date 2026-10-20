@@ -18,7 +18,7 @@ A comprehensive developer guide for building **2D and 3D games** with Spark — 
 
 | Part | Folder | Focus |
 |------|--------|-------|
-| **1** | `1-overview-architecture/` | Engine loop, interfaces, ECS, **component reference**, **UI toolkits**, render contract |
+| **1** | `1-overview-architecture/` | Engine loop, interfaces, ECS, **component reference**, **gameplay kit**, **UI toolkits**, render contract |
 | **2** | `2-2d-graphics/` | Sprites, cameras, tilemaps, 2D render pipeline |
 | **3** | `3-3d-graphics/` | Meshes, PBR, lighting, skinning, terrain |
 | **4** | `4-ai/` | Blackboard, FSM, GOAP, pathfinding, steering |
@@ -37,7 +37,8 @@ A comprehensive developer guide for building **2D and 3D games** with Spark — 
 | `src/spark/demo/GameFlow2DProductPathDemo.cpp` | P0 grid ARPG path (SparkDemo **#26 / F**) |
 | `docs/programming-guide/7-2d-game/09-2d-gameplay-api-guide.md` | Tilemap + nav + minimap workflow |
 | `docs/programming-guide/7-2d-game/10-2d-components-handbook.md` | All components with 2D examples |
-| `docs/programming-guide/1-overview-architecture/07-game-component-reference.md` | Full **108** `GameComponent` types (by section) |
+| `docs/programming-guide/1-overview-architecture/07-game-component-reference.md` | Full **120** `GameComponent` types (by section) |
+| `docs/programming-guide/1-overview-architecture/09-gameplay-kit.md` | Teams, damage, interaction, inventory hooks (`GameplayKit.hpp`) |
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j

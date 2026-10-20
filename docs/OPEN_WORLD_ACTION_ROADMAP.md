@@ -152,7 +152,7 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | ID | Feature | Priority | Notes |
 |----|---------|----------|--------|
 | G1 | **Hit model** — traces, active frames, i-frames | P0 | Prefer animation-driven windows |
-| G2 | **Damage pipeline** — types, armor, crit, knockback, optional hitstop | P0 | |
+| G2 | **Damage pipeline** — types, armor, crit, knockback, optional hitstop | P0 | Baseline: `GameplayDamageDeal`, team policy, `Combat2D`/`Combat3D` targets — extend for data-driven weapons |
 | G3 | **Status effects** — stacking rules | P1 | |
 | G4 | **AI combat** — aggro, spacing, ranged spread, flee | P0 | |
 | G5 | **Group tactics** — pin, alternate attacks | P1 | |

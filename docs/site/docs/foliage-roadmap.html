@@ -578,7 +578,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Grass meadow (prototype)</strong></td>
-<td><strong>Partial</strong> — <code>FoliageInstancedMeshComponent</code> grid + <code>GrassBladeMesh</code>; terrain chunks / slope scatter (F2) not started</td>
+<td><strong>Done</strong> — <code>FoliageWindDemo</code> flat grid (<code>FoliageInstancedMeshComponent</code>)</td>
+</tr>
+<tr>
+<td><strong>Grass field on terrain (F2)</strong></td>
+<td><strong>Mostly done</strong> — <code>GrassFieldComponent</code>, chunk streaming, <code>GrassFieldTerrainDemo</code> (#28, <strong>H</strong>)</td>
 </tr>
 <tr>
 <td><strong>Tree instancing + LOD</strong></td>
@@ -599,6 +603,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><strong>Foliage wind demo</strong></td>
 <td><strong>Done</strong> — <code>FoliageWindDemo</code> (launcher #27, hotkey <strong>G</strong>)</td>
+</tr>
+<tr>
+<td><strong>Grass field terrain demo</strong></td>
+<td><strong>Done</strong> — <code>GrassFieldTerrainDemo</code> (launcher #28, hotkey <strong>H</strong>)</td>
 </tr>
 </tbody>
 </table>
@@ -857,19 +865,19 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 <td>FOLIAGE-F2-01</td>
 <td><strong><code>GrassFieldComponent</code></strong> — bounds, blade mesh ref, density, max distance, terrain object link</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x]</td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-02</td>
 <td><strong>Chunk grid</strong> (e.g. 32 m) — activate 3×3 or 5×5 neighborhood around camera</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x] — 3×3 default, ring configurable</td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-03</td>
 <td><strong>Scatter algorithm</strong> — jitter XZ in chunk; sample terrain height + normal; reject slope &gt; threshold</td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x] — <code>GrassChunkScatterBuilder</code></td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-04</td>
@@ -893,25 +901,25 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 <td>FOLIAGE-F2-07</td>
 <td><strong>Distance fade</strong> — dither or alpha at far radius; hard cull beyond <code>maxDistance</code></td>
 <td>P0</td>
-<td>[ ]</td>
+<td>[x] — IG dither in <code>foliage.frag</code>, push fade range per batch</td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-08</td>
 <td><strong><code>maxGrassInstancesPerFrame</code> budget</strong> — drop farthest chunks first (A2 alignment)</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x] — <code>SceneRenderParams::maxGrassInstancesPerFrame</code> + per-field cap</td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-09</td>
 <td><strong>Fake subsurface</strong> — wrap diffuse / back-light tint for sunset readability</td>
 <td>P1</td>
-<td>[ ]</td>
+<td>[x] — wrap + back-scatter + rim in <code>foliage.frag</code> (v1)</td>
 </tr>
 <tr>
 <td>FOLIAGE-F2-10</td>
 <td><strong>Demo</strong> — extend <code>TerrainDemo</code> or <code>FoliageMeadowDemo</code> with grass + wind hotkeys</td>
 <td>P1</td>
-<td>[x] — <code>FoliageWindDemo</code> (flat meadow; terrain hookup deferred)</td>
+<td>[x] — <code>FoliageWindDemo</code> (<strong>G</strong>); terrain: <code>GrassFieldTerrainDemo</code> (<strong>H</strong>)</td>
 </tr>
 </tbody>
 </table>
@@ -1439,7 +1447,8 @@ done
 </tbody>
 </table>
 <hr />
-<p><em>Last updated: 2026-09-30 — F0 and F1 complete; F2 grass prototype items (blade mesh, vertex wind, demo) landed in <code>FoliageWindDemo</code>. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
+<p><em>Last updated: 2026-10-03 — F0/F1 complete; F2 grass fields on terrain (<code>GrassFieldComponent</code>, <code>GrassFieldTerrainDemo</code>), distance fade, frame budget, perf-oriented streaming merge. Remaining F2: F2-04 density mask (P1).</em></p>
+<p><strong>F2 demo baseline (playtest):</strong> <code>DefaultMaxGrassInstancesPerFrame</code> = <strong>2400</strong>, view <strong>38 m</strong>, density <strong>5/m²</strong>, chunk cache <strong>720</strong> — see <code>GrassFieldTerrainDemo.cpp</code>.</p>
       </article>
     </main>
 

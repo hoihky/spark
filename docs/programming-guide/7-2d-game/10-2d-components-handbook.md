@@ -1,6 +1,6 @@
 # 2D components handbook
 
-One **`###` section per `ComponentKind`** value in `include/spark/ecs/GameComponent.hpp` (**108** kinds, excluding `Unknown`). Order below matches the enum. Full field-level API: [Game component reference](../1-overview-architecture/07-game-component-reference.md).
+One **`###` section per `ComponentKind`** value in `include/spark/ecs/GameComponent.hpp` (**120** kinds, excluding `Unknown`). Order below matches the enum. Full field-level API: [Game component reference](../1-overview-architecture/07-game-component-reference.md).
 
 **Include:** `#include "spark/ecs/Ecs.hpp"` or the header listed on each row.
 
@@ -86,6 +86,8 @@ One **`###` section per `ComponentKind`** value in `include/spark/ecs/GameCompon
 | `Damageable` | `DamageableComponent` | Primary |
 | `Interactable` | `InteractableComponent` | Primary |
 | `Pickup` | `PickupComponent` | Primary |
+| `GameplayTeam` | `GameplayTeamComponent` | Primary |
+| `GameplayInventoryCollector` | `GameplayInventoryCollectorComponent` | Primary |
 | `AnimationHitbox2D` | `AnimationHitbox2DComponent` | Primary |
 | `Hurtbox2D` | `Hurtbox2DComponent` | Primary |
 | `Projectile2D` | `Projectile2DComponent` | Primary |

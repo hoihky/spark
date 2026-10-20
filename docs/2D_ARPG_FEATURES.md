@@ -30,7 +30,7 @@ Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`
 
 | Priority | Feature | Status | Notes |
 |----------|---------|--------|--------|
-| **P2.1** | Inventory / equipment | Missing | UI + save + item defs (often game-specific). |
+| **P2.1** | Inventory / equipment | Partial | `GameplayInventoryCollectorComponent`, `PickupComponent` → `GameplayPickupDelivery`, `SignalId::ItemCollected`; bag UI + equipment + save still game-specific. See [Gameplay kit](programming-guide/1-overview-architecture/09-gameplay-kit.md). |
 | **P2.2** | Dialogue / quests | Missing | Data-driven quests + UI; optional scripting hooks. |
 | **P2.3** | Save/load game state | Partial | `GameSave` + `GameFlowPersistentData` in P0 demo; not all ECS components snapshotted. |
 | **P2.4** | Minimap / fog | Partial | `Scene2DCompositeViewComponent` + GPU ortho capture (`VulkanScene2DCompositeCapture`); RGBA8 RT + HUD blit. Fog/outline feature enum reserved. See [2D runtime limits](programming-guide/7-2d-game/08-scene2d-runtime-limits.md). |

@@ -570,7 +570,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>SparkScriptHost</strong></td>
 <td><code>cmake-build-debug/scripting/SparkScriptHost</code></td>
-<td>CoreCLR host + HelloCsGame (<code>-DSPARK_BUILD_SCRIPT_HOST=ON</code>)</td>
+<td>CoreCLR host + <code>HelloCsGame</code> (<code>-DSPARK_BUILD_SCRIPT_HOST=ON</code>, ON in <code>debug</code> preset)</td>
 </tr>
 </tbody>
 </table>
@@ -587,7 +587,7 @@ cmake --build cmake-build-debug -j
 <tbody>
 <tr>
 <td><a href="../../programming-guide/site/index.html"><strong>Programming guide</strong></a></td>
-<td>Tutorials + <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI toolkits</a> + <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html">component reference</a></td>
+<td>Tutorials + <a href="../../programming-guide/site/1-overview-architecture/09-gameplay-kit.html">gameplay kit</a> + <a href="../../programming-guide/site/1-overview-architecture/08-ui-and-toolkits.html">UI toolkits</a> + <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html">component reference</a></td>
 </tr>
 <tr>
 <td><a href="architecture-and-developer-guide.html"><strong>Architecture &amp; Developer Guide</strong></a></td>
@@ -618,6 +618,14 @@ cmake --build cmake-build-debug -j
 <td>Editor milestones, project/asset workflow</td>
 </tr>
 <tr>
+<td><a href="csharp-scripting.html"><strong>C# scripting</strong></a></td>
+<td>SparkInterop, Spark.Bindings, SparkScriptHost, HelloCsGame</td>
+</tr>
+<tr>
+<td><a href="docs/COMPONENT_SCRIPT_CODEGEN.md"><strong>Component bindgen</strong></a></td>
+<td><code>SPARK_SCRIPT_BIND</code> → C# mirrors</td>
+</tr>
+<tr>
 <td><a href="gui-editor-roadmap.html"><strong>GUI &amp; Editor Roadmap</strong></a></td>
 <td>GUI toolkit and authoring UI tasks</td>
 </tr>
@@ -636,16 +644,16 @@ cmake --build cmake-build-debug -j
 </tbody>
 </table>
 <h2 id="repository-layout">Repository layout</h2>
-<pre><code>include/spark/     Public API (engine, ecs, scene, render, gui, imgui, editor, …)
+<pre><code>include/spark/     Public API (engine, ecs, scene, render, gameplay, gui, imgui, editor, …)
 src/spark/         Implementations
 src/Engine.cpp     Engine loop (not under src/spark/engine/)
 assets/            Runtime fonts, models, textures
 shaders/           GLSL → SPIR-V (SparkShaders target)
 docs/              Design docs and roadmaps
-scripting/         SparkInterop C ABI + ClangSharp C# bindings (`Spark.Bindings`)
+scripting/         SparkInterop C ABI, generated `Spark.Bindings`, `Spark.Scripting`, samples
 spark_editor/      SparkEditor executable
 </code></pre>
-<p><strong>C# bindings:</strong> See <a href="csharp-scripting.html"><code>docs/CSHARP_SCRIPTING.md</code></a>. After interop changes, run <code>./tools/generate-csharp-bindings.sh</code>. Preset <code>debug</code> enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>.</p>
+<p><strong>C# bindings:</strong> See <a href="csharp-scripting.html"><code>docs/CSHARP_SCRIPTING.md</code></a>. After C++ interop changes, run <code>./tools/generate-csharp-bindings.sh</code>. CMake preset <strong>debug</strong> enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>.</p>
 <p><strong>Render headers</strong> live under <code>include/spark/render/</code> in stage subfolders (not flat <code>render/*.hpp</code>):</p>
 <table>
 <thead>

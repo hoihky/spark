@@ -2,7 +2,7 @@
 
 This chapter is a **practical catalog** of Spark APIs for 2D games: loading maps, collision, object spawns, camera, grid navigation, NPC behavior, pickups, minimap, and presentation FX. It aligns with `GameFlow2DProductPathDemo` (shell **F**) and `TilemapShowcase2DDemo` (**#19**).
 
-For a **component-by-component** index (all **108** `ComponentKind` values, 2D vs 3D), use [10 — Components handbook](10-2d-components-handbook.md) alongside the [full reference](../1-overview-architecture/07-game-component-reference.md).
+For a **component-by-component** index (all **120** `ComponentKind` values, 2D vs 3D), use [10 — Components handbook](10-2d-components-handbook.md) alongside the [full reference](../1-overview-architecture/07-game-component-reference.md). Cross-cutting teams, damage, interaction, and inventory conventions: [Gameplay kit](../1-overview-architecture/09-gameplay-kit.md).
 
 ---
 
@@ -411,7 +411,7 @@ P0 demo: **P** pause, **R** reload level, **Escape** menu.
 | Rendering | `SpriteComponent`, `SpriteLighting2D`, `SpriteAnimator`, `Scene2DCompositeView`, `Camera2D`, `Camera2DRig`, `ParallaxLayer`, `ScreenShake` |
 | Physics | `Rigidbody2D`, `BoxCollider2D`, `CircleCollider2D`, `TriggerVolume2D`, `CharacterController2D` |
 | AI | `GridNavAgent2D`, `GridNavTarget2D`, `GridPathFollower2D`, `AiAgent` (3D steering plane / legacy) |
-| Gameplay | `Pickup`, `Interactable`, `Health`, `GameState`, `GameFlowTrigger`, `PlayerInput`, `InputActionMap` |
+| Gameplay | `Pickup`, `Interactable`, `Health`, `GameplayTeam`, `GameplayInventoryCollector`, `GameState`, `GameFlowTrigger`, `PlayerInput`, `InputActionMap` |
 | Input | `PlayerInputComponent` + `InputActionMapComponent` |
 
 Full signatures and signal IDs: [Game component reference](../1-overview-architecture/07-game-component-reference.md).

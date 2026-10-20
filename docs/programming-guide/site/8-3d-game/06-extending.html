@@ -461,6 +461,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/09-gameplay-kit.html" class="nav-link">09 gameplay kit</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -846,7 +852,7 @@ if (world.IsGltfReady(&quot;assets/models/Fox.glb&quot;)) {
 }
 </code></pre>
 <h2 id="c-scripting">C# Scripting</h2>
-<p>Spark exposes <code>SparkInterop</code> and generated <code>Spark.Bindings</code>; optional <code>SparkScriptHost</code> (<code>SPARK_BUILD_SCRIPT_HOST</code>, ON in the <code>debug</code> preset) runs managed games. See <code>docs/CSHARP_SCRIPTING.md</code> and <code>docs/COMPONENT_SCRIPT_CODEGEN.md</code>.</p>
+<p>Spark exposes gameplay through <strong><code>SparkInterop</code></strong> and generated <strong><code>Spark.Bindings</code></strong>. Optional <strong><code>SparkScriptHost</code></strong> (<code>SPARK_BUILD_SCRIPT_HOST</code>, ON in the <code>debug</code> CMake preset) runs managed <code>Game</code> subclasses via CoreCLR. Authoring flow, regen, and <code>HelloCsGame</code>: <strong><code>docs/CSHARP_SCRIPTING.md</code></strong>; bindgen pipeline: <strong><code>docs/COMPONENT_SCRIPT_CODEGEN.md</code></strong>.</p>
 <hr />
 <p><strong>Congratulations!</strong> You have completed all eight parts. Explore <code>SparkDemo</code> demos and <code>docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code> for advanced topics: scene editor, serialization, tilemaps, and the open-world roadmap.</p></div>
           <footer class="doc-footer">

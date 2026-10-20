@@ -1,6 +1,6 @@
 # Game Component Reference
 
-Complete reference for all **108** built-in `GameComponent` types in Spark (`ComponentKind` in `GameComponent.hpp`, excluding `Unknown`) (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
+Complete reference for all **120** built-in `GameComponent` types in Spark (`ComponentKind` in `GameComponent.hpp`, excluding `Unknown`) (`include/spark/ecs/components/`). Every component has exactly one `ComponentKind` value; lookup uses `GetComponent<T>()` which matches `T::TypeKind`.
 
 **Includes:** `#include "spark/ecs/Ecs.hpp"` (umbrella) or the specific header under `spark/ecs/components/`.
 
@@ -31,7 +31,7 @@ Complete reference for all **108** built-in `GameComponent` types in Spark (`Com
 | [Audio](#audio) | `SoundCue`, `AudioListener`, `AmbientZone` |
 | [UI](#ui) | `UiCanvas` |
 | [World](#world) | `SceneSpatialPolicy`, `TimeOfDayDriver`, `SpawnPoint`, `SpawnPoint2D`, `GltfSceneSource`, `GltfInstanceNode` |
-| [Gameplay](#gameplay) | `Health`, `Damageable`, `DamageZone2D`, `Interactable`, `Pickup`, `GameState`, `GameFlowTrigger` |
+| [Gameplay](#gameplay) | `Health`, `Damageable`, `DamageZone2D`, `Interactable`, `Pickup`, `GameplayTeam`, `GameplayInventoryCollector`, `GameState`, `GameFlowTrigger` |
 
 ---
 
@@ -72,6 +72,7 @@ Complete reference for all **108** built-in `GameComponent` types in Spark (`Com
 | `GameStateChanged` | `ptr` = owner `GameObject*`, `a` = new state, `b` = previous state | `GameStateComponent` |
 | `DamageApplied` | `ptr` = `DamageSignalPayload*` (sync only) | `HealthComponent` |
 | `Died` | `ptr` = instigator `GameObject*` or null | `HealthComponent` |
+| `ItemCollected` | `ptr` = `GameplayItemCollectedPayload*` (sync only) | `GameplayInventoryCollectorComponent` |
 | `UserBase + n` | custom | your gameplay code |
 
 ```cpp
@@ -1310,6 +1311,8 @@ const SceneSpawnPose2D pose = FindSpawnPoint2D(world, "PlayerStart");
 
 ## Gameplay
 
+Shared routing for teams, damage, interaction, and inventory lives in **`spark/gameplay/`** — see [Gameplay kit](09-gameplay-kit.md). Combat entry points: `Combat2DTarget` / `Combat3DTarget` (`spark/gameplay/Combat2D.hpp`, `Combat3D.hpp`).
+
 ### `HealthComponent` + `DamageableComponent`
 
 ```cpp
@@ -1353,10 +1356,33 @@ chest->SetOnInteract([](GameObject& instigator) {
     // open inventory UI
 });
 
-// Each frame when player presses Interact:
-if (playerInput->WasActionPressedThisFrame("Interact") && chest->CanInteract(*player)) {
-    chest->TryInteract(*player);
-}
+// Or use the shared processor (same logic as ProcessInteractables2D):
+GameplayInteractionProcessor processor{};
+processor.ProcessInteractPress(world, *player);
+```
+
+### `GameplayTeamComponent`
+
+**Kind:** `GameplayTeam` · **Resolved by:** `GameplayTeamAffiliation::Resolve` (parent chain)
+
+Assigns a `GameplayTeamId` used by `GameplayTeamPolicy` when applying damage through `Combat2DTarget` / `Combat3DTarget`.
+
+```cpp
+#include "spark/ecs/components/gameplay/GameplayTeamComponent.hpp"
+
+player->AddComponent<GameplayTeamComponent>()->SetTeamId(1);
+```
+
+### `GameplayInventoryCollectorComponent`
+
+**Kind:** `GameplayInventoryCollector` · **Implements:** `IGameplayInventorySink`
+
+Default inventory hook on the collector object. Emits `SignalId::ItemCollected` and optional `SetOnItemReceived` callback. `PickupComponent` delivers here when no `SetOnCollected` callback is set.
+
+```cpp
+#include "spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp"
+
+player->AddComponent<GameplayInventoryCollectorComponent>();
 ```
 
 ### `PickupComponent`
@@ -1381,6 +1407,7 @@ pickup->SetOnCollected([](GameObject& collector, const char* itemId, int qty) {
     (void)itemId;
     (void)qty;
 });
+// Without SetOnCollected, TryCollect uses GameplayPickupDelivery → GameplayInventoryCollectorComponent.
 
 // After Simulate2D (flushes deferred destroys):
 PickupComponent::ProcessDeferredDestroys(world);

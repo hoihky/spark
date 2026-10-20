@@ -461,6 +461,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/09-gameplay-kit.html" class="nav-link">09 gameplay kit</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -783,7 +789,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>07 game component reference</h1>
           </header>
           <div class="doc-body"><h1 id="game-component-reference">Game Component Reference</h1>
-<p>Complete reference for all <strong>108</strong> built-in <code>GameComponent</code> types in Spark (<code>ComponentKind</code> in <code>GameComponent.hpp</code>, excluding <code>Unknown</code>) (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
+<p>Complete reference for all <strong>120</strong> built-in <code>GameComponent</code> types in Spark (<code>ComponentKind</code> in <code>GameComponent.hpp</code>, excluding <code>Unknown</code>) (<code>include/spark/ecs/components/</code>). Every component has exactly one <code>ComponentKind</code> value; lookup uses <code>GetComponent&lt;T&gt;()</code> which matches <code>T::TypeKind</code>.</p>
 <p><strong>Includes:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> (umbrella) or the specific header under <code>spark/ecs/components/</code>.</p>
 <p><strong>Subsystem tick order (typical frame):</strong></p>
 <ol>
@@ -857,7 +863,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><a href="#gameplay">Gameplay</a></td>
-<td><code>Health</code>, <code>Damageable</code>, <code>DamageZone2D</code>, <code>Interactable</code>, <code>Pickup</code>, <code>GameState</code>, <code>GameFlowTrigger</code></td>
+<td><code>Health</code>, <code>Damageable</code>, <code>DamageZone2D</code>, <code>Interactable</code>, <code>Pickup</code>, <code>GameplayTeam</code>, <code>GameplayInventoryCollector</code>, <code>GameState</code>, <code>GameFlowTrigger</code></td>
 </tr>
 </tbody>
 </table>
@@ -1005,6 +1011,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>Died</code></td>
 <td><code>ptr</code> = instigator <code>GameObject*</code> or null</td>
 <td><code>HealthComponent</code></td>
+</tr>
+<tr>
+<td><code>ItemCollected</code></td>
+<td><code>ptr</code> = <code>GameplayItemCollectedPayload*</code> (sync only)</td>
+<td><code>GameplayInventoryCollectorComponent</code></td>
 </tr>
 <tr>
 <td><code>UserBase + n</code></td>
@@ -1945,6 +1956,7 @@ const SceneSpawnPose2D pose = FindSpawnPoint2D(world, &quot;PlayerStart&quot;);
 </code></pre>
 <hr />
 <h2 id="gameplay">Gameplay</h2>
+<p>Shared routing for teams, damage, interaction, and inventory lives in <strong><code>spark/gameplay/</code></strong> — see <a href="09-gameplay-kit.html">Gameplay kit</a>. Combat entry points: <code>Combat2DTarget</code> / <code>Combat3DTarget</code> (<code>spark/gameplay/Combat2D.hpp</code>, <code>Combat3D.hpp</code>).</p>
 <h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
 <pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
 auto* dmg = enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
@@ -1978,10 +1990,23 @@ chest-&gt;SetOnInteract([](GameObject&amp; instigator) {
     // open inventory UI
 });
 
-// Each frame when player presses Interact:
-if (playerInput-&gt;WasActionPressedThisFrame(&quot;Interact&quot;) &amp;&amp; chest-&gt;CanInteract(*player)) {
-    chest-&gt;TryInteract(*player);
-}
+// Or use the shared processor (same logic as ProcessInteractables2D):
+GameplayInteractionProcessor processor{};
+processor.ProcessInteractPress(world, *player);
+</code></pre>
+<h3 id="gameplayteamcomponent"><code>GameplayTeamComponent</code></h3>
+<p><strong>Kind:</strong> <code>GameplayTeam</code> · <strong>Resolved by:</strong> <code>GameplayTeamAffiliation::Resolve</code> (parent chain)</p>
+<p>Assigns a <code>GameplayTeamId</code> used by <code>GameplayTeamPolicy</code> when applying damage through <code>Combat2DTarget</code> / <code>Combat3DTarget</code>.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameplayTeamComponent.hpp&quot;
+
+player-&gt;AddComponent&lt;GameplayTeamComponent&gt;()-&gt;SetTeamId(1);
+</code></pre>
+<h3 id="gameplayinventorycollectorcomponent"><code>GameplayInventoryCollectorComponent</code></h3>
+<p><strong>Kind:</strong> <code>GameplayInventoryCollector</code> · <strong>Implements:</strong> <code>IGameplayInventorySink</code></p>
+<p>Default inventory hook on the collector object. Emits <code>SignalId::ItemCollected</code> and optional <code>SetOnItemReceived</code> callback. <code>PickupComponent</code> delivers here when no <code>SetOnCollected</code> callback is set.</p>
+<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp&quot;
+
+player-&gt;AddComponent&lt;GameplayInventoryCollectorComponent&gt;();
 </code></pre>
 <h3 id="pickupcomponent"><code>PickupComponent</code></h3>
 <p><strong>Kind:</strong> <code>Pickup</code> · <strong>Sibling:</strong> <code>TriggerVolume2DComponent</code> (recommended)</p>
@@ -2001,6 +2026,7 @@ pickup-&gt;SetOnCollected([](GameObject&amp; collector, const char* itemId, int 
     (void)itemId;
     (void)qty;
 });
+// Without SetOnCollected, TryCollect uses GameplayPickupDelivery → GameplayInventoryCollectorComponent.
 
 // After Simulate2D (flushes deferred destroys):
 PickupComponent::ProcessDeferredDestroys(world);

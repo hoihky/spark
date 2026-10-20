@@ -530,6 +530,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>Core load/save works</td>
 <td>No prefabs, 3D spawn points, transitions, physics layers, or streaming</td>
 </tr>
+<tr>
+<td><strong>Gameplay conventions</strong></td>
+<td><code>GameplayKit.hpp</code> (teams, damage deal, interaction, inventory hooks)</td>
+<td>No weapon data schema, status effects, or full inventory UI</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -565,7 +570,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>C# bindings for animator + 3D FSM</td>
-<td><code>include/spark/scripting/SparkInterop.h</code>, <code>scripting/bindings/generated/Spark.Bindings/ComponentMirrors.g.cs</code></td>
+<td><code>SparkInterop.h</code>, <code>scripting/bindings/generated/Spark.Bindings/Components/FromInterop/</code></td>
 </tr>
 <tr>
 <td>Scene save: skinned mesh + animator</td>
@@ -998,6 +1003,80 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <hr />
+<h2 id="4-gameplay-kit-includesparkgameplay">4. Gameplay kit (<code>include/spark/gameplay/</code>)</h2>
+<h3 id="what-exists_3">What exists</h3>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Team ids + friendly-fire policy</td>
+<td><code>GameplayTeamComponent</code>, <code>GameplayTeamPolicy</code>, <code>GameplayTeamAffiliation</code></td>
+</tr>
+<tr>
+<td>Shared damage routing</td>
+<td><code>GameplayDamageApplier</code>, <code>GameplayDamageDeal</code>, <code>Combat2DTarget</code> / <code>Combat3DTarget</code></td>
+</tr>
+<tr>
+<td>Damage signal helper</td>
+<td><code>GameplayDamageEvent</code> + <code>DamageSignalPayload</code> / <code>SignalId::DamageApplied</code></td>
+</tr>
+<tr>
+<td>Nearest interactable</td>
+<td><code>GameplayInteractionProcessor</code>, <code>ProcessInteractables2D</code></td>
+</tr>
+<tr>
+<td>Inventory collector hook</td>
+<td><code>GameplayInventoryCollectorComponent</code>, <code>IGameplayInventorySink</code>, <code>GameplayPickupDelivery</code>, <code>SignalId::ItemCollected</code></td>
+</tr>
+<tr>
+<td>Umbrella include</td>
+<td><code>include/spark/gameplay/GameplayKit.hpp</code></td>
+</tr>
+<tr>
+<td>Tests</td>
+<td><code>tests/gameplay/GameplayKitTest.cpp</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="gaps-for-3d-action_3">Gaps for 3D action</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Gap</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P0</strong></td>
+<td><strong>No weapon / ability data schema</strong></td>
+<td>Designers still author damage in code or ad-hoc component fields</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>No status effects / buff stack rules</strong></td>
+<td>Poison, stun, i-frame stacks are DIY</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td><strong>Team / collector not in all save snapshots</strong></td>
+<td>Mid-combat save may lose affiliation unless you extend serializers</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td><strong>No hitstop / camera shake combat helpers</strong></td>
+<td>Use <code>ScreenShakeComponent</code> / game code</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Guide:</strong> <a href="../../programming-guide/site/1-overview-architecture/09-gameplay-kit.html"><code>programming-guide/1-overview-architecture/09-gameplay-kit.md</code></a>.</p>
+<hr />
 <h2 id="cross-system-gaps">Cross-system gaps</h2>
 <table>
 <thead>
@@ -1026,10 +1105,17 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>Hit detection on anim frame</td>
-<td>Manual markers only</td>
+<td>Manual markers + <code>Combat3DTarget</code></td>
 <td>—</td>
 <td>—</td>
 <td>No glTF event pipeline</td>
+</tr>
+<tr>
+<td>Friendly-fire / teams</td>
+<td><code>GameplayTeamPolicy</code> on combat targets</td>
+<td>—</td>
+<td>—</td>
+<td>No faction reputation layer</td>
 </tr>
 <tr>
 <td>Weapon on hand bone</td>

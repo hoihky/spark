@@ -170,9 +170,13 @@ See [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) for planned milestones.
 
 ### 2.7 Gameplay layer
 
-| Gap | Current API | Missing API / behavior |
-|-----|-------------|------------------------|
-| **`spark/gameplay/`** | Empty directory | No public damage, health, inventory, interaction interfaces — games roll their own |
+| Area | Current API | Remaining gaps |
+|------|-------------|----------------|
+| **`spark/gameplay/` kit** | `GameplayKit.hpp` — teams (`GameplayTeamComponent`, `GameplayTeamPolicy`), damage (`GameplayDamageDeal`, `GameplayDamageApplier`, `GameplayDamageEvent`), interaction (`GameplayInteractionProcessor`, `ProcessInteractables2D`), inventory hooks (`GameplayInventoryCollectorComponent`, `GameplayPickupDelivery`, `SignalId::ItemCollected`) | No built-in **inventory UI**, item defs, equipment slots, or quest graph; damage **types**/armor/crit/status are game-specific; team/collector **serialization** not guaranteed in all snapshot handlers |
+| **Combat targets** | `Combat2DTarget` / `Combat3DTarget` team-aware via default policy | Custom per-weapon friendly-fire rules need explicit `SetTeamPolicy()` or game-side checks |
+| **Vitals** | `HealthComponent`, `DamageableComponent`, signals | No shared **death/respawn** state machine beyond components |
+
+Programming guide: [`programming-guide/1-overview-architecture/09-gameplay-kit.md`](programming-guide/1-overview-architecture/09-gameplay-kit.md).
 
 ---
 

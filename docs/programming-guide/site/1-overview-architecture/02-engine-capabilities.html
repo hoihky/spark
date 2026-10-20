@@ -461,6 +461,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/09-gameplay-kit.html" class="nav-link">09 gameplay kit</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -966,8 +972,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>Combat vitals</td>
 <td><code>HealthComponent</code>, <code>DamageableComponent</code></td>
 </tr>
+<tr>
+<td>Teams / friendly fire</td>
+<td><code>GameplayTeamComponent</code>, <code>GameplayTeamPolicy</code></td>
+</tr>
+<tr>
+<td>Inventory hook</td>
+<td><code>GameplayInventoryCollectorComponent</code>, <code>GameplayPickupDelivery</code></td>
+</tr>
 </tbody>
 </table>
+<h2 id="gameplay-kit-sparkgameplay">Gameplay kit (<code>spark/gameplay/</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Umbrella include</td>
+<td><code>GameplayKit.hpp</code></td>
+</tr>
+<tr>
+<td>Damage routing</td>
+<td><code>GameplayDamageDeal</code>, <code>GameplayDamageApplier</code>, <code>GameplayDamageEvent</code></td>
+</tr>
+<tr>
+<td>Combat targets</td>
+<td><code>Combat2DTarget</code>, <code>Combat3DTarget</code>, <code>CombatHurtboxWorldQuery2D</code>, <code>CombatHurtboxSphereQuery</code></td>
+</tr>
+<tr>
+<td>Interaction</td>
+<td><code>GameplayInteractionProcessor</code>, <code>ProcessInteractables2D</code></td>
+</tr>
+<tr>
+<td>Items</td>
+<td><code>GameplayItemStack</code>, <code>IGameplayInventorySink</code></td>
+</tr>
+</tbody>
+</table>
+<p>Full walkthrough: <a href="09-gameplay-kit.html">Gameplay kit</a>.</p>
 <h2 id="simulation-tools">Simulation &amp; Tools</h2>
 <pre><code class="language-cpp">#include &quot;spark/physics/PhysicsSubsystem.hpp&quot;
 
@@ -979,7 +1025,7 @@ Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flu
 Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 </code></pre>
 <p>Legacy free functions (<code>SimulatePhysics2D</code>, <code>SimulatePhysics3D</code>, …) remain but are <strong>deprecated</strong> — prefer <code>PhysicsSubsystem</code>.</p>
-<p><strong>100 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
+<p><strong>120 built-in components</strong> — full reference: <a href="07-game-component-reference.html">Game Component Reference</a>.</p>
 <h2 id="asset-loading-on-gameworld">Asset Loading on GameWorld</h2>
 <pre><code class="language-cpp">Spark::GltfAsset asset = world.LoadGltf(&quot;assets/models/Cube.glb&quot;);
 Spark::SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/models/Fox.glb&quot;);

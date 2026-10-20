@@ -461,6 +461,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/09-gameplay-kit.html" class="nav-link">09 gameplay kit</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -783,7 +789,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>2D components handbook</h1>
           </header>
           <div class="doc-body"><h1 id="2d-components-handbook">2D components handbook</h1>
-<p>One <strong><code>###</code> section per <code>ComponentKind</code></strong> value in <code>include/spark/ecs/GameComponent.hpp</code> (<strong>108</strong> kinds, excluding <code>Unknown</code>). Order below matches the enum. Full field-level API: <a href="../1-overview-architecture/07-game-component-reference.html">Game component reference</a>.</p>
+<p>One <strong><code>###</code> section per <code>ComponentKind</code></strong> value in <code>include/spark/ecs/GameComponent.hpp</code> (<strong>120</strong> kinds, excluding <code>Unknown</code>). Order below matches the enum. Full field-level API: <a href="../1-overview-architecture/07-game-component-reference.html">Game component reference</a>.</p>
 <p><strong>Include:</strong> <code>#include "spark/ecs/Ecs.hpp"</code> or the header listed on each row.</p>
 <p><strong>2D role:</strong> <strong>Primary</strong> — common in pure 2D games; <strong>Optional</strong> — useful in 2.5D or mixed scenes; <strong>3D-only</strong> — skip for flat sprite/tilemap games (see <a href="../3-3d-graphics/01-meshes-and-materials.html">Part 3</a> / <a href="../8-3d-game/01-fps-intro.html">Part 8</a>).</p>
 <h3 id="quick-jumps-part-7-chapters">Quick jumps (Part 7 chapters)</h3>
@@ -1146,6 +1152,16 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><code>Pickup</code></td>
 <td><code>PickupComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>GameplayTeam</code></td>
+<td><code>GameplayTeamComponent</code></td>
+<td>Primary</td>
+</tr>
+<tr>
+<td><code>GameplayInventoryCollector</code></td>
+<td><code>GameplayInventoryCollectorComponent</code></td>
 <td>Primary</td>
 </tr>
 <tr>

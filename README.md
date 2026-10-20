@@ -47,7 +47,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 
 | Document | Contents |
 |----------|----------|
-| [**Programming guide**](docs/programming-guide/index.md) | Tutorials + [UI toolkits](docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md) + [component reference](docs/programming-guide/1-overview-architecture/07-game-component-reference.md) |
+| [**Programming guide**](docs/programming-guide/index.md) | Tutorials + [gameplay kit](docs/programming-guide/1-overview-architecture/09-gameplay-kit.md) + [UI toolkits](docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md) + [component reference](docs/programming-guide/1-overview-architecture/07-game-component-reference.md) |
 | [**Architecture & Developer Guide**](docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine loop, ECS, rendering data path, feature catalog |
 | [**Scene & Rendering API Gaps**](docs/SCENE_AND_RENDERING_GAPS.md) | C++ public API gap analysis (`include/spark/`, scene + 3D render) |
 | [**3D Action Game Gaps**](docs/3D_ACTION_GAME_GAPS.md) | Animation, materials, and scene management gaps for action games |
@@ -65,7 +65,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 ## Repository layout
 
 ```
-include/spark/     Public API (engine, ecs, scene, render, gui, imgui, editor, …)
+include/spark/     Public API (engine, ecs, scene, render, gameplay, gui, imgui, editor, …)
 src/spark/         Implementations
 src/Engine.cpp     Engine loop (not under src/spark/engine/)
 assets/            Runtime fonts, models, textures

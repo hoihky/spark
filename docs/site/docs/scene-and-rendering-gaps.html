@@ -738,8 +738,8 @@ C &lt;kind&gt; &lt;payload&gt;
 <tbody>
 <tr>
 <td><strong>Stable handles</strong></td>
-<td><code>GameObject*</code> only</td>
-<td><code>EntityId</code> or opaque handle surviving reorder; no dangling-pointer-safe lookup</td>
+<td><code>EntityId</code> on <code>GameObject</code>, <code>TryGetGameObject</code> / <code>IsGameObjectAlive</code></td>
+<td>Weak handles or generational IDs so stale <code>GameObject*</code> cannot alias a new entity</td>
 </tr>
 <tr>
 <td><strong>Multi-scene</strong></td>
@@ -758,8 +758,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>Deferred destroy</strong></td>
-<td><code>DestroyGameObject</code> immediate</td>
-<td><code>DestroyAtEndOfFrame</code> to avoid iterator invalidation during <code>OnUpdate</code></td>
+<td><code>DestroyGameObject</code> defers during <code>UpdateGameObjects</code>; <code>DestroyGameObjectAtEndOfFrame</code></td>
+<td>Same deferral when destroying from physics/AI ticks outside <code>UpdateGameObjects</code></td>
 </tr>
 <tr>
 <td><strong>Component queries</strong></td>
@@ -966,19 +966,30 @@ C &lt;kind&gt; &lt;payload&gt;
 <table>
 <thead>
 <tr>
-<th>Gap</th>
+<th>Area</th>
 <th>Current API</th>
-<th>Missing API / behavior</th>
+<th>Remaining gaps</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><code>spark/gameplay/</code></strong></td>
-<td>Empty directory</td>
-<td>No public damage, health, inventory, interaction interfaces — games roll their own</td>
+<td><strong><code>spark/gameplay/</code> kit</strong></td>
+<td><code>GameplayKit.hpp</code> — teams (<code>GameplayTeamComponent</code>, <code>GameplayTeamPolicy</code>), damage (<code>GameplayDamageDeal</code>, <code>GameplayDamageApplier</code>, <code>GameplayDamageEvent</code>), interaction (<code>GameplayInteractionProcessor</code>, <code>ProcessInteractables2D</code>), inventory hooks (<code>GameplayInventoryCollectorComponent</code>, <code>GameplayPickupDelivery</code>, <code>SignalId::ItemCollected</code>)</td>
+<td>No built-in <strong>inventory UI</strong>, item defs, equipment slots, or quest graph; damage <strong>types</strong>/armor/crit/status are game-specific; team/collector <strong>serialization</strong> not guaranteed in all snapshot handlers</td>
+</tr>
+<tr>
+<td><strong>Combat targets</strong></td>
+<td><code>Combat2DTarget</code> / <code>Combat3DTarget</code> team-aware via default policy</td>
+<td>Custom per-weapon friendly-fire rules need explicit <code>SetTeamPolicy()</code> or game-side checks</td>
+</tr>
+<tr>
+<td><strong>Vitals</strong></td>
+<td><code>HealthComponent</code>, <code>DamageableComponent</code>, signals</td>
+<td>No shared <strong>death/respawn</strong> state machine beyond components</td>
 </tr>
 </tbody>
 </table>
+<p>Programming guide: <a href="../../programming-guide/site/1-overview-architecture/09-gameplay-kit.html"><code>programming-guide/1-overview-architecture/09-gameplay-kit.md</code></a>.</p>
 <hr />
 <h2 id="3-rendering-api-gaps-scenerenderparams-submit-path">3. Rendering API gaps (<code>SceneRenderParams</code> &amp; submit path)</h2>
 <p>Games control rendering through <strong><code>SceneRenderParams</code></strong> and submit helpers — not through Vulkan types.</p>
@@ -1253,8 +1264,8 @@ C &lt;kind&gt; &lt;payload&gt;
 <td><code>EmitSignal</code> is per-object only; no world-level <code>Subscribe&lt;CollisionEvent&gt;</code></td>
 </tr>
 <tr>
-<td><strong>C++ scripting surface</strong></td>
-<td><code>SparkInterop.h</code> C ABI exists; not all <code>ComponentKind</code> values exposed to C#</td>
+<td><strong>C# scripting surface</strong></td>
+<td>Most gameplay components have <code>FromInterop</code> mirrors; see <code>binding-coverage.json</code> for remaining gaps</td>
 </tr>
 <tr>
 <td><strong>Error reporting</strong></td>
