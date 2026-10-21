@@ -594,6 +594,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>QA/replay; prerequisite if you ever add netcode</td>
 </tr>
 <tr>
+<td>A4b</td>
+<td><strong>Fixed physics step</strong> — <code>Step(fixedDt)</code> decoupled from render <code>deltaTime</code>; documented non-deterministic vs deterministic modes</td>
+<td>P0</td>
+<td>Pair with A4; see <code>SCENE_AND_RENDERING_GAPS.md</code> §2.5</td>
+</tr>
+<tr>
+<td>A4c</td>
+<td><strong>Input + sim state ring buffer</strong> — record ticks for replay playback (no game rules in engine)</td>
+<td>P1</td>
+<td>Depends on A4; replay viewport in D8</td>
+</tr>
+<tr>
 <td>A5</td>
 <td><strong>Seedable RNG service</strong> for encounters</td>
 <td>P1</td>
@@ -703,6 +715,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>P1</td>
 <td>See <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a></td>
 </tr>
+<tr>
+<td>C7</td>
+<td><strong>Distant agent LOD</strong> — impostor/billboard fallback for skinned NPCs (reuse F4 impostor path)</td>
+<td>P1</td>
+<td>Stadiums, crowds, many duplicates — FOLIAGE F4-08</td>
+</tr>
+<tr>
+<td>C8</td>
+<td><strong>Skinned draw budget defaults</strong> — enforce <code>SkinnedAnimationBudgetComponent</code> in submit path</td>
+<td>P1</td>
+<td>Many animated agents in view</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Exit criteria:</strong> Same route shows <strong>~2× fewer draws</strong> at mid-distance vs naive submit, without unacceptable visual regression.</p>
@@ -767,6 +791,36 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>P2</td>
 <td>Separate pass or raymarch (not implemented)</td>
 </tr>
+<tr>
+<td>D8</td>
+<td><strong>Multi-view rendering</strong> — split-screen, PiP, replay viewport; multi <code>viewProjection</code> or multi submit pass</td>
+<td>P1</td>
+<td><code>SCENE_AND_RENDERING_GAPS.md</code> §3.5</td>
+</tr>
+<tr>
+<td>D9</td>
+<td><strong>Camera director</strong> — blend between rigs, weighted targets, spline paths, broadcast-style framing hooks</td>
+<td>P1</td>
+<td>Game supplies targets; engine blends <code>Camera</code> / spring arms</td>
+</tr>
+<tr>
+<td>D10</td>
+<td><strong>Entity motion trails</strong> — velocity-aligned ribbons (VFX layer)</td>
+<td>P2</td>
+<td>Fast projectiles readable at distance — <a href="vfx-roadmap.html"><code>VFX_ROADMAP.md</code></a> P6</td>
+</tr>
+<tr>
+<td>D11</td>
+<td><strong>Optional motion blur / pan exposure</strong></td>
+<td>P2</td>
+<td>Fast camera moves; keep off by default for clarity</td>
+</tr>
+<tr>
+<td>D12</td>
+<td><strong>Punctual light shadow priority API</strong></td>
+<td>P1</td>
+<td>Many local lights; assign which cast shadows per frame</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Exit criteria:</strong> <strong>Day → night</strong> combat encounter stays <strong>readable</strong> within GPU budget.</p>
@@ -807,6 +861,42 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>P1</td>
 <td></td>
 </tr>
+<tr>
+<td>E5</td>
+<td><strong>Dynamic–dynamic CCD</strong> — fast small body vs moving characters</td>
+<td>P0</td>
+<td>Balls, projectiles, vehicles at speed</td>
+</tr>
+<tr>
+<td>E6</td>
+<td><strong>Contact notify hooks</strong> — per-pair callbacks (game implements material-specific response)</td>
+<td>P1</td>
+<td>Spin, grip, slide beyond scalar friction</td>
+</tr>
+<tr>
+<td>E7</td>
+<td><strong>Kinematic attach API</strong> — documented handoff between motor and rigidbody</td>
+<td>P1</td>
+<td>Carry, throw, mount without ad-hoc parenting hacks</td>
+</tr>
+<tr>
+<td>E8</td>
+<td><strong>Unified scene + physics raycast</strong></td>
+<td>P1</td>
+<td>Picking, pass targeting, AI line tests one pipeline</td>
+</tr>
+<tr>
+<td>E9</td>
+<td><strong>3D trigger stay + layer parity</strong></td>
+<td>P1</td>
+<td>Volumes that need per-frame overlap, consistent masks</td>
+</tr>
+<tr>
+<td>E10</td>
+<td><strong>Simulation pause / replay domain</strong></td>
+<td>P1</td>
+<td>Replay tick without advancing live world</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Exit criteria:</strong> Melee trace + explosion overlap + vault/mantle probe <strong>stable</strong> on streamed collision.</p>
@@ -839,31 +929,49 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>F3</td>
 <td><strong>Locomotion blend tree</strong> — walk/run/strafe</td>
 <td>P0</td>
-<td></td>
+<td><strong>Done (baseline)</strong> — 1D speed + directional locomotion; see <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> M3</td>
 </tr>
 <tr>
 <td>F4</td>
 <td><strong>Hit reactions, staggers</strong> — animation events + gameplay states</td>
 <td>P1</td>
-<td></td>
+<td><strong>Partial</strong> — combat overlays + events (M2/M4)</td>
 </tr>
 <tr>
 <td>F5</td>
 <td><strong>IK</strong> — foot on slopes; aim IK; look-at (pick 1–2 for ship)</td>
 <td>P1</td>
-<td></td>
+<td><strong>Done (v1)</strong> — <code>FootIkComponent</code>, <code>AimIkComponent</code> (M5-09/10)</td>
 </tr>
 <tr>
 <td>F6</td>
 <td><strong>Camera</strong> — collision pull-in, occluder handling</td>
 <td>P0</td>
-<td></td>
+<td>Spring arm + follow; director blending in D9</td>
 </tr>
 <tr>
 <td>F7</td>
 <td><strong>Lock-on</strong> (if melee-heavy)</td>
 <td>P1</td>
 <td>Prototype early if core</td>
+</tr>
+<tr>
+<td>F8</td>
+<td><strong>2D parameter locomotion blend</strong> — speed × direction without clip pops</td>
+<td>P1</td>
+<td><code>ANIMATION_3D_ROADMAP.md</code> M7</td>
+</tr>
+<tr>
+<td>F9</td>
+<td><strong>Data-driven animation graph</strong> — serializable states/transitions (game-defined)</td>
+<td>P1</td>
+<td>M7; upper/lower layers already in M4 stack</td>
+</tr>
+<tr>
+<td>F10</td>
+<td><strong>Root motion vs motor arbitration</strong> — documented policy + API</td>
+<td>P1</td>
+<td>M7; root motion sampler exists (M4)</td>
 </tr>
 </tbody>
 </table>
@@ -909,7 +1017,13 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>G5</td>
 <td><strong>Group tactics</strong> — pin, alternate attacks</td>
 <td>P1</td>
-<td></td>
+<td>Build on Phase K squad primitives</td>
+</tr>
+<tr>
+<td>G6</td>
+<td><strong>Hitstop / camera shake helpers</strong> (optional gameplay-facing)</td>
+<td>P2</td>
+<td>Thin wrappers over <code>ScreenShake</code> + time scale</td>
 </tr>
 </tbody>
 </table>
@@ -954,6 +1068,70 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <p><strong>Exit criteria:</strong> 10-minute drive loop shows <strong>variety</strong> without hand-authoring every fight.</p>
+<hr />
+<h3 id="phase-k-ai-navigation-group-coordination">Phase K — AI, navigation &amp; group coordination</h3>
+<p><strong>Goal:</strong> Many agents and team-scale games without every title reimplementing nav, squads, and spatial reasoning.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Feature</th>
+<th>Priority</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K1</td>
+<td><strong>3D navigation mesh</strong> — bake + query on XZ (or integrate external solver)</td>
+<td>P0</td>
+<td>Complements 2D <code>GridNavAgent2D</code>; today <code>NavMeshAgent</code> is patrol/grid helper</td>
+</tr>
+<tr>
+<td>K2</td>
+<td><strong>Dynamic steering obstacles</strong> — moving agents in avoidance</td>
+<td>P1</td>
+<td>Tight packs, jostling</td>
+</tr>
+<tr>
+<td>K3</td>
+<td><strong>Squad blackboard + role slots</strong> — generic team memory (game defines roles)</td>
+<td>P1</td>
+<td>Not sport-specific rules</td>
+</tr>
+<tr>
+<td>K4</td>
+<td><strong>Spatial utilities</strong> — visibility corridors, occupancy grid, influence samples</td>
+<td>P1</td>
+<td>Pass/shoot <em>decisions</em> stay in game code</td>
+</tr>
+<tr>
+<td>K5</td>
+<td><strong>Target claim / assignment</strong> — avoid duplicate pursuit of one entity</td>
+<td>P1</td>
+<td></td>
+</tr>
+<tr>
+<td>K6</td>
+<td><strong>Perception memory</strong> — last known position, stale time</td>
+<td>P1</td>
+<td>Extends <code>PerceptionSensorComponent</code></td>
+</tr>
+<tr>
+<td>K7</td>
+<td><strong>Fixed-step AI tick</strong> — aligned with A4 physics step</td>
+<td>P0</td>
+<td>Deterministic squad sim</td>
+</tr>
+<tr>
+<td>K8</td>
+<td><strong>Serialization</strong> — <code>AiAgent</code>, nav, perception handlers</td>
+<td>P1</td>
+<td>Save/load + replay</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exit criteria:</strong> Harness with <strong>N agents</strong> pathfind, claim targets, and update on fixed step without frame-rate coupling.</p>
 <hr />
 <h3 id="phase-i-missions-narrative-persistence">Phase I — Missions, narrative, persistence</h3>
 <p><strong>Goal:</strong> Leave and return; quests survive streaming.</p>
@@ -1128,11 +1306,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Q4</strong></td>
-<td>Phases H–I, Slice 3</td>
+<td>Phases H–I, K1–K3, Slice 3</td>
 </tr>
 <tr>
 <td><strong>Q5–Q6</strong></td>
-<td>D3–D4 polish, Phase J, Slice 4, scope cut to ship</td>
+<td>D3–D4, D8–D9, Phase J, Slice 4, scope cut to ship</td>
 </tr>
 </tbody>
 </table>
@@ -1140,7 +1318,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <hr />
 <h2 id="7-references-in-this-repo">7. References in this repo</h2>
 <ul>
-<li><code>docs/ANIMATION_3D_ROADMAP.md</code> — tracked 3D animation milestones (M1–M6); maps to Phase F/G items below.</li>
+<li><code>docs/ANIMATION_3D_ROADMAP.md</code> — tracked 3D animation milestones (M1–M7); maps to Phase F/G items below.</li>
+<li><code>docs/VFX_ROADMAP.md</code> — particles and motion trails (Phase D10).</li>
 <li><code>docs/FOLIAGE_ROADMAP.md</code> — grass, trees, wind, instancing, LOD (Phase C6 / D6 wind).</li>
 <li><code>docs/WATER_ROADMAP.md</code> — water surfaces, waves, buoyancy; shares wind field with foliage.</li>
 <li><code>docs/GUI_EDITOR_ROADMAP.md</code> — retained GUI inventory + Spark Editor milestones (E0–E6).</li>

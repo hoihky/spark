@@ -143,7 +143,7 @@ Registered today: Transform, Mesh, Material, **`GltfSceneSource`** (v2 instance 
 | **LOD** | Always full mesh | `MeshLodComponent` + `Scene::ForEachDrawableLod(view, distance)` |
 | **Light iterators** | Point, spot, directional (`ForEachDirectionalLight`) | Area lights, light probes |
 | **Physics overlap from Scene** | Separate `PhysicsQueries2D` | `Scene::OverlapSphere`, `Raycast` unified with 3D physics bodies |
-| **Picking** | `Scene::RaycastPick` (rigid + skinned bind pose); `MeshRaycast` for low-level use | Physics-body picks, deformed skinned mesh picks |
+| **Picking** | `Scene::RaycastPick` (rigid + skinned bind pose); `MeshRaycast` for low-level use | Physics-body picks, deformed skinned mesh picks; **unified** scene raycast vs `PhysicsQueries3D` (see §2.5) |
 
 ### 2.5 Physics API (`spark/physics/`)
 
@@ -153,20 +153,44 @@ Registered today: Transform, Mesh, Material, **`GltfSceneSource`** (v2 instance 
 | **Character controller** | `CharacterController3DComponent` + `SimulateCharacterControllers3D` | Capsule mesh, moving platforms, dynamic body pushes |
 | **3D triggers** | `TriggerVolume3DComponent` + `SimulateTriggerVolumes3D` (enter/exit callbacks + signals) | Layer masks, trigger stay events |
 | **Triggers** | 2D overlap signals; 3D enter/exit | `OnTriggerStay3D`, unified layer filtering |
-| **Fixed timestep** | `PhysicsWorld3DSettings::substeps` only | `IPhysicsWorld::Step(fixedDt)` decoupled from render rate |
-| **Determinism** | Float integration | Documented deterministic mode or fixed-point option |
+| **Fixed timestep** | `PhysicsWorld3DSettings::substeps` only | `IPhysicsWorld::Step(fixedDt)` decoupled from render rate — see [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) A4 |
+| **Determinism** | Float integration | Documented deterministic mode, stable ordering, seedable sim — prerequisite for replay/netcode (A4, K7) |
+| **Dynamic–dynamic CCD** | Swept CCD vs static colliders | Fast small dynamic vs moving dynamic (tunneling at high relative speed) |
+| **Contact callbacks** | Restitution/friction on materials | Per-contact notify hooks (game implements spin/grip on top) |
+| **Kinematic authority** | Character controller + rigid bodies | Documented attach/release/handoff between kinematic motor and dynamic bodies |
+| **Simulation isolation** | Single global `PhysicsWorld3D` per `GameWorld` | Per-scene or paused sim domains; replay mode without advancing live world |
+| **Unified queries** | `PhysicsQueries2D` / `PhysicsQueries3D` separate from `Scene` | `Scene::Raycast` / overlap that hits registered physics bodies consistently |
 
 ### 2.6 Animation API (`spark/animation/`, `AnimatorComponent`)
 
+**Baseline (implemented):** 1D speed blend tree, crossfade, `Character3DAnimFsmComponent`, directional locomotion (`LocomotionController`), animation layers (`AnimationLayerStackComponent`), root motion (`RootMotionComponent`), clip events (`AnimationEventReceiverComponent`), attachments, foot IK + aim IK — see [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) M1–M5.
+
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Root motion** | Joint palette only | `AnimatorComponent::ConsumeRootMotion()` |
-| **Animation events** | None | `OnAnimationEvent` / clip notify markers |
-| **Blend trees** | Single clip + crossfade | `BlendTree`, 1D/2D parameter blend |
-| **IK** | None | Foot IK, look-at IK hooks on `Skeleton` |
-| **State machine** | `Character3DAnimFsmComponent` (locomotion) | General `AnimationStateMachineComponent` API |
+| **2D parameter blend** | 1D speed + cardinal/directional clips | Two-parameter blend (e.g. speed × move angle) without discrete sector pops |
+| **General animation graph** | Combat/locomotion FSM components | Data-driven `AnimationGraph` / state machine component (serializable, game-defined states) |
+| **Layer authoring** | Runtime layer stack + masks | Snapshot handlers + editor workflow for masks/stacks |
+| **Joint by name** | Joint index on sockets | Stable `FindJoint("RightHand")` across assets |
+| **Root motion arbitration** | Root motion + character motor both exist | Policy for when clip drives vs motor drives (plant, release, physics handoff) |
+| **Reach / carry IK** | Aim IK, foot IK | Two-hand reach, look-at chain extensions (game sets targets) |
+| **Animation LOD** | Skinned draw budget component | Per-agent palette update rate / LOD for many identical rigs |
+| **2D velocity blend** | `Sprite2DCharacterAnimFsmComponent` discrete states | Blend sprite clips by velocity vector (top-down / side-view) |
+| **Retargeting** | Single skeleton per asset | Cross-skeleton clip retarget (deferred spike in M5-11; tracked in M7) |
 
-See [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) for planned milestones.
+### 2.8 AI API (`spark/ai/`, `SimulateGameAi`)
+
+| Gap | Current API | Missing API / behavior |
+|-----|-------------|------------------------|
+| **3D navmesh** | `NavMeshAgentComponent` (patrol + grid A* helper), 2D `GridNavAgent2D` | Baked mesh navigation on XZ with dynamic obstacles |
+| **Group coordination** | Per-agent `AiAgentComponent`, FSM/GOAP/steering | Squad blackboard, generic role slots (game assigns meaning) |
+| **Spatial reasoning** | Perception FOV/hearing | Lanes, occupancy grids, influence fields as reusable query helpers |
+| **Target assignment** | Manual blackboard keys | Claim/release target API to avoid duplicate pursuit |
+| **Perception memory** | Instantaneous sight tests | Last known position, stale time, forget rules |
+| **Deterministic AI tick** | Frame `deltaTime` | Fixed-step AI aligned with physics (see OPEN_WORLD A4, K7) |
+| **Dynamic steering obstacles** | Static avoidance | Other moving agents as first-class steering obstacles |
+| **Serialization** | — | `AiAgent`, nav, perception snapshot handlers |
+
+Tracked in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) **Phase K**.
 
 ### 2.7 Gameplay layer
 
@@ -189,8 +213,9 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
 | **Transparency queue** | `transparentDraws` + `SceneTransparentSortMode` (material opacity &lt; 1); opaque `draws` | `SceneDrawItem::sortKey` for fine-grained ordering within queues |
-| **Render layers** | `shadowFlags` only | `layerMask`, `renderQueue` (background / opaque / transparent / overlay) |
-| **Instancing** | One `SceneDrawItem` per object | `InstanceBatch` or `drawInstances` with shared mesh + per-instance data — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F1 |
+| **Render layers / queues** | `shadowFlags` only | Per-draw `layerMask`, `renderQueue` (background / opaque / transparent / overlay / UI-only) |
+| **Instancing** | One `SceneDrawItem` per object; foliage instancing pass (F1) | General **character/prop** instancing on main opaque path; skinned instancing — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F1, F4-08 |
+| **Velocity trails** | CPU particles | Entity-attached ribbon/trail module (speed-readable motion) — see [`VFX_ROADMAP.md`](VFX_ROADMAP.md) P6 |
 | **LOD selection** | Caller picks mesh | Submit helper chooses LOD from camera distance — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4 |
 | **Foliage (grass / trees)** | Per-entity glTF trees only (`CharacterCameraDemo`) | `GrassFieldComponent`, `TreeInstanceBatch`, wind UBO — [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
 | **Custom shaders** | `SceneShadingModel::LitPbr` / `ToonCel` | Material shader graph or `userShaderId` escape hatch |
@@ -204,7 +229,8 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | `worldClearColor` | Solid HDR background clear | No gradient/skybox mesh — single RGB color only |
 | `MaxPointLights` | 256 | OK for forward; no API to prioritize / cull lights per tile |
 | `MaxSpotLights` | 128 | Same |
-| Punctual shadows | Max 2 point + 4 spot per frame | No API to assign shadow priority to lights |
+| Punctual shadows | Max 2 point + 4 spot per frame | No API to assign **shadow priority** to lights (many local lights, stadiums, arenas) |
+| Skinned instancing | 128 joints per draw | No multi-draw skinned instancing for duplicate agents |
 | `MaxSprites` | Fixed cap on `sprites` array | Documented limit; no spill or batch API |
 | Skinning | 128 joints per draw (`Skeleton::MaxJoints`) | No multi-draw skinned instancing |
 | Custom meshes | `SceneMeshSlot::Custom` + `VulkanCustomMeshPool` GPU upload | No persistent `GpuMeshHandle` owned by game code; pool clears cached mesh pointers when params have no custom draws (demo switch safe) |
@@ -225,6 +251,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
 | **Post stack** | `ssaoEnabled` + tonemap exposure | `bloomStrength`, `vignette`, color grading LUT slot on params |
+| **Motion / exposure** | Tonemap exposure scalar | Optional motion blur, exposure compensation for fast camera pan |
 | **Fog** | None | `fogColor`, `fogDensity` / height fog on `SceneRenderParams` |
 | **Contact shadows** | None | Toggle + tunables on params |
 | **Time of day** | `useTimeOfDay`, `timeOfDay` | `TimeOfDayDriverComponent` + `ProcessTimeOfDayDrivers` (submit path); GPU uses existing analytic sun |
@@ -238,8 +265,9 @@ Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_L
 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Single view** | One `viewProjection` on params | `SceneRenderParams` array for split-screen / picture-in-picture |
-| **Offscreen targets** | Swapchain + full-frame HDR only | `IRenderTarget` / `RenderTexture` handle for mirrors, UI 3D, thumbnails |
+| **Single view** | One `viewProjection` on params | `SceneRenderParams` **array** for split-screen / picture-in-picture — OPEN_WORLD D8 |
+| **Offscreen targets** | `RenderTexture` token (limited) | First-class multi-pass submit: mirrors, minimap, replay buffer, UI 3D portraits — OPEN_WORLD D8 |
+| **Camera director** | `CameraFollow3D`, `SpringArm3D`, demo rigs | Blend cuts, weighted targets, spline paths, collision pull-in policy — OPEN_WORLD D9 |
 | **Viewport rect** | `worldViewportScissor*` (clip rect) | Sub-rect render without scissor hack; normalized viewport on params |
 | **Orthographic 3D** | `Camera` supports it | First-class in `SubmitStandardLitSceneFromWorld` + shadow fitting |
 
@@ -260,6 +288,7 @@ Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_L
 | **No render abstraction enum** | Games include `SceneRenderParams` Vulkan-specific comments (clip Y, shadow flip) |
 | **No job system** | All load, cull, submit on main thread |
 | **No event bus** | `EmitSignal` is per-object only; no world-level `Subscribe<CollisionEvent>` |
+| **Input / state recording** | — | Ring buffer of sim state + input for replay playback (depends on fixed step — A4) |
 | **C# scripting surface** | Most gameplay components have `FromInterop` mirrors; see `binding-coverage.json` for remaining gaps |
 | **Error reporting** | `LoadMesh` returns empty `SharedPtr`; no `LoadResult` with error code / message |
 | **Thread safety** | `GameWorld` is main-thread only; not documented on public headers |
@@ -278,8 +307,10 @@ Prioritized for **C++ game authors** (no editor dependency):
 | **4** | `AssetHandle` + async `RequestLoad*` | Large levels without hitches |
 | **5** | `EntityId` + deferred destroy | Safer gameplay code |
 | **6** | Instancing fields on submit path | Crowds, props |
-| **7** | `RenderTexture` / multi-view `SceneRenderParams` | Mirrors, split-screen |
-| **8** | Character controller + trigger callbacks (3D) | Action games without custom physics |
+| **7** | `RenderTexture` / multi-view `SceneRenderParams` | Mirrors, split-screen, replay viewport (OPEN_WORLD D8) |
+| **8** | Fixed timestep + determinism hooks | Replay, QA repro, future netcode (OPEN_WORLD A4) |
+| **9** | 3D navmesh + group AI primitives | Many agents, team-scale games (OPEN_WORLD Phase K) |
+| **10** | General animation graph + 2D blend | Analog locomotion, data-driven actions (`ANIMATION_3D_ROADMAP` M7) |
 
 ---
 
@@ -301,7 +332,9 @@ Prioritized for **C++ game authors** (no editor dependency):
 | [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md) | Material channels and shader limits |
 | [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWING.md) | Shadow/light implementation status |
 | [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) | Animation API roadmap |
-| [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) | Long-horizon streaming/combat (many items need new public API) |
+| [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) | Long-horizon streaming, rendering scale, physics, AI (Phases A–K) |
+| [`VFX_ROADMAP.md`](VFX_ROADMAP.md) | Particles, trails, composited effects (P6 trails) |
+| [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) | Instancing, impostors, crowd-scale LOD |
 | [`3D_ACTION_GAME_GAPS.md`](3D_ACTION_GAME_GAPS.md) | Animation + materials + scenes for 3D action games |
 | [`CSHARP_SCRIPTING.md`](CSHARP_SCRIPTING.md) | Managed interop surface |
 

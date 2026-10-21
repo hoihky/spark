@@ -517,8 +517,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tbody>
 <tr>
 <td><strong>Animation</strong></td>
-<td>M1 done, M2 partial</td>
-<td>Locomotion works; combat depth (blend trees, hurt/stagger, root motion, IK, events) is missing</td>
+<td>M1–M5 largely done</td>
+<td>1D/directional locomotion, layers, root motion, events, foot/aim IK — see <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a>; <strong>M7</strong> tracks 2D blend, data-driven graphs, animation LOD</td>
+</tr>
+<tr>
+<td><strong>AI / many agents</strong></td>
+<td>Per-agent <code>AiAgent</code> only</td>
+<td>3D navmesh, squad primitives, fixed-step AI — <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> Phase <strong>K</strong></td>
+</tr>
+<tr>
+<td><strong>Presentation scale</strong></td>
+<td>Single view, hero skinned draws</td>
+<td>Multi-view, camera director, crowds/impostors — OPEN_WORLD <strong>D8–D12</strong>, <strong>C7–C8</strong>, <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F4-08</td>
 </tr>
 <tr>
 <td><strong>Textures / materials</strong></td>
@@ -539,6 +549,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </table>
 <hr />
 <h2 id="1-animation-system">1. Animation system</h2>
+<blockquote>
+<p><strong>Note:</strong> The gap table below is <strong>partially stale</strong>. Implemented work is tracked in <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> (M1–M5 done). Open <strong>general</strong> animation items are in <strong>M7</strong> (2D blend, animation graph, LOD). This section is kept for historical context; prefer the roadmap for planning.</p>
+</blockquote>
 <h3 id="what-exists">What exists</h3>
 <table>
 <thead>
@@ -702,7 +715,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 </tbody>
 </table>
-<p><strong>Roadmap:</strong> <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> — M2 partial, M3–M6 open.</p>
+<p><strong>Roadmap:</strong> <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> — M1–M6 largely complete; <strong>M7</strong> for graphs, 2D blend, LOD.</p>
 <hr />
 <h2 id="2-texture-mapping-material-system">2. Texture mapping &amp; material system</h2>
 <h3 id="what-exists_1">What exists</h3>
@@ -1147,10 +1160,38 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>10+ skinned enemies</td>
-<td>No draw budget</td>
+<td>Animation LOD (M7) partial</td>
 <td>32-texture cap</td>
 <td>—</td>
 <td>Performance risk</td>
+</tr>
+<tr>
+<td>Split-screen / replay view</td>
+<td>—</td>
+<td>—</td>
+<td>Single <code>viewProjection</code></td>
+<td>OPEN_WORLD D8</td>
+</tr>
+<tr>
+<td>Deterministic sim + replay</td>
+<td>—</td>
+<td>—</td>
+<td>Float step</td>
+<td>OPEN_WORLD A4, A4c</td>
+</tr>
+<tr>
+<td>Team-scale AI</td>
+<td>Steering only</td>
+<td>—</td>
+<td>No navmesh/squad API</td>
+<td>OPEN_WORLD Phase K</td>
+</tr>
+<tr>
+<td>Fast projectile vs movers</td>
+<td>CCD vs statics</td>
+<td>—</td>
+<td>Dynamic–dynamic gaps</td>
+<td>OPEN_WORLD E5</td>
 </tr>
 </tbody>
 </table>
@@ -1162,28 +1203,33 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Material serialization</strong> — levels round-trip correctly</li>
 <li><strong>Prefab instantiate API</strong> — reusable enemy/prop chunks</li>
 <li><strong>3D spawn point component</strong> + tag serialization</li>
-<li><strong>Speed blend tree</strong> (walk↔run)</li>
-<li><strong>Combat FSM expansion</strong> — hurt, stagger, death states</li>
+<li>~~Speed blend tree~~ ✅ (ANIMATION M3) — extend with <strong>M7</strong> 2D blend if needed</li>
+<li>~~Combat overlay / hurt / stagger~~ ✅ (baseline M2/M4) — use <strong>M7</strong> graph for game-specific actions</li>
 </ol>
 <h3 id="tier-2-polished-combat-feel">Tier 2 — Polished combat feel</h3>
 <ol>
-<li><strong>Animation layers</strong> — upper-body attacks while moving</li>
-<li><strong>Root motion</strong> — dodge, lunge, attack displacement</li>
-<li><strong>Animation events from glTF</strong> — hit windows, SFX/VFX triggers</li>
-<li><strong>Joint-by-name sockets</strong> — weapon attachment</li>
-<li><strong>Physics layer masks</strong> — combat collision filtering</li>
+<li>~~Animation layers~~ ✅ (<code>AnimationLayerStackComponent</code>)</li>
+<li>~~Root motion~~ ✅ (M4) — <strong>M7-05</strong> arbitration</li>
+<li>~~Animation events~~ ✅ (M4) — glTF pipeline polish optional</li>
+<li><strong>Joint-by-name sockets</strong> — M7-04</li>
+<li><strong>Physics layer masks</strong> — exist on colliders; document + 3D trigger parity (OPEN_WORLD E9)</li>
 <li><strong>Scene transition manager</strong> — load screen, fade, progress</li>
 <li><strong>Raise texture budget</strong> — more layers, mips, or bindless path</li>
+<li><strong>Multi-view / camera director</strong> — OPEN_WORLD D8–D9</li>
+<li><strong>Deterministic fixed step + replay buffer</strong> — OPEN_WORLD A4, A4c</li>
 </ol>
 <h3 id="tier-3-scale-production">Tier 3 — Scale / production</h3>
 <ol>
-<li>Foot IK + aim IK</li>
+<li>~~Foot IK + aim IK~~ ✅ (M5-09/10)</li>
 <li>Texture compression + streaming</li>
-<li>~~Shared <code>MaterialAsset</code> + <code>.sparkmat</code> assets~~ ✅ (Phase 2 complete)</li>
-<li>World region streaming</li>
-<li>Skinned draw budget + palette cache</li>
-<li>Full component serialization (FSM, AI, audio, sockets)</li>
-<li>GPU decals</li>
+<li>~~Shared <code>MaterialAsset</code>~~ ✅</li>
+<li>World region streaming (OPEN_WORLD B)</li>
+<li>~~Skinned draw budget + palette cache~~ ✅ (M5-02/03) — <strong>M7-07</strong> animation LOD</li>
+<li>Full component serialization (FSM, AI, audio, sockets) — K8, M7-03</li>
+<li>GPU decals polish</li>
+<li><strong>3D navmesh + squad AI primitives</strong> — OPEN_WORLD Phase K</li>
+<li><strong>Crowd / impostor LOD</strong> — FOLIAGE F4-08, OPEN_WORLD C7</li>
+<li><strong>Motion trails</strong> — VFX P6</li>
 </ol>
 <hr />
 <h2 id="what-you-can-ship-today-vs-what-you-cannot">What you can ship today vs what you cannot</h2>

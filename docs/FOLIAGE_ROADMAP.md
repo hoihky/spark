@@ -190,6 +190,7 @@ Add WindSettings to SceneRenderParams and upload each frame for foliage shaders.
 | FOLIAGE-F4-05 | **Impostor pass** — `BillboardComponent` pattern or instanced camera-facing quad in foliage pass | P1 | [ ] |
 | FOLIAGE-F4-06 | **Light wind on impostor** — UV scroll or normal sway (cheap) | P2 | [ ] |
 | FOLIAGE-F4-07 | **Debug viz** — color instances by LOD bucket | P2 | [ ] |
+| FOLIAGE-F4-08 | **Generic agent impostor** — reuse impostor pass for distant skinned NPCs (card + depth alpha), not only trees | P1 | OPEN_WORLD C7; stadiums / many duplicates |
 
 ---
 
@@ -272,6 +273,8 @@ flowchart TB
 | C1 Mesh LOD | F4 |
 | C2 LOD hysteresis | F4-01 |
 | C3 Impostors / billboards | F4-04, F4-05 |
+| C7 Distant agent LOD | F4-08 |
+| C8 Skinned budget in submit | F5-03 (with `SkinnedAnimationBudgetComponent`) |
 | C4 Frustum culling | F5-01, F5-02; existing `Scene` spatial policy |
 | C5 GPU occlusion | F5-06 (optional) |
 | A2 Frame budgets | F2-08, F5-03 |

@@ -878,7 +878,7 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>Picking</strong></td>
 <td><code>Scene::RaycastPick</code> (rigid + skinned bind pose); <code>MeshRaycast</code> for low-level use</td>
-<td>Physics-body picks, deformed skinned mesh picks</td>
+<td>Physics-body picks, deformed skinned mesh picks; <strong>unified</strong> scene raycast vs <code>PhysicsQueries3D</code> (see §2.5)</td>
 </tr>
 </tbody>
 </table>
@@ -915,16 +915,42 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>Fixed timestep</strong></td>
 <td><code>PhysicsWorld3DSettings::substeps</code> only</td>
-<td><code>IPhysicsWorld::Step(fixedDt)</code> decoupled from render rate</td>
+<td><code>IPhysicsWorld::Step(fixedDt)</code> decoupled from render rate — see <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> A4</td>
 </tr>
 <tr>
 <td><strong>Determinism</strong></td>
 <td>Float integration</td>
-<td>Documented deterministic mode or fixed-point option</td>
+<td>Documented deterministic mode, stable ordering, seedable sim — prerequisite for replay/netcode (A4, K7)</td>
+</tr>
+<tr>
+<td><strong>Dynamic–dynamic CCD</strong></td>
+<td>Swept CCD vs static colliders</td>
+<td>Fast small dynamic vs moving dynamic (tunneling at high relative speed)</td>
+</tr>
+<tr>
+<td><strong>Contact callbacks</strong></td>
+<td>Restitution/friction on materials</td>
+<td>Per-contact notify hooks (game implements spin/grip on top)</td>
+</tr>
+<tr>
+<td><strong>Kinematic authority</strong></td>
+<td>Character controller + rigid bodies</td>
+<td>Documented attach/release/handoff between kinematic motor and dynamic bodies</td>
+</tr>
+<tr>
+<td><strong>Simulation isolation</strong></td>
+<td>Single global <code>PhysicsWorld3D</code> per <code>GameWorld</code></td>
+<td>Per-scene or paused sim domains; replay mode without advancing live world</td>
+</tr>
+<tr>
+<td><strong>Unified queries</strong></td>
+<td><code>PhysicsQueries2D</code> / <code>PhysicsQueries3D</code> separate from <code>Scene</code></td>
+<td><code>Scene::Raycast</code> / overlap that hits registered physics bodies consistently</td>
 </tr>
 </tbody>
 </table>
 <h3 id="26-animation-api-sparkanimation-animatorcomponent">2.6 Animation API (<code>spark/animation/</code>, <code>AnimatorComponent</code>)</h3>
+<p><strong>Baseline (implemented):</strong> 1D speed blend tree, crossfade, <code>Character3DAnimFsmComponent</code>, directional locomotion (<code>LocomotionController</code>), animation layers (<code>AnimationLayerStackComponent</code>), root motion (<code>RootMotionComponent</code>), clip events (<code>AnimationEventReceiverComponent</code>), attachments, foot IK + aim IK — see <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> M1–M5.</p>
 <table>
 <thead>
 <tr>
@@ -935,33 +961,105 @@ C &lt;kind&gt; &lt;payload&gt;
 </thead>
 <tbody>
 <tr>
-<td><strong>Root motion</strong></td>
-<td>Joint palette only</td>
-<td><code>AnimatorComponent::ConsumeRootMotion()</code></td>
+<td><strong>2D parameter blend</strong></td>
+<td>1D speed + cardinal/directional clips</td>
+<td>Two-parameter blend (e.g. speed × move angle) without discrete sector pops</td>
 </tr>
 <tr>
-<td><strong>Animation events</strong></td>
-<td>None</td>
-<td><code>OnAnimationEvent</code> / clip notify markers</td>
+<td><strong>General animation graph</strong></td>
+<td>Combat/locomotion FSM components</td>
+<td>Data-driven <code>AnimationGraph</code> / state machine component (serializable, game-defined states)</td>
 </tr>
 <tr>
-<td><strong>Blend trees</strong></td>
-<td>Single clip + crossfade</td>
-<td><code>BlendTree</code>, 1D/2D parameter blend</td>
+<td><strong>Layer authoring</strong></td>
+<td>Runtime layer stack + masks</td>
+<td>Snapshot handlers + editor workflow for masks/stacks</td>
 </tr>
 <tr>
-<td><strong>IK</strong></td>
-<td>None</td>
-<td>Foot IK, look-at IK hooks on <code>Skeleton</code></td>
+<td><strong>Joint by name</strong></td>
+<td>Joint index on sockets</td>
+<td>Stable <code>FindJoint("RightHand")</code> across assets</td>
 </tr>
 <tr>
-<td><strong>State machine</strong></td>
-<td><code>Character3DAnimFsmComponent</code> (locomotion)</td>
-<td>General <code>AnimationStateMachineComponent</code> API</td>
+<td><strong>Root motion arbitration</strong></td>
+<td>Root motion + character motor both exist</td>
+<td>Policy for when clip drives vs motor drives (plant, release, physics handoff)</td>
+</tr>
+<tr>
+<td><strong>Reach / carry IK</strong></td>
+<td>Aim IK, foot IK</td>
+<td>Two-hand reach, look-at chain extensions (game sets targets)</td>
+</tr>
+<tr>
+<td><strong>Animation LOD</strong></td>
+<td>Skinned draw budget component</td>
+<td>Per-agent palette update rate / LOD for many identical rigs</td>
+</tr>
+<tr>
+<td><strong>2D velocity blend</strong></td>
+<td><code>Sprite2DCharacterAnimFsmComponent</code> discrete states</td>
+<td>Blend sprite clips by velocity vector (top-down / side-view)</td>
+</tr>
+<tr>
+<td><strong>Retargeting</strong></td>
+<td>Single skeleton per asset</td>
+<td>Cross-skeleton clip retarget (deferred spike in M5-11; tracked in M7)</td>
 </tr>
 </tbody>
 </table>
-<p>See <a href="animation-3d-roadmap.html"><code>ANIMATION_3D_ROADMAP.md</code></a> for planned milestones.</p>
+<h3 id="28-ai-api-sparkai-simulategameai">2.8 AI API (<code>spark/ai/</code>, <code>SimulateGameAi</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>Current API</th>
+<th>Missing API / behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>3D navmesh</strong></td>
+<td><code>NavMeshAgentComponent</code> (patrol + grid A* helper), 2D <code>GridNavAgent2D</code></td>
+<td>Baked mesh navigation on XZ with dynamic obstacles</td>
+</tr>
+<tr>
+<td><strong>Group coordination</strong></td>
+<td>Per-agent <code>AiAgentComponent</code>, FSM/GOAP/steering</td>
+<td>Squad blackboard, generic role slots (game assigns meaning)</td>
+</tr>
+<tr>
+<td><strong>Spatial reasoning</strong></td>
+<td>Perception FOV/hearing</td>
+<td>Lanes, occupancy grids, influence fields as reusable query helpers</td>
+</tr>
+<tr>
+<td><strong>Target assignment</strong></td>
+<td>Manual blackboard keys</td>
+<td>Claim/release target API to avoid duplicate pursuit</td>
+</tr>
+<tr>
+<td><strong>Perception memory</strong></td>
+<td>Instantaneous sight tests</td>
+<td>Last known position, stale time, forget rules</td>
+</tr>
+<tr>
+<td><strong>Deterministic AI tick</strong></td>
+<td>Frame <code>deltaTime</code></td>
+<td>Fixed-step AI aligned with physics (see OPEN_WORLD A4, K7)</td>
+</tr>
+<tr>
+<td><strong>Dynamic steering obstacles</strong></td>
+<td>Static avoidance</td>
+<td>Other moving agents as first-class steering obstacles</td>
+</tr>
+<tr>
+<td><strong>Serialization</strong></td>
+<td>—</td>
+<td><code>AiAgent</code>, nav, perception snapshot handlers</td>
+</tr>
+</tbody>
+</table>
+<p>Tracked in <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> <strong>Phase K</strong>.</p>
 <h3 id="27-gameplay-layer">2.7 Gameplay layer</h3>
 <table>
 <thead>
@@ -1009,14 +1107,19 @@ C &lt;kind&gt; &lt;payload&gt;
 <td><code>SceneDrawItem::sortKey</code> for fine-grained ordering within queues</td>
 </tr>
 <tr>
-<td><strong>Render layers</strong></td>
+<td><strong>Render layers / queues</strong></td>
 <td><code>shadowFlags</code> only</td>
-<td><code>layerMask</code>, <code>renderQueue</code> (background / opaque / transparent / overlay)</td>
+<td>Per-draw <code>layerMask</code>, <code>renderQueue</code> (background / opaque / transparent / overlay / UI-only)</td>
 </tr>
 <tr>
 <td><strong>Instancing</strong></td>
-<td>One <code>SceneDrawItem</code> per object</td>
-<td><code>InstanceBatch</code> or <code>drawInstances</code> with shared mesh + per-instance data — see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F1</td>
+<td>One <code>SceneDrawItem</code> per object; foliage instancing pass (F1)</td>
+<td>General <strong>character/prop</strong> instancing on main opaque path; skinned instancing — see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F1, F4-08</td>
+</tr>
+<tr>
+<td><strong>Velocity trails</strong></td>
+<td>CPU particles</td>
+<td>Entity-attached ribbon/trail module (speed-readable motion) — see <a href="vfx-roadmap.html"><code>VFX_ROADMAP.md</code></a> P6</td>
 </tr>
 <tr>
 <td><strong>LOD selection</strong></td>
@@ -1073,7 +1176,12 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td>Punctual shadows</td>
 <td>Max 2 point + 4 spot per frame</td>
-<td>No API to assign shadow priority to lights</td>
+<td>No API to assign <strong>shadow priority</strong> to lights (many local lights, stadiums, arenas)</td>
+</tr>
+<tr>
+<td>Skinned instancing</td>
+<td>128 joints per draw</td>
+<td>No multi-draw skinned instancing for duplicate agents</td>
 </tr>
 <tr>
 <td><code>MaxSprites</code></td>
@@ -1150,6 +1258,11 @@ C &lt;kind&gt; &lt;payload&gt;
 <td><code>bloomStrength</code>, <code>vignette</code>, color grading LUT slot on params</td>
 </tr>
 <tr>
+<td><strong>Motion / exposure</strong></td>
+<td>Tonemap exposure scalar</td>
+<td>Optional motion blur, exposure compensation for fast camera pan</td>
+</tr>
+<tr>
 <td><strong>Fog</strong></td>
 <td>None</td>
 <td><code>fogColor</code>, <code>fogDensity</code> / height fog on <code>SceneRenderParams</code></td>
@@ -1195,12 +1308,17 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>Single view</strong></td>
 <td>One <code>viewProjection</code> on params</td>
-<td><code>SceneRenderParams</code> array for split-screen / picture-in-picture</td>
+<td><code>SceneRenderParams</code> <strong>array</strong> for split-screen / picture-in-picture — OPEN_WORLD D8</td>
 </tr>
 <tr>
 <td><strong>Offscreen targets</strong></td>
-<td>Swapchain + full-frame HDR only</td>
-<td><code>IRenderTarget</code> / <code>RenderTexture</code> handle for mirrors, UI 3D, thumbnails</td>
+<td><code>RenderTexture</code> token (limited)</td>
+<td>First-class multi-pass submit: mirrors, minimap, replay buffer, UI 3D portraits — OPEN_WORLD D8</td>
+</tr>
+<tr>
+<td><strong>Camera director</strong></td>
+<td><code>CameraFollow3D</code>, <code>SpringArm3D</code>, demo rigs</td>
+<td>Blend cuts, weighted targets, spline paths, collision pull-in policy — OPEN_WORLD D9</td>
 </tr>
 <tr>
 <td><strong>Viewport rect</strong></td>
@@ -1264,6 +1382,10 @@ C &lt;kind&gt; &lt;payload&gt;
 <td><code>EmitSignal</code> is per-object only; no world-level <code>Subscribe&lt;CollisionEvent&gt;</code></td>
 </tr>
 <tr>
+<td><strong>Input / state recording</strong></td>
+<td>—</td>
+</tr>
+<tr>
 <td><strong>C# scripting surface</strong></td>
 <td>Most gameplay components have <code>FromInterop</code> mirrors; see <code>binding-coverage.json</code> for remaining gaps</td>
 </tr>
@@ -1322,12 +1444,22 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>7</strong></td>
 <td><code>RenderTexture</code> / multi-view <code>SceneRenderParams</code></td>
-<td>Mirrors, split-screen</td>
+<td>Mirrors, split-screen, replay viewport (OPEN_WORLD D8)</td>
 </tr>
 <tr>
 <td><strong>8</strong></td>
-<td>Character controller + trigger callbacks (3D)</td>
-<td>Action games without custom physics</td>
+<td>Fixed timestep + determinism hooks</td>
+<td>Replay, QA repro, future netcode (OPEN_WORLD A4)</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td>3D navmesh + group AI primitives</td>
+<td>Many agents, team-scale games (OPEN_WORLD Phase K)</td>
+</tr>
+<tr>
+<td><strong>10</strong></td>
+<td>General animation graph + 2D blend</td>
+<td>Analog locomotion, data-driven actions (<code>ANIMATION_3D_ROADMAP</code> M7)</td>
 </tr>
 </tbody>
 </table>
@@ -1368,7 +1500,15 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a></td>
-<td>Long-horizon streaming/combat (many items need new public API)</td>
+<td>Long-horizon streaming, rendering scale, physics, AI (Phases A–K)</td>
+</tr>
+<tr>
+<td><a href="vfx-roadmap.html"><code>VFX_ROADMAP.md</code></a></td>
+<td>Particles, trails, composited effects (P6 trails)</td>
+</tr>
+<tr>
+<td><a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a></td>
+<td>Instancing, impostors, crowd-scale LOD</td>
 </tr>
 <tr>
 <td><a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a></td>

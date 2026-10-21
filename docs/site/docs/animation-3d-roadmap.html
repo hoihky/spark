@@ -633,9 +633,15 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>M1</td>
 <td>§0 content pipeline</td>
 </tr>
+<tr>
+<td><strong>M7</strong></td>
+<td>General gameplay animation — 2D blend, graphs, LOD</td>
+<td>M3, M4</td>
+<td>OPEN_WORLD F8–F10; team-scale / analog locomotion</td>
+</tr>
 </tbody>
 </table>
-<p><strong>Recommended order:</strong> M1 → M2 → M3 → M4 (M5/M6 in parallel where possible).</p>
+<p><strong>Recommended order:</strong> M1 → M2 → M3 → M4 (M5/M6/M7 in parallel where possible).</p>
 <hr />
 <h2 id="m1-animator-v1-api-playback-semantics">M1 — Animator v1 (API + playback semantics)</h2>
 <p><strong>Exit criteria:</strong> A C# or gameplay module can switch clips, play one-shots, and query clip finished <strong>without</strong> custom engine C++. <code>SceneSubmit</code> skips off-screen skinned draws when spatial policy is enabled.</p>
@@ -1027,6 +1033,75 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 </tbody>
 </table>
 <hr />
+<h2 id="m7-general-gameplay-animation-graphs-2d-blend-scale">M7 — General gameplay animation (graphs, 2D blend, scale)</h2>
+<p><strong>Exit criteria:</strong> Game code drives locomotion with <strong>two blend parameters</strong> (e.g. speed + direction) and <strong>data-defined action states</strong> without new engine FSM subclasses; many agents respect animation LOD budget.</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Task</th>
+<th>P</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AN3D-M7-01</td>
+<td><strong>2D blend evaluator</strong> — two parameters → clip weights (Cartesian or polar) on <code>Skeleton</code> / <code>Animator</code></td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-02</td>
+<td><strong><code>AnimationGraphComponent</code></strong> — serializable states, transitions, conditions (game fills clip names)</td>
+<td>P0</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-03</td>
+<td><strong>Layer stack snapshot handlers</strong> — masks + stack persist in <code>spark_scene_v4</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-04</td>
+<td><strong>Joint lookup by name</strong> — stable across glTF assets on <code>Skeleton</code></td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-05</td>
+<td><strong>Root motion arbitration API</strong> — motor vs clip ownership flags documented + enforced in <code>Character3DBody</code> path</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-06</td>
+<td><strong>Reach IK extension</strong> — two-hand / carry target hooks on IK service</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-07</td>
+<td><strong>Animation LOD</strong> — reduce palette update rate by distance / budget tier</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-08</td>
+<td><strong>2D sprite velocity blend</strong> — <code>SpriteAnimator</code> mix by <code>velocity</code> vector (top-down / side)</td>
+<td>P1</td>
+<td>[ ]</td>
+</tr>
+<tr>
+<td>AN3D-M7-09</td>
+<td><strong>Retargeting spike</strong> — feasibility doc or minimal bone-map prototype (extends M5-11)</td>
+<td>P2</td>
+<td>[ ]</td>
+</tr>
+</tbody>
+</table>
+<hr />
 <h2 id="m6-tooling-content-pipeline">M6 — Tooling &amp; content pipeline</h2>
 <p><strong>Exit criteria:</strong> Artists have a one-page export checklist; engineers get skeleton debug draw and load-time warnings.</p>
 <table>
@@ -1086,6 +1161,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
   M4[M4 Events / root motion]
   M5[M5 Scale / IK / content]
   M6[M6 Tooling]
+  M7[M7 Graphs / 2D blend]
   M1 --> M2
   M1 --> M3
   M2 --> M3
@@ -1093,7 +1169,9 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
   M2 --> M4
   M1 --> M5
   M3 --> M5
-  M1 --> M6</div></div>
+  M1 --> M6
+  M3 --> M7
+  M4 --> M7</div></div>
 <hr />
 <h2 id="mapping-to-open_world_action_roadmap-phase-f">Mapping to OPEN_WORLD_ACTION_ROADMAP (Phase F)</h2>
 <table>
@@ -1117,12 +1195,28 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 <td>M5-09, M5-10</td>
 </tr>
 <tr>
+<td>F8 2D locomotion blend</td>
+<td>M7-01</td>
+</tr>
+<tr>
+<td>F9 Data-driven animation graph</td>
+<td>M7-02</td>
+</tr>
+<tr>
+<td>F10 Root motion arbitration</td>
+<td>M7-05</td>
+</tr>
+<tr>
 <td>G1 Hit model (animation windows)</td>
 <td>M4-07, M4-08</td>
 </tr>
 <tr>
 <td>A2 Frame budgets (skinned cap)</td>
-<td>M5-03</td>
+<td>M5-03, M7-07</td>
+</tr>
+<tr>
+<td>K7 Fixed-step AI + anim</td>
+<td>M7-07 (LOD), OPEN_WORLD A4</td>
 </tr>
 </tbody>
 </table>
@@ -1212,7 +1306,7 @@ done
 </tbody>
 </table>
 <hr />
-<p><em>Last updated: 3D animation roadmap — all milestones M1–M6. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
+<p><em>Last updated: 3D animation roadmap — milestones M1–M7. Revise task status via PR checkbox edits or linked GitHub issues.</em></p>
       </article>
     </main>
 

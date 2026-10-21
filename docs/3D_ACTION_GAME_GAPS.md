@@ -17,7 +17,9 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 
 | System | Maturity | Action-game verdict |
 |--------|----------|---------------------|
-| **Animation** | M1 done, M2 partial | Locomotion works; combat depth (blend trees, hurt/stagger, root motion, IK, events) is missing |
+| **Animation** | M1–M5 largely done | 1D/directional locomotion, layers, root motion, events, foot/aim IK — see [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md); **M7** tracks 2D blend, data-driven graphs, animation LOD |
+| **AI / many agents** | Per-agent `AiAgent` only | 3D navmesh, squad primitives, fixed-step AI — [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) Phase **K** |
+| **Presentation scale** | Single view, hero skinned draws | Multi-view, camera director, crowds/impostors — OPEN_WORLD **D8–D12**, **C7–C8**, [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4-08 |
 | **Textures / materials** | PBR pipeline exists | Mipmapped scene arrays; BC7/ASTC (KTX2 + runtime BC7); 32×1024² budget |
 | **Scene management** | Core load/save works | No prefabs, 3D spawn points, transitions, physics layers, or streaming |
 | **Gameplay conventions** | `GameplayKit.hpp` (teams, damage deal, interaction, inventory hooks) | No weapon data schema, status effects, or full inventory UI |
@@ -25,6 +27,8 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 ---
 
 ## 1. Animation system
+
+> **Note:** The gap table below is **partially stale**. Implemented work is tracked in [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) (M1–M5 done). Open **general** animation items are in **M7** (2D blend, animation graph, LOD). This section is kept for historical context; prefer the roadmap for planning.
 
 ### What exists
 
@@ -68,7 +72,7 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 | Foot sliding fix (foot IK) | **Missing** | |
 | Save/load animated enemy | **Partial** | Mesh + animator only; FSM/events/sockets lost |
 
-**Roadmap:** [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) — M2 partial, M3–M6 open.
+**Roadmap:** [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) — M1–M6 largely complete; **M7** for graphs, 2D blend, LOD.
 
 ---
 
@@ -221,7 +225,11 @@ DIY LevelManager
 | Arena load/unload | — | — | Async load works | No transition layer |
 | Checkpoint respawn | — | — | No 3D spawn component | Code constants only |
 | Save mid-combat | FSM/events lost | PBR maps persist (v2) | Tags lost | Partial round-trip |
-| 10+ skinned enemies | No draw budget | 32-texture cap | — | Performance risk |
+| 10+ skinned enemies | Animation LOD (M7) partial | 32-texture cap | — | Performance risk |
+| Split-screen / replay view | — | — | Single `viewProjection` | OPEN_WORLD D8 |
+| Deterministic sim + replay | — | — | Float step | OPEN_WORLD A4, A4c |
+| Team-scale AI | Steering only | — | No navmesh/squad API | OPEN_WORLD Phase K |
+| Fast projectile vs movers | CCD vs statics | — | Dynamic–dynamic gaps | OPEN_WORLD E5 |
 
 ---
 
@@ -233,28 +241,33 @@ DIY LevelManager
 2. **Material serialization** — levels round-trip correctly
 3. **Prefab instantiate API** — reusable enemy/prop chunks
 4. **3D spawn point component** + tag serialization
-5. **Speed blend tree** (walk↔run)
-6. **Combat FSM expansion** — hurt, stagger, death states
+5. ~~Speed blend tree~~ ✅ (ANIMATION M3) — extend with **M7** 2D blend if needed
+6. ~~Combat overlay / hurt / stagger~~ ✅ (baseline M2/M4) — use **M7** graph for game-specific actions
 
 ### Tier 2 — Polished combat feel
 
-7. **Animation layers** — upper-body attacks while moving
-8. **Root motion** — dodge, lunge, attack displacement
-9. **Animation events from glTF** — hit windows, SFX/VFX triggers
-10. **Joint-by-name sockets** — weapon attachment
-11. **Physics layer masks** — combat collision filtering
+7. ~~Animation layers~~ ✅ (`AnimationLayerStackComponent`)
+8. ~~Root motion~~ ✅ (M4) — **M7-05** arbitration
+9. ~~Animation events~~ ✅ (M4) — glTF pipeline polish optional
+10. **Joint-by-name sockets** — M7-04
+11. **Physics layer masks** — exist on colliders; document + 3D trigger parity (OPEN_WORLD E9)
 12. **Scene transition manager** — load screen, fade, progress
 13. **Raise texture budget** — more layers, mips, or bindless path
+14. **Multi-view / camera director** — OPEN_WORLD D8–D9
+15. **Deterministic fixed step + replay buffer** — OPEN_WORLD A4, A4c
 
 ### Tier 3 — Scale / production
 
-14. Foot IK + aim IK
-15. Texture compression + streaming
-16. ~~Shared `MaterialAsset` + `.sparkmat` assets~~ ✅ (Phase 2 complete)
-17. World region streaming
-18. Skinned draw budget + palette cache
-19. Full component serialization (FSM, AI, audio, sockets)
-20. GPU decals
+16. ~~Foot IK + aim IK~~ ✅ (M5-09/10)
+17. Texture compression + streaming
+18. ~~Shared `MaterialAsset`~~ ✅
+19. World region streaming (OPEN_WORLD B)
+20. ~~Skinned draw budget + palette cache~~ ✅ (M5-02/03) — **M7-07** animation LOD
+21. Full component serialization (FSM, AI, audio, sockets) — K8, M7-03
+22. GPU decals polish
+23. **3D navmesh + squad AI primitives** — OPEN_WORLD Phase K
+24. **Crowd / impostor LOD** — FOLIAGE F4-08, OPEN_WORLD C7
+25. **Motion trails** — VFX P6
 
 ---
 

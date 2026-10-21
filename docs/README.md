@@ -22,7 +22,7 @@
 | [**BLENDER_GLTF_ANIMATION_EXPORT.md**](BLENDER_GLTF_ANIMATION_EXPORT.md) | Artists | Blender export checklist for skinned glTF |
 | [**CSHARP_SCRIPTING.md**](CSHARP_SCRIPTING.md) | Scripting | `SparkInterop`, generated `Spark.Bindings`, `SparkScriptHost`, HelloCsGame |
 | [**COMPONENT_SCRIPT_CODEGEN.md**](COMPONENT_SCRIPT_CODEGEN.md) | Scripting | `SPARK_SCRIPT_BIND` pipeline, regen, coverage |
-| [**OPEN_WORLD_ACTION_ROADMAP.md**](OPEN_WORLD_ACTION_ROADMAP.md) | Long-term | Streaming, combat, AI phases |
+| [**OPEN_WORLD_ACTION_ROADMAP.md**](OPEN_WORLD_ACTION_ROADMAP.md) | Long-term | Streaming, rendering scale (D8–D12), physics (E5–E10), AI/nav (Phase K), combat |
 | [**2D_ARPG_FEATURES.md**](2D_ARPG_FEATURES.md) | 2D gameplay | Physics, queries, anim FSM backlog |
 
 **Also:** [`.run/README.md`](../.run/README.md) (CLion run configs), [`spark_editor/CLION.md`](../spark_editor/CLION.md), [`assets/CREDITS.md`](../assets/CREDITS.md).

@@ -53,6 +53,8 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | A2 | **Frame & memory budgets** — caps on draws, skinned draws, particles, UI verts, physics substeps | P0 | Enforce in submit + sim paths |
 | A3 | **Memory pools** for streaming assets (textures, meshes, nav data) | P1 | Reduces fragmentation and spikes |
 | A4 | **Determinism hooks** — fixed timestep option, stable ordering where needed | P0 | QA/replay; prerequisite if you ever add netcode |
+| A4b | **Fixed physics step** — `Step(fixedDt)` decoupled from render `deltaTime`; documented non-deterministic vs deterministic modes | P0 | Pair with A4; see `SCENE_AND_RENDERING_GAPS.md` §2.5 |
+| A4c | **Input + sim state ring buffer** — record ticks for replay playback (no game rules in engine) | P1 | Depends on A4; replay viewport in D8 |
 | A5 | **Seedable RNG service** for encounters | P1 | Reproducible world events |
 
 **Exit criteria:** Load/unload a region in a harness with **stable FPS** and **bounded RAM** on a min-spec profile.
@@ -88,6 +90,8 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | C4 | **Frustum + sector culling** — aggressive defaults | P0 | Leverage existing `Scene` spatial options |
 | C5 | **GPU occlusion / PVS** | P2 | Only if profiling proves need |
 | C6 | **Foliage (grass + trees)** — GPU instancing, wind, LOD/impostors | P1 | See [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
+| C7 | **Distant agent LOD** — impostor/billboard fallback for skinned NPCs (reuse F4 impostor path) | P1 | Stadiums, crowds, many duplicates — FOLIAGE F4-08 |
+| C8 | **Skinned draw budget defaults** — enforce `SkinnedAnimationBudgetComponent` in submit path | P1 | Many animated agents in view |
 
 **Exit criteria:** Same route shows **~2× fewer draws** at mid-distance vs naive submit, without unacceptable visual regression.
 
@@ -107,6 +111,11 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | D5b | **Contact shadows** | P2 | Short screen-space sun trace (not implemented) |
 | D6 | **Weather** — rain/snow particles + surface wetness/roughness + **wind field** | P1 | Wind drives [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F6 + [`WATER_ROADMAP.md`](WATER_ROADMAP.md) W6-06 |
 | D7 | **Volumetric fog / god rays** | P2 | Separate pass or raymarch (not implemented) |
+| D8 | **Multi-view rendering** — split-screen, PiP, replay viewport; multi `viewProjection` or multi submit pass | P1 | `SCENE_AND_RENDERING_GAPS.md` §3.5 |
+| D9 | **Camera director** — blend between rigs, weighted targets, spline paths, broadcast-style framing hooks | P1 | Game supplies targets; engine blends `Camera` / spring arms |
+| D10 | **Entity motion trails** — velocity-aligned ribbons (VFX layer) | P2 | Fast projectiles readable at distance — [`VFX_ROADMAP.md`](VFX_ROADMAP.md) P6 |
+| D11 | **Optional motion blur / pan exposure** | P2 | Fast camera moves; keep off by default for clarity |
+| D12 | **Punctual light shadow priority API** | P1 | Many local lights; assign which cast shadows per frame |
 
 **Exit criteria:** **Day → night** combat encounter stays **readable** within GPU budget.
 
@@ -122,6 +131,12 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | E2 | **Document supported** shapes/constraints for the shipped game | P0 | Capsule player, ragdoll scope, etc. |
 | E3 | **Extend in-house physics** *or* **integrate** Jolt/PhysX | P1 | One big decision; avoid doing both |
 | E4 | **Physics LOD** — sleep/distant simplified collision | P1 | |
+| E5 | **Dynamic–dynamic CCD** — fast small body vs moving characters | P0 | Balls, projectiles, vehicles at speed |
+| E6 | **Contact notify hooks** — per-pair callbacks (game implements material-specific response) | P1 | Spin, grip, slide beyond scalar friction |
+| E7 | **Kinematic attach API** — documented handoff between motor and rigidbody | P1 | Carry, throw, mount without ad-hoc parenting hacks |
+| E8 | **Unified scene + physics raycast** | P1 | Picking, pass targeting, AI line tests one pipeline |
+| E9 | **3D trigger stay + layer parity** | P1 | Volumes that need per-frame overlap, consistent masks |
+| E10 | **Simulation pause / replay domain** | P1 | Replay tick without advancing live world |
 
 **Exit criteria:** Melee trace + explosion overlap + vault/mantle probe **stable** on streamed collision.
 
@@ -135,11 +150,14 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 |----|---------|----------|--------|
 | F1 | **Character motor** — slopes, steps, coyote time, jump buffer | P0 | |
 | F2 | **Mantle / vault** — world markers + traces | P1 | |
-| F3 | **Locomotion blend tree** — walk/run/strafe | P0 | |
-| F4 | **Hit reactions, staggers** — animation events + gameplay states | P1 | |
-| F5 | **IK** — foot on slopes; aim IK; look-at (pick 1–2 for ship) | P1 | |
-| F6 | **Camera** — collision pull-in, occluder handling | P0 | |
+| F3 | **Locomotion blend tree** — walk/run/strafe | P0 | **Done (baseline)** — 1D speed + directional locomotion; see [`ANIMATION_3D_ROADMAP.md`](ANIMATION_3D_ROADMAP.md) M3 |
+| F4 | **Hit reactions, staggers** — animation events + gameplay states | P1 | **Partial** — combat overlays + events (M2/M4) |
+| F5 | **IK** — foot on slopes; aim IK; look-at (pick 1–2 for ship) | P1 | **Done (v1)** — `FootIkComponent`, `AimIkComponent` (M5-09/10) |
+| F6 | **Camera** — collision pull-in, occluder handling | P0 | Spring arm + follow; director blending in D9 |
 | F7 | **Lock-on** (if melee-heavy) | P1 | Prototype early if core |
+| F8 | **2D parameter locomotion blend** — speed × direction without clip pops | P1 | `ANIMATION_3D_ROADMAP.md` M7 |
+| F9 | **Data-driven animation graph** — serializable states/transitions (game-defined) | P1 | M7; upper/lower layers already in M4 stack |
+| F10 | **Root motion vs motor arbitration** — documented policy + API | P1 | M7; root motion sampler exists (M4) |
 
 **Exit criteria:** Playtest: **“responsive”** on uneven terrain (qualitative + timing metrics).
 
@@ -155,7 +173,8 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | G2 | **Damage pipeline** — types, armor, crit, knockback, optional hitstop | P0 | Baseline: `GameplayDamageDeal`, team policy, `Combat2D`/`Combat3D` targets — extend for data-driven weapons |
 | G3 | **Status effects** — stacking rules | P1 | |
 | G4 | **AI combat** — aggro, spacing, ranged spread, flee | P0 | |
-| G5 | **Group tactics** — pin, alternate attacks | P1 | |
+| G5 | **Group tactics** — pin, alternate attacks | P1 | Build on Phase K squad primitives |
+| G6 | **Hitstop / camera shake helpers** (optional gameplay-facing) | P2 | Thin wrappers over `ScreenShake` + time scale |
 
 **Exit criteria:** Designers tune a **weapon** with data/schema, minimal code churn.
 
@@ -173,6 +192,25 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | H4 | **Factions / crime / reputation** | P2 | Only if core fantasy |
 
 **Exit criteria:** 10-minute drive loop shows **variety** without hand-authoring every fight.
+
+---
+
+### Phase K — AI, navigation & group coordination
+
+**Goal:** Many agents and team-scale games without every title reimplementing nav, squads, and spatial reasoning.
+
+| ID | Feature | Priority | Notes |
+|----|---------|----------|--------|
+| K1 | **3D navigation mesh** — bake + query on XZ (or integrate external solver) | P0 | Complements 2D `GridNavAgent2D`; today `NavMeshAgent` is patrol/grid helper |
+| K2 | **Dynamic steering obstacles** — moving agents in avoidance | P1 | Tight packs, jostling |
+| K3 | **Squad blackboard + role slots** — generic team memory (game defines roles) | P1 | Not sport-specific rules |
+| K4 | **Spatial utilities** — visibility corridors, occupancy grid, influence samples | P1 | Pass/shoot *decisions* stay in game code |
+| K5 | **Target claim / assignment** — avoid duplicate pursuit of one entity | P1 | |
+| K6 | **Perception memory** — last known position, stale time | P1 | Extends `PerceptionSensorComponent` |
+| K7 | **Fixed-step AI tick** — aligned with A4 physics step | P0 | Deterministic squad sim |
+| K8 | **Serialization** — `AiAgent`, nav, perception handlers | P1 | Save/load + replay |
+
+**Exit criteria:** Harness with **N agents** pathfind, claim targets, and update on fixed step without frame-rate coupling.
 
 ---
 
@@ -244,8 +282,8 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 | **Q1** | Phases A–B, D1–D2 (sun + CSM prototype), perf harness |
 | **Q2** | Phase C, E1, Slice 1 |
 | **Q3** | Phases F–G, Slice 2 |
-| **Q4** | Phases H–I, Slice 3 |
-| **Q5–Q6** | D3–D4 polish, Phase J, Slice 4, scope cut to ship |
+| **Q4** | Phases H–I, K1–K3, Slice 3 |
+| **Q5–Q6** | D3–D4, D8–D9, Phase J, Slice 4, scope cut to ship |
 
 Adjust length if team size or scope changes.
 
@@ -253,7 +291,8 @@ Adjust length if team size or scope changes.
 
 ## 7. References in this repo
 
-- `docs/ANIMATION_3D_ROADMAP.md` — tracked 3D animation milestones (M1–M6); maps to Phase F/G items below.
+- `docs/ANIMATION_3D_ROADMAP.md` — tracked 3D animation milestones (M1–M7); maps to Phase F/G items below.
+- `docs/VFX_ROADMAP.md` — particles and motion trails (Phase D10).
 - `docs/FOLIAGE_ROADMAP.md` — grass, trees, wind, instancing, LOD (Phase C6 / D6 wind).
 - `docs/WATER_ROADMAP.md` — water surfaces, waves, buoyancy; shares wind field with foliage.
 - `docs/GUI_EDITOR_ROADMAP.md` — retained GUI inventory + Spark Editor milestones (E0–E6).

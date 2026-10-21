@@ -53,8 +53,9 @@ Copy the **Issue body** block under each task when filing issues (or use the bul
 | **M4** | Gameplay hooks — events, root motion, attachments | M1, M2 | F4, G1 |
 | **M5** | Scale & content — joints, materials, morph, IK | M1–M3 | F5, A2 budgets |
 | **M6** | Tooling & pipeline — export rules, debug viz | M1 | §0 content pipeline |
+| **M7** | General gameplay animation — 2D blend, graphs, LOD | M3, M4 | OPEN_WORLD F8–F10; team-scale / analog locomotion |
 
-**Recommended order:** M1 → M2 → M3 → M4 (M5/M6 in parallel where possible).
+**Recommended order:** M1 → M2 → M3 → M4 (M5/M6/M7 in parallel where possible).
 
 ---
 
@@ -177,6 +178,24 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 
 ---
 
+## M7 — General gameplay animation (graphs, 2D blend, scale)
+
+**Exit criteria:** Game code drives locomotion with **two blend parameters** (e.g. speed + direction) and **data-defined action states** without new engine FSM subclasses; many agents respect animation LOD budget.
+
+| ID | Task | P | Status |
+|----|------|---|--------|
+| AN3D-M7-01 | **2D blend evaluator** — two parameters → clip weights (Cartesian or polar) on `Skeleton` / `Animator` | P0 | [ ] |
+| AN3D-M7-02 | **`AnimationGraphComponent`** — serializable states, transitions, conditions (game fills clip names) | P0 | [ ] |
+| AN3D-M7-03 | **Layer stack snapshot handlers** — masks + stack persist in `spark_scene_v4` | P1 | [ ] |
+| AN3D-M7-04 | **Joint lookup by name** — stable across glTF assets on `Skeleton` | P1 | [ ] |
+| AN3D-M7-05 | **Root motion arbitration API** — motor vs clip ownership flags documented + enforced in `Character3DBody` path | P1 | [ ] |
+| AN3D-M7-06 | **Reach IK extension** — two-hand / carry target hooks on IK service | P2 | [ ] |
+| AN3D-M7-07 | **Animation LOD** — reduce palette update rate by distance / budget tier | P1 | [ ] |
+| AN3D-M7-08 | **2D sprite velocity blend** — `SpriteAnimator` mix by `velocity` vector (top-down / side) | P1 | [ ] |
+| AN3D-M7-09 | **Retargeting spike** — feasibility doc or minimal bone-map prototype (extends M5-11) | P2 | [ ] |
+
+---
+
 ## M6 — Tooling & content pipeline
 
 **Exit criteria:** Artists have a one-page export checklist; engineers get skeleton debug draw and load-time warnings.
@@ -202,6 +221,7 @@ flowchart TB
   M4[M4 Events / root motion]
   M5[M5 Scale / IK / content]
   M6[M6 Tooling]
+  M7[M7 Graphs / 2D blend]
   M1 --> M2
   M1 --> M3
   M2 --> M3
@@ -210,6 +230,8 @@ flowchart TB
   M1 --> M5
   M3 --> M5
   M1 --> M6
+  M3 --> M7
+  M4 --> M7
 ```
 
 ---
@@ -221,8 +243,12 @@ flowchart TB
 | F3 Locomotion blend tree | M3 (+ M2 thresholds) |
 | F4 Hit reactions, staggers | M2 combat overlay + M4 events |
 | F5 IK foot / aim | M5-09, M5-10 |
+| F8 2D locomotion blend | M7-01 |
+| F9 Data-driven animation graph | M7-02 |
+| F10 Root motion arbitration | M7-05 |
 | G1 Hit model (animation windows) | M4-07, M4-08 |
-| A2 Frame budgets (skinned cap) | M5-03 |
+| A2 Frame budgets (skinned cap) | M5-03, M7-07 |
+| K7 Fixed-step AI + anim | M7-07 (LOD), OPEN_WORLD A4 |
 
 ---
 
@@ -282,4 +308,4 @@ done
 
 ---
 
-*Last updated: 3D animation roadmap — all milestones M1–M6. Revise task status via PR checkbox edits or linked GitHub issues.*
+*Last updated: 3D animation roadmap — milestones M1–M7. Revise task status via PR checkbox edits or linked GitHub issues.*

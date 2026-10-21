@@ -145,6 +145,15 @@ Extensions (phased):
 - [x] C# bindings `spark_vfx_play`, `spark_world_process_vfx`, `spark_vfx_player_*`
 - [x] Platformer `ExplosionFx` delegates to `VfxSubsystem`
 
+### P6 — Motion trails & ribbons (planned)
+
+- [ ] **Velocity-aligned ribbon** — attach to `GameObject` / socket; sample world velocity each frame
+- [ ] **`VfxLibrary` preset** — generic motion streak (configurable length, width, fade)
+- [ ] **Module:** `ribbon` or `trail` on `IParticleModule` registry (streak readability for fast movers)
+- [ ] **Budget** — max ribbon segments per frame (align with OPEN_WORLD A2 / D10)
+
+Maps to [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) **D10** and [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) §3.1.
+
 ---
 
 ## 6. ECS usage (target)

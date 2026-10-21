@@ -714,6 +714,14 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li>[x] C# bindings <code>spark_vfx_play</code>, <code>spark_world_process_vfx</code>, <code>spark_vfx_player_*</code></li>
 <li>[x] Platformer <code>ExplosionFx</code> delegates to <code>VfxSubsystem</code></li>
 </ul>
+<h3 id="p6-motion-trails-ribbons-planned">P6 — Motion trails &amp; ribbons (planned)</h3>
+<ul>
+<li>[ ] <strong>Velocity-aligned ribbon</strong> — attach to <code>GameObject</code> / socket; sample world velocity each frame</li>
+<li>[ ] <strong><code>VfxLibrary</code> preset</strong> — generic motion streak (configurable length, width, fade)</li>
+<li>[ ] <strong>Module:</strong> <code>ribbon</code> or <code>trail</code> on <code>IParticleModule</code> registry (streak readability for fast movers)</li>
+<li>[ ] <strong>Budget</strong> — max ribbon segments per frame (align with OPEN_WORLD A2 / D10)</li>
+</ul>
+<p>Maps to <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> <strong>D10</strong> and <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a> §3.1.</p>
 <hr />
 <h2 id="6-ecs-usage-target">6. ECS usage (target)</h2>
 <pre><code class="language-cpp">// One-shot explosion at hit point
