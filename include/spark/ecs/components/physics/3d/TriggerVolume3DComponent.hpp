@@ -27,8 +27,8 @@ enum class TriggerVolume3DShape : std::uint8_t {
 
 /**
  * Non-blocking 3D trigger volume. Call <c>SimulateTriggerVolumes3D</c> each frame after movement / physics.
- * Fires <c>SetOnEnter</c> / <c>SetOnExit</c> when probe bodies begin or end overlap. Also emits
- * <c>SignalId::Physics3DTriggerEnter</c> / <c>Physics3DTriggerExit</c> to sibling components
+ * Fires <c>SetOnEnter</c> / <c>SetOnStay</c> / <c>SetOnExit</c> when probe bodies overlap. Also emits
+ * <c>SignalId::Physics3DTriggerEnter</c> / <c>Physics3DTriggerStay</c> / <c>Physics3DTriggerExit</c>
  * (<c>payload.ptr</c> = other <c>GameObject*</c>, <c>payload.a</c> = other id).
  */
 class TriggerVolume3DComponent final : public GameComponent {
@@ -81,7 +81,18 @@ public:
     SPARK_SCRIPT_BIND(set_filter_tag)
     void SetFilterTag(const char* tag) noexcept { filterTag = tag; }
 
+    SPARK_SCRIPT_BIND(get_category_bits)
+    [[nodiscard]] std::uint16_t GetCategoryBits() const noexcept { return categoryBits; }
+    SPARK_SCRIPT_BIND(set_category_bits)
+    void SetCategoryBits(const std::uint16_t bits) noexcept { categoryBits = bits; }
+
+    SPARK_SCRIPT_BIND(get_mask_bits)
+    [[nodiscard]] std::uint16_t GetMaskBits() const noexcept { return maskBits; }
+    SPARK_SCRIPT_BIND(set_mask_bits)
+    void SetMaskBits(const std::uint16_t bits) noexcept { maskBits = bits; }
+
     void SetOnEnter(ObjectCallback callback) { onEnter = MoveTemp(callback); }
+    void SetOnStay(ObjectCallback callback) { onStay = MoveTemp(callback); }
     void SetOnExit(ObjectCallback callback) { onExit = MoveTemp(callback); }
 
     /** True while <c>other</c> overlaps this volume (after the last <c>SimulateTriggerVolumes3D</c> step). */
@@ -93,6 +104,7 @@ private:
     friend class TriggerVolumeWorld3D;
 
     void NotifyEnter(GameObject& other);
+    void NotifyStay(GameObject& other);
     void NotifyExit(GameObject& other);
     void SetOverlappingIds(Array<std::uint64_t> ids);
 
@@ -103,7 +115,10 @@ private:
     CapsuleDirection3D capsuleDirection = CapsuleDirection3D::Y;
     Vector3 offset{Vector3::Zero};
     const char* filterTag = nullptr;
+    std::uint16_t categoryBits = 1u;
+    std::uint16_t maskBits = 0xFFFFu;
     ObjectCallback onEnter{};
+    ObjectCallback onStay{};
     ObjectCallback onExit{};
     Array<std::uint64_t> overlappingIds{};
 };

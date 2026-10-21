@@ -8,6 +8,8 @@
 
 namespace Spark {
 
+class PhysicsContactBroadcaster3D;
+
 /** Static and dynamic contact resolution for 3D rigidbodies. */
 class ContactResolver3D {
 public:
@@ -17,7 +19,8 @@ public:
             SpatialHashGrid3D& broadPhase,
             Array<std::uint32_t>& scratch,
             float substepDt,
-            const PhysicsWorld3DSettings& settings) noexcept;
+            const PhysicsWorld3DSettings& settings,
+            PhysicsContactBroadcaster3D* contactBroadcaster = nullptr) noexcept;
 
     static void ResolvePenetrations(
             Array<DynamicBody3D>& bodies,
@@ -29,7 +32,8 @@ public:
     static void ResolveDynamicPairVelocities(
             Array<DynamicBody3D>& bodies,
             float substepDt,
-            const PhysicsWorld3DSettings& settings) noexcept;
+            const PhysicsWorld3DSettings& settings,
+            PhysicsContactBroadcaster3D* contactBroadcaster = nullptr) noexcept;
 };
 
 }  // namespace Spark

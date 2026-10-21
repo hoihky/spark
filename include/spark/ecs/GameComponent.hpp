@@ -130,6 +130,8 @@ enum class ComponentKind : std::uint32_t {
     CombatHurtFlash3D,
     GameplayTeam,
     GameplayInventoryCollector,
+    PhysicsContactListener3D,
+    PhysicsAttachedBody3D,
 };
 
 /**

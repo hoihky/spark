@@ -82,7 +82,7 @@ void RigidbodyIntegrator3D::IntegrateSubstep(
         RefreshDynamicBody3D(body);
         const Vector3 track0 = body.collider.GetTrackingPoint();
         const Vector3 track1{track0.x + v.x * substepDt, track0.y + v.y * substepDt, track0.z + v.z * substepDt};
-        const float lambda = SweptCcd3D::ComputeTranslationLambdaAgainstStatics(
+        float lambda = SweptCcd3D::ComputeTranslationLambdaAgainstStatics(
                 body.collider,
                 track0,
                 track1,
@@ -90,6 +90,14 @@ void RigidbodyIntegrator3D::IntegrateSubstep(
                 colliders,
                 broadPhase,
                 queryScratch);
+        const float lambdaDynamic = SweptCcd3D::ComputeTranslationLambdaAgainstDynamics(
+                body.collider,
+                track0,
+                track1,
+                settings.sweptDynamicCcdBinaryIterations,
+                bodies,
+                bi);
+        lambda = std::min(lambda, lambdaDynamic);
         const Vector3 trackSafe{
                 track0.x + (track1.x - track0.x) * lambda,
                 track0.y + (track1.y - track0.y) * lambda,

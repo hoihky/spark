@@ -29,6 +29,8 @@ function(spark_add_physics_tests)
             tests/physics/Combat3DComponentsTest.cpp
             tests/physics/MotionArbitratorTest.cpp
             tests/physics/PhysicsCollider3DFilterTest.cpp
+            tests/physics/PhysicsWorld3DIntegrationTest.cpp
+            tests/physics/PhysicsWorld3DTier2Test.cpp
             tests/animation/AnimationJointMaskTest.cpp
             tests/animation/CombatGraphRunnerTest.cpp
             tests/animation/CardinalDirectionMixerTest.cpp

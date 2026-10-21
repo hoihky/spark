@@ -4,6 +4,7 @@
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/MeshCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/PhysicsAttachedBody3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/physics/colliders/ColliderBake3D.hpp"
@@ -18,6 +19,10 @@ namespace Spark {
 namespace {
 
 [[nodiscard]] bool ContributesAnyStaticCollider3D(GameObject& object) noexcept {
+    if (const auto* attachment = object.GetComponent<PhysicsAttachedBody3DComponent>();
+        attachment != nullptr && attachment->IsAttached()) {
+        return false;
+    }
     if (object.GetComponent<CharacterController3DComponent>() != nullptr) {
         return false;
     }

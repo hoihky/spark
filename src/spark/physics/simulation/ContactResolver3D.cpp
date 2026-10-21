@@ -11,6 +11,7 @@
 #include "spark/physics/colliders/DynamicCollider3D.hpp"
 #include "spark/physics/core/ColliderMaterial.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/physics/simulation/PhysicsContactBroadcaster3D.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -147,7 +148,8 @@ void ApplyDeepestStaticNormalImpulse(
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch,
         const float h,
-        const PhysicsWorld3DSettings& settings) noexcept {
+        const PhysicsWorld3DSettings& settings,
+        PhysicsContactBroadcaster3D* contactBroadcaster) noexcept {
     RefreshDynamicBody3D(body);
 
     constexpr float kBroadInflate = 0.006F;
@@ -206,6 +208,10 @@ void ApplyDeepestStaticNormalImpulse(
         }
         if (!have || bestIdx == UINT32_MAX) {
             break;
+        }
+
+        if (pass == 0 && contactBroadcaster != nullptr) {
+            contactBroadcaster->NotifyStaticContact(body, colliders[bestIdx], bestIdx, bnX, bnY, bnZ, bestPen);
         }
 
         const float vn0 = bestVn;
@@ -357,9 +363,11 @@ void ContactResolver3D::ApplyStaticNormalImpulses(
         SpatialHashGrid3D& broadPhase,
         Array<std::uint32_t>& scratch,
         const float substepDt,
-        const PhysicsWorld3DSettings& settings) noexcept {
+        const PhysicsWorld3DSettings& settings,
+        PhysicsContactBroadcaster3D* contactBroadcaster) noexcept {
     for (std::size_t bi = 0; bi < bodies.GetSize(); ++bi) {
-        ApplyDeepestStaticNormalImpulse(bodies[bi], colliders, broadPhase, scratch, substepDt, settings);
+        ApplyDeepestStaticNormalImpulse(
+                bodies[bi], colliders, broadPhase, scratch, substepDt, settings, contactBroadcaster);
     }
 }
 
@@ -426,7 +434,8 @@ void ContactResolver3D::ResolvePenetrations(
 void ContactResolver3D::ResolveDynamicPairVelocities(
         Array<DynamicBody3D>& bodies,
         const float substepDt,
-        const PhysicsWorld3DSettings& settings) noexcept {
+        const PhysicsWorld3DSettings& settings,
+        PhysicsContactBroadcaster3D* contactBroadcaster) noexcept {
     for (std::size_t a = 0; a < bodies.GetSize(); ++a) {
         for (std::size_t b = a + 1; b < bodies.GetSize(); ++b) {
             DynamicBody3D& bodyA = bodies[a];
@@ -440,6 +449,10 @@ void ContactResolver3D::ResolveDynamicPairVelocities(
             float pen = 0.0F;
             if (!bodyA.collider.ComputeDynamicContact(bodyB.collider, nx, ny, nz, pen) || pen <= 0.0F) {
                 continue;
+            }
+
+            if (contactBroadcaster != nullptr) {
+                contactBroadcaster->NotifyDynamicContact(bodyA, bodyB, nx, ny, nz, pen);
             }
 
             Vector3 va = bodyA.rb->GetVelocity();

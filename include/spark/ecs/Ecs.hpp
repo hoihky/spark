@@ -75,6 +75,8 @@
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/PhysicsAttachedBody3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/PhysicsContactListener3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsLayer3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/TriggerVolume3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/DistanceJoint3DComponent.hpp"

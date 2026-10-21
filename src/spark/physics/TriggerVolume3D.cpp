@@ -6,6 +6,9 @@
 #include "spark/ecs/Signal.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
+#include "spark/physics/CollisionFilter3D.hpp"
+#include "spark/physics/colliders/PhysicsCollider3DFilter.hpp"
+#include "spark/physics/core/ColliderFilter.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
@@ -73,6 +76,19 @@ void BuildSphereBounds(const Vector3& center, const float radius, CollisionAabb3
         return true;
     }
     return std::strcmp(probeObject.GetTag().CStr(), required) == 0;
+}
+
+[[nodiscard]] bool PassesLayerFilter(const TriggerVolume3DComponent& volume, const GameObject& probeObject) noexcept {
+    ColliderFilter volumeFilter{};
+    volumeFilter.categoryBits = volume.GetCategoryBits();
+    volumeFilter.maskBits = volume.GetMaskBits();
+    volumeFilter.isTrigger = true;
+    const ColliderFilter probeFilter = PhysicsCollider3DFilter::Resolve(probeObject);
+    return CollisionFilter3D::ShouldCollide(
+            volumeFilter.categoryBits,
+            volumeFilter.maskBits,
+            probeFilter.categoryBits,
+            probeFilter.maskBits);
 }
 
 [[nodiscard]] bool SphereSphereOverlap(
@@ -274,6 +290,9 @@ void TriggerVolumeWorld3D::Simulate(GameWorld& world, const FrameTiming& timing)
             if (!PassesTagFilter(volume, *probeEntry.owner)) {
                 continue;
             }
+            if (!PassesLayerFilter(volume, *probeEntry.owner)) {
+                continue;
+            }
             if (!TriggerVolume3DOverlapsProbe(volumeEntry.world, probeEntry.sim)) {
                 continue;
             }
@@ -285,11 +304,13 @@ void TriggerVolumeWorld3D::Simulate(GameWorld& world, const FrameTiming& timing)
 
         for (std::size_t i = 0; i < current.GetSize(); ++i) {
             const std::uint64_t id = current[i];
-            if (ContainsId(previous, id)) {
+            GameObject* other = world.FindGameObjectById(id);
+            if (other == nullptr) {
                 continue;
             }
-            GameObject* other = world.FindGameObjectById(id);
-            if (other != nullptr) {
+            if (ContainsId(previous, id)) {
+                volume.NotifyStay(*other);
+            } else {
                 volume.NotifyEnter(*other);
             }
         }

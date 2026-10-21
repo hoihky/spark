@@ -1,6 +1,7 @@
 #include "spark/physics/colliders/PhysicsCollider3DFilter.hpp"
 
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
+#include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/CapsuleCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/MeshCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsLayer3DComponent.hpp"
@@ -10,6 +11,12 @@
 namespace Spark {
 
 ColliderFilter PhysicsCollider3DFilter::Resolve(const GameObject& object) noexcept {
+    if (const CharacterController3DComponent* controller = object.GetComponent<CharacterController3DComponent>()) {
+        ColliderFilter filter{};
+        filter.categoryBits = controller->GetCategoryBits();
+        filter.maskBits = controller->GetMaskBits();
+        return filter;
+    }
     if (const BoxCollider3DComponent* box = object.GetComponent<BoxCollider3DComponent>()) {
         ColliderFilter filter{};
         filter.categoryBits = box->GetCategoryBits();

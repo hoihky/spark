@@ -33,6 +33,7 @@ void PhysicsSubsystem::SimulateTriggerVolumes2D(GameWorld& world, const FrameTim
 }
 
 void PhysicsSubsystem::Simulate3D(GameWorld& world, const FrameTiming& timing) {
+    queries3D.SetCellWorldSize(world3D.GetBroadPhaseCellSize());
     world3D.Simulate(world, timing);
 }
 
@@ -45,9 +46,14 @@ void PhysicsSubsystem::SimulateTriggerVolumes3D(GameWorld& world, const FrameTim
 }
 
 void PhysicsSubsystem::SimulateAll3D(GameWorld& world, const FrameTiming& timing) {
+    queries3D.SetCellWorldSize(world3D.GetBroadPhaseCellSize());
     world3D.Simulate(world, timing);
     characterController3D.Simulate(world, timing);
     triggerVolumes3D.Simulate(world, timing);
+}
+
+bool PhysicsSubsystem::PlaybackPhysics3DFrame(GameWorld& world, const std::size_t framesBackFromLatest) noexcept {
+    return world3D.GetSimulationDomain().PlaybackFrameFromLatest(framesBackFromLatest, world);
 }
 
 }  // namespace Spark

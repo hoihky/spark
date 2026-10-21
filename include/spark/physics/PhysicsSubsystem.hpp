@@ -6,6 +6,7 @@
 #include "spark/physics/PhysicsQueries3D.hpp"
 #include "spark/physics/PhysicsWorld2D.hpp"
 #include "spark/physics/PhysicsWorld3D.hpp"
+#include "spark/physics/simulation/PhysicsSimulationRecorder3D.hpp"
 #include "spark/physics/TriggerVolume2D.hpp"
 #include "spark/physics/TriggerVolume3D.hpp"
 #include "spark/engine/FrameTiming.hpp"
@@ -53,6 +54,16 @@ public:
 
     [[nodiscard]] PhysicsQueryWorld3D& GetQueries3D() noexcept { return queries3D; }
     [[nodiscard]] const PhysicsQueryWorld3D& GetQueries3D() const noexcept { return queries3D; }
+
+    [[nodiscard]] PhysicsSimulationDomain3D& GetSimulationDomain3D() noexcept {
+        return world3D.GetSimulationDomain();
+    }
+    [[nodiscard]] const PhysicsSimulationDomain3D& GetSimulationDomain3D() const noexcept {
+        return world3D.GetSimulationDomain();
+    }
+
+    /** Restores a recorded physics frame without advancing the solver (replay scrub). */
+    bool PlaybackPhysics3DFrame(GameWorld& world, std::size_t framesBackFromLatest) noexcept;
 
     [[nodiscard]] CharacterControllerWorld2D& GetCharacterController2D() noexcept { return characterController2D; }
     [[nodiscard]] const CharacterControllerWorld2D& GetCharacterController2D() const noexcept {

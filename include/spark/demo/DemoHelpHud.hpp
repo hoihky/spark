@@ -35,6 +35,9 @@ public:
     void SetDetail(const char* detail) noexcept;
     void SetScreenOffset(float x, float y) noexcept;
 
+    /** Called when global H toggle shows the overlay (rebuilds on next update/patch). */
+    void NotifyGlobalShown() noexcept;
+
     /** Applies pending text changes (no-op when nothing changed since last draw). */
     void Update(const FrameTiming& timing, int framebufferWidth) noexcept;
     void Update(const FrameTiming& timing, IEngineContext& context) noexcept;
@@ -51,7 +54,8 @@ public:
     [[nodiscard]] static const char* Footer2D() noexcept;
 
 private:
-    void RebuildText(int framebufferWidth) noexcept;
+    void RebuildText(int framebufferWidth, GameWorld& world) noexcept;
+    void EnsureBuiltForDraw(GameWorld& world, int framebufferWidth) noexcept;
     void AppendWrappedSection(
             const Font* font,
             const Utf8String& section,
@@ -68,6 +72,7 @@ private:
     Utf8String renderedText{};
     Utf8String lastRendered{};
     const Font* layoutFont = nullptr;
+    GameWorld* layoutWorld = nullptr;
     float screenX = DemoHud::kScreenMargin;
     float screenY = DemoHud::kScreenMargin;
 };

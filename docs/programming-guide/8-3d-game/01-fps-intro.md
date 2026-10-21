@@ -6,6 +6,7 @@ SparkDemo includes several 3D first-person references — there is no separate `
 |------|------------|------------|
 | `CharacterCameraDemo` | 5 | 3rd/1st person, `CharacterController3DComponent`, spring arm |
 | `PhysicsBallThrow3DDemo` | 11 | 3D physics, throwing, cursor capture |
+| `PhysicsShowcase3DDemo` | 29 (**P**) | Full Tier‑2 tour: CC, handoff, queries, triggers, CCD, fixed step, replay |
 | `Maze3DDemo` | 9 | Nav mesh guard, perception, gems, fly camera |
 
 This walkthrough describes a **minimal first-person arena** you can build by combining patterns from those demos:

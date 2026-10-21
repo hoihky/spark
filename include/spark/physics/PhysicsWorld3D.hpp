@@ -1,6 +1,9 @@
 #pragma once
 
 #include "spark/engine/FrameTiming.hpp"
+#include "spark/physics/simulation/PhysicsContactBroadcaster3D.hpp"
+#include "spark/physics/simulation/PhysicsFixedStepClock.hpp"
+#include "spark/physics/simulation/PhysicsSimulationRecorder3D.hpp"
 
 namespace Spark {
 
@@ -27,6 +30,18 @@ struct PhysicsWorld3DSettings {
      * Uses a conservative inflated-AABB query along the motion segment to reduce tunneling.
      */
     int sweptStaticCcdBinaryIterations = 10;
+    /**
+     * Binary-search steps along translation vs other dynamic colliders (0 = disabled).
+     * Complements static swept CCD for fast small bodies (balls) vs moving capsules/players.
+     */
+    int sweptDynamicCcdBinaryIterations = 8;
+    /**
+     * When &gt; 0, simulation advances in fixed steps of this many seconds (accumulator on <c>PhysicsWorld3D</c>).
+     * When 0, each frame uses <c>FrameTiming::deltaTimeSeconds</c> directly.
+     */
+    float fixedSimulationTimestep = 0.0F;
+    /** Caps fixed steps per frame when <c>fixedSimulationTimestep</c> is enabled (spiral-of-death guard). */
+    int maxFixedSimulationStepsPerFrame = 8;
     /**
      * Kinetic Coulomb friction applies only for contacts with meaningful normal approach (m/s). Static contacts use
      * pre-restitution <c>v·n</c> (negative into the surface); sphere–sphere uses positive closing speed along <c>n</c>.
@@ -55,9 +70,24 @@ public:
     void SetBroadPhaseCellSize(float cellWorldSize) noexcept { broadPhaseCellSize = cellWorldSize; }
     [[nodiscard]] float GetBroadPhaseCellSize() const noexcept { return broadPhaseCellSize; }
 
+    void ResetFixedStepAccumulator() noexcept;
+
+    [[nodiscard]] PhysicsSimulationDomain3D& GetSimulationDomain() noexcept { return simulationDomain; }
+    [[nodiscard]] const PhysicsSimulationDomain3D& GetSimulationDomain() const noexcept { return simulationDomain; }
+
+    [[nodiscard]] PhysicsContactBroadcaster3D& GetContactBroadcaster() noexcept { return contactBroadcaster; }
+    [[nodiscard]] const PhysicsContactBroadcaster3D& GetContactBroadcaster() const noexcept {
+        return contactBroadcaster;
+    }
+
 private:
+    void SimulateStep(GameWorld& world, float stepDeltaSeconds);
+
     PhysicsWorld3DSettings settings{};
     float broadPhaseCellSize = DefaultBroadPhaseCellSize;
+    PhysicsFixedStepClock fixedStepClock{};
+    PhysicsSimulationDomain3D simulationDomain{};
+    PhysicsContactBroadcaster3D contactBroadcaster{};
 };
 
 /** @deprecated Prefer <c>PhysicsSubsystem::Simulate3D</c> or <c>PhysicsWorld3D::Simulate</c>. */

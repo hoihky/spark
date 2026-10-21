@@ -48,9 +48,13 @@ bool DemoHelpHud::ProcessGlobalToggle(IInput& input) noexcept {
     }
     ToggleGlobalVisible();
     if (g_activeHelpHud != nullptr && g_demoHelpHudVisible) {
-        g_activeHelpHud->textDirty = true;
+        g_activeHelpHud->NotifyGlobalShown();
     }
     return true;
+}
+
+void DemoHelpHud::NotifyGlobalShown() noexcept {
+    textDirty = true;
 }
 
 void DemoHelpHud::Mount(
@@ -67,6 +71,7 @@ void DemoHelpHud::Mount(
     renderedText.Clear();
     lastRendered.Clear();
     textDirty = true;
+    layoutWorld = &world;
     layoutFont = world.GetUiFont().Get();
     screenX = DemoHud::kScreenMargin;
     screenY = DemoHud::kScreenMargin;
@@ -78,6 +83,7 @@ void DemoHelpHud::Unmount(GameWorld& /*world*/) noexcept {
     }
     mounted = false;
     layoutFont = nullptr;
+    layoutWorld = nullptr;
     renderedText.Clear();
     lastRendered.Clear();
     textDirty = true;
@@ -129,10 +135,13 @@ void DemoHelpHud::AppendWrappedSection(
     }
 }
 
-void DemoHelpHud::RebuildText(const int framebufferWidth) noexcept {
+void DemoHelpHud::RebuildText(const int framebufferWidth, GameWorld& world) noexcept {
     if (!mounted) {
         return;
     }
+
+    layoutWorld = &world;
+    layoutFont = world.GetUiFont().Get();
 
     const float wrapWidth = std::clamp(
             static_cast<float>(framebufferWidth) * kWrapWidthFraction,
@@ -173,26 +182,44 @@ void DemoHelpHud::RebuildText(const int framebufferWidth) noexcept {
     textDirty = false;
 }
 
+void DemoHelpHud::EnsureBuiltForDraw(GameWorld& world, const int framebufferWidth) noexcept {
+    if (!mounted || !g_demoHelpHudVisible) {
+        return;
+    }
+    if (!textDirty && !renderedText.IsEmpty()) {
+        return;
+    }
+    RebuildText(framebufferWidth > 0 ? framebufferWidth : 1280, world);
+}
+
 void DemoHelpHud::Update(const FrameTiming& timing, const int framebufferWidth) noexcept {
     (void)timing;
-    if (!mounted || !g_demoHelpHudVisible) {
+    if (!mounted || !g_demoHelpHudVisible || layoutWorld == nullptr) {
         return;
     }
     if (!textDirty) {
         return;
     }
-    RebuildText(framebufferWidth > 0 ? framebufferWidth : 1280);
+    RebuildText(framebufferWidth > 0 ? framebufferWidth : 1280, *layoutWorld);
 }
 
 void DemoHelpHud::Update(const FrameTiming& timing, IEngineContext& context) noexcept {
     int fbW = 0;
     int fbH = 0;
     context.GetFramebufferSize(fbW, fbH);
-    Update(timing, fbW > 0 ? fbW : 1280);
+    if (!mounted || layoutWorld == nullptr) {
+        return;
+    }
+    EnsureBuiltForDraw(*layoutWorld, fbW > 0 ? fbW : 1280);
+    (void)timing;
 }
 
 void DemoHelpHud::PatchSceneRenderParams(SceneRenderParams& params, GameWorld& world) const noexcept {
-    if (!mounted || !g_demoHelpHudVisible || renderedText.IsEmpty()) {
+    if (!mounted || !g_demoHelpHudVisible) {
+        return;
+    }
+    const_cast<DemoHelpHud*>(this)->EnsureBuiltForDraw(world, 1280);
+    if (renderedText.IsEmpty()) {
         return;
     }
     if (!params.uiFont) {

@@ -61,6 +61,13 @@ enum class SignalId : std::uint32_t {
      * <c>ptr</c> = <c>GameplayItemCollectedPayload*</c>, valid only for synchronous dispatch.
      */
     ItemCollected = 16,
+    /** 3D trigger volume stay (each <c>SimulateTriggerVolumes3D</c> step): <c>ptr</c> = other object. */
+    Physics3DTriggerStay = 17,
+    /**
+     * 3D rigidbody contact during simulation.
+     * <c>ptr</c> = <c>PhysicsContactReport3D*</c> (valid only for synchronous dispatch).
+     */
+    Physics3DContact = 18,
     UserBase = 0x10000,
 };
 

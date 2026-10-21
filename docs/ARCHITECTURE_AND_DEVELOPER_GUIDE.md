@@ -755,9 +755,11 @@ physics.GetQueries2D().RebuildStatics(world);
 | `PhysicsSubsystem` | `PhysicsSubsystem.hpp` | Facade: 2D/3D worlds, queries, character controllers, triggers |
 | `PhysicsWorld2D::Simulate` | `PhysicsWorld2D.hpp` | Broad-phase bake → integrate → static contacts → dynamic pairs → joints |
 | `PhysicsQueryWorld2D` | `PhysicsQueries2D.hpp` | Overlap circle/AABB, raycast, arc vs static broad-phase; dynamic overlap queries |
+| `PhysicsSubsystem::SimulateAll3D` | `PhysicsSubsystem.hpp` | Rigidbodies → characters → triggers; syncs `PhysicsQueryWorld3D` cell size |
 | `PhysicsWorld3D::Simulate` | `PhysicsWorld3D.hpp` | Sphere/capsule dynamics vs static boxes/capsules (skips `CharacterController3DComponent`) |
 | `CharacterControllerWorld3D::Simulate` | `CharacterController3D.hpp` | Kinematic character motor: slide + step offset |
 | `TriggerVolumeWorld3D::Simulate` | `TriggerVolume3D.hpp` | Enter/exit overlap tests |
+| `PhysicsBodyHandoff3D` | `PhysicsBodyHandoff3D.hpp` | Carry/throw kinematic attach; see `PhysicsShowcase3DDemo` |
 
 Deprecated wrappers (`SimulatePhysics2D`, `SimulatePhysics3D`, …) delegate to the classes above.
 
@@ -834,11 +836,13 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDem
 6. `include/spark/demo/ThreeDDemo.hpp` — camera + glTF + lights + manual submit pattern
 7. `include/spark/demo/GltfSamples3DDemo.hpp` — glTF PBR + HDR sky dome reference
 8. `include/spark/demo/ModelViewer3DDemo.hpp` — bundled glTF sample browser
-9. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** usage
-9. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
-10. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
-11. `docs/programming-guide/1-overview-architecture/09-gameplay-kit.md` — teams, damage, interaction, inventory conventions
-12. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
+9. `include/spark/demo/PhysicsBallThrow3DDemo.hpp` — minimal **3D physics** (throw spheres)
+10. `include/spark/demo/PhysicsShowcase3DDemo.hpp` — **3D physics contract** demo (launcher **#29**, **P**): `SimulateAll3D`, queries, handoff, triggers, CCD, replay
+11. `spark/ui/runtime/UiScene.hpp` + `spark/ui/Ui.hpp` — retained UI input/paint and factory controls
+12. `docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md` — retained GUI vs Dear ImGui
+13. `docs/programming-guide/1-overview-architecture/09-gameplay-kit.md` — teams, damage, interaction, inventory conventions
+14. [`docs/SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) — C++ public API gaps for scene management and 3D rendering
+15. [`docs/programming-guide/5-physics/07-physics-3d-contract.md`](programming-guide/5-physics/07-physics-3d-contract.md) — 3D simulation/query contract and showcase demo map
 ---
 
 ## 15. Extending the Engine Safely

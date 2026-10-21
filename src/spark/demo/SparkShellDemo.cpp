@@ -27,6 +27,7 @@
 #include "spark/demo/ImGuiShowcaseDemo.hpp"
 #include "spark/demo/Maze3DDemo.hpp"
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
+#include "spark/demo/PhysicsShowcase3DDemo.hpp"
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 #include "spark/demo/SceneEditor3DDemo.hpp"
 #if SPARK_HAS_EDITOR
@@ -155,6 +156,9 @@ public:
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_X) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_X, hotkeyId)) {
                 EnterDemoByStorageId(hotkeyId);
+            } else if (in.IsKeyPressedThisFrame(GLFW_KEY_P) &&
+                       DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_P, hotkeyId)) {
+                EnterDemoByStorageId(hotkeyId);
 #if SPARK_HAS_EDITOR
             } else if (in.IsKeyPressedThisFrame(GLFW_KEY_E) &&
                        DemoCatalog::TryResolveLetterHotkey(GLFW_KEY_E, hotkeyId)) {
@@ -230,6 +234,11 @@ public:
             }
         } else if (mode == DemoMode::PhysicsBall3D) {
             physicsBall3D.Simulate(timing, context, GetWorld());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
+        } else if (mode == DemoMode::PhysicsShowcase3D) {
+            physicsShowcase3D.Simulate(timing, context, GetWorld(), GetScene());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
@@ -341,6 +350,8 @@ public:
             maze3DDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::PhysicsBall3D) {
             physicsBall3D.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::PhysicsShowcase3D) {
+            physicsShowcase3D.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::SteeringShowcase3D) {
             steeringShowcase3D.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::SceneEditor3D) {
@@ -579,6 +590,13 @@ public:
         }
         mode = DemoMode::FoliageWind;
         context.GetInput().SetCursorCaptured(true);
+    }
+
+    void EnterPhysicsShowcase3DDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        physicsShowcase3D.Load(GetWorld(), context);
+        physicsShowcase3DLoaded = true;
+        mode = DemoMode::PhysicsShowcase3D;
     }
 
     void EnterGrassFieldTerrainDemo(IEngineContext& context) {
@@ -835,6 +853,10 @@ private:
             physicsBall3D.Unload(GetWorld());
             physicsBall3DLoaded = false;
         }
+        if (physicsShowcase3DLoaded) {
+            physicsShowcase3D.Unload(GetWorld());
+            physicsShowcase3DLoaded = false;
+        }
         if (steeringShowcase3DLoaded) {
             steeringShowcase3D.Unload(GetWorld());
             steeringShowcase3DLoaded = false;
@@ -936,6 +958,7 @@ private:
                 &ShellGame::EnterGameFlow2DProductPathDemo,
                 &ShellGame::EnterFoliageWindDemo,
                 &ShellGame::EnterGrassFieldTerrainDemo,
+                &ShellGame::EnterPhysicsShowcase3DDemo,
 #if SPARK_HAS_EDITOR
                 &ShellGame::EnterSparkEditorDemo,
 #endif
@@ -1122,6 +1145,8 @@ private:
     bool maze3DLoaded = false;
     PhysicsBallThrow3DDemo physicsBall3D{};
     bool physicsBall3DLoaded = false;
+    PhysicsShowcase3DDemo physicsShowcase3D{};
+    bool physicsShowcase3DLoaded = false;
     SteeringShowcase3DDemo steeringShowcase3D{};
     bool steeringShowcase3DLoaded = false;
     SceneEditor3DDemo sceneEditor3D{};

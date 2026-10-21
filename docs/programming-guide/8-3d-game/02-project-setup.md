@@ -52,6 +52,6 @@ void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
 }
 ```
 
-See `PhysicsBallThrow3DDemo` for rigidbody spheres and `CharacterCameraDemo` for `CharacterController3DComponent`.
+See `PhysicsBallThrow3DDemo` for rigidbody spheres, `CharacterCameraDemo` for `CharacterController3DComponent`, and `PhysicsShowcase3DDemo` (**#29** / **P**) for the recommended `SimulateAll3D` integration (layers, queries, carry, triggers).
 
 Next: [Arena and Targets](03-arena.md).

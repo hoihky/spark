@@ -46,6 +46,12 @@ physics.SetBroadPhaseCellSize2D(8.0F);  // sets world + query cell size
 
 Default cell size is **4** world units (`PhysicsWorld2D::DefaultBroadPhaseCellSize`).
 
+### Broad-phase cell size (3D)
+
+`PhysicsWorld3D::DefaultBroadPhaseCellSize` is **2** world units. `Simulate3D` and `SimulateAll3D` copy that value into `GetQueries3D()` each step. After load or level edits, call `RebuildStatics` / `RebuildDynamics` (or `RebuildAll`) before relying on raycasts.
+
+End-to-end 3D gameplay patterns (queries, triggers, carry, CCD, fixed step): [Physics 3D contract](07-physics-3d-contract.md) and `PhysicsShowcase3DDemo`.
+
 ## Legacy Free Functions
 
 `SimulatePhysics2D` / `SimulatePhysics3D` still compile but are **deprecated** — they recreate settings every call. Prefer `PhysicsSubsystem` or holding a `PhysicsWorld2D` / `PhysicsWorld3D` member.

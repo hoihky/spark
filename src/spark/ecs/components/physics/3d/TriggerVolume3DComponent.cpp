@@ -42,6 +42,16 @@ void TriggerVolume3DComponent::NotifyEnter(GameObject& other) {
     }
 }
 
+void TriggerVolume3DComponent::NotifyStay(GameObject& other) {
+    if (onStay) {
+        onStay(other);
+    }
+    GameObject* owner = GetOwner();
+    if (owner != nullptr) {
+        EmitTriggerSignal(*owner, SignalId::Physics3DTriggerStay, other);
+    }
+}
+
 void TriggerVolume3DComponent::NotifyExit(GameObject& other) {
     if (onExit) {
         onExit(other);

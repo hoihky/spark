@@ -91,9 +91,52 @@ bool grounded = RaycastWorld2D(world, footX, footY, 0.0F, -1.0F, 0.08F, filter, 
 
 Or use `Rigidbody2DComponent::IsGrounded()` after simulation.
 
+## 3D physics queries (`PhysicsQueryWorld3D`)
+
+Owned by `PhysicsSubsystem::GetQueries3D()`. Rebuild statics and/or dynamics, then query without re-walking ECS colliders each call.
+
+```cpp
+physics.GetQueries3D().RebuildAll(world);
+
+Array<PhysicsQueryHit3D> staticHits;
+Array<PhysicsQueryHitDynamic3D> dynamicHits;
+physics.GetQueries3D().OverlapSphere(
+        world, center, radius, filter, ignoreObject, staticHits, dynamicHits);
+
+PhysicsRaycastHit3D hit{};
+physics.GetQueries3D().Raycast(world, origin, direction, maxDistance, filter, ignoreObject, hit);
+```
+
+Dynamic catalog includes simulated rigidbodies and `CharacterController3DComponent` sphere proxies. Carried bodies (`PhysicsAttachedBody3DComponent::IsAttached`) are skipped until released. See [Physics 3D contract](07-physics-3d-contract.md).
+
+`PhysicsSubsystem::Simulate3D` and `SimulateAll3D` sync query cell size from `PhysicsWorld3D` each frame. If you only query (no simulate), call `GetQueries3D().SetCellWorldSize(GetWorld3D().GetBroadPhaseCellSize())` after changing cell size.
+
+## Unified scene + physics raycast
+
+`ScenePhysicsRaycast3D` compares closest mesh picks (`Scene::RaycastPick`) with `PhysicsQueryWorld3D::Raycast` and returns the nearer hit:
+
+```cpp
+#include "spark/scene/query/ScenePhysicsRaycast3D.hpp"
+
+ScenePhysicsRaycast3D unified{scene};
+unified.SetPhysicsQueries(&physics.GetQueries3D());
+
+SceneRay ray{camera.position, camera.Forward().Normalized(), 80.0F};
+SceneRaycastHit hit{};
+SceneRaycastOptions sceneOpts{};
+sceneOpts.pickRigidMeshes = true;
+
+PhysicsQueryFilter3D filter{};
+if (unified.RaycastClosest(world, ray, hit, sceneOpts, filter, player)) {
+    GameObject* picked = hit.object;
+}
+```
+
+See `PhysicsShowcase3DDemo::TryRaycastPick` (SparkDemo **#29**, **P**).
+
 ## 3D Raycasts (Scene / Mesh)
 
-3D physics queries for triggers and overlaps are handled via `TriggerVolume3DComponent` signals and `PhysicsSubsystem::SimulateAll3D`. For **picking** and **hitscan weapons**, use scene raycast helpers:
+For **mesh-accurate picking** and some hitscan weapons, use scene raycast helpers (below). Use `PhysicsQueryWorld3D` for physics colliders (environment, balls, hurtboxes on dynamics).
 
 ```cpp
 #include "spark/scene/mesh/MeshRaycast.hpp"

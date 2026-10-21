@@ -37,6 +37,8 @@ physics.GetQueries2D().RebuildStatics(world);
 
 `PhysicsSubsystem::Simulate2D` syncs query cell size from `PhysicsWorld2D` each step. Use `SetBroadPhaseCellSize2D` when tuning the spatial hash for both simulation and queries.
 
+**3D:** `Simulate3D` and `SimulateAll3D` sync `GetQueries3D()` from `GetWorld3D()`. Call `PhysicsWorld3D::ResetFixedStepAccumulator()` after teleports or demo reloads to avoid a multi-step catch-up. Dynamic props need sphere/capsule colliders — see [Physics 3D contract](07-physics-3d-contract.md).
+
 ## Debug Visualization
 
 Use `TextOverlayComponent` or GUI labels to show velocity:

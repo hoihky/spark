@@ -59,7 +59,8 @@ Copy the patterns in `src/spark/demo/` as a starting point — especially `Platf
 | 12 | Match-3 | `Camera2D` + grid pick |
 | **19** | **Tilemap showcase** | Layers, autotile, animation, gameplay grid, pathfinding; **L** loads Kenney `sampleMap.tmx`, **R** resets procedural map |
 | 20 | Dear ImGui | Docking tool UI (`SPARK_ENABLE_IMGUI`) |
+| **29** | **Physics 3D showcase** | `PhysicsShowcase3DDemo` — CC, carry/throw, CCD shots, unified raycast, triggers, fixed step, replay (**P**) |
 
-Full list: `SparkShellDemo` menu in `src/spark/demo/SparkShellDemo.cpp`.
+Full list: `DemoCatalog` in `include/spark/demo/DemoCatalog.hpp` and the `SparkShellDemo` menu.
 
 Next: [The Engine Loop](04-engine-loop.md).

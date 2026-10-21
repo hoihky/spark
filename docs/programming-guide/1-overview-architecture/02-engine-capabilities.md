@@ -87,7 +87,7 @@ Full walkthrough: [Gameplay kit](09-gameplay-kit.md).
 
 PhysicsSubsystem physics;
 physics.Simulate2D(world, timing);
-physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers
+physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers (+ 3D query cell sync)
 Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flush
 Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);

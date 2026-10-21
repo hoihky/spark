@@ -577,6 +577,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/RenderLayers2DDemo.cpp
         src/spark/demo/TilemapShowcase2DDemo.cpp
         src/spark/demo/PhysicsBallThrow3DDemo.cpp
+        src/spark/demo/PhysicsShowcase3DDemo.cpp
         src/spark/demo/Maze3DDemo.cpp
         src/spark/demo/SteeringShowcase3DDemo.cpp
         src/spark/demo/SceneEditor3DDemo.cpp
@@ -781,6 +782,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/mesh/Mesh.cpp
         src/spark/scene/mesh/MeshRaycast.cpp
         src/spark/scene/query/SceneRaycast.cpp
+        src/spark/scene/query/ScenePhysicsRaycast3D.cpp
         src/spark/scene/mesh/TerrainMeshGenerator.cpp
         src/spark/scene/mesh/mesh_gltf.cpp
         src/spark/scene/assets/gltf/GltfContentClassifier.cpp
@@ -955,6 +957,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/FootIkComponent.cpp
         src/spark/ecs/components/animation/AimIkComponent.cpp
         src/spark/physics/PhysicsQueries3D.cpp
+        src/spark/physics/PhysicsQueryDynamicCatalog3D.cpp
         src/spark/scene/submit/SkinnedSceneDrawMaterialApplicator.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitWater.cpp
@@ -1045,6 +1048,12 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/simulation/RigidbodyIntegrator2D.cpp
         src/spark/physics/simulation/RigidbodyIntegrator3D.cpp
         src/spark/physics/simulation/SweptCcd3D.cpp
+        src/spark/physics/simulation/PhysicsFixedStepClock.cpp
+        src/spark/physics/simulation/PhysicsContactBroadcaster3D.cpp
+        src/spark/physics/simulation/PhysicsSimulationRecorder3D.cpp
+        src/spark/physics/PhysicsBodyHandoff3D.cpp
+        src/spark/ecs/components/physics/3d/PhysicsContactListener3DComponent.cpp
+        src/spark/ecs/components/physics/3d/PhysicsAttachedBody3DComponent.cpp
         src/spark/physics/simulation/TriggerDispatcher2D.cpp
         src/spark/physics/PhysicsQueries2D.cpp
         src/spark/physics/Collision3D.cpp
