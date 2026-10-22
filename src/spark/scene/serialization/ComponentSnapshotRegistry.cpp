@@ -1054,8 +1054,6 @@ void RegisterBuiltInHandlers(ComponentSnapshotRegistry& registry) {
     RegisterExtendedSnapshotHandlers(registry);
     RegisterMoreSnapshotHandlers(registry);
     RegisterRenderingSnapshotHandlers(registry);
-    RegisterGameplaySnapshotHandlers(registry);
-    RegisterGameFlowSnapshotHandlers(registry);
     RegisterTilemapSnapshotHandlers(registry);
     RegisterPhysics2DExtendedSnapshotHandlers(registry);
     RegisterUiSnapshotHandlers(registry);

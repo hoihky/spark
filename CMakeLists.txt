@@ -588,6 +588,7 @@ set(SPARK_ENGINE_DEMO_SOURCES
 )
 
 set(SPARK_ENGINE_EDITOR_SOURCES
+        src/spark/demo/DemoGuiFrame.cpp
         src/spark/editor/EditorSelection.cpp
         src/spark/editor/EditorProject.cpp
         src/spark/editor/EditorUiFont.cpp
@@ -688,8 +689,6 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/AnimationEventVfxComponent.cpp
         src/spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.cpp
         src/spark/ecs/components/animation/SpriteAnimationEventVfxComponent.cpp
-        src/spark/ecs/components/animation/AnimationHitbox2DComponent.cpp
-        src/spark/ecs/components/animation/AnimationMeleeHitComponent.cpp
         src/spark/ecs/components/animation/RootMotionComponent.cpp
         src/spark/ecs/components/animation/AttachmentSocketComponent.cpp
         src/spark/ecs/components/animation/SkeletonDebugDrawComponent.cpp
@@ -698,25 +697,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/ai/NavMeshAgentComponent.cpp
         src/spark/ecs/components/ai/GridNavAgent2DComponent.cpp
         src/spark/ecs/components/ai/GridPathFollower2DComponent.cpp
-        src/spark/ecs/components/gameplay/HealthComponent.cpp
-        src/spark/ecs/components/gameplay/DamageableComponent.cpp
-        src/spark/ecs/components/gameplay/InteractableComponent.cpp
-        src/spark/ecs/components/gameplay/PickupComponent.cpp
-        src/spark/ecs/components/gameplay/GameStateComponent.cpp
-        src/spark/ecs/components/gameplay/GameFlowTriggerComponent.cpp
-        src/spark/ecs/components/gameplay/CombatHurtFlash3DComponent.cpp
-        src/spark/ecs/components/gameplay/GameplayTeamComponent.cpp
-        src/spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.cpp
-        src/spark/ecs/components/gameplay/DamageZone2DComponent.cpp
         src/spark/ecs/components/input/InputActionMapComponent.cpp
         src/spark/ecs/components/input/PlayerInputComponent.cpp
         src/spark/input/InputAction.cpp
         src/spark/input/KeyboardInputBindings.cpp
         src/spark/input/GamepadInputBindings.cpp
-        src/spark/ecs/components/gameplay/FogOfWar2DComponent.cpp
-        src/spark/gameplay/fog/FogOfWarExplorationMap.cpp
-        src/spark/gameplay/fog/FogOfWarMaskTextureBuilder.cpp
-        src/spark/gameplay/fog/FogOfWarScreenPresenter.cpp
         src/spark/scene/tilemap/TilemapObjectLayerCatalog.cpp
         src/spark/ecs/components/rendering/ParallaxLayerComponent.cpp
         src/spark/ecs/components/physics/2d/PolygonCollider2DComponent.cpp
@@ -905,7 +890,6 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/sprites2d/Scene2DMinimap.cpp
         src/spark/ecs/components/rendering/Scene2DCompositeViewComponent.cpp
         src/spark/scene/spawn/GameObjectPool.cpp
-        src/spark/gameplay/GameplayDataTable.cpp
         src/spark/render/sprites2d/VulkanTilemapPass.cpp
         src/spark/render/foliage/VulkanFoliageInstancedPass.cpp
         src/spark/render/sprites2d/Vulkan2DCompositePass.cpp
@@ -969,11 +953,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/serialization/ComponentSnapshotHandlersExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp
-        src/spark/scene/serialization/ComponentSnapshotHandlersGameplay.cpp
-        src/spark/scene/serialization/ComponentSnapshotHandlersGameFlow.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersTilemap.cpp
-        src/spark/gameflow/GameFlowCoordinator.cpp
-        src/spark/gameflow/GameFlowPersistentData.cpp
         src/spark/save/GameSave.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersUi.cpp
@@ -1072,19 +1052,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/colliders/PhysicsCollider3DFilter.cpp
         src/spark/physics/TriggerVolume2D.cpp
         src/spark/physics/TriggerVolume3D.cpp
-        src/spark/gameplay/Interaction2D.cpp
-        src/spark/gameplay/Combat2D.cpp
-        src/spark/gameplay/Combat3D.cpp
-        src/spark/gameplay/GameplayDamageEvent.cpp
-        src/spark/gameplay/GameplayDamageApplier.cpp
-        src/spark/gameplay/GameplayDamageDeal.cpp
-        src/spark/gameplay/GameplayInteractionQuery.cpp
-        src/spark/gameplay/GameplayInteractionProcessor.cpp
-        src/spark/gameplay/GameplayPickupDelivery.cpp
-        src/spark/gameplay/GameplayTeamAffiliation.cpp
-        src/spark/gameplay/GameplayTeamPolicy.cpp
         src/spark/ecs/components/physics/3d/Hurtbox3DComponent.cpp
-        src/spark/gameplay/CameraBounds2DResolve.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp
         src/spark/ai/steering/SteeringBehaviors2D.cpp
@@ -1121,14 +1089,7 @@ else ()
     list(APPEND SPARK_ENGINE_SOURCES src/spark/audio/SoundOutputNull.cpp)
 endif ()
 
-option(SPARK_BUILD_TESTS "Build Spark unit tests (GoogleTest)" OFF)
-option(SPARK_BUILD_ENGINE_SHARED "Build SparkEngine as a shared library (OFF = static)" OFF)
-option(SPARK_BUILD_ENGINE_DEMOS "Compile shell/demo sources into SparkEngine (OFF for slim editor/game DLL)" ON)
-option(SPARK_BUILD_EDITOR "Compile spark/editor authoring module into SparkEngine" OFF)
-option(SPARK_BUILD_SPARK_EDITOR "Build SparkEditor standalone executable (requires SPARK_BUILD_EDITOR)" OFF)
-option(SPARK_BUILD_DEMO "Build SparkDemo sample executable (shell + demos)" ON)
-option(SPARK_BUILD_INTEROP "Build SparkInterop shared library (C ABI for C# bindings)" OFF)
-option(SPARK_BUILD_SCRIPT_HOST "Build SparkScriptHost (CoreCLR + HelloCsGame)" OFF)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkOptions.cmake)
 
 if (SPARK_BUILD_ENGINE_DEMOS)
     list(APPEND SPARK_ENGINE_SOURCES ${SPARK_ENGINE_DEMO_SOURCES})
@@ -1206,55 +1167,4 @@ if (WIN32)
     target_link_libraries(SparkEngine PUBLIC ole32 uuid)
 endif ()
 
-if (SPARK_BUILD_DEMO)
-    add_executable(SparkDemo src/main.cpp)
-    target_link_libraries(SparkDemo PRIVATE SparkEngine)
-endif ()
-
-if (SPARK_BUILD_SPARK_EDITOR)
-    if (NOT SPARK_BUILD_EDITOR)
-        message(FATAL_ERROR "SPARK_BUILD_SPARK_EDITOR requires SPARK_BUILD_EDITOR=ON")
-    endif ()
-    add_executable(SparkEditor spark_editor/main.cpp)
-    target_link_libraries(SparkEditor PRIVATE SparkEngine)
-endif ()
-
-if (SPARK_BUILD_SCRIPT_HOST AND NOT SPARK_BUILD_INTEROP)
-    message(FATAL_ERROR "SPARK_BUILD_SCRIPT_HOST requires SPARK_BUILD_INTEROP=ON")
-endif ()
-
-if (SPARK_BUILD_INTEROP)
-    add_subdirectory(scripting)
-endif ()
-
-if (SPARK_BUILD_TESTS)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkTests.cmake)
-    spark_add_physics_tests()
-endif ()
-
-# CLion / strict warnings
-set(SPARK_WARNING_TARGETS SparkEngine)
-if (SPARK_BUILD_DEMO)
-    list(APPEND SPARK_WARNING_TARGETS SparkDemo)
-endif ()
-if (SPARK_BUILD_SPARK_EDITOR)
-    list(APPEND SPARK_WARNING_TARGETS SparkEditor)
-endif ()
-if (SPARK_BUILD_INTEROP)
-    list(APPEND SPARK_WARNING_TARGETS SparkInterop)
-endif ()
-if (SPARK_BUILD_SCRIPT_HOST)
-    list(APPEND SPARK_WARNING_TARGETS SparkScriptHost)
-endif ()
-if (MSVC)
-    foreach (_t IN LISTS SPARK_WARNING_TARGETS)
-        target_compile_options(${_t} PRIVATE /W4 /permissive-)
-    endforeach ()
-else ()
-    foreach (_t IN LISTS SPARK_WARNING_TARGETS)
-        target_compile_options(${_t} PRIVATE
-                -Wall -Wextra -Wpedantic
-                -Wno-missing-field-initializers
-        )
-    endforeach ()
-endif ()
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkExecutables.cmake)

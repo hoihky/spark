@@ -4,7 +4,7 @@
 
 | Profile | Build directory | Use for |
 |---------|-----------------|---------|
-| **debug** | `cmake-build-debug/` | SparkDemo, SparkEditor, SparkInterop, SparkScriptHost (preset enables interop + script host) |
+| **debug** | `cmake-build-debug/` | SparkDemo, SparkEditor (`SPARK_BUILD_GAMEPLAY=ON`) |
 | **editor-debug** | `cmake-build-editor/` | SparkEditor only — shared `libSparkEngine.dylib`, no demos |
 
 ## Enable `editor-debug` in CLion
@@ -32,8 +32,6 @@ If not using presets, create a profile with build directory `cmake-build-editor`
 -DSPARK_BUILD_DEMO=OFF
 ```
 
-## SparkScriptHost (C# sample)
+## C# scripting
 
-Preset **debug** sets `SPARK_BUILD_INTEROP=ON` and `SPARK_BUILD_SCRIPT_HOST=ON`. Build target **SparkScriptHost**, then run **SparkScriptHost (HelloCsGame)** — see [`.run/README.md`](../.run/README.md) and [`CSHARP_SCRIPTING.md`](CSHARP_SCRIPTING.md).
-
-See also [`.run/README.md`](../.run/README.md).
+Open the sibling **spark-sharp** project in CLion (or a second window). See [`SPARK_SHARP.md`](SPARK_SHARP.md) and [`CSHARP_SCRIPTING.md`](CSHARP_SCRIPTING.md).

@@ -364,7 +364,7 @@ Call **`SimulateGameAi(world, timing, context)`** from your game tick when you w
 
 ### 5.13 C# scripting
 
-**SparkInterop** exposes a C ABI (`spark_*`); **ClangSharp** + mirror codegen produce **`Spark.Bindings`**. Optional **CoreCLR** hosting (`SparkScriptHost`, **nethost** + **hostfxr**) loads managed games (`HelloCsGame`, `Spark.Scripting`). See **`docs/CSHARP_SCRIPTING.md`** and **`docs/COMPONENT_SCRIPT_CODEGEN.md`**. The **`debug`** CMake preset enables `SPARK_BUILD_INTEROP` and `SPARK_BUILD_SCRIPT_HOST`; disable either for slimmer builds. Gameplay without scripting remains **C++** via `IGame` / `GameComponent`.
+**SparkInterop** and C# bindings live in the sibling **spark-sharp** repo (`SPARK_ENGINE_ROOT` → this tree). **ClangSharp** + mirror codegen produce **`Spark.Bindings`**; optional **CoreCLR** hosting loads managed games. See **`docs/SPARK_SHARP.md`**, **`docs/CSHARP_SCRIPTING.md`**, **`docs/COMPONENT_SCRIPT_CODEGEN.md`**. Core engine CMake has no interop targets; optional **`SparkGameplay`** covers combat/pickups/game-flow. Gameplay without scripting remains **C++** via `IGame` / `GameComponent`.
 
 ---
 

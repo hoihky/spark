@@ -1,4 +1,5 @@
 #include "spark/demo/Platformer2DDemo.hpp"
+#include "spark/gameplay/SparkGameplayModule.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/save/GameSave.hpp"
@@ -1005,6 +1006,7 @@ void Platformer2DDemo::Simulate(
     }
 
     physics.Simulate2D(world, timing);
+    SparkGameplayAfterPhysics2D(world);
 
     if (playerTr != nullptr) {
         const bool attackPressed =

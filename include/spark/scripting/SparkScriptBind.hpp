@@ -14,6 +14,6 @@
  * void SetEnabled(bool value) noexcept;
  * @endcode
  *
- * Regenerate: ./tools/generate-csharp-bindings.sh (runs spark_script_bindgen.py).
+ * Regenerate C# / interop from the spark-sharp repository (./tools/generate-csharp-bindings.sh).
  */
 #define SPARK_SCRIPT_BIND(suffix) /* spark_script_bind:suffix */

@@ -4,7 +4,7 @@
 
 | Profile | Build dir | Targets |
 |---------|-----------|---------|
-| **debug** | `cmake-build-debug/` | SparkDemo, SparkEditor, SparkScriptHost (with `SPARK_BUILD_SCRIPT_HOST`) |
+| **debug** | `cmake-build-debug/` | SparkDemo, SparkEditor (`SPARK_BUILD_GAMEPLAY=ON`) |
 | **editor-debug** | `cmake-build-editor/` | SparkEditor + shared SparkEngine (slim, no demos) |
 
 Enable presets: **Settings → CMake → Load CMake presets**. Repo also ships `.idea/cmake.xml` with both profiles.
@@ -31,18 +31,6 @@ For **editor-debug** (shared `libSparkEngine.dylib`), use **SparkEditor (editor-
 
 Executable: `cmake-build-debug/spark_editor/SparkEditor` or `cmake-build-editor/spark_editor/SparkEditor`.
 
-## SparkScriptHost (HelloCsGame)
+## C# / SparkScriptHost
 
-Requires **`-DSPARK_BUILD_INTEROP=ON`** and **`-DSPARK_BUILD_SCRIPT_HOST=ON`** (both ON in the `debug` preset).
-
-1. Reload CMake, build target **SparkScriptHost** (pulls **SparkScriptingBuild** → HelloCsGame Release).
-2. Run **SparkScriptHost (HelloCsGame)** from the run configuration dropdown.
-3. Working directory: repo root (for `assets/`). `DYLD_LIBRARY_PATH` must include `cmake-build-debug/scripting` (set in `.run/SparkScriptHost.run.xml`).
-
-Manual:
-
-```bash
-cmake -B cmake-build-debug -DSPARK_BUILD_INTEROP=ON -DSPARK_BUILD_SCRIPT_HOST=ON
-cmake --build cmake-build-debug --target SparkScriptHost
-DYLD_LIBRARY_PATH=cmake-build-debug/scripting ./cmake-build-debug/scripting/SparkScriptHost
-```
+Build and run **HelloCsGame** from the sibling **[spark-sharp](../docs/SPARK_SHARP.md)** repository (`SparkScriptHost`, `SparkInterop`). This engine tree no longer contains `scripting/` or interop CMake options.

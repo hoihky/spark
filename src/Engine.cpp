@@ -6,7 +6,9 @@
 #include "spark/engine/IFramePresenter.hpp"
 #include "spark/engine/IRenderFrame.hpp"
 #include "spark/engine/ISceneProvider.hpp"
+#if SPARK_HAS_ENGINE_DEMOS
 #include "spark/demo/DemoFoundation.hpp"
+#endif
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ui/runtime/UiSystem.hpp"
 #include "spark/media/VideoRecordingSettings.hpp"
@@ -157,9 +159,11 @@ struct Engine::Impl {
                 engineContext->GetFramePresenter().RequestScreenshotSave(shotPath);
             }
 
+#if SPARK_HAS_ENGINE_DEMOS
             if (input->IsKeyPressedThisFrame(GLFW_KEY_F3) || input->IsKeyPressedThisFrame(GLFW_KEY_F4)) {
                 ToggleDemoFpsOverlayVisible();
             }
+#endif
 
             if (input->IsKeyPressedThisFrame(GLFW_KEY_F9)) {
                 IFramePresenter& presenter = engineContext->GetFramePresenter();

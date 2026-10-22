@@ -76,7 +76,7 @@ This runs, in order:
 6. `generate_native_pinvoke_companion.py`
 7. `generate-csharp-component-registry.py`
 
-CMake also runs `spark_script_bindgen.py` when building **`SparkInterop`** (`SparkInteropBindingsCodegen` target).
+Bindgen runs from the **spark-sharp** repo when building **`SparkInterop`** (`SparkInteropBindingsCodegen` target).
 
 ## Closing gaps (C++ → interop)
 

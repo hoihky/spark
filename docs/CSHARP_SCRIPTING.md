@@ -1,10 +1,10 @@
 # C# interop (ClangSharp + SparkInterop)
 
-Spark exposes a stable **C ABI** (`SparkInterop`) for managed games, editors, and tools. C# P/Invoke and component mirrors are **generated** from `include/spark/scripting/SparkInterop.h` (and generated component bindings) via **ClangSharp** and **ComponentMirrorCodegen**.
+> **Repository split:** Build interop, bindings, and `SparkScriptHost` from the **[spark-sharp](SPARK_SHARP.md)** sibling repo. This document describes the architecture; paths below refer to **spark-sharp** unless noted.
 
-> **CMake:** `-DSPARK_BUILD_INTEROP=ON` builds `libSparkInterop` + optional `SparkBindingsBuild`. Add `-DSPARK_BUILD_SCRIPT_HOST=ON` for **`SparkScriptHost`** (CoreCLR + `HelloCsGame`). Both interop flags are **ON** in the `debug` preset ([`CMakePresets.json`](../CMakePresets.json)).
+Spark exposes a stable **C ABI** (`SparkInterop`) for managed games, editors, and tools. C# P/Invoke and component mirrors are **generated** from `native/include/spark/scripting/SparkInterop.h` (and generated component bindings) via **ClangSharp** and **ComponentMirrorCodegen**. Component headers are read from the **spark** engine tree (`SPARK_ENGINE_ROOT`).
 
-## Repository layout (`scripting/`)
+## Repository layout (spark-sharp)
 
 | Path | Role |
 |------|------|
@@ -80,42 +80,36 @@ Outputs (under `scripting/bindings/generated/Spark.Bindings/`):
 
 Hand-maintained companions (not overwritten by ClangSharp): **`CppMirrors.g.cs`**, **`InteropPtr.cs`**, **`InteropUtf8.cs`**, occasional `*.Extensions.g.cs` (e.g. `ProceduralSoundPreset`, typed `QueuePreset`).
 
-**CI:** [`.github/workflows/csharp-bindings.yml`](../.github/workflows/csharp-bindings.yml) regenerates bindings, builds `Spark.Bindings` / `Spark.Scripting` / `HelloCsGame`, and builds `SparkInterop` + `SparkScriptHost` on macOS.
+**CI:** Prefer workflows in **spark-sharp** that set `SPARK_ENGINE_ROOT` to this engine tree.
 
-## CMake targets
+## CMake targets (spark-sharp)
 
-| Option | Default (repo) | Targets |
-|--------|----------------|---------|
-| `SPARK_BUILD_INTEROP` | OFF globally; **ON** in `debug` preset | `SparkInterop`, `SparkBindingsBuild` |
-| `SPARK_BUILD_SCRIPT_HOST` | OFF globally; **ON** in `debug` preset | `SparkScriptHost`, `SparkScriptingBuild` (HelloCsGame Release) |
+Configure and build from the **spark-sharp** repo root. See **[SPARK_SHARP.md](SPARK_SHARP.md)**.
 
-`SPARK_BUILD_SCRIPT_HOST` requires `SPARK_BUILD_INTEROP=ON`.
+| Option | Role |
+|--------|------|
+| `SPARK_ENGINE_ROOT` | Path to this C++ engine checkout |
+| `SPARK_SHARP_BUILD_SCRIPT_HOST` | Build `SparkScriptHost` + CoreCLR bridge |
+
+Targets: `SparkInterop`, `SparkBindingsBuild`, optional `SparkScriptHost`.
 
 ## Build & run
 
-Prerequisites: **.NET 8 SDK**, **CMake ≥ 3.28**, Vulkan/GLFW (same as engine).
+Prerequisites: **.NET 8 SDK**, **CMake ≥ 3.28**, Vulkan/GLFW (same as engine), sibling **spark** checkout.
 
-### CLion
-
-Run configuration: [`.run/SparkScriptHost.run.xml`](../.run/SparkScriptHost.run.xml). See [`.run/README.md`](../.run/README.md).
-
-1. Load CMake preset **debug** (interop + script host ON).
-2. Build **SparkScriptHost** (depends on **SparkScriptingBuild**).
-3. Run **SparkScriptHost (HelloCsGame)** from repo root (`assets/` resolution).
-
-Set `DYLD_LIBRARY_PATH` / `LD_LIBRARY_PATH` to `<build-dir>/scripting` (done in the run config for `cmake-build-debug`).
-
-### Command line
+### Command line (spark-sharp)
 
 ```bash
-cmake -B cmake-build-debug -DSPARK_BUILD_INTEROP=ON -DSPARK_BUILD_SCRIPT_HOST=ON
-cmake --build cmake-build-debug --target SparkScriptHost
+cmake -S ../spark-sharp -B ../spark-sharp/build \
+  -DSPARK_ENGINE_ROOT="$(pwd)" \
+  -DSPARK_SHARP_BUILD_SCRIPT_HOST=ON
+cmake --build ../spark-sharp/build --target SparkScriptHost
 ```
 
-From repo root (defaults point at HelloCsGame Release output):
+Run from the **spark** repo root so `assets/` resolve; set `DYLD_LIBRARY_PATH` to `spark-sharp/build/native`:
 
 ```bash
-DYLD_LIBRARY_PATH=cmake-build-debug/scripting ./cmake-build-debug/scripting/SparkScriptHost
+DYLD_LIBRARY_PATH=../spark-sharp/build/native ../spark-sharp/build/native/SparkScriptHost
 ```
 
 Explicit paths:

@@ -1,5 +1,6 @@
 #include "spark/demo/GameFlow2DProductPathDemo.hpp"
 
+#include "spark/gameplay/SparkGameplayModule.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/platformer2d/Platformer2DLevelPipeline.hpp"
 #include "spark/engine/IEngineContext.hpp"
@@ -1371,6 +1372,7 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
 
     if (canMove) {
         physics.Simulate2D(world, timing);
+        SparkGameplayAfterPhysics2D(world);
         if (fogOfWar != nullptr && walkGrid != nullptr && playerObject != nullptr) {
             const Vector3 playerPos = playerObject->GetWorldMatrix().TransformPoint(Vector3::Zero);
             fogOfWar->RevealAtWorldPosition({playerPos.x, playerPos.y}, walkGrid->GetGridFrame());

@@ -40,7 +40,9 @@
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
 #include "spark/scene/submit/DrawableSortResolver.hpp"
+#if SPARK_HAS_GAMEPLAY
 #include "spark/ecs/components/gameplay/FogOfWar2DComponent.hpp"
+#endif
 #include "spark/scene/foliage/FoliageSceneCollector.hpp"
 #include "spark/scene/foliage/WindSubsystem.hpp"
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
@@ -700,6 +702,7 @@ void FillStandardLitSceneFromWorld(
     FoliageSceneCollector foliageCollector{};
     foliageCollector.CollectInto(world, params, findOrAddTexture);
 
+#if SPARK_HAS_GAMEPLAY
     world.ForEachActiveGameObject([&](GameObject* object) {
         if (object == nullptr) {
             return;
@@ -714,6 +717,7 @@ void FillStandardLitSceneFromWorld(
         }
         fog->SubmitSceneDraw(params, world, grid->GetGridFrame(), findOrAddTexture);
     });
+#endif
     SceneSubmitDetail::StableSortSprites(params.sprites, params.spriteSortMode);
 
     CollectScene2DCompositeViews(world, params);

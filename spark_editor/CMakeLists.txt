@@ -1,0 +1,12 @@
+if (NOT SPARK_BUILD_SPARK_EDITOR)
+    return()
+endif ()
+if (NOT SPARK_BUILD_EDITOR)
+    message(FATAL_ERROR "SPARK_BUILD_SPARK_EDITOR requires SPARK_BUILD_EDITOR=ON")
+endif ()
+
+add_executable(SparkEditor main.cpp)
+target_link_libraries(SparkEditor PRIVATE SparkEngine)
+if (SPARK_BUILD_GAMEPLAY)
+    target_link_libraries(SparkEditor PRIVATE SparkGameplay)
+endif ()

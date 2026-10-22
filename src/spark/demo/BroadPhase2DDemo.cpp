@@ -1,4 +1,5 @@
 #include "spark/demo/BroadPhase2DDemo.hpp"
+#include "spark/gameplay/SparkGameplayModule.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/demo/platformer2d/Platformer2DCombatMath.hpp"
@@ -973,6 +974,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
         }
 
         physics.Simulate2D(world, timing);
+        SparkGameplayAfterPhysics2D(world);
 
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
         TickEnemies(dt, p.x, p.y);
