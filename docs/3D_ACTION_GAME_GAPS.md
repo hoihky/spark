@@ -39,7 +39,7 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 | `Character3DAnimFsmComponent` — idle/walk/run + attack one-shot | `include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp` |
 | Manual animation events → signals | `include/spark/ecs/components/animation/AnimationEventReceiverComponent.hpp` |
 | Bone attachments by joint index | `include/spark/ecs/components/animation/AttachmentSocketComponent.hpp` |
-| C# bindings for animator + 3D FSM | `SparkInterop.h`, `scripting/bindings/generated/Spark.Bindings/Components/FromInterop/` |
+| C# bindings for animator + 3D FSM | **spark-sharp** `native/include/spark/scripting/SparkInterop.h`, `scripting/bindings/generated/Spark.Bindings/Components/FromInterop/` |
 | Scene save: skinned mesh + animator | `src/spark/scene/serialization/ComponentSnapshotRegistry.cpp` |
 
 ### Gaps for 3D action

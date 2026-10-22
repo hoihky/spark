@@ -953,15 +953,14 @@ cmake --build cmake-build-debug -j
             <tbody>
               <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 22 built-in demo modes</td></tr>
               <tr><td><code>SparkEditor</code></td><td>3D editor shell with dock UI (<code>editor-debug</code> preset)</td></tr>
-              <tr><td><code>SparkInterop</code></td><td>C ABI shared library for managed code (<code>-DSPARK_BUILD_INTEROP=ON</code>, ON in <code>debug</code> preset)</td></tr>
-              <tr><td><code>SparkScriptHost</code></td><td>CoreCLR executable loading <code>HelloCsGame.dll</code> (<code>-DSPARK_BUILD_SCRIPT_HOST=ON</code>)</td></tr>
+              <tr><td><code>SparkGameplay</code></td><td>Optional gameplay kit (<code>SPARK_BUILD_GAMEPLAY=ON</code> in <code>debug</code> preset)</td></tr>
             </tbody>
           </table>
 
           <p>
-            Managed sample: <code>cmake --build cmake-build-debug --target SparkScriptHost</code>, then run from repo root with
-            <code>DYLD_LIBRARY_PATH=cmake-build-debug/scripting</code>. Details in
-            <a href="site/docs/csharp-scripting.html">C# scripting</a>.
+            <strong>C# / interop</strong> lives in the sibling <a href="site/docs/spark-sharp.html">spark-sharp</a> repo
+            (<code>SparkInterop</code>, <code>Spark.Bindings</code>, <code>SparkScriptHost</code>, HelloCsGame).
+            See <a href="site/docs/spark-sharp.html">SPARK_SHARP</a> and <a href="site/docs/csharp-scripting.html">C# scripting</a>.
           </p>
         </section>
 
@@ -981,8 +980,12 @@ cmake --build cmake-build-debug -j
                 <td>Engine loop, ECS, rendering data path, feature catalog</td>
               </tr>
               <tr>
+                <td><a href="site/docs/spark-sharp.html">spark-sharp (C# repo)</a></td>
+                <td>Sibling repo: build interop, bindings regen, HelloCsGame, CLion run configs</td>
+              </tr>
+              <tr>
                 <td><a href="site/docs/csharp-scripting.html">C# scripting</a></td>
-                <td><code>SparkInterop</code>, generated <code>Spark.Bindings</code>, <code>Spark.Scripting</code>, <code>SparkScriptHost</code>, HelloCsGame, regen workflow</td>
+                <td>Interop architecture, <code>SparkScriptHost</code>, debugging managed games</td>
               </tr>
               <tr>
                 <td><a href="site/docs/component-script-codegen.html">Component script bindings</a></td>

@@ -304,7 +304,7 @@ done
 | `src/spark/scene/SceneSubmitDrawPartition.cpp` | Opaque vs transparent draw partition |
 | `shaders/scene.vert` | GPU skinning |
 | `src/spark/demo/Maze3DDemo.cpp` | Skinned character integration |
-| `scripting/bindings/generated/Spark.Bindings/` | C# animator API (`AnimatorComponent`, loop modes, crossfade) |
+| **spark-sharp** `scripting/bindings/generated/Spark.Bindings/` | C# animator API (`AnimatorComponent`, loop modes, crossfade) |
 
 ---
 

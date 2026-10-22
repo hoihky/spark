@@ -51,8 +51,8 @@ Key header groups:
 
 | Preset | Build dir | Targets |
 |--------|-----------|---------|
-| `debug` | `cmake-build-debug/` | SparkDemo, SparkEditor, SparkScriptHost |
-| `editor-debug` | `cmake-build-editor/` | SparkEditor only (shared `SparkEngine`, no demos) |
+| `debug` | `cmake-build-debug/` | SparkDemo, SparkEditor (`SPARK_BUILD_GAMEPLAY=ON`) |
+| `editor-debug` | `cmake-build-editor/` | SparkEditor only (shared `SparkEngine`, no demos in engine lib) |
 
 ```bash
 cmake --preset debug

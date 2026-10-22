@@ -563,17 +563,13 @@ cmake --build cmake-build-debug -j
 <td>3D editor shell (edit mode, dock UI)</td>
 </tr>
 <tr>
-<td><strong>SparkInterop</strong></td>
-<td><code>cmake-build-debug/scripting/libSparkInterop.dylib</code></td>
-<td>C ABI for C# (<code>-DSPARK_BUILD_INTEROP=ON</code>)</td>
-</tr>
-<tr>
-<td><strong>SparkScriptHost</strong></td>
-<td><code>cmake-build-debug/scripting/SparkScriptHost</code></td>
-<td>CoreCLR host + <code>HelloCsGame</code> (<code>-DSPARK_BUILD_SCRIPT_HOST=ON</code>, ON in <code>debug</code> preset)</td>
+<td><strong>SparkGameplay</strong></td>
+<td><code>cmake-build-debug/libSparkGameplay.a</code></td>
+<td>Optional combat / pickups / game-flow kit (<code>SPARK_BUILD_GAMEPLAY=ON</code>)</td>
 </tr>
 </tbody>
 </table>
+<p><strong>C# scripting:</strong> sibling repo <a href="spark-sharp.html"><strong>spark-sharp</strong></a> (<code>SparkInterop</code>, <code>Spark.Bindings</code>, <code>SparkScriptHost</code>).</p>
 <p><strong>Editor-only slim build:</strong> <code>cmake --preset editor-debug &amp;&amp; cmake --build cmake-build-editor --target SparkEditor</code></p>
 <p>See <a href="clion.html"><code>docs/CLION.md</code></a> and <a href="readme.html"><code>.run/README.md</code></a> for CLion presets and run configurations.</p>
 <h2 id="documentation">Documentation</h2>
@@ -618,11 +614,11 @@ cmake --build cmake-build-debug -j
 <td>Editor milestones, project/asset workflow</td>
 </tr>
 <tr>
-<td><a href="csharp-scripting.html"><strong>C# scripting</strong></a></td>
-<td>SparkInterop, Spark.Bindings, SparkScriptHost, HelloCsGame</td>
+<td><a href="spark-sharp.html"><strong>C# scripting</strong></a></td>
+<td>Built from sibling <strong>spark-sharp</strong> (see also <a href="csharp-scripting.html">architecture notes</a>)</td>
 </tr>
 <tr>
-<td><a href="docs/COMPONENT_SCRIPT_CODEGEN.md"><strong>Component bindgen</strong></a></td>
+<td><a href="component-script-codegen.html"><strong>Component bindgen</strong></a></td>
 <td><code>SPARK_SCRIPT_BIND</code> → C# mirrors</td>
 </tr>
 <tr>
@@ -650,10 +646,10 @@ src/Engine.cpp     Engine loop (not under src/spark/engine/)
 assets/            Runtime fonts, models, textures
 shaders/           GLSL → SPIR-V (SparkShaders target)
 docs/              Design docs and roadmaps
-scripting/         SparkInterop C ABI, generated `Spark.Bindings`, `Spark.Scripting`, samples
+cmake/             SparkEngine, SparkGameplay, tests, shaders
 spark_editor/      SparkEditor executable
 </code></pre>
-<p><strong>C# bindings:</strong> See <a href="csharp-scripting.html"><code>docs/CSHARP_SCRIPTING.md</code></a>. After C++ interop changes, run <code>./tools/generate-csharp-bindings.sh</code>. CMake preset <strong>debug</strong> enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>.</p>
+<p><strong>C# bindings:</strong> <a href="spark-sharp.html"><code>docs/SPARK_SHARP.md</code></a>. Regenerate from <strong>spark-sharp</strong> (<code>tools/generate-csharp-bindings.sh</code>). Core engine keeps only <code>include/spark/scripting/SparkScriptBind.hpp</code> for bindgen annotations.</p>
 <p><strong>Render headers</strong> live under <code>include/spark/render/</code> in stage subfolders (not flat <code>render/*.hpp</code>):</p>
 <table>
 <thead>

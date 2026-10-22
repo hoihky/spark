@@ -25,6 +25,13 @@ BODY_END = '</div>\n          <footer class="doc-footer">'
 NAV_START = '<ul class="nav-list">'
 NAV_END = "</ul>\n        </nav>"
 
+# Top-level docs/*.md rendered under docs/site/docs/ (not programming-guide/site/).
+ENGINE_DOC_HTML: dict[str, str] = {
+    "SPARK_SHARP": "spark-sharp.html",
+    "CSHARP_SCRIPTING": "csharp-scripting.html",
+    "COMPONENT_SCRIPT_CODEGEN": "component-script-codegen.html",
+}
+
 PART_ORDER = [
     "1-overview-architecture",
     "2-2d-graphics",
@@ -53,6 +60,17 @@ def md_to_html(text: str) -> str:
         html,
         flags=re.DOTALL,
     )
+    return html
+
+
+def fix_engine_doc_links(html: str, page_rel: Path) -> str:
+    """Rewrite ../../FOO.html links to docs/site/docs/*.html from programming-guide pages."""
+    ups = "../" * (len(page_rel.parts) + 1)
+    base = f"{ups}site/docs/"
+    for stem, out_name in ENGINE_DOC_HTML.items():
+        for depth in (2, 3):
+            prefix = "../" * depth
+            html = html.replace(f'href="{prefix}{stem}.html"', f'href="{base}{out_name}"')
     return html
 
 
@@ -160,7 +178,9 @@ def patch_body(html: str, md_path: Path) -> str:
     end = html.find(BODY_END)
     if start < 0 or end < 0:
         return html
+    page_rel = md_path.relative_to(ROOT).with_suffix(".html")
     body = md_to_html(md_path.read_text(encoding="utf-8"))
+    body = fix_engine_doc_links(body, page_rel)
     return html[: start + len(BODY_START)] + body + html[end:]
 
 

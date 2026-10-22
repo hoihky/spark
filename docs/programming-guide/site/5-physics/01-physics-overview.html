@@ -641,6 +641,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/07-physics-3d-contract.html" class="nav-link">07 physics 3d contract</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -846,6 +852,9 @@ void OnUpdate(const FrameTiming&amp; timing) override {
 // or: physics.GetWorld2D().SetBroadPhaseCellSize(8.0F) before Simulate2D (queries sync each step)
 </code></pre>
 <p>Default cell size is <strong>4</strong> world units (<code>PhysicsWorld2D::DefaultBroadPhaseCellSize</code>).</p>
+<h3 id="broad-phase-cell-size-3d">Broad-phase cell size (3D)</h3>
+<p><code>PhysicsWorld3D::DefaultBroadPhaseCellSize</code> is <strong>2</strong> world units. <code>Simulate3D</code> and <code>SimulateAll3D</code> copy that value into <code>GetQueries3D()</code> each step. After load or level edits, call <code>RebuildStatics</code> / <code>RebuildDynamics</code> (or <code>RebuildAll</code>) before relying on raycasts.</p>
+<p>End-to-end 3D gameplay patterns (queries, triggers, carry, CCD, fixed step): <a href="07-physics-3d-contract.html">Physics 3D contract</a> and <code>PhysicsShowcase3DDemo</code>.</p>
 <h2 id="legacy-free-functions">Legacy Free Functions</h2>
 <p><code>SimulatePhysics2D</code> / <code>SimulatePhysics3D</code> still compile but are <strong>deprecated</strong> — they recreate settings every call. Prefer <code>PhysicsSubsystem</code> or holding a <code>PhysicsWorld2D</code> / <code>PhysicsWorld3D</code> member.</p>
 <h2 id="settings-structs">Settings Structs</h2>

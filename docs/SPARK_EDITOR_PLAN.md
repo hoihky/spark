@@ -53,7 +53,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 - `SPARK_BUILD_SPARK_EDITOR` — compiles `spark/editor/` into `SparkEngine` + `SparkEditor` exe.
 
 ### Scripting (future PIE)
-- `SparkScriptHost`, `SparkInterop`, C# `HelloCsGame`.
+- **spark-sharp:** `SparkScriptHost`, `SparkInterop`, C# `HelloCsGame` (see [SPARK_SHARP.md](SPARK_SHARP.md)).
 
 ---
 

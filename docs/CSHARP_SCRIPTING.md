@@ -8,13 +8,14 @@ Spark exposes a stable **C ABI** (`SparkInterop`) for managed games, editors, an
 
 | Path | Role |
 |------|------|
-| `bindings/generated/Spark.Bindings/` | Generated + companion C# (`Native.g.cs`, `Components/FromInterop/*.g.cs`, `CppMirrors.g.cs`, …) |
-| `bindings/generator/` | `Spark.Bindings.Generator` (ClangSharp + mirror codegen) |
-| `Spark.Scripting/` | Thin SDK: `ScriptHostEntry`, `GameBootstrap`, `SparkGame` helpers |
-| `samples/HelloCsGame/` | Sample game DLL wired to `SparkScriptHost` |
+| `scripting/bindings/generated/Spark.Bindings/` | Generated + companion C# (`Native.g.cs`, `Components/FromInterop/*.g.cs`, `CppMirrors.g.cs`, …) |
+| `scripting/bindings/generator/` | `Spark.Bindings.Generator` (ClangSharp + mirror codegen) |
+| `scripting/Spark.Scripting/` | Thin SDK: `ScriptHostEntry`, `GameBootstrap`, `SparkGame` helpers |
+| `scripting/samples/HelloCsGame/` | Sample game DLL wired to `SparkScriptHost` |
+| `native/` | `SparkInterop`, optional `SparkScriptHost`, CoreCLR bridge sources |
 | `cmake/DotNetHost.cmake` | Locates SDK **nethost** when building the host |
 
-Native implementation: `src/spark/scripting/SparkInterop*.cpp`, `SparkScriptHost.cpp`, `CoreClrHost.cpp`, `ManagedGameBridge.cpp`.
+Native implementation: `native/src/spark/scripting/SparkInterop*.cpp`, `SparkScriptHost.cpp`, `CoreClrHost.cpp`, `ManagedGameBridge.cpp` (paths may vary slightly by branch; see spark-sharp `CMakeLists.txt`).
 
 ## Architecture
 
@@ -64,11 +65,13 @@ Virtual gameplay APIs are mirrored as C# types that call `spark_*`. Structs/enum
 ### Regenerate bindings
 
 ```bash
+cd /path/to/spark-sharp
 dotnet tool restore   # once, uses .config/dotnet-tools.json
+export SPARK_ENGINE_ROOT=/path/to/spark
 ./tools/generate-csharp-bindings.sh
 ```
 
-Outputs (under `scripting/bindings/generated/Spark.Bindings/`):
+Outputs (under **spark-sharp** `scripting/bindings/generated/Spark.Bindings/`):
 
 | Artifact | Source |
 |----------|--------|
@@ -112,12 +115,12 @@ Run from the **spark** repo root so `assets/` resolve; set `DYLD_LIBRARY_PATH` t
 DYLD_LIBRARY_PATH=../spark-sharp/build/native ../spark-sharp/build/native/SparkScriptHost
 ```
 
-Explicit paths:
+Explicit paths (from **spark-sharp** after `cmake --build build --target SparkHelloCsGameDebug`):
 
 ```bash
-./cmake-build-debug/scripting/SparkScriptHost \
-  scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.runtimeconfig.json \
-  scripting/samples/HelloCsGame/bin/Release/net8.0/HelloCsGame.dll
+../spark-sharp/build/native/SparkScriptHost \
+  ../spark-sharp/scripting/samples/HelloCsGame/bin/Debug/net8.0/HelloCsGame.runtimeconfig.json \
+  ../spark-sharp/scripting/samples/HelloCsGame/bin/Debug/net8.0/HelloCsGame.dll
 ```
 
 Optional entry override (default type/method: `HelloCsGame.GameEntry.Initialize`):
@@ -129,7 +132,7 @@ SparkScriptHost <runtimeconfig> <assembly.dll> <TypeName> <MethodName>
 ### Managed-only compile check
 
 ```bash
-dotnet build scripting/samples/HelloCsGame/HelloCsGame.csproj -c Release -p:NuGetAudit=false
+dotnet build /path/to/spark-sharp/scripting/samples/HelloCsGame/HelloCsGame.csproj -c Debug -p:NuGetAudit=false
 ```
 
 Game libraries need **`GenerateRuntimeConfigurationFiles`** (see `HelloCsGame.csproj`) so hostfxr can load them.
@@ -163,9 +166,9 @@ public static int Initialize(IntPtr hostApiPtr) => ScriptHostEntry.InitializeCor
 | `GameObject` accessors | `GameObject.ComponentAccess.g.cs` + `CppMirrors.g.cs` factories |
 | Default add | `spark_object_get_or_add_default_component` + `GetOrAdd*` for allowed kinds |
 
-**Coverage:** `python3 tools/scan-cpp-component-api.py` → `scripting/bindings/binding-coverage.json`.
+**Coverage:** `python3 tools/scan-cpp-component-api.py` in **spark-sharp** → `scripting/bindings/binding-coverage.json`.
 
-**Manual interop** (non-`SPARK_SCRIPT_BIND`): creation helpers `spark_object_add_terrain`, `spark_object_add_directional_light`, `spark_object_add_sound_cue`, platformer texture registration, physics queries — in `SparkInterop.h` / `SparkInterop*.cpp`.
+**Manual interop** (non-`SPARK_SCRIPT_BIND`): creation helpers `spark_object_add_terrain`, `spark_object_add_directional_light`, `spark_object_add_sound_cue`, platformer texture registration, physics queries — in **spark-sharp** `native/include/spark/scripting/SparkInterop.h` and `SparkInterop*.cpp`.
 
 ## HelloCsGame (sample)
 

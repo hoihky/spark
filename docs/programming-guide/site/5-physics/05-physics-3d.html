@@ -641,6 +641,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/07-physics-3d-contract.html" class="nav-link">07 physics 3d contract</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -798,7 +804,7 @@ void OnUpdate(const FrameTiming&amp; timing) {
     physics.SimulateAll3D(world, timing);
 }
 </code></pre>
-<p><code>SimulateAll3D</code> runs, in order: rigidbody simulation, character controllers, trigger volumes.</p>
+<p><code>SimulateAll3D</code> runs, in order: rigidbody simulation, character controllers, trigger volumes. It also keeps <code>GetQueries3D()</code> broad-phase cell size aligned with <code>GetWorld3D()</code> (same as <code>Simulate3D</code>).</p>
 <p>Or step individually:</p>
 <pre><code class="language-cpp">physics.Simulate3D(world, timing);
 physics.SimulateCharacterControllers3D(world, timing);
@@ -810,7 +816,7 @@ void SetVelocity(const Vector3&amp; v);
 Vector3&amp; GetAngularVelocity();
 void AddImpulse(const Vector3&amp; impulse);
 </code></pre>
-<p>Pair with <code>SphereCollider3DComponent</code> or <code>CapsuleCollider3DComponent</code> for dynamic props. If both sphere and capsule exist, <strong>sphere is preferred</strong> by the solver.</p>
+<p>Pair with <code>SphereCollider3DComponent</code> or <code>CapsuleCollider3DComponent</code> for dynamic props. If both sphere and capsule exist, <strong>sphere is preferred</strong> by the solver. <code>BoxCollider3DComponent</code> on a dynamic body is <strong>not</strong> simulated — use sphere/capsule proxies for boxes and crates.</p>
 <h2 id="throw-demo-pattern">Throw Demo Pattern</h2>
 <pre><code class="language-cpp">auto* ball = world.CreateGameObject();
 ball-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation(spawnPos);
@@ -820,7 +826,7 @@ rb-&gt;SetVelocity(camera.Forward() * 18.0F);
 
 physics.Simulate3D(world, timing);
 </code></pre>
-<p>See <code>PhysicsBallThrow3DDemo</code>.</p>
+<p>See <code>PhysicsBallThrow3DDemo</code>. For carry/throw, layered triggers, queries, CCD, fixed step, and replay, see <strong><code>PhysicsShowcase3DDemo</code></strong> (SparkDemo <strong>#29</strong>, <strong>P</strong>).</p>
 <h2 id="character-controller-kinematic">Character Controller (kinematic)</h2>
 <p>For FPS / third-person walkers, use <code>CharacterController3DComponent</code> instead of a dynamic rigidbody on the player:</p>
 <pre><code class="language-cpp">auto* cc = player-&gt;AddComponent&lt;CharacterController3DComponent&gt;(0.4F, Vector3{0,0.9F,0});
@@ -828,18 +834,56 @@ cc-&gt;SetMoveInput({inputX, 0.0F, inputZ});
 physics.SimulateCharacterControllers3D(world, timing);
 </code></pre>
 <p>Objects with <code>CharacterController3DComponent</code> are <strong>excluded</strong> from dynamic rigidbody simulation.</p>
+<p>Third-person movement should use the same horizontal forward as <code>FlyCamera</code> (yaw only): <code>{sin(yaw), 0, -cos(yaw)}</code> and <code>right = cross(forward, up)</code>. <code>PhysicsShowcase3DDemo</code> drives <code>SetMoveInput</code> from <code>camera.yaw</code> after mouse look.</p>
+<h2 id="carry-and-throw-handoff">Carry and throw (handoff)</h2>
+<pre><code class="language-cpp">#include &quot;spark/physics/PhysicsBodyHandoff3D.hpp&quot;
+
+// Before PhysicsWorld3D::Simulate (SimulateAll3D does this internally at step start):
+PhysicsBodyHandoff3D::SynchronizeAttachedBodies(world);
+
+PhysicsBodyHandoff3D::AttachRigidbodyToCarrier(world, *crate, *carrierAnchor, localOffset);
+physics.GetQueries3D().RebuildDynamics(world);
+
+const Vector3 throwImpulse = forward * 7.0F + Vector3::UnitY * 2.8F;
+PhysicsBodyHandoff3D::ReleaseRigidbody(*crate, throwImpulse);
+physics.GetQueries3D().RebuildDynamics(world);
+</code></pre>
+<p><code>ReleaseRigidbody</code> sets the body dynamic and applies <code>worldImpulse</code> as velocity (plus a small positional nudge). Pair with <code>PhysicsAttachedBody3DComponent</code> on the carried object.</p>
 <h2 id="trigger-volumes">Trigger Volumes</h2>
 <pre><code class="language-cpp">zone-&gt;AddComponent&lt;TriggerVolume3DComponent&gt;(TriggerVolume3DShape::Box, Vector3{3,2,3});
+zone-&gt;GetComponent&lt;TriggerVolume3DComponent&gt;()-&gt;SetCategoryBits(
+        CollisionFilter3D::LayerBit(PhysicsLayers3D::Trigger));
+zone-&gt;GetComponent&lt;TriggerVolume3DComponent&gt;()-&gt;SetMaskBits(
+        CollisionFilter3D::LayerBit(PhysicsLayers3D::Player));
 physics.SimulateTriggerVolumes3D(world, timing);
+// After simulation:
+if (zone-&gt;GetComponent&lt;TriggerVolume3DComponent&gt;()-&gt;IsOverlapping(*player)) { ... }
+</code></pre>
+<p>Prefer <code>SimulateAll3D</code> so trigger overlap lists update before gameplay reads <code>IsOverlapping</code>.</p>
+<h2 id="fixed-timestep">Fixed timestep</h2>
+<pre><code class="language-cpp">auto&amp; settings = physics.GetWorld3D().GetSettings();
+settings.fixedSimulationTimestep = 1.0F / 60.0F;
+settings.maxFixedSimulationStepsPerFrame = 8;
+</code></pre>
+<p>When <code>fixedSimulationTimestep</code> is zero, each frame uses the real <code>deltaTime</code> once. See <a href="07-physics-3d-contract.html">Physics 3D contract</a>.</p>
+<h2 id="3d-queries">3D queries</h2>
+<pre><code class="language-cpp">physics.GetQueries3D().RebuildAll(world);
+
+PhysicsQueryFilter3D filter{};
+Array&lt;PhysicsQueryHitDynamic3D&gt; dynamics;
+physics.GetQueries3D().OverlapSphereDynamics(center, radius, filter, nullptr, dynamics);
+
+PhysicsRaycastHit3D hit{};
+physics.GetQueries3D().Raycast(world, origin, direction, maxDistance, filter, nullptr, hit);
 </code></pre>
 <h2 id="3d-simulation-pipeline">3D Simulation Pipeline</h2>
 <p>Per substep, <code>PhysicsWorld3D</code> runs:</p>
 <ol>
-<li><code>RigidbodyIntegrator3D</code> — gravity, damping, swept CCD, orientation</li>
+<li><code>RigidbodyIntegrator3D</code> — gravity, damping, swept static + dynamic CCD, orientation</li>
 <li><code>ContactResolver3D</code> — static impulses, penetration separation, dynamic pair velocities</li>
 <li><code>JointSolver3D</code> — distance, hinge, spring constraints</li>
 </ol>
-<p>Next: <a href="06-tips.html">Tips</a>.</p></div>
+<p>Next: <a href="07-physics-3d-contract.html">Physics 3D contract</a> · <a href="06-tips.html">Tips</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>

@@ -2,7 +2,7 @@
 
 C# scripting, **SparkInterop**, and generated **Spark.Bindings** live in a separate repository:
 
-**[spark-sharp](https://github.com/your-org/spark-sharp)** — sibling repository next to this engine tree (convention: `../spark-sharp`).
+**[spark-sharp](https://github.com/hoihky/spark-sharp)** — sibling repository next to this engine tree (convention: `../spark-sharp`). Intro: [spark-sharp `docs/index.html`](https://github.com/hoihky/spark-sharp/blob/main/docs/index.html).
 
 The engine keeps only `include/spark/scripting/SparkScriptBind.hpp` — annotation macros scanned by bindgen in **spark-sharp**.
 

@@ -641,6 +641,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/07-physics-3d-contract.html" class="nav-link">07 physics 3d contract</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -854,8 +860,40 @@ physics.GetQueries2D().OverlapArcDynamics(
 <pre><code class="language-cpp">bool grounded = RaycastWorld2D(world, footX, footY, 0.0F, -1.0F, 0.08F, filter, hit);
 </code></pre>
 <p>Or use <code>Rigidbody2DComponent::IsGrounded()</code> after simulation.</p>
+<h2 id="3d-physics-queries-physicsqueryworld3d">3D physics queries (<code>PhysicsQueryWorld3D</code>)</h2>
+<p>Owned by <code>PhysicsSubsystem::GetQueries3D()</code>. Rebuild statics and/or dynamics, then query without re-walking ECS colliders each call.</p>
+<pre><code class="language-cpp">physics.GetQueries3D().RebuildAll(world);
+
+Array&lt;PhysicsQueryHit3D&gt; staticHits;
+Array&lt;PhysicsQueryHitDynamic3D&gt; dynamicHits;
+physics.GetQueries3D().OverlapSphere(
+        world, center, radius, filter, ignoreObject, staticHits, dynamicHits);
+
+PhysicsRaycastHit3D hit{};
+physics.GetQueries3D().Raycast(world, origin, direction, maxDistance, filter, ignoreObject, hit);
+</code></pre>
+<p>Dynamic catalog includes simulated rigidbodies and <code>CharacterController3DComponent</code> sphere proxies. Carried bodies (<code>PhysicsAttachedBody3DComponent::IsAttached</code>) are skipped until released. See <a href="07-physics-3d-contract.html">Physics 3D contract</a>.</p>
+<p><code>PhysicsSubsystem::Simulate3D</code> and <code>SimulateAll3D</code> sync query cell size from <code>PhysicsWorld3D</code> each frame. If you only query (no simulate), call <code>GetQueries3D().SetCellWorldSize(GetWorld3D().GetBroadPhaseCellSize())</code> after changing cell size.</p>
+<h2 id="unified-scene-physics-raycast">Unified scene + physics raycast</h2>
+<p><code>ScenePhysicsRaycast3D</code> compares closest mesh picks (<code>Scene::RaycastPick</code>) with <code>PhysicsQueryWorld3D::Raycast</code> and returns the nearer hit:</p>
+<pre><code class="language-cpp">#include &quot;spark/scene/query/ScenePhysicsRaycast3D.hpp&quot;
+
+ScenePhysicsRaycast3D unified{scene};
+unified.SetPhysicsQueries(&amp;physics.GetQueries3D());
+
+SceneRay ray{camera.position, camera.Forward().Normalized(), 80.0F};
+SceneRaycastHit hit{};
+SceneRaycastOptions sceneOpts{};
+sceneOpts.pickRigidMeshes = true;
+
+PhysicsQueryFilter3D filter{};
+if (unified.RaycastClosest(world, ray, hit, sceneOpts, filter, player)) {
+    GameObject* picked = hit.object;
+}
+</code></pre>
+<p>See <code>PhysicsShowcase3DDemo::TryRaycastPick</code> (SparkDemo <strong>#29</strong>, <strong>P</strong>).</p>
 <h2 id="3d-raycasts-scene-mesh">3D Raycasts (Scene / Mesh)</h2>
-<p>3D physics queries for triggers and overlaps are handled via <code>TriggerVolume3DComponent</code> signals and <code>PhysicsSubsystem::SimulateAll3D</code>. For <strong>picking</strong> and <strong>hitscan weapons</strong>, use scene raycast helpers:</p>
+<p>For <strong>mesh-accurate picking</strong> and some hitscan weapons, use scene raycast helpers (below). Use <code>PhysicsQueryWorld3D</code> for physics colliders (environment, balls, hurtboxes on dynamics).</p>
 <pre><code class="language-cpp">#include &quot;spark/scene/mesh/MeshRaycast.hpp&quot;
 #include &quot;spark/scene/core/Scene.hpp&quot;
 

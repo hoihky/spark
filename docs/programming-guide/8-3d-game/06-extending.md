@@ -84,7 +84,7 @@ if (world.IsGltfReady("assets/models/Fox.glb")) {
 
 ## C# Scripting
 
-Spark exposes gameplay through **`SparkInterop`** and generated **`Spark.Bindings`**. Optional **`SparkScriptHost`** (`SPARK_BUILD_SCRIPT_HOST`, ON in the `debug` CMake preset) runs managed `Game` subclasses via CoreCLR. Authoring flow, regen, and `HelloCsGame`: **`docs/CSHARP_SCRIPTING.md`**; bindgen pipeline: **`docs/COMPONENT_SCRIPT_CODEGEN.md`**.
+Spark exposes gameplay through **`SparkInterop`** and generated **`Spark.Bindings`** (built from the sibling **[spark-sharp](../../SPARK_SHARP.md)** repo). Optional **`SparkScriptHost`** (`SPARK_SHARP_BUILD_SCRIPT_HOST=ON` in spark-sharp) runs managed `Game` subclasses via CoreCLR. Authoring flow, regen, and `HelloCsGame`: **`docs/CSHARP_SCRIPTING.md`**; bindgen pipeline: **`docs/COMPONENT_SCRIPT_CODEGEN.md`**.
 
 ---
 

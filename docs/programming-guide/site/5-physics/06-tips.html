@@ -641,6 +641,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/07-physics-3d-contract.html" class="nav-link">07 physics 3d contract</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -839,6 +845,7 @@ while (accum &gt;= kFixedDt) {
 // then many OverlapCircleStatics / RaycastStatics calls
 </code></pre>
 <p><code>PhysicsSubsystem::Simulate2D</code> syncs query cell size from <code>PhysicsWorld2D</code> each step. Use <code>SetBroadPhaseCellSize2D</code> when tuning the spatial hash for both simulation and queries.</p>
+<p><strong>3D:</strong> <code>Simulate3D</code> and <code>SimulateAll3D</code> sync <code>GetQueries3D()</code> from <code>GetWorld3D()</code>. Call <code>PhysicsWorld3D::ResetFixedStepAccumulator()</code> after teleports or demo reloads to avoid a multi-step catch-up. Dynamic props need sphere/capsule colliders — see <a href="07-physics-3d-contract.html">Physics 3D contract</a>.</p>
 <h2 id="debug-visualization">Debug Visualization</h2>
 <p>Use <code>TextOverlayComponent</code> or GUI labels to show velocity:</p>
 <pre><code class="language-cpp">std::format(&quot;v=({:.1f},{:.1f})&quot;, v.x, v.y);

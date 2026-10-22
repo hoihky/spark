@@ -224,8 +224,8 @@ cmake --build build -j
 | Option | Default | Effect |
 |--------|---------|--------|
 | `SPARK_BUILD_DEMO` | ON | Builds `SparkDemo` launcher |
-| `SPARK_BUILD_INTEROP` | OFF (ON in `debug` preset) | `SparkInterop` + `SparkBindingsBuild` |
-| `SPARK_BUILD_SCRIPT_HOST` | OFF (ON in `debug` preset) | `SparkScriptHost` + HelloCsGame; requires interop |
+| `SPARK_BUILD_GAMEPLAY` | ON | Optional `SparkGameplay` kit (combat, pickups, game flow) |
+| C# / interop | — | **spark-sharp** sibling repo (`SparkInterop`, bindings, `SparkScriptHost`) |
 | `SPARK_BUILD_TESTS` | OFF | Unit tests |
 
 ## Generated Config
@@ -2622,7 +2622,7 @@ SkinnedGltfAsset arms = world.LoadSkinnedGltf("assets/models/arms.glb");
 
 ## C# Scripting
 
-Spark exposes `SparkInterop` and generated `Spark.Bindings`; optional `SparkScriptHost` (`SPARK_BUILD_SCRIPT_HOST`) runs managed games. See `docs/CSHARP_SCRIPTING.md` and `docs/COMPONENT_SCRIPT_CODEGEN.md`.
+Spark exposes `SparkInterop` and generated `Spark.Bindings` from the **spark-sharp** sibling repo; optional `SparkScriptHost` (`SPARK_SHARP_BUILD_SCRIPT_HOST=ON`) runs managed games. See `docs/SPARK_SHARP.md`, `docs/CSHARP_SCRIPTING.md`, and `docs/COMPONENT_SCRIPT_CODEGEN.md`.
 
 ---
 

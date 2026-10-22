@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Component script bindings · Spark Game Engine</title>
-  <meta name="description" content="SPARK_SCRIPT_BIND pipeline from C++ components to Spark.Bindings C# mirrors.">
+  <title>Component Script Bindings · Spark Game Engine</title>
+  <meta name="description" content="Component script bindings — architecture">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="../../programming-guide/site/assets/vendor/atom-one-dark.min.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"></script>
   <script>mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });</script>
+  <script src="../../programming-guide/site/assets/vendor/highlight.min.js"></script>
   <style id="spark-inline-theme">
 :root {
   --bg: #f8fafc;
@@ -485,7 +487,6 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <a href="../../index.html" class="brand">Spark Game Engine</a>
       <nav class="topbar-nav" aria-label="Primary">
         <a href="../../index.html#documentation">Documentation</a>
-        <a href="csharp-scripting.html">C# scripting</a>
         <a href="../../programming-guide/site/index.html">Programming guide</a>
         <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
       </nav>
@@ -493,44 +494,154 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 
     <main class="doc-page">
       <article class="doc-body">
-        <h1 id="component-script-bindings">Component script bindings — architecture</h1>
-        <p>C# cannot call C++ <code>GameComponent</code> methods directly. The pipeline treats <strong><code>SparkInterop.h</code></strong> as the stable C ABI contract. Component headers are the source of truth for what should exist; interop exports define what C# can call today.</p>
-        <p>See also <a href="csharp-scripting.html">C# interop (ClangSharp + SparkInterop)</a> for building and running <code>SparkScriptHost</code>.</p>
-
-        <h2 id="layers">Layers</h2>
-        <table>
-          <thead><tr><th>Layer</th><th>Artifact</th><th>Role</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td><code>SparkInterop.h</code> + <code>SparkInterop*.cpp</code></td><td>C ABI + manual thunks</td></tr>
-            <tr><td>1b</td><td><code>SparkInteropComponentBindings.generated.*</code></td><td>Auto thunks from <code>SPARK_SCRIPT_BIND</code></td></tr>
-            <tr><td>2</td><td><code>Native.g.cs</code>, <code>Native.Interop.g.cs</code></td><td>P/Invoke</td></tr>
-            <tr><td>3</td><td><code>Components/FromInterop/*.g.cs</code></td><td>Usable component mirrors</td></tr>
-            <tr><td>4</td><td><code>GameObject.ComponentAccess.g.cs</code></td><td><code>GetOrAdd*</code> accessors</td></tr>
-          </tbody>
-        </table>
-
-        <h2 id="regenerate">Regenerate</h2>
-        <pre><code class="language-bash">./tools/generate-csharp-bindings.sh</code></pre>
-        <p>Runs bindgen, ClangSharp, mirror codegen, <code>binding-coverage.json</code>, and the component registry. CMake also runs <code>spark_script_bindgen.py</code> when building <code>SparkInterop</code>.</p>
-
-        <h2 id="closing-gaps">Closing gaps</h2>
-        <ol>
-          <li><code>python3 tools/scan-cpp-component-api.py</code> → <code>scripting/bindings/binding-coverage.json</code></li>
-          <li>Add <code>SPARK_SCRIPT_BIND</code> on <code>*Component.hpp</code>, then regen</li>
-          <li>Re-run <code>./tools/generate-csharp-bindings.sh</code></li>
-        </ol>
-        <p>Kinds that need constructor args use <code>spark_object_add_*</code> in <code>SparkInterop.h</code> and <code>GameObject.Add*</code> in <code>CppMirrors.g.cs</code> (not <code>GetOrAdd*</code>).</p>
-        <p>Canonical source: <code>docs/COMPONENT_SCRIPT_CODEGEN.md</code> in the repository.</p>
+        <h1 id="component-script-bindings-architecture">Component script bindings — architecture</h1>
+<blockquote>
+<p><strong>Repository split:</strong> Interop implementation, generated bindings, and all tools live in <strong><a href="spark-sharp.html">spark-sharp</a></strong>. This engine repo keeps <strong><code>include/spark/scripting/SparkScriptBind.hpp</code></strong> and component headers annotated with <code>SPARK_SCRIPT_BIND</code>.</p>
+</blockquote>
+<p>C# cannot call C++ <code>GameComponent</code> methods directly. The pipeline treats <strong><code>native/include/spark/scripting/SparkInterop.h</code></strong> (in <strong>spark-sharp</strong>) as the scriptable contract (stable C ABI). C++ component headers in <strong>this</strong> repo are the <em>source of truth for what should exist</em>; interop exports are the <em>source of truth for what C# can call today</em>.</p>
+<div class="mermaid-wrap"><div class="mermaid">flowchart TB
+  subgraph cpp [C++ engine + spark-sharp native]
+    HPP["spark/include *Component.hpp"]
+    InteropH["SparkInterop.h spark_* exports"]
+    InteropCpp["SparkInterop*.cpp thunks"]
+    HPP -->|"SPARK_SCRIPT_BIND + spark_script_bindgen.py"| BindGen["SparkInteropComponentBindings.generated.*"]
+    BindGen --> InteropCpp
+    HPP -->|"manual thunks (asset keys, Add* factories)"| InteropCpp
+    InteropCpp --> InteropH
+  end
+  subgraph gen [.NET in spark-sharp]
+    Clang["ClangSharpPInvokeGenerator"]
+    Mirror["ComponentMirrorCodegen"]
+    Reg["generate-csharp-component-registry.py"]
+    PInvoke["generate_native_pinvoke_companion.py"]
+    Clang --> Native["Native.g.cs"]
+    PInvoke --> Companion["Native.Interop.g.cs"]
+    InteropH --> Mirror
+    Mirror --> CS["Components/FromInterop/*.g.cs"]
+    Reg --> Access["GameObject.ComponentAccess.g.cs"]
+    Reg --> Factory["SparkInteropComponentFactory.generated.cpp"]
+  end
+  subgraph scan [Coverage]
+    Scan["scan-cpp-component-api.py"]
+    HPP --> Scan
+    Scan --> Cov["binding-coverage.json"]
+    InteropH --> Cov
+  end
+  Native --> Bindings["Spark.Bindings"]
+  Companion --> Bindings
+  CS --> Bindings
+  Access --> Bindings</div></div>
+<h2 id="layers">Layers</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Artifact</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>SparkInterop.h</code> + <code>SparkInterop*.cpp</code></td>
+<td>C ABI mirroring scriptable C++ surface (<strong>spark-sharp</strong> <code>native/</code>)</td>
+</tr>
+<tr>
+<td>1b</td>
+<td><code>SparkInteropComponentBindings.generated.h/.cpp</code></td>
+<td>Auto thunks from <code>SPARK_SCRIPT_BIND</code> in component headers</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>Native.g.cs</code> + <code>Native.Interop.g.cs</code></td>
+<td><code>DllImport</code> declarations (ClangSharp + companion)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>Components/FromInterop/*.g.cs</code></td>
+<td>Usable C# types from <code>spark_&lt;prefix&gt;_*</code> grouping</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>Components/Generated/*</code></td>
+<td>Handle-only stubs when <strong>no</strong> <code>spark_&lt;prefix&gt;_</code> group exists yet</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Generated glue</td>
+<td><code>GameObject.ComponentAccess.g.cs</code>, <code>SparkComponentKind.g.cs</code>, C++ default-add factory</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ergonomics (hand-maintained):</strong> <code>CppMirrors.g.cs</code> (<code>Game</code>, <code>GameWorld</code>, <code>GameObject</code> <code>Add*</code> helpers), <code>InteropPtr.cs</code>, <code>InteropUtf8.cs</code>, small <code>*.Extensions.g.cs</code> files for enums/overloads.</p>
+<h2 id="naming-convention">Naming convention</h2>
+<p>Interop functions use <strong><code>spark_&lt;componentPrefix&gt;_&lt;verb&gt;</code></strong>:</p>
+<ul>
+<li><code>spark_transform_get_translation</code> / <code>spark_transform_set_translation</code> → <code>TransformComponent.Translation</code></li>
+<li><code>spark_sound_cue_queue_bundled_clip</code> → <code>SoundCueComponent.QueueBundledClip</code> (UTF-8 path)</li>
+<li>Irregular prefixes live in <code>scripting/bindings/spark-interop-bindings.json</code> (<strong>spark-sharp</strong>, from <code>generate_interop_manifest.py</code>).</li>
+</ul>
+<p><strong>Creation vs get-or-add:</strong> Some kinds are denied in <code>generate-csharp-component-registry.py</code> (<code>FACTORY_DENY</code>) because C++ needs extra constructor args. Expose <strong><code>spark_object_add_*</code></strong> in <code>SparkInterop.h</code> and mirror as <code>GameObject.AddTerrain()</code>, <code>AddSoundCue()</code>, etc. in <code>CppMirrors.g.cs</code>.</p>
+<h2 id="regenerate-full-stack">Regenerate (full stack)</h2>
+<p>From the <strong>spark-sharp</strong> repository root:</p>
+<pre><code class="language-bash">export SPARK_ENGINE_ROOT=/path/to/spark
+./tools/generate-csharp-bindings.sh
+</code></pre>
+<p>This runs, in order:</p>
+<ol>
+<li><code>inject_spark_script_bind.py</code> / <code>spark_script_bindgen.py</code></li>
+<li><code>generate_interop_manifest.py</code> → <code>spark-interop-bindings.json</code></li>
+<li><code>dotnet run</code> → <strong>Spark.Bindings.Generator</strong> (ClangSharp + mirrors)</li>
+<li><code>sync-component-kind-bindings.sh</code></li>
+<li><code>scan-cpp-component-api.py</code> → <code>binding-coverage.json</code></li>
+<li><code>generate_native_pinvoke_companion.py</code></li>
+<li><code>generate-csharp-component-registry.py</code></li>
+</ol>
+<p>CMake also runs <code>spark_script_bindgen.py</code> when building <strong><code>SparkInterop</code></strong> in spark-sharp (<code>SparkInteropBindingsCodegen</code> target).</p>
+<h2 id="closing-gaps-c-interop">Closing gaps (C++ → interop)</h2>
+<ol>
+<li>Run <code>python3 tools/scan-cpp-component-api.py</code> (spark-sharp) and open <code>scripting/bindings/binding-coverage.json</code>.</li>
+<li>Prefer <code>SPARK_SCRIPT_BIND(suffix)</code> on <code>*Component.hpp</code> members in <strong>this</strong> repo, then <code>spark_script_bindgen.py</code> (or build <code>SparkInterop</code>).</li>
+<li>Ensure new symbols are not duplicated in manual <code>SparkInterop.h</code> (bindgen skips existing names).</li>
+<li>Re-run <code>./tools/generate-csharp-bindings.sh</code> in <strong>spark-sharp</strong>.</li>
+</ol>
+<p><code>skipMirrorCodegenClasses</code> in <code>generate_interop_manifest.py</code> is for APIs that need custom C# (e.g. <code>AnimationEventReceiverComponent</code> callbacks).</p>
+<h2 id="managed-host-optional">Managed host (optional)</h2>
+<p>Build <strong><code>SparkScriptHost</code></strong> from <strong>spark-sharp</strong> (<code>SPARK_SHARP_BUILD_SCRIPT_HOST=ON</code>). It loads a game <code>.dll</code> and registers managed <code>Game</code> callbacks via <code>ScriptHostEntry</code> (<code>Spark.Scripting</code>). See <strong><a href="csharp-scripting.html">CSHARP_SCRIPTING.md</a></strong> and <strong><a href="spark-sharp.html">SPARK_SHARP.md</a></strong>.</p>
+<h2 id="related-docs">Related docs</h2>
+<table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>Topic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="spark-sharp.html">SPARK_SHARP.md</a></td>
+<td>Sibling repo, CMake presets, run HelloCsGame</td>
+</tr>
+<tr>
+<td><a href="csharp-scripting.html">CSHARP_SCRIPTING.md</a></td>
+<td>Architecture, debugging, game authoring</td>
+</tr>
+</tbody>
+</table>
       </article>
     </main>
 
     <footer class="site-footer doc-page-footer">
       <p>
         <a href="../../index.html">← Back to Spark home</a>
-        · <a href="csharp-scripting.html">C# scripting</a>
         · <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub</a>
       </p>
     </footer>
   </div>
+  <script>
+    document.querySelectorAll('pre code').forEach((block) => {
+      if (block.classList.contains('language-mermaid')) return;
+      if (typeof hljs !== 'undefined') hljs.highlightElement(block);
+    });
+  </script>
 </body>
 </html>

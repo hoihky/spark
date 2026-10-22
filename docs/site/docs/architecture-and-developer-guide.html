@@ -574,12 +574,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><code>debug</code></td>
 <td><code>cmake-build-debug/</code></td>
-<td>SparkDemo, SparkEditor, SparkScriptHost</td>
+<td>SparkDemo, SparkEditor (<code>SPARK_BUILD_GAMEPLAY=ON</code>)</td>
 </tr>
 <tr>
 <td><code>editor-debug</code></td>
 <td><code>cmake-build-editor/</code></td>
-<td>SparkEditor only (shared <code>SparkEngine</code>, no demos)</td>
+<td>SparkEditor only (shared <code>SparkEngine</code>, no demos in engine lib)</td>
 </tr>
 </tbody>
 </table>
@@ -1357,7 +1357,7 @@ Spark::LitSceneBuilder(world, context)
 </table>
 <p>Call <strong><code>SimulateGameAi(world, timing, context)</code></strong> from your game tick when you want ECS-driven AI to run.</p>
 <h3 id="513-c-scripting">5.13 C# scripting</h3>
-<p><strong>SparkInterop</strong> exposes a C ABI (<code>spark_*</code>); <strong>ClangSharp</strong> + mirror codegen produce <strong><code>Spark.Bindings</code></strong>. Optional <strong>CoreCLR</strong> hosting (<code>SparkScriptHost</code>, <strong>nethost</strong> + <strong>hostfxr</strong>) loads managed games (<code>HelloCsGame</code>, <code>Spark.Scripting</code>). See <strong><code>docs/CSHARP_SCRIPTING.md</code></strong> and <strong><code>docs/COMPONENT_SCRIPT_CODEGEN.md</code></strong>. The <strong><code>debug</code></strong> CMake preset enables <code>SPARK_BUILD_INTEROP</code> and <code>SPARK_BUILD_SCRIPT_HOST</code>; disable either for slimmer builds. Gameplay without scripting remains <strong>C++</strong> via <code>IGame</code> / <code>GameComponent</code>.</p>
+<p><strong>SparkInterop</strong> and C# bindings live in the sibling <strong>spark-sharp</strong> repo (<code>SPARK_ENGINE_ROOT</code> → this tree). <strong>ClangSharp</strong> + mirror codegen produce <strong><code>Spark.Bindings</code></strong>; optional <strong>CoreCLR</strong> hosting loads managed games. See <strong><code>docs/SPARK_SHARP.md</code></strong>, <strong><code>docs/CSHARP_SCRIPTING.md</code></strong>, <strong><code>docs/COMPONENT_SCRIPT_CODEGEN.md</code></strong>. Core engine CMake has no interop targets; optional <strong><code>SparkGameplay</code></strong> covers combat/pickups/game-flow. Gameplay without scripting remains <strong>C++</strong> via <code>IGame</code> / <code>GameComponent</code>.</p>
 <hr />
 <h2 id="6-runtime-lifecycle-igame">6. Runtime Lifecycle (<code>IGame</code>)</h2>
 <p>Your game implements <code>spark/engine/IGame.hpp</code>:</p>
@@ -2044,6 +2044,11 @@ physics.GetQueries2D().RebuildStatics(world);
 <td>Overlap circle/AABB, raycast, arc vs static broad-phase; dynamic overlap queries</td>
 </tr>
 <tr>
+<td><code>PhysicsSubsystem::SimulateAll3D</code></td>
+<td><code>PhysicsSubsystem.hpp</code></td>
+<td>Rigidbodies → characters → triggers; syncs <code>PhysicsQueryWorld3D</code> cell size</td>
+</tr>
+<tr>
 <td><code>PhysicsWorld3D::Simulate</code></td>
 <td><code>PhysicsWorld3D.hpp</code></td>
 <td>Sphere/capsule dynamics vs static boxes/capsules (skips <code>CharacterController3DComponent</code>)</td>
@@ -2057,6 +2062,11 @@ physics.GetQueries2D().RebuildStatics(world);
 <td><code>TriggerVolumeWorld3D::Simulate</code></td>
 <td><code>TriggerVolume3D.hpp</code></td>
 <td>Enter/exit overlap tests</td>
+</tr>
+<tr>
+<td><code>PhysicsBodyHandoff3D</code></td>
+<td><code>PhysicsBodyHandoff3D.hpp</code></td>
+<td>Carry/throw kinematic attach; see <code>PhysicsShowcase3DDemo</code></td>
 </tr>
 </tbody>
 </table>
@@ -2117,11 +2127,13 @@ PaintUiCanvases(world, params, fbW, fbH);
 <li><code>include/spark/demo/ThreeDDemo.hpp</code> — camera + glTF + lights + manual submit pattern</li>
 <li><code>include/spark/demo/GltfSamples3DDemo.hpp</code> — glTF PBR + HDR sky dome reference</li>
 <li><code>include/spark/demo/ModelViewer3DDemo.hpp</code> — bundled glTF sample browser</li>
-<li><code>include/spark/demo/PhysicsBallThrow3DDemo.hpp</code> — minimal <strong>3D physics</strong> usage</li>
+<li><code>include/spark/demo/PhysicsBallThrow3DDemo.hpp</code> — minimal <strong>3D physics</strong> (throw spheres)</li>
+<li><code>include/spark/demo/PhysicsShowcase3DDemo.hpp</code> — <strong>3D physics contract</strong> demo (launcher <strong>#29</strong>, <strong>P</strong>): <code>SimulateAll3D</code>, queries, handoff, triggers, CCD, replay</li>
 <li><code>spark/ui/runtime/UiScene.hpp</code> + <code>spark/ui/Ui.hpp</code> — retained UI input/paint and factory controls</li>
 <li><code>docs/programming-guide/1-overview-architecture/08-ui-and-toolkits.md</code> — retained GUI vs Dear ImGui</li>
 <li><code>docs/programming-guide/1-overview-architecture/09-gameplay-kit.md</code> — teams, damage, interaction, inventory conventions</li>
 <li><a href="scene-and-rendering-gaps.html"><code>docs/SCENE_AND_RENDERING_GAPS.md</code></a> — C++ public API gaps for scene management and 3D rendering</li>
+<li><a href="../../programming-guide/site/5-physics/07-physics-3d-contract.html"><code>docs/programming-guide/5-physics/07-physics-3d-contract.md</code></a> — 3D simulation/query contract and showcase demo map</li>
 </ol>
 <hr />
 <h2 id="15-extending-the-engine-safely">15. Extending the Engine Safely</h2>

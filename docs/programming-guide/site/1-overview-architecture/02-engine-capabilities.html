@@ -641,6 +641,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/07-physics-3d-contract.html" class="nav-link">07 physics 3d contract</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -1019,7 +1025,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 
 PhysicsSubsystem physics;
 physics.Simulate2D(world, timing);
-physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers
+physics.SimulateAll3D(world, timing);  // rigidbodies + character + triggers (+ 3D query cell sync)
 Spark::SimulateGameAi(world, timing, context);
 Spark::ProcessSoundCues(world, context);  // listeners + ambient zones + cue flush
 Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);

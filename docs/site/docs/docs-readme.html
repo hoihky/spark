@@ -495,7 +495,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <main class="doc-page">
       <article class="doc-body">
         <h1 id="spark-documentation-index">Spark documentation index</h1>
-<p><strong>Build / preview HTML:</strong> from this folder run <code>./build-all.sh</code>, then <code>python3 -m http.server 8080</code> and open <code>http://127.0.0.1:8080/index.html</code>. Generated pages embed theme CSS inline so they also work when opened directly as local files.</p>
+<p><strong>Build / preview HTML:</strong> from repo root run <code>python3 docs/site/build-docs.py</code> and <code>python3 docs/programming-guide/rebuild-site.py</code> (optional: <code>python3 docs/ensure-html-theme.py</code> to inline CSS). Then <code>cd docs &amp;&amp; python3 -m http.server 8080</code> and open <code>http://127.0.0.1:8080/index.html</code>.</p>
 <table>
 <thead>
 <tr>
@@ -586,12 +586,17 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td>Blender export checklist for skinned glTF</td>
 </tr>
 <tr>
-<td><a href="csharp-scripting.html"><strong>CSHARP_SCRIPTING.md</strong></a></td>
+<td><a href="spark-sharp.html"><strong>SPARK_SHARP.md</strong></a></td>
 <td>Scripting</td>
-<td><code>SparkInterop</code>, generated <code>Spark.Bindings</code>, <code>SparkScriptHost</code>, HelloCsGame</td>
+<td>Sibling <strong>spark-sharp</strong> repo: CMake, presets, HelloCsGame debug</td>
 </tr>
 <tr>
-<td><a href="COMPONENT_SCRIPT_CODEGEN.md"><strong>COMPONENT_SCRIPT_CODEGEN.md</strong></a></td>
+<td><a href="csharp-scripting.html"><strong>CSHARP_SCRIPTING.md</strong></a></td>
+<td>Scripting</td>
+<td>Interop architecture, <code>SparkScriptHost</code>, managed game workflow</td>
+</tr>
+<tr>
+<td><a href="component-script-codegen.html"><strong>COMPONENT_SCRIPT_CODEGEN.md</strong></a></td>
 <td>Scripting</td>
 <td><code>SPARK_SCRIPT_BIND</code> pipeline, regen, coverage</td>
 </tr>
