@@ -15,6 +15,10 @@ endif ()
 if (SPARK_BUILD_GAMEPLAY)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/SparkGameplay.cmake)
     spark_add_gameplay_library(SparkEngine)
+    # Engine ECS sources (e.g. Projectile2D) call into SparkGameplay; pull the static kit into the dylib.
+    if (SPARK_BUILD_ENGINE_SHARED)
+        target_link_libraries(SparkEngine PRIVATE SparkGameplay)
+    endif ()
 endif ()
 
 if (SPARK_BUILD_DEMO)

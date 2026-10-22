@@ -58,6 +58,7 @@ function(spark_setup_gltf_draco target)
     endif ()
 
     set(DRACO_TESTS OFF CACHE BOOL "" FORCE)
+    set(DRACO_INSTALL OFF CACHE BOOL "" FORCE)
     set(DRACO_UNITY_PLUGIN OFF CACHE BOOL "" FORCE)
     set(DRACO_MAYA_PLUGIN OFF CACHE BOOL "" FORCE)
     set(DRACO_TRANSCODER OFF CACHE BOOL "" FORCE)
