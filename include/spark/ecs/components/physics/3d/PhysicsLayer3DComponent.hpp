@@ -32,6 +32,7 @@ public:
     SPARK_SCRIPT_BIND(set_is_trigger)
     void SetIsTrigger(const bool value) noexcept { filter.isTrigger = value; }
 
+    SPARK_SCRIPT_BIND(get_filter)
     [[nodiscard]] const ColliderFilter& GetFilter() const noexcept { return filter; }
 
 private:

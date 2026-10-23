@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -23,12 +24,19 @@ public:
 
     [[nodiscard]] int UpdatePriority() const noexcept override { return 250; }
 
+    SPARK_SCRIPT_BIND(get_source_object)
     [[nodiscard]] GameObject* GetSourceObject() const noexcept { return sourceObject; }
+    SPARK_SCRIPT_BIND(get_attached_object)
     [[nodiscard]] GameObject* GetAttachedObject() const noexcept { return attachedObject; }
+    SPARK_SCRIPT_BIND(get_joint_index)
     [[nodiscard]] std::uint32_t GetJointIndex() const noexcept { return jointIndex; }
+    SPARK_SCRIPT_BIND(get_joint_name_pattern)
     [[nodiscard]] const char* GetJointNamePattern() const noexcept { return jointNamePattern.CStr(); }
+    SPARK_SCRIPT_BIND(get_local_offset)
     [[nodiscard]] const Vector3& GetLocalOffset() const noexcept { return localOffset; }
+    SPARK_SCRIPT_BIND(get_local_rotation)
     [[nodiscard]] const Quaternion& GetLocalRotation() const noexcept { return localRotation; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
     void SetSourceObject(GameObject* o) noexcept { sourceObject = o; }
@@ -37,6 +45,7 @@ public:
     /** Resolves joint index from the source animator skeleton (case-insensitive substring). */
     bool SetJointByNamePattern(const char* substring) noexcept;
     void SetLocalOffset(const Vector3& o) noexcept { localOffset = o; }
+    SPARK_SCRIPT_BIND(set_local_rotation)
     void SetLocalRotation(const Quaternion& q) noexcept { localRotation = q; }
     void SetEnabled(bool e) noexcept { enabled = e; }
 

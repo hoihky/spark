@@ -25,8 +25,8 @@ public:
     SPARK_SCRIPT_BIND(set_local_offset)
     void SetLocalOffset(const Vector3& o) noexcept { offset = o; }
 
-    SPARK_SCRIPT_BIND(is_trigger)
-    [[nodiscard]] bool IsTrigger() const noexcept { return isTrigger; }
+    SPARK_SCRIPT_BIND(get_is_trigger)
+    [[nodiscard]] bool GetIsTrigger() const noexcept { return isTrigger; }
     SPARK_SCRIPT_BIND(set_is_trigger)
     void SetIsTrigger(const bool t) noexcept { isTrigger = t; }
 
@@ -39,8 +39,6 @@ public:
     [[nodiscard]] std::uint16_t GetMaskBits() const noexcept { return maskBits; }
     SPARK_SCRIPT_BIND(set_mask_bits)
     void SetMaskBits(const std::uint16_t bits) noexcept { maskBits = bits; }
-
-    [[nodiscard]] bool GetIsTrigger() const noexcept { return isTrigger; }
 
 private:
     Vector3 offset{Vector3::Zero};

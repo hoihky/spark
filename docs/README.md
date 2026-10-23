@@ -1,5 +1,7 @@
 # Spark documentation index
 
+**Privacy / paths:** [PATHS_AND_PRIVACY.md](PATHS_AND_PRIVACY.md) — run `./tools/check-paths-privacy.sh` before push.
+
 **Build / preview HTML:** from repo root run `python3 docs/site/build-docs.py` and `python3 docs/programming-guide/rebuild-site.py` (optional: `python3 docs/ensure-html-theme.py` to inline CSS). Then `cd docs && python3 -m http.server 8080` and open `http://127.0.0.1:8080/index.html`.
 
 | Document | Audience | Summary |

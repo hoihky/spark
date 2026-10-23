@@ -5,6 +5,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -25,6 +26,7 @@ public:
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
 
     [[nodiscard]] const SharedPtr<Mesh>& GetMesh() const noexcept { return mesh; }
+    SPARK_SCRIPT_BIND(get_slot)
     [[nodiscard]] SceneMeshSlot GetSlot() const noexcept { return slot; }
     [[nodiscard]] const Vector3& GetAlbedo() const noexcept { return albedo; }
 

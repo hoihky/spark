@@ -4,6 +4,7 @@
 #include "spark/math/Vector3.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -20,8 +21,11 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
+    SPARK_SCRIPT_BIND(get_carrier)
     [[nodiscard]] GameObject* GetCarrier() const noexcept { return carrier; }
+    SPARK_SCRIPT_BIND(get_local_offset)
     [[nodiscard]] const Vector3& GetLocalOffset() const noexcept { return localOffset; }
+    SPARK_SCRIPT_BIND(is_attached)
     [[nodiscard]] bool IsAttached() const noexcept { return carrier != nullptr; }
 
 private:

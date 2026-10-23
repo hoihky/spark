@@ -25,6 +25,7 @@ public:
 
     void OnAttach(GameObject& owner) override;
 
+    SPARK_SCRIPT_BIND(get_settings)
     [[nodiscard]] const TerrainGeneratorSettings& GetSettings() const noexcept { return settings; }
     [[nodiscard]] const Array<float>& GetHeightSamples() const noexcept { return heightSamples; }
 
@@ -53,6 +54,7 @@ public:
         return settings.worldUnitsPerTextureRepeat;
     }
     SPARK_SCRIPT_BIND(get_mesh_albedo)
+    SPARK_SCRIPT_BIND(get_mesh_albedo_rgb)
     [[nodiscard]] Vector3 GetMeshAlbedoRgb() const noexcept { return meshAlbedo; }
 
     SPARK_SCRIPT_BIND(set_height_scale)
@@ -66,12 +68,14 @@ public:
     void ResetHeightsToProcedural(GameObject& owner);
 
     SPARK_SCRIPT_BIND(reset_heights_to_procedural)
+    SPARK_SCRIPT_BIND(reset_heights_to_procedural_on)
     void ResetHeightsToProceduralOn(GameObject* owner);
 
     /** Rebuilds mesh from the current height buffer (call after brush edits). */
     void RegenerateMesh(GameObject& owner);
 
     SPARK_SCRIPT_BIND(regenerate_mesh)
+    SPARK_SCRIPT_BIND(regenerate_mesh_on)
     void RegenerateMeshOn(GameObject* owner);
 
     /**
@@ -89,6 +93,7 @@ public:
     void ApplyHeightBrushLocal(GameObject& owner, Vector2 centerXZ, float radiusXZ, float deltaY);
 
     SPARK_SCRIPT_BIND(apply_height_brush_local)
+    SPARK_SCRIPT_BIND(apply_height_brush_local_on)
     void ApplyHeightBrushLocalOn(GameObject* owner, const Vector2& centerXZ, float radiusXZ, float deltaY);
 
     /** Transforms @p centerWorld to local XZ; scales radius from world using max horizontal scale of the object. */

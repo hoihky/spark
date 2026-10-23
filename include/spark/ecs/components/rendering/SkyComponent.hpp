@@ -6,6 +6,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -22,13 +23,18 @@ public:
 
     explicit SkyComponent(SceneSkyMode mode) noexcept : skyMode(mode) {}
 
+    SPARK_SCRIPT_BIND(get_sky_mode)
     [[nodiscard]] SceneSkyMode GetSkyMode() const noexcept { return skyMode; }
+    SPARK_SCRIPT_BIND(set_sky_mode)
     void SetSkyMode(SceneSkyMode m) noexcept { skyMode = m; }
 
+    SPARK_SCRIPT_BIND(is_sky_enabled)
     [[nodiscard]] bool IsSkyEnabled() const noexcept { return enabled; }
+    SPARK_SCRIPT_BIND(set_sky_enabled)
     void SetSkyEnabled(bool e) noexcept { enabled = e; }
 
     void SetTint(const Vector3& c) noexcept { tint = c; }
+    SPARK_SCRIPT_BIND(get_tint)
     [[nodiscard]] const Vector3& GetTint() const noexcept { return tint; }
 
     void SetSkyTexture(SharedPtr<Texture2D> t) { skyTexture = MoveTemp(t); }

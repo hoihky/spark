@@ -23,6 +23,7 @@ public:
     Array<UniquePtr<InputAction>>& GetActions() noexcept { return actions; }
 
     SPARK_SCRIPT_BIND(clear)
+    SPARK_SCRIPT_BIND(clear_actions)
     void ClearActions() noexcept { actions.Clear(); }
 
     SPARK_SCRIPT_BIND(bind_button)
@@ -36,7 +37,9 @@ public:
             int secondaryNegativeKey = -1,
             int secondaryPositiveKey = -1);
 
+    SPARK_SCRIPT_BIND(bind_gamepad_button)
     void BindGamepadButton(const char* actionName, int gamepadButton);
+    SPARK_SCRIPT_BIND(bind_gamepad_axis1_d)
     void BindGamepadAxis1D(const char* actionName, int gamepadAxis, float axisScale = 1.0F);
 
     /** Keyboard + gamepad on the same semantic action (common for MoveX / Jump). */
@@ -55,7 +58,9 @@ public:
             int gamepadButton,
             int secondaryKey = -1);
 
+    SPARK_SCRIPT_BIND(find_action)
     [[nodiscard]] const InputAction* FindAction(const char* actionName) const noexcept;
+    SPARK_SCRIPT_BIND(find_action)
     [[nodiscard]] InputAction* FindAction(const char* actionName) noexcept;
 
 private:

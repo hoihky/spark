@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -17,7 +18,9 @@ public:
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_flash_duration)
     void SetFlashDuration(const float seconds) noexcept;
+    SPARK_SCRIPT_BIND(set_hurt_tint)
     void SetHurtTint(const Vector3& tint) noexcept { hurtTint = tint; }
 
 private:

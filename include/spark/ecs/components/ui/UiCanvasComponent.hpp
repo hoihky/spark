@@ -6,6 +6,7 @@
 #include "spark/ui/core/IUiElement.hpp"
 #include "spark/ui/core/UiTheme.hpp"
 #include "spark/ui/core/UiTypes.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -22,10 +23,14 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
+    SPARK_SCRIPT_BIND(set_sort_order)
     void SetSortOrder(int order) noexcept { sortOrder = order; }
+    SPARK_SCRIPT_BIND(get_sort_order)
     [[nodiscard]] int GetSortOrder() const noexcept { return sortOrder; }
 
+    SPARK_SCRIPT_BIND(set_canvas_enabled)
     void SetCanvasEnabled(bool enabled) noexcept;
+    SPARK_SCRIPT_BIND(is_canvas_enabled)
     [[nodiscard]] bool IsCanvasEnabled() const noexcept { return canvasEnabled; }
 
     template<typename T>
@@ -43,11 +48,13 @@ public:
 
     void AdoptRoot(UniquePtr<Ui::IUiElement> element) noexcept { root = MoveTemp(element); }
 
+    SPARK_SCRIPT_BIND(clear_transient_pointer_state)
     void ClearTransientPointerState() noexcept;
+    SPARK_SCRIPT_BIND(clear_keyboard_focus)
     void ClearKeyboardFocus() noexcept;
+    SPARK_SCRIPT_BIND(apply_focus)
     void ApplyFocus(Ui::IUiElement* nextFocus) noexcept;
 
-    /** Called by <c>UiInputRouter</c> with the topmost hit under the cursor (may be nullptr). */
     void StepPointer(const Ui::UiFrameInput& frameInput, Ui::IUiElement* hitElement);
     void ProcessKeyFocus(IInput& input);
 
@@ -56,7 +63,9 @@ public:
     void SetTheme(Ui::UiTheme theme) noexcept { uiTheme = theme; }
     [[nodiscard]] const Ui::UiTheme& GetTheme() const noexcept { return uiTheme; }
 
+    SPARK_SCRIPT_BIND(set_modal_input_capture)
     void SetModalInputCapture(bool capture) noexcept { modalInputCapture = capture; }
+    SPARK_SCRIPT_BIND(get_modal_input_capture)
     [[nodiscard]] bool GetModalInputCapture() const noexcept { return modalInputCapture; }
 
     [[nodiscard]] Ui::IUiElement* GetHotElement() const noexcept { return hotElement; }

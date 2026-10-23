@@ -11,6 +11,7 @@
 #include "spark/scene/tilemap/Tileset.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -50,39 +51,58 @@ public:
     void SetTileset(SharedPtr<Tileset> inTileset) noexcept;
 
     [[nodiscard]] const SharedPtr<Texture2D>& GetAtlas() const noexcept;
+    SPARK_SCRIPT_BIND(get_map_width)
     [[nodiscard]] std::uint32_t GetMapWidth() const noexcept { return mapWidth; }
+    SPARK_SCRIPT_BIND(get_map_height)
     [[nodiscard]] std::uint32_t GetMapHeight() const noexcept { return mapHeight; }
+    SPARK_SCRIPT_BIND(get_atlas_tiles_u)
     [[nodiscard]] std::uint32_t GetAtlasTilesU() const noexcept;
+    SPARK_SCRIPT_BIND(get_atlas_tiles_v)
     [[nodiscard]] std::uint32_t GetAtlasTilesV() const noexcept;
+    SPARK_SCRIPT_BIND(get_tile_world_size)
     [[nodiscard]] float GetTileWorldSize() const noexcept { return tileWorldSize; }
+    SPARK_SCRIPT_BIND(set_tile_world_size)
     void SetTileWorldSize(const float size) noexcept { tileWorldSize = size > 0.0F ? size : 1.0F; }
+    SPARK_SCRIPT_BIND(get_sort_order_base)
     [[nodiscard]] std::int32_t GetSortOrderBase() const noexcept { return sortOrderBase; }
+    SPARK_SCRIPT_BIND(set_sort_order_base)
     void SetSortOrderBase(std::int32_t order) noexcept { sortOrderBase = order; }
 
+    SPARK_SCRIPT_BIND(resize)
     void Resize(std::uint32_t mapW, std::uint32_t mapH);
 
     [[nodiscard]] std::uint32_t GetLayerCount() const noexcept {
         return static_cast<std::uint32_t>(layers.GetSize());
     }
+    SPARK_SCRIPT_BIND(get_layer)
     [[nodiscard]] TilemapLayer& GetLayer(const std::uint32_t layerIndex) noexcept;
+    SPARK_SCRIPT_BIND(get_layer)
     [[nodiscard]] const TilemapLayer& GetLayer(const std::uint32_t layerIndex) const noexcept;
     /** Appends an empty layer with the current map size. @return New layer index. */
+    SPARK_SCRIPT_BIND(get_add_layer)
     [[nodiscard]] std::uint32_t AddLayer(const char* name = "Layer");
     /** Removes a layer when more than one exists. */
+    SPARK_SCRIPT_BIND(remove_layer)
     void RemoveLayer(std::uint32_t layerIndex) noexcept;
 
     /** Legacy API: layer 0, default transform and full opacity. */
     void SetTile(std::uint32_t x, std::uint32_t y, std::uint16_t tileId);
     /** Returns <c>kEmptyTile</c> for out-of-range or empty cells (layer 0). */
+    SPARK_SCRIPT_BIND(get_tile)
     [[nodiscard]] std::uint16_t GetTile(std::uint32_t x, std::uint32_t y) const noexcept;
 
+    SPARK_SCRIPT_BIND(set_tile_cell)
     void SetTileCell(std::uint32_t x, std::uint32_t y, const TileCell& cell);
+    SPARK_SCRIPT_BIND(get_tile_cell)
     [[nodiscard]] TileCell GetTileCell(std::uint32_t x, std::uint32_t y) const noexcept;
 
     void SetTile(std::uint32_t layerIndex, std::uint32_t x, std::uint32_t y, std::uint16_t tileId);
+    SPARK_SCRIPT_BIND(set_tile_cell)
     void SetTileCell(std::uint32_t layerIndex, std::uint32_t x, std::uint32_t y, const TileCell& cell);
+    SPARK_SCRIPT_BIND(get_tile_cell)
     [[nodiscard]] TileCell GetTileCell(std::uint32_t layerIndex, std::uint32_t x, std::uint32_t y) const noexcept;
 
+    SPARK_SCRIPT_BIND(get_tile_definition)
     [[nodiscard]] const TileDefinition& GetTileDefinition(std::uint32_t x, std::uint32_t y) const noexcept;
     [[nodiscard]] const TileDefinition& GetTileDefinition(
             std::uint32_t layerIndex,
@@ -95,12 +115,16 @@ public:
             std::uint32_t x,
             std::uint32_t y) const noexcept;
 
+    SPARK_SCRIPT_BIND(get_definition_for_tile_id)
     [[nodiscard]] const TileDefinition& GetDefinitionForTileId(std::uint16_t tileId) const noexcept;
 
     /** Sets terrain paint id and display id; use with <c>TilemapAutotileComponent</c>. */
+    SPARK_SCRIPT_BIND(set_paint_tile)
     void SetPaintTile(std::uint32_t x, std::uint32_t y, std::uint16_t paintTileId);
+    SPARK_SCRIPT_BIND(set_paint_tile)
     void SetPaintTile(std::uint32_t layerIndex, std::uint32_t x, std::uint32_t y, std::uint16_t paintTileId);
 
+    SPARK_SCRIPT_BIND(bake_gameplay_grid)
     void BakeGameplayGrid(TilemapGameplayGrid& outGrid, TilemapGameplayWalkRule rule) const noexcept;
 
 private:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -19,8 +20,11 @@ public:
 
     explicit SortingGroupComponent(std::int32_t sortingOrderIn = 0) noexcept : sortingOrder(sortingOrderIn) {}
 
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
+    SPARK_SCRIPT_BIND(get_sorting_order)
     [[nodiscard]] std::int32_t GetSortingOrder() const noexcept { return sortingOrder; }
+    SPARK_SCRIPT_BIND(is_uses_root_world_y)
     [[nodiscard]] bool UsesRootWorldY() const noexcept { return sortAtRootWorldY; }
 
     void SetEnabled(const bool value) noexcept { enabled = value; }

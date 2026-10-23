@@ -49,7 +49,9 @@ public:
     SPARK_SCRIPT_BIND(is_world_hurtbox_query_enabled)
     [[nodiscard]] bool IsWorldHurtboxQueryEnabled() const noexcept { return worldHurtboxQueryEnabled; }
 
+    SPARK_SCRIPT_BIND(set_query_filter)
     void SetQueryFilter(const PhysicsQueryFilter3D& filter) noexcept { queryFilter = filter; }
+    SPARK_SCRIPT_BIND(get_query_filter)
     [[nodiscard]] const PhysicsQueryFilter3D& GetQueryFilter() const noexcept { return queryFilter; }
 
     SPARK_SCRIPT_BIND(set_knockback_meters)

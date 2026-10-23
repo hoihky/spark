@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/scene/submit/RenderLayerId.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -24,15 +25,20 @@ public:
     RenderLayerComponent(RenderLayerId layerIdIn, std::int32_t orderInLayerIn) noexcept
             : layerId(layerIdIn), orderInLayer(orderInLayerIn), explicitOrderInLayer(true) {}
 
+    SPARK_SCRIPT_BIND(get_layer_id)
     [[nodiscard]] RenderLayerId GetLayerId() const noexcept { return layerId; }
+    SPARK_SCRIPT_BIND(get_order_in_layer)
     [[nodiscard]] std::int32_t GetOrderInLayer() const noexcept { return orderInLayer; }
+    SPARK_SCRIPT_BIND(has_s_explicit_order_in_layer)
     [[nodiscard]] bool HasExplicitOrderInLayer() const noexcept { return explicitOrderInLayer; }
 
+    SPARK_SCRIPT_BIND(set_layer_id)
     void SetLayerId(RenderLayerId id) noexcept { layerId = id; }
     void SetOrderInLayer(std::int32_t order) noexcept {
         orderInLayer = order;
         explicitOrderInLayer = true;
     }
+    SPARK_SCRIPT_BIND(clear_explicit_order_in_layer)
     void ClearExplicitOrderInLayer() noexcept { explicitOrderInLayer = false; }
 
 private:

@@ -18,7 +18,9 @@ public:
     SPARK_SCRIPT_BIND(get_team_id)
     [[nodiscard]] std::int32_t GetTeamId() const noexcept { return team.GetValue(); }
 
+    SPARK_SCRIPT_BIND(set_gameplay_team)
     void SetGameplayTeam(const GameplayTeamId id) noexcept { team = id; }
+    SPARK_SCRIPT_BIND(get_gameplay_team)
     [[nodiscard]] GameplayTeamId GetGameplayTeam() const noexcept { return team; }
 
 private:

@@ -4,6 +4,7 @@
 #include "spark/math/Vector4.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -30,8 +31,11 @@ public:
             std::int32_t inSortOrder) noexcept;
 
     [[nodiscard]] const SharedPtr<Texture2D>& GetTexture() const noexcept { return texture; }
+    SPARK_SCRIPT_BIND(get_tint)
     [[nodiscard]] const Vector4& GetTint() const noexcept { return tint; }
+    SPARK_SCRIPT_BIND(get_uv_rect)
     [[nodiscard]] const Vector4& GetUvRect() const noexcept { return uvRect; }
+    SPARK_SCRIPT_BIND(get_sort_order)
     [[nodiscard]] std::int32_t GetSortOrder() const noexcept { return sortOrder; }
 
     void SetTexture(SharedPtr<Texture2D> t) noexcept { texture = MoveTemp(t); }

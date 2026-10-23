@@ -151,15 +151,20 @@ public:
     [[nodiscard]] bool IsDead() const noexcept { return deathLocked; }
 
     /** When true (default), attack/hurt/stagger use <c>AnimationLayerStackComponent</c> on the upper body. */
+    SPARK_SCRIPT_BIND(set_use_upper_body_combat_overlay)
     void SetUseUpperBodyCombatOverlay(const bool enabled) noexcept { useUpperBodyCombatOverlay = enabled; }
+    SPARK_SCRIPT_BIND(get_use_upper_body_combat_overlay)
     [[nodiscard]] bool GetUseUpperBodyCombatOverlay() const noexcept { return useUpperBodyCombatOverlay; }
+    SPARK_SCRIPT_BIND(set_use_upper_body_attack_overlay)
     void SetUseUpperBodyAttackOverlay(const bool enabled) noexcept { SetUseUpperBodyCombatOverlay(enabled); }
+    SPARK_SCRIPT_BIND(get_use_upper_body_attack_overlay)
     [[nodiscard]] bool GetUseUpperBodyAttackOverlay() const noexcept { return GetUseUpperBodyCombatOverlay(); }
 
     /** Speed-only (default) or directional strafe when catalog clips exist. */
     void SetLocomotionDriverMode(LocomotionController::DriverMode mode) noexcept {
         locomotionController.SetDriverMode(mode);
     }
+    SPARK_SCRIPT_BIND(set_wish_facing_yaw_radians)
     void SetWishFacingYawRadians(const float radians) noexcept { locomotionController.SetWishFacingYawRadians(radians); }
 
     /** Depth-first search on <c>root</c> and descendants for a 3D animation FSM. */

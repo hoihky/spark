@@ -3,6 +3,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -19,21 +20,28 @@ public:
 
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
 
+    SPARK_SCRIPT_BIND(get_text)
     [[nodiscard]] const Utf8String& GetText() const noexcept { return text; }
     void SetText(Utf8String value);
 
+    SPARK_SCRIPT_BIND(get_screen_x)
     [[nodiscard]] float GetScreenX() const noexcept { return screenX; }
+    SPARK_SCRIPT_BIND(get_screen_y)
     [[nodiscard]] float GetScreenY() const noexcept { return screenY; }
     void SetScreenPosition(float x, float y);
 
+    SPARK_SCRIPT_BIND(get_font_size_pixels)
     [[nodiscard]] float GetFontSizePixels() const noexcept { return fontSizePixels; }
     void SetFontSizePixels(float px);
 
+    SPARK_SCRIPT_BIND(get_color)
     [[nodiscard]] const Vector3& GetColor() const noexcept { return color; }
     void SetColor(const Vector3& rgb);
+    SPARK_SCRIPT_BIND(get_alpha)
     [[nodiscard]] float GetAlpha() const noexcept { return alpha; }
     void SetAlpha(float a);
 
+    SPARK_SCRIPT_BIND(is_visible)
     [[nodiscard]] bool IsVisible() const noexcept { return visible; }
     void SetVisible(bool v);
 

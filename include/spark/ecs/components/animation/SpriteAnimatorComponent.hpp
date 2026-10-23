@@ -5,6 +5,7 @@
 #include "spark/math/Vector4.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -51,11 +52,14 @@ public:
     /** For the current clip: when <c>loop == false</c>, true once playback reaches the last frame. */
     [[nodiscard]] bool IsCurrentClipFinished() const noexcept;
 
+    SPARK_SCRIPT_BIND(get_time_in_clip_seconds)
     [[nodiscard]] float GetTimeInClipSeconds() const noexcept { return timeInClipSeconds; }
 
     /** Local frame index within the active clip (0 .. frameCount-1). */
+    SPARK_SCRIPT_BIND(get_current_local_frame)
     [[nodiscard]] std::uint32_t GetCurrentLocalFrame() const noexcept;
 
+    SPARK_SCRIPT_BIND(get_current_clip)
     [[nodiscard]] const SpriteAnimationClip* GetCurrentClip() const noexcept;
 
     [[nodiscard]] static Vector4 ComputeUniformGridUv(

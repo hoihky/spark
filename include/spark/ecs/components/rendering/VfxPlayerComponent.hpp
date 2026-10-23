@@ -4,6 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/scene/vfx/VfxAsset.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -28,16 +29,24 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(set_vfx_asset_key)
     void SetVfxAssetKey(const char* key);
+    SPARK_SCRIPT_BIND(get_vfx_asset_key)
     [[nodiscard]] const Utf8String& GetVfxAssetKey() const noexcept { return vfxAssetKey; }
 
+    SPARK_SCRIPT_BIND(set_play_on_start)
     void SetPlayOnStart(bool enabled) noexcept { playOnStart = enabled; }
+    SPARK_SCRIPT_BIND(get_play_on_start)
     [[nodiscard]] bool GetPlayOnStart() const noexcept { return playOnStart; }
 
+    SPARK_SCRIPT_BIND(set_play_on_start_once)
     void SetPlayOnStartOnce(bool enabled) noexcept { playOnStartOnce = enabled; }
+    SPARK_SCRIPT_BIND(get_play_on_start_once)
     [[nodiscard]] bool GetPlayOnStartOnce() const noexcept { return playOnStartOnce; }
 
+    SPARK_SCRIPT_BIND(set_pooled_playback)
     void SetPooledPlayback(bool pooled) noexcept { pooledPlayback = pooled; }
+    SPARK_SCRIPT_BIND(is_pooled_playback)
     [[nodiscard]] bool IsPooledPlayback() const noexcept { return pooledPlayback; }
 
     void Play(GameObject& owner);
@@ -47,6 +56,7 @@ public:
     [[nodiscard]] bool IsPlaying() const noexcept {
         return state == VfxPlaybackState::Playing || state == VfxPlaybackState::PlayingOnce;
     }
+    SPARK_SCRIPT_BIND(get_playback_state)
     [[nodiscard]] VfxPlaybackState GetPlaybackState() const noexcept { return state; }
 
     /** True when a pooled one-shot has fully stopped and can be returned to the pool. */

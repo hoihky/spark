@@ -5,6 +5,7 @@
 #include "spark/ecs/GameComponent.hpp"
 
 #include <cstdint>
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -24,18 +25,27 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
+    SPARK_SCRIPT_BIND(play_overlay)
     void PlayOverlay(std::uint32_t clipIndex, AnimLoopMode loopMode) noexcept;
+    SPARK_SCRIPT_BIND(clear_overlay)
     void ClearOverlay() noexcept;
 
+    SPARK_SCRIPT_BIND(is_overlay_active)
     [[nodiscard]] bool IsOverlayActive() const noexcept { return overlayActive; }
+    SPARK_SCRIPT_BIND(is_overlay_finished)
     [[nodiscard]] bool IsOverlayFinished() const noexcept { return overlayActive && overlayFinished; }
 
+    SPARK_SCRIPT_BIND(get_overlay_clip_index)
     [[nodiscard]] std::uint32_t GetOverlayClipIndex() const noexcept { return overlayClip; }
+    SPARK_SCRIPT_BIND(get_overlay_time_seconds)
     [[nodiscard]] float GetOverlayTimeSeconds() const noexcept { return overlayTimeSeconds; }
+    SPARK_SCRIPT_BIND(get_overlay_loop_mode)
     [[nodiscard]] AnimLoopMode GetOverlayLoopMode() const noexcept { return overlayLoop; }
 
+    SPARK_SCRIPT_BIND(configure_upper_body_mask_from_spine)
     void ConfigureUpperBodyMaskFromSpine(const Skeleton& skeleton, const char* spineNameHint = "spine") noexcept;
 
+    SPARK_SCRIPT_BIND(get_joint_mask)
     [[nodiscard]] const AnimationJointMask& GetJointMask() const noexcept { return jointMask; }
 
 private:

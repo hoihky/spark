@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -20,16 +21,22 @@ public:
 
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
 
+    SPARK_SCRIPT_BIND(get_color)
     [[nodiscard]] const Vector3& GetColor() const noexcept { return color; }
+    SPARK_SCRIPT_BIND(get_intensity)
     [[nodiscard]] float GetIntensity() const noexcept { return intensity; }
+    SPARK_SCRIPT_BIND(get_range)
     [[nodiscard]] float GetRange() const noexcept { return range; }
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
+    SPARK_SCRIPT_BIND(is_casts_shadow)
     [[nodiscard]] bool CastsShadow() const noexcept { return castsShadow; }
 
     void SetColor(const Vector3& c);
     void SetIntensity(float v);
     void SetRange(float r);
     void SetEnabled(bool e);
+    SPARK_SCRIPT_BIND(set_casts_shadow)
     void SetCastsShadow(bool c);
 
 private:

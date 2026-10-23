@@ -40,14 +40,17 @@ public:
     void SetEnabled(bool value) noexcept { enabled = value; }
 
     SPARK_SCRIPT_BIND(get_enabled)
+    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
     SPARK_SCRIPT_BIND(set_terrain_object)
     void SetTerrainObject(GameObject* object) noexcept { terrainProbe.BindTerrainObject(object); }
+    SPARK_SCRIPT_BIND(get_terrain_object)
     [[nodiscard]] GameObject* GetTerrainObject() const noexcept { return terrainProbe.GetTerrainObject(); }
 
     SPARK_SCRIPT_BIND(set_view_target_object)
     void SetViewTargetObject(GameObject* object) noexcept { viewTargetObject = object; }
+    SPARK_SCRIPT_BIND(get_view_target_object)
     [[nodiscard]] GameObject* GetViewTargetObject() const noexcept { return viewTargetObject; }
 
     /** Preferred streaming anchor (fly camera world position); overrides view-target object when set. */
@@ -72,10 +75,14 @@ public:
     void SetAlbedoTexture(const SharedPtr<Texture2D>& texture) noexcept { albedoTexture = texture; }
     [[nodiscard]] const SharedPtr<Texture2D>& GetAlbedoTexture() const noexcept { return albedoTexture; }
 
+    SPARK_SCRIPT_BIND(get_bounds)
     GrassFieldBounds& GetBounds() noexcept { return bounds; }
+    SPARK_SCRIPT_BIND(get_bounds)
     [[nodiscard]] const GrassFieldBounds& GetBounds() const noexcept { return bounds; }
 
+    SPARK_SCRIPT_BIND(get_scatter_settings)
     GrassChunkScatterSettings& GetScatterSettings() noexcept { return scatterSettings; }
+    SPARK_SCRIPT_BIND(get_scatter_settings)
     [[nodiscard]] const GrassChunkScatterSettings& GetScatterSettings() const noexcept { return scatterSettings; }
 
     SPARK_SCRIPT_BIND(set_neighborhood_ring_radius)

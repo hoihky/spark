@@ -31,22 +31,28 @@ public:
 
     SPARK_SCRIPT_BIND(set_source)
     void SetSource(GameFlowTriggerSource value) noexcept { source = value; }
+    SPARK_SCRIPT_BIND(get_source)
     [[nodiscard]] GameFlowTriggerSource GetSource() const noexcept { return source; }
 
     SPARK_SCRIPT_BIND(set_target_state)
     void SetTargetState(const GameFlowState state) noexcept { targetState = state; }
+    SPARK_SCRIPT_BIND(get_target_state)
     [[nodiscard]] GameFlowState GetTargetState() const noexcept { return targetState; }
 
     /** Optional filter for trigger-enter: only objects whose name contains this substring. */
     SPARK_SCRIPT_BIND(set_instigator_name_filter)
     void SetInstigatorNameFilter(const char* filter) noexcept;
+    SPARK_SCRIPT_BIND(get_instigator_name_filter)
     [[nodiscard]] const char* GetInstigatorNameFilter() const noexcept { return instigatorNameFilter.CStr(); }
 
+    SPARK_SCRIPT_BIND(set_watch_state)
     void SetWatchState(const GameFlowState state) noexcept { watchState = state; }
+    SPARK_SCRIPT_BIND(get_watch_state)
     [[nodiscard]] GameFlowState GetWatchState() const noexcept { return watchState; }
 
     SPARK_SCRIPT_BIND(set_state_owner)
     void SetStateOwner(GameObject* owner) noexcept { stateOwner = owner; }
+    SPARK_SCRIPT_BIND(get_state_owner)
     [[nodiscard]] GameObject* GetStateOwner() const noexcept { return stateOwner; }
 
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;

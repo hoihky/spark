@@ -25,6 +25,7 @@ public:
     void SetOnItemReceived(ItemReceivedCallback callback) { onItemReceived = MoveTemp(callback); }
 
     bool TryReceive(const GameplayItemStack& stack) noexcept override;
+    SPARK_SCRIPT_BIND(is_try_receive)
     bool TryReceive(const GameplayItemStack& stack, GameObject* pickupOwner) noexcept;
 
     [[nodiscard]] static GameplayInventoryCollectorComponent* FindOnHierarchy(GameObject& root) noexcept;

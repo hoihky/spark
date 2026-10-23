@@ -44,12 +44,14 @@ public:
 
     SPARK_SCRIPT_BIND(get_offset)
     [[nodiscard]] const Vector2& GetOffset() const noexcept { return currentOffset; }
+    SPARK_SCRIPT_BIND(get_trauma)
     [[nodiscard]] float GetTrauma() const noexcept { return trauma; }
 
     SPARK_SCRIPT_BIND(clear)
     void Clear() noexcept;
 
     /** Advances simulation and returns the offset to apply this frame. */
+    SPARK_SCRIPT_BIND(tick)
     Vector2 Tick(float deltaSeconds) noexcept;
 
 private:
