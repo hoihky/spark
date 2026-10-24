@@ -558,6 +558,8 @@ set(SPARK_ENGINE_DEMO_SOURCES
         src/spark/demo/TerrainDemo.cpp
         src/spark/demo/VfxShowcaseDemo.cpp
         src/spark/demo/VfxShowcase2DDemo.cpp
+        src/spark/demo/SparkPixAtlasLoad.cpp
+        src/spark/demo/SparkPixShowcase2DDemo.cpp
         src/spark/demo/GameFlow2DProductPathDemo.cpp
         src/spark/demo/FoliageWindDemo.cpp
         src/spark/demo/GrassFieldTerrainDemo.cpp

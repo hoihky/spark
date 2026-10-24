@@ -40,6 +40,7 @@ enum class DemoMode : std::uint8_t {
     FoliageWind,
     GrassFieldTerrain,
     PhysicsShowcase3D,
+    SparkPixShowcase2D,
 #if SPARK_HAS_EDITOR
     SparkEditor,
 #endif

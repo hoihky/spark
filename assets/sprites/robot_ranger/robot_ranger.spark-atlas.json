@@ -1,0 +1,50 @@
+{
+  "format": "spark-sprite-atlas-v1",
+  "texture": "robot_ranger.png",
+  "columns": 8,
+  "rows": 4,
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "padding": 0,
+  "gridOrigin": "bottom-left",
+  "frameOrder": "row-major-x-then-y",
+  "nearestFilter": true,
+  "clips": [
+    {
+      "name": "idle",
+      "firstFrame": 0,
+      "frameCount": 4,
+      "framesPerSecond": 4.0,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "firstFrame": 4,
+      "frameCount": 6,
+      "framesPerSecond": 10.0,
+      "loop": true
+    },
+    {
+      "name": "run",
+      "firstFrame": 10,
+      "frameCount": 6,
+      "framesPerSecond": 14.0,
+      "loop": true
+    },
+    {
+      "name": "shoot",
+      "firstFrame": 16,
+      "frameCount": 6,
+      "framesPerSecond": 12.0,
+      "loop": false
+    },
+    {
+      "name": "die",
+      "firstFrame": 22,
+      "frameCount": 6,
+      "framesPerSecond": 8.0,
+      "loop": false
+    }
+  ],
+  "notes": "Matches Spark::SpriteAnimatorComponent uniform grid: frame 0 is bottom-left, +X then +Y. Use SetUniformGrid(columns, rows) and SpriteAnimationClip fields."
+}

@@ -12,6 +12,7 @@
 #include "spark/demo/SkyDemo.hpp"
 #include "spark/demo/VfxShowcaseDemo.hpp"
 #include "spark/demo/VfxShowcase2DDemo.hpp"
+#include "spark/demo/SparkPixShowcase2DDemo.hpp"
 #include "spark/demo/GameFlow2DProductPathDemo.hpp"
 #include "spark/demo/FoliageWindDemo.hpp"
 #include "spark/demo/GrassFieldTerrainDemo.hpp"
@@ -292,6 +293,11 @@ public:
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
                 ReturnToMenu(context);
             }
+        } else if (mode == DemoMode::SparkPixShowcase2D) {
+            sparkPixShowcase2DDemo.Simulate(timing, context, GetWorld());
+            if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
+                ReturnToMenu(context);
+            }
         } else if (mode == DemoMode::GameFlow2DProductPath) {
             gameFlow2DProductPathDemo.Simulate(timing, context, GetWorld());
             if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_ESCAPE)) {
@@ -372,6 +378,8 @@ public:
             waterLakeDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::VfxShowcase2D) {
             vfxShowcase2DDemo.Render(GetScene(), GetWorld(), context);
+        } else if (mode == DemoMode::SparkPixShowcase2D) {
+            sparkPixShowcase2DDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::GameFlow2DProductPath) {
             gameFlow2DProductPathDemo.Render(GetScene(), GetWorld(), context);
         } else if (mode == DemoMode::FoliageWind) {
@@ -571,6 +579,14 @@ public:
         vfxShowcase2DDemo.Load(GetWorld(), context);
         vfxShowcase2DLoaded = true;
         mode = DemoMode::VfxShowcase2D;
+        context.GetInput().SetCursorCaptured(false);
+    }
+
+    void EnterSparkPixShowcase2DDemo(IEngineContext& context) {
+        UnloadAllActiveDemos(context);
+        sparkPixShowcase2DDemo.Load(GetWorld(), context);
+        sparkPixShowcase2DLoaded = true;
+        mode = DemoMode::SparkPixShowcase2D;
         context.GetInput().SetCursorCaptured(false);
     }
 
@@ -889,6 +905,10 @@ private:
             vfxShowcase2DDemo.Unload(GetWorld());
             vfxShowcase2DLoaded = false;
         }
+        if (sparkPixShowcase2DLoaded) {
+            sparkPixShowcase2DDemo.Unload(GetWorld());
+            sparkPixShowcase2DLoaded = false;
+        }
         if (gameFlow2DProductPathLoaded) {
             gameFlow2DProductPathDemo.Unload(GetWorld());
             gameFlow2DProductPathLoaded = false;
@@ -959,6 +979,7 @@ private:
                 &ShellGame::EnterFoliageWindDemo,
                 &ShellGame::EnterGrassFieldTerrainDemo,
                 &ShellGame::EnterPhysicsShowcase3DDemo,
+                &ShellGame::EnterSparkPixShowcase2DDemo,
 #if SPARK_HAS_EDITOR
                 &ShellGame::EnterSparkEditorDemo,
 #endif
@@ -1166,6 +1187,8 @@ private:
     bool waterLakeDemoLoaded = false;
     VfxShowcase2DDemo vfxShowcase2DDemo{};
     bool vfxShowcase2DLoaded = false;
+    SparkPixShowcase2DDemo sparkPixShowcase2DDemo{};
+    bool sparkPixShowcase2DLoaded = false;
     GameFlow2DProductPathDemo gameFlow2DProductPathDemo{};
     bool gameFlow2DProductPathLoaded = false;
     FoliageWindDemo foliageWindDemo{};

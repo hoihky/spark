@@ -1,0 +1,29 @@
+{
+  "format": "spark-sprite-atlas-v1",
+  "texture": "slime.png",
+  "columns": 4,
+  "rows": 2,
+  "frameWidth": 16,
+  "frameHeight": 16,
+  "padding": 0,
+  "gridOrigin": "bottom-left",
+  "frameOrder": "row-major-x-then-y",
+  "nearestFilter": true,
+  "clips": [
+    {
+      "name": "idle",
+      "firstFrame": 0,
+      "frameCount": 1,
+      "framesPerSecond": 2.0,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "firstFrame": 1,
+      "frameCount": 3,
+      "framesPerSecond": 8.0,
+      "loop": true
+    }
+  ],
+  "notes": "Matches Spark::SpriteAnimatorComponent uniform grid: frame 0 is bottom-left, +X then +Y. Use SetUniformGrid(columns, rows) and SpriteAnimationClip fields."
+}

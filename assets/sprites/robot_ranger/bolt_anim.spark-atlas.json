@@ -1,0 +1,19 @@
+{
+  "format": "spark-sprite-atlas-v1",
+  "texture": "bolt_anim.png",
+  "columns": 3,
+  "rows": 1,
+  "frameWidth": 16,
+  "frameHeight": 16,
+  "nearestFilter": true,
+  "clips": [
+    {
+      "name": "fly",
+      "firstFrame": 0,
+      "frameCount": 3,
+      "framesPerSecond": 16.0,
+      "loop": true
+    }
+  ],
+  "notes": "For static bullets use bolt.png + full UV. Animated: SpriteAnimator clip 'fly'."
+}

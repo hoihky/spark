@@ -1,0 +1,13 @@
+{
+  "format": "spark-static-sprite-v1",
+  "texture": "bolt.png",
+  "size": [
+    16,
+    16
+  ],
+  "pivot": [
+    0.25,
+    0.5
+  ],
+  "notes": "Pivot near rear of trail; spawn at muzzle facing +X."
+}
