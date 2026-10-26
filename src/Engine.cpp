@@ -120,8 +120,8 @@ struct Engine::Impl {
         }
         autoRecordPending = !runOptions.autoRecordPath.IsEmpty();
         EmptyRenderFrame renderFrame;
-        if (ISceneProvider* sceneHost = dynamic_cast<ISceneProvider*>(game.Get())) {
-            engineContext->SetSceneBinding(&sceneHost->GetScene());
+        if (Scene* ownedScene = game->TryGetOwnedScene()) {
+            engineContext->SetSceneBinding(ownedScene);
         }
         game->OnAttach(*engineContext);
         (void)audio.Startup();

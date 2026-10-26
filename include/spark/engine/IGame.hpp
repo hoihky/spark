@@ -6,12 +6,17 @@
 
 namespace Spark {
 
+class Scene;
+
 /**
  * Game contract — implement or inherit Game for application logic (Dependency Inversion).
  */
 class IGame {
 public:
     virtual ~IGame() = default;
+
+    /** When the game owns a <c>Scene</c> (e.g. <c>Spark::Game</c>), return it for engine binding. */
+    [[nodiscard]] virtual Scene* TryGetOwnedScene() noexcept { return nullptr; }
 
     /** Called once after the engine has created window, renderer, and input. */
     virtual void OnAttach(IEngineContext& context) = 0;

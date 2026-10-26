@@ -3,14 +3,28 @@
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
 
+#include <cstdlib>
 #include <cstdio>
 #include <stdexcept>
 #include <string>
 
 namespace Spark {
 
+namespace {
+
+[[nodiscard]] const char* ShaderSpvDirectory() {
+    if (const char* override_dir = std::getenv("SPARK_SHADER_SPV_DIR")) {
+        if (override_dir[0] != '\0') {
+            return override_dir;
+        }
+    }
+    return SPARK_SHADER_SPV_DIR;
+}
+
+}  // namespace
+
 Array<char> VulkanSpvShaderLoader::ReadSpvFile(const char* filename) const {
-    Utf8String pathUtf(SPARK_SHADER_SPV_DIR);
+    Utf8String pathUtf(ShaderSpvDirectory());
     pathUtf.AppendUtf8("/");
     pathUtf.AppendUtf8(filename);
     FILE* file = std::fopen(pathUtf.CStr(), "rb");

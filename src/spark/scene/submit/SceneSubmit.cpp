@@ -167,7 +167,10 @@ struct RigidDrawableSubmitSink final : DrawableFrustumSink {
             const MeshComponent& mc,
             const MaterialComponent* mat,
             const Matrix4& worldM) override {
-        if (o == nullptr || !mc.GetMesh()) {
+        if (o == nullptr) {
+            return;
+        }
+        if (!mc.GetMesh() && mc.GetSlot() == SceneMeshSlot::Custom) {
             return;
         }
         const MultiMaterialComponent* multiMat = o->GetComponent<MultiMaterialComponent>();
@@ -429,7 +432,10 @@ void FillStandardLitSceneFromWorld(
                 return;
             }
             const MeshComponent* mc = o->GetComponent<MeshComponent>();
-            if (mc == nullptr || !mc->GetMesh()) {
+            if (mc == nullptr) {
+                return;
+            }
+            if (!mc->GetMesh() && mc->GetSlot() == SceneMeshSlot::Custom) {
                 return;
             }
             rigidSink.OnDrawable(o, *mc, o->GetComponent<MaterialComponent>(), o->GetWorldMatrix());

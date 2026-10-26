@@ -14,6 +14,8 @@ namespace Spark {
  */
 class Game : public IGame, public ISceneProvider {
 public:
+    [[nodiscard]] Scene* TryGetOwnedScene() noexcept override { return &scene; }
+
     [[nodiscard]] Scene& GetScene() noexcept override { return scene; }
     [[nodiscard]] const Scene& GetScene() const noexcept override { return scene; }
 
