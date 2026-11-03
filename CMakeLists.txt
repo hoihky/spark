@@ -701,6 +701,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/ai/GridPathFollower2DComponent.cpp
         src/spark/ecs/components/input/InputActionMapComponent.cpp
         src/spark/ecs/components/input/PlayerInputComponent.cpp
+        src/spark/ecs/components/script/ScriptSignalListenerComponent.cpp
         src/spark/input/InputAction.cpp
         src/spark/input/KeyboardInputBindings.cpp
         src/spark/input/GamepadInputBindings.cpp

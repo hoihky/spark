@@ -1,0 +1,36 @@
+{
+  "format": "spark-sprite-atlas-v1",
+  "texture": "ref_youth.png",
+  "columns": 10,
+  "rows": 2,
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "padding": 0,
+  "gridOrigin": "bottom-left",
+  "frameOrder": "row-major-x-then-y",
+  "nearestFilter": true,
+  "clips": [
+    {
+      "name": "idle",
+      "firstFrame": 0,
+      "frameCount": 4,
+      "framesPerSecond": 4.0,
+      "loop": true
+    },
+    {
+      "name": "walk",
+      "firstFrame": 4,
+      "frameCount": 8,
+      "framesPerSecond": 10.0,
+      "loop": true
+    },
+    {
+      "name": "run",
+      "firstFrame": 12,
+      "frameCount": 6,
+      "framesPerSecond": 14.0,
+      "loop": true
+    }
+  ],
+  "notes": "Matches Spark::SpriteAnimatorComponent uniform grid: frame 0 is bottom-left, +X then +Y. Atlas PNG cells are flipped vertically at export so +Y-up sprites match engine UV sampling (see compose_spritesheet in export.py)."
+}

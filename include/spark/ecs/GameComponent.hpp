@@ -132,6 +132,8 @@ enum class ComponentKind : std::uint32_t {
     GameplayInventoryCollector,
     PhysicsContactListener3D,
     PhysicsAttachedBody3D,
+    /** Managed/script hook: forwards sibling <c>OnSignal</c> dispatch to a C callback. */
+    ScriptSignalListener,
 };
 
 /**

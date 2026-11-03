@@ -119,6 +119,7 @@
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/input/InputActionMapComponent.hpp"
 #include "spark/ecs/components/input/PlayerInputComponent.hpp"
+#include "spark/ecs/components/script/ScriptSignalListenerComponent.hpp"
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/ecs/components/world/TimeOfDayDriverComponent.hpp"

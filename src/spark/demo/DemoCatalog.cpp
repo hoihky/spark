@@ -266,7 +266,7 @@ constexpr DemoCatalogEntry kEntries[] = {
          DemoCategory::Gameplay2D,
          false,
          "Spark-pix atlas",
-         "Load slime.spark-atlas.json manifest",
+         "ref_youth · ref_elder · rose_hero atlases",
          "30",
          -1,
          'Z'},
