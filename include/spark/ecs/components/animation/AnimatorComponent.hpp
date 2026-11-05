@@ -7,7 +7,6 @@
 #include "spark/memory/SharedPtr.hpp"
 
 #include <cstdint>
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -46,9 +45,7 @@ public:
         const float blend = crossfade.elapsed / crossfade.duration;
         return (blend < 0.0F) ? 0.0F : (blend > 1.0F ? 1.0F : blend);
     }
-    SPARK_SCRIPT_BIND(get_crossfade_from_clip)
     [[nodiscard]] std::uint32_t GetCrossfadeFromClip() const noexcept { return crossfade.fromClip; }
-    SPARK_SCRIPT_BIND(get_crossfade_from_time)
     [[nodiscard]] float GetCrossfadeFromTime() const noexcept { return crossfade.fromTime; }
     [[nodiscard]] bool IsLocomotionBlending() const noexcept { return locomotionBlend.active; }
     [[nodiscard]] std::uint32_t GetLocomotionBlendClipA() const noexcept { return locomotionBlend.clipA; }
@@ -65,7 +62,6 @@ public:
     void SetTimeSeconds(float t);
     void SetLoopMode(AnimLoopMode mode) noexcept;
     /** Resets playback to t=0 on the current clip (clears crossfade). */
-    SPARK_SCRIPT_BIND(restart_current_clip)
     void RestartCurrentClip() noexcept;
     /** Swaps skeleton/clip (e.g. character model switch); resets playback state. */
     void RetargetSkeleton(SharedPtr<Skeleton> newSkeleton, std::uint32_t clipIndex, float newSpeed = 1.0F);
@@ -78,7 +74,6 @@ public:
     void ClearLocomotionBlend() noexcept;
 
     /** Fills skin joint palette using loop mode, optional crossfade/blend, and evaluated sample times. */
-    SPARK_SCRIPT_BIND(compute_joint_palette)
     void ComputeJointPalette(Matrix4* outPalette, std::uint32_t paletteMax) const;
 
     /** Samples the current animated pose (crossfade / locomotion blend aware). */
@@ -88,7 +83,6 @@ public:
      * Joint world matrix in skeleton space using the same crossfade / locomotion-blend rules as
      * <c>ComputeJointPalette</c>.
      */
-    SPARK_SCRIPT_BIND(is_try_compute_joint_world_matrix)
     [[nodiscard]] bool TryComputeJointWorldMatrix(std::uint32_t jointIndex, Matrix4& outJointWorld) const;
 
     friend class SkeletonPaletteCacheKey;

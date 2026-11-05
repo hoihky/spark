@@ -1,6 +1,6 @@
 # C# bindings coverage (vs C++ components)
 
-Interop and generated **`Spark.Bindings`** live in the sibling **[spark-sharp](SPARK_SHARP.md)** repo. The engine exposes scriptable surface via **`SPARK_SCRIPT_BIND`** on component headers and a stable C ABI (`SparkInterop`).
+Interop and generated **`Spark.Bindings`** live in the sibling **[spark-sharp](SPARK_SHARP.md)** repo. Scriptable surface is declared in **spark-sharp** `component-script-catalog.json` and exported through a stable C ABI (`SparkInterop`).
 
 ## Regenerate and audit
 
@@ -21,12 +21,12 @@ After a full regen (Oct 2025 split work), expect **~1,000+** `spark_*` exports a
 | Layer | C# access |
 |-------|-----------|
 | All `ComponentKind` values in `Ecs.hpp` | `GameObject.GetOrAdd*` / `TryGet*` (see `GameObject.ComponentAccess.g.cs`) |
-| Methods marked `SPARK_SCRIPT_BIND` | `Components/FromInterop/*Component.g.cs` properties and methods |
+| Methods listed in `component-script-catalog.json` | `Components/FromInterop/*Component.g.cs` properties and methods |
 | Manual `SparkInterop.h` | `Native.g.cs` + `CppMirrors.g.cs` (`Game`, `GameWorld`, `AddTerrain`, animator, mesh-by-key, …) |
 
 ## Intentionally not mirrored (C++-only today)
 
-These patterns are skipped by bindgen (`tools/inject_spark_script_bind.py` / `spark_script_bindgen.py`):
+These patterns are skipped by bindgen (`validate_component_script_catalog.py` / `spark_script_bindgen.py`):
 
 | Pattern | Examples | Workaround in C# |
 |---------|----------|------------------|
@@ -40,7 +40,7 @@ Non-component engine APIs (Vulkan, `IEngineContext`, editor, raw physics world) 
 
 ## Closing a gap
 
-1. Add `SPARK_SCRIPT_BIND(suffix)` above the C++ member in **`include/spark/ecs/components/...`** (this repo).
+1. Add `{ "suffix", "member" }` to **`component-script-catalog.json`** in **spark-sharp** and implement the C++ member in **`include/spark/ecs/components/...`** (this repo).
 2. Run **`./tools/generate-csharp-bindings.sh`** in **spark-sharp**.
 3. If the component needs constructor args, add `spark_object_add_*` in **`SparkInterop.h`** and mirror in **`CppMirrors.g.cs`**; add kind to `FACTORY_DENY` if needed.
 

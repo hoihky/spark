@@ -497,7 +497,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
         <h1 id="sparksharp-c-bindings">SparkSharp (C# bindings)</h1>
 <p>C# scripting, <strong>SparkInterop</strong>, and generated <strong>Spark.Bindings</strong> live in a separate repository:</p>
 <p><strong><a href="https://github.com/hoihky/spark-sharp">spark-sharp</a></strong> — sibling repository next to this engine tree (convention: <code>../spark-sharp</code>). Intro: <a href="https://github.com/hoihky/spark-sharp/blob/main/docs/index.html">spark-sharp <code>docs/index.html</code></a>.</p>
-<p>The engine keeps only <code>include/spark/scripting/SparkScriptBind.hpp</code> — annotation macros scanned by bindgen in <strong>spark-sharp</strong>.</p>
+<p>Scriptable component APIs are listed in <strong>spark-sharp</strong> <code>scripting/bindings/component-script-catalog.json</code> (not in engine headers).</p>
 <h2 id="build-interop">Build interop</h2>
 <pre><code class="language-bash">cd ../spark-sharp
 cmake --preset debug -DSPARK_ENGINE_ROOT=&quot;$(pwd)/../spark&quot;   # from engine dir: -DSPARK_ENGINE_ROOT=&quot;$(pwd)&quot;

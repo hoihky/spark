@@ -5,7 +5,6 @@
 #include "spark/ecs/GameComponent.hpp"
 
 #include <cstdint>
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -31,9 +30,7 @@ public:
     [[nodiscard]] const Array<SpriteAnimationEventMarker>& GetMarkers() const noexcept { return markers; }
     Array<SpriteAnimationEventMarker>& GetMarkers() noexcept { return markers; }
 
-    SPARK_SCRIPT_BIND(clear_markers)
     void ClearMarkers() noexcept;
-    SPARK_SCRIPT_BIND(add_marker)
     void AddMarker(std::uint32_t clipIndex, float normalizedTime, const char* eventName);
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;

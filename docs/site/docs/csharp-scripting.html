@@ -616,7 +616,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tbody>
 </table>
 <p>Virtual gameplay APIs are mirrored as C# types that call <code>spark_*</code>. Structs/enums in <code>SparkInteropTypes.h</code> are emitted by ClangSharp with sequential layout.</p>
-<p><strong>Pipeline details:</strong> <strong><a href="component-script-codegen.html">COMPONENT_SCRIPT_CODEGEN.md</a></strong> (<code>SPARK_SCRIPT_BIND</code>, manifest, registry, coverage).</p>
+<p><strong>Pipeline details:</strong> <strong><a href="component-script-codegen.html">COMPONENT_SCRIPT_CODEGEN.md</a></strong> (component script catalog, manifest, registry, coverage).</p>
 <h3 id="regenerate-bindings">Regenerate bindings</h3>
 <pre><code class="language-bash">cd /path/to/spark-sharp
 dotnet tool restore   # once, uses .config/dotnet-tools.json
@@ -750,7 +750,7 @@ public static int Initialize(IntPtr hostApiPtr) =&gt; ScriptHostEntry.Initialize
 </tbody>
 </table>
 <p><strong>Coverage:</strong> <code>python3 tools/scan-cpp-component-api.py</code> in <strong>spark-sharp</strong> → <code>scripting/bindings/binding-coverage.json</code>.</p>
-<p><strong>Manual interop</strong> (non-<code>SPARK_SCRIPT_BIND</code>): creation helpers <code>spark_object_add_terrain</code>, <code>spark_object_add_directional_light</code>, <code>spark_object_add_sound_cue</code>, platformer texture registration, physics queries — in <strong>spark-sharp</strong> <code>native/include/spark/scripting/SparkInterop.h</code> and <code>SparkInterop*.cpp</code>.</p>
+<p><strong>Manual interop</strong> (not driven by the component catalog): creation helpers <code>spark_object_add_terrain</code>, <code>spark_object_add_directional_light</code>, <code>spark_object_add_sound_cue</code>, platformer texture registration, physics queries — in <strong>spark-sharp</strong> <code>native/include/spark/scripting/SparkInterop.h</code> and <code>SparkInterop*.cpp</code>.</p>
 <h2 id="hellocsgame-sample">HelloCsGame (sample)</h2>
 <p>Minimal loop to validate bindings + host wiring (not a full Kenney platformer clone):</p>
 <ul>
@@ -762,7 +762,7 @@ public static int Initialize(IntPtr hostApiPtr) =&gt; ScriptHostEntry.Initialize
 <ul>
 <li>Hot reload / in-editor <code>dotnet build</code> (GUI roadmap E5).</li>
 <li>Broader header-driven ClangSharp (beyond <code>SparkInterop.h</code>).</li>
-<li>Remaining <code>binding-coverage.json</code> gaps — prefer <code>SPARK_SCRIPT_BIND</code> + regen.</li>
+<li>Remaining <code>binding-coverage.json</code> gaps — add catalog entries + regen.</li>
 </ul>
 <p>Legacy <strong>SparkNative</strong> P/Invoke stack is removed; <strong><code>SparkInterop</code> + generated <code>Spark.Bindings</code></strong> replace it.</p>
       </article>

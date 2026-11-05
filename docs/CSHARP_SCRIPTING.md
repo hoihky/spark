@@ -60,7 +60,7 @@ flowchart LR
 
 Virtual gameplay APIs are mirrored as C# types that call `spark_*`. Structs/enums in `SparkInteropTypes.h` are emitted by ClangSharp with sequential layout.
 
-**Pipeline details:** **[COMPONENT_SCRIPT_CODEGEN.md](COMPONENT_SCRIPT_CODEGEN.md)** (`SPARK_SCRIPT_BIND`, manifest, registry, coverage).
+**Pipeline details:** **[COMPONENT_SCRIPT_CODEGEN.md](COMPONENT_SCRIPT_CODEGEN.md)** (component script catalog, manifest, registry, coverage).
 
 ### Regenerate bindings
 
@@ -168,7 +168,7 @@ public static int Initialize(IntPtr hostApiPtr) => ScriptHostEntry.InitializeCor
 
 **Coverage:** `python3 tools/scan-cpp-component-api.py` in **spark-sharp** → `scripting/bindings/binding-coverage.json`.
 
-**Manual interop** (non-`SPARK_SCRIPT_BIND`): creation helpers `spark_object_add_terrain`, `spark_object_add_directional_light`, `spark_object_add_sound_cue`, platformer texture registration, physics queries — in **spark-sharp** `native/include/spark/scripting/SparkInterop.h` and `SparkInterop*.cpp`.
+**Manual interop** (not driven by the component catalog): creation helpers `spark_object_add_terrain`, `spark_object_add_directional_light`, `spark_object_add_sound_cue`, platformer texture registration, physics queries — in **spark-sharp** `native/include/spark/scripting/SparkInterop.h` and `SparkInterop*.cpp`.
 
 ## HelloCsGame (sample)
 
@@ -183,6 +183,6 @@ For the full 2D platformer reference, use C++ **`Platformer2DDemo`** and optiona
 
 - Hot reload / in-editor `dotnet build` (GUI roadmap E5).
 - Broader header-driven ClangSharp (beyond `SparkInterop.h`).
-- Remaining `binding-coverage.json` gaps — prefer `SPARK_SCRIPT_BIND` + regen.
+- Remaining `binding-coverage.json` gaps — add catalog entries + regen.
 
 Legacy **SparkNative** P/Invoke stack is removed; **`SparkInterop` + generated `Spark.Bindings`** replace it.

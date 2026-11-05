@@ -1,16 +1,18 @@
 # Component script bindings — architecture
 
-> **Repository split:** Interop implementation, generated bindings, and all tools live in **[spark-sharp](SPARK_SHARP.md)**. This engine repo keeps **`include/spark/scripting/SparkScriptBind.hpp`** and component headers annotated with `SPARK_SCRIPT_BIND`.
+> **Repository split:** Interop implementation, generated bindings, and all tools live in **[spark-sharp](SPARK_SHARP.md)**. Scriptable component APIs are declared in **spark-sharp** `scripting/bindings/component-script-catalog.json`. Engine `*Component.hpp` files hold the C++ implementations.
 
-C# cannot call C++ `GameComponent` methods directly. The pipeline treats **`native/include/spark/scripting/SparkInterop.h`** (in **spark-sharp**) as the scriptable contract (stable C ABI). C++ component headers in **this** repo are the *source of truth for what should exist*; interop exports are the *source of truth for what C# can call today*.
+C# cannot call C++ `GameComponent` methods directly. The pipeline treats **`native/include/spark/scripting/SparkInterop.h`** (in **spark-sharp**) as the scriptable contract (stable C ABI). The **component script catalog** is the source of truth for which methods get C thunks; C++ headers must implement those members.
 
 ```mermaid
 flowchart TB
   subgraph cpp [C++ engine + spark-sharp native]
     HPP["spark/include *Component.hpp"]
+    Catalog["component-script-catalog.json"]
     InteropH["SparkInterop.h spark_* exports"]
     InteropCpp["SparkInterop*.cpp thunks"]
-    HPP -->|"SPARK_SCRIPT_BIND + spark_script_bindgen.py"| BindGen["SparkInteropComponentBindings.generated.*"]
+    Catalog -->|"spark_script_bindgen.py"| BindGen["SparkInteropComponentBindings.generated.*"]
+    HPP -->|"validate + member lookup"| Catalog
     BindGen --> InteropCpp
     HPP -->|"manual thunks (asset keys, Add* factories)"| InteropCpp
     InteropCpp --> InteropH
@@ -44,7 +46,7 @@ flowchart TB
 | Layer | Artifact | Role |
 |-------|----------|------|
 | 1 | `SparkInterop.h` + `SparkInterop*.cpp` | C ABI mirroring scriptable C++ surface (**spark-sharp** `native/`) |
-| 1b | `SparkInteropComponentBindings.generated.h/.cpp` | Auto thunks from `SPARK_SCRIPT_BIND` in component headers |
+| 1b | `SparkInteropComponentBindings.generated.h/.cpp` | Auto thunks from **`component-script-catalog.json`** |
 | 2 | `Native.g.cs` + `Native.Interop.g.cs` | `DllImport` declarations (ClangSharp + companion) |
 | 3 | `Components/FromInterop/*.g.cs` | Usable C# types from `spark_<prefix>_*` grouping |
 | 4 | `Components/Generated/*` | Handle-only stubs when **no** `spark_<prefix>_` group exists yet |
@@ -73,7 +75,7 @@ export SPARK_ENGINE_ROOT=/path/to/spark
 
 This runs, in order:
 
-1. `inject_spark_script_bind.py` / `spark_script_bindgen.py`
+1. `validate_component_script_catalog.py` → `spark_script_bindgen.py`
 2. `generate_interop_manifest.py` → `spark-interop-bindings.json`
 3. `dotnet run` → **Spark.Bindings.Generator** (ClangSharp + mirrors)
 4. `sync-component-kind-bindings.sh`
@@ -81,12 +83,14 @@ This runs, in order:
 6. `generate_native_pinvoke_companion.py`
 7. `generate-csharp-component-registry.py`
 
+See **spark-sharp** `scripting/bindings/COMPONENT_SCRIPT_CATALOG.md` for catalog editing.
+
 CMake also runs `spark_script_bindgen.py` when building **`SparkInterop`** in spark-sharp (`SparkInteropBindingsCodegen` target).
 
 ## Closing gaps (C++ → interop)
 
 1. Run `python3 tools/scan-cpp-component-api.py` (spark-sharp) and open `scripting/bindings/binding-coverage.json`.
-2. Prefer `SPARK_SCRIPT_BIND(suffix)` on `*Component.hpp` members in **this** repo, then `spark_script_bindgen.py` (or build `SparkInterop`).
+2. Add the method to **`component-script-catalog.json`** (suffix + C++ `member` name), implement it on the component in **this** repo, then validate and bindgen (or `./tools/generate-csharp-bindings.sh` in spark-sharp).
 3. Ensure new symbols are not duplicated in manual `SparkInterop.h` (bindgen skips existing names).
 4. Re-run `./tools/generate-csharp-bindings.sh` in **spark-sharp**.
 

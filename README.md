@@ -57,7 +57,7 @@ See [`docs/CLION.md`](docs/CLION.md) and [`.run/README.md`](.run/README.md) for 
 | [**Materials & Lighting**](docs/MATERIALS_AND_LIGHTING.md) | PBR channels, IBL, material limits |
 | [**Spark Editor Plan**](docs/SPARK_EDITOR_PLAN.md) | Editor milestones, project/asset workflow |
 | [**C# scripting**](docs/SPARK_SHARP.md) | Built from sibling **spark-sharp** (see also [architecture notes](docs/CSHARP_SCRIPTING.md)) |
-| [**Component bindgen**](docs/COMPONENT_SCRIPT_CODEGEN.md) | `SPARK_SCRIPT_BIND` → C# mirrors |
+| [**Component bindgen**](docs/COMPONENT_SCRIPT_CODEGEN.md) | `component-script-catalog.json` → C# mirrors |
 | [**GUI & Editor Roadmap**](docs/GUI_EDITOR_ROADMAP.md) | GUI toolkit and authoring UI tasks |
 | [**3D Animation Roadmap**](docs/ANIMATION_3D_ROADMAP.md) | Skeletal animation milestones |
 | [**Open World Roadmap**](docs/OPEN_WORLD_ACTION_ROADMAP.md) | Long-horizon streaming/combat/AI plan |
@@ -76,7 +76,7 @@ cmake/             SparkEngine, SparkGameplay, tests, shaders
 spark_editor/      SparkEditor executable
 ```
 
-**C# bindings:** [`docs/SPARK_SHARP.md`](docs/SPARK_SHARP.md). Regenerate from **spark-sharp** (`tools/generate-csharp-bindings.sh`). Core engine keeps only `include/spark/scripting/SparkScriptBind.hpp` for bindgen annotations.
+**C# bindings:** [`docs/SPARK_SHARP.md`](docs/SPARK_SHARP.md). Regenerate from **spark-sharp** (`tools/generate-csharp-bindings.sh`). Script API surface is declared in **spark-sharp** `component-script-catalog.json`.
 
 **Render headers** live under `include/spark/render/` in stage subfolders (not flat `render/*.hpp`):
 

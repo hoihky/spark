@@ -619,7 +619,7 @@ cmake --build cmake-build-debug -j
 </tr>
 <tr>
 <td><a href="component-script-codegen.html"><strong>Component bindgen</strong></a></td>
-<td><code>SPARK_SCRIPT_BIND</code> → C# mirrors</td>
+<td><code>component-script-catalog.json</code> → C# mirrors</td>
 </tr>
 <tr>
 <td><a href="gui-editor-roadmap.html"><strong>GUI &amp; Editor Roadmap</strong></a></td>
@@ -649,7 +649,7 @@ docs/              Design docs and roadmaps
 cmake/             SparkEngine, SparkGameplay, tests, shaders
 spark_editor/      SparkEditor executable
 </code></pre>
-<p><strong>C# bindings:</strong> <a href="spark-sharp.html"><code>docs/SPARK_SHARP.md</code></a>. Regenerate from <strong>spark-sharp</strong> (<code>tools/generate-csharp-bindings.sh</code>). Core engine keeps only <code>include/spark/scripting/SparkScriptBind.hpp</code> for bindgen annotations.</p>
+<p><strong>C# bindings:</strong> <a href="spark-sharp.html"><code>docs/SPARK_SHARP.md</code></a>. Regenerate from <strong>spark-sharp</strong> (<code>tools/generate-csharp-bindings.sh</code>). Script API surface is declared in <strong>spark-sharp</strong> <code>component-script-catalog.json</code>.</p>
 <p><strong>Render headers</strong> live under <code>include/spark/render/</code> in stage subfolders (not flat <code>render/*.hpp</code>):</p>
 <table>
 <thead>

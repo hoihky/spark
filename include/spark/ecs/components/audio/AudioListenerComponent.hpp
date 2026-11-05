@@ -3,7 +3,6 @@
 #include "spark/ecs/GameComponent.hpp"
 
 #include <cstdint>
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -17,14 +16,10 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
-    SPARK_SCRIPT_BIND(get_priority)
     [[nodiscard]] std::int32_t GetPriority() const noexcept { return priority; }
-    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
-    SPARK_SCRIPT_BIND(set_priority)
     void SetPriority(std::int32_t p) noexcept { priority = p; }
-    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool e) noexcept { enabled = e; }
 
 private:

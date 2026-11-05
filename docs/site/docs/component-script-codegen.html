@@ -496,15 +496,17 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <article class="doc-body">
         <h1 id="component-script-bindings-architecture">Component script bindings — architecture</h1>
 <blockquote>
-<p><strong>Repository split:</strong> Interop implementation, generated bindings, and all tools live in <strong><a href="spark-sharp.html">spark-sharp</a></strong>. This engine repo keeps <strong><code>include/spark/scripting/SparkScriptBind.hpp</code></strong> and component headers annotated with <code>SPARK_SCRIPT_BIND</code>.</p>
+<p><strong>Repository split:</strong> Interop implementation, generated bindings, and all tools live in <strong><a href="spark-sharp.html">spark-sharp</a></strong>. Scriptable component APIs are declared in <strong>spark-sharp</strong> <code>scripting/bindings/component-script-catalog.json</code>. Engine <code>*Component.hpp</code> files hold the C++ implementations.</p>
 </blockquote>
-<p>C# cannot call C++ <code>GameComponent</code> methods directly. The pipeline treats <strong><code>native/include/spark/scripting/SparkInterop.h</code></strong> (in <strong>spark-sharp</strong>) as the scriptable contract (stable C ABI). C++ component headers in <strong>this</strong> repo are the <em>source of truth for what should exist</em>; interop exports are the <em>source of truth for what C# can call today</em>.</p>
+<p>C# cannot call C++ <code>GameComponent</code> methods directly. The pipeline treats <strong><code>native/include/spark/scripting/SparkInterop.h</code></strong> (in <strong>spark-sharp</strong>) as the scriptable contract (stable C ABI). The <strong>component script catalog</strong> is the source of truth for which methods get C thunks; C++ headers must implement those members.</p>
 <div class="mermaid-wrap"><div class="mermaid">flowchart TB
   subgraph cpp [C++ engine + spark-sharp native]
     HPP["spark/include *Component.hpp"]
+    Catalog["component-script-catalog.json"]
     InteropH["SparkInterop.h spark_* exports"]
     InteropCpp["SparkInterop*.cpp thunks"]
-    HPP -->|"SPARK_SCRIPT_BIND + spark_script_bindgen.py"| BindGen["SparkInteropComponentBindings.generated.*"]
+    Catalog -->|"spark_script_bindgen.py"| BindGen["SparkInteropComponentBindings.generated.*"]
+    HPP -->|"validate + member lookup"| Catalog
     BindGen --> InteropCpp
     HPP -->|"manual thunks (asset keys, Add* factories)"| InteropCpp
     InteropCpp --> InteropH
@@ -549,7 +551,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td>1b</td>
 <td><code>SparkInteropComponentBindings.generated.h/.cpp</code></td>
-<td>Auto thunks from <code>SPARK_SCRIPT_BIND</code> in component headers</td>
+<td>Auto thunks from <strong><code>component-script-catalog.json</code></strong></td>
 </tr>
 <tr>
 <td>2</td>
@@ -589,7 +591,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </code></pre>
 <p>This runs, in order:</p>
 <ol>
-<li><code>inject_spark_script_bind.py</code> / <code>spark_script_bindgen.py</code></li>
+<li><code>validate_component_script_catalog.py</code> → <code>spark_script_bindgen.py</code></li>
 <li><code>generate_interop_manifest.py</code> → <code>spark-interop-bindings.json</code></li>
 <li><code>dotnet run</code> → <strong>Spark.Bindings.Generator</strong> (ClangSharp + mirrors)</li>
 <li><code>sync-component-kind-bindings.sh</code></li>
@@ -597,11 +599,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>generate_native_pinvoke_companion.py</code></li>
 <li><code>generate-csharp-component-registry.py</code></li>
 </ol>
+<p>See <strong>spark-sharp</strong> <code>scripting/bindings/COMPONENT_SCRIPT_CATALOG.md</code> for catalog editing.</p>
 <p>CMake also runs <code>spark_script_bindgen.py</code> when building <strong><code>SparkInterop</code></strong> in spark-sharp (<code>SparkInteropBindingsCodegen</code> target).</p>
 <h2 id="closing-gaps-c-interop">Closing gaps (C++ → interop)</h2>
 <ol>
 <li>Run <code>python3 tools/scan-cpp-component-api.py</code> (spark-sharp) and open <code>scripting/bindings/binding-coverage.json</code>.</li>
-<li>Prefer <code>SPARK_SCRIPT_BIND(suffix)</code> on <code>*Component.hpp</code> members in <strong>this</strong> repo, then <code>spark_script_bindgen.py</code> (or build <code>SparkInterop</code>).</li>
+<li>Add the method to <strong><code>component-script-catalog.json</code></strong> (suffix + C++ <code>member</code> name), implement it on the component in <strong>this</strong> repo, then validate and bindgen (or <code>./tools/generate-csharp-bindings.sh</code> in spark-sharp).</li>
 <li>Ensure new symbols are not duplicated in manual <code>SparkInterop.h</code> (bindgen skips existing names).</li>
 <li>Re-run <code>./tools/generate-csharp-bindings.sh</code> in <strong>spark-sharp</strong>.</li>
 </ol>

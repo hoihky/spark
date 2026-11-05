@@ -2,7 +2,6 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -19,9 +18,7 @@ public:
 
     explicit BlendModeComponent(SceneBlendMode modeIn = kSceneBlendModeDefault) noexcept : mode(modeIn) {}
 
-    SPARK_SCRIPT_BIND(get_mode)
     [[nodiscard]] SceneBlendMode GetMode() const noexcept { return mode; }
-    SPARK_SCRIPT_BIND(set_mode)
     void SetMode(SceneBlendMode m) noexcept { mode = m; }
 
 private:

@@ -24,7 +24,8 @@
 | [**BLENDER_GLTF_ANIMATION_EXPORT.md**](BLENDER_GLTF_ANIMATION_EXPORT.md) | Artists | Blender export checklist for skinned glTF |
 | [**SPARK_SHARP.md**](SPARK_SHARP.md) | Scripting | Sibling **spark-sharp** repo: CMake, presets, HelloCsGame debug |
 | [**CSHARP_SCRIPTING.md**](CSHARP_SCRIPTING.md) | Scripting | Interop architecture, `SparkScriptHost`, managed game workflow |
-| [**COMPONENT_SCRIPT_CODEGEN.md**](COMPONENT_SCRIPT_CODEGEN.md) | Scripting | `SPARK_SCRIPT_BIND` pipeline, regen, coverage |
+| [**COMPONENT_SCRIPT_CODEGEN.md**](COMPONENT_SCRIPT_CODEGEN.md) | Scripting | Component script catalog, regen pipeline |
+| [**BINDINGS_COVERAGE.md**](BINDINGS_COVERAGE.md) | Scripting | C# mirrors vs C++ components; closing gaps |
 | [**OPEN_WORLD_ACTION_ROADMAP.md**](OPEN_WORLD_ACTION_ROADMAP.md) | Long-term | Streaming, rendering scale (D8–D12), physics (E5–E10), AI/nav (Phase K), combat |
 | [**2D_ARPG_FEATURES.md**](2D_ARPG_FEATURES.md) | 2D gameplay | Physics, queries, anim FSM backlog |
 

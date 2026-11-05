@@ -3,7 +3,6 @@
 #include "spark/core/Function.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/gameplay/IGameplayInventorySink.hpp"
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -25,7 +24,6 @@ public:
     void SetOnItemReceived(ItemReceivedCallback callback) { onItemReceived = MoveTemp(callback); }
 
     bool TryReceive(const GameplayItemStack& stack) noexcept override;
-    SPARK_SCRIPT_BIND(is_try_receive)
     bool TryReceive(const GameplayItemStack& stack, GameObject* pickupOwner) noexcept;
 
     [[nodiscard]] static GameplayInventoryCollectorComponent* FindOnHierarchy(GameObject& root) noexcept;

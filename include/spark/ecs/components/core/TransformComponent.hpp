@@ -4,7 +4,6 @@
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Transform.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -17,10 +16,8 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
-    SPARK_SCRIPT_BIND(get_local_transform)
     [[nodiscard]] const Transform& GetLocalTransform() const noexcept { return local; }
 
-    SPARK_SCRIPT_BIND(set_local_transform)
     void SetLocalTransform(const Transform& t);
     void SetTranslation(const Vector3& v);
     void SetRotation(const Quaternion& q);

@@ -3,7 +3,6 @@
 #include "spark/core/Function.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/physics/simulation/PhysicsContactBroadcaster3D.hpp"
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 

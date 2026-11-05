@@ -3,7 +3,6 @@
 #include "spark/ecs/GameComponent.hpp"
 
 #include <cstdint>
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -27,14 +26,10 @@ public:
 
     [[nodiscard]] int UpdatePriority() const noexcept override { return 50; }
 
-    SPARK_SCRIPT_BIND(get_mode)
     [[nodiscard]] BillboardMode GetMode() const noexcept { return mode; }
-    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
-    SPARK_SCRIPT_BIND(set_mode)
     void SetMode(BillboardMode m) noexcept { mode = m; }
-    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(bool e) noexcept { enabled = e; }
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;

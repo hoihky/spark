@@ -1,7 +1,6 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -17,7 +16,6 @@ public:
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
     /** Always <c>true</c>; exists so scripts can hold a typed <c>OneWayPlatform2DComponent</c> mirror. */
-    SPARK_SCRIPT_BIND(is_one_way_platform)
     [[nodiscard]] bool IsOneWayPlatform() const noexcept { return true; }
 };
 

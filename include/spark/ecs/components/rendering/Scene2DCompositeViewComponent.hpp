@@ -5,7 +5,6 @@
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/scene/render/RenderTexture.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -16,9 +15,7 @@ public:
 
     [[nodiscard]] ComponentKind Kind() const noexcept override { return TypeKind; }
 
-    SPARK_SCRIPT_BIND(set_feature)
     void SetFeature(const Scene2DCompositeFeature value) noexcept { feature = value; }
-    SPARK_SCRIPT_BIND(get_feature)
     [[nodiscard]] Scene2DCompositeFeature GetFeature() const noexcept { return feature; }
 
     void SetTarget(SharedPtr<RenderTexture> texture) noexcept { target = MoveTemp(texture); }
@@ -39,12 +36,9 @@ public:
         worldOrthoHalfExtent = orthoHalfExtent;
     }
 
-    SPARK_SCRIPT_BIND(set_enabled)
     void SetEnabled(const bool value) noexcept { enabled = value; }
-    SPARK_SCRIPT_BIND(is_enabled)
     [[nodiscard]] bool IsEnabled() const noexcept { return enabled; }
 
-    SPARK_SCRIPT_BIND(build_desc)
     [[nodiscard]] Scene2DCompositeViewDesc BuildDesc() const noexcept;
 
 private:

@@ -7,7 +7,6 @@
 #include "spark/physics/PhysicsQueries3D.hpp"
 
 #include <cstdint>
-#include "spark/scripting/SparkScriptBind.hpp"
 
 namespace Spark {
 
@@ -29,46 +28,28 @@ public:
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
-    SPARK_SCRIPT_BIND(set_start_event_name)
     void SetStartEventName(const char* name) noexcept;
-    SPARK_SCRIPT_BIND(set_end_event_name)
     void SetEndEventName(const char* name) noexcept;
-    SPARK_SCRIPT_BIND(set_facing_object)
     void SetFacingObject(GameObject* object) noexcept { facingObject = object; }
-    SPARK_SCRIPT_BIND(set_origin_local_offset)
     void SetOriginLocalOffset(const Vector3& offset) noexcept { originLocalOffset = offset; }
-    SPARK_SCRIPT_BIND(set_trace_distance)
     void SetTraceDistance(float meters) noexcept;
-    SPARK_SCRIPT_BIND(set_hit_radius)
     void SetHitRadius(float meters) noexcept;
-    SPARK_SCRIPT_BIND(set_damage_per_hit)
     void SetDamagePerHit(float amount) noexcept { damagePerHit = amount; }
 
-    SPARK_SCRIPT_BIND(set_world_hurtbox_query_enabled)
     void SetWorldHurtboxQueryEnabled(const bool enabled) noexcept { worldHurtboxQueryEnabled = enabled; }
-    SPARK_SCRIPT_BIND(is_world_hurtbox_query_enabled)
     [[nodiscard]] bool IsWorldHurtboxQueryEnabled() const noexcept { return worldHurtboxQueryEnabled; }
 
-    SPARK_SCRIPT_BIND(set_query_filter)
     void SetQueryFilter(const PhysicsQueryFilter3D& filter) noexcept { queryFilter = filter; }
-    SPARK_SCRIPT_BIND(get_query_filter)
     [[nodiscard]] const PhysicsQueryFilter3D& GetQueryFilter() const noexcept { return queryFilter; }
 
-    SPARK_SCRIPT_BIND(set_knockback_meters)
     void SetKnockbackMeters(const float meters) noexcept { knockbackMeters = meters > 0.0F ? meters : 0.0F; }
-    SPARK_SCRIPT_BIND(set_apply_hurt_reaction)
     void SetApplyHurtReaction(const bool enabled) noexcept { applyHurtReaction = enabled; }
 
-    SPARK_SCRIPT_BIND(clear_targets)
     void ClearTargets() noexcept { targets.Clear(); }
-    SPARK_SCRIPT_BIND(add_target)
     void AddTarget(GameObject* target) noexcept;
 
-    SPARK_SCRIPT_BIND(is_hit_window_active)
     [[nodiscard]] bool IsHitWindowActive() const noexcept { return hitWindowActive; }
-    SPARK_SCRIPT_BIND(get_hits_this_swing)
     [[nodiscard]] std::uint32_t GetHitsThisSwing() const noexcept { return hitsThisSwing; }
-    SPARK_SCRIPT_BIND(get_total_hits)
     [[nodiscard]] std::uint32_t GetTotalHits() const noexcept { return totalHits; }
 
 private:
