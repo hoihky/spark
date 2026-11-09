@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spark Game Engine — C++23, Vulkan, optional C#</title>
-  <meta name="description" content="Spark is a desktop game engine for learning and prototyping: C++23, Vulkan forward rendering, entity–component gameplay, 2D/3D physics, AI, and audio—with optional C# scripting over a stable native interop API.">
+  <meta name="description" content="Spark is a C++23 desktop game engine with Vulkan forward PBR, 120+ ECS components, custom 2D/3D physics, AI, and audio. SparkDemo ships 30+ built-in modes; the ten-part programming guide covers 2D/3D games, tools, and optional C# scripting.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -506,11 +506,17 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           <div class="hero-text">
             <h1>Spark Game Engine</h1>
             <p class="hero-tagline">
-              Spark is a desktop game engine built on <strong>C++23</strong> and <strong>Vulkan</strong>, organized
-              around explicit simulation and render phases, composable components, and interfaces that keep gameplay
-              code independent of the renderer. It includes 2D and 3D physics, navigation and AI, audio, a retained-mode
-              UI toolkit, and optional <strong>Dear ImGui</strong> for tools. Extend titles in <strong>C#</strong> when you
-              want managed gameplay, with generated bindings over a stable C interop layer and a CoreCLR host.
+              Spark is a desktop game engine built on <strong>C++23</strong> and <strong>Vulkan</strong>, with an
+              explicit frame contract: simulation and rules in <code>OnUpdate</code>, an immutable
+              <code>SceneRenderParams</code> snapshot for rendering. Gameplay is expressed through
+              <strong>120+</strong> <code>GameComponent</code> types on lightweight <code>GameObject</code> entities—not
+              renderer inheritance. You get 2D sprites and tilemaps, forward PBR and skinned glTF, terrain, water,
+              foliage, custom 2D/3D physics, grid and patrol AI, spatial audio, retained UI, and optional
+              <strong>Dear ImGui</strong> for tools.
+              <strong>SparkDemo</strong> is a launcher over 30+ samples, each tied to chapters in the
+              <a href="programming-guide/site/index.html">ten-part programming guide</a> (start from the
+              <a href="programming-guide/site/1-overview-architecture/10-sparkdemo-catalog.html">demo catalog</a>).
+              Optional <strong>C#</strong> gameplay uses generated bindings and a CoreCLR host (<code>spark-sharp</code>).
             </p>
             <div class="hero-links">
               <a href="https://github.com/hoihky/spark" target="_blank" rel="noopener">GitHub repository ↗</a>
@@ -528,9 +534,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             Spark is an open, education-oriented engine intended to demonstrate modern C++ game architecture:
             clear frame contracts, dependency inversion instead of tight coupling to Vulkan, and behavior expressed
             through components rather than deep inheritance. The reference application <code>SparkDemo</code> provides
-            an interactive launcher with <strong>22 built-in modes</strong>—from 3D scenes and editor prototypes to
-            2D platformers, tilemap systems, glTF viewing, and classic arcade samples—so each major subsystem ships
-            with runnable context. Entries marked <code>*</code> in the menu are good starting points.
+            an interactive launcher with <strong>30+ built-in modes</strong>—from 3D PBR, character camera, and physics
+            showcases to 2D platformers, tilemap authoring, scene editor prototypes, glTF viewing, water/foliage slices,
+            and single-file arcade games (Tetris, Match-3, Space Invaders). Each major subsystem has a demo and a guide
+            chapter. Entries marked <code>*</code> in the menu are recommended starting points.
           </p>
 
           <div class="pillar-grid">
@@ -662,7 +669,7 @@ flowchart LR
             <code>GameWorld::UpdateGameObjects</code> ticks every attached <code>GameComponent</code> in priority order
             (billboards, animation drivers, animators, camera rigs, then default gameplay). Components communicate
             on the same entity via <code>EmitSignal</code> / <code>OnSignal</code>. The engine ships
-            <strong>70+ built-in component types</strong> — see the
+            <strong>120 built-in component types</strong> — see the
             <a href="programming-guide/site/1-overview-architecture/07-game-component-reference.html">component reference</a>.
           </p>
 
@@ -739,12 +746,12 @@ flowchart LR
             </thead>
             <tbody>
               <tr><td><strong>Physics 2D</strong></td><td>Grid broad-phase, dynamic/static colliders, raycasts, overlap queries, trigger events.</td></tr>
-              <tr><td><strong>Physics 3D</strong></td><td>Sphere/capsule dynamics, character controller, distance joints, static box colliders.</td></tr>
-              <tr><td><strong>AI</strong></td><td>FSM, GOAP, fuzzy logic, steering behaviors, grid pathfinding via <code>AiAgentComponent</code>.</td></tr>
-              <tr><td><strong>Audio</strong></td><td>Software mixer, WAV decode, <code>SoundCueComponent</code>, background music.</td></tr>
+              <tr><td><strong>Physics 3D</strong></td><td>Layers/masks, triggers (enter/stay/exit), character controller, queries, carry handoff showcase.</td></tr>
+              <tr><td><strong>AI</strong></td><td>FSM, GOAP, steering, grid pathfinding, patrol paths, perception sensors, <code>SimulateGameAi</code>.</td></tr>
+              <tr><td><strong>Audio</strong></td><td>Mixer, spatial one-shots, <code>AudioListener</code>, ambient zones, BGM, procedural fallbacks.</td></tr>
               <tr><td><strong>UI (retained)</strong></td><td><code>UiCanvasComponent</code> tree, themed controls, input router, screen paint to params.</td></tr>
               <tr><td><strong>Dear ImGui</strong></td><td>Optional docking tools; <code>UiToolkitSettings</code> switches native vs ImGui backend.</td></tr>
-              <tr><td><strong>Scene authoring</strong></td><td><code>SceneSerializer</code> v3/v4, <code>SceneManager</code> async load, scene editor prototype.</td></tr>
+              <tr><td><strong>Scene authoring</strong></td><td><code>.sparkscene</code> v4, pools, scene editor demo (#10), Spark editor prototype (#24) — <a href="programming-guide/site/10-tools-and-workflows/00-tools-and-workflows-map.html">Part 10</a>.</td></tr>
             </tbody>
           </table>
         </section>
@@ -752,8 +759,11 @@ flowchart LR
         <section id="programming-guide">
           <h2 class="section-title">Programming guide</h2>
           <p class="section-lead">
-            The <a href="programming-guide/site/index.html">Spark Programming Guide</a> is a ten-part
-            developer course for building 2D and 3D games. A static HTML site is also available at
+            The <a href="programming-guide/site/index.html">Spark Programming Guide</a> is a
+            <strong>ten-part</strong> course (~90 chapters) for building 2D and 3D games in C++, with C# and Python
+            examples where bindings exist. It includes a <strong>SparkDemo catalog</strong>, scene/asset pipelines,
+            Tier-depth topics (tilemap levels, environment stack, perception, physics layers, spatial audio), arcade
+            mini-games, debugging checklists, 2D/3D component handbooks, and in-engine tools workflows. Static HTML:
             <a href="programming-guide/site/index.html">docs/programming-guide/site/</a>.
           </p>
 
@@ -765,47 +775,52 @@ flowchart LR
               <tr>
                 <td><strong>1</strong></td>
                 <td><code>1-overview-architecture/</code></td>
-                <td>Introduction, capabilities, build &amp; run, engine loop, <code>IGame</code> contract, ECS, component reference, UI, SparkDemo catalog, scenes, assets, scripting.</td>
+                <td>ECS, 120-type reference, catalog, scenes/saves, assets, scripting, debugging, arcade demos, roadmap hub.</td>
               </tr>
               <tr>
                 <td><strong>2</strong></td>
                 <td><code>2-2d-graphics/</code></td>
-                <td>Sprites, Camera2D, tilemaps, 2D animation, sprite lighting, 2D render pipeline.</td>
+                <td>Sprites, Camera2D, tilemaps, render layers, level authoring, 2D pipeline.</td>
               </tr>
               <tr>
                 <td><strong>3</strong></td>
                 <td><code>3-3d-graphics/</code></td>
-                <td>Meshes &amp; materials, 3D cameras, lighting, shadows, skinned characters, terrain, sky, particles, VFX.</td>
+                <td>PBR, lighting/shadows, skinning, terrain, VFX, environment stack, fog/post volumes.</td>
               </tr>
               <tr>
                 <td><strong>4</strong></td>
                 <td><code>4-ai/</code></td>
-                <td>Blackboard, FSM, GOAP, pathfinding, steering integration.</td>
+                <td>FSM, GOAP, pathfinding, steering, perception &amp; nav agents.</td>
               </tr>
               <tr>
                 <td><strong>5</strong></td>
                 <td><code>5-physics/</code></td>
-                <td>2D/3D solvers, colliders, queries, layers, tips.</td>
+                <td>Solvers, colliders, queries, collision layers, triggers &amp; contacts.</td>
               </tr>
               <tr>
                 <td><strong>6</strong></td>
                 <td><code>6-sound/</code></td>
-                <td>Sound engine, clips, cues, background music.</td>
+                <td>Clips, cues, spatial audio, ambient zones, music beds.</td>
               </tr>
               <tr>
                 <td><strong>7</strong></td>
                 <td><code>7-game-components-usage/</code></td>
-                <td>Grouped component recipes — C++, C#, Python per family.</td>
+                <td>Grouped attach recipes — C++, C#, Python per family.</td>
               </tr>
               <tr>
                 <td><strong>8</strong></td>
                 <td><code>8-2d-game/</code></td>
-                <td>2D platformer, tilemap gameplay, P0 product path, gameplay API, component handbook.</td>
+                <td>Platformer, tilemap product path, gameplay API, 2D components handbook.</td>
               </tr>
               <tr>
                 <td><strong>9</strong></td>
                 <td><code>9-3d-game/</code></td>
-                <td>FPS arena, character camera, physics showcase path, maze AI.</td>
+                <td>FPS, character camera, physics showcase, maze AI, 3D components handbook.</td>
+              </tr>
+              <tr>
+                <td><strong>10</strong></td>
+                <td><code>10-tools-and-workflows/</code></td>
+                <td>Scene editor 3D, Dear ImGui showcase, Spark editor direction.</td>
               </tr>
             </tbody>
           </table>
@@ -941,7 +956,13 @@ int main() {
             <li>Dear ImGui docking tools demo</li>
             <li>glTF sample — DamagedHelmet PBR + studio HDR sky dome</li>
             <li>3D model viewer — cycle bundled Khronos glTF samples (hotkey V)</li>
+            <li>Water lake, foliage wind meadow, grass field terrain</li>
+            <li>VFX showcase (3D and 2D), physics 3D showcase (hotkey P)</li>
+            <li>2D P0 product path (hotkey F), Spark editor prototype (hotkey E)</li>
           </ul>
+          <p class="section-lead" style="margin-top: 1rem;">
+            Full list with hotkeys: <a href="programming-guide/site/1-overview-architecture/10-sparkdemo-catalog.html">SparkDemo catalog</a> (Part 1).
+          </p>
         </section>
 
         <section id="quick-start">
@@ -956,7 +977,7 @@ cmake --build cmake-build-debug -j
               <tr><th>Target</th><th>Purpose</th></tr>
             </thead>
             <tbody>
-              <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 22 built-in demo modes</td></tr>
+              <tr><td><code>SparkDemo</code></td><td>Interactive launcher + 30+ built-in demo modes (<kbd>TAB</kbd>, catalog in Part 1)</td></tr>
               <tr><td><code>SparkEditor</code></td><td>3D editor shell with dock UI (<code>editor-debug</code> preset)</td></tr>
               <tr><td><code>SparkGameplay</code></td><td>Optional gameplay kit (<code>SPARK_BUILD_GAMEPLAY=ON</code> in <code>debug</code> preset)</td></tr>
             </tbody>
@@ -978,7 +999,7 @@ cmake --build cmake-build-debug -j
             <tbody>
               <tr>
                 <td><a href="programming-guide/site/index.html">Programming guide</a></td>
-                <td>Tutorials, UI toolkits, full component reference</td>
+                <td>Ten-part course: 2D/3D games, handbooks, tools, demos, roadmaps hub</td>
               </tr>
               <tr>
                 <td><a href="site/docs/architecture-and-developer-guide.html">Architecture &amp; Developer Guide</a></td>
