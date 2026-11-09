@@ -1,82 +1,102 @@
 # Rigidbody 2D
 
-## Class Design: `Rigidbody2DComponent`
+`Rigidbody2DComponent` pairs with a **2D collider** (`BoxCollider2D`, `CircleCollider2D`, or `PolygonCollider2D`). Simulation writes back to `TransformComponent`.
+
+**Platformers:** prefer `CharacterController2DComponent` on top of dynamic body — [Player controller](../8-2d-game/04-player-controller.md).
+
+## Body types
+
+| `RigidbodyBodyType2D` | Behavior |
+|-----------------------|----------|
+| `Static` | Immovable (platforms) |
+| `Dynamic` | Forces + gravity |
+| `Kinematic` | Transform-driven, pushes dynamics |
+
+## Concept: dynamic crate
+
+### C++
 
 ```cpp
-enum class RigidbodyBodyType2D { Kinematic, Static, Dynamic };
+#include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
+#include "spark/ecs/components/physics/2d/BoxCollider2DComponent.hpp"
 
-Rigidbody2DComponent(RigidbodyBodyType2D bodyType = Dynamic, float gravityScaleIn = 1.0F);
-
-Vector2& GetVelocity();
-void SetVelocity(const Vector2& v);
-bool IsGrounded() const noexcept;
-float GetGravityScale() const noexcept;
+GameObject* crate = world.CreateGameObject();
+crate->AddComponent<TransformComponent>()->SetTranslation({2, 3, 0});
+crate->AddComponent<Rigidbody2DComponent>();
+crate->AddComponent<BoxCollider2DComponent>(Vector2{0.5F, 0.5F});
 ```
 
-| Body type | Behavior |
-|-----------|----------|
-| `Static` | Immovable collider (platforms) |
-| `Dynamic` | Simulated velocity + gravity |
-| `Kinematic` | Moved by transform, pushes dynamics |
+### C\#
 
-## Player Controller (Platformer)
+```csharp
+crate.GetOrAddTransform().SetTranslation(new Vector3(2, 3, 0));
+crate.AddRigidbody2D(RigidbodyBodyType2D.Dynamic);
+crate.AddBoxCollider2D(new Vector2(0.5f, 0.5f));
+```
 
-Prefer `CharacterController2DComponent` over direct velocity writes. It adds coyote time, jump buffer, ground snap, slope limits, and one-way platform drop-through on top of `Rigidbody2DComponent`.
+### Python
+
+```python
+crate = world.create_game_object("Crate")
+crate.get_or_add_transform().translation = Vector3(2, 3, 0)
+crate.add_rigidbody_2d(native.RigidbodyBodyType2D.Dynamic)
+crate.add_box_collider_2d(Vector2(0.5, 0.5), Vector2(0, 0))
+```
+
+## Concept: apply impulse
+
+### C++
 
 ```cpp
-#include "spark/physics/PhysicsSubsystem.hpp"
-#include "spark/ecs/components/physics/2d/CharacterController2DComponent.hpp"
-#include "spark/ecs/components/input/PlayerInputComponent.hpp"
+Rigidbody2DComponent* rb = crate->GetComponent<Rigidbody2DComponent>();
+rb->SetVelocity({4.0F, 8.0F});
+```
 
-PhysicsSubsystem physics;
+### C\#
 
-void OnAttach(IEngineContext& context) override {
-    physics.GetWorld2D().GetSettings().gravityY = -30.0F;
-    physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
+```csharp
+rb.SetVelocity(new Vector2(4f, 8f));
+```
+
+### Python
+
+```python
+rb = crate.get_component_rigidbody_2d()  # when wrapper exists
+rb.set_velocity(Vector2(4.0, 8.0))
+```
+
+## Concept: character controller stack
+
+### C++
+
+```cpp
+auto* motor = player->AddComponent<CharacterController2DComponent>();
+motor->SetMaxRunSpeed(7.5F);
+motor->SetJumpImpulse(12.0F);
+player->AddComponent<Rigidbody2DComponent>();
+player->AddComponent<BoxCollider2DComponent>(Vector2{0.35F, 0.55F});
+
+void OnUpdate(...) {
+    motor->SetMoveInputX(input->GetActionAxis1D("MoveX"));
+    if (input->WasActionPressedThisFrame("Jump")) motor->RequestJump();
+    physics.Simulate2D(world, timing);
 }
-
-void OnUpdate(const FrameTiming& timing) {
-    playerController->SetMoveInputX(playerInput->GetActionAxis1D("MoveX"));
-    if (playerInput->WasActionPressedThisFrame("Jump")) {
-        playerController->RequestJump();
-    }
-    physics.Simulate2D(GetWorld(), timing);
-    PickupComponent::ProcessDeferredDestroys(GetWorld());
-}
 ```
 
-### One-way platforms
+### C\#
 
-Mark static platforms with `OneWayPlatform2DComponent`. The character controller ignores them from below unless landing from above:
-
-```cpp
-platform->AddComponent<BoxCollider2DComponent>(Vector2{4.0F, 0.15F});
-platform->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
-platform->AddComponent<OneWayPlatform2DComponent>();
+```csharp
+player.GetOrAddComponent<CharacterController2DComponent>()?.SetMaxRunSpeed(7.5f);
 ```
 
-Press **S** / **Down** (via `SetDropThroughOneWay(true)`) to fall through for one frame.
+### Python
 
-### Legacy: direct velocity control
-
-You can still drive `Rigidbody2DComponent` velocity manually for prototypes, but you lose coyote time and one-way semantics:
-
-```cpp
-Vector2 v = playerRb->GetVelocity();
-v.x = run * kRunSpeed;
-if (playerRb->IsGrounded() && jumpPressed) v.y = kJumpSpeed;
-playerRb->SetVelocity(v);
+```python
+player.get_or_add_default_component(ComponentKind.CharacterController2D)
 ```
 
-See `Platformer2DDemo` for the full component-based sample.
+## One-way platforms
 
-## Static Platform
-
-```cpp
-go->AddComponent<BoxCollider2DComponent>();
-go->AddComponent<Rigidbody2DComponent>(RigidbodyBodyType2D::Static, 0.0F);
-```
-
-Transform scale defines collider world size when using default `BoxCollider2DComponent` half-extents.
+Add `OneWayPlatform2DComponent` on platform; motor drops through with down+ jump — platformer demo.
 
 Next: [Colliders](03-colliders.md).

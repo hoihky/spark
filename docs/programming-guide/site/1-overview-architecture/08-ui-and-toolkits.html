@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,8 +1087,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>08 ui and toolkits</h1>
           </header>
           <div class="doc-body"><h1 id="ui-and-toolkits">UI and Toolkits</h1>
-<p>Spark’s UI lives in <strong><code>spark/ui/</code></strong> (umbrella header <strong><code>spark/ui/Ui.hpp</code></strong>). The stack is <strong>retained-mode</strong>: you build an <strong><code>IUiElement</code></strong> tree on a <strong><code>UiCanvasComponent</code></strong>, route input each frame, and paint into <strong><code>SceneRenderParams</code></strong> for the Vulkan screen-UI pass.</p>
-<p>Two <strong>backends</strong> share the same factory interfaces:</p>
+<p>Spark UI lives in <strong><code>spark/ui/</code></strong> (<code>#include "spark/ui/Ui.hpp"</code>). The stack is <strong>retained-mode</strong>: build an <strong><code>IUiElement</code></strong> tree on <strong><code>UiCanvasComponent</code></strong>, route input each frame, paint into <strong><code>SceneRenderParams</code></strong> for the Vulkan screen-UI pass.</p>
+<p>Two <strong>backends</strong> share factory interfaces:</p>
 <table>
 <thead>
 <tr>
@@ -811,25 +1103,25 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><strong>Spark native</strong></td>
 <td><code>SparkNative</code></td>
 <td><code>SparkUiControlsFactory</code></td>
-<td>Shipped menus, themed HUD, editor chrome</td>
+<td>Shipped menus, themed HUD</td>
 </tr>
 <tr>
 <td><strong>Dear ImGui retained</strong></td>
 <td><code>DearImGui</code></td>
 <td><code>DearImguiControlsFactory</code></td>
-<td>Docking tool panels, rapid internal editors</td>
+<td>Docking tools, rapid editors</td>
 </tr>
 </tbody>
 </table>
-<p>Both compile when <strong><code>SPARK_ENABLE_IMGUI=ON</code></strong> (default). Use <strong><code>Ui::UiToolkitSettings</code></strong> to choose which backend owns pointer/keyboard routing for a mode.</p>
+<p>Both compile when <strong><code>SPARK_ENABLE_IMGUI=ON</code></strong> (default). Use <strong><code>Ui::UiToolkitSettings</code></strong> to choose pointer/keyboard routing.</p>
+<p>See also <a href="../../../GUI_TOOLKIT_ARCHITECTURE.html"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a>, <a href="../../../GUI_EDITOR_ROADMAP.html"><code>GUI_EDITOR_ROADMAP.md</code></a>.</p>
 <h2 id="architecture">Architecture</h2>
 <pre class="mermaid">flowchart TB
-    ECS[UiCanvasComponent on GameObject] --&gt; Tree[IUiElement tree]
+    ECS[UiCanvasComponent] --&gt; Tree[IUiElement tree]
     Factory[IUiControlsFactory] --&gt; Tree
     Router[UiInputRouter] --&gt; ECS
-    System[UiSystem facade] --&gt; Router
-    System --&gt; Paint[SparkUiRenderer or ImguiUiRenderer]
-    Paint --&gt; SRP[SceneRenderParams screenRects / screenTexts]
+    System[UiSystem] --&gt; Paint[SparkUiRenderer / ImguiUiRenderer]
+    Paint --&gt; SRP[screenRects / screenTexts]
 </pre>
 <table>
 <thead>
@@ -840,76 +1132,94 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </thead>
 <tbody>
 <tr>
-<td><strong><code>UiCanvasComponent</code></strong></td>
-<td>ECS root; sort order; hot / active / focus elements</td>
+<td><code>UiCanvasComponent</code></td>
+<td>Canvas root, sort order, focus</td>
 </tr>
 <tr>
-<td><strong><code>IUiControlsFactory</code></strong></td>
-<td>Creates panels, buttons, lists, dock workspaces, …</td>
+<td><code>ProcessUiCanvasesInput</code></td>
+<td>Hit-test + focus (<code>UiScene.hpp</code>)</td>
 </tr>
 <tr>
-<td><strong><code>UiSystem</code></strong></td>
-<td>Facade: active backend, <code>ProcessInput</code> / <code>Paint</code>, factory via <code>GetContext</code></td>
+<td><code>PaintUiCanvases</code></td>
+<td>Emit draw lists into <code>SceneRenderParams</code></td>
 </tr>
 <tr>
-<td><strong><code>ProcessUiCanvasesInput</code> / <code>PaintUiCanvases</code></strong></td>
-<td>World-level input + paint entry points (<code>spark/ui/runtime/UiScene.hpp</code>)</td>
-</tr>
-<tr>
-<td><strong><code>UiTheme</code> / <code>UiThemeCatalog</code></strong></td>
-<td>Semantic colors per canvas (<code>spark/ui/core/</code>)</td>
-</tr>
-<tr>
-<td><strong><code>IDockWorkspace</code> / <code>SparkDockWorkspace</code></strong></td>
-<td>Editor-style left / center / right panes with collapse</td>
-</tr>
-<tr>
-<td><strong><code>UiContextMenu</code></strong></td>
-<td>Global right-click menus (<code>GetUiContextMenu()</code>)</td>
+<td><code>UiConsumesGamePointer()</code></td>
+<td>Gate gameplay picking when UI captures pointer</td>
 </tr>
 </tbody>
 </table>
-<p>See also <a href="../../../GUI_TOOLKIT_ARCHITECTURE.html"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a>, <a href="../../../ARCHITECTURE_AND_DEVELOPER_GUIDE.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a>, and <a href="../../../GUI_EDITOR_ROADMAP.html"><code>GUI_EDITOR_ROADMAP.md</code></a>.</p>
-<h2 id="building-a-retained-canvas">Building a retained canvas</h2>
-<p>Attach <strong><code>UiCanvasComponent</code></strong> to a <code>GameObject</code>, build a tree with the active factory, then call the scene helpers each frame:</p>
-<pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
+<h2 id="concept-pause-menu-canvas">Concept: pause menu canvas</h2>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ui/Ui.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/ui/UiCanvasComponent.hpp&quot;</span></span>
 
 Ui::IUiControlsFactory&amp; factory =
-    Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
+    Ui::UiSystem::<span class="hljs-built_in">Get</span>().<span class="hljs-built_in">GetActiveBackendPtr</span>()-&gt;<span class="hljs-built_in">GetControlsFactory</span>();
 
 Ui::PanelDesc panelDesc{};
-panelDesc.id = Utf8String(&quot;menu&quot;);
-panelDesc.title = Utf8String(&quot;Pause&quot;);
-panelDesc.centerInParent = true;
-panelDesc.width = 280.0F;
-auto panel = factory.CreatePanel(panelDesc);
+panelDesc.id = <span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;menu&quot;</span>);
+panelDesc.title = <span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;Pause&quot;</span>);
+panelDesc.centerInParent = <span class="hljs-literal">true</span>;
+panelDesc.width = <span class="hljs-number">280.0F</span>;
+<span class="hljs-keyword">auto</span> panel = factory.<span class="hljs-built_in">CreatePanel</span>(panelDesc);
 
 Ui::ButtonDesc btnDesc{};
-btnDesc.id = Utf8String(&quot;resume&quot;);
-btnDesc.label = Utf8String(&quot;Resume&quot;);
-auto btn = factory.CreateButton(btnDesc);
+btnDesc.id = <span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;resume&quot;</span>);
+btnDesc.label = <span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;Resume&quot;</span>);
+<span class="hljs-keyword">auto</span> btn = factory.<span class="hljs-built_in">CreateButton</span>(btnDesc);
 Ui::UiVoidCallback resumeCb{};
-resumeCb.fn = [](void*) { paused = false; };
-btn-&gt;SetOnClick(resumeCb);
-Ui::AdoptUiChild(*panel, MoveTemp(btn));
+resumeCb.fn = [](<span class="hljs-type">void</span>* ctx) { *<span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">bool</span>*&gt;(ctx) = <span class="hljs-literal">false</span>; };
+btn-&gt;<span class="hljs-built_in">SetOnClick</span>(resumeCb);
+Ui::<span class="hljs-built_in">AdoptUiChild</span>(*panel, <span class="hljs-built_in">MoveTemp</span>(btn));
 
-auto* canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
-canvas-&gt;SetRoot(MoveTemp(panel));
+GameObject* uiRoot = world.<span class="hljs-built_in">CreateGameObject</span>();
+UiCanvasComponent* canvas = uiRoot-&gt;<span class="hljs-built_in">AddComponent</span>&lt;UiCanvasComponent&gt;();
+canvas-&gt;<span class="hljs-built_in">SetRoot</span>(<span class="hljs-built_in">MoveTemp</span>(panel));
+canvas-&gt;<span class="hljs-built_in">SetTheme</span>(Ui::UiTheme::<span class="hljs-built_in">ClassicMint</span>());
 </code></pre>
-<p><strong>Input</strong> (typically from <code>OnUpdate</code> or after polling input):</p>
-<pre><code class="language-cpp">Spark::ProcessUiCanvasesInput(world, input, fbW, fbH, contentScaleX, contentScaleY);
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-comment">// Use generated UiCanvasComponent mirror when available; otherwise build from native bootstrap in template.</span>
+<span class="hljs-keyword">var</span> uiRoot = world.CreateGameObject(<span class="hljs-string">&quot;UI&quot;</span>);
+<span class="hljs-keyword">var</span> canvas = uiRoot.AddUiCanvas();
+<span class="hljs-comment">// Populate via UiSystem factory from Spark.Scripting helpers in spark-sharp samples.</span>
+</code></pre>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># UiCanvas often mounted from native demo; extend when spark-python exposes Ui bindings.</span>
+ui_root = world.create_game_object(<span class="hljs-string">&quot;UI&quot;</span>)
+</code></pre>
+<h2 id="concept-per-frame-input-paint">Concept: per-frame input + paint</h2>
+<p>Call <strong>input</strong> after polling (typically end of <code>OnUpdate</code>):</p>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; t, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
+    <span class="hljs-type">int</span> fbW = <span class="hljs-number">0</span>, fbH = <span class="hljs-number">0</span>;
+    ctx.<span class="hljs-built_in">GetFramebufferSize</span>(fbW, fbH);
+    <span class="hljs-built_in">ProcessUiCanvasesInput</span>(<span class="hljs-built_in">GetWorld</span>(), ctx.<span class="hljs-built_in">GetInput</span>(), fbW, fbH, <span class="hljs-number">1.0F</span>, <span class="hljs-number">1.0F</span>);
 
-if (!Spark::UiScrollWheelConsumed()) {
-    // apply camera zoom from scroll wheel
-}
-if (!Spark::UiConsumesGamePointer()) {
-    // viewport pick / orbit / gameplay pointer
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">UiScrollWheelConsumed</span>()) {
+        <span class="hljs-comment">// camera zoom</span>
+    }
+    <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">UiConsumesGamePointer</span>()) {
+        <span class="hljs-comment">// viewport gameplay pick</span>
+    }
+    Game::<span class="hljs-built_in">OnUpdate</span>(t, ctx);
 }
 </code></pre>
-<p><strong>Paint</strong> (when building <code>SceneRenderParams</code>):</p>
-<pre><code class="language-cpp">Spark::PaintUiCanvases(world, params, fbW, fbH);
+<p><strong>Paint</strong> when building scene params in <code>OnRender</code>:</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SceneRenderParams params{};
+<span class="hljs-built_in">FillStandardLitSceneFromWorld</span>(..., params);
+<span class="hljs-built_in">PaintUiCanvases</span>(<span class="hljs-built_in">GetWorld</span>(), params, fbW, fbH);
+ctx.<span class="hljs-built_in">SetSceneRenderParams</span>(params);
 </code></pre>
-<h3 id="input-gating-helpers">Input gating helpers</h3>
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">ProcessUiCanvasesInput(World, context.GetInput(), fbW, fbH, <span class="hljs-number">1f</span>, <span class="hljs-number">1f</span>);
+<span class="hljs-comment">// ...</span>
+PaintUiCanvases(World, p, fbW, fbH);
+</code></pre>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Delegated to native host when UI is enabled in template.</span>
+</code></pre>
+<h2 id="input-gating-helpers">Input gating helpers</h2>
 <table>
 <thead>
 <tr>
@@ -919,116 +1229,123 @@ if (!Spark::UiConsumesGamePointer()) {
 </thead>
 <tbody>
 <tr>
-<td><strong><code>UiConsumesGamePointer()</code></strong></td>
-<td>UI owns gameplay pointer this frame (replaces legacy <code>GuiConsumesGamePointer</code>)</td>
+<td><code>UiConsumesGamePointer()</code></td>
+<td>UI owns gameplay pointer</td>
 </tr>
 <tr>
-<td><strong><code>UiPointerOverUi()</code></strong></td>
-<td>Cursor is over UI chrome — gate viewport picking / orbit</td>
+<td><code>UiPointerOverUi()</code></td>
+<td>Cursor over chrome — skip world pick</td>
 </tr>
 <tr>
-<td><strong><code>UiScrollWheelConsumed()</code></strong></td>
-<td>UI ate the scroll wheel — gate 3D camera zoom</td>
+<td><code>UiScrollWheelConsumed()</code></td>
+<td>UI ate scroll — skip camera zoom</td>
 </tr>
 </tbody>
 </table>
-<h3 id="themes">Themes</h3>
-<pre><code class="language-cpp">canvas-&gt;SetTheme(Ui::UiTheme::SceneEditorDark());
-// or Ui::UiTheme::ClassicMint(), Ui::ResolveUiTheme(Ui::UiThemePreset::TwilightSlate), …
-</code></pre>
-<h3 id="editor-docking">Editor docking</h3>
-<p>Use <strong><code>factory.CreateDockWorkspace(DockWorkspaceDesc{})</code></strong> (<code>SparkDockWorkspace</code> or <code>ImguiDockWorkspace</code> depending on backend). <strong><code>EditorDockShell</code></strong> in <code>spark/editor/</code> hosts hierarchy / inspector / project / viewport panes. <strong><code>SparkEditor</code></strong> also uses Dear ImGui for the top <strong>File</strong> menu (project and scene open/save); native file pickers run outside the ImGui frame. See <a href="../../../SPARK_EDITOR_PLAN.html"><code>SPARK_EDITOR_PLAN.md</code></a>.</p>
-<h3 id="context-menus">Context menus</h3>
-<pre><code class="language-cpp">Ui::GetUiContextMenu().Open(
-    screenX, screenY,
-    {Utf8String(&quot;Delete&quot;), Utf8String(&quot;Duplicate&quot;)},
-    [](int index) { /* handle pick */ });
-</code></pre>
-<h2 id="switching-backends">Switching backends</h2>
-<pre><code class="language-cpp">#include &quot;spark/ui/runtime/UiToolkitSettings.hpp&quot;
+<h2 id="switching-backends-tool-mode">Switching backends (tool mode)</h2>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ui/runtime/UiToolkitSettings.hpp&quot;</span></span>
 
-Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
-// … tool mode …
-Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::SparkNative);
+Ui::UiToolkitSettings::<span class="hljs-built_in">SetPreferred</span>(Ui::UiBackendKind::DearImGui);
+<span class="hljs-comment">// tool work…</span>
+Ui::UiToolkitSettings::<span class="hljs-built_in">SetPreferred</span>(Ui::UiBackendKind::SparkNative);
 </code></pre>
-<p>When Dear ImGui is preferred, <strong><code>UiToolkitSettings::ShouldProcessSparkUiInput()</code></strong> returns <code>false</code> so Spark-native canvases skip router hit-testing while ImGui owns input.</p>
-<h2 id="dear-imgui-optional-immediate-mode-layer">Dear ImGui (optional immediate-mode layer)</h2>
-<p>CMake option <strong><code>SPARK_ENABLE_IMGUI</code></strong> (default <strong>ON</strong>) links the <strong>docking</strong> branch of Dear ImGui with GLFW + Vulkan backends (<code>cmake/SparkImGui.cmake</code>).</p>
-<h3 id="access-from-gameplay">Access from gameplay</h3>
-<pre><code class="language-cpp">#include &quot;spark/imgui/IImGuiLayer.hpp&quot;
-#include &quot;spark/ui/runtime/UiToolkitSettings.hpp&quot;
-
-void MyToolMode::Enter(Spark::IEngineContext&amp; context) {
-    Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
-    if (Spark::IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
-        imgui-&gt;SetEnabled(imgui-&gt;IsAvailable());
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">UiToolkitSettings.SetPreferred(UiBackendKind.DearImGui);
+</code></pre>
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Native-only today unless exposed by host.</span>
+</code></pre>
+<h2 id="dear-imgui-immediate-layer">Dear ImGui immediate layer</h2>
+<p>CMake <strong><code>SPARK_ENABLE_IMGUI</code></strong> links docking ImGui + Vulkan backend.</p>
+<h3 id="c_6">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; context)</span> <span class="hljs-keyword">override</span> </span>{
+    <span class="hljs-keyword">if</span> (IImGuiLayer* imgui = context.<span class="hljs-built_in">TryGetImGuiLayer</span>()) {
+        <span class="hljs-keyword">if</span> (imgui-&gt;<span class="hljs-built_in">IsAvailable</span>() &amp;&amp; imgui-&gt;<span class="hljs-built_in">IsEnabled</span>()) {
+            ImGui::<span class="hljs-built_in">Begin</span>(<span class="hljs-string">&quot;Debug&quot;</span>);
+            ImGui::<span class="hljs-built_in">Text</span>(<span class="hljs-string">&quot;FPS: %.1f&quot;</span>, <span class="hljs-number">1.0f</span> / dt);
+            ImGui::<span class="hljs-built_in">End</span>();
+        }
     }
-}
-
-void MyToolMode::Leave(Spark::IEngineContext&amp; context) noexcept {
-    if (Spark::IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
-        imgui-&gt;SetEnabled(false);
-    }
-    Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::SparkNative);
+    <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(...);
 }
 </code></pre>
-<p>You can mix <strong>retained</strong> ImGui-backend controls (<code>DearImguiControlsFactory</code>) with <strong>raw</strong> <code>ImGui::Begin</code> windows in <strong><code>OnRender</code></strong> for debug overlays.</p>
-<h3 id="engine-frame-order-imgui-enabled">Engine frame order (ImGui enabled)</h3>
+<p><strong>Rules:</strong> no <code>ImGui::Begin</code> in <code>OnUpdate</code>; engine calls <code>NewFrame</code> after update.</p>
+<h3 id="c_7">C#</h3>
+<p>Use <code>context.TryGetImGuiLayer()</code> from bindings when hosting tool demos.</p>
+<h3 id="python_3">Python</h3>
+<p>ImGui not typical in Python host — use retained UI or native tool mode.</p>
+<h2 id="engine-frame-order-both-ui-stacks">Engine frame order (both UI stacks)</h2>
 <pre class="mermaid">sequenceDiagram
     participant E as Engine
     participant G as IGame
     participant U as UiSystem
     participant I as IImGuiLayer
-    participant V as VulkanRenderer
-    E-&gt;&gt;E: PollEvents + input BeginFrame
-    E-&gt;&gt;G: OnUpdate (simulation)
-    E-&gt;&gt;U: ProcessInput (retained canvases)
-    E-&gt;&gt;I: BeginFrame (NewFrame)
-    E-&gt;&gt;G: OnRender (build UI + scene params)
-    E-&gt;&gt;U: Paint (retained → params or ImGui draw lists)
-    E-&gt;&gt;I: EndFrame (Render)
-    E-&gt;&gt;V: PresentFrame
+    E-&gt;&gt;G: OnUpdate
+    E-&gt;&gt;U: ProcessInput
+    E-&gt;&gt;I: BeginFrame
+    E-&gt;&gt;G: OnRender
+    E-&gt;&gt;U: Paint
+    E-&gt;&gt;I: EndFrame
 </pre>
-<p><strong>Rules:</strong></p>
-<ol>
-<li>Do <strong>not</strong> call <code>ImGui::Begin</code> from <code>OnUpdate</code> — <code>NewFrame</code> runs after update.</li>
-<li>Call <strong><code>InstallPlatformCallbacks</code></strong> once after <code>GlfwInput::WireToWindow</code> (the engine does this automatically).</li>
-<li>Gate game pointer with <strong><code>UiConsumesGamePointer()</code></strong> / <strong><code>UiPointerOverUi()</code></strong> when both stacks are compiled in.</li>
-</ol>
-<h3 id="demo">Demo</h3>
-<p><strong>SparkDemo</strong> launcher item <strong>20 — Dear ImGui tools (docking)</strong> (hotkey <strong>G</strong>): docked Hierarchy / Inspector / Console, optional <code>ShowDemoWindow</code>, 3D backdrop. Source: <code>ImGuiShowcaseDemo</code> (<code>include/spark/demo/ImGuiShowcaseDemo.hpp</code>).</p>
-<p><strong>glTF PBR sample</strong> — launcher item <strong>21</strong> (hotkey <strong>Q</strong>): <code>GltfSamples3DDemo</code> loads <code>DamagedHelmet.glb</code> with studio HDR sky dome and opt-in HDR IBL (<code>iblUseHdrSkyEnvironment</code>). See <a href="../3-3d-graphics/01-meshes-and-materials.html">Meshes and Materials</a> and <a href="../3-3d-graphics/06-terrain-and-sky.html">Terrain and Sky</a>.</p>
-<p><strong>3D model viewer</strong> — launcher item <strong>22</strong> (hotkey <strong>V</strong>): <code>ModelViewer3DDemo</code> cycles bundled Khronos glTF samples (chair, watch, plant, shoe, etc.) with orbit camera.</p>
-<h3 id="demo-help-overlay">Demo help overlay</h3>
-<p><code>DemoHelpHud</code> (<code>include/spark/demo/DemoHelpHud.hpp</code>) provides a shared top-left help panel for shell demos. It patches text into <code>SceneRenderParams::screenTexts</code> via <code>PatchSceneRenderParams</code> — not a scene <code>TextOverlayComponent</code>. <strong>Hidden by default</strong>; press <strong>H</strong> to toggle globally. <strong>F3</strong> toggles the shell FPS overlay (also off by default). <strong>TAB</strong> returns to the launcher.</p>
-<h3 id="disable-imgui">Disable ImGui</h3>
-<pre><code class="language-bash">cmake -S . -B build -DSPARK_ENABLE_IMGUI=OFF
-</code></pre>
-<p><code>IImGuiLayer</code> becomes a null object; <code>SPARK_ENABLE_IMGUI=0</code> in <code>spark/config.hpp</code>.</p>
-<h2 id="choosing-a-toolkit">Choosing a toolkit</h2>
+<h2 id="demos">Demos</h2>
 <table>
 <thead>
 <tr>
-<th>Use Spark native (<code>SparkNative</code>)</th>
-<th>Use Dear ImGui backend or raw ImGui</th>
+<th>Demo</th>
+<th>Item</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Shipped game menus with consistent theming</td>
-<td>Internal tools, profilers, temp editors</td>
+<td>Scene editor</td>
+<td><strong>#10</strong></td>
+<td><a href="../10-tools-and-workflows/01-scene-editor-3d.html">Part 10</a></td>
 </tr>
 <tr>
-<td><code>UiCanvasComponent</code> in saved scenes</td>
-<td>Docking-heavy IDE-style layouts</td>
+<td>ImGui docking</td>
+<td>#20, key <strong>G</strong></td>
+<td><a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html">Part 10</a></td>
 </tr>
 <tr>
-<td>Full widget catalog (<code>TreeView</code>, lists, scroll panels, …)</td>
-<td>ImGui ecosystem widgets / <code>imgui_demo.cpp</code></td>
+<td>Spark editor</td>
+<td><strong>#24</strong>, key <strong>E</strong></td>
+<td><a href="../10-tools-and-workflows/03-spark-editor-direction.html">Editor direction</a></td>
+</tr>
+<tr>
+<td>Shell help HUD</td>
+<td><strong>H</strong></td>
+<td><code>DemoHelpHud</code> → <code>screenTexts</code>, not <code>UiCanvas</code></td>
 </tr>
 </tbody>
 </table>
-<p>Next: <a href="../2-2d-graphics/01-sprites.html">Sprites</a> (Part 2) or continue with <a href="07-game-component-reference.html">Game Component Reference</a> for <code>UiCanvasComponent</code>.</p></div>
+<p>Disable ImGui: <code>cmake … -DSPARK_ENABLE_IMGUI=OFF</code> → <code>TryGetImGuiLayer()</code> is null.</p>
+<h2 id="choosing-a-toolkit">Choosing a toolkit</h2>
+<table>
+<thead>
+<tr>
+<th>Spark native</th>
+<th>Dear ImGui</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Themed game menus</td>
+<td>Profilers, temp editors</td>
+</tr>
+<tr>
+<td>Saved scenes with <code>UiCanvasComponent</code></td>
+<td>Docking IDE layouts</td>
+</tr>
+<tr>
+<td><code>TreeView</code>, scroll panels</td>
+<td>ImGui ecosystem widgets</td>
+</tr>
+</tbody>
+</table>
+<p><code>UiCanvasComponent</code> field reference continues in the long-form sections of <a href="07-game-component-reference.html#ui">Game Component Reference — UI</a>.</p>
+<p>Next: <a href="09-gameplay-kit.html">Gameplay kit</a> · Part 2: <a href="../2-2d-graphics/01-sprites.html">Sprites</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>

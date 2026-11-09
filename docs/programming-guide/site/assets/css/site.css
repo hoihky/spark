@@ -223,7 +223,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -238,6 +238,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {

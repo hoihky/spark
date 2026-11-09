@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -805,6 +1097,171 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>ProcessSoundCues</code> — <code>ProcessAudioListeners</code>, <code>ProcessAmbientZones</code>, cue flush</li>
 <li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
 </ol>
+<hr />
+<h2 id="how-to-use-this-reference">How to use this reference</h2>
+<p>Each built-in component has:</p>
+<ul>
+<li>A <strong>header</strong> under <code>include/spark/ecs/components/</code> (C++ authoritative API).</li>
+<li>A <strong><code>ComponentKind</code></strong> constant used by <code>GetComponent&lt;T&gt;()</code>.</li>
+<li>Optional <strong>script mirrors</strong> when listed in spark-sharp <code>component-script-catalog.json</code>.</li>
+</ul>
+<h3 id="discovering-apis-in-c-and-python">Discovering APIs in C# and Python</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>C#</th>
+<th>Python</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Find component</td>
+<td><code>Spark.Bindings</code> → <code>Components/FromInterop/*.g.cs</code></td>
+<td><code>spark/components/</code> wrappers</td>
+</tr>
+<tr>
+<td>Add on object</td>
+<td><code>gameObject.Add&lt;SpriteComponent&gt;()</code> or <code>AddSprite(...)</code> shorthand in <code>CppMirrors.g.cs</code></td>
+<td><code>go.add_sprite(...)</code> etc.</td>
+</tr>
+<tr>
+<td>Method surface</td>
+<td>Catalog JSON → generated partial classes</td>
+<td>Same catalog → <code>SparkInterop</code> exports</td>
+</tr>
+</tbody>
+</table>
+<p>Regenerate after engine changes: <code>spark-sharp/tools/generate-csharp-bindings.sh</code> with <code>SPARK_ENGINE_ROOT</code> set.</p>
+<h3 id="concept-attach-and-query">Concept: attach and query</h3>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/Ecs.hpp&quot;</span></span>
+
+GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
+<span class="hljs-keyword">auto</span>* tr = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+<span class="hljs-keyword">auto</span>* health = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;();
+health-&gt;<span class="hljs-built_in">SetMaxHealth</span>(<span class="hljs-number">100.0F</span>);
+
+<span class="hljs-keyword">if</span> (HealthComponent* h = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;HealthComponent&gt;()) {
+    h-&gt;<span class="hljs-built_in">ApplyDamage</span>(<span class="hljs-number">10.0F</span>);
+}
+</code></pre>
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> go = world.CreateGameObject(<span class="hljs-string">&quot;Enemy&quot;</span>);
+go.GetOrAddTransform();
+<span class="hljs-keyword">var</span> health = go.AddHealth();
+health.SetMaxHealth(<span class="hljs-number">100f</span>);
+go.GetComponent&lt;HealthComponent&gt;()?.ApplyDamage(<span class="hljs-number">10f</span>);
+</code></pre>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">go = world.create_game_object(<span class="hljs-string">&quot;Enemy&quot;</span>)
+go.get_or_add_transform()
+health = go.add_health()
+health.set_max_health(<span class="hljs-number">100.0</span>)
+go.get_component_health().apply_damage(<span class="hljs-number">10.0</span>)
+</code></pre>
+<h3 id="concept-iteration-without-a-query-language">Concept: iteration without a query language</h3>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">ForEachActiveGameObject</span>([&amp;](GameObject* o) {
+    <span class="hljs-keyword">if</span> (o == <span class="hljs-literal">nullptr</span>) <span class="hljs-keyword">return</span>;
+    <span class="hljs-keyword">if</span> (PickupComponent* p = o-&gt;<span class="hljs-built_in">GetComponent</span>&lt;PickupComponent&gt;()) {
+        (<span class="hljs-type">void</span>)p;
+    }
+});
+</code></pre>
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> go <span class="hljs-keyword">in</span> world.EnumerateActiveGameObjects())
+{
+    <span class="hljs-keyword">var</span> pickup = go.GetComponent&lt;PickupComponent&gt;();
+    <span class="hljs-keyword">if</span> (pickup <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">null</span>) { }
+}
+</code></pre>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">for</span> go <span class="hljs-keyword">in</span> world.enumerate_active_game_objects():
+    pickup = go.try_get_component_pickup()
+    <span class="hljs-keyword">if</span> pickup <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:
+        ...
+</code></pre>
+<h3 id="folder-concern-map">Folder → concern map</h3>
+<table>
+<thead>
+<tr>
+<th>If you are building…</th>
+<th>Start in this folder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2D platformer</td>
+<td><code>physics/</code>, <code>input/</code>, <code>gameplay/</code>, <code>camera/</code></td>
+</tr>
+<tr>
+<td>Top-down grid game</td>
+<td><code>tilemap/</code>, <code>ai/</code>, <code>gameplay/</code></td>
+</tr>
+<tr>
+<td>3D action</td>
+<td><code>rendering/</code>, <code>physics/</code>, <code>animation/</code>, <code>lighting/</code></td>
+</tr>
+<tr>
+<td>Tool/UI mode</td>
+<td><code>ui/</code> + <a href="08-ui-and-toolkits.html">UI and Toolkits</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="component-usage-guides-part-7">Component usage guides (Part 7)</h3>
+<p>Detailed <strong>C++ / C# / Python</strong> examples — see <strong><a href="../7-game-components-usage/00-introduction.html">Part 7: Game Components Usage</a></strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Guide</th>
+<th>Chapter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2D rendering</td>
+<td><a href="../7-game-components-usage/01-2d-rendering.html">01-2d-rendering.md</a></td>
+</tr>
+<tr>
+<td>3D rendering</td>
+<td><a href="../7-game-components-usage/02-3d-rendering.html">02-3d-rendering.md</a></td>
+</tr>
+<tr>
+<td>Tilemap</td>
+<td><a href="../7-game-components-usage/03-tilemap.html">03-tilemap.md</a></td>
+</tr>
+<tr>
+<td>Lighting</td>
+<td><a href="../7-game-components-usage/04-lighting.html">04-lighting.md</a></td>
+</tr>
+<tr>
+<td>Camera</td>
+<td><a href="../7-game-components-usage/05-camera.html">05-camera.md</a></td>
+</tr>
+<tr>
+<td>Physics 2D</td>
+<td><a href="../7-game-components-usage/06-physics-2d.html">06-physics-2d.md</a></td>
+</tr>
+<tr>
+<td>Physics 3D</td>
+<td><a href="../7-game-components-usage/07-physics-3d.html">07-physics-3d.md</a></td>
+</tr>
+<tr>
+<td>Animation</td>
+<td><a href="../7-game-components-usage/08-animation.html">08-animation.md</a></td>
+</tr>
+<tr>
+<td>Input &amp; gameplay</td>
+<td><a href="../7-game-components-usage/09-input-and-gameplay.html">09-input-and-gameplay.md</a></td>
+</tr>
+<tr>
+<td>AI, audio, world</td>
+<td><a href="../7-game-components-usage/10-ai-audio-world.html">10-ai-audio-world.md</a></td>
+</tr>
+</tbody>
+</table>
+<p>The sections below document <strong>every</strong> built-in component alphabetically by folder (field-level API). Cross-links: <a href="../8-2d-game/09-2d-gameplay-api-guide.html">2D gameplay API</a>, <a href="../8-2d-game/10-2d-components-handbook.html">2D components handbook</a>.</p>
 <hr />
 <h2 id="quick-index">Quick index</h2>
 <table>
@@ -1030,28 +1487,28 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 </tbody>
 </table>
-<pre><code class="language-cpp">void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
-    if (id == SignalId::Physics2DTriggerEnter) {
-        GameObject* other = static_cast&lt;GameObject*&gt;(payload.ptr);
-        (void)other;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnSignal</span><span class="hljs-params">(GameObject&amp; owner, SignalId id, <span class="hljs-type">const</span> SignalPayload&amp; payload)</span> <span class="hljs-keyword">override</span> </span>{
+    <span class="hljs-keyword">if</span> (id == SignalId::Physics2DTriggerEnter) {
+        GameObject* other = <span class="hljs-built_in">static_cast</span>&lt;GameObject*&gt;(payload.ptr);
+        (<span class="hljs-type">void</span>)other;
     }
-    if (id == SignalId::SpriteAnimationEvent) {
-        const char* name = static_cast&lt;const char*&gt;(payload.ptr);
-        (void)name;
+    <span class="hljs-keyword">if</span> (id == SignalId::SpriteAnimationEvent) {
+        <span class="hljs-type">const</span> <span class="hljs-type">char</span>* name = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> <span class="hljs-type">char</span>*&gt;(payload.ptr);
+        (<span class="hljs-type">void</span>)name;
     }
-    if (id == SignalId::InputActionTriggered) {
-        const char* action = static_cast&lt;const char*&gt;(payload.ptr);
-        const auto phase = static_cast&lt;InputActionPhase&gt;(payload.a);
-        (void)action;
-        (void)phase;
+    <span class="hljs-keyword">if</span> (id == SignalId::InputActionTriggered) {
+        <span class="hljs-type">const</span> <span class="hljs-type">char</span>* action = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> <span class="hljs-type">char</span>*&gt;(payload.ptr);
+        <span class="hljs-type">const</span> <span class="hljs-keyword">auto</span> phase = <span class="hljs-built_in">static_cast</span>&lt;InputActionPhase&gt;(payload.a);
+        (<span class="hljs-type">void</span>)action;
+        (<span class="hljs-type">void</span>)phase;
     }
-    if (id == SignalId::GameStateChanged) {
-        const auto next = static_cast&lt;GameFlowState&gt;(payload.a);
-        (void)next;
+    <span class="hljs-keyword">if</span> (id == SignalId::GameStateChanged) {
+        <span class="hljs-type">const</span> <span class="hljs-keyword">auto</span> next = <span class="hljs-built_in">static_cast</span>&lt;GameFlowState&gt;(payload.a);
+        (<span class="hljs-type">void</span>)next;
     }
-    if (id == SignalId::DamageApplied) {
-        const auto* dmg = static_cast&lt;const DamageSignalPayload*&gt;(payload.ptr);
-        (void)dmg;
+    <span class="hljs-keyword">if</span> (id == SignalId::DamageApplied) {
+        <span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>* dmg = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> DamageSignalPayload*&gt;(payload.ptr);
+        (<span class="hljs-type">void</span>)dmg;
     }
 }
 </code></pre>
@@ -1062,107 +1519,107 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <strong>Kind:</strong> <code>ComponentKind::Transform</code><br />
 <strong>Consumed by:</strong> Everything that needs pose (render, physics, audio, cameras).</p>
 <p>Local translation / rotation / quaternion scale. Parent chain composes <code>GameObject::GetWorldMatrix()</code>.</p>
-<pre><code class="language-cpp">GameObject* player = world.CreateGameObject();
-auto* tr = player-&gt;AddComponent&lt;TransformComponent&gt;();
-tr-&gt;SetTranslation({0.0F, 1.0F, 0.0F});
-tr-&gt;SetUniformScale(1.5F);
-tr-&gt;SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* player = world.<span class="hljs-built_in">CreateGameObject</span>();
+<span class="hljs-keyword">auto</span>* tr = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+tr-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.0F</span>, <span class="hljs-number">0.0F</span>});
+tr-&gt;<span class="hljs-built_in">SetUniformScale</span>(<span class="hljs-number">1.5F</span>);
+tr-&gt;<span class="hljs-built_in">SetRotation</span>(Quaternion::<span class="hljs-built_in">FromAxisAngle</span>(Vector3::UnitY, <span class="hljs-number">0.5F</span>));
 </code></pre>
 <hr />
 <h2 id="rendering">Rendering</h2>
 <h3 id="meshcomponent"><code>MeshComponent</code></h3>
 <p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
 <p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
-<pre><code class="language-cpp">SharedPtr&lt;Mesh&gt; cube = world.LoadMesh(&quot;assets/models/cube.obj&quot;);
-auto* mesh = go-&gt;AddComponent&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
-mesh-&gt;SetAlbedo({0.8F, 0.2F, 0.2F});
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Mesh&gt; cube = world.<span class="hljs-built_in">LoadMesh</span>(<span class="hljs-string">&quot;assets/models/cube.obj&quot;</span>);
+<span class="hljs-keyword">auto</span>* mesh = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
+mesh-&gt;<span class="hljs-built_in">SetAlbedo</span>({<span class="hljs-number">0.8F</span>, <span class="hljs-number">0.2F</span>, <span class="hljs-number">0.2F</span>});
 </code></pre>
 <h3 id="materialcomponent"><code>MaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Material</code> · <strong>Consumed by:</strong> Scene submit (PBR / toon, transparency partition)</p>
-<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; albedo = world.LoadTexture(&quot;assets/brick.png&quot;);
-go-&gt;AddComponent&lt;MaterialComponent&gt;(albedo, Vector3::One);
-auto* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;();
-mat-&gt;SetMetallic(0.1F);
-mat-&gt;SetRoughness(0.7F);
-mat-&gt;SetNormalTexture(normalMap);
-mat-&gt;SetMetallicRoughnessTexture(ormMap);
-mat-&gt;SetOpacity(0.85F);  // → transparent pass
-mat-&gt;SetShadowParticipation(Spark::SceneShadowParticipation::ReceiveOnly());
-// or: mat-&gt;SetShadowCastOverride(false);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Texture2D&gt; albedo = world.<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/brick.png&quot;</span>);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(albedo, Vector3::One);
+<span class="hljs-keyword">auto</span>* mat = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;MaterialComponent&gt;();
+mat-&gt;<span class="hljs-built_in">SetMetallic</span>(<span class="hljs-number">0.1F</span>);
+mat-&gt;<span class="hljs-built_in">SetRoughness</span>(<span class="hljs-number">0.7F</span>);
+mat-&gt;<span class="hljs-built_in">SetNormalTexture</span>(normalMap);
+mat-&gt;<span class="hljs-built_in">SetMetallicRoughnessTexture</span>(ormMap);
+mat-&gt;<span class="hljs-built_in">SetOpacity</span>(<span class="hljs-number">0.85F</span>);  <span class="hljs-comment">// → transparent pass</span>
+mat-&gt;<span class="hljs-built_in">SetShadowParticipation</span>(Spark::SceneShadowParticipation::<span class="hljs-built_in">ReceiveOnly</span>());
+<span class="hljs-comment">// or: mat-&gt;SetShadowCastOverride(false);</span>
 </code></pre>
 <p>Shadow participation defaults come from <code>SceneRenderParams::shadowsCastByDefault</code> / <code>shadowsReceiveByDefault</code>. Overrides and built-in rules are documented in <a href="../3-3d-graphics/04-shadows.html">Shadows</a>.</p>
 <h3 id="multimaterialcomponent"><code>MultiMaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Unknown</code> (serialization pending) · <strong>Sibling:</strong> <code>MeshComponent</code> on multi-material glTF meshes</p>
 <p>Per-submesh material slots indexed by <code>MeshSubmesh::materialIndex</code>. Populated from a loaded glTF asset:</p>
-<pre><code class="language-cpp">GltfAsset asset = world.LoadGltf(&quot;assets/models/Building.glb&quot;);
-go-&gt;AddComponent&lt;MeshComponent&gt;(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
-auto* multi = go-&gt;AddComponent&lt;MultiMaterialComponent&gt;();
-multi-&gt;PopulateFromGltfAsset(asset);
-// Scene submit reads slots when partitioning draws per submesh.
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Building.glb&quot;</span>);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
+<span class="hljs-keyword">auto</span>* multi = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MultiMaterialComponent&gt;();
+multi-&gt;<span class="hljs-built_in">PopulateFromGltfAsset</span>(asset);
+<span class="hljs-comment">// Scene submit reads slots when partitioning draws per submesh.</span>
 </code></pre>
 <h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
-<pre><code class="language-cpp">SkinnedGltfAsset fox = world.LoadSkinnedGltf(&quot;assets/Fox.glb&quot;);
-go-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(fox.mesh);
-go-&gt;AddComponent&lt;MaterialComponent&gt;(fox.baseColorTexture);
-auto* anim = go-&gt;AddComponent&lt;AnimatorComponent&gt;(fox.skeleton, 0, 1.0F);
-anim-&gt;SetLoopMode(AnimLoopMode::Loop);
-anim-&gt;SetClipIndexWithCrossfade(1, 0.25F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/Fox.glb&quot;</span>);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkinnedMeshComponent&gt;(fox.mesh);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(fox.baseColorTexture);
+<span class="hljs-keyword">auto</span>* anim = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(fox.skeleton, <span class="hljs-number">0</span>, <span class="hljs-number">1.0F</span>);
+anim-&gt;<span class="hljs-built_in">SetLoopMode</span>(AnimLoopMode::Loop);
+anim-&gt;<span class="hljs-built_in">SetClipIndexWithCrossfade</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0.25F</span>);
 </code></pre>
 <h3 id="spritecomponent"><code>SpriteComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sprite</code> · <strong>Consumed by:</strong> Sprite pass in <code>SceneRenderParams</code></p>
-<pre><code class="language-cpp">SharedPtr&lt;Texture2D&gt; sheet = world.LoadTexture(&quot;assets/hero.png&quot;);
-auto* sprite = go-&gt;AddComponent&lt;SpriteComponent&gt;(sheet, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 10);
-sprite-&gt;SetSortOrder(5);  // higher draws on top within layer
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Texture2D&gt; sheet = world.<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/hero.png&quot;</span>);
+<span class="hljs-keyword">auto</span>* sprite = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(sheet, Vector4{<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>}, Vector4{<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>}, <span class="hljs-number">10</span>);
+sprite-&gt;<span class="hljs-built_in">SetSortOrder</span>(<span class="hljs-number">5</span>);  <span class="hljs-comment">// higher draws on top within layer</span>
 </code></pre>
 <h3 id="spritelighting2dcomponent"><code>SpriteLighting2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpriteLighting2D</code> · <strong>Sibling:</strong> <code>SpriteComponent</code></p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteLighting2DComponent&gt;(SpriteLighting2DMode::NormalMapped, 1.0F, 0.0F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteLighting2DComponent&gt;(SpriteLighting2DMode::NormalMapped, <span class="hljs-number">1.0F</span>, <span class="hljs-number">0.0F</span>);
 </code></pre>
 <h3 id="spriteanimatorcomponent"><code>SpriteAnimatorComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpriteAnimator</code> · <strong>Priority:</strong> 200 · <strong>Sibling:</strong> <code>SpriteComponent</code></p>
-<pre><code class="language-cpp">auto* sa = go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
-sa-&gt;SetUniformGrid(4, 4);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* sa = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimatorComponent&gt;();
+sa-&gt;<span class="hljs-built_in">SetUniformGrid</span>(<span class="hljs-number">4</span>, <span class="hljs-number">4</span>);
 SpriteAnimationClip idle{};
-idle.firstFrame = 0;
-idle.frameCount = 4;
-idle.framesPerSecond = 8.0F;
-sa-&gt;AddClip(idle);
-sa-&gt;SetClipIndex(0);
+idle.firstFrame = <span class="hljs-number">0</span>;
+idle.frameCount = <span class="hljs-number">4</span>;
+idle.framesPerSecond = <span class="hljs-number">8.0F</span>;
+sa-&gt;<span class="hljs-built_in">AddClip</span>(idle);
+sa-&gt;<span class="hljs-built_in">SetClipIndex</span>(<span class="hljs-number">0</span>);
 </code></pre>
 <h3 id="tilemapcomponent"><code>TilemapComponent</code></h3>
 <p><strong>Kind:</strong> <code>Tilemap</code> · <strong>Consumed by:</strong> Tilemap pass · <strong>Guide:</strong> <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a></p>
 <p>Multi-layer grid; each <code>TilemapLayer</code> holds <code>TileCell</code> data. Rendering uses <code>Tileset</code> atlas layout (including Tiled margin/spacing when set).</p>
-<pre><code class="language-cpp">SharedPtr&lt;Tileset&gt; set = CreateTilesetFromAtlas(atlas, 12, 11);
-auto* tm = go-&gt;AddComponent&lt;TilemapComponent&gt;(set, 32, 20, 1.0F, 0);
-static_cast&lt;void&gt;(tm-&gt;AddLayer(&quot;Dungeon&quot;));
-tm-&gt;SetPaintTile(0, x, y, floorPaintId);
-tm-&gt;BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Tileset&gt; set = <span class="hljs-built_in">CreateTilesetFromAtlas</span>(atlas, <span class="hljs-number">12</span>, <span class="hljs-number">11</span>);
+<span class="hljs-keyword">auto</span>* tm = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapComponent&gt;(set, <span class="hljs-number">32</span>, <span class="hljs-number">20</span>, <span class="hljs-number">1.0F</span>, <span class="hljs-number">0</span>);
+<span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">void</span>&gt;(tm-&gt;<span class="hljs-built_in">AddLayer</span>(<span class="hljs-string">&quot;Dungeon&quot;</span>));
+tm-&gt;<span class="hljs-built_in">SetPaintTile</span>(<span class="hljs-number">0</span>, x, y, floorPaintId);
+tm-&gt;<span class="hljs-built_in">BakeGameplayGrid</span>(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
 </code></pre>
 <h3 id="tilemapcollider2dcomponent"><code>TilemapCollider2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapCollider2D</code> · <strong>Sibling:</strong> <code>TilemapComponent</code> · <strong>Consumed by:</strong> <code>PhysicsWorld2D</code></p>
 <p>Bakes static colliders from <code>TileDefinition</code> on layers with <code>contributeCollision</code>.</p>
-<pre><code class="language-cpp">auto* tc = go-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
-tc-&gt;SetCategoryBits(1u &lt;&lt; 1);
-tc-&gt;SetMaskBits(0xFFFF);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* tc = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapCollider2DComponent&gt;();
+tc-&gt;<span class="hljs-built_in">SetCategoryBits</span>(<span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">1</span>);
+tc-&gt;<span class="hljs-built_in">SetMaskBits</span>(<span class="hljs-number">0xFFFF</span>);
 </code></pre>
 <hr />
 <h2 id="tilemap">Tilemap</h2>
 <h3 id="tilemapgameplaygridcomponent"><code>TilemapGameplayGridComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapGameplayGrid</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
 <p>Caches a walkability grid and <code>TilemapGridFrame</code> for pathfinding / gameplay queries.</p>
-<pre><code class="language-cpp">auto* grid = go-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
-grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
-grid-&gt;SetAutoRebake(true);
-grid-&gt;RebakeIfNeeded(*go);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* grid = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapGameplayGridComponent&gt;();
+grid-&gt;<span class="hljs-built_in">SetWalkRule</span>(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid-&gt;<span class="hljs-built_in">SetAutoRebake</span>(<span class="hljs-literal">true</span>);
+grid-&gt;<span class="hljs-built_in">RebakeIfNeeded</span>(*go);
 </code></pre>
 <h3 id="tilemapmapsourcecomponent"><code>TilemapMapSourceComponent</code></h3>
 <p><strong>Kind:</strong> <code>TilemapMapSource</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
 <p>Imports <code>.tmx</code> or <code>.sparkmap</code> via <code>ImportNow</code>, optional hot reload. Sets <code>pixelsPerWorldUnit</code> on <code>TilemapDocumentApplyOptions</code>.</p>
-<pre><code class="language-cpp">auto* source = go-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
-source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;);
-source-&gt;SetPixelsPerWorldUnit(16.0F);
-source-&gt;ImportNow(*go, world);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* source = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapMapSourceComponent&gt;();
+source-&gt;<span class="hljs-built_in">SetTmxPath</span>(<span class="hljs-string">&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;</span>);
+source-&gt;<span class="hljs-built_in">SetPixelsPerWorldUnit</span>(<span class="hljs-number">16.0F</span>);
+source-&gt;<span class="hljs-built_in">ImportNow</span>(*go, world);
 </code></pre>
 <h3 id="tilemapautotilecomponent-tilemaptileanimatorcomponent"><code>TilemapAutotileComponent</code> / <code>TilemapTileAnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>TilemapAutotile</code>, <code>TilemapTileAnimator</code> · <strong>Sibling:</strong> <code>TilemapComponent</code></p>
@@ -1173,121 +1630,121 @@ source-&gt;ImportNow(*go, world);
 <hr />
 <h3 id="skycomponent"><code>SkyComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sky</code> · <strong>Siblings:</strong> <code>MeshComponent</code> (sky mesh), <code>TransformComponent</code></p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;MeshComponent&gt;(skyBoxMesh, SceneMeshSlot::Custom);
-go-&gt;AddComponent&lt;SkyComponent&gt;(SceneSkyMode::Box);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(skyBoxMesh, SceneMeshSlot::Custom);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkyComponent&gt;(SceneSkyMode::Box);
 </code></pre>
 <h3 id="terraincomponent"><code>TerrainComponent</code></h3>
 <p><strong>Kind:</strong> <code>Terrain</code> · <strong>Consumed by:</strong> Mesh rebuild + raycast</p>
-<pre><code class="language-cpp">TerrainGeneratorSettings settings{};
-settings.subdivX = 128;
-settings.subdivZ = 128;
-settings.halfExtentX = 56.0F;
-settings.halfExtentZ = 56.0F;
-settings.heightScale = 14.0F;
-settings.noiseScale = 0.055F;
-go-&gt;AddComponent&lt;TerrainComponent&gt;(settings, Vector3{0.4F, 0.55F, 0.35F});
-go-&gt;AddComponent&lt;MaterialComponent&gt;(grassTex);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">TerrainGeneratorSettings settings{};
+settings.subdivX = <span class="hljs-number">128</span>;
+settings.subdivZ = <span class="hljs-number">128</span>;
+settings.halfExtentX = <span class="hljs-number">56.0F</span>;
+settings.halfExtentZ = <span class="hljs-number">56.0F</span>;
+settings.heightScale = <span class="hljs-number">14.0F</span>;
+settings.noiseScale = <span class="hljs-number">0.055F</span>;
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TerrainComponent&gt;(settings, Vector3{<span class="hljs-number">0.4F</span>, <span class="hljs-number">0.55F</span>, <span class="hljs-number">0.35F</span>});
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(grassTex);
 </code></pre>
 <h3 id="waterbodycomponent"><code>WaterBodyComponent</code></h3>
 <p><strong>Kind:</strong> <code>WaterBody</code> · <strong>Consumed by:</strong> dedicated water pass (<code>SceneRenderParams::waterDraws</code>)</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/water/WaterBodyComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/water/WaterBodyComponent.hpp&quot;</span></span>
 
 WaterSurfaceMeshSettings mesh{};
-mesh.SetTileHalfExtent(64.0F);
-go-&gt;AddComponent&lt;WaterBodyComponent&gt;(
+mesh.<span class="hljs-built_in">SetTileHalfExtent</span>(<span class="hljs-number">64.0F</span>);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;WaterBodyComponent&gt;(
         WaterBodyMode::FiniteLake,
-        0.0F,
-        WaterBodyExtent::MakeRectangle(48.0F, 48.0F),
+        <span class="hljs-number">0.0F</span>,
+        WaterBodyExtent::<span class="hljs-built_in">MakeRectangle</span>(<span class="hljs-number">48.0F</span>, <span class="hljs-number">48.0F</span>),
         WaterWavePresetId::CalmLake,
         mesh,
-        Vector3{0.12F, 0.45F, 0.62F});
-WaterBodyComponent* water = go-&gt;GetComponent&lt;WaterBodyComponent&gt;();
-water-&gt;SetAbsorption(0.08F);
-water-&gt;SetFoamStrength(0.85F);
-water-&gt;RegenerateSurface(*go);
+        Vector3{<span class="hljs-number">0.12F</span>, <span class="hljs-number">0.45F</span>, <span class="hljs-number">0.62F</span>});
+WaterBodyComponent* water = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;WaterBodyComponent&gt;();
+water-&gt;<span class="hljs-built_in">SetAbsorption</span>(<span class="hljs-number">0.08F</span>);
+water-&gt;<span class="hljs-built_in">SetFoamStrength</span>(<span class="hljs-number">0.85F</span>);
+water-&gt;<span class="hljs-built_in">RegenerateSurface</span>(*go);
 </code></pre>
 <p>Wave parameters resolve from <code>assets/water/&lt;preset&gt;.sparkwater</code> when available. See <a href="../3-3d-graphics/06-terrain-and-sky.html#water-bodies-waterbodycomponent">Terrain and Sky</a>.</p>
 <h3 id="particleemittercomponent"><code>ParticleEmitterComponent</code></h3>
 <p><strong>Kind:</strong> <code>ParticleEmitter</code> · <strong>Consumed by:</strong> <code>OnUpdate</code> + <code>SceneRenderParams::particles</code></p>
-<pre><code class="language-cpp">auto* pe = go-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
-pe-&gt;SetEmitterEnabled(true);
-pe-&gt;SetMaxParticles(256);
-pe-&gt;SetEmissionRate(40.0F);
-pe-&gt;SetStartEndColor({1.0F, 0.6F, 0.1F, 1.0F}, {0.85F, 0.05F, 0.0F, 0.0F});
-pe-&gt;SetGravity({0.0F, -4.0F, 0.0F});
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* pe = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;ParticleEmitterComponent&gt;();
+pe-&gt;<span class="hljs-built_in">SetEmitterEnabled</span>(<span class="hljs-literal">true</span>);
+pe-&gt;<span class="hljs-built_in">SetMaxParticles</span>(<span class="hljs-number">256</span>);
+pe-&gt;<span class="hljs-built_in">SetEmissionRate</span>(<span class="hljs-number">40.0F</span>);
+pe-&gt;<span class="hljs-built_in">SetStartEndColor</span>({<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.6F</span>, <span class="hljs-number">0.1F</span>, <span class="hljs-number">1.0F</span>}, {<span class="hljs-number">0.85F</span>, <span class="hljs-number">0.05F</span>, <span class="hljs-number">0.0F</span>, <span class="hljs-number">0.0F</span>});
+pe-&gt;<span class="hljs-built_in">SetGravity</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">-4.0F</span>, <span class="hljs-number">0.0F</span>});
 </code></pre>
 <h3 id="billboardcomponent"><code>BillboardComponent</code></h3>
 <p><strong>Kind:</strong> <code>Billboard</code> · <strong>Priority:</strong> 50 · <strong>Consumed by:</strong> <code>OnUpdate</code> (rotates transform)</p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteComponent&gt;(iconTex);
-go-&gt;AddComponent&lt;BillboardComponent&gt;();  // default: full camera facing
-// YAxisLocked for trees / pickups in 3D:
-auto* bb = go-&gt;AddComponent&lt;BillboardComponent&gt;();
-bb-&gt;SetMode(BillboardMode::YAxisLocked);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(iconTex);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BillboardComponent&gt;();  <span class="hljs-comment">// default: full camera facing</span>
+<span class="hljs-comment">// YAxisLocked for trees / pickups in 3D:</span>
+<span class="hljs-keyword">auto</span>* bb = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BillboardComponent&gt;();
+bb-&gt;<span class="hljs-built_in">SetMode</span>(BillboardMode::YAxisLocked);
 </code></pre>
 <h3 id="decalprojectorcomponent"><code>DecalProjectorComponent</code></h3>
 <p><strong>Kind:</strong> <code>DecalProjector</code> · <strong>Consumed by:</strong> <code>SceneRenderParams::decals</code> (data path; GPU decal pass optional)</p>
-<pre><code class="language-cpp">auto* decal = go-&gt;AddComponent&lt;DecalProjectorComponent&gt;();
-decal-&gt;SetTexture(bulletHoleTex);
-decal-&gt;SetSize({0.4F, 0.4F, 0.2F});
-decal-&gt;SetOpacity(0.9F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* decal = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DecalProjectorComponent&gt;();
+decal-&gt;<span class="hljs-built_in">SetTexture</span>(bulletHoleTex);
+decal-&gt;<span class="hljs-built_in">SetSize</span>({<span class="hljs-number">0.4F</span>, <span class="hljs-number">0.4F</span>, <span class="hljs-number">0.2F</span>});
+decal-&gt;<span class="hljs-built_in">SetOpacity</span>(<span class="hljs-number">0.9F</span>);
 </code></pre>
 <h3 id="fogvolumecomponent"><code>FogVolumeComponent</code></h3>
 <p><strong>Kind:</strong> <code>FogVolume</code> · <strong>Consumed by:</strong> <code>ApplyRegionalRenderVolumes</code> → <code>SceneRenderParams</code> (data path; GPU fog optional)</p>
 <p>Oriented box or sphere volume. When the camera is inside, overrides <code>fogEnabled</code>, <code>fogColor</code>, <code>fogDensity</code>, <code>fogStart</code>, <code>fogEnd</code>. Higher <code>priority</code> wins overlaps.</p>
-<pre><code class="language-cpp">auto* fog = cave-&gt;AddComponent&lt;FogVolumeComponent&gt;();
-fog-&gt;SetShape(VolumeShape::Box);
-fog-&gt;SetHalfExtents({12.0F, 6.0F, 12.0F});
-fog-&gt;SetFogColor({0.55F, 0.58F, 0.62F});
-fog-&gt;SetFogDensity(0.035F);
-fog-&gt;SetPriority(5);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* fog = cave-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FogVolumeComponent&gt;();
+fog-&gt;<span class="hljs-built_in">SetShape</span>(VolumeShape::Box);
+fog-&gt;<span class="hljs-built_in">SetHalfExtents</span>({<span class="hljs-number">12.0F</span>, <span class="hljs-number">6.0F</span>, <span class="hljs-number">12.0F</span>});
+fog-&gt;<span class="hljs-built_in">SetFogColor</span>({<span class="hljs-number">0.55F</span>, <span class="hljs-number">0.58F</span>, <span class="hljs-number">0.62F</span>});
+fog-&gt;<span class="hljs-built_in">SetFogDensity</span>(<span class="hljs-number">0.035F</span>);
+fog-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">5</span>);
 </code></pre>
 <h3 id="postprocessvolumecomponent"><code>PostProcessVolumeComponent</code></h3>
 <p><strong>Kind:</strong> <code>PostProcessVolume</code> · <strong>Consumed by:</strong> <code>ApplyRegionalRenderVolumes</code></p>
 <p>Regional overrides for SSAO, exposure, and ambient scale when the camera is inside the volume.</p>
-<pre><code class="language-cpp">auto* pp = interior-&gt;AddComponent&lt;PostProcessVolumeComponent&gt;();
-pp-&gt;SetSsaoEnabled(false);
-pp-&gt;SetExposure(1.15F);
-pp-&gt;SetAmbientScale(0.85F);
-pp-&gt;SetPriority(2);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* pp = interior-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PostProcessVolumeComponent&gt;();
+pp-&gt;<span class="hljs-built_in">SetSsaoEnabled</span>(<span class="hljs-literal">false</span>);
+pp-&gt;<span class="hljs-built_in">SetExposure</span>(<span class="hljs-number">1.15F</span>);
+pp-&gt;<span class="hljs-built_in">SetAmbientScale</span>(<span class="hljs-number">0.85F</span>);
+pp-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">2</span>);
 </code></pre>
 <h3 id="textoverlaycomponent"><code>TextOverlayComponent</code></h3>
 <p><strong>Kind:</strong> <code>TextOverlay</code> · <strong>Consumed by:</strong> Screen UI pass</p>
-<pre><code class="language-cpp">world.SetUiFont(font);
-auto* hud = hudGo-&gt;AddComponent&lt;TextOverlayComponent&gt;();
-hud-&gt;SetText(&quot;HP: 100&quot;);
-hud-&gt;SetScreenPosition({24.0F, 24.0F});
-hud-&gt;SetFontSizePixels(18.0F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">SetUiFont</span>(font);
+<span class="hljs-keyword">auto</span>* hud = hudGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TextOverlayComponent&gt;();
+hud-&gt;<span class="hljs-built_in">SetText</span>(<span class="hljs-string">&quot;HP: 100&quot;</span>);
+hud-&gt;<span class="hljs-built_in">SetScreenPosition</span>({<span class="hljs-number">24.0F</span>, <span class="hljs-number">24.0F</span>});
+hud-&gt;<span class="hljs-built_in">SetFontSizePixels</span>(<span class="hljs-number">18.0F</span>);
 </code></pre>
 <h3 id="blendmodecomponent-renderlayercomponent-sortinggroupcomponent"><code>BlendModeComponent</code> / <code>RenderLayerComponent</code> / <code>SortingGroupComponent</code></h3>
-<pre><code class="language-cpp">// Per-sprite blend (sprite or tilemap sibling required)
-go-&gt;AddComponent&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-comment">// Per-sprite blend (sprite or tilemap sibling required)</span>
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BlendModeComponent&gt;(SceneBlendMode::Additive);
 
-// Named layer from RenderLayerRegistry
-go-&gt;AddComponent&lt;RenderLayerComponent&gt;(&quot;Characters&quot;, 10);
+<span class="hljs-comment">// Named layer from RenderLayerRegistry</span>
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;RenderLayerComponent&gt;(<span class="hljs-string">&quot;Characters&quot;</span>, <span class="hljs-number">10</span>);
 
-// Batch sort for subtree (descendant sprites/tilemaps)
-parent-&gt;AddComponent&lt;SortingGroupComponent&gt;(100);
+<span class="hljs-comment">// Batch sort for subtree (descendant sprites/tilemaps)</span>
+parent-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SortingGroupComponent&gt;(<span class="hljs-number">100</span>);
 </code></pre>
 <h3 id="parallaxlayercomponent"><code>ParallaxLayerComponent</code></h3>
 <p><strong>Kind:</strong> <code>ParallaxLayer</code> · <strong>Priority:</strong> 290 · <strong>Sibling:</strong> <code>SpriteComponent</code> or <code>TransformComponent</code><br />
 <strong>Consumed by:</strong> <code>OnUpdate</code> — writes owner transform from camera delta</p>
 <p>Scrolls a distant layer slower than the active camera. Point <code>SetCameraReference</code> at the camera rig object (the same <code>GameObject</code> that owns <code>Camera2DRigComponent</code>). On attach, the component captures the owner's current translation as <strong>rest offset</strong> relative to a configurable world anchor.</p>
 <p><strong>Design:</strong> Strategy via <code>ParallaxDriftMode</code> for optional procedural sway (clouds). Runs before <code>ScreenShakeComponent</code> (295) and <code>Camera2DRigComponent</code> (300) so shake applies to the final view, not the parallax math.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/ParallaxLayerComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/rendering/ParallaxLayerComponent.hpp&quot;</span></span>
 
-bgSky-&gt;AddComponent&lt;SpriteComponent&gt;(skyTex, ...);
-auto* parallax = bgSky-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
-parallax-&gt;SetFactorX(0.04F);           // 4% of camera X movement
-parallax-&gt;SetFactorY(0.0F);            // horizontal-only (default axis mode)
-parallax-&gt;SetAnchorWorld({20.0F, 0.0F, 0.0F});
+bgSky-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(skyTex, ...);
+<span class="hljs-keyword">auto</span>* parallax = bgSky-&gt;<span class="hljs-built_in">AddComponent</span>&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;<span class="hljs-built_in">SetFactorX</span>(<span class="hljs-number">0.04F</span>);           <span class="hljs-comment">// 4% of camera X movement</span>
+parallax-&gt;<span class="hljs-built_in">SetFactorY</span>(<span class="hljs-number">0.0F</span>);            <span class="hljs-comment">// horizontal-only (default axis mode)</span>
+parallax-&gt;<span class="hljs-built_in">SetAnchorWorld</span>({<span class="hljs-number">20.0F</span>, <span class="hljs-number">0.0F</span>, <span class="hljs-number">0.0F</span>});
 
-// After camera exists:
-parallax-&gt;SetCameraReference(mainCameraGo);
+<span class="hljs-comment">// After camera exists:</span>
+parallax-&gt;<span class="hljs-built_in">SetCameraReference</span>(mainCameraGo);
 
-// Slow cloud sway layered on parallax:
-parallax-&gt;SetDriftMode(ParallaxDriftMode::SineHorizontal);
-parallax-&gt;SetDriftAmplitude(0.35F);
-parallax-&gt;SetDriftFrequencyHz(0.22F);
+<span class="hljs-comment">// Slow cloud sway layered on parallax:</span>
+parallax-&gt;<span class="hljs-built_in">SetDriftMode</span>(ParallaxDriftMode::SineHorizontal);
+parallax-&gt;<span class="hljs-built_in">SetDriftAmplitude</span>(<span class="hljs-number">0.35F</span>);
+parallax-&gt;<span class="hljs-built_in">SetDriftFrequencyHz</span>(<span class="hljs-number">0.22F</span>);
 </code></pre>
 <table>
 <thead>
@@ -1321,403 +1778,403 @@ parallax-&gt;SetDriftFrequencyHz(0.22F);
 <h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
 <p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>FillStandardLitSceneFromWorld</code></p>
 <p>Light direction = owner transform <strong>local +Z</strong> in world space.</p>
-<pre><code class="language-cpp">auto* sun = sunGo-&gt;AddComponent&lt;DirectionalLightComponent&gt;(Vector3{1,0.97,0.9}, 1.2F);
-sunGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetRotation(
-    Quaternion::FromAxisAngle(Vector3::UnitX, -0.6F));
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* sun = sunGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DirectionalLightComponent&gt;(Vector3{<span class="hljs-number">1</span>,<span class="hljs-number">0.97</span>,<span class="hljs-number">0.9</span>}, <span class="hljs-number">1.2F</span>);
+sunGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetRotation</span>(
+    Quaternion::<span class="hljs-built_in">FromAxisAngle</span>(Vector3::UnitX, <span class="hljs-number">-0.6F</span>));
 </code></pre>
 <h3 id="pointlightcomponent-spotlightcomponent"><code>PointLightComponent</code> / <code>SpotLightComponent</code></h3>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;PointLightComponent&gt;(Vector3::One, 4.0F, 12.0F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PointLightComponent&gt;(Vector3::One, <span class="hljs-number">4.0F</span>, <span class="hljs-number">12.0F</span>);
 
-auto* spot = go-&gt;AddComponent&lt;SpotLightComponent&gt;(Vector3::One, 6.0F, 15.0F, 25.0F, 40.0F);
-// Cone axis = local −Z in world space
+<span class="hljs-keyword">auto</span>* spot = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpotLightComponent&gt;(Vector3::One, <span class="hljs-number">6.0F</span>, <span class="hljs-number">15.0F</span>, <span class="hljs-number">25.0F</span>, <span class="hljs-number">40.0F</span>);
+<span class="hljs-comment">// Cone axis = local −Z in world space</span>
 </code></pre>
 <hr />
 <h2 id="camera">Camera</h2>
 <h3 id="cameracomponent-3d"><code>CameraComponent</code> (3D)</h3>
 <p><strong>Kind:</strong> <code>Camera</code> · <strong>Consumed by:</strong> <code>TryResolveMainCamera</code>, scene submit</p>
-<pre><code class="language-cpp">auto* cam = cameraGo-&gt;AddComponent&lt;CameraComponent&gt;();
-cam-&gt;SetProjectionMode(CameraProjectionMode::Perspective);
-cam-&gt;SetFovYDegrees(72.0F);
-cam-&gt;SetNearPlane(0.1F);
-cam-&gt;SetFarPlane(500.0F);
-cam-&gt;SetPriority(10);  // higher wins as &quot;main&quot; camera
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* cam = cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CameraComponent&gt;();
+cam-&gt;<span class="hljs-built_in">SetProjectionMode</span>(CameraProjectionMode::Perspective);
+cam-&gt;<span class="hljs-built_in">SetFovYDegrees</span>(<span class="hljs-number">72.0F</span>);
+cam-&gt;<span class="hljs-built_in">SetNearPlane</span>(<span class="hljs-number">0.1F</span>);
+cam-&gt;<span class="hljs-built_in">SetFarPlane</span>(<span class="hljs-number">500.0F</span>);
+cam-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">10</span>);  <span class="hljs-comment">// higher wins as &quot;main&quot; camera</span>
 </code></pre>
 <h3 id="camera2dcomponent-camera2drigcomponent"><code>Camera2DComponent</code> + <code>Camera2DRigComponent</code></h3>
-<pre><code class="language-cpp">auto* cam2d = cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;();
-cam2d-&gt;SetHalfExtentY(6.0F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* cam2d = cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Camera2DComponent&gt;();
+cam2d-&gt;<span class="hljs-built_in">SetHalfExtentY</span>(<span class="hljs-number">6.0F</span>);
 
-auto* rig = cameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;();
-rig-&gt;SetMode(Camera2DRigMode::FollowTarget);
-rig-&gt;SetTarget(player);
-rig-&gt;SetFollowSmoothRate(7.5F);
-rig-&gt;SetLookAheadScale(0.15F);
+<span class="hljs-keyword">auto</span>* rig = cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Camera2DRigComponent&gt;();
+rig-&gt;<span class="hljs-built_in">SetMode</span>(Camera2DRigMode::FollowTarget);
+rig-&gt;<span class="hljs-built_in">SetTarget</span>(player);
+rig-&gt;<span class="hljs-built_in">SetFollowSmoothRate</span>(<span class="hljs-number">7.5F</span>);
+rig-&gt;<span class="hljs-built_in">SetLookAheadScale</span>(<span class="hljs-number">0.15F</span>);
 </code></pre>
 <p><code>Camera2DRigComponent::OnUpdate</code> reads <code>ScreenShakeComponent::GetOffset()</code> on the same object and adds it to the final camera translation. Attach shake to the camera rig, not to parallax layers.</p>
 <h3 id="camerabounds2dcomponent"><code>CameraBounds2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>CameraBounds2D</code> · <strong>Consumed by:</strong> <code>TryResolveCameraBounds2DForTarget</code> inside <code>Camera2DRigComponent</code> when <code>useBounds</code> or <code>BoundedFollow</code> is active.</p>
 <p>Place axis-aligned volumes in the level; when the rig follow target lies inside a volume, that volume's min/max override the rig's <code>boundsMin</code> / <code>boundsMax</code> for the frame (highest <code>priority</code> wins).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/camera/CameraBounds2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/camera/CameraBounds2DComponent.hpp&quot;</span></span>
 
-auto* room = zoneGo-&gt;AddComponent&lt;CameraBounds2DComponent&gt;();
-room-&gt;SetHalfExtents({24.0F, 14.0F});
-room-&gt;SetPriority(1);
+<span class="hljs-keyword">auto</span>* room = zoneGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CameraBounds2DComponent&gt;();
+room-&gt;<span class="hljs-built_in">SetHalfExtents</span>({<span class="hljs-number">24.0F</span>, <span class="hljs-number">14.0F</span>});
+room-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">1</span>);
 </code></pre>
 <h3 id="screenshakecomponent"><code>ScreenShakeComponent</code></h3>
 <p><strong>Kind:</strong> <code>ScreenShake</code> · <strong>Priority:</strong> 295 · <strong>Sibling:</strong> <code>Camera2DRigComponent</code> on same object<br />
 <strong>Design:</strong> Composite pattern — multiple <code>CameraShakeImpulse</code> instances sum each frame; optional <strong>trauma</strong> accumulator for sustained rumble.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/camera/ScreenShakeComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/camera/ScreenShakeComponent.hpp&quot;</span></span>
 
-auto* shake = cameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+<span class="hljs-keyword">auto</span>* shake = cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;ScreenShakeComponent&gt;();
 
-// Directional burst (world-unit peak offset, duration, frequency Hz):
-shake-&gt;AddImpulse({0.18F, -0.12F}, 0.25F, 30.0F);
+<span class="hljs-comment">// Directional burst (world-unit peak offset, duration, frequency Hz):</span>
+shake-&gt;<span class="hljs-built_in">AddImpulse</span>({<span class="hljs-number">0.18F</span>, <span class="hljs-number">-0.12F</span>}, <span class="hljs-number">0.25F</span>, <span class="hljs-number">30.0F</span>);
 
-// Trauma-based shake (0..1 energy, decays over time):
-shake-&gt;AddTrauma(0.45F);
+<span class="hljs-comment">// Trauma-based shake (0..1 energy, decays over time):</span>
+shake-&gt;<span class="hljs-built_in">AddTrauma</span>(<span class="hljs-number">0.45F</span>);
 
-// Read offset (applied automatically by Camera2DRigComponent):
-const Vector2&amp; offset = shake-&gt;GetOffset();
+<span class="hljs-comment">// Read offset (applied automatically by Camera2DRigComponent):</span>
+<span class="hljs-type">const</span> Vector2&amp; offset = shake-&gt;<span class="hljs-built_in">GetOffset</span>();
 </code></pre>
 <p>Typical triggers: player hurt (<code>AddImpulse</code> on damage), explosions, goal reached. Call <code>Clear()</code> to reset impulses and trauma instantly.</p>
 <h3 id="springarm3dcomponent-camerafollow3dcomponent"><code>SpringArm3DComponent</code> + <code>CameraFollow3DComponent</code></h3>
 <p>Third-person orbit (runs at priorities 295 / 300).</p>
-<pre><code class="language-cpp">GameObject* rig = world.CreateGameObject();
-GameObject* camObj = world.CreateGameObject();
-world.SetParent(camObj, rig);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* rig = world.<span class="hljs-built_in">CreateGameObject</span>();
+GameObject* camObj = world.<span class="hljs-built_in">CreateGameObject</span>();
+world.<span class="hljs-built_in">SetParent</span>(camObj, rig);
 
-rig-&gt;AddComponent&lt;TransformComponent&gt;();
-auto* arm = camObj-&gt;AddComponent&lt;SpringArm3DComponent&gt;();
-arm-&gt;SetPivotTarget(player);
-arm-&gt;SetSocketOffset({0.0F, 1.5F, 0.0F});
-arm-&gt;SetArmLength(4.5F);
-arm-&gt;SetYawRadians(0.0F);
-arm-&gt;SetPitchRadians(-0.3F);
+rig-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+<span class="hljs-keyword">auto</span>* arm = camObj-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpringArm3DComponent&gt;();
+arm-&gt;<span class="hljs-built_in">SetPivotTarget</span>(player);
+arm-&gt;<span class="hljs-built_in">SetSocketOffset</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.5F</span>, <span class="hljs-number">0.0F</span>});
+arm-&gt;<span class="hljs-built_in">SetArmLength</span>(<span class="hljs-number">4.5F</span>);
+arm-&gt;<span class="hljs-built_in">SetYawRadians</span>(<span class="hljs-number">0.0F</span>);
+arm-&gt;<span class="hljs-built_in">SetPitchRadians</span>(<span class="hljs-number">-0.3F</span>);
 
-camObj-&gt;AddComponent&lt;CameraComponent&gt;();
-auto* follow = camObj-&gt;AddComponent&lt;CameraFollow3DComponent&gt;();
-follow-&gt;SetTarget(player);
-follow-&gt;SetTargetOffset({0.0F, 1.6F, 0.0F});
-follow-&gt;SetLookAtTarget(true);
+camObj-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CameraComponent&gt;();
+<span class="hljs-keyword">auto</span>* follow = camObj-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CameraFollow3DComponent&gt;();
+follow-&gt;<span class="hljs-built_in">SetTarget</span>(player);
+follow-&gt;<span class="hljs-built_in">SetTargetOffset</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.6F</span>, <span class="hljs-number">0.0F</span>});
+follow-&gt;<span class="hljs-built_in">SetLookAtTarget</span>(<span class="hljs-literal">true</span>);
 </code></pre>
 <hr />
 <h2 id="physics-2d">Physics 2D</h2>
 <p>Call each frame from <code>OnUpdate</code> (after gameplay input, before render):</p>
-<pre><code class="language-cpp">#include &quot;spark/physics/PhysicsSubsystem.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/physics/PhysicsSubsystem.hpp&quot;</span></span>
 
-PhysicsSubsystem physics;  // member on your Game class
-physics.Simulate2D(world, timing);
+PhysicsSubsystem physics;  <span class="hljs-comment">// member on your Game class</span>
+physics.<span class="hljs-built_in">Simulate2D</span>(world, timing);
 </code></pre>
 <h3 id="rigidbody2dcomponent"><code>Rigidbody2DComponent</code></h3>
-<pre><code class="language-cpp">auto* rb = go-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
-rb-&gt;SetVelocity({3.0F, 0.0F});
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* rb = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, <span class="hljs-number">1.0F</span>);
+rb-&gt;<span class="hljs-built_in">SetVelocity</span>({<span class="hljs-number">3.0F</span>, <span class="hljs-number">0.0F</span>});
 </code></pre>
 <h3 id="boxcollider2dcomponent-circlecollider2dcomponent"><code>BoxCollider2DComponent</code> / <code>CircleCollider2DComponent</code></h3>
-<pre><code class="language-cpp">auto* box = go-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{0.5F, 0.5F});
-box-&gt;SetCategoryBits(1u &lt;&lt; 0);
-box-&gt;SetMaskBits(0xFFFF);
-box-&gt;SetIsTrigger(false);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* box = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BoxCollider2DComponent&gt;(Vector2{<span class="hljs-number">0.5F</span>, <span class="hljs-number">0.5F</span>});
+box-&gt;<span class="hljs-built_in">SetCategoryBits</span>(<span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">0</span>);
+box-&gt;<span class="hljs-built_in">SetMaskBits</span>(<span class="hljs-number">0xFFFF</span>);
+box-&gt;<span class="hljs-built_in">SetIsTrigger</span>(<span class="hljs-literal">false</span>);
 
-// On same dynamic body, circle wins over box if both exist:
-go-&gt;AddComponent&lt;CircleCollider2DComponent&gt;(0.45F);
+<span class="hljs-comment">// On same dynamic body, circle wins over box if both exist:</span>
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CircleCollider2DComponent&gt;(<span class="hljs-number">0.45F</span>);
 </code></pre>
 <h3 id="polygoncollider2dcomponent"><code>PolygonCollider2DComponent</code></h3>
 <p><strong>Static only</strong> (no dynamic rigidbody, or static/kinematic body). Convex, max <strong>16</strong> vertices.</p>
-<pre><code class="language-cpp">Array&lt;Vector2&gt; verts;
-verts.PushBack({-1.0F, 0.0F});
-verts.PushBack({1.0F, 0.0F});
-verts.PushBack({0.0F, 1.5F});
-auto* poly = ramp-&gt;AddComponent&lt;PolygonCollider2DComponent&gt;();
-poly-&gt;SetVertices(verts);
-poly-&gt;SetCategoryBits(1u &lt;&lt; 1);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">Array&lt;Vector2&gt; verts;
+verts.<span class="hljs-built_in">PushBack</span>({<span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.0F</span>});
+verts.<span class="hljs-built_in">PushBack</span>({<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.0F</span>});
+verts.<span class="hljs-built_in">PushBack</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.5F</span>});
+<span class="hljs-keyword">auto</span>* poly = ramp-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PolygonCollider2DComponent&gt;();
+poly-&gt;<span class="hljs-built_in">SetVertices</span>(verts);
+poly-&gt;<span class="hljs-built_in">SetCategoryBits</span>(<span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">1</span>);
 </code></pre>
 <h3 id="physicsmaterial2dcomponent"><code>PhysicsMaterial2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>PhysicsMaterial2D</code> · <strong>Sibling:</strong> static 2D collider on same object · <strong>Consumed by:</strong> static broad-phase bake + contact restitution</p>
-<pre><code class="language-cpp">ice-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{4.0F, 0.1F});
-ice-&gt;AddComponent&lt;PhysicsMaterial2DComponent&gt;(0.15F, 0.35F);  // friction, restitution
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">ice-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BoxCollider2DComponent&gt;(Vector2{<span class="hljs-number">4.0F</span>, <span class="hljs-number">0.1F</span>});
+ice-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PhysicsMaterial2DComponent&gt;(<span class="hljs-number">0.15F</span>, <span class="hljs-number">0.35F</span>);  <span class="hljs-comment">// friction, restitution</span>
 </code></pre>
 <h3 id="distancejoint2dcomponent-hingejoint2dcomponent"><code>DistanceJoint2DComponent</code> / <code>HingeJoint2DComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>PhysicsWorld2D</code> when <code>PhysicsWorld2DSettings::jointIterations &gt; 0</code> (default <strong>4</strong>)</p>
-<pre><code class="language-cpp">PhysicsWorld2DSettings settings{};
-settings.jointIterations = 6;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">PhysicsWorld2DSettings settings{};
+settings.jointIterations = <span class="hljs-number">6</span>;
 
-chainA-&gt;AddComponent&lt;Rigidbody2DComponent&gt;();
-chainB-&gt;AddComponent&lt;Rigidbody2DComponent&gt;();
-chainA-&gt;AddComponent&lt;DistanceJoint2DComponent&gt;(chainB, 1.2F);
+chainA-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;();
+chainB-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;();
+chainA-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DistanceJoint2DComponent&gt;(chainB, <span class="hljs-number">1.2F</span>);
 
-// Pin two bodies at local anchor offsets:
-hingeA-&gt;AddComponent&lt;HingeJoint2DComponent&gt;(hingeB);
-auto* hj = hingeA-&gt;GetComponent&lt;HingeJoint2DComponent&gt;();
-hj-&gt;SetLocalAnchorA({0.0F, 0.5F});
-hj-&gt;SetLocalAnchorB({0.0F, -0.5F});
+<span class="hljs-comment">// Pin two bodies at local anchor offsets:</span>
+hingeA-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HingeJoint2DComponent&gt;(hingeB);
+<span class="hljs-keyword">auto</span>* hj = hingeA-&gt;<span class="hljs-built_in">GetComponent</span>&lt;HingeJoint2DComponent&gt;();
+hj-&gt;<span class="hljs-built_in">SetLocalAnchorA</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">0.5F</span>});
+hj-&gt;<span class="hljs-built_in">SetLocalAnchorB</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">-0.5F</span>});
 </code></pre>
 <h3 id="charactercontroller2dcomponent"><code>CharacterController2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>CharacterController2D</code> · <strong>Siblings:</strong> <code>Rigidbody2DComponent</code> + <code>BoxCollider2DComponent</code> (or circle)<br />
 <strong>Consumed by:</strong> <code>PhysicsSubsystem::Simulate2D</code> → <code>SimulateCharacterControllers2D</code></p>
 <p>Platformer motor with coyote time, jump buffer, ground snap, slope limit, and one-way platform drop-through. Set horizontal intent and optional jump <strong>before</strong> <code>Simulate2D</code>.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/CharacterController2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/physics/2d/CharacterController2DComponent.hpp&quot;</span></span>
 
-auto* rb = player-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
-player-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
-auto* cc = player-&gt;AddComponent&lt;CharacterController2DComponent&gt;();
-cc-&gt;SetMoveSpeed(11.0F);
-cc-&gt;SetJumpSpeed(13.2F);
-cc-&gt;SetCoyoteTimeSeconds(0.12F);
-cc-&gt;SetJumpBufferSeconds(0.1F);
+<span class="hljs-keyword">auto</span>* rb = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, <span class="hljs-number">1.0F</span>);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BoxCollider2DComponent&gt;();
+<span class="hljs-keyword">auto</span>* cc = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CharacterController2DComponent&gt;();
+cc-&gt;<span class="hljs-built_in">SetMoveSpeed</span>(<span class="hljs-number">11.0F</span>);
+cc-&gt;<span class="hljs-built_in">SetJumpSpeed</span>(<span class="hljs-number">13.2F</span>);
+cc-&gt;<span class="hljs-built_in">SetCoyoteTimeSeconds</span>(<span class="hljs-number">0.12F</span>);
+cc-&gt;<span class="hljs-built_in">SetJumpBufferSeconds</span>(<span class="hljs-number">0.1F</span>);
 
-// Each frame, after PlayerInputComponent (or manual input):
-cc-&gt;SetMoveInputX(playerInput-&gt;GetActionAxis1D(&quot;MoveX&quot;));
-if (playerInput-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
-    cc-&gt;RequestJump();
+<span class="hljs-comment">// Each frame, after PlayerInputComponent (or manual input):</span>
+cc-&gt;<span class="hljs-built_in">SetMoveInputX</span>(playerInput-&gt;<span class="hljs-built_in">GetActionAxis1D</span>(<span class="hljs-string">&quot;MoveX&quot;</span>));
+<span class="hljs-keyword">if</span> (playerInput-&gt;<span class="hljs-built_in">WasActionPressedThisFrame</span>(<span class="hljs-string">&quot;Jump&quot;</span>)) {
+    cc-&gt;<span class="hljs-built_in">RequestJump</span>();
 }
-if (playerInput-&gt;IsActionPressed(&quot;Drop&quot;)) {
-    cc-&gt;SetDropThroughOneWay(true);  // cleared after one prepare step
+<span class="hljs-keyword">if</span> (playerInput-&gt;<span class="hljs-built_in">IsActionPressed</span>(<span class="hljs-string">&quot;Drop&quot;</span>)) {
+    cc-&gt;<span class="hljs-built_in">SetDropThroughOneWay</span>(<span class="hljs-literal">true</span>);  <span class="hljs-comment">// cleared after one prepare step</span>
 }
-physics.Simulate2D(world, timing);
+physics.<span class="hljs-built_in">Simulate2D</span>(world, timing);
 
-// Land feedback:
-if (cc-&gt;IsGrounded() &amp;&amp; !cc-&gt;WasGroundedLastFrame()) {
-    // spawn dust VFX
+<span class="hljs-comment">// Land feedback:</span>
+<span class="hljs-keyword">if</span> (cc-&gt;<span class="hljs-built_in">IsGrounded</span>() &amp;&amp; !cc-&gt;<span class="hljs-built_in">WasGroundedLastFrame</span>()) {
+    <span class="hljs-comment">// spawn dust VFX</span>
 }
 </code></pre>
 <p>Pair with <code>PlayerInputComponent</code> (priority 50) so semantic actions are ready before the controller reads them.</p>
 <h3 id="onewayplatform2dcomponent"><code>OneWayPlatform2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>OneWayPlatform2D</code> · <strong>Sibling:</strong> static <code>BoxCollider2DComponent</code></p>
 <p>Marker on platform colliders. The character controller treats the surface as pass-through from below unless landing from above (or drop-through is not requested).</p>
-<pre><code class="language-cpp">platform-&gt;AddComponent&lt;BoxCollider2DComponent&gt;(Vector2{4.0F, 0.15F});
-platform-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);
-platform-&gt;AddComponent&lt;OneWayPlatform2DComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">platform-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BoxCollider2DComponent&gt;(Vector2{<span class="hljs-number">4.0F</span>, <span class="hljs-number">0.15F</span>});
+platform-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, <span class="hljs-number">0.0F</span>);
+platform-&gt;<span class="hljs-built_in">AddComponent</span>&lt;OneWayPlatform2DComponent&gt;();
 </code></pre>
 <h3 id="triggervolume2dcomponent"><code>TriggerVolume2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>TriggerVolume2D</code> · <strong>Consumed by:</strong> <code>SimulateTriggerVolumes2D</code> (called inside <code>Simulate2D</code>)</p>
 <p>Non-blocking overlap volume with enter/stay/exit callbacks and sibling signals. Prefer this over <code>SetIsTrigger(true)</code> on solid colliders when you want dedicated gameplay volumes (goals, pickups, hazards).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp&quot;</span></span>
 
-auto* trig = zone-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(
+<span class="hljs-keyword">auto</span>* trig = zone-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TriggerVolume2DComponent&gt;(
     TriggerVolume2DShape::Box,
-    Vector2{1.5F, 2.0F},   // half extents (box) or ignored for circle + SetRadius
-    Vector2::Zero);        // local offset
-trig-&gt;SetFilterTag(&quot;player&quot;);  // optional: only detect tagged objects
-trig-&gt;SetOnEnter([](GameObject&amp; other) { (void)other; });
+    Vector2{<span class="hljs-number">1.5F</span>, <span class="hljs-number">2.0F</span>},   <span class="hljs-comment">// half extents (box) or ignored for circle + SetRadius</span>
+    Vector2::Zero);        <span class="hljs-comment">// local offset</span>
+trig-&gt;<span class="hljs-built_in">SetFilterTag</span>(<span class="hljs-string">&quot;player&quot;</span>);  <span class="hljs-comment">// optional: only detect tagged objects</span>
+trig-&gt;<span class="hljs-built_in">SetOnEnter</span>([](GameObject&amp; other) { (<span class="hljs-type">void</span>)other; });
 
-// Circle gem pickup:
-gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
-auto* circle = gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;();
-circle-&gt;SetRadius(0.45F);
+<span class="hljs-comment">// Circle gem pickup:</span>
+gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+<span class="hljs-keyword">auto</span>* circle = gem-&gt;<span class="hljs-built_in">GetComponent</span>&lt;TriggerVolume2DComponent&gt;();
+circle-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">0.45F</span>);
 </code></pre>
 <p>Signals (<code>Physics2DTriggerEnter</code> / <code>Stay</code> / <code>Exit</code>) are delivered to <strong>sibling</strong> components on the same <code>GameObject</code>. Pair with <code>PickupComponent</code> or <code>GameFlowTriggerComponent</code> instead of wiring lambdas in demo code when possible.</p>
 <h3 id="hurtbox2dcomponent"><code>Hurtbox2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>Hurtbox2D</code> · <strong>Priority:</strong> 40 · <strong>Sibling:</strong> auto-configured <code>CircleCollider2D</code> or <code>BoxCollider2D</code> (trigger)</p>
 <p>Passive damage receiver for query-based weapons. Syncs layer bits to a trigger collider and optional post-hit invulnerability (<code>NotifyDamageReceived</code> via <code>TryApplyCombatDamage2D</code>).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp&quot;</span></span>
 
-auto* hurt = enemy-&gt;AddComponent&lt;Hurtbox2DComponent&gt;();
-hurt-&gt;SetShape(Hurtbox2DShape::Circle);
-hurt-&gt;SetRadius(0.68F);
-hurt-&gt;SetCategoryBits(1u &lt;&lt; 4);  // hurtbox layer
-hurt-&gt;SetInvulnerabilitySeconds(0.15F);
-enemy-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, 0.0F);
-enemy-&gt;AddComponent&lt;HealthComponent&gt;(3.0F);
+<span class="hljs-keyword">auto</span>* hurt = enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Hurtbox2DComponent&gt;();
+hurt-&gt;<span class="hljs-built_in">SetShape</span>(Hurtbox2DShape::Circle);
+hurt-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">0.68F</span>);
+hurt-&gt;<span class="hljs-built_in">SetCategoryBits</span>(<span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">4</span>);  <span class="hljs-comment">// hurtbox layer</span>
+hurt-&gt;<span class="hljs-built_in">SetInvulnerabilitySeconds</span>(<span class="hljs-number">0.15F</span>);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Static, <span class="hljs-number">0.0F</span>);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;(<span class="hljs-number">3.0F</span>);
 </code></pre>
 <h3 id="projectile2dcomponent"><code>Projectile2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>Projectile2D</code> · <strong>Priority:</strong> 220 · <strong>Damage path:</strong> <code>TryApplyCombatDamage2D</code></p>
 <p>Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; <code>destroyOwnerOnDeactivate</code> queues destroy flushed by <code>Projectile2DComponent::ProcessDeferredDestroys</code> (called from <code>PhysicsSubsystem::Simulate2D</code>).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/physics/2d/Projectile2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/physics/2d/Projectile2DComponent.hpp&quot;</span></span>
 
-auto* shot = bulletGo-&gt;AddComponent&lt;Projectile2DComponent&gt;();
-shot-&gt;SetRadius(0.05F);
-shot-&gt;SetDamage(1.0F);
-shot-&gt;SetTargetFilter(meleeStyleFilter);  // queryCategory + mask vs hurtbox layer
-shot-&gt;SetBlockOnSolidHit(true);
-shot-&gt;SetDestroyOwnerOnDeactivate(false);
-shot-&gt;Activate({originX, originY}, {speedX, speedY}, player);
+<span class="hljs-keyword">auto</span>* shot = bulletGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Projectile2DComponent&gt;();
+shot-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">0.05F</span>);
+shot-&gt;<span class="hljs-built_in">SetDamage</span>(<span class="hljs-number">1.0F</span>);
+shot-&gt;<span class="hljs-built_in">SetTargetFilter</span>(meleeStyleFilter);  <span class="hljs-comment">// queryCategory + mask vs hurtbox layer</span>
+shot-&gt;<span class="hljs-built_in">SetBlockOnSolidHit</span>(<span class="hljs-literal">true</span>);
+shot-&gt;<span class="hljs-built_in">SetDestroyOwnerOnDeactivate</span>(<span class="hljs-literal">false</span>);
+shot-&gt;<span class="hljs-built_in">Activate</span>({originX, originY}, {speedX, speedY}, player);
 </code></pre>
 <h3 id="damagezone2dcomponent"><code>DamageZone2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>DamageZone2D</code> · <strong>Priority:</strong> 215 · <strong>Damage path:</strong> <code>TryApplyCombatDamage2D</code></p>
 <p>Axis-aligned or circular hazard volume. Overlap-queries each frame (<code>damagePerSecond * dt</code>) using the same filter model as projectiles. Optional trigger collider sync for editor visibility.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/DamageZone2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/DamageZone2DComponent.hpp&quot;</span></span>
 
-auto* lava = hazard-&gt;AddComponent&lt;DamageZone2DComponent&gt;();
-lava-&gt;SetHalfExtents({4.0F, 1.0F});
-lava-&gt;SetDamagePerSecond(25.0F);
-lava-&gt;SetTargetFilter(hurtboxQueryFilter);
+<span class="hljs-keyword">auto</span>* lava = hazard-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DamageZone2DComponent&gt;();
+lava-&gt;<span class="hljs-built_in">SetHalfExtents</span>({<span class="hljs-number">4.0F</span>, <span class="hljs-number">1.0F</span>});
+lava-&gt;<span class="hljs-built_in">SetDamagePerSecond</span>(<span class="hljs-number">25.0F</span>);
+lava-&gt;<span class="hljs-built_in">SetTargetFilter</span>(hurtboxQueryFilter);
 </code></pre>
 <h3 id="layer-filter">Layer filter</h3>
 <pre><code>collide = (maskA &amp; categoryB) &amp;&amp; (maskB &amp; categoryA)
 </code></pre>
 <hr />
 <h2 id="physics-3d">Physics 3D</h2>
-<pre><code class="language-cpp">physics.SimulateAll3D(world, timing);
-// or step individually:
-physics.Simulate3D(world, timing);
-physics.SimulateCharacterControllers3D(world, timing);
-physics.SimulateTriggerVolumes3D(world, timing);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">physics.<span class="hljs-built_in">SimulateAll3D</span>(world, timing);
+<span class="hljs-comment">// or step individually:</span>
+physics.<span class="hljs-built_in">Simulate3D</span>(world, timing);
+physics.<span class="hljs-built_in">SimulateCharacterControllers3D</span>(world, timing);
+physics.<span class="hljs-built_in">SimulateTriggerVolumes3D</span>(world, timing);
 </code></pre>
 <h3 id="rigidbody3dcomponent-spherecollider3dcomponent"><code>Rigidbody3DComponent</code> + <code>SphereCollider3DComponent</code></h3>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;Rigidbody3DComponent&gt;(RigidbodyBodyType3D::Dynamic, 1.0F);
-go-&gt;AddComponent&lt;SphereCollider3DComponent&gt;(0.5F);
-go-&gt;AddComponent&lt;PhysicsMaterial3DComponent&gt;(0.5F, 0.4F, 0.3F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody3DComponent&gt;(RigidbodyBodyType3D::Dynamic, <span class="hljs-number">1.0F</span>);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SphereCollider3DComponent&gt;(<span class="hljs-number">0.5F</span>);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PhysicsMaterial3DComponent&gt;(<span class="hljs-number">0.5F</span>, <span class="hljs-number">0.4F</span>, <span class="hljs-number">0.3F</span>);
 </code></pre>
 <h3 id="capsulecollider3dcomponent"><code>CapsuleCollider3DComponent</code></h3>
 <p>Static when body is not dynamic; dynamic with <code>Rigidbody3DComponent</code>.</p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;CapsuleCollider3DComponent&gt;(0.35F, 1.8F, CapsuleCollider3DComponent::Axis::Y);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CapsuleCollider3DComponent&gt;(<span class="hljs-number">0.35F</span>, <span class="hljs-number">1.8F</span>, CapsuleCollider3DComponent::Axis::Y);
 </code></pre>
 <h3 id="meshcollider3dcomponent"><code>MeshCollider3DComponent</code></h3>
 <p><strong>Kind:</strong> <code>MeshCollider3D</code> · <strong>Sibling:</strong> <code>MeshComponent</code> · <strong>Static only</strong> (non-dynamic rigidbody)</p>
 <p>World AABB baked from mesh vertices each broad-phase rebuild — useful for imported glTF level geometry.</p>
-<pre><code class="language-cpp">level-&gt;AddComponent&lt;MeshComponent&gt;(levelMesh, SceneMeshSlot::Custom, Vector3::One);
-level-&gt;AddComponent&lt;MeshCollider3DComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">level-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(levelMesh, SceneMeshSlot::Custom, Vector3::One);
+level-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshCollider3DComponent&gt;();
 </code></pre>
 <h3 id="charactercontroller3dcomponent"><code>CharacterController3DComponent</code></h3>
 <p>Kinematic motor — <strong>do not</strong> add <code>Rigidbody3DComponent</code> on the same object.</p>
-<pre><code class="language-cpp">auto* cc = player-&gt;AddComponent&lt;CharacterController3DComponent&gt;(0.4F, Vector3{0,0.9F,0});
-cc-&gt;SetMoveInput({inputX, 0.0F, inputZ});
-// After SimulateCharacterControllers3D:
-const bool grounded = cc-&gt;IsGrounded();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* cc = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CharacterController3DComponent&gt;(<span class="hljs-number">0.4F</span>, Vector3{<span class="hljs-number">0</span>,<span class="hljs-number">0.9F</span>,<span class="hljs-number">0</span>});
+cc-&gt;<span class="hljs-built_in">SetMoveInput</span>({inputX, <span class="hljs-number">0.0F</span>, inputZ});
+<span class="hljs-comment">// After SimulateCharacterControllers3D:</span>
+<span class="hljs-type">const</span> <span class="hljs-type">bool</span> grounded = cc-&gt;<span class="hljs-built_in">IsGrounded</span>();
 </code></pre>
 <h3 id="triggervolume3dcomponent"><code>TriggerVolume3DComponent</code></h3>
-<pre><code class="language-cpp">auto* trig = zone-&gt;AddComponent&lt;TriggerVolume3DComponent&gt;(
-    TriggerVolume3DShape::Box, Vector3{2,2,2});
-trig-&gt;SetOnEnter([](GameObject&amp; other) { (void)other; });
-trig-&gt;SetOnExit([](GameObject&amp; other) { (void)other; });
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* trig = zone-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TriggerVolume3DComponent&gt;(
+    TriggerVolume3DShape::Box, Vector3{<span class="hljs-number">2</span>,<span class="hljs-number">2</span>,<span class="hljs-number">2</span>});
+trig-&gt;<span class="hljs-built_in">SetOnEnter</span>([](GameObject&amp; other) { (<span class="hljs-type">void</span>)other; });
+trig-&gt;<span class="hljs-built_in">SetOnExit</span>([](GameObject&amp; other) { (<span class="hljs-type">void</span>)other; });
 </code></pre>
 <h3 id="distancejoint3dcomponent"><code>DistanceJoint3DComponent</code></h3>
 <p>Requires <code>jointIterations &gt; 0</code> in <code>PhysicsWorld3DSettings</code>. Both ends need <code>SphereCollider3DComponent</code>.</p>
-<pre><code class="language-cpp">PhysicsWorld3DSettings settings{};
-settings.jointIterations = 8;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">PhysicsWorld3DSettings settings{};
+settings.jointIterations = <span class="hljs-number">8</span>;
 
-ballA-&gt;AddComponent&lt;DistanceJoint3DComponent&gt;(ballB, 2.5F);
-auto* joint = ballA-&gt;GetComponent&lt;DistanceJoint3DComponent&gt;();
-joint-&gt;SetStiffness(0.9F);
+ballA-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DistanceJoint3DComponent&gt;(ballB, <span class="hljs-number">2.5F</span>);
+<span class="hljs-keyword">auto</span>* joint = ballA-&gt;<span class="hljs-built_in">GetComponent</span>&lt;DistanceJoint3DComponent&gt;();
+joint-&gt;<span class="hljs-built_in">SetStiffness</span>(<span class="hljs-number">0.9F</span>);
 </code></pre>
 <h3 id="hingejoint3dcomponent-springjoint3dcomponent"><code>HingeJoint3DComponent</code> / <code>SpringJoint3DComponent</code></h3>
 <p><strong>Hinge:</strong> soft pin at local anchor offsets (revolute-style position lock).<br />
 <strong>Spring:</strong> velocity spring-damper along the line between sphere centers.</p>
-<pre><code class="language-cpp">doorA-&gt;AddComponent&lt;HingeJoint3DComponent&gt;(doorB);
-auto* hinge = doorA-&gt;GetComponent&lt;HingeJoint3DComponent&gt;();
-hinge-&gt;SetLocalAnchorA({0.0F, 1.0F, 0.0F});
-hinge-&gt;SetLocalAnchorB({0.0F, 1.0F, 0.0F});
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">doorA-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HingeJoint3DComponent&gt;(doorB);
+<span class="hljs-keyword">auto</span>* hinge = doorA-&gt;<span class="hljs-built_in">GetComponent</span>&lt;HingeJoint3DComponent&gt;();
+hinge-&gt;<span class="hljs-built_in">SetLocalAnchorA</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.0F</span>, <span class="hljs-number">0.0F</span>});
+hinge-&gt;<span class="hljs-built_in">SetLocalAnchorB</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.0F</span>, <span class="hljs-number">0.0F</span>});
 
-pendulum-&gt;AddComponent&lt;SpringJoint3DComponent&gt;(anchor, 3.0F);
-auto* spring = pendulum-&gt;GetComponent&lt;SpringJoint3DComponent&gt;();
-spring-&gt;SetSpringStiffness(55.0F);
-spring-&gt;SetDamping(5.0F);
+pendulum-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpringJoint3DComponent&gt;(anchor, <span class="hljs-number">3.0F</span>);
+<span class="hljs-keyword">auto</span>* spring = pendulum-&gt;<span class="hljs-built_in">GetComponent</span>&lt;SpringJoint3DComponent&gt;();
+spring-&gt;<span class="hljs-built_in">SetSpringStiffness</span>(<span class="hljs-number">55.0F</span>);
+spring-&gt;<span class="hljs-built_in">SetDamping</span>(<span class="hljs-number">5.0F</span>);
 </code></pre>
 <h3 id="collisioncomponent-legacy-sphere"><code>CollisionComponent</code> (legacy sphere)</h3>
 <p>Simple world-space sphere bounds; used by some probe paths.</p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;CollisionComponent&gt;(0.5F, Vector3::Zero);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CollisionComponent&gt;(<span class="hljs-number">0.5F</span>, Vector3::Zero);
 </code></pre>
 <hr />
 <h2 id="animation">Animation</h2>
 <h3 id="character3danimfsmcomponent"><code>Character3DAnimFsmComponent</code></h3>
 <p><strong>Priority:</strong> 100 (<code>ComponentUpdatePriority::AnimationDriver</code>) · <strong>Sibling:</strong> <code>AnimatorComponent</code> (200) on the same object.</p>
 <p>Tick order is enforced by <code>GameObject</code> stable-sort on <code>UpdatePriority</code> — component add order does not matter.</p>
-<pre><code class="language-cpp">auto* fsm = go-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
-go-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, walkClip, 1.0F);
-fsm-&gt;ConfigureLocomotionFromSkeleton(*skeleton, walkClip);
-fsm-&gt;SetWalkSpeedThreshold(0.35F);
-fsm-&gt;SetRunSpeedThreshold(2.5F);
-fsm-&gt;SetLocomotionBlendEnabled(true);
-fsm-&gt;SetLocomotionAnalogSpeed(speedMetersPerSecond);  // or SetLocomotionInput(moving, sprint)
-fsm-&gt;SetCombatClips(attackClip, hurtClip, staggerClip, deathClip);
-fsm-&gt;SetCombatBlackboardIntSlot(kAiBlackboardIntCharacter3DCombatCommand);
-fsm-&gt;RequestAttack();
-fsm-&gt;RequestHurt();
-fsm-&gt;RequestStagger();
-fsm-&gt;RequestDeath();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* fsm = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Character3DAnimFsmComponent&gt;();
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(skeleton, walkClip, <span class="hljs-number">1.0F</span>);
+fsm-&gt;<span class="hljs-built_in">ConfigureLocomotionFromSkeleton</span>(*skeleton, walkClip);
+fsm-&gt;<span class="hljs-built_in">SetWalkSpeedThreshold</span>(<span class="hljs-number">0.35F</span>);
+fsm-&gt;<span class="hljs-built_in">SetRunSpeedThreshold</span>(<span class="hljs-number">2.5F</span>);
+fsm-&gt;<span class="hljs-built_in">SetLocomotionBlendEnabled</span>(<span class="hljs-literal">true</span>);
+fsm-&gt;<span class="hljs-built_in">SetLocomotionAnalogSpeed</span>(speedMetersPerSecond);  <span class="hljs-comment">// or SetLocomotionInput(moving, sprint)</span>
+fsm-&gt;<span class="hljs-built_in">SetCombatClips</span>(attackClip, hurtClip, staggerClip, deathClip);
+fsm-&gt;<span class="hljs-built_in">SetCombatBlackboardIntSlot</span>(kAiBlackboardIntCharacter3DCombatCommand);
+fsm-&gt;<span class="hljs-built_in">RequestAttack</span>();
+fsm-&gt;<span class="hljs-built_in">RequestHurt</span>();
+fsm-&gt;<span class="hljs-built_in">RequestStagger</span>();
+fsm-&gt;<span class="hljs-built_in">RequestDeath</span>();
 </code></pre>
 <p><strong>Locomotion sources</strong> (first match wins each frame): <code>SetLocomotionAnalogSpeed</code> → <code>SetLocomotionInput</code> → parent-chain <code>Rigidbody3D</code> / <code>CharacterController3D</code> velocity → world-position delta.</p>
 <p>Default locomotion uses a <strong>1D speed blend tree</strong> (idle / walk / run). Disable with <code>SetLocomotionBlendEnabled(false)</code> for discrete clip switches.</p>
 <h3 id="animationeventreceivercomponent"><code>AnimationEventReceiverComponent</code></h3>
 <p><strong>Priority:</strong> 210 · <strong>Sibling:</strong> <code>AnimatorComponent</code></p>
-<pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
-recv-&gt;AddMarker(0, 0.35F, &quot;Footstep&quot;);
-recv-&gt;AddMarker(0, 0.72F, &quot;Footstep&quot;);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* recv = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimationEventReceiverComponent&gt;();
+recv-&gt;<span class="hljs-built_in">AddMarker</span>(<span class="hljs-number">0</span>, <span class="hljs-number">0.35F</span>, <span class="hljs-string">&quot;Footstep&quot;</span>);
+recv-&gt;<span class="hljs-built_in">AddMarker</span>(<span class="hljs-number">0</span>, <span class="hljs-number">0.72F</span>, <span class="hljs-string">&quot;Footstep&quot;</span>);
 
-class FootstepHandler final : public GameComponent {
-public:
-    void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) override {
-        if (id == SignalId::AnimationEvent) {
-            // const char* name = static_cast&lt;const char*&gt;(p.ptr);
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">FootstepHandler</span> <span class="hljs-keyword">final</span> : <span class="hljs-keyword">public</span> GameComponent {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnSignal</span><span class="hljs-params">(GameObject&amp; owner, SignalId id, <span class="hljs-type">const</span> SignalPayload&amp; p)</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-keyword">if</span> (id == SignalId::AnimationEvent) {
+            <span class="hljs-comment">// const char* name = static_cast&lt;const char*&gt;(p.ptr);</span>
         }
     }
 };
-go-&gt;AddComponent&lt;FootstepHandler&gt;();
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FootstepHandler&gt;();
 </code></pre>
 <h3 id="attachmentsocketcomponent"><code>AttachmentSocketComponent</code></h3>
 <p><strong>Priority:</strong> 250 · Source needs <code>AnimatorComponent</code>.</p>
-<pre><code class="language-cpp">// On character:
-go-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, 0);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-comment">// On character:</span>
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(skeleton, <span class="hljs-number">0</span>);
 
-// On weapon child (or separate object):
-auto* socket = go-&gt;AddComponent&lt;AttachmentSocketComponent&gt;();
-socket-&gt;SetSourceObject(character);
-socket-&gt;SetAttachedObject(swordObject);
-socket-&gt;SetJointIndex(12);  // hand bone
-socket-&gt;SetLocalOffset({0.05F, 0.0F, 0.1F});
+<span class="hljs-comment">// On weapon child (or separate object):</span>
+<span class="hljs-keyword">auto</span>* socket = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AttachmentSocketComponent&gt;();
+socket-&gt;<span class="hljs-built_in">SetSourceObject</span>(character);
+socket-&gt;<span class="hljs-built_in">SetAttachedObject</span>(swordObject);
+socket-&gt;<span class="hljs-built_in">SetJointIndex</span>(<span class="hljs-number">12</span>);  <span class="hljs-comment">// hand bone</span>
+socket-&gt;<span class="hljs-built_in">SetLocalOffset</span>({<span class="hljs-number">0.05F</span>, <span class="hljs-number">0.0F</span>, <span class="hljs-number">0.1F</span>});
 </code></pre>
 <h3 id="sprite2dcharacteranimfsmcomponent"><code>Sprite2DCharacterAnimFsmComponent</code></h3>
 <p><strong>Priority:</strong> 100 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code></p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
-go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
-auto* fsm = go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
-fsm-&gt;RequestAttack();
-fsm-&gt;RequestHurt();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimatorComponent&gt;();
+<span class="hljs-keyword">auto</span>* fsm = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+fsm-&gt;<span class="hljs-built_in">RequestAttack</span>();
+fsm-&gt;<span class="hljs-built_in">RequestHurt</span>();
 </code></pre>
 <h3 id="spriteanimationeventreceivercomponent"><code>SpriteAnimationEventReceiverComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpriteAnimationEventReceiver</code> · <strong>Priority:</strong> 215 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code><br />
 <strong>Design:</strong> Observer — watches sprite clip playback and fires <code>SignalId::SpriteAnimationEvent</code> when normalized-time markers are crossed.</p>
 <p>Markers use <strong>normalized time</strong> (0..1 of clip duration), not frame indices. Reset when the clip loops or changes.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp&quot;</span></span>
 
-auto* recv = go-&gt;AddComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
-recv-&gt;AddMarker(1, 0.25F, &quot;Footstep&quot;);  // clip 1, 25% through
-recv-&gt;AddMarker(1, 0.75F, &quot;Footstep&quot;);
+<span class="hljs-keyword">auto</span>* recv = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimationEventReceiverComponent&gt;();
+recv-&gt;<span class="hljs-built_in">AddMarker</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0.25F</span>, <span class="hljs-string">&quot;Footstep&quot;</span>);  <span class="hljs-comment">// clip 1, 25% through</span>
+recv-&gt;<span class="hljs-built_in">AddMarker</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0.75F</span>, <span class="hljs-string">&quot;Footstep&quot;</span>);
 
-class FootstepSfx final : public GameComponent {
-public:
-    void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) override {
-        if (id == SignalId::SpriteAnimationEvent) {
-            const char* name = static_cast&lt;const char*&gt;(p.ptr);
-            if (std::strcmp(name, &quot;Footstep&quot;) == 0) {
-                owner.GetComponent&lt;SoundCueComponent&gt;()-&gt;Queue(footstepClip, 0.5F);
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">FootstepSfx</span> <span class="hljs-keyword">final</span> : <span class="hljs-keyword">public</span> GameComponent {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnSignal</span><span class="hljs-params">(GameObject&amp; owner, SignalId id, <span class="hljs-type">const</span> SignalPayload&amp; p)</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-keyword">if</span> (id == SignalId::SpriteAnimationEvent) {
+            <span class="hljs-type">const</span> <span class="hljs-type">char</span>* name = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> <span class="hljs-type">char</span>*&gt;(p.ptr);
+            <span class="hljs-keyword">if</span> (std::<span class="hljs-built_in">strcmp</span>(name, <span class="hljs-string">&quot;Footstep&quot;</span>) == <span class="hljs-number">0</span>) {
+                owner.<span class="hljs-built_in">GetComponent</span>&lt;SoundCueComponent&gt;()-&gt;<span class="hljs-built_in">Queue</span>(footstepClip, <span class="hljs-number">0.5F</span>);
             }
         }
     }
 };
-go-&gt;AddComponent&lt;FootstepSfx&gt;();
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FootstepSfx&gt;();
 </code></pre>
 <h3 id="spriteanimationeventvfxcomponent"><code>SpriteAnimationEventVfxComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpriteAnimationEventVfx</code> · <strong>Sibling:</strong> <code>SpriteAnimationEventReceiverComponent</code><br />
 <strong>Design:</strong> Strategy bindings — maps event names to <code>VfxLibrary</code> asset keys; queues one-shot VFX at owner world position on matching <code>SpriteAnimationEvent</code>.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp&quot;</span></span>
 
-auto* vfx = go-&gt;AddComponent&lt;SpriteAnimationEventVfxComponent&gt;();
-vfx-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
-vfx-&gt;AddBinding(&quot;Land&quot;, &quot;impact_ring&quot;);
-vfx-&gt;SetWorldOffset({0.0F, -0.4F, 0.0F});
+<span class="hljs-keyword">auto</span>* vfx = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimationEventVfxComponent&gt;();
+vfx-&gt;<span class="hljs-built_in">AddBinding</span>(<span class="hljs-string">&quot;Footstep&quot;</span>, <span class="hljs-string">&quot;dust_puff&quot;</span>);
+vfx-&gt;<span class="hljs-built_in">AddBinding</span>(<span class="hljs-string">&quot;Land&quot;</span>, <span class="hljs-string">&quot;impact_ring&quot;</span>);
+vfx-&gt;<span class="hljs-built_in">SetWorldOffset</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">-0.4F</span>, <span class="hljs-number">0.0F</span>});
 </code></pre>
 <h3 id="animationhitbox2dcomponent"><code>AnimationHitbox2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>AnimationHitbox2D</code> · <strong>Priority:</strong> 215 · <strong>Sibling:</strong> <code>SpriteAnimatorComponent</code><br />
 <strong>Consumed by:</strong> <code>OnUpdate</code> during active hit window — runs <code>PhysicsQueryWorld2D</code> overlap (circle or arc) and applies damage via <code>DamageableComponent</code> on targets.</p>
 <p>Frame-synced combat hitbox: active while the animator's <strong>local frame</strong> is in <code>[startFrame, endFrame]</code> for <code>clipIndex</code>. Only fires once per target per swing.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/AnimationHitbox2DComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/animation/AnimationHitbox2DComponent.hpp&quot;</span></span>
 
-auto* hitbox = player-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();
-hitbox-&gt;SetClipIndex(2U);           // attack clip
-hitbox-&gt;SetStartLocalFrame(0U);
-hitbox-&gt;SetEndLocalFrame(0U);
-hitbox-&gt;SetShape(AnimationHitbox2DShape::Arc);
-hitbox-&gt;SetRadius(1.1F);
-hitbox-&gt;SetArcHalfAngleRadians(0.9F);
-hitbox-&gt;SetLocalOffset({0.5F, 0.0F});  // offset from owner, flipped by facing sign
-hitbox-&gt;SetDamagePerHit(10.0F);
+<span class="hljs-keyword">auto</span>* hitbox = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimationHitbox2DComponent&gt;();
+hitbox-&gt;<span class="hljs-built_in">SetClipIndex</span>(<span class="hljs-number">2U</span>);           <span class="hljs-comment">// attack clip</span>
+hitbox-&gt;<span class="hljs-built_in">SetStartLocalFrame</span>(<span class="hljs-number">0U</span>);
+hitbox-&gt;<span class="hljs-built_in">SetEndLocalFrame</span>(<span class="hljs-number">0U</span>);
+hitbox-&gt;<span class="hljs-built_in">SetShape</span>(AnimationHitbox2DShape::Arc);
+hitbox-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">1.1F</span>);
+hitbox-&gt;<span class="hljs-built_in">SetArcHalfAngleRadians</span>(<span class="hljs-number">0.9F</span>);
+hitbox-&gt;<span class="hljs-built_in">SetLocalOffset</span>({<span class="hljs-number">0.5F</span>, <span class="hljs-number">0.0F</span>});  <span class="hljs-comment">// offset from owner, flipped by facing sign</span>
+hitbox-&gt;<span class="hljs-built_in">SetDamagePerHit</span>(<span class="hljs-number">10.0F</span>);
 
 PhysicsQueryFilter2D filter{};
-filter.queryCategoryBits = 1u &lt;&lt; 3;  // weapon layer
-filter.queryMaskBits = 1u &lt;&lt; 4;      // enemy hurtbox layer
-filter.hitTriggers = true;
-filter.hitSolids = false;
-hitbox-&gt;SetQueryFilter(filter);
+filter.queryCategoryBits = <span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">3</span>;  <span class="hljs-comment">// weapon layer</span>
+filter.queryMaskBits = <span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">4</span>;      <span class="hljs-comment">// enemy hurtbox layer</span>
+filter.hitTriggers = <span class="hljs-literal">true</span>;
+filter.hitSolids = <span class="hljs-literal">false</span>;
+hitbox-&gt;<span class="hljs-built_in">SetQueryFilter</span>(filter);
 </code></pre>
 <p>Facing follows owner transform X scale sign (negative scale = facing left). See <a href="../5-physics/04-queries.html">Queries</a> for arc overlap details.</p>
 <hr />
@@ -1725,16 +2182,16 @@ hitbox-&gt;SetQueryFilter(filter);
 <p>Semantic input separates <strong>hardware bindings</strong> (Flyweight config) from <strong>runtime polling</strong> (Command / Observer).</p>
 <h3 id="inputactionmapcomponent"><code>InputActionMapComponent</code></h3>
 <p><strong>Kind:</strong> <code>InputActionMap</code> · <strong>Data-only</strong> — no <code>OnUpdate</code>; consumed by <code>PlayerInputComponent</code> on the same entity.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/input/InputActionMapComponent.hpp&quot;
-#include &quot;spark/input/InputActionTypes.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/input/InputActionMapComponent.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/input/InputActionTypes.hpp&quot;</span></span>
 
-auto* map = player-&gt;AddComponent&lt;InputActionMapComponent&gt;();
-map-&gt;BindAxis1D(&quot;MoveX&quot;, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
-map-&gt;BindButton(&quot;Jump&quot;, GLFW_KEY_SPACE);
-map-&gt;BindButton(&quot;Drop&quot;, GLFW_KEY_S, GLFW_KEY_DOWN);
-map-&gt;BindButton(&quot;Attack&quot;, GLFW_KEY_J);
+<span class="hljs-keyword">auto</span>* map = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;InputActionMapComponent&gt;();
+map-&gt;<span class="hljs-built_in">BindAxis1D</span>(<span class="hljs-string">&quot;MoveX&quot;</span>, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map-&gt;<span class="hljs-built_in">BindButton</span>(<span class="hljs-string">&quot;Jump&quot;</span>, GLFW_KEY_SPACE);
+map-&gt;<span class="hljs-built_in">BindButton</span>(<span class="hljs-string">&quot;Drop&quot;</span>, GLFW_KEY_S, GLFW_KEY_DOWN);
+map-&gt;<span class="hljs-built_in">BindButton</span>(<span class="hljs-string">&quot;Attack&quot;</span>, GLFW_KEY_J);
 
-const InputActionDefinition* jump = map-&gt;FindAction(&quot;Jump&quot;);
+<span class="hljs-type">const</span> InputActionDefinition* jump = map-&gt;<span class="hljs-built_in">FindAction</span>(<span class="hljs-string">&quot;Jump&quot;</span>);
 </code></pre>
 <table>
 <thead>
@@ -1760,25 +2217,25 @@ const InputActionDefinition* jump = map-&gt;FindAction(&quot;Jump&quot;);
 <h3 id="playerinputcomponent"><code>PlayerInputComponent</code></h3>
 <p><strong>Kind:</strong> <code>PlayerInput</code> · <strong>Priority:</strong> 50 · <strong>Sibling:</strong> <code>InputActionMapComponent</code><br />
 Emits <code>SignalId::InputActionTriggered</code> on action edges (<code>InputActionPhase::Started</code> / <code>Canceled</code>).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/input/PlayerInputComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/input/PlayerInputComponent.hpp&quot;</span></span>
 
-auto* input = player-&gt;AddComponent&lt;PlayerInputComponent&gt;();
-input-&gt;SetActionMap(map);
+<span class="hljs-keyword">auto</span>* input = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PlayerInputComponent&gt;();
+input-&gt;<span class="hljs-built_in">SetActionMap</span>(map);
 
-// After OnUpdate (or call Refresh early for custom order):
-if (input-&gt;WasActionPressedThisFrame(&quot;Jump&quot;)) {
-    controller-&gt;RequestJump();
+<span class="hljs-comment">// After OnUpdate (or call Refresh early for custom order):</span>
+<span class="hljs-keyword">if</span> (input-&gt;<span class="hljs-built_in">WasActionPressedThisFrame</span>(<span class="hljs-string">&quot;Jump&quot;</span>)) {
+    controller-&gt;<span class="hljs-built_in">RequestJump</span>();
 }
-const float moveX = input-&gt;GetActionAxis1D(&quot;MoveX&quot;);
-controller-&gt;SetMoveInputX(moveX);
+<span class="hljs-type">const</span> <span class="hljs-type">float</span> moveX = input-&gt;<span class="hljs-built_in">GetActionAxis1D</span>(<span class="hljs-string">&quot;MoveX&quot;</span>);
+controller-&gt;<span class="hljs-built_in">SetMoveInputX</span>(moveX);
 
-// Signal listener for UI prompts:
-void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) override {
-    if (id == SignalId::InputActionTriggered) {
-        const char* action = static_cast&lt;const char*&gt;(p.ptr);
-        const auto phase = static_cast&lt;InputActionPhase&gt;(p.a);
-        (void)action;
-        (void)phase;
+<span class="hljs-comment">// Signal listener for UI prompts:</span>
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnSignal</span><span class="hljs-params">(GameObject&amp; owner, SignalId id, <span class="hljs-type">const</span> SignalPayload&amp; p)</span> <span class="hljs-keyword">override</span> </span>{
+    <span class="hljs-keyword">if</span> (id == SignalId::InputActionTriggered) {
+        <span class="hljs-type">const</span> <span class="hljs-type">char</span>* action = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> <span class="hljs-type">char</span>*&gt;(p.ptr);
+        <span class="hljs-type">const</span> <span class="hljs-keyword">auto</span> phase = <span class="hljs-built_in">static_cast</span>&lt;InputActionPhase&gt;(p.a);
+        (<span class="hljs-type">void</span>)action;
+        (<span class="hljs-type">void</span>)phase;
     }
 }
 </code></pre>
@@ -1788,37 +2245,37 @@ void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; p) ov
 <p><code>SimulateGameAi</code> runs, in order: <code>ProcessNavMeshAgents</code> → <code>ProcessPerceptionSensors</code> → each enabled <code>AiAgentComponent::SubsystemTick</code>.</p>
 <h3 id="aiagentcomponent"><code>AiAgentComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>SimulateGameAi</code> (not <code>OnUpdate</code> on the component)</p>
-<pre><code class="language-cpp">auto* agent = enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
-AiBlackboard&amp; bb = agent-&gt;GetBlackboard();
-bb.SetFloat(0, playerX);   // grid goal X when using NavMeshAgent grid mode
-bb.SetFloat(1, playerZ);
-agent-&gt;SetMaxSpeed(4.5F);
-agent-&gt;SetSteeringPlane(AiSteeringPlane::XzWorld);
-agent-&gt;SetFsmEnabled(true);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* agent = enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AiAgentComponent&gt;();
+AiBlackboard&amp; bb = agent-&gt;<span class="hljs-built_in">GetBlackboard</span>();
+bb.<span class="hljs-built_in">SetFloat</span>(<span class="hljs-number">0</span>, playerX);   <span class="hljs-comment">// grid goal X when using NavMeshAgent grid mode</span>
+bb.<span class="hljs-built_in">SetFloat</span>(<span class="hljs-number">1</span>, playerZ);
+agent-&gt;<span class="hljs-built_in">SetMaxSpeed</span>(<span class="hljs-number">4.5F</span>);
+agent-&gt;<span class="hljs-built_in">SetSteeringPlane</span>(AiSteeringPlane::XzWorld);
+agent-&gt;<span class="hljs-built_in">SetFsmEnabled</span>(<span class="hljs-literal">true</span>);
 </code></pre>
 <h3 id="gridnavagent2dcomponent-gridpathfollower2dcomponent-gridnavtarget2dcomponent"><code>GridNavAgent2DComponent</code> + <code>GridPathFollower2DComponent</code> + <code>GridNavTarget2DComponent</code></h3>
 <p><strong>2D tilemap pathfinding</strong> on the XY plane via sibling <code>TilemapGameplayGridComponent</code>. Run <code>ProcessGridNavAgents2D(world, deltaTime)</code> each frame (called automatically from <code>SimulateGameAi</code>).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/ai/GridNavAgent2DComponent.hpp&quot;
-#include &quot;spark/ecs/components/ai/GridPathFollower2DComponent.hpp&quot;
-#include &quot;spark/ecs/components/ai/GridNavTarget2DComponent.hpp&quot;
-#include &quot;spark/ai/NavigationSubsystem.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/ai/GridNavAgent2DComponent.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/ai/GridPathFollower2DComponent.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/ai/GridNavTarget2DComponent.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ai/NavigationSubsystem.hpp&quot;</span></span>
 
-// Tilemap board (already has TilemapGameplayGridComponent):
-mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;()-&gt;SetAutoRebake(true);
+<span class="hljs-comment">// Tilemap board (already has TilemapGameplayGridComponent):</span>
+mapGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapGameplayGridComponent&gt;()-&gt;<span class="hljs-built_in">SetAutoRebake</span>(<span class="hljs-literal">true</span>);
 
-// Click-to-move player:
-auto* nav = player-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
-nav-&gt;SetGridSourceObject(mapGo);
-nav-&gt;SetGoalMode(GridNavGoalMode2D::WorldPosition);
-nav-&gt;SetGoalWorldPosition({goalX, goalY});
-nav-&gt;SetSyncToAiAgent(false);  // use follower instead of AiAgent steering
+<span class="hljs-comment">// Click-to-move player:</span>
+<span class="hljs-keyword">auto</span>* nav = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GridNavAgent2DComponent&gt;();
+nav-&gt;<span class="hljs-built_in">SetGridSourceObject</span>(mapGo);
+nav-&gt;<span class="hljs-built_in">SetGoalMode</span>(GridNavGoalMode2D::WorldPosition);
+nav-&gt;<span class="hljs-built_in">SetGoalWorldPosition</span>({goalX, goalY});
+nav-&gt;<span class="hljs-built_in">SetSyncToAiAgent</span>(<span class="hljs-literal">false</span>);  <span class="hljs-comment">// use follower instead of AiAgent steering</span>
 
-auto* follower = player-&gt;AddComponent&lt;GridPathFollower2DComponent&gt;();
-follower-&gt;SetMaxSpeed(7.0F);
-follower-&gt;SetMode(GridPathFollower2DMode::Transform);
+<span class="hljs-keyword">auto</span>* follower = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GridPathFollower2DComponent&gt;();
+follower-&gt;<span class="hljs-built_in">SetMaxSpeed</span>(<span class="hljs-number">7.0F</span>);
+follower-&gt;<span class="hljs-built_in">SetMode</span>(GridPathFollower2DMode::Transform);
 
-// Each frame (before UpdateGameObjects for follower motion):
-ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
+<span class="hljs-comment">// Each frame (before UpdateGameObjects for follower motion):</span>
+<span class="hljs-built_in">ProcessGridNavAgents2D</span>(world, timing.deltaTimeSeconds);
 </code></pre>
 <table>
 <thead>
@@ -1849,229 +2306,229 @@ ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
 <li><code>GridCell</code> — explicit <code>{x, y}</code> cell index</li>
 </ul>
 <p>When <code>SetSyncToAiAgent(true)</code> (default), the polyline is copied into <code>AiAgentComponent</code> — use with <code>SetSteeringPlane(AiSteeringPlane::XyRigidbody2D)</code> for steering-based enemies.</p>
-<pre><code class="language-cpp">// Enemy chases player on tilemap grid:
-enemy-&gt;AddComponent&lt;AiAgentComponent&gt;()-&gt;SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);
-auto* chase = enemy-&gt;AddComponent&lt;GridNavAgent2DComponent&gt;();
-chase-&gt;SetGridSourceObject(mapGo);
-chase-&gt;SetGoalMode(GridNavGoalMode2D::TargetObject);
-chase-&gt;SetGoalTarget(player);
-player-&gt;AddComponent&lt;GridNavTarget2DComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-comment">// Enemy chases player on tilemap grid:</span>
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AiAgentComponent&gt;()-&gt;<span class="hljs-built_in">SetSteeringPlane</span>(AiSteeringPlane::XyRigidbody2D);
+<span class="hljs-keyword">auto</span>* chase = enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GridNavAgent2DComponent&gt;();
+chase-&gt;<span class="hljs-built_in">SetGridSourceObject</span>(mapGo);
+chase-&gt;<span class="hljs-built_in">SetGoalMode</span>(GridNavGoalMode2D::TargetObject);
+chase-&gt;<span class="hljs-built_in">SetGoalTarget</span>(player);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GridNavTarget2DComponent&gt;();
 </code></pre>
 <h3 id="patrolpathcomponent-navmeshagentcomponent"><code>PatrolPathComponent</code> + <code>NavMeshAgentComponent</code></h3>
 <p><strong>PatrolPath</strong> stores local waypoints; <strong>NavMeshAgent</strong> copies them into <code>AiAgentComponent::pathWorldPolylineXZ</code> each AI tick (or runs legacy bitmap grid A<em> on the XZ plane when <code>UseGridPathfinding()</code> is true). For </em><em>2D tilemaps</em>*, prefer <code>GridNavAgent2DComponent</code>.</p>
-<pre><code class="language-cpp">// Waypoint object (or same object as agent):
-auto* path = pathObj-&gt;AddComponent&lt;PatrolPathComponent&gt;();
-path-&gt;GetWaypoints().PushBack({0.0F, 0.0F, 0.0F});
-path-&gt;GetWaypoints().PushBack({8.0F, 0.0F, 0.0F});
-path-&gt;GetWaypoints().PushBack({8.0F, 0.0F, 8.0F});
-path-&gt;SetLooping(true);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-comment">// Waypoint object (or same object as agent):</span>
+<span class="hljs-keyword">auto</span>* path = pathObj-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PatrolPathComponent&gt;();
+path-&gt;<span class="hljs-built_in">GetWaypoints</span>().<span class="hljs-built_in">PushBack</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">0.0F</span>, <span class="hljs-number">0.0F</span>});
+path-&gt;<span class="hljs-built_in">GetWaypoints</span>().<span class="hljs-built_in">PushBack</span>({<span class="hljs-number">8.0F</span>, <span class="hljs-number">0.0F</span>, <span class="hljs-number">0.0F</span>});
+path-&gt;<span class="hljs-built_in">GetWaypoints</span>().<span class="hljs-built_in">PushBack</span>({<span class="hljs-number">8.0F</span>, <span class="hljs-number">0.0F</span>, <span class="hljs-number">8.0F</span>});
+path-&gt;<span class="hljs-built_in">SetLooping</span>(<span class="hljs-literal">true</span>);
 
-enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
-auto* nav = enemy-&gt;AddComponent&lt;NavMeshAgentComponent&gt;();
-nav-&gt;SetPatrolPathObject(pathObj);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AiAgentComponent&gt;();
+<span class="hljs-keyword">auto</span>* nav = enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;NavMeshAgentComponent&gt;();
+nav-&gt;<span class="hljs-built_in">SetPatrolPathObject</span>(pathObj);
 
-// Optional grid replan to blackboard goal (slots 0,1 = world X/Z):
-nav-&gt;SetUseGridPathfinding(true);
-nav-&gt;SetGridOriginXZ({-32.0F, -32.0F});
-nav-&gt;SetGridCellSize(1.0F);
+<span class="hljs-comment">// Optional grid replan to blackboard goal (slots 0,1 = world X/Z):</span>
+nav-&gt;<span class="hljs-built_in">SetUseGridPathfinding</span>(<span class="hljs-literal">true</span>);
+nav-&gt;<span class="hljs-built_in">SetGridOriginXZ</span>({<span class="hljs-number">-32.0F</span>, <span class="hljs-number">-32.0F</span>});
+nav-&gt;<span class="hljs-built_in">SetGridCellSize</span>(<span class="hljs-number">1.0F</span>);
 </code></pre>
 <h3 id="perceptionsensorcomponent"><code>PerceptionSensorComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessPerceptionSensors</code> — fills <code>GetDetectedObjects()</code> each frame (sight cone + hearing radius).</p>
-<pre><code class="language-cpp">auto* sense = guard-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
-sense-&gt;SetSightRadius(18.0F);
-sense-&gt;SetSightFovDegrees(110.0F);
-sense-&gt;SetHearingRadius(10.0F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* sense = guard-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PerceptionSensorComponent&gt;();
+sense-&gt;<span class="hljs-built_in">SetSightRadius</span>(<span class="hljs-number">18.0F</span>);
+sense-&gt;<span class="hljs-built_in">SetSightFovDegrees</span>(<span class="hljs-number">110.0F</span>);
+sense-&gt;<span class="hljs-built_in">SetHearingRadius</span>(<span class="hljs-number">10.0F</span>);
 
-// After SimulateGameAi:
-for (GameObject* target : sense-&gt;GetDetectedObjects()) {
-    (void)target;
+<span class="hljs-comment">// After SimulateGameAi:</span>
+<span class="hljs-keyword">for</span> (GameObject* target : sense-&gt;<span class="hljs-built_in">GetDetectedObjects</span>()) {
+    (<span class="hljs-type">void</span>)target;
 }
 </code></pre>
 <hr />
 <h2 id="audio">Audio</h2>
 <p><code>Game::OnUpdate</code> calls <code>ProcessSoundCues</code>, which runs <code>ProcessAudioListeners</code>, then <code>ProcessAmbientZones</code>, then flushes cues.</p>
 <h3 id="audiolistenercomponent"><code>AudioListenerComponent</code></h3>
-<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;AudioListenerComponent&gt;()-&gt;SetPriority(10);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AudioListenerComponent&gt;()-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">10</span>);
 </code></pre>
 <p>Without an explicit listener, spatial audio falls back to the main 3D camera pose.</p>
 <h3 id="soundcuecomponent"><code>SoundCueComponent</code></h3>
-<pre><code class="language-cpp">auto* cue = player-&gt;AddComponent&lt;SoundCueComponent&gt;();
-cue-&gt;Queue(jumpClip, 0.9F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* cue = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SoundCueComponent&gt;();
+cue-&gt;<span class="hljs-built_in">Queue</span>(jumpClip, <span class="hljs-number">0.9F</span>);
 
-// Spatial one-shot at world position:
-const Matrix4&amp; wm = player-&gt;GetWorldMatrix();
-const Vector3 pos{wm.m[12], wm.m[13], wm.m[14]};
-cue-&gt;QueueAtWorld(landClip, 0.7F, pos, 1.0F, 1.0F, 48.0F);
+<span class="hljs-comment">// Spatial one-shot at world position:</span>
+<span class="hljs-type">const</span> Matrix4&amp; wm = player-&gt;<span class="hljs-built_in">GetWorldMatrix</span>();
+<span class="hljs-type">const</span> Vector3 pos{wm.m[<span class="hljs-number">12</span>], wm.m[<span class="hljs-number">13</span>], wm.m[<span class="hljs-number">14</span>]};
+cue-&gt;<span class="hljs-built_in">QueueAtWorld</span>(landClip, <span class="hljs-number">0.7F</span>, pos, <span class="hljs-number">1.0F</span>, <span class="hljs-number">1.0F</span>, <span class="hljs-number">48.0F</span>);
 </code></pre>
 <p>Background music: <code>context.TryGetSoundEngine()-&gt;SetBackgroundMusic(bgm, 0.3F, true)</code>.</p>
 <h3 id="ambientzonecomponent"><code>AmbientZoneComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessAmbientZones</code> — when the listener is inside, scales master one-shot volume (<code>volumeScale</code>). Higher <code>priority</code> wins.</p>
-<pre><code class="language-cpp">auto* zone = cave-&gt;AddComponent&lt;AmbientZoneComponent&gt;();
-zone-&gt;SetShape(VolumeShape::Sphere);
-zone-&gt;SetHalfExtents({10.0F, 10.0F, 10.0F});
-zone-&gt;SetVolumeScale(0.7F);
-zone-&gt;SetPriority(3);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* zone = cave-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AmbientZoneComponent&gt;();
+zone-&gt;<span class="hljs-built_in">SetShape</span>(VolumeShape::Sphere);
+zone-&gt;<span class="hljs-built_in">SetHalfExtents</span>({<span class="hljs-number">10.0F</span>, <span class="hljs-number">10.0F</span>, <span class="hljs-number">10.0F</span>});
+zone-&gt;<span class="hljs-built_in">SetVolumeScale</span>(<span class="hljs-number">0.7F</span>);
+zone-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">3</span>);
 </code></pre>
 <hr />
 <h2 id="ui">UI</h2>
 <h3 id="uicanvascomponent"><code>UiCanvasComponent</code></h3>
-<pre><code class="language-cpp">#include &quot;spark/ui/Ui.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ui/Ui.hpp&quot;</span></span>
 
-auto canvas = uiRoot-&gt;AddComponent&lt;UiCanvasComponent&gt;();
-canvas-&gt;SetSortOrder(0);
-canvas-&gt;SetTheme(Ui::UiTheme::ClassicMint());
+<span class="hljs-keyword">auto</span> canvas = uiRoot-&gt;<span class="hljs-built_in">AddComponent</span>&lt;UiCanvasComponent&gt;();
+canvas-&gt;<span class="hljs-built_in">SetSortOrder</span>(<span class="hljs-number">0</span>);
+canvas-&gt;<span class="hljs-built_in">SetTheme</span>(Ui::UiTheme::<span class="hljs-built_in">ClassicMint</span>());
 
 Ui::IUiControlsFactory&amp; factory =
-    Ui::UiSystem::Get().GetActiveBackendPtr()-&gt;GetControlsFactory();
+    Ui::UiSystem::<span class="hljs-built_in">Get</span>().<span class="hljs-built_in">GetActiveBackendPtr</span>()-&gt;<span class="hljs-built_in">GetControlsFactory</span>();
 Ui::PanelDesc panelDesc{};
-panelDesc.id = Utf8String(&quot;hud&quot;);
-auto panel = factory.CreatePanel(panelDesc);
-canvas-&gt;SetRoot(MoveTemp(panel));
+panelDesc.id = <span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;hud&quot;</span>);
+<span class="hljs-keyword">auto</span> panel = factory.<span class="hljs-built_in">CreatePanel</span>(panelDesc);
+canvas-&gt;<span class="hljs-built_in">SetRoot</span>(<span class="hljs-built_in">MoveTemp</span>(panel));
 
-// Each frame:
-ProcessUiCanvasesInput(world, input, fbW, fbH);
-// After FillStandardLitSceneFromWorld (or equivalent):
-PaintUiCanvases(world, params, fbW, fbH);
+<span class="hljs-comment">// Each frame:</span>
+<span class="hljs-built_in">ProcessUiCanvasesInput</span>(world, input, fbW, fbH);
+<span class="hljs-comment">// After FillStandardLitSceneFromWorld (or equivalent):</span>
+<span class="hljs-built_in">PaintUiCanvases</span>(world, params, fbW, fbH);
 </code></pre>
 <hr />
 <h2 id="world">World</h2>
 <h3 id="scenespatialpolicycomponent"><code>SceneSpatialPolicyComponent</code></h3>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::BoundingVolumeHierarchy);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SceneSpatialPolicyComponent&gt;(ScenePartitionKind::BoundingVolumeHierarchy);
 </code></pre>
 <p>Affects <code>Scene::ForEachDrawableInViewFrustum</code> partition strategy.</p>
 <h3 id="timeofdaydrivercomponent"><code>TimeOfDayDriverComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessTimeOfDayDrivers</code> before scene lighting resolve</p>
 <p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> is <strong>true</strong> and <code>dayLengthSeconds &gt; 0</code>, <code>ProcessTimeOfDayDrivers</code> advances time each <code>FillStandardLitSceneFromWorld</code> call. Set <code>loop = false</code> when your gameplay code owns the clock (see <code>TimeOfDayDemo</code>).</p>
-<pre><code class="language-cpp">auto* tod = worldRoot-&gt;AddComponent&lt;TimeOfDayDriverComponent&gt;();
-tod-&gt;SetTimeOfDay(0.35F);
-tod-&gt;SetDayLengthSeconds(90.0F);
-tod-&gt;SetLooping(true);
-tod-&gt;SetPriority(1);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* tod = worldRoot-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TimeOfDayDriverComponent&gt;();
+tod-&gt;<span class="hljs-built_in">SetTimeOfDay</span>(<span class="hljs-number">0.35F</span>);
+tod-&gt;<span class="hljs-built_in">SetDayLengthSeconds</span>(<span class="hljs-number">90.0F</span>);
+tod-&gt;<span class="hljs-built_in">SetLooping</span>(<span class="hljs-literal">true</span>);
+tod-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number">1</span>);
 </code></pre>
 <h3 id="spawnpoint2dcomponent"><code>SpawnPoint2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>SpawnPoint2D</code> · <strong>Resolved by:</strong> <code>FindSpawnPoint2D</code> / <code>SpawnPoint2DService</code></p>
 <p>2D counterpart to <code>SpawnPointComponent</code>: world XY from the transform, planar facing from local Z rotation (or explicit radians), optional <code>teamId</code>.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/world/SpawnPoint2DComponent.hpp&quot;
-#include &quot;spark/scene/core/SceneSpawn2D.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/world/SpawnPoint2DComponent.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/scene/core/SceneSpawn2D.hpp&quot;</span></span>
 
-auto* spawn = marker-&gt;AddComponent&lt;SpawnPoint2DComponent&gt;();
-spawn-&gt;SetSpawnName(&quot;PlayerStart&quot;);
-spawn-&gt;SetUseTransformFacing(true);
+<span class="hljs-keyword">auto</span>* spawn = marker-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpawnPoint2DComponent&gt;();
+spawn-&gt;<span class="hljs-built_in">SetSpawnName</span>(<span class="hljs-string">&quot;PlayerStart&quot;</span>);
+spawn-&gt;<span class="hljs-built_in">SetUseTransformFacing</span>(<span class="hljs-literal">true</span>);
 
-const SceneSpawnPose2D pose = FindSpawnPoint2D(world, &quot;PlayerStart&quot;);
+<span class="hljs-type">const</span> SceneSpawnPose2D pose = <span class="hljs-built_in">FindSpawnPoint2D</span>(world, <span class="hljs-string">&quot;PlayerStart&quot;</span>);
 </code></pre>
 <hr />
 <h2 id="gameplay">Gameplay</h2>
 <p>Shared routing for teams, damage, interaction, and inventory lives in <strong><code>spark/gameplay/</code></strong> — see <a href="09-gameplay-kit.html">Gameplay kit</a>. Combat entry points: <code>Combat2DTarget</code> / <code>Combat3DTarget</code> (<code>spark/gameplay/Combat2D.hpp</code>, <code>Combat3D.hpp</code>).</p>
 <h3 id="healthcomponent-damageablecomponent"><code>HealthComponent</code> + <code>DamageableComponent</code></h3>
-<pre><code class="language-cpp">auto* hp = enemy-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
-auto* dmg = enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
-dmg-&gt;SetDamageMultiplier(1.5F);  // vulnerable to fire, etc.
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* hp = enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;(<span class="hljs-number">100.0F</span>);
+<span class="hljs-keyword">auto</span>* dmg = enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DamageableComponent&gt;();
+dmg-&gt;<span class="hljs-built_in">SetDamageMultiplier</span>(<span class="hljs-number">1.5F</span>);  <span class="hljs-comment">// vulnerable to fire, etc.</span>
 
-float applied = dmg-&gt;ApplyDamage(25.0F, player);
-hp-&gt;SetOnDeath([](GameObject&amp; self, GameObject* killer) {
-    (void)killer;
-    self.GetWorld().DestroyGameObject(&amp;self);
+<span class="hljs-type">float</span> applied = dmg-&gt;<span class="hljs-built_in">ApplyDamage</span>(<span class="hljs-number">25.0F</span>, player);
+hp-&gt;<span class="hljs-built_in">SetOnDeath</span>([](GameObject&amp; self, GameObject* killer) {
+    (<span class="hljs-type">void</span>)killer;
+    self.<span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">DestroyGameObject</span>(&amp;self);
 });
 </code></pre>
 <p>Listen for combat feedback:</p>
-<pre><code class="language-cpp">void OnSignal(GameObject&amp; owner, SignalId id, const SignalPayload&amp; payload) override {
-    if (id == SignalId::DamageApplied) {
-        const auto* d = static_cast&lt;const DamageSignalPayload*&gt;(payload.ptr);
-        // d-&gt;applied, d-&gt;instigator, d-&gt;target
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnSignal</span><span class="hljs-params">(GameObject&amp; owner, SignalId id, <span class="hljs-type">const</span> SignalPayload&amp; payload)</span> <span class="hljs-keyword">override</span> </span>{
+    <span class="hljs-keyword">if</span> (id == SignalId::DamageApplied) {
+        <span class="hljs-type">const</span> <span class="hljs-keyword">auto</span>* d = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> DamageSignalPayload*&gt;(payload.ptr);
+        <span class="hljs-comment">// d-&gt;applied, d-&gt;instigator, d-&gt;target</span>
     }
 }
 </code></pre>
 <h3 id="interactablecomponent"><code>InteractableComponent</code></h3>
 <p><strong>Kind:</strong> <code>Interactable</code> · <strong>Optional sibling:</strong> <code>TriggerVolume2DComponent</code> for range</p>
 <p>Generic use/interact prompt. <code>TryInteract(instigator)</code> runs when the instigator is in range (radius around owner transform) and passes optional tag filter.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/InteractableComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/InteractableComponent.hpp&quot;</span></span>
 
-auto* chest = chestGo-&gt;AddComponent&lt;InteractableComponent&gt;();
-chest-&gt;SetPromptText(&quot;Open&quot;);
-chest-&gt;SetInteractionRadius(1.5F);
-chest-&gt;SetRequiredInstigatorTag(&quot;player&quot;);
-chest-&gt;SetOnInteract([](GameObject&amp; instigator) {
-    (void)instigator;
-    // open inventory UI
+<span class="hljs-keyword">auto</span>* chest = chestGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;InteractableComponent&gt;();
+chest-&gt;<span class="hljs-built_in">SetPromptText</span>(<span class="hljs-string">&quot;Open&quot;</span>);
+chest-&gt;<span class="hljs-built_in">SetInteractionRadius</span>(<span class="hljs-number">1.5F</span>);
+chest-&gt;<span class="hljs-built_in">SetRequiredInstigatorTag</span>(<span class="hljs-string">&quot;player&quot;</span>);
+chest-&gt;<span class="hljs-built_in">SetOnInteract</span>([](GameObject&amp; instigator) {
+    (<span class="hljs-type">void</span>)instigator;
+    <span class="hljs-comment">// open inventory UI</span>
 });
 
-// Or use the shared processor (same logic as ProcessInteractables2D):
+<span class="hljs-comment">// Or use the shared processor (same logic as ProcessInteractables2D):</span>
 GameplayInteractionProcessor processor{};
-processor.ProcessInteractPress(world, *player);
+processor.<span class="hljs-built_in">ProcessInteractPress</span>(world, *player);
 </code></pre>
 <h3 id="gameplayteamcomponent"><code>GameplayTeamComponent</code></h3>
 <p><strong>Kind:</strong> <code>GameplayTeam</code> · <strong>Resolved by:</strong> <code>GameplayTeamAffiliation::Resolve</code> (parent chain)</p>
 <p>Assigns a <code>GameplayTeamId</code> used by <code>GameplayTeamPolicy</code> when applying damage through <code>Combat2DTarget</code> / <code>Combat3DTarget</code>.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameplayTeamComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/GameplayTeamComponent.hpp&quot;</span></span>
 
-player-&gt;AddComponent&lt;GameplayTeamComponent&gt;()-&gt;SetTeamId(1);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GameplayTeamComponent&gt;()-&gt;<span class="hljs-built_in">SetTeamId</span>(<span class="hljs-number">1</span>);
 </code></pre>
 <h3 id="gameplayinventorycollectorcomponent"><code>GameplayInventoryCollectorComponent</code></h3>
 <p><strong>Kind:</strong> <code>GameplayInventoryCollector</code> · <strong>Implements:</strong> <code>IGameplayInventorySink</code></p>
 <p>Default inventory hook on the collector object. Emits <code>SignalId::ItemCollected</code> and optional <code>SetOnItemReceived</code> callback. <code>PickupComponent</code> delivers here when no <code>SetOnCollected</code> callback is set.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp&quot;</span></span>
 
-player-&gt;AddComponent&lt;GameplayInventoryCollectorComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GameplayInventoryCollectorComponent&gt;();
 </code></pre>
 <h3 id="pickupcomponent"><code>PickupComponent</code></h3>
 <p><strong>Kind:</strong> <code>Pickup</code> · <strong>Sibling:</strong> <code>TriggerVolume2DComponent</code> (recommended)</p>
 <p>Collectible item. Auto-collects on <code>Physics2DTriggerEnter</code> when enabled, or via <code>InteractableComponent::TryInteract</code>. Defers owner destroy to end of physics step to avoid signal re-entrancy crashes.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/PickupComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/PickupComponent.hpp&quot;</span></span>
 
-gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
-gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetRadius(0.4F);
+gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+gem-&gt;<span class="hljs-built_in">GetComponent</span>&lt;TriggerVolume2DComponent&gt;()-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">0.4F</span>);
 
-auto* pickup = gem-&gt;AddComponent&lt;PickupComponent&gt;();
-pickup-&gt;SetItemId(&quot;gem&quot;);
-pickup-&gt;SetQuantity(1);
-pickup-&gt;SetAutoCollectOnTriggerEnter(true);
-pickup-&gt;SetDestroyOwnerOnCollect(true);
-pickup-&gt;SetOnCollected([](GameObject&amp; collector, const char* itemId, int qty) {
-    (void)collector;
-    (void)itemId;
-    (void)qty;
+<span class="hljs-keyword">auto</span>* pickup = gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PickupComponent&gt;();
+pickup-&gt;<span class="hljs-built_in">SetItemId</span>(<span class="hljs-string">&quot;gem&quot;</span>);
+pickup-&gt;<span class="hljs-built_in">SetQuantity</span>(<span class="hljs-number">1</span>);
+pickup-&gt;<span class="hljs-built_in">SetAutoCollectOnTriggerEnter</span>(<span class="hljs-literal">true</span>);
+pickup-&gt;<span class="hljs-built_in">SetDestroyOwnerOnCollect</span>(<span class="hljs-literal">true</span>);
+pickup-&gt;<span class="hljs-built_in">SetOnCollected</span>([](GameObject&amp; collector, <span class="hljs-type">const</span> <span class="hljs-type">char</span>* itemId, <span class="hljs-type">int</span> qty) {
+    (<span class="hljs-type">void</span>)collector;
+    (<span class="hljs-type">void</span>)itemId;
+    (<span class="hljs-type">void</span>)qty;
 });
-// Without SetOnCollected, TryCollect uses GameplayPickupDelivery → GameplayInventoryCollectorComponent.
+<span class="hljs-comment">// Without SetOnCollected, TryCollect uses GameplayPickupDelivery → GameplayInventoryCollectorComponent.</span>
 
-// After Simulate2D (flushes deferred destroys):
-PickupComponent::ProcessDeferredDestroys(world);
+<span class="hljs-comment">// After Simulate2D (flushes deferred destroys):</span>
+PickupComponent::<span class="hljs-built_in">ProcessDeferredDestroys</span>(world);
 </code></pre>
 <p><strong>Pool + dissolve (P0 gems):</strong> set <code>SetDestroyOwnerOnCollect(false)</code>, run dissolve/VFX in <code>SetOnCollected</code>, then <code>ResetForRespawn()</code> and <code>GameObjectPool::Release</code> when the effect finishes. Disable <code>SetAutoCollectOnTriggerEnter</code> during dissolve to avoid re-entry.</p>
 <h3 id="scene2dcompositeviewcomponent"><code>Scene2DCompositeViewComponent</code></h3>
 <p><strong>Kind:</strong> <code>Scene2DCompositeView</code> · <strong>Submit:</strong> <code>CollectScene2DCompositeViews</code> → GPU capture + HUD blit</p>
 <p>Authoring hook for minimap / fog / outline. Pairs <code>RenderTexture</code> (capture) with <code>Texture2D</code> (HUD atlas layer).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/rendering/Scene2DCompositeViewComponent.hpp&quot;</span></span>
 
-auto* view = flow-&gt;AddComponent&lt;Scene2DCompositeViewComponent&gt;();
-view-&gt;SetFeature(Scene2DCompositeFeature::Minimap);
-view-&gt;SetTarget(minimapRenderTexture);
-view-&gt;SetHudTexture(minimapHudTexture);
-view-&gt;SetWorldCapture(mapCenter, orthoHalfExtent);
-view-&gt;SetScreenRect(0.82F, 0.02F, 0.16F, 0.16F);
+<span class="hljs-keyword">auto</span>* view = flow-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Scene2DCompositeViewComponent&gt;();
+view-&gt;<span class="hljs-built_in">SetFeature</span>(Scene2DCompositeFeature::Minimap);
+view-&gt;<span class="hljs-built_in">SetTarget</span>(minimapRenderTexture);
+view-&gt;<span class="hljs-built_in">SetHudTexture</span>(minimapHudTexture);
+view-&gt;<span class="hljs-built_in">SetWorldCapture</span>(mapCenter, orthoHalfExtent);
+view-&gt;<span class="hljs-built_in">SetScreenRect</span>(<span class="hljs-number">0.82F</span>, <span class="hljs-number">0.02F</span>, <span class="hljs-number">0.16F</span>, <span class="hljs-number">0.16F</span>);
 </code></pre>
-<p>Minimap RTs should use <code>RenderTextureFormat::Rgba8Unorm</code> when blitting to the UI atlas. See <a href="../7-2d-game/08-scene2d-runtime-limits.html">2D runtime limits</a>.</p>
+<p>Minimap RTs should use <code>RenderTextureFormat::Rgba8Unorm</code> when blitting to the UI atlas. See <a href="../8-2d-game/08-scene2d-runtime-limits.html">2D runtime limits</a>.</p>
 <h3 id="gamestatecomponent"><code>GameStateComponent</code></h3>
 <p><strong>Kind:</strong> <code>GameState</code> · <strong>Design:</strong> State pattern with optional push/pop stack for pause menus.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameStateComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/GameStateComponent.hpp&quot;</span></span>
 
-auto* flow = manager-&gt;AddComponent&lt;GameStateComponent&gt;(GameFlowState::Playing);
-flow-&gt;SetOnTransition([](GameFlowState prev, GameFlowState next, GameObject&amp; owner) {
-    (void)prev;
-    (void)owner;
-    if (next == GameFlowState::Victory) {
-        // celebration VFX, disable player input, etc.
+<span class="hljs-keyword">auto</span>* flow = manager-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GameStateComponent&gt;(GameFlowState::Playing);
+flow-&gt;<span class="hljs-built_in">SetOnTransition</span>([](GameFlowState prev, GameFlowState next, GameObject&amp; owner) {
+    (<span class="hljs-type">void</span>)prev;
+    (<span class="hljs-type">void</span>)owner;
+    <span class="hljs-keyword">if</span> (next == GameFlowState::Victory) {
+        <span class="hljs-comment">// celebration VFX, disable player input, etc.</span>
     }
 });
 
-if (pausePressed) {
-    flow-&gt;PushState(GameFlowState::Paused);
+<span class="hljs-keyword">if</span> (pausePressed) {
+    flow-&gt;<span class="hljs-built_in">PushState</span>(GameFlowState::Paused);
 }
-if (resumePressed) {
-    flow-&gt;PopState();
+<span class="hljs-keyword">if</span> (resumePressed) {
+    flow-&gt;<span class="hljs-built_in">PopState</span>();
 }
 
-flow-&gt;RequestState(GameFlowState::Victory);  // emits GameStateChanged to siblings
+flow-&gt;<span class="hljs-built_in">RequestState</span>(GameFlowState::Victory);  <span class="hljs-comment">// emits GameStateChanged to siblings</span>
 </code></pre>
 <table>
 <thead>
@@ -2102,84 +2559,84 @@ flow-&gt;RequestState(GameFlowState::Victory);  // emits GameStateChanged to sib
 <h3 id="gameflowtriggercomponent"><code>GameFlowTriggerComponent</code></h3>
 <p><strong>Kind:</strong> <code>GameFlowTrigger</code> · <strong>Design:</strong> Mediator — bridges world signals to <code>GameStateComponent::RequestState</code>.</p>
 <p>Attach to the object that <strong>receives</strong> the source signal (trigger volume owner for <code>TriggerEnter</code>, player for <code>Died</code>). Point <code>SetStateOwner</code> at the object that owns <code>GameStateComponent</code> when they differ.</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp&quot;
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/gameplay/GameFlowTriggerComponent.hpp&quot;</span></span>
 
-// Goal zone on goalTriggerGo:
-goalTriggerGo-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Box, {2.0F, 3.0F});
-auto* goalFlow = goalTriggerGo-&gt;AddComponent&lt;GameFlowTriggerComponent&gt;();
-goalFlow-&gt;SetSource(GameFlowTriggerSource::TriggerEnter);
-goalFlow-&gt;SetTargetState(GameFlowState::Victory);
-goalFlow-&gt;SetInstigatorNameFilter(&quot;Player&quot;);
-goalFlow-&gt;SetStateOwner(gameFlowGo);  // gameFlowGo owns GameStateComponent
+<span class="hljs-comment">// Goal zone on goalTriggerGo:</span>
+goalTriggerGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Box, {<span class="hljs-number">2.0F</span>, <span class="hljs-number">3.0F</span>});
+<span class="hljs-keyword">auto</span>* goalFlow = goalTriggerGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GameFlowTriggerComponent&gt;();
+goalFlow-&gt;<span class="hljs-built_in">SetSource</span>(GameFlowTriggerSource::TriggerEnter);
+goalFlow-&gt;<span class="hljs-built_in">SetTargetState</span>(GameFlowState::Victory);
+goalFlow-&gt;<span class="hljs-built_in">SetInstigatorNameFilter</span>(<span class="hljs-string">&quot;Player&quot;</span>);
+goalFlow-&gt;<span class="hljs-built_in">SetStateOwner</span>(gameFlowGo);  <span class="hljs-comment">// gameFlowGo owns GameStateComponent</span>
 
-// Player death → defeat:
-player-&gt;AddComponent&lt;GameFlowTriggerComponent&gt;();
-auto* deathFlow = player-&gt;GetComponent&lt;GameFlowTriggerComponent&gt;();
-deathFlow-&gt;SetSource(GameFlowTriggerSource::Died);
-deathFlow-&gt;SetTargetState(GameFlowState::Defeat);
-deathFlow-&gt;SetStateOwner(gameFlowGo);
+<span class="hljs-comment">// Player death → defeat:</span>
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GameFlowTriggerComponent&gt;();
+<span class="hljs-keyword">auto</span>* deathFlow = player-&gt;<span class="hljs-built_in">GetComponent</span>&lt;GameFlowTriggerComponent&gt;();
+deathFlow-&gt;<span class="hljs-built_in">SetSource</span>(GameFlowTriggerSource::Died);
+deathFlow-&gt;<span class="hljs-built_in">SetTargetState</span>(GameFlowState::Defeat);
+deathFlow-&gt;<span class="hljs-built_in">SetStateOwner</span>(gameFlowGo);
 </code></pre>
 <p><code>OnGameState</code> source listens for <code>GameStateChanged</code> on the <strong>same</strong> <code>GameObject</code> — use for chained reactions (e.g. enable HUD only when <code>Playing</code>).</p>
 <hr />
 <h2 id="typical-object-recipes">Typical object recipes</h2>
 <h3 id="2d-platformer-player">2D platformer player</h3>
-<pre><code class="language-cpp">player-&gt;AddComponent&lt;TransformComponent&gt;();
-player-&gt;AddComponent&lt;SpriteComponent&gt;(heroTex);
-player-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
-player-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
-player-&gt;AddComponent&lt;BoxCollider2DComponent&gt;();
-player-&gt;AddComponent&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, 1.0F);
-player-&gt;AddComponent&lt;CharacterController2DComponent&gt;();
-player-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();  // melee window
-auto* map = player-&gt;AddComponent&lt;InputActionMapComponent&gt;();
-map-&gt;BindAxis1D(&quot;MoveX&quot;, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
-map-&gt;BindButton(&quot;Jump&quot;, GLFW_KEY_SPACE);
-map-&gt;BindButton(&quot;Attack&quot;, GLFW_KEY_J);
-auto* input = player-&gt;AddComponent&lt;PlayerInputComponent&gt;();
-input-&gt;SetActionMap(map);
-player-&gt;AddComponent&lt;SoundCueComponent&gt;();
-player-&gt;AddComponent&lt;HealthComponent&gt;(100.0F);
-player-&gt;AddComponent&lt;DamageableComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(heroTex);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimatorComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BoxCollider2DComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;(RigidbodyBodyType2D::Dynamic, <span class="hljs-number">1.0F</span>);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CharacterController2DComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimationHitbox2DComponent&gt;();  <span class="hljs-comment">// melee window</span>
+<span class="hljs-keyword">auto</span>* map = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;InputActionMapComponent&gt;();
+map-&gt;<span class="hljs-built_in">BindAxis1D</span>(<span class="hljs-string">&quot;MoveX&quot;</span>, GLFW_KEY_A, GLFW_KEY_D, GLFW_KEY_LEFT, GLFW_KEY_RIGHT);
+map-&gt;<span class="hljs-built_in">BindButton</span>(<span class="hljs-string">&quot;Jump&quot;</span>, GLFW_KEY_SPACE);
+map-&gt;<span class="hljs-built_in">BindButton</span>(<span class="hljs-string">&quot;Attack&quot;</span>, GLFW_KEY_J);
+<span class="hljs-keyword">auto</span>* input = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PlayerInputComponent&gt;();
+input-&gt;<span class="hljs-built_in">SetActionMap</span>(map);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SoundCueComponent&gt;();
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;(<span class="hljs-number">100.0F</span>);
+player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DamageableComponent&gt;();
 </code></pre>
 <h3 id="2d-camera-rig-with-parallax-shake">2D camera rig with parallax + shake</h3>
-<pre><code class="language-cpp">cameraGo-&gt;AddComponent&lt;Camera2DComponent&gt;()-&gt;SetHalfExtentY(6.5F);
-cameraGo-&gt;AddComponent&lt;Camera2DRigComponent&gt;()-&gt;SetTarget(player);
-cameraGo-&gt;AddComponent&lt;ScreenShakeComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Camera2DComponent&gt;()-&gt;<span class="hljs-built_in">SetHalfExtentY</span>(<span class="hljs-number">6.5F</span>);
+cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Camera2DRigComponent&gt;()-&gt;<span class="hljs-built_in">SetTarget</span>(player);
+cameraGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;ScreenShakeComponent&gt;();
 
-bgLayer-&gt;AddComponent&lt;SpriteComponent&gt;(mountainsTex, ...);
-auto* parallax = bgLayer-&gt;AddComponent&lt;ParallaxLayerComponent&gt;();
-parallax-&gt;SetFactorX(0.18F);
-parallax-&gt;SetCameraReference(cameraGo);
+bgLayer-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(mountainsTex, ...);
+<span class="hljs-keyword">auto</span>* parallax = bgLayer-&gt;<span class="hljs-built_in">AddComponent</span>&lt;ParallaxLayerComponent&gt;();
+parallax-&gt;<span class="hljs-built_in">SetFactorX</span>(<span class="hljs-number">0.18F</span>);
+parallax-&gt;<span class="hljs-built_in">SetCameraReference</span>(cameraGo);
 </code></pre>
 <h3 id="gem-pickup">Gem pickup</h3>
-<pre><code class="language-cpp">gem-&gt;AddComponent&lt;SpriteComponent&gt;(gemTex, ...);
-gem-&gt;AddComponent&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
-gem-&gt;GetComponent&lt;TriggerVolume2DComponent&gt;()-&gt;SetRadius(0.4F);
-gem-&gt;AddComponent&lt;PickupComponent&gt;()-&gt;SetItemId(&quot;gem&quot;);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(gemTex, ...);
+gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TriggerVolume2DComponent&gt;(TriggerVolume2DShape::Circle);
+gem-&gt;<span class="hljs-built_in">GetComponent</span>&lt;TriggerVolume2DComponent&gt;()-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">0.4F</span>);
+gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PickupComponent&gt;()-&gt;<span class="hljs-built_in">SetItemId</span>(<span class="hljs-string">&quot;gem&quot;</span>);
 </code></pre>
 <h3 id="3d-skinned-enemy">3D skinned enemy</h3>
-<pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
-enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
-enemy-&gt;AddComponent&lt;MaterialComponent&gt;(tex);
-enemy-&gt;AddComponent&lt;Character3DAnimFsmComponent&gt;();
-enemy-&gt;AddComponent&lt;AnimatorComponent&gt;(skeleton, 0);
-enemy-&gt;AddComponent&lt;CapsuleCollider3DComponent&gt;(0.4F, 1.8F);
-enemy-&gt;AddComponent&lt;Rigidbody3DComponent&gt;();
-enemy-&gt;AddComponent&lt;HealthComponent&gt;(50.0F);
-enemy-&gt;AddComponent&lt;DamageableComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkinnedMeshComponent&gt;(mesh);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(tex);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Character3DAnimFsmComponent&gt;();
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(skeleton, <span class="hljs-number">0</span>);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;CapsuleCollider3DComponent&gt;(<span class="hljs-number">0.4F</span>, <span class="hljs-number">1.8F</span>);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody3DComponent&gt;();
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;(<span class="hljs-number">50.0F</span>);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DamageableComponent&gt;();
 </code></pre>
 <h3 id="3d-patrolling-guard">3D patrolling guard</h3>
-<pre><code class="language-cpp">enemy-&gt;AddComponent&lt;TransformComponent&gt;();
-enemy-&gt;AddComponent&lt;SkinnedMeshComponent&gt;(mesh);
-enemy-&gt;AddComponent&lt;AiAgentComponent&gt;();
-enemy-&gt;AddComponent&lt;NavMeshAgentComponent&gt;()-&gt;SetPatrolPathObject(patrolPathObj);
-enemy-&gt;AddComponent&lt;PerceptionSensorComponent&gt;();
-enemy-&gt;AddComponent&lt;HealthComponent&gt;(80.0F);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkinnedMeshComponent&gt;(mesh);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AiAgentComponent&gt;();
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;NavMeshAgentComponent&gt;()-&gt;<span class="hljs-built_in">SetPatrolPathObject</span>(patrolPathObj);
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PerceptionSensorComponent&gt;();
+enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;(<span class="hljs-number">80.0F</span>);
 </code></pre>
 <h3 id="static-2d-level-chunk">Static 2D level chunk</h3>
-<pre><code class="language-cpp">level-&gt;AddComponent&lt;TransformComponent&gt;();
-level-&gt;AddComponent&lt;TilemapComponent&gt;(...);
-level-&gt;AddComponent&lt;TilemapCollider2DComponent&gt;();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">level-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+level-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapComponent&gt;(...);
+level-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapCollider2DComponent&gt;();
 </code></pre>
 <hr />
 <h2 id="serialization">Serialization</h2>

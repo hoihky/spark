@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,24 +1087,36 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>01 meshes and materials</h1>
           </header>
           <div class="doc-body"><h1 id="meshes-and-materials">Meshes and Materials</h1>
-<h2 id="class-design-mesh">Class Design: <code>Mesh</code></h2>
-<p>CPU vertex/index buffers. Loaders and primitives live on <code>Mesh</code> (<code>spark/scene/mesh/Mesh.hpp</code>):</p>
-<pre><code class="language-cpp">struct Vertex {
+<p>3D rendering in Spark is <strong>forward-clustered PBR</strong> on Vulkan: opaque and transparent <code>MeshComponent</code> draws fill <code>SceneRenderParams::draws</code> / <code>transparentDraws</code>, skinned meshes use a separate path, and materials feed <strong>push constants</strong> + texture bindings consumed by <code>pbr.frag</code> / glTF extension variants.</p>
+<p><strong>Demos:</strong> launcher <strong>#21</strong> <code>GltfSamples3DDemo</code> (PBR + IBL), <strong>#22</strong> <code>ModelViewer3DDemo</code>, FPS sample procedural cubes.</p>
+<h2 id="data-flow">Data flow</h2>
+<pre class="mermaid">flowchart LR
+  M[Mesh / SkinnedMesh] --&gt; MC[MeshComponent]
+  MAT[MaterialComponent] --&gt; Draw[SceneDrawItem]
+  MC --&gt; Fill[FillStandardLitSceneFromWorld]
+  MAT --&gt; Fill
+  Fill --&gt; Vulkan[VulkanScenePass]
+  Vulkan --&gt; IBL[IBL + shadows + fog]
+</pre>
+<h2 id="class-design-mesh">Class design: <code>Mesh</code></h2>
+<p>CPU vertex/index buffers (<code>spark/scene/mesh/Mesh.hpp</code>):</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">Vertex</span> {
     Vector3 position;
     Vector3 normal;
     Vector2 texCoord;
 };
 
-static Mesh CreateUnitCube();
-static Mesh CreateGroundPlane(float halfExtent);
-static Mesh CreateSkyDome(float radius, int latSegs, int lonSegs);
-static bool TryLoadFromObj(const char* path, Mesh&amp; outMesh);
-static bool TryLoadFromGltf(const char* path, Mesh&amp; outMesh, SharedPtr&lt;Texture2D&gt;* outBaseColor = nullptr);
+<span class="hljs-function"><span class="hljs-type">static</span> Mesh <span class="hljs-title">CreateUnitCube</span><span class="hljs-params">()</span></span>;
+<span class="hljs-function"><span class="hljs-type">static</span> Mesh <span class="hljs-title">CreateGroundPlane</span><span class="hljs-params">(<span class="hljs-type">float</span> halfExtent)</span></span>;
+<span class="hljs-function"><span class="hljs-type">static</span> Mesh <span class="hljs-title">CreateSkyDome</span><span class="hljs-params">(<span class="hljs-type">float</span> radius, <span class="hljs-type">int</span> latSegs, <span class="hljs-type">int</span> lonSegs)</span></span>;
+<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">TryLoadFromObj</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* path, Mesh&amp; outMesh)</span></span>;
+<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">TryLoadFromGltf</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* path, Mesh&amp; outMesh, SharedPtr&lt;Texture2D&gt;* outBaseColor = <span class="hljs-literal">nullptr</span>)</span></span>;
 </code></pre>
-<h2 id="class-design-meshcomponent">Class Design: <code>MeshComponent</code></h2>
-<pre><code class="language-cpp">MeshComponent(SharedPtr&lt;Mesh&gt; mesh, SceneMeshSlot slot, Vector3 albedo);
-void SetMesh(SharedPtr&lt;Mesh&gt; m);
-void SetMeshSlot(SceneMeshSlot slot);
+<p>glTF import runs <code>Mesh::RecomputeTangentSpace</code> for normal mapping.</p>
+<h2 id="class-design-meshcomponent">Class design: <code>MeshComponent</code></h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-built_in">MeshComponent</span>(SharedPtr&lt;Mesh&gt; mesh, SceneMeshSlot slot, Vector3 albedo);
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetMesh</span><span class="hljs-params">(SharedPtr&lt;Mesh&gt; m)</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetMeshSlot</span><span class="hljs-params">(SceneMeshSlot slot)</span></span>;
 </code></pre>
 <table>
 <thead>
@@ -836,50 +1140,84 @@ void SetMeshSlot(SceneMeshSlot slot);
 </tr>
 </tbody>
 </table>
-<h2 id="class-design-materialcomponent">Class Design: <code>MaterialComponent</code></h2>
-<pre><code class="language-cpp">class MaterialComponent final : public GameComponent {
-public:
-    MaterialComponent(SharedPtr&lt;Texture2D&gt; baseColor, Vector3 inTint = Vector3::One);
-    void SetMetallic(float m);
-    void SetRoughness(float r);
-    void SetEmissive(const Vector3&amp; rgb, float intensity);
-    void SetShadingModel(SceneShadingModel s);  // LitPbr, ToonCel, ...
-    SharedPtr&lt;Texture2D&gt; GetNormalTexture() const noexcept;
-    SharedPtr&lt;Texture2D&gt; GetMetallicRoughnessTexture() const noexcept;
+<p>Register custom meshes: <code>world.RegisterMesh(mesh, "fps/unit_cube")</code>.</p>
+<h2 id="class-design-materialcomponent">Class design: <code>MaterialComponent</code></h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MaterialComponent</span> <span class="hljs-keyword">final</span> : <span class="hljs-keyword">public</span> GameComponent {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-built_in">MaterialComponent</span>(SharedPtr&lt;Texture2D&gt; baseColor, Vector3 inTint = Vector3::One);
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetMetallic</span><span class="hljs-params">(<span class="hljs-type">float</span> m)</span></span>;
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetRoughness</span><span class="hljs-params">(<span class="hljs-type">float</span> r)</span></span>;
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetEmissive</span><span class="hljs-params">(<span class="hljs-type">const</span> Vector3&amp; rgb, <span class="hljs-type">float</span> intensity)</span></span>;
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetShadingModel</span><span class="hljs-params">(SceneShadingModel s)</span></span>;  <span class="hljs-comment">// LitPbr, ToonCel, ...</span>
+    <span class="hljs-function">SharedPtr&lt;Texture2D&gt; <span class="hljs-title">GetNormalTexture</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span></span>;
+    <span class="hljs-function">SharedPtr&lt;Texture2D&gt; <span class="hljs-title">GetMetallicRoughnessTexture</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span></span>;
 };
 </code></pre>
-<p><code>ApplyMaterialComponentToSceneDrawItem()</code> copies PBR fields into <code>SceneDrawItem</code>.</p>
-<h2 id="multi-material-gltf">Multi-Material glTF</h2>
-<p>For assets with multiple material slots per mesh, prefer <code>GltfAssetBinder</code> so slots bind to shared library keys (<code>path.glb#material/N</code>):</p>
-<pre><code class="language-cpp">auto* go = world.CreateGameObject();
-go-&gt;AddComponent&lt;TransformComponent&gt;();
-GltfAssetBinder::BindFromPath(*go, &quot;assets/models/Building.glb&quot;);
+<p><code>ApplyMaterialComponentToSceneDrawItem()</code> copies PBR fields into each <code>SceneDrawItem</code>. Library assets: <code>SetMaterialAsset(world, "materials/hero.sparkmat")</code>.</p>
+<h2 id="concept-spawn-a-lit-gltf-prop">Concept: spawn a lit glTF prop</h2>
+<p>Prefer <code>GltfAssetBinder::BindFromPath</code> — mesh, materials, texture keys, skeleton when skinned.</p>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>});
+GltfAssetBinder::<span class="hljs-built_in">BindFromPath</span>(*go, <span class="hljs-string">&quot;assets/models/DamagedHelmet.glb&quot;</span>);
 </code></pre>
-<p><code>BindFromPath</code> probes the file, loads rigid or skinned content automatically, and attaches mesh + materials (+ skeleton for skinned bind-pose display). For explicit control, use <code>BindRigidMesh</code> / <code>BindSkinnedMesh</code> with a known asset type.</p>
-<p>For inline-only setup (no library retain), <code>PopulateFromGltfAsset</code> still copies textures and factors directly into slot storage.</p>
-<p><code>ThreeDDemo</code> and <code>SkyDemo</code> use multi-material glTF props with library keys when loaded through <code>GltfAssetBinder</code>.</p>
-<h2 id="material-library-sparkmat">Material library (<code>.sparkmat</code>)</h2>
-<p>Author reusable materials under <code>assets/materials/*.sparkmat</code>. Components reference them by key:</p>
-<pre><code class="language-cpp">material-&gt;SetMaterialAsset(world, &quot;materials/hero.sparkmat&quot;);
-multi-&gt;SetSlotMaterialAsset(world, 0, &quot;materials/trim.sparkmat&quot;);
-</code></pre>
-<p>glTF imports also expose <code>models/Foo.glb#material/0</code> keys. <code>.sparkmat</code> files persist full PBR scalars, shading model, and toon fields (<code>sparkmat_v1</code> + slot v1 payload).</p>
-<h2 id="spawn-a-lit-gltf-prop">Spawn a Lit glTF Prop</h2>
-<p>Prefer <code>GltfAssetBinder</code> for display-ready binding (mesh + material maps + library keys):</p>
-<pre><code class="language-cpp">GltfAssetBinder::BindFromPath(*go, &quot;assets/models/DamagedHelmet.glb&quot;);
-</code></pre>
-<p>Or load and bind manually:</p>
-<pre><code class="language-cpp">GltfAsset asset = world.LoadGltf(&quot;assets/models/Crate.glb&quot;);
-auto* go = world.CreateGameObject();
-go-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({0, 0, 0});
-GltfAssetBinder::BindRigidMesh(*go, asset, SceneMeshSlot::Custom, Vector3::One, &quot;assets/models/Crate.glb&quot;);
-if (MaterialComponent* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;()) {
-    ApplyGltfMaterialDesc(*mat, asset.material);
+<p>Manual path:</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
+GltfAssetBinder::<span class="hljs-built_in">BindRigidMesh</span>(*go, asset, SceneMeshSlot::Custom, Vector3::One, <span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
+<span class="hljs-keyword">if</span> (MaterialComponent* mat = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;MaterialComponent&gt;()) {
+    <span class="hljs-built_in">ApplyGltfMaterialDesc</span>(*mat, asset.material);
 }
 </code></pre>
-<p>Imported meshes include tangent space for normal maps (<code>Mesh::RecomputeTangentSpace</code> on glTF load). See launcher <strong>#21</strong> / key <strong>Q</strong> (<code>GltfSamples3DDemo</code>) for a full PBR + HDR IBL reference scene, and <strong>#22</strong> / key <strong>V</strong> (<code>ModelViewer3DDemo</code>) to cycle bundled samples including <strong><code>Lantern.glb</code></strong>.</p>
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> go = world.CreateGameObject(<span class="hljs-string">&quot;Helmet&quot;</span>);
+go.GetOrAddTransform();
+GltfAssetBinder.BindFromPath(go, <span class="hljs-string">&quot;assets/models/DamagedHelmet.glb&quot;</span>);
+</code></pre>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">go = world.create_game_object(<span class="hljs-string">&quot;Helmet&quot;</span>)
+go.get_or_add_transform()
+go.bind_gltf_from_path(<span class="hljs-string">&quot;assets/models/DamagedHelmet.glb&quot;</span>)
+</code></pre>
+<p>(Use generated interop names from your <code>spark-python</code> build when <code>bind_gltf_from_path</code> differs.)</p>
+<h2 id="concept-procedural-cube-fps-style">Concept: procedural cube (FPS style)</h2>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span> unitCube = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
+world.<span class="hljs-built_in">RegisterMesh</span>(unitCube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+
+GameObject* target = world.<span class="hljs-built_in">CreateGameObject</span>();
+target-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">5</span>, <span class="hljs-number">1</span>, <span class="hljs-number">-3</span>});
+target-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(unitCube, SceneMeshSlot::Custom, Vector3{<span class="hljs-number">0.9F</span>, <span class="hljs-number">0.3F</span>, <span class="hljs-number">0.2F</span>});
+target-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(<span class="hljs-literal">nullptr</span>)-&gt;<span class="hljs-built_in">SetRoughness</span>(<span class="hljs-number">0.35F</span>);
+</code></pre>
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RegisterMesh(unitCube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+<span class="hljs-keyword">var</span> target = world.CreateGameObject(<span class="hljs-string">&quot;Target&quot;</span>);
+target.GetOrAddTransform().SetTranslation(<span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">5</span>, <span class="hljs-number">1</span>, <span class="hljs-number">-3</span>));
+target.AddMesh(SceneMeshSlot.Custom, <span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">0.9f</span>, <span class="hljs-number">0.3f</span>, <span class="hljs-number">0.2f</span>));
+target.AddMaterial(<span class="hljs-literal">null</span>).SetRoughness(<span class="hljs-number">0.35f</span>);
+</code></pre>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">target = world.create_game_object(<span class="hljs-string">&quot;Target&quot;</span>)
+target.get_or_add_transform().set_translation(Vector3(<span class="hljs-number">5</span>, <span class="hljs-number">1</span>, -<span class="hljs-number">3</span>))
+target.add_mesh_custom(albedo=Vector3(<span class="hljs-number">0.9</span>, <span class="hljs-number">0.3</span>, <span class="hljs-number">0.2</span>))
+target.add_material().set_roughness(<span class="hljs-number">0.35</span>)
+</code></pre>
+<h2 id="multi-material-gltf">Multi-material glTF</h2>
+<p>Multiple material slots → <code>GltfAssetBinder</code> + library keys <code>path.glb#material/N</code>, or <code>MultiMaterialComponent</code> with <code>SetSlotMaterialAsset</code>. Variant extension <code>KHR_materials_variants</code> cycles via <code>MultiMaterialComponent</code> variant index (see demos calling <code>CycleVariantsOnObjectTree</code>).</p>
+<h2 id="material-library-sparkmat">Material library (<code>.sparkmat</code>)</h2>
+<p>Author under <code>assets/materials/*.sparkmat</code> (<code>sparkmat_v1</code>). glTF imports also expose <code>models/Foo.glb#material/0</code> keys.</p>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">material-&gt;<span class="hljs-built_in">SetMaterialAsset</span>(world, <span class="hljs-string">&quot;materials/hero.sparkmat&quot;</span>);
+multi-&gt;<span class="hljs-built_in">SetSlotMaterialAsset</span>(world, <span class="hljs-number">0</span>, <span class="hljs-string">&quot;materials/trim.sparkmat&quot;</span>);
+</code></pre>
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">mat.SetMaterialAsset(world, <span class="hljs-string">&quot;materials/hero.sparkmat&quot;</span>);
+</code></pre>
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">mat.set_material_asset(<span class="hljs-string">&quot;materials/hero.sparkmat&quot;</span>)
+</code></pre>
 <h2 id="gltf-khr-material-extensions">glTF KHR material extensions</h2>
-<p>The loader maps these into <code>MaterialGltfExtensions</code> and <code>ModelPushConstants</code> (<code>shaders/gltf_pbr_extensions.glsl</code>):</p>
+<p>Mapped into <code>MaterialGltfExtensions</code> and <code>ModelPushConstants</code> (<code>shaders/gltf_pbr_extensions.glsl</code>):</p>
 <table>
 <thead>
 <tr>
@@ -890,19 +1228,19 @@ if (MaterialComponent* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;()) {
 <tbody>
 <tr>
 <td><code>KHR_materials_clearcoat</code></td>
-<td>Second specular lobe on geometry normal</td>
+<td>Second specular lobe</td>
 </tr>
 <tr>
 <td><code>KHR_materials_transmission</code></td>
-<td>Screen-space refract of opaque HDR color (descriptor binding <strong>13</strong>)</td>
+<td>Screen-space refract (binding <strong>13</strong>)</td>
 </tr>
 <tr>
 <td><code>KHR_materials_iridescence</code></td>
-<td>Thin-film tint on specular</td>
+<td>Thin-film specular tint</td>
 </tr>
 <tr>
 <td><code>KHR_materials_variants</code></td>
-<td><code>MultiMaterialComponent</code> variant index; cycle at runtime in demos that call <code>CycleVariantsOnObjectTree</code></td>
+<td><code>MultiMaterialComponent</code> variant index</td>
 </tr>
 <tr>
 <td><code>normalTexture.scale</code></td>
@@ -910,16 +1248,36 @@ if (MaterialComponent* mat = go-&gt;GetComponent&lt;MaterialComponent&gt;()) {
 </tr>
 </tbody>
 </table>
-<p><strong>IBL:</strong> split-sum specular uses a precomputed <strong>BRDF LUT</strong> (<code>VulkanIblBrdfLut</code>, binding <strong>12</strong>). See <a href="../../../GLTF_DISPLAY_ROADMAP.html"><code>GLTF_DISPLAY_ROADMAP.md</code></a> and <a href="../../../MATERIALS_AND_LIGHTING.html"><code>MATERIALS_AND_LIGHTING.md</code></a>.</p>
-<h2 id="procedural-cube-fps-sample-style">Procedural Cube (FPS Sample Style)</h2>
-<pre><code class="language-cpp">auto unitCube = MakeShared&lt;Mesh&gt;(Mesh::CreateUnitCube());
-world.RegisterMesh(unitCube, &quot;fps/unit_cube&quot;);
-
-auto* target = world.CreateGameObject();
-target-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({5, 1, -3});
-target-&gt;AddComponent&lt;MeshComponent&gt;(unitCube, SceneMeshSlot::Custom, Vector3{0.9F, 0.3F, 0.2F});
-target-&gt;AddComponent&lt;MaterialComponent&gt;(nullptr)-&gt;SetRoughness(0.35F);
-</code></pre>
+<p><strong>IBL:</strong> split-sum specular + <strong>BRDF LUT</strong> (<code>VulkanIblBrdfLut</code>, binding <strong>12</strong>). Deep reference: <a href="../../../GLTF_DISPLAY_ROADMAP.html"><code>GLTF_DISPLAY_ROADMAP.md</code></a>, <a href="../../../MATERIALS_AND_LIGHTING.html"><code>MATERIALS_AND_LIGHTING.md</code></a>.</p>
+<h2 id="transparency-and-sorting">Transparency and sorting</h2>
+<p>Transparent draws go to <code>params.transparentDraws</code> with distance sort. Water uses <code>waterDraws</code> with a dedicated pass. Set material flags / component options when authoring glass (<code>transmission</code> extension) or fade props.</p>
+<h2 id="debugging">Debugging</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flat grey mesh</td>
+<td>Missing <code>MaterialComponent</code> or null base color</td>
+</tr>
+<tr>
+<td>Wrong UVs</td>
+<td>Custom mesh tangents; reimport glTF</td>
+</tr>
+<tr>
+<td>No IBL reflection</td>
+<td>HDR environment + BRDF LUT enabled in render init</td>
+</tr>
+<tr>
+<td>Pink shader</td>
+<td>Extension mismatch — verify material variant</td>
+</tr>
+</tbody>
+</table>
 <p>Next: <a href="02-cameras-3d.html">Cameras in 3D</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

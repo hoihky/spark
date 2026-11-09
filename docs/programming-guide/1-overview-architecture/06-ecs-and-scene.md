@@ -1,188 +1,225 @@
 # ECS and Scene
 
-## Class Design: `GameObject`
+Spark ECS is **gameplay-oriented**: entities are `GameObject`, data and behavior are `GameComponent` derivatives looked up by `ComponentKind`. There is no archetype/query DSL — use `ForEachGameObjectWithComponents` and tags for iteration.
 
-`GameObject` is Spark's **entity**. It does not use inheritance for gameplay — behavior is composed from components.
+`Scene` is a **read/query façade** over the same `GameWorld` the game mutates; rendering uses `FillStandardLitSceneFromWorld(world, …)` rather than Scene iterators in most games.
+
+## Entity: `GameObject`
 
 | Field / API | Purpose |
 |-------------|---------|
-| `GetId()` | Stable `uint64_t` identifier |
-| `GetName()` | `Utf8String` debug label |
-| `GetParent()` / `SetParent()` | Scene hierarchy |
+| `GetId()` | Stable `uint64_t` |
+| `GetName()` | Debug `Utf8String` |
+| `GetParent()` / `SetParent()` | Hierarchy |
 | `GetWorldMatrix()` | Composed TRS from root |
-| `AddComponent<T>()` | Type-safe component factory |
+| `AddComponent<T>()` | Factory + `OnAttach` |
 | `GetComponent<T>()` | Lookup by `T::TypeKind` |
-| `EmitSignal()` | Sibling messaging on same entity |
+| `EmitSignal()` | Same-object component messaging |
+| `SetTag` / queries | Lightweight grouping |
 
 ```cpp
 template<typename T, typename... Args>
-T* AddComponent(Args&&... args) {
-    static_assert(std::is_base_of_v<GameComponent, T>);
-    auto ptr = MakeUnique<T>(Forward<Args>(args)...);
-    T* raw = ptr.Get();
-    raw->InternalSetOwner(this);
-    components.PushBack(UniquePtr<GameComponent>(ptr.Release()));
-    raw->OnAttach(*this);
-    return raw;
-}
+T* AddComponent(Args&&... args);
 ```
 
-## Class Design: `GameComponent`
+## Component base: `GameComponent`
 
 ```cpp
-class GameComponent {
-public:
-    virtual ComponentKind Kind() const noexcept = 0;
-    virtual void OnAttach(GameObject& owner);
-    virtual void OnDetach(GameObject& owner);
-    virtual void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context);
-    virtual void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload);
-    virtual int UpdatePriority() const noexcept { return 0; }
-};
+virtual void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context);
+virtual void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload);
+virtual int UpdatePriority() const noexcept { return 0; }
 ```
 
-Built-in priorities (`ComponentUpdatePriority`). Each `GameObject` **stable-sorts** its components by `UpdatePriority()` before `OnUpdate` — lower values run first:
+Each `GameObject` **stable-sorts** components by `UpdatePriority()` before `OnUpdate`.
 
-| Priority | Value | Examples |
-|----------|-------|----------|
-| — | 50 | `PlayerInput` (semantic actions before gameplay) |
-| — | 125 | `GridPathFollower2D` (after `ProcessGridNavAgents2D`, before animator playback) |
-| `Billboard` | 50 | Face camera before gameplay |
-| `AnimationDriver` | 100 | `Character3DAnimFsm`, `Sprite2DCharacterAnimFsm` |
-| `AnimatorPlayback` | 200 | `Animator`, `SpriteAnimator` |
-| — | 210 | `AnimationEventReceiver` |
-| — | 215 | `SpriteAnimationEventReceiver`, `AnimationHitbox2D` |
-| — | 250 | `AttachmentSocket` |
-| — | 290 | `ParallaxLayer` (background scroll before camera rig) |
-| — | 295 | `ScreenShake`, `SpringArm3D` |
-| — | 300 | `Camera2DRig`, `CameraFollow3D` |
+| Priority | Examples |
+|----------|----------|
+| 50 | `PlayerInputComponent`, `BillboardComponent` |
+| 100 | Character / sprite FSM drivers |
+| 200 | `AnimatorComponent`, `SpriteAnimatorComponent` |
+| 215 | Sprite animation events, `AnimationHitbox2D` |
+| 290–300 | Parallax, screen shake, camera rigs |
 
-Full per-component tables: [Game Component Reference](07-game-component-reference.md).
+Full table: [Game Component Reference](07-game-component-reference.md#update-priorities).
 
-## Class Design: `GameWorld`
-
-`GameWorld` owns all `GameObject` instances and **asset caches**:
+## `GameWorld` ownership
 
 ```cpp
 GameObject* CreateGameObject();
 void DestroyGameObject(GameObject* object);
 bool SetParent(GameObject* child, GameObject* newParent);
 void UpdateGameObjects(const FrameTiming& timing, IEngineContext& context);
-
-// Asset cache
-void RegisterMesh(const SharedPtr<Mesh>& mesh, const char* key);
-SharedPtr<Mesh> FindMesh(const char* key) const;
-GltfAsset LoadGltf(const char* path);
-SkinnedGltfAsset LoadSkinnedGltf(const char* path);
-void SetUiFont(const SharedPtr<Font>& font);
 ```
 
-## Class Design: `Scene`
+Asset caches: `RegisterMesh`, `RegisterTexture`, `LoadGltf`, `LoadSkinnedGltf`, `SetUiFont`, async `RequestGltf` + `PumpAssets`.
 
-`Scene` is a **read-only query layer** over `GameWorld`:
+## Concept: create a player entity
+
+### C++
 
 ```cpp
-void ForEachDrawable(const DrawableFn& fn);
-void ForEachSkinnedDrawable(const SkinnedFn& fn);
-void ForEachSprite(const SpriteFn& fn);
-void ForEachTilemap(const TilemapFn& fn);
-void ForEachPointLight(const PointLightFn& fn);
-void ForEachUiCanvas(Fn&& fn);
-void SetSpatialPartitionKind(ScenePartitionKind kind);  // BruteForce, BVH, Octree, QuadTree, ...
+GameObject* player = world.CreateGameObject();
+player->SetTag("player");
+TransformComponent* tr = player->AddComponent<TransformComponent>();
+tr->SetTranslation({0.0F, 1.0F, 0.0F});
+player->AddComponent<Rigidbody2DComponent>();
+player->AddComponent<SpriteComponent>(tex, tint, uv, sortOrder);
 ```
 
-## World Queries
+### C\#
 
-Find entities by tag or component set:
-
-```cpp
-GameObject* player = world.FindGameObjectWithTag("player");
-
-world.ForEachGameObjectWithComponents<MeshComponent, MaterialComponent>(
-    [](GameObject* go) {
-        // visit every lit mesh
-    });
-
-Camera2DComponent* cam2d = world.FindFirstGameObjectWithComponents<Camera2DComponent>()
-    ?->GetComponent<Camera2DComponent>();
+```csharp
+var player = world.CreateGameObject("Player");
+player.SetTag("player");
+player.GetOrAddTransform().SetTranslation(new Vector3(0, 1, 0));
+player.AddRigidbody2D();
+player.AddSprite("game/hero", tint, uv, sortOrder: 100);
 ```
 
-Tags are set with `go->SetTag("enemy")` and queried at runtime without maintaining your own maps.
+### Python
 
-## Hierarchy
+```python
+player = world.create_game_object("Player")
+player.set_tag("player")
+player.get_or_add_transform().set_translation(Vector3(0, 1, 0))
+player.add_rigidbody_2d()
+player.add_sprite("game/hero", tint, uv, sort_order=100)
+```
 
-Parent transforms compose into world matrices automatically:
+## Concept: hierarchy
+
+Parent transforms compose automatically:
+
+### C++
 
 ```cpp
 GameObject* root = world.CreateGameObject();
 GameObject* child = world.CreateGameObject();
 world.SetParent(child, root);
-
-auto* rootTr = root->AddComponent<TransformComponent>();
-rootTr->SetTranslation({10, 0, 0});
-auto* childTr = child->AddComponent<TransformComponent>();
-childTr->SetTranslation({0, 2, 0});  // world position ≈ (10, 2, 0)
+root->AddComponent<TransformComponent>()->SetTranslation({10, 0, 0});
+child->AddComponent<TransformComponent>()->SetTranslation({0, 2, 0});
+// child world ≈ (10, 2, 0)
 ```
 
-## Signals Example
+### C\#
+
+```csharp
+world.SetParent(child, root);
+root.GetOrAddTransform().SetTranslation(new Vector3(10, 0, 0));
+child.GetOrAddTransform().SetTranslation(new Vector3(0, 2, 0));
+```
+
+### Python
+
+```python
+world.set_parent(child, root)
+root.get_or_add_transform().set_translation(Vector3(10, 0, 0))
+child.get_or_add_transform().set_translation(Vector3(0, 2, 0))
+```
+
+## Concept: queries and tags
+
+### C++
 
 ```cpp
-// TransformComponent emits SignalId::TransformChanged
+GameObject* player = world.FindGameObjectWithTag("player");
+
+world.ForEachGameObjectWithComponents<MeshComponent, MaterialComponent>(
+    [](GameObject* go) { /* lit mesh */ });
+
+GameObject* camGo = world.FindFirstGameObjectWithComponents<Camera2DComponent>();
+```
+
+### C\#
+
+```csharp
+var player = world.FindGameObjectWithTag("player");
+world.ForEachWithComponents<MeshComponent, MaterialComponent>(go => { });
+```
+
+### Python
+
+```python
+player = world.find_game_object_with_tag("player")
+```
+
+## Concept: signals (sibling-only)
+
+`EmitSignal` dispatches to **components on the same `GameObject`**, not children. Example: goal trigger receives `Physics2DTriggerEnter` on the trigger object — put `GameFlowTriggerComponent` there, not on the player.
+
+### C++
+
+```cpp
 void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override {
-    if (id == SignalId::TransformChanged) {
-        // Rebuild local bounds, etc.
-    }
-    if (id == SignalId::Physics2DTriggerOverlap) {
-        GameObject* other = static_cast<GameObject*>(payload.ptr);
-        (void)other;
-    }
     if (id == SignalId::Physics2DTriggerEnter) {
         GameObject* other = static_cast<GameObject*>(payload.ptr);
-        (void)other;
-    }
-    if (id == SignalId::Physics3DTriggerEnter) {
-        GameObject* other = static_cast<GameObject*>(payload.ptr);
-        (void)other;
-    }
-    if (id == SignalId::AnimationEvent) {
-        const char* eventName = static_cast<const char*>(payload.ptr);
-        (void)eventName;
-    }
-    if (id == SignalId::SpriteAnimationEvent) {
-        const char* eventName = static_cast<const char*>(payload.ptr);
-        (void)eventName;
     }
     if (id == SignalId::InputActionTriggered) {
         const char* action = static_cast<const char*>(payload.ptr);
         const auto phase = static_cast<InputActionPhase>(payload.a);
-        (void)action;
-        (void)phase;
-    }
-    if (id == SignalId::GameStateChanged) {
-        const auto next = static_cast<GameFlowState>(payload.a);
-        (void)next;
     }
     if (id == SignalId::DamageApplied) {
         const auto* dmg = static_cast<const DamageSignalPayload*>(payload.ptr);
-        (void)dmg;
     }
 }
 ```
 
-Signals are **sibling-only**: `EmitSignal` on a `GameObject` dispatches to components on that same object, not children or parents. When a trigger on `goalTriggerGo` fires `Physics2DTriggerEnter`, attach `GameFlowTriggerComponent` on `goalTriggerGo`, not on the player. Use `SetStateOwner` when the `GameStateComponent` lives on a different manager object.
+### C\#
 
-See [Game Component Reference](07-game-component-reference.md) for every component and signal payload.
+```csharp
+public override void OnSignal(GameObject owner, SignalId id, in SignalPayload payload)
+{
+    if (id == SignalId.Physics2DTriggerEnter) { /* ... */ }
+}
+```
 
-## Rendering Hand-off
+### Python
+
+```python
+def on_signal(self, owner, signal_id, payload):
+    if signal_id == SignalId.PHYSICS_2D_TRIGGER_ENTER:
+        other = payload.ptr
+```
+
+Payload tables: [Game Component Reference — Signals](07-game-component-reference.md#signals-sparkecssignalhpp).
+
+## `Scene` query layer
 
 ```cpp
-Spark::SceneRenderParams params{};
-ProcessTimeOfDayDrivers(world, timing.deltaTimeSeconds);  // optional if not using FillStandardLitSceneFromWorld
-Spark::FillStandardLitSceneFromWorld(world, context, viewProj, camPos,
+void ForEachDrawable(const DrawableFn& fn);
+void ForEachSkinnedDrawable(const SkinnedFn& fn);
+void ForEachSprite(const SpriteFn& fn);
+void SetSpatialPartitionKind(ScenePartitionKind kind);
+```
+
+Use for editor tooling, culling experiments, or custom render paths — production games usually call `FillStandardLitSceneFromWorld` directly on `GameWorld`.
+
+## Concept: full render hand-off
+
+### C++
+
+```cpp
+SceneRenderParams params{};
+FillStandardLitSceneFromWorld(world, context, viewProj, camPos,
     lightDir, lightColor, lightIntensity, ambient, enableParticles,
-    camRight, camUp, sceneTime, params);  // applies TimeOfDayDriver + fog/post volumes internally
-Spark::PaintUiCanvases(world, params, fbW, fbH);
+    camRight, camUp, sceneTime, params);
+PaintUiCanvases(world, params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
 
-Part 1 complete → [Game Component Reference](07-game-component-reference.md) · **Part 2**: [Sprites](../2-2d-graphics/01-sprites.md).
+### C\#
+
+```csharp
+var p = new SceneRenderParams();
+FillStandardLitSceneFromWorld(World, ctx, vp, camPos, ... , p);
+PaintUiCanvases(World, p, fbW, fbH);
+ctx.SetSceneRenderParams(p);
+```
+
+### Python
+
+```python
+# Host assembles params after on_update; call paint helpers when bound.
+```
+
+Part 1 foundations → [Game Component Reference](07-game-component-reference.md) · **Part 2**: [Sprites](../2-2d-graphics/01-sprites.md).

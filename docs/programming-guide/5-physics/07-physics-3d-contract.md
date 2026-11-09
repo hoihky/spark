@@ -1,108 +1,95 @@
-# Physics 3D contract
+# Physics 3D Contract
 
-This page describes what Spark’s 3D physics layer guarantees today: simulation order, query services, fixed timestep, and continuous collision detection (CCD). It is the reference for gameplay code that depends on balls, players, and environment interaction.
+This chapter summarizes **what Spark 3D physics guarantees** for gameplay programmers — aligned with `PhysicsShowcase3DDemo` and `PhysicsSubsystem` sources.
 
 ## Simulation entry points
 
-| API | Responsibility |
-| --- | --- |
-| `PhysicsSubsystem::Simulate3D` | Dynamic rigidbodies (sphere/capsule) vs static box/capsule geometry, joints |
-| `PhysicsSubsystem::SimulateCharacterControllers3D` | Kinematic character motors (sphere vs statics) |
-| `PhysicsSubsystem::SimulateAll3D` | Rigidbodies, then characters, then trigger volumes (also syncs 3D query broad-phase cell size) |
+| Call | Includes |
+|------|----------|
+| `Simulate3D` | Rigidbodies, joints, some triggers |
+| `SimulateAll3D` | Above + character controllers + trigger volume sync + query cell sync |
 
-Objects with `CharacterController3DComponent` are **not** integrated as rigidbodies. Dynamic rigidbodies require `Rigidbody3DComponent` + `SphereCollider3DComponent` or `CapsuleCollider3DComponent`.
-
-`BoxCollider3DComponent` and `MeshCollider3DComponent` participate in **static** baking and triggers, but are **not** integrated as dynamic rigidbodies today. For crate-like props, use a **cube mesh** with a **sphere or capsule** collider sized to fit the visual (see `PhysicsShowcase3DDemo`).
-
-## Fixed timestep (A4b)
-
-`PhysicsWorld3DSettings::fixedSimulationTimestep` (seconds) enables an internal accumulator on `PhysicsWorld3D`. When greater than zero, each frame runs up to `maxFixedSimulationStepsPerFrame` steps at that fixed delta. When zero, the frame uses `FrameTiming::deltaTimeSeconds` once (legacy behavior).
-
-`substeps` still subdivide **each** simulation step for internal stability (`stepDelta / substeps`).
+### C++
 
 ```cpp
-auto& settings = physics.GetWorld3D().GetSettings();
-settings.fixedSimulationTimestep = 1.0F / 60.0F;
-settings.maxFixedSimulationStepsPerFrame = 6;
+physics.SimulateAll3D(world, timing);
 ```
 
-Call `PhysicsWorld3D::ResetFixedStepAccumulator()` after teleporting the whole scene to avoid a large catch-up burst.
+### C\#
 
-## Queries (E1)
+```csharp
+_physics.SimulateAll3D(World, timing);
+```
 
-`PhysicsSubsystem::GetQueries3D()` owns `PhysicsQueryWorld3D`:
+### Python
 
-1. `RebuildStatics(world)` — baked static colliders (boxes/capsules from the ECS bake pipeline).
-2. `RebuildDynamics(world)` — dynamic rigidbodies plus character controllers (sphere proxy).
-3. `RebuildAll(world)` — both.
+```python
+context.physics.simulate_all_3d(world, timing)
+```
 
-| Method | Targets |
-| --- | --- |
-| `OverlapSphereStatics` | Static geometry |
-| `OverlapSphereDynamics` | Dynamic rigidbodies + character controllers |
-| `OverlapSphere` | Rebuilds all, then fills static and dynamic hit arrays |
-| `RaycastStatics` / `RaycastDynamics` | Narrow-phase ray vs one category |
-| `Raycast` | Closest hit among statics and dynamics |
+## Query contract
 
-Filtering uses the same bitmask rules as simulation (`PhysicsQueryFilter3D` + per-collider category/mask). Pass `GameObject* ignore` on dynamic queries to skip an instigator (e.g. the projectile owner).
+- Queries share **broad-phase cell size** with `PhysicsWorld3D` after each simulate.
+- Call `GetQueries3D().RebuildStatics(world)` after bulk static spawn.
+- Dynamic rebuild: `RebuildDynamics` when adding many moving props mid-level.
 
-`PhysicsRaycastHit3D::isDynamicHit` is true when `staticColliderIndex == kNoStaticColliderIndex`.
+### C++
 
-`Simulate3D` and `SimulateAll3D` align `PhysicsQueryWorld3D` broad-phase cell size with `PhysicsWorld3D::GetBroadPhaseCellSize()`. After changing cell size or spawning/destroying dynamics, call `RebuildDynamics` (or `RebuildAll`) before raycasts/overlaps.
+```cpp
+physics.GetQueries3D().RebuildStatics(world);
+```
 
-Bodies with an active `PhysicsAttachedBody3DComponent` binding are omitted from the dynamic query catalog until released.
+### C\#
 
-## Continuous collision detection
+```csharp
+_physics.GetQueries3D().RebuildStatics(World);
+```
 
-| Setting | Effect |
-| --- | --- |
-| `sweptStaticCcdBinaryIterations` | Binary search along translation vs **static** colliders (broad-phase along segment) |
-| `sweptDynamicCcdBinaryIterations` | Binary search vs **other dynamic** colliders at interpolated poses |
+### Python
 
-Set either counter to `0` to disable that pass. CCD runs inside `RigidbodyIntegrator3D` before contact resolution.
+```python
+pass
+```
 
-## Layer indices
+## Trigger contract
 
-Use `PhysicsLayers3D` and `CollisionFilter3D::LayerBit` on colliders, character controllers, and query filters. See [Colliders](03-colliders.md).
+- `TriggerVolume3DComponent` dispatches `SignalId::Physics3DTriggerEnter` / `Exit` to **siblings** on the same object.
+- Collider must overlap; rigidbody optional depending on setup.
 
-## Tier 2 — Trust and handoff
+### C++
 
-| Feature | API |
-| --- | --- |
-| **E9** Trigger stay + layers | `TriggerVolume3DComponent` category/mask; `Physics3DTriggerStay` signal |
-| **E8** Unified raycast | `ScenePhysicsRaycast3D` + `PhysicsQueryWorld3D` |
-| **E6** Contact hooks | `PhysicsContactBroadcaster3D`, `PhysicsContactListener3DComponent`, `Physics3DContact` |
-| **E7** Carry / throw | `PhysicsBodyHandoff3D`, `PhysicsAttachedBody3DComponent` |
-| **E10 / A4c** Replay domain | `PhysicsSimulationDomain3D`, `PhysicsReplayRingBuffer3D`, `PhysicsSubsystem::PlaybackPhysics3DFrame` |
+```cpp
+void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override {
+    if (id == SignalId::Physics3DTriggerEnter) {
+        GameObject* other = static_cast<GameObject*>(payload.ptr);
+    }
+}
+```
 
-`PhysicsSimulationDomain3D::AdvanceMode::Paused` skips live rigidbody integration inside `PhysicsWorld3D::Simulate`. `SimulateAll3D` still runs character controllers and trigger volumes unless you step APIs individually.
+### C\#
 
-### Trigger overlap state
+```csharp
+// GameComponent subclass OnSignal override in managed component when used.
+```
 
-`TriggerVolume3DComponent::IsOverlapping` reads the overlap list updated by `SimulateTriggerVolumes3D`. Query it **after** `SimulateAll3D` (or `SimulateTriggerVolumes3D`) in the same frame.
+### Python
 
-### Character controller vs fixed step
+```python
+def on_signal(self, owner, signal_id, payload):
+    pass
+```
 
-`CharacterControllerWorld3D` uses `FrameTiming::deltaTimeSeconds` each frame. `PhysicsWorld3D` can use `fixedSimulationTimestep` independently. Toggle both in **`PhysicsShowcase3DDemo`** (**F2**) to compare behavior.
+## Character controller contract
 
-## Hands-on reference
+- Motor resolves against static + dynamic colliders baked that frame.
+- Not a full rigidbody — use `Rigidbody3D` for throwing props.
 
-SparkDemo **#29** / hotkey **P** — `PhysicsShowcase3DDemo` (`include/spark/demo/PhysicsShowcase3DDemo.hpp`):
+## CCD / fast movers
 
-| Input | Feature |
-| --- | --- |
-| WASD | `CharacterController3DComponent` + camera-yaw-relative velocity |
-| **E** | `PhysicsBodyHandoff3D` carry / throw |
-| **F** | Fast sphere projectile (swept CCD vs thin wall) |
-| LMB | `ScenePhysicsRaycast3D` unified mesh + physics pick |
-| **F2** | Fixed vs variable physics timestep |
-| **F3** | Pause rigidbody integration (`PhysicsSimulationDomain3D`) |
-| **F4** / **F5** | Record / playback replay buffer |
-| Goal zone | Layered `TriggerVolume3DComponent` stay counter |
+Increase `sweptStaticCcdBinaryIterations` and cap velocity or use substep count > 1 for thrown balls — showcase **carry/throw** scene.
 
-Regression: `PhysicsShowcaseRegressionTest.CharacterControllerWalksOnFloor` in `tests/physics/PhysicsWorld3DIntegrationTest.cpp`.
+## Layering / filtering
 
-## Related
+Use gameplay tags + ignore lists in query filters where exposed in query API; default queries hit all registered colliders unless demo adds filters.
 
-- [Physics 3D overview](05-physics-3d.md)
-- [Queries (2D patterns)](04-queries.md)
+Further depth: [Collision layers](08-collision-layers-and-filters.md) · [Triggers & showcase](09-triggers-contacts-and-showcase.md) (Part 5 closing chapter).

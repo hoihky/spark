@@ -1,78 +1,89 @@
 # Sound Cues
 
-## Class Design: `SoundCueComponent`
+`SoundCueComponent` queues one-shots with gain; `ProcessSoundCues` (in `Game::OnUpdate`) flushes queues through `SoundMixer` with optional 3D pan from `AudioListenerComponent`.
+
+## Concept: play on jump
+
+### C++
 
 ```cpp
-class SoundCueComponent final : public GameComponent {
-public:
-    void Queue(const SharedPtr<SoundClip>& clip, float volume = 1.0F);
-    void QueueAtWorld(const SharedPtr<SoundClip>& clip, float volume,
-                      const Vector3& worldPosition,
-                      float spatialBlend = 1.0F,
-                      float minDistance = 1.0F,
-                      float maxDistance = 48.0F);
-    void FlushTo(SoundEngine* engine) noexcept;
-};
-```
-
-## Queue Pattern
-
-```cpp
-auto* player = playerObject;
-auto* cue = player->GetComponent<SoundCueComponent>();
-if (!cue) cue = player->AddComponent<SoundCueComponent>();
-
-if (justJumped)
-    cue->Queue(jumpClip, 0.9F);
-if (justLanded) {
-    const Matrix4& wm = player->GetWorldMatrix();
-    const Vector3 pos{wm.m[12], wm.m[13], wm.m[14]};
-    cue->QueueAtWorld(landClip, 0.6F, pos);
+if (playerInput->WasActionPressedThisFrame("Jump")) {
+    playerController->RequestJump();
+    if (SoundCueComponent* cue = player->GetComponent<SoundCueComponent>())
+        cue->Queue(jumpSfx, 0.9F);
 }
 ```
 
-## Audio Listener
+### C\#
 
-`AudioListenerComponent` marks the owner's transform as the spatial audio listener (highest `priority` wins). Resolved each frame by `ProcessAudioListeners` **before** cues are flushed.
-
-```cpp
-cameraGo->AddComponent<AudioListenerComponent>()->SetPriority(10);
+```csharp
+if (input.WasActionPressedThisFrame("Jump"))
+    player.GetComponent<SoundCueComponent>()?.Queue(jumpSfx, 0.9f);
 ```
 
-If no listener is present, spatial panning falls back to the main 3D `CameraComponent` pose.
+### Python
 
-## Ambient zones
-
-```cpp
-cave->AddComponent<AmbientZoneComponent>();
-auto* zone = cave->GetComponent<AmbientZoneComponent>();
-zone->SetVolumeScale(0.75F);
-zone->SetHalfExtents({8.0F, 5.0F, 8.0F});
-zone->SetPriority(2);
+```python
+if inp.was_action_pressed("Jump"):
+    player.get_component_sound_cue().queue(jump_clip, 0.9)
 ```
 
-## Automatic Drain
+## Concept: animation events → SFX
 
-`Game::OnUpdate` calls `ProcessSoundCues(world, context)` which:
+Pair `SpriteAnimationEventReceiverComponent` with names like `"Footstep"` and queue cue in `OnSignal` or dedicated VFX/audio component.
 
-1. `ProcessAudioListeners(world)`
-2. `ProcessAmbientZones(world)` — regional volume scale when listener is inside `AmbientZoneComponent`
-3. `SoundCueComponent::FlushTo` on every active object
-
-If you bypass `Game::OnUpdate`, call `ProcessSoundCues` yourself.
-
-## Background Music
+### C++
 
 ```cpp
-if (SoundEngine* se = context.TryGetSoundEngine()) {
-    se->SetBackgroundMusic(bgmClip, 0.28F, true);
+if (id == SignalId::SpriteAnimationEvent) {
+    const char* name = static_cast<const char*>(payload.ptr);
+    if (Utf8String(name) == "Footstep")
+        cue->Queue(footstepSfx, 0.6F);
 }
-// Later:
-se->ClearBackgroundMusic();
 ```
 
-## Multiple Voices
+### C\#
 
-`SoundMixer` multiplexes one-shots — rapid `Queue` calls overlap without cutting off prior sounds (within voice pool limits). Spatial voices apply stereo pan and distance attenuation from the resolved listener.
+```csharp
+if (id == SignalId.SpriteAnimationEvent) { /* queue */ }
+```
 
-Part 6 complete → **Part 7**: [Platformer Introduction](../7-2d-game/01-platformer-intro.md).
+### Python
+
+```python
+def on_signal(self, owner, signal_id, payload):
+    pass
+```
+
+## Multiple voices
+
+`SoundMixer` multiplexes overlapping one-shots within voice pool limits — rapid `Queue` calls layer instead of cutting (until pool full).
+
+## BGM vs cues
+
+| API | Use |
+|-----|-----|
+| `SoundEngine::SetBackgroundMusic` | Looping bed |
+| `SoundCueComponent::Queue` | Footsteps, jumps, UI blips |
+
+Clear BGM on scene tear-down:
+
+### C++
+
+```cpp
+context.TryGetSoundEngine()->ClearBackgroundMusic();
+```
+
+### C\#
+
+```csharp
+context.TryGetSoundEngine()?.ClearBackgroundMusic();
+```
+
+### Python
+
+```python
+context.try_get_sound_engine().clear_background_music()
+```
+
+Next: [Spatial audio](04-spatial-audio-and-listeners.md) · [Ambient zones & music](05-ambient-zones-and-mix.md).

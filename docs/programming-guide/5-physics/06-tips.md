@@ -1,54 +1,81 @@
-# Tips and Patterns
+# Joints and Tips
 
-## Fixed Timestep
+2D/3D distance and hinge joints attach to `Rigidbody` bodies. Tune iteration counts when chains jitter.
 
-```cpp
-PhysicsSubsystem physics;
-float accum = 0.0F;
-constexpr float kFixedDt = 1.0F / 60.0F;
-accum += timing.deltaTimeSeconds;
-while (accum >= kFixedDt) {
-    physics.Simulate2D(world, FrameTiming{kFixedDt, timing.totalTimeSeconds, timing.frameIndex});
-    accum -= kFixedDt;
-}
-```
+## Concept: distance joint 2D
 
-## Layer Design Example
-
-| Layer bit | Category | Collides with |
-|-----------|----------|---------------|
-| 0 | Player | 1, 2 |
-| 1 | Environment | all |
-| 2 | Enemy | 0, 1 |
-| 3 | Pickup (trigger) | 0 |
-
-## Dynamic vs Dynamic
-
-Default `resolveDynamicVsDynamic = false` in 2D — enable only if you need pile-ups.
-
-## Query Performance
-
-Rebuild static queries once per frame (or when level geometry changes):
+### C++
 
 ```cpp
-physics.GetQueries2D().RebuildStatics(world);
-// then many OverlapCircleStatics / RaycastStatics calls
+#include "spark/ecs/components/physics/2d/DistanceJoint2DComponent.hpp"
+
+bridge->AddComponent<DistanceJoint2DComponent>()
+    ->SetConnectedBody(otherRb)
+    ->SetRestLength(3.0F);
 ```
 
-`PhysicsSubsystem::Simulate2D` syncs query cell size from `PhysicsWorld2D` each step. Use `SetBroadPhaseCellSize2D` when tuning the spatial hash for both simulation and queries.
+### C\#
 
-**3D:** `Simulate3D` and `SimulateAll3D` sync `GetQueries3D()` from `GetWorld3D()`. Call `PhysicsWorld3D::ResetFixedStepAccumulator()` after teleports or demo reloads to avoid a multi-step catch-up. Dynamic props need sphere/capsule colliders — see [Physics 3D contract](07-physics-3d-contract.md).
+```csharp
+bridge.GetOrAddComponent<DistanceJoint2DComponent>();
+```
 
-## Debug Visualization
+### Python
 
-Use `TextOverlayComponent` or GUI labels to show velocity:
+```python
+bridge.get_or_add_default_component(ComponentKind.DistanceJoint2D)
+```
+
+## Concept: hinge joint 3D (door)
+
+### C++
 
 ```cpp
-std::format("v=({:.1f},{:.1f})", v.x, v.y);
+door->AddComponent<HingeJoint3DComponent>()->SetAxisLocal({0, 1, 0});
 ```
 
-## When to Skip Physics
+### C\#
 
-Grid-based tactics, visual novels, and menu scenes need no solver — omit `PhysicsSubsystem::Simulate*`.
+```csharp
+door.AddHingeJoint3D();
+```
 
-Part 5 complete → **Part 6**: [Sound Engine](../6-sound/01-sound-engine.md).
+### Python
+
+```python
+door.get_or_add_default_component(ComponentKind.HingeJoint3D)
+```
+
+## Tips
+
+| Issue | Fix |
+|-------|-----|
+| Tunneling at high speed | 3D substeps + CCD |
+| Jitter on stacks | More `resolveIterations`, sleep thresholds |
+| Missed raycasts | `RebuildStatics` after spawning level |
+| Triggers not firing | Component on trigger object; sibling `OnSignal` |
+| Character snags | Tweak capsule radius, controller step height |
+
+## Determinism / replay
+
+`PhysicsShowcase3DDemo` records input + physics state — pattern for QA replays.
+
+### C++
+
+```cpp
+// See demo Recording subsystem — fixed timestep optional via settings.
+```
+
+### C\#
+
+```csharp
+// Mirror demo FixedStep in template projects.
+```
+
+### Python
+
+```python
+pass
+```
+
+Next: [Physics 3D contract](07-physics-3d-contract.md) → [Layers & filters](08-collision-layers-and-filters.md) → [Triggers & showcase](09-triggers-contacts-and-showcase.md).

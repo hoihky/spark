@@ -1,113 +1,110 @@
 # Physics Overview
 
-## Recommended API: `PhysicsSubsystem`
+Physics is **explicit**: neither `Game::OnUpdate` nor `Engine` calls `Simulate2D` for you. Own a `PhysicsSubsystem`, configure gravity once, and step every frame after applying input.
 
-Spark physics is **not** auto-ticked in `Game::OnUpdate`. Your game owns a `PhysicsSubsystem`, configures it once, and steps explicitly each frame:
+**Guides:** [Physics 2D components](../7-game-components-usage/06-physics-2d.md), [Physics 3D](../7-game-components-usage/07-physics-3d.md) · **Demo #29** Physics 3D showcase.
+
+## Concept: own and step `PhysicsSubsystem`
+
+### C++
 
 ```cpp
-#include "spark/physics/Physics.hpp"
+#include "spark/physics/PhysicsSubsystem.hpp"
 
 PhysicsSubsystem physics;
 
-void OnAttach(IEngineContext& context) override {
+void OnAttach(IEngineContext&) override {
     physics.GetWorld2D().GetSettings().gravityY = -30.0F;
-    physics.GetWorld2D().GetSettings().maxFallSpeed = 42.0F;
     physics.GetWorld3D().GetSettings().substeps = 2;
 }
 
-void OnUpdate(const FrameTiming& timing) override {
-    ApplyPlayerForces();
-    physics.Simulate2D(GetWorld(), timing);
-    physics.SimulateAll3D(GetWorld(), timing);  // rigidbodies + character + triggers
-    PostPhysicsGameplay();
-}
-```
-
-`PhysicsSubsystem` owns:
-
-| Service | Role |
-|---------|------|
-| `GetWorld2D()` | 2D rigidbody simulation |
-| `GetWorld3D()` | 3D rigidbody simulation |
-| `GetQueries2D()` | Static/dynamic overlap and raycasts |
-| `GetCharacterController3D()` | Kinematic character motors |
-| `GetTriggerVolumes3D()` | 3D trigger enter/exit |
-
-Include everything with `#include "spark/physics/Physics.hpp"`.
-
-### Broad-phase cell size (2D)
-
-Simulation and queries share the same uniform-cell grid when using `PhysicsSubsystem`:
-
-```cpp
-physics.SetBroadPhaseCellSize2D(8.0F);  // sets world + query cell size
-// or: physics.GetWorld2D().SetBroadPhaseCellSize(8.0F) before Simulate2D (queries sync each step)
-```
-
-Default cell size is **4** world units (`PhysicsWorld2D::DefaultBroadPhaseCellSize`).
-
-### Broad-phase cell size (3D)
-
-`PhysicsWorld3D::DefaultBroadPhaseCellSize` is **2** world units. `Simulate3D` and `SimulateAll3D` copy that value into `GetQueries3D()` each step. After load or level edits, call `RebuildStatics` / `RebuildDynamics` (or `RebuildAll`) before relying on raycasts.
-
-End-to-end 3D gameplay patterns (queries, triggers, carry, CCD, fixed step): [Physics 3D contract](07-physics-3d-contract.md) and `PhysicsShowcase3DDemo`.
-
-## Legacy Free Functions
-
-`SimulatePhysics2D` / `SimulatePhysics3D` still compile but are **deprecated** — they recreate settings every call. Prefer `PhysicsSubsystem` or holding a `PhysicsWorld2D` / `PhysicsWorld3D` member.
-
-## Settings Structs
-
-**2D** (`PhysicsWorld2DSettings`):
-
-| Field | Default | Meaning |
-|-------|---------|---------|
-| `gravityY` | `-32` | Vertical acceleration |
-| `maxFallSpeed` | `46` | Terminal velocity clamp |
-| `resolveDynamicVsDynamic` | `false` | Dynamic-dynamic positional separation |
-| `jointIterations` | `4` | Distance/hinge joint soft iterations |
-
-**3D** (`PhysicsWorld3DSettings`):
-
-| Field | Default |
-|-------|---------|
-| `gravityY` | `-24` |
-| `substeps` | `1` |
-| `resolveIterations` | `8` |
-| `sweptStaticCcdBinaryIterations` | `10` |
-| `jointIterations` | `0` |
-
-## Internal Pipeline (2D)
-
-Each `PhysicsWorld2D::Simulate` step runs:
-
-1. **Broad-phase** — `ColliderBakePipeline2D` bakes static `Collider2D` snapshots
-2. **Integrator** — gravity + velocity integration (`RigidbodyIntegrator2D`)
-3. **Contact resolver** — static and dynamic–dynamic contacts (`ContactResolver2D`)
-4. **Triggers** — `Physics2DTriggerOverlap` signals (`TriggerDispatcher2D`)
-5. **Joints** — distance/hinge (`JointSolver2D`)
-
-3D mirrors this with swept CCD (`SweptCcd3D`), impulse resolution, and substepping.
-
-## Collider Model
-
-Static and dynamic colliders are **object-oriented**:
-
-- `Collider2D` / `Collider3D` — baked static shapes (`UniquePtr<IShape>`)
-- `DynamicCollider2D` / `DynamicCollider3D` — runtime dynamic shapes
-- `DynamicBody2D` / `DynamicBody3D` — ECS handle bundles for queries and 3D simulation
-
-See `spark/physics/colliders/PhysicsColliders.hpp` and `spark/physics/simulation/PhysicsSimulation.hpp`.
-
-## Recommended Update Order
-
-```cpp
-void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
-    ReadInputAndSetForces();
+void OnUpdate(const FrameTiming& t, IEngineContext&) override {
+    Game::OnUpdate(t, context);
     physics.Simulate2D(GetWorld(), t);
-    PostPhysicsGameplay();
-    Game::OnUpdate(t, ctx);
+    physics.SimulateAll3D(GetWorld(), t);
 }
 ```
+
+### C\#
+
+```csharp
+private readonly PhysicsSubsystem _physics = new();
+
+public override void OnUpdate(FrameTiming t, IEngineContext ctx)
+{
+    base.OnUpdate(t, ctx);
+    _physics.Simulate2D(World, t);
+    _physics.SimulateAll3D(World, t);
+}
+```
+
+### Python
+
+```python
+def on_update(self, timing, context):
+    super().on_update(timing, context)
+    context.physics.simulate_2d(self.world, timing)
+    context.physics.simulate_all_3d(self.world, timing)
+```
+
+## Services on `PhysicsSubsystem`
+
+| Accessor | Role |
+|----------|------|
+| `GetWorld2D()` | 2D integrate + contacts |
+| `GetWorld3D()` | 3D rigid bodies + CCD |
+| `GetQueries2D()` | Overlap / raycast 2D |
+| `GetQueries3D()` | Overlap / raycast 3D |
+| `GetCharacterController3D()` | FPS motor |
+| `GetTriggerVolumes3D()` | 3D trigger dispatch |
+
+Include umbrella: `#include "spark/physics/Physics.hpp"`.
+
+## Broad-phase cell size
+
+### C++
+
+```cpp
+physics.SetBroadPhaseCellSize2D(8.0F);
+// 3D default cell 2 — PhysicsWorld3D::DefaultBroadPhaseCellSize
+```
+
+After large static edits, `GetQueries3D().RebuildStatics(world)` before raycasts.
+
+### C\#
+
+```csharp
+_physics.SetBroadPhaseCellSize2D(8f);
+```
+
+### Python
+
+```python
+context.physics.set_broadphase_cell_size_2d(8.0)
+```
+
+## 2D pipeline (one step)
+
+Broad-phase bake → integrate → contact resolve → triggers → joints.
+
+## Legacy APIs
+
+`SimulatePhysics2D` / `SimulatePhysics3D` are **deprecated** — recreate settings each call.
+
+## Settings snapshot
+
+| 2D field | Default |
+|----------|---------|
+| `gravityY` | -32 |
+| `maxFallSpeed` | 46 |
+| `jointIterations` | 4 |
+
+| 3D field | Default |
+|----------|---------|
+| `gravityY` | -24 |
+| `substeps` | 1 |
+| `resolveIterations` | 8 |
+
+3D contract for triggers/CCD/replay: [07-physics-3d-contract.md](07-physics-3d-contract.md).
 
 Next: [Rigidbody 2D](02-rigidbody-2d.md).

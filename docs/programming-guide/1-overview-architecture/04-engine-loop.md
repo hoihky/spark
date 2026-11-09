@@ -1,12 +1,12 @@
 # The Engine Loop
 
-## Class Design: `Engine`
+The loop in `Spark::Engine::Run()` (`spark/engine/Engine.cpp`) is fixed: **poll input → simulate → audio pump → render → present**. Games plug in through `IGame`; they must not call Vulkan directly.
 
-`Spark::Engine` (`spark/engine/Engine.hpp`) owns the application lifetime:
+## Class design: `Engine`
 
 | Responsibility | Detail |
 |----------------|--------|
-| Owns `IGame` | Unique pointer; destroyed on shutdown |
+| Owns `IGame` | Destroyed on shutdown |
 | Owns `VulkanRenderer` | Implements `IFramePresenter` |
 | Owns `SoundEngine` | Pumped each frame |
 | Drives loop | Poll → Update → Audio → Render → Present |
@@ -18,90 +18,150 @@ public:
     void Run();
 
     template<typename GameType, typename... Args>
-    static UniquePtr<IGame> NewGame(Args&&... args) {
-        return UniquePtr<IGame>(new GameType(Forward<Args>(args)...));
-    }
+    static UniquePtr<IGame> NewGame(Args&&... args);
 };
 ```
 
-## Frame Sequence
+## Frame sequence
 
 ```mermaid
 sequenceDiagram
     participant E as Engine
     participant G as IGame
     participant S as SoundEngine
+    participant U as UiSystem
     participant I as IImGuiLayer
     participant V as VulkanRenderer
     E->>E: PollEvents + BeginInputFrame
     E->>G: OnUpdate(timing, context)
     E->>S: PumpFrame(delta)
+    E->>U: ProcessUiCanvasesInput optional
     opt ImGui enabled
-        E->>I: BeginFrame (NewFrame)
+        E->>I: BeginFrame NewFrame
     end
     E->>G: OnRender(frame, context)
     opt ImGui enabled
-        E->>I: EndFrame (Render)
+        E->>I: EndFrame Render
     end
     E->>V: PresentFrame
 ```
 
-When Dear ImGui is enabled, build all `ImGui::Begin` / widget code inside **`OnRender`**, not `OnUpdate`. See [UI and Toolkits](08-ui-and-toolkits.md).
+**ImGui rule:** build all `ImGui::Begin` / widget code inside **`OnRender`**, not `OnUpdate`. Retained Spark UI uses `ProcessUiCanvasesInput` during update and `PaintUiCanvases` when assembling `SceneRenderParams` — see [UI and Toolkits](08-ui-and-toolkits.md).
 
-## FrameTiming
+## `FrameTiming`
 
 ```cpp
 struct FrameTiming {
-    float deltaTimeSeconds;   // Use for all motion
-    float totalTimeSeconds;   // Elapsed since start
+    float deltaTimeSeconds;   // Motion integration — always use this
+    float totalTimeSeconds;   // Since engine start
     std::uint64_t frameIndex;
 };
 ```
 
-## IEngineContext Facade
+Clamp gameplay logic if you need fixed step; physics showcase demos use `PhysicsSubsystem` internal sub-stepping.
 
-Games receive `IEngineContext` — a stable surface hiding engine internals:
+## `IEngineContext` facade
+
+Stable API hiding renderer/window implementation:
 
 ```cpp
 Window& GetWindow();
 IInput& GetInput();
 void GetFramebufferSize(int& outWidth, int& outHeight) const;
 void SetSceneRenderParams(const SceneRenderParams& params);
-IImGuiLayer* TryGetImGuiLayer() noexcept;  // null when SPARK_ENABLE_IMGUI=0
+IImGuiLayer* TryGetImGuiLayer() noexcept;
 SoundEngine* TryGetSoundEngine() noexcept;
 Scene* TryGetScene() noexcept;
 ```
 
-## Input Example
+Script hosts expose a subset through `EngineContext` (Python) or `IEngineContext` (C\#).
+
+## Concept: handle quit + debug keys
+
+### C++
 
 ```cpp
 void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
     IInput& in = context.GetInput();
     if (in.IsKeyPressedThisFrame(GLFW_KEY_ESCAPE))
         glfwSetWindowShouldClose(context.GetWindow().Handle(), GLFW_TRUE);
-    if (in.IsKeyPressedThisFrame(GLFW_KEY_F12))
-        ; // Engine handles screenshot internally when bound
+    Game::OnUpdate(timing, context);
 }
 ```
 
-## Screenshots
+### C\#
 
-**F12** captures the presented framebuffer to `SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png`. The engine handles the key in `Engine.cpp`; games do not need extra code.
+```csharp
+public override void OnUpdate(FrameTiming timing, IEngineContext context)
+{
+    if (context.GetInput().IsKeyPressedThisFrame(Key.Escape))
+        context.GetWindow().RequestClose();
+    base.OnUpdate(timing, context);
+}
+```
 
-Capture is asynchronous: the GPU copies the swapchain image on the next frame, and PNG write happens after the matching in-flight fence signals. A watermark is applied automatically. On macOS, use in-engine **F12** rather than system screen capture — MoltenVK windows often record as black with external tools.
+### Python
 
-**F9** toggles MP4 video recording (see root `README.md`).
+```python
+def on_update(self, timing: FrameTiming, context: EngineContext) -> None:
+    inp = context.get_input()
+    if inp.is_key_pressed_this_frame(Key.ESCAPE):
+        context.request_close()
+```
+
+## Concept: drive render from `OnRender`
+
+### C++
+
+```cpp
+void OnRender(IRenderFrame&, IEngineContext& context) override {
+    SubmitStandardLitSceneFromWorldWithCamera(
+        GetWorld(), context,
+        sunDir, sunColor, sunIntensity, ambient,
+        enableParticles, sceneTimeSeconds);
+}
+```
+
+### C\#
+
+```csharp
+public override void OnRender(IRenderFrame frame, IEngineContext context)
+{
+    SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+        World, context, SunDir, SunColor, Intensity, Ambient,
+        enableParticles: true, _sceneTime);
+}
+```
+
+### Python
+
+```python
+def on_render(self, context: EngineContext) -> None:
+    # Native host or template calls FillStandardLitSceneFromWorld after updates.
+    pass
+```
+
+Custom fly-camera games must build `viewProjection` manually (see [IGame and Game](05-igame-contract.md)).
+
+## Screenshots and recording
+
+- **F12** — async PNG to `SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png` (engine-internal binding).
+- **F9** — MP4 recording toggle (see root `README.md`).
+
+On macOS, prefer in-engine **F12** over system capture (MoltenVK windows often record black externally).
+
+## Recommended order inside `OnUpdate`
+
+1. Read input / write velocities.
+2. `Game::OnUpdate` (components, animation, sound cue prep).
+3. `PhysicsSubsystem::Simulate2D` / `SimulateAll3D`.
+4. Game rules (scoring, spawns) that depend on physics results.
+5. Optional: `SimulateGameAi`, `ProcessVfx`, async `world.PumpAssets()`.
+
+Rendering never mutates physics state — only reads transforms after simulation.
 
 ## Demo shell shortcuts
 
-When running **SparkDemo**, these keys work globally (help and FPS overlays start **hidden**):
-
-| Key | Action |
-|-----|--------|
-| **TAB** | Return to launcher menu |
-| **H** | Toggle demo help overlay (`DemoHelpHud`) |
-| **F3** | Toggle FPS overlay (top-right shell readout) |
-| **F9** | Toggle video recording |
-| **F12** | Save PNG screenshot |
+When running **SparkDemo**: **TAB** menu, **H** help, **F3** FPS. These are implemented in the shell, not in individual demos.
 
 Next: [IGame and Game](05-igame-contract.md).

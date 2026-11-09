@@ -1,66 +1,81 @@
 # Sound Engine
 
-## Class Design
+Audio is **software mixed** on the main thread: `Engine::Run` pumps `SoundEngine` after `OnUpdate`. Entity one-shots use `SoundCueComponent`; `ProcessSoundCues` runs in `Game::OnUpdate`.
+
+**Components:** [Sound cue](../7-game-components-usage/10-ai-audio-world.md#soundcuecomponent).
+
+## Architecture
 
 ```mermaid
 flowchart LR
     Cue[SoundCueComponent::Queue] --> Process[ProcessSoundCues]
     Process --> Mixer[SoundMixer]
-    Mixer --> Out[Platform Audio Output]
     BGM[SetBackgroundMusic] --> Mixer
-    Engine[Engine::PumpFrame] --> Mixer
+    Engine[PumpFrame] --> Mixer
 ```
 
-| Class | Role |
-|-------|------|
-| `SoundEngine` | Facade: startup, pump, BGM |
-| `SoundMixer` | Voice pool, mixing |
-| `SoundClip` | Decoded stereo float PCM |
-| `SoundCueComponent` | Per-entity one-shot queue |
+## Concept: background music
 
-## SoundEngine API
+### C++
 
 ```cpp
-class SoundEngine {
-public:
-    bool Startup();
-    void Shutdown() noexcept;
-    void PumpFrame(float deltaTimeSeconds) noexcept;
-    SoundMixer& GetMixer() noexcept;
-    void SetBackgroundMusic(const SharedPtr<SoundClip>& clip,
-                            float volume = 0.32F, bool loop = true) noexcept;
-    void ClearBackgroundMusic() noexcept;
-};
-```
-
-`Engine::Run` calls `PumpFrame` after `OnUpdate`. Games access audio via:
-
-```cpp
-SoundEngine* audio = context.TryGetSoundEngine();
-if (audio) {
-    audio->SetBackgroundMusic(ambienceClip, 0.25F, true);
+void OnAttach(IEngineContext& context) override {
+    if (SoundEngine* se = context.TryGetSoundEngine()) {
+        SharedPtr<SoundClip> bgm = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
+        if (bgm) se->SetBackgroundMusic(bgm, 0.32F, true);
+    }
 }
 ```
 
-## Loading and Playing (from `Platformer2DDemo`)
+### C\#
+
+```csharp
+if (context.TryGetSoundEngine() is { } se)
+    se.SetBackgroundMusic(bgmClip, 0.32f, loop: true);
+```
+
+### Python
+
+```python
+def on_attach(self, context):
+    se = context.try_get_sound_engine()
+    if se is not None:
+        se.set_background_music("assets/audio/time_for_adventure.wav", 0.32, loop=True)
+```
+
+## Concept: one-shot via cue component
+
+### C++
 
 ```cpp
-#include "spark/audio/SoundFileLoader.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 
-SharedPtr<SoundClip> jumpSfx = TryLoadSoundClipFromBundledAsset("assets/audio/jump.wav");
-if (!jumpSfx) {
-    jumpSfx = SoundClip::CreateToneBlip(520.0F, 0.07F, 0.45F);  // procedural fallback
-}
-
-// One-shot from gameplay:
-player->GetComponent<SoundCueComponent>()->Queue(jumpSfx, 0.9F);
-// ProcessSoundCues runs automatically in Game::OnUpdate
-
-// Background music in OnAttach:
-if (SoundEngine* se = context.TryGetSoundEngine()) {
-    se->SetBackgroundMusic(LoadPlatformerBgm(), 0.32F, true);
-}
+player->AddComponent<SoundCueComponent>()->Queue(jumpSfx, 0.9F);
+// Game::OnUpdate → ProcessSoundCues → ProcessAudioListeners → spatial pan
 ```
+
+Mount `AudioListenerComponent` on camera for 3D panning.
+
+### C\#
+
+```csharp
+player.AddSoundCue().Queue(jumpSfx, 0.9f);
+camera.AddAudioListener();
+```
+
+### Python
+
+```python
+player.get_or_add_default_component(ComponentKind.SoundCue)
+camera.get_or_add_default_component(ComponentKind.AudioListener)
+```
+
+## Procedural fallback
+
+When WAV missing, `Platformer2DDemo` uses `SoundClip::CreateToneBlip` — [Sound Clips](02-clips.md).
+
+## Ambient zones
+
+`AmbientZoneComponent` scales volume and low-pass when the listener is inside the box — [Ambient zones & music](05-ambient-zones-and-mix.md).
 
 Next: [Sound Clips](02-clips.md).

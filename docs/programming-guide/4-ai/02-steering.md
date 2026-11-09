@@ -1,86 +1,112 @@
 # Steering Behaviors
 
-## Class Design: `ISteeringBehavior` (2D)
+Steering computes **desired acceleration** from position/velocity and blackboard targets. `AiAgentComponent::SubsystemTick` applies the composed acceleration to the steering plane (XZ world or XY rigidbody).
+
+**Headers:** `spark/ai/steering/SteeringBehaviors.hpp` (2D XZ as Vector2), `SteeringBehaviors3D.hpp`.
+
+## Concept: weighted behaviors
+
+### C++
 
 ```cpp
-class ISteeringBehavior {
-public:
-    virtual Vector2 ComputeAcceleration(
-        const Vector2& positionXZ,
-        const Vector2& velocityXZ,
-        AiBlackboard& board) const = 0;
-};
-```
+#include "spark/ai/steering/SteeringBehaviors.hpp"
 
-Implementations in `spark/ai/steering/SteeringBehaviors.hpp`:
-
-- `SteeringSeek`, `SteeringFlee`, `SteeringArrive`, `SteeringWander`
-- `SteeringPursuit`, `SteeringEvade`, `SteeringSeparation`
-
-## `SteeringComposer`
-
-Weighted sum of behaviors:
-
-```cpp
+SteeringSeek seek{};
+SteeringSeparation separation{};
 SteeringComposer composer;
 composer.Add(&seek, 1.0F);
 composer.Add(&separation, 0.8F);
-Vector2 accel = composer.Compose(posXZ, velXZ, blackboard);
-```
 
-## 3D Steering
-
-`spark/ai/steering/SteeringBehaviors3D.hpp` provides `ISteeringBehavior3D` and `SteeringComposer3D`:
-
-- `SteeringSeek3D`, `SteeringFlee3D`, `SteeringObstacleAvoidance3D`
-- `SteeringFlocking3D` (separation + alignment + cohesion)
-
-## Blackboard Targets
-
-Store goal position in blackboard slots (indices are game-defined):
-
-```cpp
 AiBlackboard& bb = agent->GetBlackboard();
-bb.SetFloat(0, targetPos.x);  // slot 0 = target X
-bb.SetFloat(1, targetPos.z);  // slot 1 = target Z
+bb.SetFloat(0, targetPos.x);
+bb.SetFloat(1, targetPos.z);
+
+Vector2 accel = composer.Compose(posXZ, velXZ, bb);
 ```
 
-Behaviors read slots in `ComputeAcceleration`.
+### C\#
 
-## ECS Patrol Agent (from `SteeringShowcase3DDemo`)
+```csharp
+var bb = agent.GetBlackboard();
+bb.SetFloat(0, targetPos.X);
+bb.SetFloat(1, targetPos.Z);
+// Compose via game-specific steering helper or native tick
+```
 
-For nav-mesh patrol without manual steering math, combine `PatrolPathComponent` + `NavMeshAgentComponent` + `AiAgentComponent`:
+### Python
+
+```python
+# Steering composition runs inside AiAgentComponent native tick when enabled.
+agent.get_or_add_default_component(ComponentKind.AiAgent)
+```
+
+## Built-in 2D (XZ) behaviors
+
+| Class | Effect |
+|-------|--------|
+| `SteeringSeek` | Toward blackboard target |
+| `SteeringFlee` | Away from threat |
+| `SteeringArrive` | Slow near target |
+| `SteeringWander` | Random walk |
+| `SteeringPursuit` / `Evade` | Moving target |
+| `SteeringSeparation` | Crowd spacing |
+
+## 3D behaviors
+
+`SteeringSeek3D`, `SteeringFlee3D`, `SteeringObstacleAvoidance3D`, `SteeringFlocking3D` — see `SteeringShowcase3DDemo`.
+
+### C++
 
 ```cpp
-GameObject* pathGo = world.CreateGameObject();
-pathGo->AddComponent<TransformComponent>()->SetTranslation({-14.0F, 0.0F, -12.0F});
-PatrolPathComponent* patrol = pathGo->AddComponent<PatrolPathComponent>();
-patrol->SetLooping(true);
-const float leg = 5.0F;
-patrol->GetWaypoints().PushBack(Vector3::Zero);
-patrol->GetWaypoints().PushBack({leg, 0.0F, 0.0F});
-patrol->GetWaypoints().PushBack({leg, 0.0F, leg});
-patrol->GetWaypoints().PushBack({0.0F, 0.0F, leg});
+#include "spark/ai/steering/SteeringBehaviors3D.hpp"
 
-GameObject* agentGo = world.CreateGameObject();
-agentGo->GetComponent<TransformComponent>()->SetTranslation({-14.0F, 0.55F, -12.0F});
-NavMeshAgentComponent* nav = agentGo->AddComponent<NavMeshAgentComponent>();
-nav->SetPatrolPathObject(pathGo);
-AiAgentComponent* agent = agentGo->AddComponent<AiAgentComponent>();
-agent->SetMaxSpeed(2.8F);
-agent->SetSteeringPlane(AiSteeringPlane::XzWorld);
-
-// Each frame:
-SimulateGameAi(world, timing, context);
+SteeringObstacleAvoidance3D avoid{};
+SteeringComposer3D composer3d;
+composer3d.Add(&avoid, 1.2F);
 ```
 
-## Apply to Rigidbody
+### C\#
+
+```csharp
+// Same pattern in C++-ported demo games under spark-sharp templates.
+```
+
+### Python
+
+```python
+pass  # enable AiAgent + native steering in 3D demos
+```
+
+## Concept: blackboard slots
+
+Slots are **game-defined indices** — document your layout in one header per enemy type.
+
+### C++
 
 ```cpp
-Vector2 vel = rb->GetVelocity();
-vel += accel * timing.deltaTimeSeconds;
-vel = vel.ClampLength(agent->GetMaxSpeed());
-rb->SetVelocity(vel);
+namespace BbSlots {
+    constexpr int TargetX = 0;
+    constexpr int TargetZ = 1;
+    constexpr int ThreatX = 2;
+}
+bb.SetFloat(BbSlots::TargetX, playerX);
 ```
+
+### C\#
+
+```csharp
+const int TargetX = 0;
+bb.SetFloat(TargetX, playerX);
+```
+
+### Python
+
+```python
+# Set blackboard via generated ai_agent_* methods when bound.
+```
+
+## ECS patrol without nav mesh
+
+Manual waypoint advance in FSM or demo code; nav mesh path sets polyline on `AiAgent` automatically — [Pathfinding](05-pathfinding.md).
 
 Next: [Finite State Machines](03-fsm.md).

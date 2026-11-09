@@ -1,67 +1,75 @@
 # Finite State Machines
 
-## Class Design: `FsmStateMachine`
+FSM logic lives in `FsmStateMachine` (`spark/ai/fsm/`) attached to `AiAgentComponent` when `SetFsmEnabled(true)`.
+
+**Also used for animation (non-AI):** `Sprite2DCharacterAnimFsmComponent`, `Character3DAnimFsmComponent` — separate from AI FSM but same priority rules ([Animation guide](../7-game-components-usage/08-animation.md)).
+
+## Concept: attach FSM to agent
+
+### C++
 
 ```cpp
-struct FsmTransition {
-    std::uint32_t fromState;
-    std::uint32_t eventId;
-    std::uint32_t toState;
-};
-
-class FsmStateMachine {
-public:
-    void AddState(UniquePtr<IFsmState> state);
-    void AddTransition(const FsmTransition& rule);
-    void SetInitialState(std::uint32_t stateId) noexcept;
-    bool SendEvent(std::uint32_t eventId, AiBlackboard& board);
-    void Tick(const FrameTiming& timing, AiBlackboard& board);
-};
-```
-
-## Implement a State
-
-```cpp
-class PatrolState final : public IFsmState {
-public:
-  explicit PatrolState(std::uint32_t id) : stateId(id) {}
-  std::uint32_t GetId() const noexcept override { return stateId; }
-
-  void OnEnter(AiBlackboard& board) override { (void)board; }
-  void OnExit(AiBlackboard& board) override { (void)board; }
-  void Tick(const FrameTiming& timing, AiBlackboard& board) override {
-    (void)timing; (void)board;
-    // wander, play anim, etc.
-  }
-private:
-  std::uint32_t stateId;
-};
-```
-
-## Wire FSM to Agent
-
-```cpp
-enum : std::uint32_t { kIdle = 1, kChase = 2, kAttack = 3 };
-enum : std::uint32_t { kEvtSeePlayer = 100, kEvtLostPlayer = 101 };
+#include "spark/ai/fsm/FsmStateMachine.hpp"
 
 auto fsm = MakeUnique<FsmStateMachine>();
-fsm->AddState(MakeUnique<IdleState>(kIdle));
-fsm->AddState(MakeUnique<ChaseState>(kChase));
-fsm->AddTransition({kIdle, kEvtSeePlayer, kChase});
-fsm->AddTransition({kChase, kEvtLostPlayer, kIdle});
-fsm->SetInitialState(kIdle);
+fsm->AddState("Idle", /* onEnter, onTick, onExit */);
+fsm->AddState("Chase", /* ... */);
+fsm->SetInitialState("Idle");
 
+auto* agent = enemy->AddComponent<AiAgentComponent>();
 agent->SetFsmEnabled(true);
 agent->SetFsm(MoveTemp(fsm));
 ```
 
-## Events from Gameplay
+Tick occurs inside `SimulateGameAi` → `AiAgentComponent::SubsystemTick`.
 
-```cpp
-if (distanceToPlayer < 12.0F)
-    agent->TryGetFsm()->SendEvent(kEvtSeePlayer, agent->GetBlackboard());
+### C\#
+
+```csharp
+var agent = enemy.AddAiAgent();
+agent.SetFsmEnabled(true);
+// FSM graph often built in C++ demo; C# games mirror states in managed layer or native module.
 ```
 
-`AiAgentComponent::SubsystemTick` calls `fsm->Tick` when `fsmEnabled`.
+### Python
+
+```python
+enemy.get_or_add_default_component(ComponentKind.AiAgent)
+```
+
+## Concept: transition on perception
+
+Wire `PerceptionSensorComponent` results into blackboard; FSM reads slots each tick.
+
+### C++
+
+```cpp
+void OnTick(AiBlackboard& bb, float dt) {
+    if (bb.GetFloat(SlotSeenPlayer) > 0.5F)
+        RequestTransition("Chase");
+}
+```
+
+### C\#
+
+```csharp
+if (bb.GetFloat(seenSlot) > 0.5f) { /* transition */ }
+```
+
+### Python
+
+```python
+# FSM tick is native; script games use simpler GridNav or direct velocity.
+```
+
+## Platformer enemy FSM
+
+`Platformer2DDemo` uses lightweight chase/idle on `AiAgentComponent` with steering plane `XyRigidbody2D` — inspect `platformer2d/` spawn helpers.
+
+## Debugging
+
+- Disable GOAP when prototyping: `agent->SetGoapEnabled(false)`
+- Log state name each transition
+- SparkDemo **Steering** showcase visualizes velocity vectors
 
 Next: [GOAP](04-goap.md).

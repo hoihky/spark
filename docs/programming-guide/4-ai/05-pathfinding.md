@@ -1,182 +1,115 @@
 # Pathfinding
 
-## Class Design: `GridPathfinder`
+Spark provides **grid pathfinding** for 2D tilemaps and **nav mesh** agents for 3D. Both feed movement targets into `AiAgentComponent` or `GridPathFollower2DComponent`.
+
+**Deep dive:** [Tilemap gameplay API](../8-2d-game/09-2d-gameplay-api-guide.md), [Tilemap components](../7-game-components-usage/03-tilemap.md).
+
+## 2D grid path (`GridPathfinder`)
+
+Bake walkability with `TilemapGameplayGridComponent`, then query A* on the grid frame.
+
+### C++
 
 ```cpp
-#include "spark/ai/path/GridPathfinder.hpp"
+#include "spark/scene/tilemap/GridPathfinder.hpp"
 
-class IGridWalkability {
-public:
-    virtual bool IsWalkable(int cellX, int cellY) const = 0;
-};
+const TilemapGridFrame& frame = grid->GetGridFrame();
+GridPathfinder::Cell start = frame.WorldXYToCell(playerPos);
+GridPathfinder::Cell goal = frame.WorldXYToCell(clickWorld);
 
-class GridBitmapWalkability final : public IGridWalkability { /* ... */ };
-
-struct Cell { int x = 0; int y = 0; };
-
-static bool FindPath4(const IGridWalkability& grid, const Cell& start,
-                      const Cell& goal, Array<Cell>& outCells);
-```
-
-4-connected A* on a grid abstraction. **Start and goal must both be walkable** (or resolved to the nearest walkable cell by your caller) or `FindPath4` returns false.
-
----
-
-## Tilemap gameplay grid (data source)
-
-Prefer baking from `TilemapComponent` instead of hand-maintaining a bitmap:
-
-```cpp
-#include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
-#include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
-
-auto* gridComp = mapGo->AddComponent<TilemapGameplayGridComponent>();
-gridComp->SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
-gridComp->SetAutoRebake(true);
-gridComp->RebakeIfNeeded(*mapGo);
-
-const TilemapGameplayGrid& walk = gridComp->GetGrid();
-const TilemapGridFrame& frame = gridComp->GetGridFrame();
-
-GridPathfinder::Cell start = frame.WorldXYToCell(playerWorldXY);
-GridPathfinder::Cell goal{targetX, targetY};
-Array<GridPathfinder::Cell> cells;
-if (GridPathfinder::FindPath4(gridComp->GetWalkability(), start, goal, cells)) {
-    for (std::size_t i = 0; i < cells.GetSize(); ++i) {
-        Vector2 wp = frame.CellCenterToWorldXY(cells[i]);
-        // move agent toward wp
-    }
+Array<GridPathfinder::Cell> path;
+if (GridPathfinder::FindPath4(frame, start, goal, path)) {
+    agent2d->SetPathFromCells(frame, path);
 }
 ```
 
-Walkability honors per-layer `contributeGameplayGrid` and per-tile `TileDefinition` flags (see [Tilemaps](../2-2d-graphics/03-tilemaps.md)).
+### C\#
 
-One-shot bake without the component:
-
-```cpp
-TilemapGameplayGrid grid;
-tilemap->BakeGameplayGrid(grid, TilemapGameplayWalkRule::DefinitionAndFlags);
+```csharp
+var frame = grid.GetGridFrame();
+var path = new List<GridCell>();
+if (GridPathfinder.FindPath4(frame, start, goal, path))
+    follower.SetPathFromCells(frame, path);
 ```
 
----
+### Python
 
-## ECS: 2D grid navigation components (recommended)
-
-For gameplay code, use the dedicated 2D nav stack instead of manual `FindPath4` loops:
-
-| Component | Purpose |
-|-----------|---------|
-| `TilemapGameplayGridComponent` | Walkability source + `TilemapGridFrame` (on tilemap object) |
-| `GridNavAgent2DComponent` | Replans A* path each tick / interval |
-| `GridPathFollower2DComponent` | Moves owner along agent waypoints |
-| `GridNavTarget2DComponent` | Marks a goal entity for `TargetObject` mode |
-
-### Click-to-move setup
-
-```cpp
-#include "spark/ecs/components/ai/GridNavAgent2DComponent.hpp"
-#include "spark/ecs/components/ai/GridPathFollower2DComponent.hpp"
-#include "spark/ai/NavigationSubsystem.hpp"
-
-boardGo->AddComponent<TilemapGameplayGridComponent>()->SetAutoRebake(true);
-
-playerGo->AddComponent<GridNavAgent2DComponent>();
-auto* nav = playerGo->GetComponent<GridNavAgent2DComponent>();
-nav->SetGridSourceObject(boardGo);
-nav->SetGoalMode(GridNavGoalMode2D::WorldPosition);
-nav->SetSyncToAiAgent(false);
-
-playerGo->AddComponent<GridPathFollower2DComponent>()->SetMaxSpeed(6.5F);
-
-// On mouse pick (world XY from screen):
-nav->SetGoalWorldPosition(pickedWorldXY);
-nav->RequestRepath();
-
-// Each frame:
-ProcessGridNavAgents2D(world, timing.deltaTimeSeconds);
-world.UpdateGameObjects(timing, context);  // GridPathFollower2D OnUpdate @ priority 125
+```python
+# grid_nav_agent_2d + pathfinder when interop exposes GridPathfinder helpers.
 ```
 
-### Chase target on grid
+## `GridNavAgent2DComponent` + `GridPathFollower2D`
+
+**Follower priority 125** — after grid agent planning, before animators.
+
+### C++
 
 ```cpp
-playerGo->AddComponent<GridNavTarget2DComponent>();
-enemyGo->AddComponent<AiAgentComponent>()->SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);
-
-auto* chase = enemyGo->AddComponent<GridNavAgent2DComponent>();
-chase->SetGridSourceObject(boardGo);
-chase->SetGoalMode(GridNavGoalMode2D::TargetObject);
-chase->SetGoalTarget(playerGo);
-chase->SetRepathIntervalSeconds(0.2F);
-chase->SetRepathEveryFrame(false);
-
-SimulateGameAi(world, timing, context);  // includes ProcessGridNavAgents2D + AiAgent steering
+player->AddComponent<GridNavAgent2DComponent>();
+auto* follower = player->AddComponent<GridPathFollower2DComponent>();
+follower->SetDestinationCell({12, 8});
 ```
 
-`GridNavAgent2DComponent` snaps start/goal to the nearest walkable cell when blocked. `GridNavTarget2DComponent::SetSnapToWalkableCell` controls goal snapping.
+Each frame: `ProcessGridNavAgents2D` inside `SimulateGameAi`.
 
-### Motion without `GridPathFollower2D`
+### C\#
 
-Demos often call helpers from `NavigationSubsystem.hpp` directly on `Rigidbody2D`:
+```csharp
+player.AddGridNavAgent2D();
+player.GetOrAddComponent<GridPathFollower2DComponent>()?.SetDestinationCell(cell);
+```
+
+### Python
+
+```python
+player.get_or_add_default_component(ComponentKind.GridNavAgent2D)
+player.get_or_add_default_component(ComponentKind.GridPathFollower2D)
+```
+
+## 3D nav mesh
+
+### C++
 
 ```cpp
-#include "spark/ai/NavigationSubsystem.hpp"
-
-ProcessGridNavAgents2D(world, deltaTime);
-ApplyGridNavAgent2DRigidbodyMotion(nav, transform, rigidbody, maxSpeed, arriveRadius, deltaTime);
-// or ApplyGridNavAgent2DSteeringMotion for smoother acceleration
+NavMeshAgentComponent* nav = guard->AddComponent<NavMeshAgentComponent>();
+nav->SetDestination({10.0F, 0.0F, 5.0F});
+// ProcessNavMeshAgents in SimulateGameAi fills AiAgent path polyline
 ```
 
-### Patrol + chase (P0 product path)
+### C\#
 
-| NPC | Goal mode | Notes |
-|-----|-----------|-------|
-| Patrol | `GridCell` | Cycle waypoints; assign goal + `RequestRepath` **before** `ProcessGridNavAgents2D` |
-| Chaser | `TargetObject` | `SetGoalTarget(player)`; repath interval ~0.35s |
+```csharp
+guard.AddNavMeshAgent().SetDestination(dest);
+```
 
-See `GameFlow2DProductPathDemo` and [2D gameplay API — grid navigation](../7-2d-game/09-2d-gameplay-api-guide.md#7-grid-navigation-player-and-npcs).
+### Python
 
----
+```python
+guard.get_or_add_default_component(ComponentKind.NavMeshAgent)
+```
 
-## Manual `GridBitmapWalkability`
+## Screen pick → grid cell
+
+Use `TerrainScreenToWorldRay` + `WorldXYToCell` — same convention as [Tilemaps](../2-2d-graphics/03-tilemaps.md#screen--cell-picking-2d).
+
+### C++
 
 ```cpp
-GridBitmapWalkability walk;
-walk.Resize(mapW, mapH);
-for (std::int32_t y = 0; y < mapH; ++y) {
-    for (std::int32_t x = 0; x < mapW; ++x) {
-        walk.SetBlocked(x, y, /* blocked if wall */);
-    }
-}
+GridPathfinder::Cell cell = grid->GetGridFrame().WorldXYToCell(world.xy);
 ```
 
-## World polyline helpers
+### C\#
 
-```cpp
-Array<Vector2> poly;
-TilemapGameplayGrid::CellsToWorldPolylineXY(
-    cells, gridOriginXY, cellSize, poly);
-
-// Legacy XZ naming (same math, Y stored in Vector2::y):
-GridPathfinder::CellsToWorldPolyline(cells, gridOriginXZ, cellSize, outWorldXZ);
+```csharp
+var cell = grid.GetGridFrame().WorldXYToCell(world);
 ```
 
----
+### Python
 
-## NavMesh agents (3D / XZ patrol)
+```python
+cell = grid.get_grid_frame().world_xy_to_cell(world_x, world_y)
+```
 
-**NavMeshAgentComponent** + **PatrolPathComponent** — `ProcessNavMeshAgents` fills the polyline before 3D steering runs. The built-in `UseGridPathfinding()` mode uses a flat `GridBitmapWalkability` on the **XZ** plane (blackboard slots 0/1 for goal). For **tilemap XY** games, use **GridNavAgent2DComponent** instead.
+**Demo:** `TilemapShowcase2DDemo` (#19), `GameFlow2DProductPathDemo` (F).
 
-See [Game Component Reference](../1-overview-architecture/07-game-component-reference.md#gridnavagent2dcomponent--gridpathfollower2dcomponent--gridnavtarget2dcomponent).
-
----
-
-## Follow polyline manually
-
-Advance `pathIndex` when within `arriveRadius` of each waypoint; steer toward `poly[pathIndex]`. `GridPathFollower2DComponent` encapsulates this for transform and rigidbody modes.
-
-## Fuzzy logic (optional)
-
-`FuzzyAdvisoryModule` (`spark/ai/fuzzy/FuzzyLogic.hpp`) blends continuous inputs (health, distance) into action weights — enable via `agent->SetFuzzyEnabled(true)`.
-
-Part 4 complete → **Part 5**: [Physics Overview](../5-physics/01-physics-overview.md).
+Next: [Perception, nav, and blackboard](06-perception-nav-and-blackboard.md).

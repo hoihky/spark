@@ -1,58 +1,78 @@
-# Goal-Oriented Action Planning
+# GOAP
 
-## Class Design: `GoapActionSpec`
+Goal-Oriented Action Planning (`spark/ai/goap/`) plans sequences of actions to satisfy world/goal bitmasks on `AiAgentComponent`.
 
-Symbolic actions with bitmask preconditions and effects:
+Enable with `SetGoapEnabled(true)` and register actions with preconditions/effects.
 
-```cpp
-struct GoapActionSpec {
-    std::uint64_t preMask, preValue;       // required world bits
-    std::uint64_t effectSetMask, effectClearMask;
-    float cost = 1.0F;
-    std::uint32_t nameId = 0;
-};
-```
+## Concept: world and goal bits
 
-World state is a `uint64_t` bitfield — semantics are **game-defined**.
-
-## Planner API
+### C++
 
 ```cpp
-#include "spark/ai/goap/GoapPlanner.hpp"
-
-std::uint64_t world = agent->GetGoapWorldBits();
-std::uint64_t goalMask = (1ull << 3);  // bit 3 must be set
-std::uint64_t goalValue = (1ull << 3);
-
-Array<std::uint32_t> plan;
-bool ok = GoapPlanner::Plan(world, goalMask, goalValue,
-                            agent->GetGoapActions(), plan);
-```
-
-## Register Actions
-
-```cpp
+AiAgentComponent* agent = npc->AddComponent<AiAgentComponent>();
 agent->SetGoapEnabled(true);
 
-GoapActionSpec pickup{};
-pickup.preMask  = (1ull << 0);  // must be "near item"
-pickup.preValue = (1ull << 0);
-pickup.effectSetMask = (1ull << 1);  // has item
-pickup.cost = 2.0F;
-agent->GetGoapActions().PushBack(pickup);
+std::uint32_t worldBits = 0;
+worldBits |= (1u << 0);  // has_key
+agent->SetGoapWorldBits(worldBits);
 
-GoapActionSpec deliver{};
-deliver.preMask = (1ull << 1);
-deliver.preValue = (1ull << 1);
-deliver.effectSetMask = (1ull << 3);  // quest complete
-deliver.cost = 1.0F;
-agent->GetGoapActions().PushBack(deliver);
-
-agent->SetGoapGoal((1ull << 3), (1ull << 3));
+std::uint32_t goalMask = 0;
+goalMask |= (1u << 2);  // door_open
+agent->SetGoapGoalMask(goalMask);
+agent->SetGoapGoalValue(goalMask);
 ```
 
-GOAP plans **what** to do; combine with pathfinding/steering for **how** to move.
+### C\#
 
-See `GoapDemo` in `SparkDemo`.
+```csharp
+var agent = npc.GetComponent<AiAgentComponent>();
+agent?.SetGoapEnabled(true);
+agent?.SetGoapWorldBits(worldBits);
+agent?.SetGoapGoalMask(goalMask);
+```
+
+### Python
+
+```python
+agent = npc.get_or_add_default_component(ComponentKind.AiAgent)
+# agent.set_goap_enabled(True) via generated binding
+```
+
+## Concept: register actions
+
+### C++
+
+```cpp
+GoapAction openDoor{};
+openDoor.name = Utf8String("OpenDoor");
+openDoor.cost = 2.0F;
+openDoor.preconditions = /* bits required */;
+openDoor.effects = /* bits set */;
+agent->GetGoapActions().PushBack(openDoor);
+```
+
+Planning runs in `SubsystemTick` when enabled and FSM allows planner control.
+
+### C\#
+
+```csharp
+// Actions defined in native gameplay module or ported from C++ samples.
+```
+
+### Python
+
+```python
+# GOAP surface exposed via catalog methods on AiAgentComponent when generated.
+```
+
+## When to use GOAP vs FSM
+
+| Approach | Best for |
+|----------|----------|
+| FSM | Combat phases, simple patrol/chase |
+| GOAP | RPG item use, multi-step quests |
+| Grid nav only | Tilemap ARPG (`GridNavAgent2D`) |
+
+Demos with GOAP bits: inspect AI test scenes in `tests/ai/` and agent setup in advanced 3D demos.
 
 Next: [Pathfinding](05-pathfinding.md).

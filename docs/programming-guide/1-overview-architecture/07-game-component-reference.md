@@ -14,6 +14,123 @@ Complete reference for all **120** built-in `GameComponent` types in Spark (`Com
 
 ---
 
+## How to use this reference
+
+Each built-in component has:
+
+- A **header** under `include/spark/ecs/components/` (C++ authoritative API).
+- A **`ComponentKind`** constant used by `GetComponent<T>()`.
+- Optional **script mirrors** when listed in spark-sharp `component-script-catalog.json`.
+
+### Discovering APIs in C\# and Python
+
+| Step | C\# | Python |
+|------|-----|--------|
+| Find component | `Spark.Bindings` → `Components/FromInterop/*.g.cs` | `spark/components/` wrappers |
+| Add on object | `gameObject.Add<SpriteComponent>()` or `AddSprite(...)` shorthand in `CppMirrors.g.cs` | `go.add_sprite(...)` etc. |
+| Method surface | Catalog JSON → generated partial classes | Same catalog → `SparkInterop` exports |
+
+Regenerate after engine changes: `spark-sharp/tools/generate-csharp-bindings.sh` with `SPARK_ENGINE_ROOT` set.
+
+### Concept: attach and query
+
+### C++
+
+```cpp
+#include "spark/ecs/Ecs.hpp"
+
+GameObject* go = world.CreateGameObject();
+auto* tr = go->AddComponent<TransformComponent>();
+auto* health = go->AddComponent<HealthComponent>();
+health->SetMaxHealth(100.0F);
+
+if (HealthComponent* h = go->GetComponent<HealthComponent>()) {
+    h->ApplyDamage(10.0F);
+}
+```
+
+### C\#
+
+```csharp
+var go = world.CreateGameObject("Enemy");
+go.GetOrAddTransform();
+var health = go.AddHealth();
+health.SetMaxHealth(100f);
+go.GetComponent<HealthComponent>()?.ApplyDamage(10f);
+```
+
+### Python
+
+```python
+go = world.create_game_object("Enemy")
+go.get_or_add_transform()
+health = go.add_health()
+health.set_max_health(100.0)
+go.get_component_health().apply_damage(10.0)
+```
+
+### Concept: iteration without a query language
+
+### C++
+
+```cpp
+world.ForEachActiveGameObject([&](GameObject* o) {
+    if (o == nullptr) return;
+    if (PickupComponent* p = o->GetComponent<PickupComponent>()) {
+        (void)p;
+    }
+});
+```
+
+### C\#
+
+```csharp
+foreach (var go in world.EnumerateActiveGameObjects())
+{
+    var pickup = go.GetComponent<PickupComponent>();
+    if (pickup is not null) { }
+}
+```
+
+### Python
+
+```python
+for go in world.enumerate_active_game_objects():
+    pickup = go.try_get_component_pickup()
+    if pickup is not None:
+        ...
+```
+
+### Folder → concern map
+
+| If you are building… | Start in this folder |
+|----------------------|----------------------|
+| 2D platformer | `physics/`, `input/`, `gameplay/`, `camera/` |
+| Top-down grid game | `tilemap/`, `ai/`, `gameplay/` |
+| 3D action | `rendering/`, `physics/`, `animation/`, `lighting/` |
+| Tool/UI mode | `ui/` + [UI and Toolkits](08-ui-and-toolkits.md) |
+
+### Component usage guides (Part 7)
+
+Detailed **C++ / C\# / Python** examples — see **[Part 7: Game Components Usage](../7-game-components-usage/00-introduction.md)**:
+
+| Guide | Chapter |
+|-------|---------|
+| 2D rendering | [01-2d-rendering.md](../7-game-components-usage/01-2d-rendering.md) |
+| 3D rendering | [02-3d-rendering.md](../7-game-components-usage/02-3d-rendering.md) |
+| Tilemap | [03-tilemap.md](../7-game-components-usage/03-tilemap.md) |
+| Lighting | [04-lighting.md](../7-game-components-usage/04-lighting.md) |
+| Camera | [05-camera.md](../7-game-components-usage/05-camera.md) |
+| Physics 2D | [06-physics-2d.md](../7-game-components-usage/06-physics-2d.md) |
+| Physics 3D | [07-physics-3d.md](../7-game-components-usage/07-physics-3d.md) |
+| Animation | [08-animation.md](../7-game-components-usage/08-animation.md) |
+| Input & gameplay | [09-input-and-gameplay.md](../7-game-components-usage/09-input-and-gameplay.md) |
+| AI, audio, world | [10-ai-audio-world.md](../7-game-components-usage/10-ai-audio-world.md) |
+
+The sections below document **every** built-in component alphabetically by folder (field-level API). Cross-links: [2D gameplay API](../8-2d-game/09-2d-gameplay-api-guide.md), [2D components handbook](../8-2d-game/10-2d-components-handbook.md).
+
+---
+
 ## Quick index
 
 | Folder | Components |
@@ -1432,7 +1549,7 @@ view->SetWorldCapture(mapCenter, orthoHalfExtent);
 view->SetScreenRect(0.82F, 0.02F, 0.16F, 0.16F);
 ```
 
-Minimap RTs should use `RenderTextureFormat::Rgba8Unorm` when blitting to the UI atlas. See [2D runtime limits](../7-2d-game/08-scene2d-runtime-limits.md).
+Minimap RTs should use `RenderTextureFormat::Rgba8Unorm` when blitting to the UI atlas. See [2D runtime limits](../8-2d-game/08-scene2d-runtime-limits.md).
 
 ### `GameStateComponent`
 

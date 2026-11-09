@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,101 +1087,184 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>04 2d animation</h1>
           </header>
           <div class="doc-body"><h1 id="2d-animation">2D Animation</h1>
-<h2 id="sprite-sheet-playback">Sprite Sheet Playback</h2>
-<p>Manual frame stepping on <code>SpriteComponent</code>:</p>
-<pre><code class="language-cpp">struct AnimFrame { Vector4 uv; float duration; };
-Array&lt;AnimFrame&gt; runLoop;
+<p>2D animation in Spark spans <strong>UV-based sprite sheets</strong>, <strong><code>SpriteAnimatorComponent</code></strong> clips, <strong>FSM-driven character states</strong>, <strong>animation events</strong>, <strong>2D hitboxes</strong>, and juice on <code>TransformComponent</code>. Update priorities matter: FSM (100) → animator (200) → event receiver (215) → camera rig (300).</p>
+<h2 id="pipeline">Pipeline</h2>
+<pre class="mermaid">flowchart TB
+  FSM[Sprite2DCharacterAnimFsmComponent]
+  SA[SpriteAnimatorComponent]
+  SP[SpriteComponent]
+  FSM --&gt; SA
+  SA --&gt; SP
+  ER[SpriteAnimationEventReceiverComponent] --&gt; VFX[SpriteAnimationEventVfxComponent]
+</pre>
+<h2 id="concept-manual-sprite-sheet-stepping">Concept: manual sprite sheet stepping</h2>
+<p>Use for prototypes or cutscenes without clip assets.</p>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">AnimFrame</span> { Vector4 uv; <span class="hljs-type">float</span> duration; };
 
-void TickSpriteAnim(const FrameTiming&amp; timing, SpriteComponent* sprite) {
-    static float accum = 0.0F;
-    static int frame = 0;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">TickSpriteAnim</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, SpriteComponent* sprite,
+                    <span class="hljs-type">const</span> Array&lt;AnimFrame&gt;&amp; loop, <span class="hljs-type">int</span>&amp; frame, <span class="hljs-type">float</span>&amp; accum)</span> </span>{
     accum += timing.deltaTimeSeconds;
-    if (accum &gt;= runLoop[frame].duration) {
-        accum = 0.0F;
-        frame = (frame + 1) % static_cast&lt;int&gt;(runLoop.GetSize());
-        sprite-&gt;SetUvRect(runLoop[frame].uv);
+    <span class="hljs-keyword">if</span> (accum &gt;= loop[frame].duration) {
+        accum = <span class="hljs-number">0.0F</span>;
+        frame = (frame + <span class="hljs-number">1</span>) % <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">int</span>&gt;(loop.<span class="hljs-built_in">GetSize</span>());
+        sprite-&gt;<span class="hljs-built_in">SetUvRect</span>(loop[frame].uv);
     }
 }
 </code></pre>
-<h2 id="spriteanimatorcomponent"><code>SpriteAnimatorComponent</code></h2>
-<p>Grid-atlas clips with crossfade support (<code>spark/ecs/components/animation/SpriteAnimatorComponent.hpp</code>). <strong>Update priority 200</strong> — runs after FSM drivers (priority 100).</p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;SpriteComponent&gt;(texture);
-auto* sa = go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
-sa-&gt;SetUniformGrid(4, 4);
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">TickSpriteAnim</span>(<span class="hljs-params"><span class="hljs-built_in">float</span> dt, SpriteComponent sprite, AnimFrame[] loop, <span class="hljs-keyword">ref</span> <span class="hljs-built_in">int</span> frame, <span class="hljs-keyword">ref</span> <span class="hljs-built_in">float</span> accum</span>)</span> {
+    accum += dt;
+    <span class="hljs-keyword">if</span> (accum &gt;= loop[frame].Duration) {
+        accum = <span class="hljs-number">0f</span>;
+        frame = (frame + <span class="hljs-number">1</span>) % loop.Length;
+        sprite.SetUvRect(loop[frame].Uv);
+    }
+}
+</code></pre>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">def</span> <span class="hljs-title function_">tick_sprite_anim</span>(<span class="hljs-params">dt: <span class="hljs-built_in">float</span>, sprite, loop: <span class="hljs-built_in">list</span>, frame: <span class="hljs-built_in">list</span>, accum: <span class="hljs-built_in">list</span></span>) -&gt; <span class="hljs-literal">None</span>:
+    accum[<span class="hljs-number">0</span>] += dt
+    <span class="hljs-keyword">if</span> accum[<span class="hljs-number">0</span>] &gt;= loop[frame[<span class="hljs-number">0</span>]].duration:
+        accum[<span class="hljs-number">0</span>] = <span class="hljs-number">0.0</span>
+        frame[<span class="hljs-number">0</span>] = (frame[<span class="hljs-number">0</span>] + <span class="hljs-number">1</span>) % <span class="hljs-built_in">len</span>(loop)
+        sprite.set_uv_rect(loop[frame[<span class="hljs-number">0</span>]].uv)
+</code></pre>
+<h2 id="concept-spriteanimatorcomponent">Concept: <code>SpriteAnimatorComponent</code></h2>
+<p>Grid-atlas clips with optional crossfade (<code>spark/ecs/components/animation/SpriteAnimatorComponent.hpp</code>).</p>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(texture, tint, fullUv, sortOrder);
+SpriteAnimatorComponent* sa = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimatorComponent&gt;();
+sa-&gt;<span class="hljs-built_in">SetUniformGrid</span>(<span class="hljs-number">4</span>, <span class="hljs-number">4</span>);
 SpriteAnimationClip run{};
-run.firstFrame = 4;
-run.frameCount = 8;
-run.framesPerSecond = 10.0F;
-run.loop = true;
-sa-&gt;AddClip(run);
-sa-&gt;SetClipIndex(0);
+run.firstFrame = <span class="hljs-number">4</span>;
+run.frameCount = <span class="hljs-number">8</span>;
+run.framesPerSecond = <span class="hljs-number">10.0F</span>;
+run.loop = <span class="hljs-literal">true</span>;
+sa-&gt;<span class="hljs-built_in">AddClip</span>(run);
+sa-&gt;<span class="hljs-built_in">SetClipIndex</span>(<span class="hljs-number">0</span>);
 </code></pre>
-<h2 id="sprite2dcharacteranimfsmcomponent"><code>Sprite2DCharacterAnimFsmComponent</code></h2>
-<p>Higher-level locomotion + combat overlay. Add <strong>before</strong> <code>SpriteAnimatorComponent</code> on the same object (priority 100).</p>
-<pre><code class="language-cpp">go-&gt;AddComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
-go-&gt;AddComponent&lt;SpriteAnimatorComponent&gt;();
-auto* fsm = go-&gt;GetComponent&lt;Sprite2DCharacterAnimFsmComponent&gt;();
-fsm-&gt;RequestAttack();
-fsm-&gt;RequestHurt();
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">go.AddSprite(texKey, tint, uv, sortOrder);
+<span class="hljs-keyword">var</span> sa = go.AddSpriteAnimator();
+sa.SetUniformGrid(<span class="hljs-number">4</span>, <span class="hljs-number">4</span>);
+<span class="hljs-keyword">var</span> run = <span class="hljs-keyword">new</span> SpriteAnimationClip {
+    FirstFrame = <span class="hljs-number">4</span>, FrameCount = <span class="hljs-number">8</span>, FramesPerSecond = <span class="hljs-number">10f</span>, Loop = <span class="hljs-literal">true</span>
+};
+sa.AddClip(run);
+sa.SetClipIndex(<span class="hljs-number">0</span>);
 </code></pre>
-<p>Uses <code>Rigidbody2D</code> velocity for locomotion when present; can read <code>AiAgentComponent</code> blackboard for combat commands.</p>
-<h2 id="sprite-animation-events">Sprite Animation Events</h2>
-<h3 id="spriteanimationeventreceivercomponent"><code>SpriteAnimationEventReceiverComponent</code></h3>
-<p><strong>Priority:</strong> 215 (after <code>SpriteAnimatorComponent</code> at 200). Markers use <strong>normalized clip time</strong> (0..1).</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventReceiverComponent.hpp&quot;
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">go.add_sprite(tex_key, tint, uv, sort_order=<span class="hljs-number">100</span>)
+anim = go.add_sprite_animator()
+anim.set_uniform_grid(<span class="hljs-number">4</span>, <span class="hljs-number">4</span>)
+anim.add_clip(first_frame=<span class="hljs-number">4</span>, frame_count=<span class="hljs-number">8</span>, fps=<span class="hljs-number">10.0</span>, loop=<span class="hljs-literal">True</span>)
+anim.set_clip_index(<span class="hljs-number">0</span>)
+</code></pre>
+<h2 id="concept-character-locomotion-fsm">Concept: character locomotion FSM</h2>
+<p>Add <strong>before</strong> <code>SpriteAnimatorComponent</code> on the same object (priority 100 vs 200).</p>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimatorComponent&gt;();
+Sprite2DCharacterAnimFsmComponent* fsm = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;Sprite2DCharacterAnimFsmComponent&gt;();
+fsm-&gt;<span class="hljs-built_in">RequestAttack</span>();
+fsm-&gt;<span class="hljs-built_in">RequestHurt</span>();
+</code></pre>
+<p>Reads <code>Rigidbody2D</code> velocity when present; can consume <code>AiAgentComponent</code> combat commands.</p>
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">go.AddSprite2DCharacterAnimFsm();
+go.AddSpriteAnimator();
+go.GetComponent&lt;Sprite2DCharacterAnimFsm&gt;()?.RequestAttack();
+</code></pre>
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">go.add_sprite_2d_character_anim_fsm()
+go.add_sprite_animator()
+go.get_component_sprite_2d_character_anim_fsm().request_attack()
+</code></pre>
+<h2 id="concept-animation-events-footsteps-vfx">Concept: animation events (footsteps, VFX)</h2>
+<p>Markers use <strong>normalized clip time</strong> 0..1. Fires <code>SignalId::SpriteAnimationEvent</code>.</p>
+<h3 id="c_6">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SpriteAnimationEventReceiverComponent* recv = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimationEventReceiverComponent&gt;();
+recv-&gt;<span class="hljs-built_in">AddMarker</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0.25F</span>, <span class="hljs-string">&quot;Footstep&quot;</span>);
+recv-&gt;<span class="hljs-built_in">AddMarker</span>(<span class="hljs-number">1</span>, <span class="hljs-number">0.75F</span>, <span class="hljs-string">&quot;Footstep&quot;</span>);
 
-auto* recv = go-&gt;AddComponent&lt;SpriteAnimationEventReceiverComponent&gt;();
-recv-&gt;AddMarker(1, 0.25F, &quot;Footstep&quot;);  // run clip, 25%
-recv-&gt;AddMarker(1, 0.75F, &quot;Footstep&quot;);
+SpriteAnimationEventVfxComponent* vfx = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteAnimationEventVfxComponent&gt;();
+vfx-&gt;<span class="hljs-built_in">AddBinding</span>(<span class="hljs-string">&quot;Footstep&quot;</span>, <span class="hljs-string">&quot;footstep_puff_2d&quot;</span>);
+vfx-&gt;<span class="hljs-built_in">SetWorldOffset</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">-0.35F</span>, <span class="hljs-number">0.0F</span>});
 </code></pre>
-<p>Fires <code>SignalId::SpriteAnimationEvent</code> to sibling components (<code>ptr</code> = event name, <code>a</code> = clip index).</p>
-<h3 id="spriteanimationeventvfxcomponent"><code>SpriteAnimationEventVfxComponent</code></h3>
-<p>Listens for <code>SpriteAnimationEvent</code> and queues VFX from <code>VfxLibrary</code> by asset key:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/SpriteAnimationEventVfxComponent.hpp&quot;
-
-auto* vfx = go-&gt;AddComponent&lt;SpriteAnimationEventVfxComponent&gt;();
-vfx-&gt;AddBinding(&quot;Footstep&quot;, &quot;dust_puff&quot;);
-vfx-&gt;SetWorldOffset({0.0F, -0.35F, 0.0F});
+<h3 id="c_7">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> recv = go.AddSpriteAnimationEventReceiver();
+recv.AddMarker(clipIndex: <span class="hljs-number">1</span>, normalizedTime: <span class="hljs-number">0.25f</span>, eventName: <span class="hljs-string">&quot;Footstep&quot;</span>);
+<span class="hljs-keyword">var</span> vfx = go.AddSpriteAnimationEventVfx();
+vfx.AddBinding(<span class="hljs-string">&quot;Footstep&quot;</span>, <span class="hljs-string">&quot;footstep_puff_2d&quot;</span>);
 </code></pre>
-<p>Pair receiver + VFX on the same <code>GameObject</code> as <code>SpriteAnimatorComponent</code>.</p>
-<h2 id="animationhitbox2dcomponent"><code>AnimationHitbox2DComponent</code></h2>
-<p>Frame-synced melee / hurtbox during sprite clips. Active when local frame ∈ <code>[start, end]</code>:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/AnimationHitbox2DComponent.hpp&quot;
-
-auto* hit = go-&gt;AddComponent&lt;AnimationHitbox2DComponent&gt;();
-hit-&gt;SetClipIndex(2U);
-hit-&gt;SetStartLocalFrame(0U);
-hit-&gt;SetEndLocalFrame(0U);
-hit-&gt;SetShape(AnimationHitbox2DShape::Arc);
-hit-&gt;SetRadius(1.0F);
+<h3 id="python_3">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">recv = go.add_sprite_animation_event_receiver()
+recv.add_marker(<span class="hljs-number">1</span>, <span class="hljs-number">0.25</span>, <span class="hljs-string">&quot;Footstep&quot;</span>)
+vfx = go.add_sprite_animation_event_vfx()
+vfx.add_binding(<span class="hljs-string">&quot;Footstep&quot;</span>, <span class="hljs-string">&quot;footstep_puff_2d&quot;</span>)
 </code></pre>
-<p>See <a href="../7-2d-game/04-player-controller.html">Player Controller</a> and <a href="../5-physics/04-queries.html">Queries</a>.</p>
-<h2 id="animationeventreceivercomponent-3d"><code>AnimationEventReceiverComponent</code> (3D)</h2>
-<p>For skeletal clips, use markers on the same object as <code>AnimatorComponent</code>:</p>
-<pre><code class="language-cpp">auto* recv = go-&gt;AddComponent&lt;AnimationEventReceiverComponent&gt;();
-recv-&gt;AddMarker(0, 0.5F, &quot;Footstep&quot;);
+<h2 id="concept-animationhitbox2dcomponent">Concept: <code>AnimationHitbox2DComponent</code></h2>
+<p>Frame-synced melee / hurtbox while a clip plays.</p>
+<h3 id="c_8">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">AnimationHitbox2DComponent* hit = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimationHitbox2DComponent&gt;();
+hit-&gt;<span class="hljs-built_in">SetClipIndex</span>(<span class="hljs-number">2U</span>);
+hit-&gt;<span class="hljs-built_in">SetStartLocalFrame</span>(<span class="hljs-number">0U</span>);
+hit-&gt;<span class="hljs-built_in">SetEndLocalFrame</span>(<span class="hljs-number">0U</span>);
+hit-&gt;<span class="hljs-built_in">SetShape</span>(AnimationHitbox2DShape::Arc);
+hit-&gt;<span class="hljs-built_in">SetRadius</span>(<span class="hljs-number">1.0F</span>);
 </code></pre>
-<p>Fires <code>SignalId::AnimationEvent</code> to sibling components when the animator crosses each marker.</p>
-<p>See <a href="../1-overview-architecture/07-game-component-reference.html#animation">Game Component Reference</a>.</p>
-<h2 id="flip-without-extra-textures">Flip Without Extra Textures</h2>
-<pre><code class="language-cpp">bool facingLeft = velocity.x &lt; 0.0F;
-tr-&gt;SetScale({facingLeft ? -baseScaleX : baseScaleX, baseScaleY, 1.0F});
+<h3 id="c_9">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> hit = go.AddAnimationHitbox2D();
+hit.SetClipIndex(<span class="hljs-number">2</span>);
+hit.SetShape(AnimationHitbox2DShape.Arc);
+hit.SetRadius(<span class="hljs-number">1f</span>);
 </code></pre>
-<h2 id="textoverlaycomponent-hud"><code>TextOverlayComponent</code> HUD</h2>
-<p>Screen-space text without full GUI:</p>
-<pre><code class="language-cpp">auto* hud = world.CreateGameObject();
-auto* text = hud-&gt;AddComponent&lt;TextOverlayComponent&gt;();
-text-&gt;SetScreenPosition(12.0F, 12.0F);
-text-&gt;SetFontSizePixels(20.0F);
-text-&gt;SetColor({0.94F, 0.97F, 1.0F});
-text-&gt;SetText(Utf8String(&quot;Score: 0&quot;));
+<h3 id="python_4">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">hit = go.add_animation_hitbox_2d()
+hit.set_clip_index(<span class="hljs-number">2</span>)
+hit.set_shape_arc()
+hit.set_radius(<span class="hljs-number">1.0</span>)
+</code></pre>
+<h2 id="concept-flip-facing">Concept: flip facing</h2>
+<h3 id="c_10">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-type">const</span> <span class="hljs-type">bool</span> facingLeft = velocity.x &lt; <span class="hljs-number">0.0F</span>;
+tr-&gt;<span class="hljs-built_in">SetScale</span>({facingLeft ? -baseScaleX : baseScaleX, baseScaleY, <span class="hljs-number">1.0F</span>});
+</code></pre>
+<h3 id="c_11">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">tr.SetScale(<span class="hljs-keyword">new</span> Vector3(facingLeft ? -baseScaleX : baseScaleX, baseScaleY, <span class="hljs-number">1f</span>));
+</code></pre>
+<h3 id="python_5">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">go.get_or_add_transform().set_scale(Vector3(-<span class="hljs-built_in">abs</span>(sx) <span class="hljs-keyword">if</span> left <span class="hljs-keyword">else</span> <span class="hljs-built_in">abs</span>(sx), sy, <span class="hljs-number">1.0</span>))
+</code></pre>
+<h2 id="concept-squash-and-stretch">Concept: squash and stretch</h2>
+<h3 id="c_12">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-type">const</span> <span class="hljs-type">float</span> vy = playerRb-&gt;<span class="hljs-built_in">GetVelocity</span>().y;
+<span class="hljs-type">const</span> <span class="hljs-type">float</span> stretch = <span class="hljs-number">1.0F</span> + std::<span class="hljs-built_in">clamp</span>(vy * <span class="hljs-number">0.02F</span>, <span class="hljs-number">-0.15F</span>, <span class="hljs-number">0.15F</span>);
+playerTr-&gt;<span class="hljs-built_in">SetScale</span>({baseScaleX / stretch, baseScaleY * stretch, <span class="hljs-number">1.0F</span>});
+</code></pre>
+<h3 id="c_13">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-built_in">float</span> stretch = <span class="hljs-number">1f</span> + Math.Clamp(vy * <span class="hljs-number">0.02f</span>, <span class="hljs-number">-0.15f</span>, <span class="hljs-number">0.15f</span>);
+tr.SetScale(<span class="hljs-keyword">new</span> Vector3(baseScaleX / stretch, baseScaleY * stretch, <span class="hljs-number">1f</span>));
+</code></pre>
+<h3 id="python_6">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">stretch = <span class="hljs-number">1.0</span> + <span class="hljs-built_in">max</span>(-<span class="hljs-number">0.15</span>, <span class="hljs-built_in">min</span>(<span class="hljs-number">0.15</span>, vy * <span class="hljs-number">0.02</span>))
+tr.set_scale(Vector3(base_sx / stretch, base_sy * stretch, <span class="hljs-number">1.0</span>))
+</code></pre>
+<h2 id="hud-textoverlaycomponent">HUD: <code>TextOverlayComponent</code></h2>
+<p>Screen-space text without a full GUI canvas.</p>
+<h3 id="c_14">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">TextOverlayComponent* text = hud-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TextOverlayComponent&gt;();
+text-&gt;<span class="hljs-built_in">SetScreenPosition</span>(<span class="hljs-number">12.0F</span>, <span class="hljs-number">12.0F</span>);
+text-&gt;<span class="hljs-built_in">SetFontSizePixels</span>(<span class="hljs-number">20.0F</span>);
+text-&gt;<span class="hljs-built_in">SetColor</span>({<span class="hljs-number">0.94F</span>, <span class="hljs-number">0.97F</span>, <span class="hljs-number">1.0F</span>});
+text-&gt;<span class="hljs-built_in">SetText</span>(<span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;Score: 0&quot;</span>));
 </code></pre>
 <p>Requires <code>world.SetUiFont(font)</code> — see platformer <code>MountUiFontIfNeeded</code>.</p>
-<h2 id="squash-and-stretch-juice">Squash and Stretch (Juice)</h2>
-<pre><code class="language-cpp">const float vy = playerRb-&gt;GetVelocity().y;
-const float stretch = 1.0F + std::clamp(vy * 0.02F, -0.15F, 0.15F);
-playerTr-&gt;SetScale({baseScaleX / stretch, baseScaleY * stretch, 1.0F});
-</code></pre>
+<h3 id="c-python">C# / Python</h3>
+<p>Bind when your scripting layer exposes <code>TextOverlayComponent</code>; otherwise mount UI font in native bootstrap and drive scores via mirrored components.</p>
+<h2 id="3d-note">3D note</h2>
+<p>For skeletal clips use <code>AnimatorComponent</code> + <code>AnimationEventReceiverComponent</code> on 3D characters (<a href="../1-overview-architecture/07-game-component-reference.html#animation">Game Component Reference</a>).</p>
 <p>Next: <a href="05-2d-lighting.html">2D Lighting</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

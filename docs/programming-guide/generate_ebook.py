@@ -1,9 +1,29 @@
 #!/usr/bin/env python3
-"""Generate comprehensive Spark Game Engine programming guide."""
+"""Generate / refresh Spark programming guide markdown (legacy embedded chapters).
+
+Prefer hand-edited .md on disk for Parts 1–6 and 8–9. Part 7 component guides
+are synced from disk via chapter_body_from_md. After any run, HTML is rebuilt
+via rebuild-site.py.
+
+For HTML only: ./build-site.sh  (or python3 rebuild-site.py)
+"""
 
 from pathlib import Path
 
 ROOT = Path(__file__).parent
+
+# Keep in sync with rebuild-site.py PART_ORDER (sidebar + HTML rebuild).
+PART_ORDER = [
+    "1-overview-architecture",
+    "2-2d-graphics",
+    "3-3d-graphics",
+    "4-ai",
+    "5-physics",
+    "6-sound",
+    "7-game-components-usage",
+    "8-2d-game",
+    "9-3d-game",
+]
 
 
 def chapter_body_from_md(rel: str) -> str:
@@ -27,7 +47,9 @@ def chapter(folder: str, fname: str, title: str, order: int, body: str) -> None:
     write(f"{folder}/{fname}", fm + "\n" + body)
 
 
-write("index.md", """---
+# Hand-edited index.md on disk wins; only seed if missing.
+if not (ROOT / "index.md").is_file():
+    write("index.md", """---
 title: Spark Game Engine Programming Guide
 order: 0
 ---
@@ -48,18 +70,19 @@ A comprehensive developer guide for building **2D and 3D games** with Spark — 
 - Vectors, matrices, basic rendering concepts
 - Spark repository cloned locally
 
-## Eight Parts (47 Chapters)
+## Nine Parts
 
 | Part | Folder | Focus |
 |------|--------|-------|
-| **1** | `1-overview-architecture/` | Engine loop, interfaces, ECS, **component reference**, **UI toolkits**, render contract |
+| **1** | `1-overview-architecture/` | Engine loop, ECS, component reference, gameplay kit, UI |
 | **2** | `2-2d-graphics/` | Sprites, cameras, tilemaps, 2D pipeline |
 | **3** | `3-3d-graphics/` | Meshes, PBR, lighting, skinning, terrain |
 | **4** | `4-ai/` | Blackboard, FSM, GOAP, pathfinding, steering |
 | **5** | `5-physics/` | 2D/3D solvers, colliders, queries, layers |
 | **6** | `6-sound/` | Mixer, clips, cues, background music |
-| **7** | `7-2d-game/` | Full platformer walkthrough |
-| **8** | `8-3d-game/` | Full FPS arena walkthrough |
+| **7** | `7-game-components-usage/` | Game components usage (C++ / C\\# / Python) |
+| **8** | `8-2d-game/` | Full platformer walkthrough |
+| **9** | `9-3d-game/` | Full FPS arena walkthrough |
 
 ## Repository Map
 
@@ -76,8 +99,10 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
 ./build/SparkDemo
 ```
 
-Start with [Introduction](overview-architecture/01-introduction.html).
+Start with [Introduction](1-overview-architecture/01-introduction.html).
 """)
+else:
+    print("Keeping existing index.md")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PART 1 — Overview & Architecture
@@ -2040,17 +2065,42 @@ se->ClearBackgroundMusic();
 
 `SoundMixer` multiplexes one-shots — rapid `Queue` calls overlap without cutting off prior sounds (within voice pool limits).
 
-Part 6 complete → **Part 7**: [Platformer Introduction](7-2d-game/01-platformer-intro.html).
+Part 6 complete → **Part 7**: [Game components usage](7-game-components-usage/00-introduction.html) · **Part 8**: [Platformer Introduction](8-2d-game/01-platformer-intro.html).
 """)
 
 print("Part 6 done")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PART 7 — Complete 2D Game
+# PART 7 — Game Components Usage (on-disk chapters are canonical)
 # ─────────────────────────────────────────────────────────────────────────────
-P7 = "7-2d-game"
+P7_COMPONENTS = "7-game-components-usage"
+_COMPONENT_GUIDE_CHAPTERS = [
+    ("00-introduction.md", "Game Components Usage", 0),
+    ("01-2d-rendering.md", "2D Rendering Components", 1),
+    ("02-3d-rendering.md", "3D Rendering Components", 2),
+    ("03-tilemap.md", "Tilemap Components", 3),
+    ("04-lighting.md", "Lighting Components", 4),
+    ("05-camera.md", "Camera Components", 5),
+    ("06-physics-2d.md", "Physics 2D Components", 6),
+    ("07-physics-3d.md", "Physics 3D Components", 7),
+    ("08-animation.md", "Animation Components", 8),
+    ("09-input-and-gameplay.md", "Input and Gameplay Components", 9),
+    ("10-ai-audio-world.md", "AI, Audio, and World Components", 10),
+]
+for _fname, _title, _order in _COMPONENT_GUIDE_CHAPTERS:
+    _rel = f"{P7_COMPONENTS}/{_fname}"
+    if (ROOT / _rel).is_file():
+        chapter(P7_COMPONENTS, _fname, _title, _order, chapter_body_from_md(_rel))
+    else:
+        print(f"Skip missing component guide: {_rel}")
+print("Part 7 component guides synced from disk")
 
-chapter(P7, "01-platformer-intro.md", "Platformer Introduction", 1, """
+# ─────────────────────────────────────────────────────────────────────────────
+# PART 8 — Complete 2D Game
+# ─────────────────────────────────────────────────────────────────────────────
+P8_2D = "8-2d-game"
+
+chapter(P8_2D, "01-platformer-intro.md", "Platformer Introduction", 1, """
 # Platformer Introduction
 
 We walk through `samples/platformer2d_game_template/` — a complete side-scroller with:
@@ -2097,10 +2147,10 @@ constexpr float kGroundTopY = -1.0F;
 constexpr float kGoalMinX = 15.5F;
 ```
 
-Next: [Project Setup](7-2d-game/02-project-setup.html).
+Next: [Project Setup](8-2d-game/02-project-setup.html).
 """)
 
-chapter(P7, "02-project-setup.md", "Project Setup", 2, """
+chapter(P8_2D, "02-project-setup.md", "Project Setup", 2, """
 # Project Setup
 
 ## Copy Template
@@ -2142,10 +2192,10 @@ void OnDetach() override {
 }
 ```
 
-Next: [Building the Level](7-2d-game/03-level-design.html).
+Next: [Building the Level](8-2d-game/03-level-design.html).
 """)
 
-chapter(P7, "03-level-design.md", "Level Design", 3, """
+chapter(P8_2D, "03-level-design.md", "Level Design", 3, """
 # Building the Level
 
 ## `AddSolidPlatform` Helper
@@ -2188,10 +2238,10 @@ AddSolidPlatform(world, roots, tileTex, 11, 2.4, 16.5, 3.05, 22, ...);
 
 Z offsets separate draw order among platforms.
 
-Next: [Player Controller](7-2d-game/04-player-controller.html).
+Next: [Player Controller](8-2d-game/04-player-controller.html).
 """)
 
-chapter(P7, "04-player-controller.md", "Player Controller", 4, """
+chapter(P8_2D, "04-player-controller.md", "Player Controller", 4, """
 # Player Controller
 
 ## Spawn Player
@@ -2243,10 +2293,10 @@ if (!goalReached && p.x >= kGoalMinX)
     goalReached = true;
 ```
 
-Next: [Camera and HUD](7-2d-game/05-camera-hud.html).
+Next: [Camera and HUD](8-2d-game/05-camera-hud.html).
 """)
 
-chapter(P7, "05-camera-hud.md", "Camera and HUD", 5, """
+chapter(P8_2D, "05-camera-hud.md", "Camera and HUD", 5, """
 # Camera and HUD
 
 ## Camera Follow
@@ -2286,10 +2336,10 @@ SubmitStandardLitSceneFromWorld(
     SceneSpriteSortMode::SortOrderThenWorldY);
 ```
 
-Next: [Polish and Ship](7-2d-game/06-polish.html).
+Next: [Polish and Ship](8-2d-game/06-polish.html).
 """)
 
-chapter(P7, "06-polish.md", "Polish and Ship", 6, """
+chapter(P8_2D, "06-polish.md", "Polish and Ship", 6, """
 # Polish and Ship
 
 ## Sound
@@ -2348,17 +2398,17 @@ Swap `CreateCheckerboard` for `Texture2D::TryLoadFromFile("assets/tiles.png", ..
 - [ ] Test on target DPI / resolution
 - [ ] Verify `SPARK_BUILD_ASSETS_DIR` paths
 
-Part 7 complete → **Part 8**: [FPS Introduction](8-3d-game/01-fps-intro.html).
+Part 8 complete → **Part 9**: [FPS Introduction](9-3d-game/01-fps-intro.html).
 """)
 
 print("Part 7 done")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PART 8 — Complete 3D Game
+# PART 9 — Complete 3D Game
 # ─────────────────────────────────────────────────────────────────────────────
-P8 = "8-3d-game"
+P9_FPS = "9-3d-game"
 
-chapter(P8, "01-fps-intro.md", "FPS Introduction", 1, """
+chapter(P9_FPS, "01-fps-intro.md", "FPS Introduction", 1, """
 # FPS Introduction
 
 `samples/fps_game_template/` demonstrates a minimal **first-person arena**:
@@ -2387,10 +2437,10 @@ struct TracerBullet {
 };
 ```
 
-Next: [Project Setup](8-3d-game/02-project-setup.html).
+Next: [Project Setup](9-3d-game/02-project-setup.html).
 """)
 
-chapter(P8, "02-project-setup.md", "Project Setup", 2, """
+chapter(P9_FPS, "02-project-setup.md", "Project Setup", 2, """
 # Project Setup
 
 ```bash
@@ -2423,10 +2473,10 @@ world.RegisterMesh(mesh, "unique/key");
 go->AddComponent<MeshComponent>(mesh, SceneMeshSlot::Custom, albedo);
 ```
 
-Next: [Arena and Targets](8-3d-game/03-arena.html).
+Next: [Arena and Targets](9-3d-game/03-arena.html).
 """)
 
-chapter(P8, "03-arena.md", "Arena and Targets", 3, """
+chapter(P9_FPS, "03-arena.md", "Arena and Targets", 3, """
 # Arena and Targets
 
 ## Ground
@@ -2467,10 +2517,10 @@ GetScene().SetSpatialPartitionKind(ScenePartitionKind::BoundingVolumeHierarchy);
 
 Improves frustum culling for many static meshes.
 
-Next: [Shooting and Tracers](8-3d-game/04-shooting.html).
+Next: [Shooting and Tracers](9-3d-game/04-shooting.html).
 """)
 
-chapter(P8, "04-shooting.md", "Shooting and Tracers", 4, """
+chapter(P9_FPS, "04-shooting.md", "Shooting and Tracers", 4, """
 # Shooting and Tracers
 
 ## Camera Update
@@ -2528,10 +2578,10 @@ void SpawnTracerBullet(const Vector3& origin, const Vector3& dirUnit) {
 }
 ```
 
-Next: [Rendering the 3D Scene](8-3d-game/05-rendering.html).
+Next: [Rendering the 3D Scene](9-3d-game/05-rendering.html).
 """)
 
-chapter(P8, "05-rendering.md", "Rendering the 3D Scene", 5, """
+chapter(P9_FPS, "05-rendering.md", "Rendering the 3D Scene", 5, """
 # Rendering the 3D Scene
 
 ## Full OnRender
@@ -2571,10 +2621,10 @@ hudText->SetText(Utf8String(std::format(
 
 `TextOverlayComponent` is collected by `FillStandardLitSceneFromWorld`.
 
-Next: [Extending the FPS](8-3d-game/06-extending.html).
+Next: [Extending the FPS](9-3d-game/06-extending.html).
 """)
 
-chapter(P8, "06-extending.md", "Extending the FPS", 6, """
+chapter(P9_FPS, "06-extending.md", "Extending the FPS", 6, """
 # Extending the FPS
 
 ## Weapons System
@@ -2626,8 +2676,19 @@ Spark exposes `SparkInterop` and generated `Spark.Bindings` from the **spark-sha
 
 ---
 
-**Congratulations!** You have completed all eight parts. Explore `SparkDemo` demos and `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md` for advanced topics: scene editor, deferred paths, open-world roadmap.
+**Congratulations!** You have completed all nine parts. Explore `SparkDemo` demos and `docs/ARCHITECTURE_AND_DEVELOPER_GUIDE.md` for advanced topics: scene editor, deferred paths, open-world roadmap.
 """)
 
-print("Part 8 done")
-print("Ebook generation complete — 45 chapters + index")
+print("Part 9 done")
+
+import subprocess
+import sys
+
+_rebuild = ROOT / "rebuild-site.py"
+if _rebuild.is_file():
+    subprocess.run([sys.executable, str(_rebuild)], check=True)
+    print("HTML site rebuilt (rebuild-site.py)")
+else:
+    print("Skip HTML rebuild — rebuild-site.py not found", file=sys.stderr)
+
+print("Ebook generation complete — see programming-guide/site/")

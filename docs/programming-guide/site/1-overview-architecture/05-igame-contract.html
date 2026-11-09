@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,15 +1087,14 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>05 igame contract</h1>
           </header>
           <div class="doc-body"><h1 id="igame-and-game">IGame and Game</h1>
-<h2 id="class-design-igame">Class Design: <code>IGame</code></h2>
-<p><code>IGame</code> is the <strong>application contract</strong>. <code>Engine</code> calls four virtual hooks:</p>
-<pre><code class="language-cpp">class IGame {
-public:
-    virtual ~IGame() = default;
-    virtual void OnAttach(IEngineContext&amp; context) = 0;
-    virtual void OnDetach() = 0;
-    virtual void OnUpdate(const FrameTiming&amp; timing, IEngineContext&amp; context) = 0;
-    virtual void OnRender(IRenderFrame&amp; frame, IEngineContext&amp; context) = 0;
+<p><code>IGame</code> is the <strong>only</strong> extension point the engine calls each frame. <code>Game</code> adds a default <code>Scene</code> + <code>GameWorld</code> and a stock <code>OnUpdate</code> that ticks components and sound cues — you override hooks but rarely reimplement the world container.</p>
+<h2 id="contract-igame">Contract: <code>IGame</code></h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">IGame</span> {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">OnAttach</span><span class="hljs-params">(IEngineContext&amp; context)</span> </span>= <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">OnDetach</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span> </span>= <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp; frame, IEngineContext&amp; context)</span> </span>= <span class="hljs-number">0</span>;
 };
 </code></pre>
 <table>
@@ -816,157 +1107,184 @@ public:
 <tbody>
 <tr>
 <td><code>OnAttach</code></td>
-<td>Spawn entities, load assets, configure window</td>
+<td>Spawn entities, load assets, capture cursor, set gravity</td>
 </tr>
 <tr>
 <td><code>OnUpdate</code></td>
-<td>Input, physics, AI, gameplay rules</td>
+<td>Input, physics, AI, rules (after <code>Game::OnUpdate</code> if using base)</td>
 </tr>
 <tr>
 <td><code>OnRender</code></td>
-<td>Build <code>SceneRenderParams</code>, submit to context</td>
+<td>Submit scene (+ GUI paint + ImGui)</td>
 </tr>
 <tr>
 <td><code>OnDetach</code></td>
-<td>Destroy tracked objects, release handles</td>
+<td>Destroy tracked roots, release subscriptions</td>
 </tr>
 </tbody>
 </table>
-<h2 id="class-design-game">Class Design: <code>Game</code></h2>
-<p><code>Spark::Game</code> provides a convenience base:</p>
-<pre><code class="language-cpp">class Game : public IGame {
-public:
-    Scene&amp; GetScene() noexcept;
-    GameWorld&amp; GetWorld() noexcept;
+<h2 id="base-class-game">Base class: <code>Game</code></h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Game</span> : <span class="hljs-keyword">public</span> IGame {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function">Scene&amp; <span class="hljs-title">GetScene</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span>;
+    <span class="hljs-function">GameWorld&amp; <span class="hljs-title">GetWorld</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span>;
 
-    void OnUpdate(const FrameTiming&amp; timing, IEngineContext&amp; context) override;
-    // Default: world.UpdateGameObjects + ProcessSoundCues
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span> <span class="hljs-keyword">override</span></span>;
+    <span class="hljs-comment">// Default: world.UpdateGameObjects + ProcessSoundCues</span>
 };
 </code></pre>
-<p><code>Game</code> owns a <code>Scene</code> façade over its internal <code>GameWorld</code>.</p>
-<h2 id="full-minimal-3d-example">Full Minimal 3D Example</h2>
-<pre><code class="language-cpp">#include &quot;spark/engine/Game.hpp&quot;
-#include &quot;spark/scene/submit/SceneSubmit.hpp&quot;
-#include &quot;spark/scene/camera/FlyCamera.hpp&quot;
-#include &quot;spark/ecs/components/rendering/MeshComponent.hpp&quot;
-#include &quot;spark/ecs/components/rendering/MaterialComponent.hpp&quot;
-#include &quot;spark/ecs/components/core/TransformComponent.hpp&quot;
-
-class LitCubeGame final : public Spark::Game {
-    Spark::FlyCamera camera{};
-
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        auto&amp; world = GetWorld();
-        auto cube = Spark::MakeShared&lt;Spark::Mesh&gt;(Spark::Mesh::CreateUnitCube());
-        world.RegisterMesh(cube, &quot;demo/cube&quot;);
-
-        auto* go = world.CreateGameObject();
-        go-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-        go-&gt;AddComponent&lt;Spark::MeshComponent&gt;(cube, Spark::SceneMeshSlot::Custom, Spark::Vector3{0.7F, 0.3F, 0.2F});
-        go-&gt;AddComponent&lt;Spark::MaterialComponent&gt;(nullptr)-&gt;SetRoughness(0.4F);
+<h2 id="concept-minimal-lit-3d-game">Concept: minimal lit 3D game</h2>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">LitCubeGame</span> <span class="hljs-keyword">final</span> : <span class="hljs-keyword">public</span> Spark::Game {
+    FlyCamera camera{};
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnAttach</span><span class="hljs-params">(IEngineContext&amp;)</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-keyword">auto</span>&amp; world = <span class="hljs-built_in">GetWorld</span>();
+        <span class="hljs-keyword">auto</span> cube = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
+        world.<span class="hljs-built_in">RegisterMesh</span>(cube, <span class="hljs-string">&quot;demo/cube&quot;</span>);
+        GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
+        go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+        go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3{<span class="hljs-number">0.7F</span>, <span class="hljs-number">0.3F</span>, <span class="hljs-number">0.2F</span>});
+        go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(<span class="hljs-literal">nullptr</span>)-&gt;<span class="hljs-built_in">SetRoughness</span>(<span class="hljs-number">0.4F</span>);
     }
 
-    void OnUpdate(const FrameTiming&amp; t, Spark::IEngineContext&amp; ctx) override {
-        camera.ProcessMovement(ctx.GetInput(), t.deltaTimeSeconds);
-        Game::OnUpdate(t, ctx);
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; t, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
+        camera.<span class="hljs-built_in">ProcessMovement</span>(ctx.<span class="hljs-built_in">GetInput</span>(), t.deltaTimeSeconds);
+        Game::<span class="hljs-built_in">OnUpdate</span>(t, ctx);
     }
 
-    void OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; ctx) override {
-        int w = 1, h = 1;
-        ctx.GetFramebufferSize(w, h);
-        const float aspect = static_cast&lt;float&gt;(w) / static_cast&lt;float&gt;(h);
-        const Spark::Matrix4 proj = Spark::Matrix4::PerspectiveVulkan(
-            Spark::DegreesToRadians(70.0F), aspect, 0.1F, 200.0F);
-        const Spark::Matrix4 vp = proj * camera.ViewMatrix();
-        Spark::Vector3 pr{}, pu{};
-        camera.BillboardBasis(pr, pu);
-
-        Spark::SubmitStandardLitSceneFromWorld(
-            GetWorld(), ctx, vp, camera.position,
-            Spark::Vector3{0.3F, -1.0F, 0.2F}.Normalized(),
-            Spark::Vector3{1.0F, 0.98F, 0.95F}, 1.2F,
-            Spark::Vector3{0.15F, 0.17F, 0.22F},
-            false, pr, pu, 0.0F);
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-type">int</span> w = <span class="hljs-number">1</span>, h = <span class="hljs-number">1</span>;
+        ctx.<span class="hljs-built_in">GetFramebufferSize</span>(w, h);
+        <span class="hljs-type">const</span> <span class="hljs-type">float</span> aspect = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">float</span>&gt;(w) / <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">float</span>&gt;(h);
+        <span class="hljs-type">const</span> Matrix4 vp = Matrix4::<span class="hljs-built_in">PerspectiveVulkan</span>(<span class="hljs-built_in">DegreesToRadians</span>(<span class="hljs-number">70.0F</span>), aspect, <span class="hljs-number">0.1F</span>, <span class="hljs-number">200.0F</span>)
+                         * camera.<span class="hljs-built_in">ViewMatrix</span>();
+        Vector3 pr{}, pu{};
+        camera.<span class="hljs-built_in">BillboardBasis</span>(pr, pu);
+        <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(<span class="hljs-built_in">GetWorld</span>(), ctx, vp, camera.position,
+            Vector3{<span class="hljs-number">0.3F</span>, <span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.2F</span>}.<span class="hljs-built_in">Normalized</span>(),
+            Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">1.2F</span>, Vector3{<span class="hljs-number">0.15F</span>, <span class="hljs-number">0.17F</span>, <span class="hljs-number">0.22F</span>},
+            <span class="hljs-literal">false</span>, pr, pu, <span class="hljs-number">0.0F</span>);
     }
 };
 </code></pre>
-<h2 id="lifecycle-best-practice">Lifecycle Best Practice</h2>
-<p>Track spawned roots in an <code>Array&lt;GameObject*&gt;</code> and destroy in <code>OnDetach</code>:</p>
-<pre><code class="language-cpp">void OnDetach() override {
-    for (GameObject* go : roots)
-        if (go) GetWorld().DestroyGameObject(go);
-    roots.Clear();
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-keyword">class</span> <span class="hljs-title">LitCubeGame</span> : <span class="hljs-title">Game</span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> FlyCamera _camera = <span class="hljs-keyword">new</span>();
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnAttach</span>(<span class="hljs-params">IEngineContext ctx</span>)</span>
+    {
+        <span class="hljs-keyword">var</span> cube = Mesh.CreateUnitCube();
+        World.RegisterMesh(cube, <span class="hljs-string">&quot;demo/cube&quot;</span>);
+        <span class="hljs-keyword">var</span> go = World.CreateGameObject();
+        go.GetOrAddTransform();
+        go.AddMesh(SceneMeshSlot.Custom, <span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">0.7f</span>, <span class="hljs-number">0.3f</span>, <span class="hljs-number">0.2f</span>));
+        go.AddMaterial(<span class="hljs-literal">null</span>).SetRoughness(<span class="hljs-number">0.4f</span>);
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnUpdate</span>(<span class="hljs-params">FrameTiming t, IEngineContext ctx</span>)</span>
+    {
+        _camera.ProcessMovement(ctx.GetInput(), t.DeltaTimeSeconds);
+        <span class="hljs-keyword">base</span>.OnUpdate(t, ctx);
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnRender</span>(<span class="hljs-params">IRenderFrame frame, IEngineContext ctx</span>)</span>
+    {
+        <span class="hljs-comment">// Build vp from _camera — same as C++ sample</span>
+        SceneSubmit.SubmitStandardLitSceneFromWorld(World, ctx, vp, _camera.Position,
+            sunDir, sunColor, <span class="hljs-number">1.2f</span>, ambient, <span class="hljs-literal">false</span>, pr, pu, <span class="hljs-number">0f</span>);
+    }
 }
 </code></pre>
-<h2 id="2d-platformer-pattern-from-platformer2ddemo">2D Platformer Pattern (from <code>Platformer2DDemo</code>)</h2>
-<p>Most SparkDemo games split setup across <strong>Load / Simulate / Render</strong> helpers. A minimal 2D game using the same ideas:</p>
-<pre><code class="language-cpp">class PlatformerGame final : public Spark::Game {
-    Spark::PhysicsSubsystem physics;
-    Spark::Array&lt;Spark::GameObject*&gt; roots;
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">LitCubeGame</span>(<span class="hljs-title class_ inherited__">Game</span>):
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">on_attach</span>(<span class="hljs-params">self, context: EngineContext</span>) -&gt; <span class="hljs-literal">None</span>:
+        world = context.try_get_scene().get_world()
+        go = world.create_game_object(<span class="hljs-string">&quot;Cube&quot;</span>)
+        go.get_or_add_transform()
+        go.add_mesh_custom(albedo=Vector3(<span class="hljs-number">0.7</span>, <span class="hljs-number">0.3</span>, <span class="hljs-number">0.2</span>))
+        go.add_material().set_roughness(<span class="hljs-number">0.4</span>)
+</code></pre>
+<p>Python hosts often use a native render path; extend with <code>on_render</code> when the host delegates submit to script.</p>
+<h2 id="concept-2d-platformer-skeleton">Concept: 2D platformer skeleton</h2>
+<p>Physics runs <strong>after</strong> component updates. Track spawned objects for clean <code>OnDetach</code>.</p>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">PlatformerGame</span> <span class="hljs-keyword">final</span> : <span class="hljs-keyword">public</span> Game {
+    PhysicsSubsystem physics;
+    Array&lt;GameObject*&gt; roots;
 
-public:
-    void OnAttach(Spark::IEngineContext&amp; ctx) override {
-        Spark::MountUiFont(GetWorld());  // required for TextOverlayComponent
-        auto&amp; w = GetWorld();
-
-        physics.GetWorld2D().GetSettings().gravityY = -32.0F;
-
-        // Player
-        auto* player = w.CreateGameObject();
-        roots.PushBack(player);
-        player-&gt;AddComponent&lt;Spark::TransformComponent&gt;()-&gt;SetTranslation({0, 0, 0});
-        player-&gt;AddComponent&lt;Spark::Rigidbody2DComponent&gt;();
-        player-&gt;AddComponent&lt;Spark::BoxCollider2DComponent&gt;();
-
-        // Ground platform
-        auto* ground = w.CreateGameObject();
-        roots.PushBack(ground);
-        auto* gtr = ground-&gt;AddComponent&lt;Spark::TransformComponent&gt;();
-        gtr-&gt;SetTranslation({0, -1.5F, 0});
-        gtr-&gt;SetScale({20.0F, 1.0F, 1.0F});
-        ground-&gt;AddComponent&lt;Spark::BoxCollider2DComponent&gt;();
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnAttach</span><span class="hljs-params">(IEngineContext&amp;)</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-built_in">MountUiFont</span>(<span class="hljs-built_in">GetWorld</span>());
+        physics.<span class="hljs-built_in">GetWorld2D</span>().<span class="hljs-built_in">GetSettings</span>().gravityY = <span class="hljs-number">-32.0F</span>;
+        GameObject* player = <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">CreateGameObject</span>();
+        roots.<span class="hljs-built_in">PushBack</span>(player);
+        player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
+        player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Rigidbody2DComponent&gt;();
+        player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;BoxCollider2DComponent&gt;();
+        <span class="hljs-comment">// ground, camera, input maps…</span>
     }
 
-    void OnUpdate(const Spark::FrameTiming&amp; t, Spark::IEngineContext&amp; ctx) override {
-        Spark::Game::OnUpdate(t, ctx);  // ticks components + sound cues
-        physics.Simulate2D(GetWorld(), t);
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; t, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
+        Game::<span class="hljs-built_in">OnUpdate</span>(t, ctx);
+        physics.<span class="hljs-built_in">Simulate2D</span>(<span class="hljs-built_in">GetWorld</span>(), t);
     }
 
-    void OnRender(Spark::IRenderFrame&amp;, Spark::IEngineContext&amp; ctx) override {
-        Spark::SubmitStandardLitSceneFromWorldWithCamera(
-            GetWorld(), ctx,
-            Spark::Vector3{0.3F, -0.9F, 0.2F}.Normalized(),
-            Spark::Vector3{1.0F, 0.98F, 0.95F}, 1.0F,
-            Spark::Vector3{0.15F, 0.17F, 0.22F},
-            false, 0.0F);
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(<span class="hljs-built_in">GetWorld</span>(), ctx,
+            sunDir, sunColor, <span class="hljs-number">1.0F</span>, ambient, <span class="hljs-literal">false</span>, sceneTime);
     }
 
-    void OnDetach() override {
-        for (Spark::GameObject* go : roots)
-            if (go) GetWorld().DestroyGameObject(go);
-        roots.Clear();
+    <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnDetach</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span> </span>{
+        <span class="hljs-keyword">for</span> (GameObject* go : roots)
+            <span class="hljs-keyword">if</span> (go) <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">DestroyGameObject</span>(go);
+        roots.<span class="hljs-built_in">Clear</span>();
     }
 };
 </code></pre>
-<p><code>SubmitStandardLitSceneFromWorldWithCamera</code> resolves the main <code>Camera2DComponent</code> or <code>CameraComponent</code> in the world — add one to the scene if you use this shortcut.</p>
-<h2 id="asset-loading">Asset Loading</h2>
-<p>Register meshes and textures with cache keys before attaching components:</p>
-<pre><code class="language-cpp">auto mesh = Spark::MakeShared&lt;Spark::Mesh&gt;(Spark::Mesh::CreateUnitCube());
-world.RegisterMesh(mesh, &quot;my_game/cube&quot;);
-
-auto tex = Spark::MakeShared&lt;Spark::Texture2D&gt;(/* ... */);
-world.RegisterTexture(tex, &quot;my_game/tiles&quot;);
-
-// Async glTF (preferred for large models):
-world.RequestGltf(&quot;assets/models/Fox.glb&quot;);
-// Each frame until ready:
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnUpdate</span>(<span class="hljs-params">FrameTiming t, IEngineContext ctx</span>)</span>
+{
+    <span class="hljs-keyword">base</span>.OnUpdate(t, ctx);
+    _physics.Simulate2D(World, t);
+}
+</code></pre>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">def</span> <span class="hljs-title function_">on_update</span>(<span class="hljs-params">self, timing, context</span>):
+    <span class="hljs-built_in">super</span>().on_update(timing, context)
+    context.physics.simulate_2d(self.world, timing)
+</code></pre>
+<p><code>SubmitStandardLitSceneFromWorldWithCamera</code> resolves the main <code>Camera2DComponent</code> or <code>CameraComponent</code> — add one to the scene when using this shortcut.</p>
+<h2 id="concept-async-gltf-loading">Concept: async glTF loading</h2>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+world.<span class="hljs-built_in">PumpAssets</span>();
+<span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
+    SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+    <span class="hljs-comment">// spawn SkinnedMeshComponent + AnimatorComponent</span>
+}
+</code></pre>
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RequestGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 world.PumpAssets();
-if (world.IsGltfReady(&quot;assets/models/Fox.glb&quot;)) {
-    Spark::GltfAsset asset = world.LoadGltf(&quot;assets/models/Fox.glb&quot;);
-    // spawn SkinnedMeshComponent + AnimatorComponent ...
+<span class="hljs-keyword">if</span> (world.IsGltfReady(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>))
+{
+    <span class="hljs-keyword">var</span> fox = world.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 }
 </code></pre>
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">world.request_gltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)
+world.pump_assets()
+<span class="hljs-keyword">if</span> world.is_gltf_ready(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>):
+    fox = world.load_skinned_gltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)
+</code></pre>
+<h2 id="lifecycle-checklist">Lifecycle checklist</h2>
+<ul>
+<li>[ ] Spawn in <code>OnAttach</code>, not constructors (world may not exist yet).</li>
+<li>[ ] Destroy external references in <code>OnDetach</code> before world teardown.</li>
+<li>[ ] Never store raw <code>GameObject*</code> without tracking — use ids or <code>Array&lt;GameObject*&gt; roots</code>.</li>
+<li>[ ] Split <strong>simulation</strong> (<code>OnUpdate</code>) from <strong>render</strong> (<code>OnRender</code>).</li>
+</ul>
 <p>Next: <a href="06-ecs-and-scene.html">ECS and Scene</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

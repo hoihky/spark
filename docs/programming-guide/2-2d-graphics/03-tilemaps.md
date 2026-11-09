@@ -1,20 +1,42 @@
 # Tilemaps
 
-Spark tilemaps are **multi-layer grids** backed by a shared **`Tileset`** (atlas + per-tile `TileDefinition` metadata). They render through the 2D tilemap pass (`VulkanTilemapPass`) with per-layer sort offsets, optional world-Y sort, flip/rotate flags, tint, and clip animation.
+Spark tilemaps are **multi-layer grids** backed by a shared **`Tileset`** (atlas + per-tile `TileDefinition`). They render in the **tilemap Vulkan pass** with per-layer sort offsets, world-Y sort, flip/rotate, tint, and animated clips. Collision and pathfinding read the same definitions through companion components.
 
-**Try it:** SparkDemo launcher item **19 — Tilemap layers, animation & pathfinding** (`TilemapShowcase2DDemo`).
+**Try it:** SparkDemo **#19 — Tilemap layers, animation & pathfinding** (`TilemapShowcase2DDemo`).
+
+**Ship a full level:** step-by-step TMX → grid → collision → spawns — [Tilemap level authoring](08-tilemap-level-authoring.md).
+
+## Rendering path
+
+```mermaid
+flowchart LR
+  TS[Tileset atlas] --> TM[TilemapComponent]
+  TM --> Fill[FillStandardLitSceneFromWorld]
+  Fill --> VTM[VulkanTilemapPass]
+  VTM --> HDR[HDR scene buffer]
+```
+
+Sprites and tilemaps share the **16-layer** `sceneTextures` table — pack tilesets and sprite atlases deliberately.
 
 ## Coordinate system
 
 | Space | Convention |
 |-------|------------|
-| World | +X right, +Y up (same as `Camera2D`) |
-| Grid cell `(x, y)` | Origin at the **bottom-left** corner of the map; cell `(0, 0)` sits on the bottom row |
-| TMX import | CSV rows are flipped on import so Tiled’s top row maps to high `y` in Spark storage |
+| World | +X right, +Y up (`Camera2D`) |
+| Grid cell `(x, y)` | Origin **bottom-left** of the map |
+| TMX import | CSV rows flipped so Tiled's top row → high `y` in Spark |
 
-Object markers from TMX use the same grid: Tiled top-down pixel `y` is converted to Spark `cellY` when parsing `objectgroup` layers.
+Object markers from TMX convert Tiled pixel `y` to Spark `cellY` when parsing `objectgroup` layers.
 
-## `TilemapComponent` and `Tileset`
+## Core types
+
+- `Tileset` — texture + `TileDefinition` per id (collision, path flags, animation index).
+- `TilemapComponent` — width, height, `tileWorldSize`, layers, sparse cell storage.
+- `TileCell` — display tile id, paint id, flip bits, per-cell tint.
+
+## Concept: create a layered map
+
+### C++
 
 ```cpp
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
@@ -25,50 +47,85 @@ tileset->Definition(wallTileId).collisionShape = TileCollisionShape::FullCell;
 tileset->Definition(wallTileId).flags = TileDefinitionFlags::BlocksPathfinding;
 tileset->Definition(floorTileId).collisionShape = TileCollisionShape::None;
 
-auto* mapGo = world.CreateGameObject();
-auto* tilemap = mapGo->AddComponent<TilemapComponent>(
-        tileset, mapW, mapH, 1.0F, /*sortOrderBase=*/0);
+GameObject* mapGo = world.CreateGameObject();
+TilemapComponent* tilemap = mapGo->AddComponent<TilemapComponent>(
+    tileset, mapW, mapH, 1.0F, /*sortOrderBase=*/0);
 static_cast<void>(tilemap->AddLayer("Terrain"));
 tilemap->SetPaintTile(0, x, y, grassPaintId);
-tilemap->SetTileCell(1, x, y, TileCell::FromTileId(waterTileId));
+tilemap->SetTileCell(0, x, y, TileCell::FromTileId(floorTileId));
 ```
 
-| API | Role |
-|-----|------|
-| `SetPaintTile` / `GetPaintTileId` | Terrain paint id (autotile source) |
-| `SetTileCell` / `GetTileCell` | Full `TileCell` (display id, flips, tint, paint id) |
-| `GetLayer` | Per-layer flags: `contributeCollision`, `contributeGameplayGrid`, `sortMode` |
-| `Tileset::Definition(id)` | Collision shape, path flags, autotile group, animation clip index |
+### C\#
 
-Kenney *Tiny Dungeon* packed atlases use **bottom-row tile indexing**; TMX import calls `TiledLocalTileIndexToSparkAtlasIndex` so atlas UVs match the packed sheet.
+```csharp
+var mapGo = world.CreateGameObject("Level");
+var tilemap = mapGo.AddTilemap(tilesetHandle, mapW, mapH, tileWorldSize: 1f, sortOrderBase: 0);
+tilemap.AddLayer("Terrain");
+tilemap.SetPaintTile(0, x, y, grassPaintId);
+tilemap.SetTileCell(0, x, y, TileCell.FromTileId(floorTileId));
+```
 
-## Stacked layers
+### Python
+
+```python
+map_go = world.create_game_object("Level")
+tilemap = map_go.add_tilemap("tilesets/dungeon", map_w, map_h, tile_world_size=1.0, sort_order_base=0)
+tilemap.add_layer("Terrain")
+tilemap.set_paint_tile(0, x, y, grass_paint_id)
+```
+
+(Exact Python method names follow generated `TilemapComponent` wrappers in `spark-python` for your engine build.)
+
+## Concept: stacked layers
+
+| Layer role | Typical settings |
+|------------|------------------|
+| Terrain | `contributeCollision=true`, `contributeGameplayGrid=true` |
+| Water | animated tiles, `sortMode=WorldY` |
+| Props | `contributeGameplayGrid=false`, higher `orderInLayerOffset` |
+
+### C++
 
 ```cpp
 TilemapLayer& props = tilemap->GetLayer(2);
 props.orderInLayerOffset = 16;
-props.contributeGameplayGrid = false;  // decor only
+props.contributeGameplayGrid = false;
 props.sortMode = TilemapLayerSortMode::WorldY;
 ```
 
-Pair with:
+### C\#
 
-- **`TilemapTileAnimatorComponent`** — advances clip time for animated tiles on the map.
-- **`TilemapAutotileComponent`** — rebuilds display tiles from painted terrain groups on a chosen layer.
-- **`TilemapCollider2DComponent`** — static colliders from `TileDefinition` shapes on layers with `contributeCollision`.
+```csharp
+var props = tilemap.GetLayer(2);
+props.OrderInLayerOffset = 16;
+props.ContributeGameplayGrid = false;
+props.SortMode = TilemapLayerSortMode.WorldY;
+```
 
-## Gameplay grid and pathfinding
+### Python
 
-Bake walkability once (or auto-rebake each frame) from tile layers:
+```python
+props = tilemap.get_layer(2)
+props.set_order_in_layer_offset(16)
+props.set_contribute_gameplay_grid(False)
+```
+
+Companion components:
+
+- `TilemapTileAnimatorComponent` — clip time for animated tiles.
+- `TilemapAutotileComponent` — terrain autotile from paint layer.
+- `TilemapCollider2DComponent` — static physics from definitions.
+
+## Concept: gameplay grid and pathfinding
+
+### C++
 
 ```cpp
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 
-auto* grid = mapGo->AddComponent<TilemapGameplayGridComponent>();
+TilemapGameplayGridComponent* grid = mapGo->AddComponent<TilemapGameplayGridComponent>();
 grid->SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
 grid->SetAutoRebake(true);
-
-// After editing tiles:
 grid->RequestRebake();
 grid->RebakeIfNeeded(*mapGo);
 
@@ -76,39 +133,69 @@ const TilemapGridFrame& frame = grid->GetGridFrame();
 Vector2 world = frame.CellCenterToWorldXY({cellX, cellY});
 ```
 
-| `TilemapGameplayWalkRule` | Behavior |
-|---------------------------|----------|
-| `OccupiedWalkable` | Any non-empty gameplay-layer cell is walkable |
-| `DefinitionAndFlags` | Respects `BlocksPathfinding` / `ForceWalkable`, then tile collision |
-| `CollisionAligned` | Blocked when the tile would contribute physics collision |
+### C\#
 
-See [Pathfinding](../4-ai/05-pathfinding.md) for `GridPathfinder::FindPath4` and mouse picking.
+```csharp
+var grid = mapGo.AddTilemapGameplayGrid();
+grid.SetWalkRule(TilemapGameplayWalkRule.DefinitionAndFlags);
+grid.SetAutoRebake(true);
+grid.RequestRebake();
+grid.RebakeIfNeeded(mapGo);
+var center = grid.GetGridFrame().CellCenterToWorldXY(new GridCell(cellX, cellY));
+```
 
-## TMX / `.sparkmap` import
+### Python
+
+```python
+grid = map_go.add_tilemap_gameplay_grid()
+grid.set_walk_rule_definition_and_flags()
+grid.set_auto_rebake(True)
+grid.request_rebake()
+```
+
+See [Pathfinding](../4-ai/05-pathfinding.md) for `GridPathfinder::FindPath4`.
+
+## Concept: TMX / `.sparkmap` import
+
+### C++
 
 ```cpp
 #include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
 
-auto* source = mapGo->AddComponent<TilemapMapSourceComponent>();
+TilemapMapSourceComponent* source = mapGo->AddComponent<TilemapMapSourceComponent>();
 source->SetImportOnAttach(false);
 source->SetTmxPath("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx");
-source->SetPixelsPerWorldUnit(16.0F);  // tileWorldSize = tilePixelWidth / PPU
+source->SetPixelsPerWorldUnit(16.0F);
 source->SetHotReload(true);
 source->ImportNow(*mapGo, world);
 ```
 
-`ApplyTilemapDocument` (`spark/scene/tilemap/TilemapDocumentApply.hpp`):
+`ApplyTilemapDocument` loads textures via `GameWorld::LoadTexture`, applies Kenney packed-atlas fixes, and derives `tileWorldSize` from PPU when the document leaves size at zero.
 
-- Loads the primary tileset texture via `GameWorld::LoadTexture` and `ResolveTilemapAssetPath`.
-- For Kenney packed dungeon atlases, swaps to `tilemap_packed.png`, clears margin/spacing, applies gameplay tile definitions, and disables gameplay-grid contribution on **Objects** / **Carts** layers.
-- Leaves `tileWorldSize` at **0** in the TMX document so apply derives size from `pixelsPerWorldUnit`.
+### C\#
 
-Importer: `TmxImporter` (CSV layers, external `.tsx` tilesets, GID flip bits).
+```csharp
+var source = mapGo.AddTilemapMapSource();
+source.SetTmxPath("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx");
+source.SetPixelsPerWorldUnit(16f);
+source.ImportNow(mapGo, world);
+```
 
-## Object layers (markers, spawns, gizmos)
+### Python
+
+```python
+source = map_go.add_tilemap_map_source()
+source.set_tmx_path("sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx")
+source.set_pixels_per_world_unit(16.0)
+source.import_now()
+```
+
+## Concept: object layers (spawns, chests)
+
+### C++
 
 ```cpp
-auto* objects = mapGo->AddComponent<TilemapObjectLayerComponent>();
+TilemapObjectLayerComponent* objects = mapGo->AddComponent<TilemapObjectLayerComponent>();
 const std::uint32_t li = objects->AddObjectLayer("GameplayObjects");
 
 TilemapObjectMarker chest{};
@@ -117,15 +204,31 @@ chest.cellX = 10;
 chest.cellY = 6;
 static_cast<void>(objects->AddMarker(li, chest));
 
-mapGo->AddComponent<TilemapObjectSpawnComponent>();  // uses TilemapObjectSpawnRegistry
-mapGo->AddComponent<TilemapObjectGizmoComponent>();  // editor-style markers
+mapGo->AddComponent<TilemapObjectSpawnComponent>();
 ```
 
-`TilemapObjectMarkerWorldPosition` maps cell + normalized offset through `TilemapGridFrame`.
+### C\#
+
+```csharp
+var objects = mapGo.AddTilemapObjectLayer();
+uint layer = objects.AddObjectLayer("GameplayObjects");
+objects.AddMarker(layer, new TilemapObjectMarker { TypeId = "chest", CellX = 10, CellY = 6 });
+mapGo.AddTilemapObjectSpawn();
+```
+
+### Python
+
+```python
+objects = map_go.add_tilemap_object_layer()
+layer = objects.add_object_layer("GameplayObjects")
+objects.add_marker(layer, type_id="chest", cell_x=10, cell_y=6)
+```
 
 ## Screen → cell picking (2D)
 
-Use the same NDC convention as the rest of Spark demos (`TerrainScreenToWorldRay` in `spark/demo/ShellDemoSceneUtil.hpp`): framebuffer Y grows **downward** (do not apply an OpenGL-style `1 - y` flip on top of `OrthographicVulkan`).
+Use **`TerrainScreenToWorldRay`** (`spark/demo/ShellDemoSceneUtil.hpp`) with `Camera2D::ViewProjection` — **no extra `1 - y` flip**.
+
+### C++
 
 ```cpp
 Matrix4 invVp{};
@@ -137,16 +240,29 @@ const Vector2 world{ro.x + rd.x * t, ro.y + rd.y * t};
 GridPathfinder::Cell cell = grid->GetGridFrame().WorldXYToCell(world);
 ```
 
-Reference: `TilemapShowcase2DDemo`, `Connect3Demo`.
+### C\#
+
+```csharp
+var invVp = viewProj.Invert();
+TerrainScreenToWorldRay(fbW, fbH, mx, my, invVp, out var ro, out var rd);
+float t = -ro.Z / rd.Z;
+var world = new Vector2(ro.X + rd.X * t, ro.Y + rd.Y * t);
+var cell = grid.GetGridFrame().WorldXYToCell(world);
+```
+
+### Python
+
+```python
+# Prefer engine picking helpers when exposed; otherwise mirror invVp unproject in native demo code.
+cell = grid.get_grid_frame().world_xy_to_cell(world_x, world_y)
+```
 
 ## Collision pairing
 
-`TilemapCollider2DComponent` bakes **per-tile** shapes from definitions (full cell, half cell, custom convex). Visual-only decor should use `TileCollisionShape::None` on the tileset.
+`TilemapCollider2DComponent` bakes per-tile shapes from `TileDefinition` (full cell, half cell, convex). Decor tiles should use `TileCollisionShape::None`.
 
-For manual platforms (no tilemap), use scaled sprites + `BoxCollider2DComponent` as in the platformer sample.
+**Editor / tools:** `TilemapDocumentCapturer`, `TilemapPicker`, `TilemapEditSession` — `spark/scene/tilemap/TilemapServices.hpp`, [Tilemap editor roadmap](04-tilemap-editor-roadmap.md), and [level authoring](08-tilemap-level-authoring.md).
 
-**Editor APIs:** service classes (`TilemapDocumentCapturer`, `TilemapPicker`, `TilemapEditSession`, `TilemapDerivedDataRebaker`, …) — include `spark/scene/tilemap/TilemapServices.hpp` and see [Tilemap editor roadmap](04-tilemap-editor-roadmap.md).
+Gameplay walkthrough: [2D gameplay API guide](../8-2d-game/09-2d-gameplay-api-guide.md).
 
-For a full **gameplay** walkthrough (collision layers, object spawn, nav, minimap), see [2D gameplay API guide](../7-2d-game/09-2d-gameplay-api-guide.md).
-
-Next: [2D Animation](04-2d-animation.md).
+Next: [2D Animation](04-2d-animation.md) · **Level authoring:** [08-tilemap-level-authoring](08-tilemap-level-authoring.md).

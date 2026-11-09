@@ -1,10 +1,21 @@
 # Gameplay kit (`spark/gameplay/`)
 
-Spark ships a small **public gameplay kit** so demos and games share the same conventions for **teams**, **damage**, **interaction**, and **inventory hooks**. Components still own data (`HealthComponent`, `PickupComponent`, …); the kit provides **routing** and **policy** in plain C++ (no separate scripting layer required).
+The gameplay kit is **plain C++** helpers shared by demos — not a scripting VM. Components own state (`HealthComponent`, `PickupComponent`, …); the kit routes **damage**, **interaction**, and **inventory** with consistent team policy.
 
-**Umbrella include:** `#include "spark/gameplay/GameplayKit.hpp"`
+**Umbrella include:** `#include "spark/gameplay/GameplayKit.hpp"`  
+**Tests:** `tests/gameplay/GameplayKitTest.cpp`
 
-**Tests:** `tests/gameplay/GameplayKitTest.cpp` (teams, damage events, interaction, pickup delivery).
+C\# can call the same logic through component methods and signals; Python uses mirrored components where generated.
+
+## Module map
+
+```mermaid
+flowchart LR
+    Teams[GameplayTeamPolicy] --> Deal[GameplayDamageDeal]
+    Deal --> Health[HealthComponent]
+    Interact[GameplayInteractionProcessor] --> Inter[InteractableComponent]
+    Pickup[GameplayPickupDelivery] --> Inv[GameplayInventoryCollector]
+```
 
 ---
 
@@ -12,12 +23,15 @@ Spark ships a small **public gameplay kit** so demos and games share the same co
 
 | Type | Role |
 |------|------|
-| `GameplayTeamId` | Stable `int32` team id (`0` = neutral / unassigned). |
-| `GameplayTeamComponent` | Team id on a `GameObject` (walk parents via `GameplayTeamAffiliation::Resolve`). |
-| `GameplayTeamPolicy` | Friendly-fire and hostility rules (`AllowsHostileAction`). |
-| `GameplayTeamRelation` | `Self`, `Ally`, `Enemy`, `Neutral` classification. |
+| `GameplayTeamId` | `int32` team id (`0` neutral) |
+| `GameplayTeamComponent` | Team on object; walks parents via `GameplayTeamAffiliation::Resolve` |
+| `GameplayTeamPolicy` | Friendly-fire rules (`AllowsHostileAction`) |
 
-`Combat2DTarget` and `Combat3DTarget` apply damage through `GameplayDamageDeal` with a default team policy (friendly fire **off**). Override with `SetTeamPolicy()` when your game needs custom rules.
+`Combat2DTarget` / `Combat3DTarget` apply damage through `GameplayDamageDeal` (friendly fire **off** by default).
+
+### Concept: team-tagged combatants
+
+#### C++
 
 ```cpp
 #include "spark/ecs/components/gameplay/GameplayTeamComponent.hpp"
@@ -30,7 +44,23 @@ Combat3DTarget target{*enemy};
 const float applied = target.ApplyDamage(player, 25.0F);  // 0 if same team
 ```
 
-**Demo:** `CharacterCameraDemo` — player team `1`, melee dummies team `2`.
+#### C\#
+
+```csharp
+player.AddGameplayTeam().SetTeamId(1);
+enemy.AddGameplayTeam().SetTeamId(2);
+var applied = new Combat3DTarget(enemy).ApplyDamage(player, 25f);
+```
+
+#### Python
+
+```python
+player.add_gameplay_team().set_team_id(1)
+enemy.add_gameplay_team().set_team_id(2)
+# Apply damage via HealthComponent or combat helpers when bound.
+```
+
+**Demo:** `CharacterCameraDemo` — player team `1`, dummies team `2`.
 
 ---
 
@@ -38,12 +68,16 @@ const float applied = target.ApplyDamage(player, 25.0F);  // 0 if same team
 
 | Type | Role |
 |------|------|
-| `GameplayDamageApplier` | Walks hierarchy for `DamageableComponent` / `HealthComponent`; optional hurtbox notifier. |
-| `GameplayDamageDeal` | Instigator + optional `GameplayTeamPolicy` + raw damage → applied amount. |
-| `GameplayDamageEvent` | Read-only view of `SignalId::DamageApplied` (`DamageSignalPayload`). |
-| `Combat2DTarget` / `Combat3DTarget` | Combat entry points (hurtbox invulnerability, then `GameplayDamageDeal`). |
+| `GameplayDamageApplier` | Walks hierarchy for `DamageableComponent` / `HealthComponent` |
+| `GameplayDamageDeal` | Instigator + policy + raw damage → applied amount |
+| `GameplayDamageEvent` | View of `SignalId::DamageApplied` |
+| `Combat2DTarget` / `Combat3DTarget` | Entry points with hurtbox rules |
 
-Components still emit **`SignalId::DamageApplied`** and **`SignalId::Died`** as before (`spark/gameplay/DamageTypes.hpp`).
+Components still emit **`SignalId::DamageApplied`** and **`SignalId::Died`**.
+
+### Concept: listen for damage
+
+#### C++
 
 ```cpp
 #include "spark/gameplay/GameplayDamageEvent.hpp"
@@ -51,12 +85,30 @@ Components still emit **`SignalId::DamageApplied`** and **`SignalId::Died`** as 
 void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override {
     GameplayDamageEvent evt{};
     if (GameplayDamageEvent::TryFromSignal(id, payload, evt)) {
-        // evt.GetAppliedAmount(), GetInstigator(), GetTarget()
+        const float amount = evt.GetAppliedAmount();
+        GameObject* instigator = evt.GetInstigator();
+        (void)amount;
+        (void)instigator;
     }
 }
 ```
 
-**Not in the kit (game-specific):** damage types, armor curves, crit tables, hitstop, status effects — build on top of `GameplayDamageDeal` or component multipliers.
+#### C\#
+
+```csharp
+if (GameplayDamageEvent.TryFromSignal(id, payload, out var evt))
+{
+    var amount = evt.AppliedAmount;
+}
+```
+
+#### Python
+
+```python
+# Handle SignalId.DAMAGE_APPLIED in on_signal when payload exposes damage struct.
+```
+
+**Game-specific layers** (armor, crit, hitstop) build on `GameplayDamageDeal` or component multipliers.
 
 ---
 
@@ -64,11 +116,37 @@ void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) over
 
 | Type | Role |
 |------|------|
-| `GameplayInteractionQuery` | Nearest `InteractableComponent` that `CanInteract(instigator)` (3D distance on transforms). |
-| `GameplayInteractionProcessor` | `ProcessInteractPress(world, instigator)` → `TryInteract` on best candidate. |
-| `ProcessInteractables2D` | Thin wrapper used by 2D demos (`Interaction2D.hpp`). |
+| `GameplayInteractionQuery` | Nearest `InteractableComponent` that `CanInteract(instigator)` |
+| `GameplayInteractionProcessor` | `ProcessInteractPress(world, instigator)` |
+| `ProcessInteractables2D` | 2D demo wrapper |
 
-Pair `InteractableComponent` with `TriggerVolume2DComponent` for overlap-based range, or rely on `SetInteractionRadius`.
+Pair `InteractableComponent` with `TriggerVolume2DComponent` for range, or set `SetInteractionRadius`.
+
+### Concept: press to interact
+
+#### C++
+
+```cpp
+#include "spark/gameplay/GameplayInteractionProcessor.hpp"
+
+if (context.GetInput().IsKeyPressedThisFrame(GLFW_KEY_E)) {
+    GameplayInteractionProcessor::ProcessInteractPress(world, player);
+}
+```
+
+#### C\#
+
+```csharp
+if (input.IsKeyPressedThisFrame(Key.E))
+    GameplayInteractionProcessor.ProcessInteractPress(World, player);
+```
+
+#### Python
+
+```python
+if inp.is_key_pressed_this_frame(Key.E):
+    gameplay.process_interact_press(world, player)
+```
 
 ---
 
@@ -76,34 +154,50 @@ Pair `InteractableComponent` with `TriggerVolume2DComponent` for overlap-based r
 
 | Type | Role |
 |------|------|
-| `IGameplayInventorySink` | Game backend (`TryReceive(GameplayItemStack)`). |
-| `GameplayInventoryCollectorComponent` | Default collector on player; emits **`SignalId::ItemCollected`** (`GameplayItemCollectedPayload`). |
-| `GameplayItemStack` | `itemId` + `quantity`. |
-| `GameplayPickupDelivery` | Finds collector on collector hierarchy. |
+| `IGameplayInventorySink` | Backend `TryReceive(GameplayItemStack)` |
+| `GameplayInventoryCollectorComponent` | Player collector; emits `ItemCollected` |
+| `GameplayPickupDelivery` | Delivers pickup to collector hierarchy |
+| `GameplayItemStack` | `itemId` + `quantity` |
 
-`PickupComponent::TryCollect` calls your `SetOnCollected` callback when set; otherwise it delivers through `GameplayPickupDelivery`.
+### Concept: gem pickup
+
+#### C++
 
 ```cpp
-#include "spark/ecs/components/gameplay/GameplayInventoryCollectorComponent.hpp"
-#include "spark/ecs/components/gameplay/PickupComponent.hpp"
-
 player->AddComponent<GameplayInventoryCollectorComponent>();
 player->GetComponent<GameplayInventoryCollectorComponent>()->SetOnItemReceived(
-        [](GameObject& owner, const GameplayItemStack& stack) {
-            // push into bag UI, stats, quests…
-        });
+    [](GameObject& owner, const GameplayItemStack& stack) {
+        (void)owner;
+        (void)stack;
+    });
 
-// Pickup without custom callback auto-delivers to collector on hierarchy.
 gem->AddComponent<PickupComponent>()->SetItemId("gem");
+// Without custom callback, TryCollect uses GameplayPickupDelivery.
+```
+
+#### C\#
+
+```csharp
+player.AddGameplayInventoryCollector()
+    .SetOnItemReceived((owner, stack) => { });
+gem.AddPickup().SetItemId("gem");
+```
+
+#### Python
+
+```python
+player.add_gameplay_inventory_collector()
+gem.add_pickup().set_item_id("gem")
 ```
 
 ---
 
 ## Related combat headers
 
-The kit re-exports common combat helpers:
+- **2D:** `Combat2D.hpp`, `Interaction2D.hpp`, `DamageZone2DComponent`, hurtbox queries.
+- **3D:** `Combat3D.hpp`, `Hurtbox3DComponent`, `AnimationMeleeHitComponent`.
 
-- **2D:** `Combat2D.hpp`, `Interaction2D.hpp`, hurtbox queries, `DamageZone2DComponent` callers.
-- **3D:** `Combat3D.hpp`, `Hurtbox3DComponent`, `AnimationMeleeHitComponent` → `Combat3DTarget`.
+ECS field reference: [Game Component Reference — Gameplay](07-game-component-reference.md#gameplay).  
+2D product path: [2D gameplay API guide](../8-2d-game/09-2d-gameplay-api-guide.md).
 
-See also [Game component reference — Gameplay](07-game-component-reference.md#gameplay) and [2D gameplay API guide](../7-2d-game/09-2d-gameplay-api-guide.md).
+**Part 1 complete** → Part 2: [Sprites](../2-2d-graphics/01-sprites.md).

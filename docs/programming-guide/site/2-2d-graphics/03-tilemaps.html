@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,8 +1087,17 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>03 tilemaps</h1>
           </header>
           <div class="doc-body"><h1 id="tilemaps">Tilemaps</h1>
-<p>Spark tilemaps are <strong>multi-layer grids</strong> backed by a shared <strong><code>Tileset</code></strong> (atlas + per-tile <code>TileDefinition</code> metadata). They render through the 2D tilemap pass (<code>VulkanTilemapPass</code>) with per-layer sort offsets, optional world-Y sort, flip/rotate flags, tint, and clip animation.</p>
-<p><strong>Try it:</strong> SparkDemo launcher item <strong>19 — Tilemap layers, animation &amp; pathfinding</strong> (<code>TilemapShowcase2DDemo</code>).</p>
+<p>Spark tilemaps are <strong>multi-layer grids</strong> backed by a shared <strong><code>Tileset</code></strong> (atlas + per-tile <code>TileDefinition</code>). They render in the <strong>tilemap Vulkan pass</strong> with per-layer sort offsets, world-Y sort, flip/rotate, tint, and animated clips. Collision and pathfinding read the same definitions through companion components.</p>
+<p><strong>Try it:</strong> SparkDemo <strong>#19 — Tilemap layers, animation &amp; pathfinding</strong> (<code>TilemapShowcase2DDemo</code>).</p>
+<p><strong>Ship a full level:</strong> step-by-step TMX → grid → collision → spawns — <a href="08-tilemap-level-authoring.html">Tilemap level authoring</a>.</p>
+<h2 id="rendering-path">Rendering path</h2>
+<pre class="mermaid">flowchart LR
+  TS[Tileset atlas] --&gt; TM[TilemapComponent]
+  TM --&gt; Fill[FillStandardLitSceneFromWorld]
+  Fill --&gt; VTM[VulkanTilemapPass]
+  VTM --&gt; HDR[HDR scene buffer]
+</pre>
+<p>Sprites and tilemaps share the <strong>16-layer</strong> <code>sceneTextures</code> table — pack tilesets and sprite atlases deliberately.</p>
 <h2 id="coordinate-system">Coordinate system</h2>
 <table>
 <thead>
@@ -808,160 +1109,205 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tbody>
 <tr>
 <td>World</td>
-<td>+X right, +Y up (same as <code>Camera2D</code>)</td>
+<td>+X right, +Y up (<code>Camera2D</code>)</td>
 </tr>
 <tr>
 <td>Grid cell <code>(x, y)</code></td>
-<td>Origin at the <strong>bottom-left</strong> corner of the map; cell <code>(0, 0)</code> sits on the bottom row</td>
+<td>Origin <strong>bottom-left</strong> of the map</td>
 </tr>
 <tr>
 <td>TMX import</td>
-<td>CSV rows are flipped on import so Tiled’s top row maps to high <code>y</code> in Spark storage</td>
+<td>CSV rows flipped so Tiled's top row → high <code>y</code> in Spark</td>
 </tr>
 </tbody>
 </table>
-<p>Object markers from TMX use the same grid: Tiled top-down pixel <code>y</code> is converted to Spark <code>cellY</code> when parsing <code>objectgroup</code> layers.</p>
-<h2 id="tilemapcomponent-and-tileset"><code>TilemapComponent</code> and <code>Tileset</code></h2>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/TilemapComponent.hpp&quot;
-#include &quot;spark/scene/tilemap/Tileset.hpp&quot;
+<p>Object markers from TMX convert Tiled pixel <code>y</code> to Spark <code>cellY</code> when parsing <code>objectgroup</code> layers.</p>
+<h2 id="core-types">Core types</h2>
+<ul>
+<li><code>Tileset</code> — texture + <code>TileDefinition</code> per id (collision, path flags, animation index).</li>
+<li><code>TilemapComponent</code> — width, height, <code>tileWorldSize</code>, layers, sparse cell storage.</li>
+<li><code>TileCell</code> — display tile id, paint id, flip bits, per-cell tint.</li>
+</ul>
+<h2 id="concept-create-a-layered-map">Concept: create a layered map</h2>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/rendering/TilemapComponent.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/scene/tilemap/Tileset.hpp&quot;</span></span>
 
-SharedPtr&lt;Tileset&gt; tileset = CreateTilesetFromAtlas(atlas, atlasCols, atlasRows);
-tileset-&gt;Definition(wallTileId).collisionShape = TileCollisionShape::FullCell;
-tileset-&gt;Definition(wallTileId).flags = TileDefinitionFlags::BlocksPathfinding;
-tileset-&gt;Definition(floorTileId).collisionShape = TileCollisionShape::None;
+SharedPtr&lt;Tileset&gt; tileset = <span class="hljs-built_in">CreateTilesetFromAtlas</span>(atlas, atlasCols, atlasRows);
+tileset-&gt;<span class="hljs-built_in">Definition</span>(wallTileId).collisionShape = TileCollisionShape::FullCell;
+tileset-&gt;<span class="hljs-built_in">Definition</span>(wallTileId).flags = TileDefinitionFlags::BlocksPathfinding;
+tileset-&gt;<span class="hljs-built_in">Definition</span>(floorTileId).collisionShape = TileCollisionShape::None;
 
-auto* mapGo = world.CreateGameObject();
-auto* tilemap = mapGo-&gt;AddComponent&lt;TilemapComponent&gt;(
-        tileset, mapW, mapH, 1.0F, /*sortOrderBase=*/0);
-static_cast&lt;void&gt;(tilemap-&gt;AddLayer(&quot;Terrain&quot;));
-tilemap-&gt;SetPaintTile(0, x, y, grassPaintId);
-tilemap-&gt;SetTileCell(1, x, y, TileCell::FromTileId(waterTileId));
+GameObject* mapGo = world.<span class="hljs-built_in">CreateGameObject</span>();
+TilemapComponent* tilemap = mapGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapComponent&gt;(
+    tileset, mapW, mapH, <span class="hljs-number">1.0F</span>, <span class="hljs-comment">/*sortOrderBase=*/</span><span class="hljs-number">0</span>);
+<span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">void</span>&gt;(tilemap-&gt;<span class="hljs-built_in">AddLayer</span>(<span class="hljs-string">&quot;Terrain&quot;</span>));
+tilemap-&gt;<span class="hljs-built_in">SetPaintTile</span>(<span class="hljs-number">0</span>, x, y, grassPaintId);
+tilemap-&gt;<span class="hljs-built_in">SetTileCell</span>(<span class="hljs-number">0</span>, x, y, TileCell::<span class="hljs-built_in">FromTileId</span>(floorTileId));
 </code></pre>
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> mapGo = world.CreateGameObject(<span class="hljs-string">&quot;Level&quot;</span>);
+<span class="hljs-keyword">var</span> tilemap = mapGo.AddTilemap(tilesetHandle, mapW, mapH, tileWorldSize: <span class="hljs-number">1f</span>, sortOrderBase: <span class="hljs-number">0</span>);
+tilemap.AddLayer(<span class="hljs-string">&quot;Terrain&quot;</span>);
+tilemap.SetPaintTile(<span class="hljs-number">0</span>, x, y, grassPaintId);
+tilemap.SetTileCell(<span class="hljs-number">0</span>, x, y, TileCell.FromTileId(floorTileId));
+</code></pre>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">map_go = world.create_game_object(<span class="hljs-string">&quot;Level&quot;</span>)
+tilemap = map_go.add_tilemap(<span class="hljs-string">&quot;tilesets/dungeon&quot;</span>, map_w, map_h, tile_world_size=<span class="hljs-number">1.0</span>, sort_order_base=<span class="hljs-number">0</span>)
+tilemap.add_layer(<span class="hljs-string">&quot;Terrain&quot;</span>)
+tilemap.set_paint_tile(<span class="hljs-number">0</span>, x, y, grass_paint_id)
+</code></pre>
+<p>(Exact Python method names follow generated <code>TilemapComponent</code> wrappers in <code>spark-python</code> for your engine build.)</p>
+<h2 id="concept-stacked-layers">Concept: stacked layers</h2>
 <table>
 <thead>
 <tr>
-<th>API</th>
-<th>Role</th>
+<th>Layer role</th>
+<th>Typical settings</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>SetPaintTile</code> / <code>GetPaintTileId</code></td>
-<td>Terrain paint id (autotile source)</td>
+<td>Terrain</td>
+<td><code>contributeCollision=true</code>, <code>contributeGameplayGrid=true</code></td>
 </tr>
 <tr>
-<td><code>SetTileCell</code> / <code>GetTileCell</code></td>
-<td>Full <code>TileCell</code> (display id, flips, tint, paint id)</td>
+<td>Water</td>
+<td>animated tiles, <code>sortMode=WorldY</code></td>
 </tr>
 <tr>
-<td><code>GetLayer</code></td>
-<td>Per-layer flags: <code>contributeCollision</code>, <code>contributeGameplayGrid</code>, <code>sortMode</code></td>
-</tr>
-<tr>
-<td><code>Tileset::Definition(id)</code></td>
-<td>Collision shape, path flags, autotile group, animation clip index</td>
+<td>Props</td>
+<td><code>contributeGameplayGrid=false</code>, higher <code>orderInLayerOffset</code></td>
 </tr>
 </tbody>
 </table>
-<p>Kenney <em>Tiny Dungeon</em> packed atlases use <strong>bottom-row tile indexing</strong>; TMX import calls <code>TiledLocalTileIndexToSparkAtlasIndex</code> so atlas UVs match the packed sheet.</p>
-<h2 id="stacked-layers">Stacked layers</h2>
-<pre><code class="language-cpp">TilemapLayer&amp; props = tilemap-&gt;GetLayer(2);
-props.orderInLayerOffset = 16;
-props.contributeGameplayGrid = false;  // decor only
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">TilemapLayer&amp; props = tilemap-&gt;<span class="hljs-built_in">GetLayer</span>(<span class="hljs-number">2</span>);
+props.orderInLayerOffset = <span class="hljs-number">16</span>;
+props.contributeGameplayGrid = <span class="hljs-literal">false</span>;
 props.sortMode = TilemapLayerSortMode::WorldY;
 </code></pre>
-<p>Pair with:</p>
-<ul>
-<li><strong><code>TilemapTileAnimatorComponent</code></strong> — advances clip time for animated tiles on the map.</li>
-<li><strong><code>TilemapAutotileComponent</code></strong> — rebuilds display tiles from painted terrain groups on a chosen layer.</li>
-<li><strong><code>TilemapCollider2DComponent</code></strong> — static colliders from <code>TileDefinition</code> shapes on layers with <code>contributeCollision</code>.</li>
-</ul>
-<h2 id="gameplay-grid-and-pathfinding">Gameplay grid and pathfinding</h2>
-<p>Bake walkability once (or auto-rebake each frame) from tile layers:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;
-
-auto* grid = mapGo-&gt;AddComponent&lt;TilemapGameplayGridComponent&gt;();
-grid-&gt;SetWalkRule(TilemapGameplayWalkRule::DefinitionAndFlags);
-grid-&gt;SetAutoRebake(true);
-
-// After editing tiles:
-grid-&gt;RequestRebake();
-grid-&gt;RebakeIfNeeded(*mapGo);
-
-const TilemapGridFrame&amp; frame = grid-&gt;GetGridFrame();
-Vector2 world = frame.CellCenterToWorldXY({cellX, cellY});
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> props = tilemap.GetLayer(<span class="hljs-number">2</span>);
+props.OrderInLayerOffset = <span class="hljs-number">16</span>;
+props.ContributeGameplayGrid = <span class="hljs-literal">false</span>;
+props.SortMode = TilemapLayerSortMode.WorldY;
 </code></pre>
-<table>
-<thead>
-<tr>
-<th><code>TilemapGameplayWalkRule</code></th>
-<th>Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>OccupiedWalkable</code></td>
-<td>Any non-empty gameplay-layer cell is walkable</td>
-</tr>
-<tr>
-<td><code>DefinitionAndFlags</code></td>
-<td>Respects <code>BlocksPathfinding</code> / <code>ForceWalkable</code>, then tile collision</td>
-</tr>
-<tr>
-<td><code>CollisionAligned</code></td>
-<td>Blocked when the tile would contribute physics collision</td>
-</tr>
-</tbody>
-</table>
-<p>See <a href="../4-ai/05-pathfinding.html">Pathfinding</a> for <code>GridPathfinder::FindPath4</code> and mouse picking.</p>
-<h2 id="tmx-sparkmap-import">TMX / <code>.sparkmap</code> import</h2>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp&quot;
-
-auto* source = mapGo-&gt;AddComponent&lt;TilemapMapSourceComponent&gt;();
-source-&gt;SetImportOnAttach(false);
-source-&gt;SetTmxPath(&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;);
-source-&gt;SetPixelsPerWorldUnit(16.0F);  // tileWorldSize = tilePixelWidth / PPU
-source-&gt;SetHotReload(true);
-source-&gt;ImportNow(*mapGo, world);
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">props = tilemap.get_layer(<span class="hljs-number">2</span>)
+props.set_order_in_layer_offset(<span class="hljs-number">16</span>)
+props.set_contribute_gameplay_grid(<span class="hljs-literal">False</span>)
 </code></pre>
-<p><code>ApplyTilemapDocument</code> (<code>spark/scene/tilemap/TilemapDocumentApply.hpp</code>):</p>
+<p>Companion components:</p>
 <ul>
-<li>Loads the primary tileset texture via <code>GameWorld::LoadTexture</code> and <code>ResolveTilemapAssetPath</code>.</li>
-<li>For Kenney packed dungeon atlases, swaps to <code>tilemap_packed.png</code>, clears margin/spacing, applies gameplay tile definitions, and disables gameplay-grid contribution on <strong>Objects</strong> / <strong>Carts</strong> layers.</li>
-<li>Leaves <code>tileWorldSize</code> at <strong>0</strong> in the TMX document so apply derives size from <code>pixelsPerWorldUnit</code>.</li>
+<li><code>TilemapTileAnimatorComponent</code> — clip time for animated tiles.</li>
+<li><code>TilemapAutotileComponent</code> — terrain autotile from paint layer.</li>
+<li><code>TilemapCollider2DComponent</code> — static physics from definitions.</li>
 </ul>
-<p>Importer: <code>TmxImporter</code> (CSV layers, external <code>.tsx</code> tilesets, GID flip bits).</p>
-<h2 id="object-layers-markers-spawns-gizmos">Object layers (markers, spawns, gizmos)</h2>
-<pre><code class="language-cpp">auto* objects = mapGo-&gt;AddComponent&lt;TilemapObjectLayerComponent&gt;();
-const std::uint32_t li = objects-&gt;AddObjectLayer(&quot;GameplayObjects&quot;);
+<h2 id="concept-gameplay-grid-and-pathfinding">Concept: gameplay grid and pathfinding</h2>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp&quot;</span></span>
+
+TilemapGameplayGridComponent* grid = mapGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapGameplayGridComponent&gt;();
+grid-&gt;<span class="hljs-built_in">SetWalkRule</span>(TilemapGameplayWalkRule::DefinitionAndFlags);
+grid-&gt;<span class="hljs-built_in">SetAutoRebake</span>(<span class="hljs-literal">true</span>);
+grid-&gt;<span class="hljs-built_in">RequestRebake</span>();
+grid-&gt;<span class="hljs-built_in">RebakeIfNeeded</span>(*mapGo);
+
+<span class="hljs-type">const</span> TilemapGridFrame&amp; frame = grid-&gt;<span class="hljs-built_in">GetGridFrame</span>();
+Vector2 world = frame.<span class="hljs-built_in">CellCenterToWorldXY</span>({cellX, cellY});
+</code></pre>
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> grid = mapGo.AddTilemapGameplayGrid();
+grid.SetWalkRule(TilemapGameplayWalkRule.DefinitionAndFlags);
+grid.SetAutoRebake(<span class="hljs-literal">true</span>);
+grid.RequestRebake();
+grid.RebakeIfNeeded(mapGo);
+<span class="hljs-keyword">var</span> center = grid.GetGridFrame().CellCenterToWorldXY(<span class="hljs-keyword">new</span> GridCell(cellX, cellY));
+</code></pre>
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">grid = map_go.add_tilemap_gameplay_grid()
+grid.set_walk_rule_definition_and_flags()
+grid.set_auto_rebake(<span class="hljs-literal">True</span>)
+grid.request_rebake()
+</code></pre>
+<p>See <a href="../4-ai/05-pathfinding.html">Pathfinding</a> for <code>GridPathfinder::FindPath4</code>.</p>
+<h2 id="concept-tmx-sparkmap-import">Concept: TMX / <code>.sparkmap</code> import</h2>
+<h3 id="c_6">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp&quot;</span></span>
+
+TilemapMapSourceComponent* source = mapGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapMapSourceComponent&gt;();
+source-&gt;<span class="hljs-built_in">SetImportOnAttach</span>(<span class="hljs-literal">false</span>);
+source-&gt;<span class="hljs-built_in">SetTmxPath</span>(<span class="hljs-string">&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;</span>);
+source-&gt;<span class="hljs-built_in">SetPixelsPerWorldUnit</span>(<span class="hljs-number">16.0F</span>);
+source-&gt;<span class="hljs-built_in">SetHotReload</span>(<span class="hljs-literal">true</span>);
+source-&gt;<span class="hljs-built_in">ImportNow</span>(*mapGo, world);
+</code></pre>
+<p><code>ApplyTilemapDocument</code> loads textures via <code>GameWorld::LoadTexture</code>, applies Kenney packed-atlas fixes, and derives <code>tileWorldSize</code> from PPU when the document leaves size at zero.</p>
+<h3 id="c_7">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> source = mapGo.AddTilemapMapSource();
+source.SetTmxPath(<span class="hljs-string">&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;</span>);
+source.SetPixelsPerWorldUnit(<span class="hljs-number">16f</span>);
+source.ImportNow(mapGo, world);
+</code></pre>
+<h3 id="python_3">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">source = map_go.add_tilemap_map_source()
+source.set_tmx_path(<span class="hljs-string">&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;</span>)
+source.set_pixels_per_world_unit(<span class="hljs-number">16.0</span>)
+source.import_now()
+</code></pre>
+<h2 id="concept-object-layers-spawns-chests">Concept: object layers (spawns, chests)</h2>
+<h3 id="c_8">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">TilemapObjectLayerComponent* objects = mapGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapObjectLayerComponent&gt;();
+<span class="hljs-type">const</span> std::<span class="hljs-type">uint32_t</span> li = objects-&gt;<span class="hljs-built_in">AddObjectLayer</span>(<span class="hljs-string">&quot;GameplayObjects&quot;</span>);
 
 TilemapObjectMarker chest{};
-chest.typeId = Utf8String(&quot;chest&quot;);
-chest.cellX = 10;
-chest.cellY = 6;
-static_cast&lt;void&gt;(objects-&gt;AddMarker(li, chest));
+chest.typeId = <span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;chest&quot;</span>);
+chest.cellX = <span class="hljs-number">10</span>;
+chest.cellY = <span class="hljs-number">6</span>;
+<span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">void</span>&gt;(objects-&gt;<span class="hljs-built_in">AddMarker</span>(li, chest));
 
-mapGo-&gt;AddComponent&lt;TilemapObjectSpawnComponent&gt;();  // uses TilemapObjectSpawnRegistry
-mapGo-&gt;AddComponent&lt;TilemapObjectGizmoComponent&gt;();  // editor-style markers
+mapGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TilemapObjectSpawnComponent&gt;();
 </code></pre>
-<p><code>TilemapObjectMarkerWorldPosition</code> maps cell + normalized offset through <code>TilemapGridFrame</code>.</p>
+<h3 id="c_9">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> objects = mapGo.AddTilemapObjectLayer();
+<span class="hljs-built_in">uint</span> layer = objects.AddObjectLayer(<span class="hljs-string">&quot;GameplayObjects&quot;</span>);
+objects.AddMarker(layer, <span class="hljs-keyword">new</span> TilemapObjectMarker { TypeId = <span class="hljs-string">&quot;chest&quot;</span>, CellX = <span class="hljs-number">10</span>, CellY = <span class="hljs-number">6</span> });
+mapGo.AddTilemapObjectSpawn();
+</code></pre>
+<h3 id="python_4">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">objects = map_go.add_tilemap_object_layer()
+layer = objects.add_object_layer(<span class="hljs-string">&quot;GameplayObjects&quot;</span>)
+objects.add_marker(layer, type_id=<span class="hljs-string">&quot;chest&quot;</span>, cell_x=<span class="hljs-number">10</span>, cell_y=<span class="hljs-number">6</span>)
+</code></pre>
 <h2 id="screen-cell-picking-2d">Screen → cell picking (2D)</h2>
-<p>Use the same NDC convention as the rest of Spark demos (<code>TerrainScreenToWorldRay</code> in <code>spark/demo/ShellDemoSceneUtil.hpp</code>): framebuffer Y grows <strong>downward</strong> (do not apply an OpenGL-style <code>1 - y</code> flip on top of <code>OrthographicVulkan</code>).</p>
-<pre><code class="language-cpp">Matrix4 invVp{};
-camera.ViewProjection(fbW, fbH).TryInvert(invVp);
+<p>Use <strong><code>TerrainScreenToWorldRay</code></strong> (<code>spark/demo/ShellDemoSceneUtil.hpp</code>) with <code>Camera2D::ViewProjection</code> — <strong>no extra <code>1 - y</code> flip</strong>.</p>
+<h3 id="c_10">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">Matrix4 invVp{};
+camera.<span class="hljs-built_in">ViewProjection</span>(fbW, fbH).<span class="hljs-built_in">TryInvert</span>(invVp);
 Vector3 ro{}, rd{};
-TerrainScreenToWorldRay(fbW, fbH, mx, my, invVp, ro, rd);
-const float t = -ro.z / rd.z;
-const Vector2 world{ro.x + rd.x * t, ro.y + rd.y * t};
-GridPathfinder::Cell cell = grid-&gt;GetGridFrame().WorldXYToCell(world);
+<span class="hljs-built_in">TerrainScreenToWorldRay</span>(fbW, fbH, mx, my, invVp, ro, rd);
+<span class="hljs-type">const</span> <span class="hljs-type">float</span> t = -ro.z / rd.z;
+<span class="hljs-type">const</span> Vector2 world{ro.x + rd.x * t, ro.y + rd.y * t};
+GridPathfinder::Cell cell = grid-&gt;<span class="hljs-built_in">GetGridFrame</span>().<span class="hljs-built_in">WorldXYToCell</span>(world);
 </code></pre>
-<p>Reference: <code>TilemapShowcase2DDemo</code>, <code>Connect3Demo</code>.</p>
+<h3 id="c_11">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> invVp = viewProj.Invert();
+TerrainScreenToWorldRay(fbW, fbH, mx, my, invVp, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> ro, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> rd);
+<span class="hljs-built_in">float</span> t = -ro.Z / rd.Z;
+<span class="hljs-keyword">var</span> world = <span class="hljs-keyword">new</span> Vector2(ro.X + rd.X * t, ro.Y + rd.Y * t);
+<span class="hljs-keyword">var</span> cell = grid.GetGridFrame().WorldXYToCell(world);
+</code></pre>
+<h3 id="python_5">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Prefer engine picking helpers when exposed; otherwise mirror invVp unproject in native demo code.</span>
+cell = grid.get_grid_frame().world_xy_to_cell(world_x, world_y)
+</code></pre>
 <h2 id="collision-pairing">Collision pairing</h2>
-<p><code>TilemapCollider2DComponent</code> bakes <strong>per-tile</strong> shapes from definitions (full cell, half cell, custom convex). Visual-only decor should use <code>TileCollisionShape::None</code> on the tileset.</p>
-<p>For manual platforms (no tilemap), use scaled sprites + <code>BoxCollider2DComponent</code> as in the platformer sample.</p>
-<p><strong>Editor APIs:</strong> service classes (<code>TilemapDocumentCapturer</code>, <code>TilemapPicker</code>, <code>TilemapEditSession</code>, <code>TilemapDerivedDataRebaker</code>, …) — include <code>spark/scene/tilemap/TilemapServices.hpp</code> and see <a href="04-tilemap-editor-roadmap.html">Tilemap editor roadmap</a>.</p>
-<p>For a full <strong>gameplay</strong> walkthrough (collision layers, object spawn, nav, minimap), see <a href="../7-2d-game/09-2d-gameplay-api-guide.html">2D gameplay API guide</a>.</p>
-<p>Next: <a href="04-2d-animation.html">2D Animation</a>.</p></div>
+<p><code>TilemapCollider2DComponent</code> bakes per-tile shapes from <code>TileDefinition</code> (full cell, half cell, convex). Decor tiles should use <code>TileCollisionShape::None</code>.</p>
+<p><strong>Editor / tools:</strong> <code>TilemapDocumentCapturer</code>, <code>TilemapPicker</code>, <code>TilemapEditSession</code> — <code>spark/scene/tilemap/TilemapServices.hpp</code>, <a href="04-tilemap-editor-roadmap.html">Tilemap editor roadmap</a>, and <a href="08-tilemap-level-authoring.html">level authoring</a>.</p>
+<p>Gameplay walkthrough: <a href="../8-2d-game/09-2d-gameplay-api-guide.html">2D gameplay API guide</a>.</p>
+<p>Next: <a href="04-2d-animation.html">2D Animation</a> · <strong>Level authoring:</strong> <a href="08-tilemap-level-authoring.html">08-tilemap-level-authoring</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>

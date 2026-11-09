@@ -1,67 +1,79 @@
 # Sound Clips
 
-## Class Design: `SoundClip`
+`SoundClip` stores **interleaved stereo float PCM**. Load from disk, bundle assets, or procedural generators.
 
-Decoded **interleaved stereo float** samples:
+## Concept: load bundled WAV
 
-```cpp
-class SoundClip {
-public:
-    const Array<float>& GetInterleavedStereo() const noexcept;
-    std::uint32_t GetSampleRate() const noexcept;
-    std::size_t GetFrameCount() const noexcept;
-
-    static SharedPtr<SoundClip> CreateToneBlip(float frequencyHz,
-                                               float durationSeconds, float gain);
-    static SharedPtr<SoundClip> CreateSimpleAmbienceLoop();
-};
-```
-
-## Procedural SFX (No Assets)
-
-```cpp
-auto jumpSfx = SoundClip::CreateToneBlip(440.0F, 0.08F, 0.5F);
-auto landSfx = SoundClip::CreateNoiseBurst(0.06F, 0.16F, 900.0F);
-
-// Cached gameplay presets (jump, land, collect, hurt, …):
-#include "spark/audio/ProceduralSoundPresets.hpp"
-auto collect = ProceduralSoundPresets::Get(ProceduralSoundPreset::Collectible);
-```
-
-Useful for prototyping — `Platformer2DDemo` falls back to procedural clips when bundled WAV/MP3 files are missing.
-
-## Load WAV/MP3 from Disk
+### C++
 
 ```cpp
 #include "spark/audio/SoundFileLoader.hpp"
 
-SharedPtr<SoundClip> clip = TryLoadSoundClipFromFile("/absolute/path/jump.wav");
-```
-
-`TryLoadSoundClipFromFile` dispatches by extension (WAV via `TryLoadSoundClipFromWavFile`).
-
-## Load from Bundled Assets
-
-When running inside SparkDemo or a target that sets `SPARK_BUILD_ASSETS_DIR`:
-
-```cpp
 SharedPtr<SoundClip> jump = TryLoadSoundClipFromBundledAsset("assets/audio/jump.wav");
-SharedPtr<SoundClip> bgm = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
+if (!jump)
+    jump = SoundClip::CreateToneBlip(520.0F, 0.07F, 0.45F);
 ```
 
-`Platformer2DDemo` uses this pattern:
+### C\#
+
+```csharp
+var jump = SoundLoader.TryLoadFromBundledAsset("assets/audio/jump.wav")
+    ?? SoundClip.CreateToneBlip(520f, 0.07f, 0.45f);
+```
+
+### Python
+
+```python
+jump = context.load_sound_clip("assets/audio/jump.wav")
+```
+
+## Concept: procedural presets
+
+### C++
 
 ```cpp
-SharedPtr<SoundClip> LoadPlatformerBgm() {
-    SharedPtr<SoundClip> clip =
-        TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.wav");
-    if (!clip) {
-        clip = TryLoadSoundClipFromBundledAsset("assets/audio/time_for_adventure.mp3");
-    }
-    return clip;
-}
+#include "spark/audio/ProceduralSoundPresets.hpp"
+
+auto collect = ProceduralSoundPresets::Get(ProceduralSoundPreset::Collectible);
+auto hurt = ProceduralSoundPresets::Get(ProceduralSoundPreset::Hurt);
 ```
 
-Queue one-shots at runtime via `SoundCueComponent` — see [Sound Cues](03-cues.md).
+Used in 2D ARPG / platformer when assets absent.
+
+### C\#
+
+```csharp
+var collect = ProceduralSoundPresets.Get(ProceduralSoundPreset.Collectible);
+```
+
+### Python
+
+```python
+# Procedural presets native-only unless bound.
+```
+
+## Concept: absolute file path
+
+### C++
+
+```cpp
+SharedPtr<SoundClip> clip = TryLoadSoundClipFromFile("/abs/path/custom.wav");
+```
+
+### C\#
+
+```csharp
+SoundLoader.TryLoadFromFile(path);
+```
+
+### Python
+
+```python
+pass
+```
+
+## Clip lifetime
+
+Store `SharedPtr<SoundClip>` on game state or static cache — queuing copies a pointer, not PCM duplicate.
 
 Next: [Sound Cues](03-cues.md).

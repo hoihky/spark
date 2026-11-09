@@ -67,12 +67,27 @@
     });
   }
 
+  if (typeof hljs !== 'undefined') {
+    hljs.registerAliases(['cmake'], { languageName: 'makefile' });
+    hljs.registerAliases(['sh', 'shell'], { languageName: 'bash' });
+    hljs.registerAliases(['c++', 'hpp', 'h'], { languageName: 'cpp' });
+    hljs.registerAliases(['cs', 'c-sharp'], { languageName: 'csharp' });
+    hljs.registerAliases(['py', 'python3'], { languageName: 'python' });
+  }
+
   document.querySelectorAll('pre code').forEach((block) => {
     if (block.classList.contains('language-mermaid') || block.closest('pre.mermaid')) {
       return;
     }
+    if (block.dataset.highlighted === 'yes' || block.classList.contains('hljs')) {
+      return;
+    }
     if (typeof hljs !== 'undefined') {
-      hljs.highlightElement(block);
+      try {
+        hljs.highlightElement(block);
+      } catch (err) {
+        console.warn('Syntax highlight failed for', block.className, err);
+      }
     }
   });
 

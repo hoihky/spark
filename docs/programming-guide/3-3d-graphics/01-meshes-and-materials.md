@@ -1,8 +1,24 @@
 # Meshes and Materials
 
-## Class Design: `Mesh`
+3D rendering in Spark is **forward-clustered PBR** on Vulkan: opaque and transparent `MeshComponent` draws fill `SceneRenderParams::draws` / `transparentDraws`, skinned meshes use a separate path, and materials feed **push constants** + texture bindings consumed by `pbr.frag` / glTF extension variants.
 
-CPU vertex/index buffers. Loaders and primitives live on `Mesh` (`spark/scene/mesh/Mesh.hpp`):
+**Demos:** launcher **#21** `GltfSamples3DDemo` (PBR + IBL), **#22** `ModelViewer3DDemo`, FPS sample procedural cubes.
+
+## Data flow
+
+```mermaid
+flowchart LR
+  M[Mesh / SkinnedMesh] --> MC[MeshComponent]
+  MAT[MaterialComponent] --> Draw[SceneDrawItem]
+  MC --> Fill[FillStandardLitSceneFromWorld]
+  MAT --> Fill
+  Fill --> Vulkan[VulkanScenePass]
+  Vulkan --> IBL[IBL + shadows + fog]
+```
+
+## Class design: `Mesh`
+
+CPU vertex/index buffers (`spark/scene/mesh/Mesh.hpp`):
 
 ```cpp
 struct Vertex {
@@ -18,7 +34,9 @@ static bool TryLoadFromObj(const char* path, Mesh& outMesh);
 static bool TryLoadFromGltf(const char* path, Mesh& outMesh, SharedPtr<Texture2D>* outBaseColor = nullptr);
 ```
 
-## Class Design: `MeshComponent`
+glTF import runs `Mesh::RecomputeTangentSpace` for normal mapping.
+
+## Class design: `MeshComponent`
 
 ```cpp
 MeshComponent(SharedPtr<Mesh> mesh, SceneMeshSlot slot, Vector3 albedo);
@@ -32,7 +50,9 @@ void SetMeshSlot(SceneMeshSlot slot);
 | `GroundPlane` | Built-in plane |
 | `Custom` | Upload `Mesh` vertices each frame |
 
-## Class Design: `MaterialComponent`
+Register custom meshes: `world.RegisterMesh(mesh, "fps/unit_cube")`.
+
+## Class design: `MaterialComponent`
 
 ```cpp
 class MaterialComponent final : public GameComponent {
@@ -47,81 +67,133 @@ public:
 };
 ```
 
-`ApplyMaterialComponentToSceneDrawItem()` copies PBR fields into `SceneDrawItem`.
+`ApplyMaterialComponentToSceneDrawItem()` copies PBR fields into each `SceneDrawItem`. Library assets: `SetMaterialAsset(world, "materials/hero.sparkmat")`.
 
-## Multi-Material glTF
+## Concept: spawn a lit glTF prop
 
-For assets with multiple material slots per mesh, prefer `GltfAssetBinder` so slots bind to shared library keys (`path.glb#material/N`):
+Prefer `GltfAssetBinder::BindFromPath` — mesh, materials, texture keys, skeleton when skinned.
 
-```cpp
-auto* go = world.CreateGameObject();
-go->AddComponent<TransformComponent>();
-GltfAssetBinder::BindFromPath(*go, "assets/models/Building.glb");
-```
-
-`BindFromPath` probes the file, loads rigid or skinned content automatically, and attaches mesh + materials (+ skeleton for skinned bind-pose display). For explicit control, use `BindRigidMesh` / `BindSkinnedMesh` with a known asset type.
-
-For inline-only setup (no library retain), `PopulateFromGltfAsset` still copies textures and factors directly into slot storage.
-
-`ThreeDDemo` and `SkyDemo` use multi-material glTF props with library keys when loaded through `GltfAssetBinder`.
-
-## Material library (`.sparkmat`)
-
-Author reusable materials under `assets/materials/*.sparkmat`. Components reference them by key:
+### C++
 
 ```cpp
-material->SetMaterialAsset(world, "materials/hero.sparkmat");
-multi->SetSlotMaterialAsset(world, 0, "materials/trim.sparkmat");
-```
-
-glTF imports also expose `models/Foo.glb#material/0` keys. `.sparkmat` files persist full PBR scalars, shading model, and toon fields (`sparkmat_v1` + slot v1 payload).
-
-## Spawn a Lit glTF Prop
-
-Prefer `GltfAssetBinder` for display-ready binding (mesh + material maps + library keys):
-
-```cpp
+GameObject* go = world.CreateGameObject();
+go->AddComponent<TransformComponent>()->SetTranslation({0, 0, 0});
 GltfAssetBinder::BindFromPath(*go, "assets/models/DamagedHelmet.glb");
 ```
 
-Or load and bind manually:
+Manual path:
 
 ```cpp
 GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
-auto* go = world.CreateGameObject();
-go->AddComponent<TransformComponent>()->SetTranslation({0, 0, 0});
 GltfAssetBinder::BindRigidMesh(*go, asset, SceneMeshSlot::Custom, Vector3::One, "assets/models/Crate.glb");
 if (MaterialComponent* mat = go->GetComponent<MaterialComponent>()) {
     ApplyGltfMaterialDesc(*mat, asset.material);
 }
 ```
 
-Imported meshes include tangent space for normal maps (`Mesh::RecomputeTangentSpace` on glTF load). See launcher **#21** / key **Q** (`GltfSamples3DDemo`) for a full PBR + HDR IBL reference scene, and **#22** / key **V** (`ModelViewer3DDemo`) to cycle bundled samples including **`Lantern.glb`**.
+### C\#
 
-## glTF KHR material extensions
+```csharp
+var go = world.CreateGameObject("Helmet");
+go.GetOrAddTransform();
+GltfAssetBinder.BindFromPath(go, "assets/models/DamagedHelmet.glb");
+```
 
-The loader maps these into `MaterialGltfExtensions` and `ModelPushConstants` (`shaders/gltf_pbr_extensions.glsl`):
+### Python
 
-| Extension | Runtime behavior |
-|-----------|-------------------|
-| `KHR_materials_clearcoat` | Second specular lobe on geometry normal |
-| `KHR_materials_transmission` | Screen-space refract of opaque HDR color (descriptor binding **13**) |
-| `KHR_materials_iridescence` | Thin-film tint on specular |
-| `KHR_materials_variants` | `MultiMaterialComponent` variant index; cycle at runtime in demos that call `CycleVariantsOnObjectTree` |
-| `normalTexture.scale` | `MaterialComponent::GetNormalScale()` |
+```python
+go = world.create_game_object("Helmet")
+go.get_or_add_transform()
+go.bind_gltf_from_path("assets/models/DamagedHelmet.glb")
+```
 
-**IBL:** split-sum specular uses a precomputed **BRDF LUT** (`VulkanIblBrdfLut`, binding **12**). See [`GLTF_DISPLAY_ROADMAP.md`](../../../GLTF_DISPLAY_ROADMAP.md) and [`MATERIALS_AND_LIGHTING.md`](../../../MATERIALS_AND_LIGHTING.md).
+(Use generated interop names from your `spark-python` build when `bind_gltf_from_path` differs.)
 
-## Procedural Cube (FPS Sample Style)
+## Concept: procedural cube (FPS style)
+
+### C++
 
 ```cpp
 auto unitCube = MakeShared<Mesh>(Mesh::CreateUnitCube());
 world.RegisterMesh(unitCube, "fps/unit_cube");
 
-auto* target = world.CreateGameObject();
+GameObject* target = world.CreateGameObject();
 target->AddComponent<TransformComponent>()->SetTranslation({5, 1, -3});
 target->AddComponent<MeshComponent>(unitCube, SceneMeshSlot::Custom, Vector3{0.9F, 0.3F, 0.2F});
 target->AddComponent<MaterialComponent>(nullptr)->SetRoughness(0.35F);
 ```
+
+### C\#
+
+```csharp
+world.RegisterMesh(unitCube, "fps/unit_cube");
+var target = world.CreateGameObject("Target");
+target.GetOrAddTransform().SetTranslation(new Vector3(5, 1, -3));
+target.AddMesh(SceneMeshSlot.Custom, new Vector3(0.9f, 0.3f, 0.2f));
+target.AddMaterial(null).SetRoughness(0.35f);
+```
+
+### Python
+
+```python
+target = world.create_game_object("Target")
+target.get_or_add_transform().set_translation(Vector3(5, 1, -3))
+target.add_mesh_custom(albedo=Vector3(0.9, 0.3, 0.2))
+target.add_material().set_roughness(0.35)
+```
+
+## Multi-material glTF
+
+Multiple material slots → `GltfAssetBinder` + library keys `path.glb#material/N`, or `MultiMaterialComponent` with `SetSlotMaterialAsset`. Variant extension `KHR_materials_variants` cycles via `MultiMaterialComponent` variant index (see demos calling `CycleVariantsOnObjectTree`).
+
+## Material library (`.sparkmat`)
+
+Author under `assets/materials/*.sparkmat` (`sparkmat_v1`). glTF imports also expose `models/Foo.glb#material/0` keys.
+
+### C++
+
+```cpp
+material->SetMaterialAsset(world, "materials/hero.sparkmat");
+multi->SetSlotMaterialAsset(world, 0, "materials/trim.sparkmat");
+```
+
+### C\#
+
+```csharp
+mat.SetMaterialAsset(world, "materials/hero.sparkmat");
+```
+
+### Python
+
+```python
+mat.set_material_asset("materials/hero.sparkmat")
+```
+
+## glTF KHR material extensions
+
+Mapped into `MaterialGltfExtensions` and `ModelPushConstants` (`shaders/gltf_pbr_extensions.glsl`):
+
+| Extension | Runtime behavior |
+|-----------|-------------------|
+| `KHR_materials_clearcoat` | Second specular lobe |
+| `KHR_materials_transmission` | Screen-space refract (binding **13**) |
+| `KHR_materials_iridescence` | Thin-film specular tint |
+| `KHR_materials_variants` | `MultiMaterialComponent` variant index |
+| `normalTexture.scale` | `MaterialComponent::GetNormalScale()` |
+
+**IBL:** split-sum specular + **BRDF LUT** (`VulkanIblBrdfLut`, binding **12**). Deep reference: [`GLTF_DISPLAY_ROADMAP.md`](../../../GLTF_DISPLAY_ROADMAP.md), [`MATERIALS_AND_LIGHTING.md`](../../../MATERIALS_AND_LIGHTING.md).
+
+## Transparency and sorting
+
+Transparent draws go to `params.transparentDraws` with distance sort. Water uses `waterDraws` with a dedicated pass. Set material flags / component options when authoring glass (`transmission` extension) or fade props.
+
+## Debugging
+
+| Issue | Check |
+|-------|--------|
+| Flat grey mesh | Missing `MaterialComponent` or null base color |
+| Wrong UVs | Custom mesh tangents; reimport glTF |
+| No IBL reflection | HDR environment + BRDF LUT enabled in render init |
+| Pink shader | Extension mismatch — verify material variant |
 
 Next: [Cameras in 3D](02-cameras-3d.md).

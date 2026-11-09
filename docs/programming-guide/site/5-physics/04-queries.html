@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,126 +1087,53 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>04 queries</h1>
           </header>
           <div class="doc-body"><h1 id="physics-queries">Physics Queries</h1>
-<h2 id="service-physicsqueryworld2d">Service: <code>PhysicsQueryWorld2D</code></h2>
-<p>Owned by <code>PhysicsSubsystem::GetQueries2D()</code>. Rebuilds a static broad-phase once, then runs overlap and raycast queries without re-walking ECS statics on every call.</p>
-<pre><code class="language-cpp">#include &quot;spark/physics/PhysicsSubsystem.hpp&quot;
-
-PhysicsSubsystem physics;
-
-PhysicsQueryFilter2D filter{};
-filter.queryCategoryBits = 1u &lt;&lt; 0;
-filter.hitSolids = true;
-filter.hitTriggers = false;
-
-Array&lt;PhysicsQueryHit2D&gt; hits;
-physics.GetQueries2D().RebuildStatics(world);
-physics.GetQueries2D().OverlapCircleStatics(footX, footY, 0.5F, filter, hits);
-</code></pre>
-<p>When using <code>PhysicsSubsystem</code>, <code>Simulate2D</code> keeps query cell size aligned with simulation. For standalone <code>PhysicsQueryWorld2D</code>, set <code>SetCellWorldSize</code> to match your <code>PhysicsWorld2D::GetBroadPhaseCellSize()</code>.</p>
-<h2 id="hit-types">Hit Types</h2>
-<pre><code class="language-cpp">struct PhysicsRaycastHit2D {
-    float distanceAlongRay = 0.0F;
-    float hitX = 0.0F;
-    float hitY = 0.0F;
-    std::uint32_t staticColliderIndex = 0;
-    GameObject* owner = nullptr;
-};
-
-struct PhysicsQueryFilter2D {
-    std::uint16_t queryCategoryBits = 0xFFFF;
-    std::uint16_t queryMaskBits = 0xFFFF;
-    bool hitSolids = true;
-    bool hitTriggers = true;
-};
-</code></pre>
-<h2 id="raycast">Raycast</h2>
-<pre><code class="language-cpp">PhysicsRaycastHit2D hit{};
-physics.GetQueries2D().RebuildStatics(world);
-if (physics.GetQueries2D().RaycastStatics(ox, oy, dx, dy, maxDist, filter, hit)) {
-    GameObject* struck = hit.owner;
-    (void)struck;
-}
-</code></pre>
-<h2 id="one-shot-world-raycast-legacy">One-Shot World Raycast (Legacy)</h2>
-<p>Free functions rebuild broad-phase internally each call — fine for tools, prefer <code>PhysicsQueryWorld2D</code> in hot paths:</p>
-<pre><code class="language-cpp">#include &quot;spark/physics/PhysicsQueries2D.hpp&quot;
-
+<p>Query APIs live on <code>PhysicsSubsystem::GetQueries2D()</code> and <code>GetQueries3D()</code>. They share broad-phase cell size with simulation each step.</p>
+<p><strong>2D combat:</strong> <code>CombatHurtboxWorldQuery2D</code> — <a href="../1-overview-architecture/09-gameplay-kit.html">Gameplay kit</a>.</p>
+<h2 id="concept-2d-raycast">Concept: 2D raycast</h2>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">PhysicsQueries2D&amp; q = physics.<span class="hljs-built_in">GetQueries2D</span>();
 PhysicsRaycastHit2D hit{};
-RaycastWorld2D(world, ox, oy, dx, dy, maxDist, filter, hit);
-</code></pre>
-<h2 id="static-broad-phase-manual">Static Broad-Phase (Manual)</h2>
-<pre><code class="language-cpp">BroadPhase2D broad;
-broad.Rebuild(world, 4.0F);
-
-PhysicsRaycastHit2D hit{};
-RaycastStatics2D(broad, ox, oy, dx, dy, maxDist, filter, hit);
-</code></pre>
-<h2 id="dynamic-overlaps">Dynamic Overlaps</h2>
-<pre><code class="language-cpp">Array&lt;PhysicsQueryHitDynamic2D&gt; dynamics;
-physics.GetQueries2D().OverlapCircleDynamics(world, cx, cy, radius, filter, nullptr, dynamics);
-physics.GetQueries2D().OverlapArcDynamics(
-        world, cx, cy, radius, dirX, dirY, halfAngleRad, filter, nullptr, dynamics);
-</code></pre>
-<p>Arc queries support cone attacks and vision checks.</p>
-<h2 id="ground-check-pattern">Ground Check Pattern</h2>
-<pre><code class="language-cpp">bool grounded = RaycastWorld2D(world, footX, footY, 0.0F, -1.0F, 0.08F, filter, hit);
-</code></pre>
-<p>Or use <code>Rigidbody2DComponent::IsGrounded()</code> after simulation.</p>
-<h2 id="3d-physics-queries-physicsqueryworld3d">3D physics queries (<code>PhysicsQueryWorld3D</code>)</h2>
-<p>Owned by <code>PhysicsSubsystem::GetQueries3D()</code>. Rebuild statics and/or dynamics, then query without re-walking ECS colliders each call.</p>
-<pre><code class="language-cpp">physics.GetQueries3D().RebuildAll(world);
-
-Array&lt;PhysicsQueryHit3D&gt; staticHits;
-Array&lt;PhysicsQueryHitDynamic3D&gt; dynamicHits;
-physics.GetQueries3D().OverlapSphere(
-        world, center, radius, filter, ignoreObject, staticHits, dynamicHits);
-
-PhysicsRaycastHit3D hit{};
-physics.GetQueries3D().Raycast(world, origin, direction, maxDistance, filter, ignoreObject, hit);
-</code></pre>
-<p>Dynamic catalog includes simulated rigidbodies and <code>CharacterController3DComponent</code> sphere proxies. Carried bodies (<code>PhysicsAttachedBody3DComponent::IsAttached</code>) are skipped until released. See <a href="07-physics-3d-contract.html">Physics 3D contract</a>.</p>
-<p><code>PhysicsSubsystem::Simulate3D</code> and <code>SimulateAll3D</code> sync query cell size from <code>PhysicsWorld3D</code> each frame. If you only query (no simulate), call <code>GetQueries3D().SetCellWorldSize(GetWorld3D().GetBroadPhaseCellSize())</code> after changing cell size.</p>
-<h2 id="unified-scene-physics-raycast">Unified scene + physics raycast</h2>
-<p><code>ScenePhysicsRaycast3D</code> compares closest mesh picks (<code>Scene::RaycastPick</code>) with <code>PhysicsQueryWorld3D::Raycast</code> and returns the nearer hit:</p>
-<pre><code class="language-cpp">#include &quot;spark/scene/query/ScenePhysicsRaycast3D.hpp&quot;
-
-ScenePhysicsRaycast3D unified{scene};
-unified.SetPhysicsQueries(&amp;physics.GetQueries3D());
-
-SceneRay ray{camera.position, camera.Forward().Normalized(), 80.0F};
-SceneRaycastHit hit{};
-SceneRaycastOptions sceneOpts{};
-sceneOpts.pickRigidMeshes = true;
-
-PhysicsQueryFilter3D filter{};
-if (unified.RaycastClosest(world, ray, hit, sceneOpts, filter, player)) {
-    GameObject* picked = hit.object;
+<span class="hljs-keyword">if</span> (q.<span class="hljs-built_in">Raycast</span>(world, origin, direction, maxDist, hit)) {
+    GameObject* o = hit.object;
+    (<span class="hljs-type">void</span>)o;
 }
 </code></pre>
-<p>See <code>PhysicsShowcase3DDemo::TryRaycastPick</code> (SparkDemo <strong>#29</strong>, <strong>P</strong>).</p>
-<h2 id="3d-raycasts-scene-mesh">3D Raycasts (Scene / Mesh)</h2>
-<p>For <strong>mesh-accurate picking</strong> and some hitscan weapons, use scene raycast helpers (below). Use <code>PhysicsQueryWorld3D</code> for physics colliders (environment, balls, hurtboxes on dynamics).</p>
-<pre><code class="language-cpp">#include &quot;spark/scene/mesh/MeshRaycast.hpp&quot;
-#include &quot;spark/scene/core/Scene.hpp&quot;
-
-// Sphere hit test (FPS targets, simple pickups)
-float hitT = 0.0F;
-float bestT = maxDistance;
-if (TryRaycastSphereWorld(rayOrigin, rayDir, centerWorld, radius, 1.0e-4F, bestT, hitT)) {
-    // hit at rayOrigin + rayDir * hitT
-}
-
-// Mesh-accurate pick (scene editor, mesh targets)
-SceneRaycastHit hit{};
-SceneRaycastOptions opts{};
-if (scene.RaycastPick(ray, hit, opts) &amp;&amp; hit.object) {
-    GameObject* picked = hit.object;
-}
-
-// Ray vs single mesh in world space
-if (TryRaycastMeshWorld(rayOrigin, rayDir, *mesh, worldMatrix, tMin, tMax, outT)) { ... }
+<p>Call after <code>Simulate2D</code> when dynamic positions must be current.</p>
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">if</span> (_physics.GetQueries2D().Raycast(World, origin, dir, maxDist, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> hit)) { }
 </code></pre>
-<p>See <code>SceneEditor3DDemo</code> for editor picking and <code>8-3d-game/04-shooting.md</code> for FPS hitscan.</p>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># physics queries via context.physics when interop exposes Raycast2D.</span>
+</code></pre>
+<h2 id="concept-overlap-circle">Concept: overlap circle</h2>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">Array&lt;PhysicsOverlapHit2D&gt; hits;
+q.<span class="hljs-built_in">OverlapCircle</span>(world, center, radius, hits);
+</code></pre>
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">_physics.GetQueries2D().OverlapCircle(World, center, radius, hits);
+</code></pre>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">pass</span>
+</code></pre>
+<h2 id="concept-3d-raycast-fps">Concept: 3D raycast (FPS)</h2>
+<p>Used in <a href="../9-3d-game/04-shooting.html">Part 9 shooting</a> and <code>PhysicsShowcase3DDemo</code>.</p>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">PhysicsQueries3D&amp; q3 = physics.<span class="hljs-built_in">GetQueries3D</span>();
+PhysicsRaycastHit3D hit3{};
+<span class="hljs-keyword">if</span> (q3.<span class="hljs-built_in">Raycast</span>(world, ro, rd, maxDist, hit3)) {
+    <span class="hljs-built_in">ApplyDamage</span>(hit3);
+}
+</code></pre>
+<p>Rebuild statics after level load: <code>q3.RebuildStatics(world)</code>.</p>
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">_physics.GetQueries3D().Raycast(World, ro, rd, maxDist, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> hit);
+</code></pre>
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">pass</span>
+</code></pre>
+<h2 id="picking-vs-physics">Picking vs physics</h2>
+<p>Screen → world for <strong>tilemaps</strong> uses orthographic unproject, not always physics raycast — <a href="../2-2d-graphics/03-tilemaps.html">Tilemaps</a>.</p>
 <p>Next: <a href="05-physics-3d.html">Physics 3D</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

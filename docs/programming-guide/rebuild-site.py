@@ -9,12 +9,9 @@ import sys
 from pathlib import Path
 
 try:
-    import markdown
-    from markdown.extensions.fenced_code import FencedCodeExtension
-    from markdown.extensions.tables import TableExtension
-    from markdown.extensions.toc import TocExtension
-except ImportError:
-    print("Missing dependency: pip install markdown", file=sys.stderr)
+    from md_html import md_to_html
+except ImportError as exc:
+    print(f"Missing md_html: {exc}", file=sys.stderr)
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parent
@@ -39,28 +36,11 @@ PART_ORDER = [
     "4-ai",
     "5-physics",
     "6-sound",
-    "7-2d-game",
-    "8-3d-game",
+    "7-game-components-usage",
+    "8-2d-game",
+    "9-3d-game",
+    "10-tools-and-workflows",
 ]
-
-
-def md_to_html(text: str) -> str:
-    md = markdown.Markdown(
-        extensions=[
-            TableExtension(),
-            FencedCodeExtension(),
-            TocExtension(permalink=False, toc_depth=3),
-        ]
-    )
-    html = md.convert(text)
-    html = re.sub(r'href="([^"]+?)\.md(#[^"]*)?"', r'href="\1.html\2"', html)
-    html = re.sub(
-        r'<pre><code class="language-mermaid">(.*?)</code></pre>',
-        lambda m: f'<pre class="mermaid">{m.group(1)}</pre>',
-        html,
-        flags=re.DOTALL,
-    )
-    return html
 
 
 def fix_engine_doc_links(html: str, page_rel: Path) -> str:

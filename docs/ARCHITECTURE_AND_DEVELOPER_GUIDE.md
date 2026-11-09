@@ -281,7 +281,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Object spawn from markers** | Tilemap object layers → prefabs | `TilemapObjectLayerComponent`, `TilemapObjectSpawnComponent`, `TilemapObjectSpawnRegistry` |
 | **Composite views / minimap** | Offscreen ortho capture → HUD texture | `Scene2DCompositeViewComponent`, `VulkanScene2DCompositeCapture`, `RenderTexture` (`Rgba8Unorm` for UI copy) |
 | **Parametric sprite FX** | Outline, hit flash, dissolve | `SpriteFx2D`, `SpriteLighting2DMode` 13–15, `sprite.frag` |
-| **P0 product demo** | End-to-end grid ARPG teaching path | `GameFlow2DProductPathDemo` (SparkDemo **F**); docs: `programming-guide/7-2d-game/09-2d-gameplay-api-guide.md` |
+| **P0 product demo** | End-to-end grid ARPG teaching path | `GameFlow2DProductPathDemo` (SparkDemo **F**); docs: `programming-guide/8-2d-game/09-2d-gameplay-api-guide.md` |
 | **2D physics & queries** | Grid broad-phase, overlaps, raycasts, arcs | `PhysicsSubsystem`, `PhysicsQueryWorld2D` (see §11) |
 
 ### 5.6 3D physics and joints

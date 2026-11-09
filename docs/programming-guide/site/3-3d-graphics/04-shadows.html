@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,26 +1087,51 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>04 shadows</h1>
           </header>
           <div class="doc-body"><h1 id="shadows">Shadows</h1>
-<h2 id="quick-start-shadow-enabled-scene">Quick Start: Shadow-Enabled Scene</h2>
-<p>The simplest path is <code>FillStandardLitSceneFromWorld</code> with a directional sun and shadow-casting punctual lights on entities:</p>
-<pre><code class="language-cpp">SceneRenderParams params{};
+<p>Spark implements <strong>cascaded shadow maps (CSM)</strong> for the directional sun and optional <strong>cubemap / spotlight shadow atlases</strong> for punctual lights. Shadow flags flow from <code>SceneRenderParams</code> defaults → per-material overrides → per-draw rules in <code>FillStandardLitSceneFromWorld</code>.</p>
+<h2 id="shadow-pipeline">Shadow pipeline</h2>
+<pre class="mermaid">flowchart LR
+  Params[SceneRenderParams CSM toggles]
+  Draw[SceneDrawItem shadowFlags]
+  Params --&gt; CSM[VulkanCsmPass]
+  Draw --&gt; CSM
+  PL[Point/Spot castsShadow] --&gt; Punct[VulkanPunctualShadows]
+  CSM --&gt; Lit[pbr.frag shadow compare]
+  Punct --&gt; Lit
+</pre>
+<h2 id="concept-shadow-enabled-scene">Concept: shadow-enabled scene</h2>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SceneRenderParams params{};
 params.lightingProfile = SceneLightingProfile::Outdoor;
-params.directionalShadowsEnabled = true;
-params.punctualShadowsEnabled = true;
+params.directionalShadowsEnabled = <span class="hljs-literal">true</span>;
+params.punctualShadowsEnabled = <span class="hljs-literal">true</span>;
 
-FillStandardLitSceneFromWorld(
+<span class="hljs-built_in">FillStandardLitSceneFromWorld</span>(
     world, context, viewProj, cameraPos,
-    Vector3{0.3F, -1.0F, 0.2F}.Normalized(),  // toward sun (overridden when useTimeOfDay)
-    Vector3{1.0F, 0.98F, 0.95F}, 1.4F,
-    Vector3{0.14F, 0.16F, 0.22F},
-    true,  // particles
-    {}, {}, sceneTime, params);
+    Vector3{<span class="hljs-number">0.3F</span>, <span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.2F</span>}.<span class="hljs-built_in">Normalized</span>(),
+    Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">1.4F</span>,
+    Vector3{<span class="hljs-number">0.14F</span>, <span class="hljs-number">0.16F</span>, <span class="hljs-number">0.22F</span>},
+    <span class="hljs-literal">true</span>, {}, {}, sceneTime, params);
 
-// Punctual shadows on individual lights
-auto* pl = lamp-&gt;AddComponent&lt;PointLightComponent&gt;();
-pl-&gt;SetCastsShadow(true);
+PointLightComponent* pl = lamp-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PointLightComponent&gt;();
+pl-&gt;<span class="hljs-built_in">SetCastsShadow</span>(<span class="hljs-literal">true</span>);
 </code></pre>
-<p>Opaque <code>MeshComponent</code> draws <strong>cast and receive</strong> directional shadows by default (<code>shadowsCastByDefault</code> / <code>shadowsReceiveByDefault</code> on <code>SceneRenderParams</code>, resolved via <code>SceneLightingProfile</code>).</p>
+<p><code>SubmitStandardLitSceneFromWorld</code> wrappers set the same fields when using lighting presets.</p>
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> p = <span class="hljs-keyword">new</span> SceneRenderParams {
+    LightingProfile = SceneLightingProfile.Outdoor,
+    DirectionalShadowsEnabled = <span class="hljs-literal">true</span>,
+    PunctualShadowsEnabled = <span class="hljs-literal">true</span>
+};
+FillStandardLitSceneFromWorld(world, ctx, vp, camPos, sunDir, sunColor, <span class="hljs-number">1.4f</span>, ambient,
+    enableParticles: <span class="hljs-literal">true</span>, pr, pu, sceneTime, p);
+lamp.GetComponent&lt;PointLightComponent&gt;()?.SetCastsShadow(<span class="hljs-literal">true</span>);
+</code></pre>
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">lamp = world.create_game_object(<span class="hljs-string">&quot;Lamp&quot;</span>)
+pl = lamp.add_point_light()
+pl.set_casts_shadow(<span class="hljs-literal">True</span>)
+<span class="hljs-comment"># Directional/CSM flags come from the native game&#x27;s OnRender / lighting profile.</span>
+</code></pre>
 <h2 id="directional-csm-scenerenderparams">Directional CSM (<code>SceneRenderParams</code>)</h2>
 <table>
 <thead>
@@ -828,76 +1145,57 @@ pl-&gt;SetCastsShadow(true);
 <tr>
 <td><code>directionalShadowsEnabled</code></td>
 <td><code>true</code></td>
-<td>Master toggle for CSM build + sampling</td>
+<td>Master CSM toggle</td>
 </tr>
 <tr>
-<td><code>shadowCascadeNear</code></td>
+<td><code>shadowCascadeNear</code> / <code>shadowCascadeFar</code></td>
 <td><code>0</code></td>
-<td>CSM near split; <code>0</code> = lighting preset</td>
-</tr>
-<tr>
-<td><code>shadowCascadeFar</code></td>
-<td><code>0</code></td>
-<td>CSM far split; <code>0</code> = preset (<code>400</code> outdoor). Raise for large islands (e.g. <code>1200</code> in <code>WaterLakeDemo</code>)</td>
+<td><code>0</code> = lighting preset</td>
 </tr>
 <tr>
 <td><code>shadowBias</code></td>
 <td><code>0.0026</code></td>
-<td>Depth bias in shadow compare</td>
+<td>Depth compare bias</td>
 </tr>
 <tr>
 <td><code>shadowNormalBias</code></td>
 <td><code>0.048</code></td>
-<td>Extra bias on grazing surfaces</td>
-</tr>
-<tr>
-<td><code>shadowDepthSampleFlipV</code></td>
-<td><code>false</code></td>
-<td>Flip shadow atlas V when sampling (MoltenVK)</td>
+<td>Grazing surface bias</td>
 </tr>
 <tr>
 <td><code>shadowDistanceMax</code></td>
 <td><code>0</code></td>
-<td>World distance where shadows fade out; <code>0</code> = preset</td>
+<td>Fade distance (<code>0</code> = preset)</td>
 </tr>
 <tr>
-<td><code>shadowFadeStartRatio</code></td>
-<td><code>0</code></td>
-<td>Fade begins at <code>shadowDistanceMax * ratio</code></td>
-</tr>
-<tr>
-<td><code>shadowsCastByDefault</code></td>
-<td><code>true</code></td>
-<td>Default cast bit for submitted draws</td>
-</tr>
-<tr>
-<td><code>shadowsReceiveByDefault</code></td>
-<td><code>true</code></td>
-<td>Default receive bit for submitted draws</td>
-</tr>
-<tr>
-<td><code>useTimeOfDay</code> / <code>timeOfDay</code></td>
+<td><code>useTimeOfDay</code></td>
 <td>preset</td>
-<td>When enabled, overrides sun direction/color before shadow matrices are built</td>
+<td>Sun direction before CSM build</td>
 </tr>
 </tbody>
 </table>
-<pre><code class="language-cpp">SceneRenderParams params{};
-params.lightingProfile = SceneLightingProfile::Outdoor;
-params.directionalShadowsEnabled = true;
-params.shadowCascadeFar = 900.0F;  // wider cascade 0 for large outdoor scenes
-params.shadowBias = 0.0026F;
-params.shadowNormalBias = 0.048F;
+<p>Large outdoor scenes (<code>WaterLakeDemo</code>): <code>shadowCascadeFar = 1200</code>.</p>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">params.shadowCascadeFar = <span class="hljs-number">900.0F</span>;
+params.shadowBias = <span class="hljs-number">0.0026F</span>;
+params.shadowNormalBias = <span class="hljs-number">0.048F</span>;
 </code></pre>
-<h2 id="per-draw-and-per-material-shadow-flags">Per-draw and per-material shadow flags</h2>
-<p>Scene submit packs <code>SceneDrawItem::shadowFlags</code> (<code>kSceneShadowCast</code> / <code>kSceneShadowReceive</code>).</p>
-<p><strong><code>MaterialComponent</code> overrides</strong> (optional, easiest for props):</p>
-<pre><code class="language-cpp">auto* mat = seabed-&gt;AddComponent&lt;MaterialComponent&gt;();
-mat-&gt;SetShadowCastOverride(false);      // never cast CSM
-mat-&gt;SetShadowReceiveOverride(true);  // optional explicit receive
-mat-&gt;ClearShadowCastOverride();         // back to scene defaults + built-in rules
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">p.ShadowCascadeFar = <span class="hljs-number">900f</span>;
+p.ShadowBias = <span class="hljs-number">0.0026f</span>;
 </code></pre>
-<p><strong>Built-in submit rules</strong> (when cast is not overridden on the material):</p>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Tune via native demo params or custom OnRender in C++ host for script games.</span>
+</code></pre>
+<h2 id="per-material-and-per-draw-flags">Per-material and per-draw flags</h2>
+<p><code>SceneDrawItem::shadowFlags</code> uses <code>kSceneShadowCast</code> / <code>kSceneShadowReceive</code>.</p>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">MaterialComponent* mat = seabed-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;();
+mat-&gt;<span class="hljs-built_in">SetShadowCastOverride</span>(<span class="hljs-literal">false</span>);
+mat-&gt;<span class="hljs-built_in">SetShadowReceiveOverride</span>(<span class="hljs-literal">true</span>);
+mat-&gt;<span class="hljs-built_in">ClearShadowCastOverride</span>();
+</code></pre>
+<p>Built-in submit rules (when not overridden):</p>
 <table>
 <thead>
 <tr>
@@ -911,73 +1209,77 @@ mat-&gt;ClearShadowCastOverride();         // back to scene defaults + built-in 
 <td>Always casts</td>
 </tr>
 <tr>
-<td><code>GroundPlane</code> with world <code>Y &lt; -0.5</code></td>
-<td>Does not cast (submerged seabed)</td>
-</tr>
-<tr>
-<td><code>UnitCube</code> with world <code>Y &lt; 1</code></td>
-<td>Does not cast (underwater props)</td>
+<td>Low <code>GroundPlane</code> / submerged cubes</td>
+<td>Often no cast</td>
 </tr>
 <tr>
 <td><code>SkyComponent</code></td>
 <td>Neither cast nor receive</td>
 </tr>
 <tr>
-<td><code>WaterBodyComponent</code></td>
-<td>Separate <code>waterDraws</code>; receive-only via <code>ResolveWaterShadowFlags</code> (<code>kSceneShadowReceive</code>, never cast)</td>
+<td>Water (<code>WaterBodyComponent</code>)</td>
+<td>Receive-only via <code>ResolveWaterShadowFlags</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="punctual-light-shadows">Punctual Light Shadows</h2>
-<pre><code class="language-cpp">pl-&gt;SetCastsShadow(true);   // PointLightComponent
-sl-&gt;SetCastsShadow(true);   // SpotLightComponent
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">mat.SetShadowCastOverride(<span class="hljs-literal">false</span>);
 </code></pre>
-<p>GPU cost scales with shadow-casting light count — budget carefully. See <code>TimeOfDayDemo</code> and <code>MaterialShowcase3DDemo</code> in SparkDemo.</p>
-<h2 id="toon-shading-shadows">Toon Shading + Shadows</h2>
-<pre><code class="language-cpp">mat-&gt;SetShadingModel(SceneShadingModel::ToonCel);
-mat-&gt;SetToonDiffuseBands(3);
-mat-&gt;SetToonRimIntensity(0.35F);
-mat-&gt;SetToonRimPower(2.5F);
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">mat.set_shadow_cast_override(<span class="hljs-literal">False</span>)
 </code></pre>
-<p>Toon materials still receive shadow terms — see <code>ToonShadingDemo</code> (SparkDemo).</p>
-<h2 id="debugging-shadow-artifacts">Debugging Shadow Artifacts</h2>
+<h2 id="concept-punctual-shadows">Concept: punctual shadows</h2>
+<h3 id="c_6">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">pl-&gt;<span class="hljs-built_in">SetCastsShadow</span>(<span class="hljs-literal">true</span>);
+sl-&gt;<span class="hljs-built_in">SetCastsShadow</span>(<span class="hljs-literal">true</span>);
+</code></pre>
+<p>GPU cost scales with shadow-casting light count — budget in <code>MaterialShowcase3DDemo</code> / <code>TimeOfDayDemo</code>.</p>
+<h3 id="c_7">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">pl.SetCastsShadow(<span class="hljs-literal">true</span>);
+sl.SetCastsShadow(<span class="hljs-literal">true</span>);
+</code></pre>
+<h3 id="python_3">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">pl.set_casts_shadow(<span class="hljs-literal">True</span>)
+sl.set_casts_shadow(<span class="hljs-literal">True</span>)
+</code></pre>
+<h2 id="toon-shadows">Toon + shadows</h2>
+<p>Toon materials still sample shadow terms:</p>
+<h3 id="c_8">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">mat-&gt;<span class="hljs-built_in">SetShadingModel</span>(SceneShadingModel::ToonCel);
+mat-&gt;<span class="hljs-built_in">SetToonDiffuseBands</span>(<span class="hljs-number">3</span>);
+mat-&gt;<span class="hljs-built_in">SetToonRimIntensity</span>(<span class="hljs-number">0.35F</span>);
+</code></pre>
+<p>See <code>ToonShadingDemo</code>.</p>
+<h3 id="c-python">C# / Python</h3>
+<p>Same property setters on <code>MaterialComponent</code> mirrors.</p>
+<h2 id="debugging">Debugging</h2>
 <table>
 <thead>
 <tr>
 <th>Artifact</th>
-<th>Likely cause</th>
 <th>Tweak</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Peter-panning</td>
-<td>Bias too low</td>
-<td>Increase <code>shadowBias</code></td>
+<td>Raise <code>shadowBias</code></td>
 </tr>
 <tr>
-<td>Shadow acne</td>
-<td>Bias too low / grazing</td>
-<td>Increase <code>shadowNormalBias</code></td>
+<td>Acne</td>
+<td>Raise <code>shadowNormalBias</code></td>
 </tr>
 <tr>
-<td>Large rectangular slab on terrain</td>
-<td>CSM cascade split across mesh; seabed casting</td>
-<td>Raise <code>shadowCascadeFar</code>; disable cast on submerged props (<code>SetShadowCastOverride(false)</code>)</td>
+<td>Huge terrain shadow slab</td>
+<td>Raise <code>shadowCascadeFar</code>; disable cast on submerged props</td>
 </tr>
 <tr>
-<td>Shimmering CSM</td>
-<td>Texel snapping + camera motion</td>
-<td>Expected at cascade edges; increase <code>cascadeBlendFraction</code> in profile</td>
-</tr>
-<tr>
-<td>Water shows gray matching terrain shadow</td>
-<td>SSR/refraction samples opaque color (binding 13)</td>
-<td>Fix terrain shadow; water does not sample CSM directly yet</td>
+<td>Cascade shimmer</td>
+<td>Profile <code>cascadeBlendFraction</code></td>
 </tr>
 </tbody>
 </table>
-<p>CSM sampling treats UV / depth outside the cascade tile as <strong>fully lit</strong> (<code>scene.frag</code>) to avoid false shadows at ortho frustum edges.</p>
+<p>CSM UV outside cascade tiles → fully lit in <code>scene.frag</code> (avoids false shadows at frustum edges).</p>
 <p>Next: <a href="05-skinned-characters.html">Skinned Characters</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>

@@ -2,7 +2,9 @@
 
 Spark tilemaps already support rendering, TMX/`.sparkmap` import (`TilemapMapSourceComponent`), gameplay grid, collision bake, autotile, animation, and object markers. This document is the plan for **editor-ready APIs** without coupling to ImGui or the scene editor shell.
 
-**Related:** [Tilemaps](03-tilemaps.md), `TilemapDocument`, `ApplyTilemapDocument`.
+**Programming guide (use today):** [Tilemaps](03-tilemaps.md) · **[Tilemap level authoring](08-tilemap-level-authoring.md)** (end-to-end level) · [Part 7 — Tilemap](../7-game-components-usage/03-tilemap.md) · [Scenes & level load](../1-overview-architecture/11-scenes-and-saves.md) · [2D gameplay API](../8-2d-game/09-2d-gameplay-api-guide.md).
+
+**Related types:** `TilemapDocument`, `ApplyTilemapDocument`, `TilemapEditSession` (Phases A–C implemented below).
 
 ## Design principles
 

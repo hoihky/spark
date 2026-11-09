@@ -1,46 +1,43 @@
 # UI and Toolkits
 
-Spark’s UI lives in **`spark/ui/`** (umbrella header **`spark/ui/Ui.hpp`**). The stack is **retained-mode**: you build an **`IUiElement`** tree on a **`UiCanvasComponent`**, route input each frame, and paint into **`SceneRenderParams`** for the Vulkan screen-UI pass.
+Spark UI lives in **`spark/ui/`** (`#include "spark/ui/Ui.hpp"`). The stack is **retained-mode**: build an **`IUiElement`** tree on **`UiCanvasComponent`**, route input each frame, paint into **`SceneRenderParams`** for the Vulkan screen-UI pass.
 
-Two **backends** share the same factory interfaces:
+Two **backends** share factory interfaces:
 
 | Backend | `UiBackendKind` | Factory | Best for |
 |---------|-----------------|---------|----------|
-| **Spark native** | `SparkNative` | `SparkUiControlsFactory` | Shipped menus, themed HUD, editor chrome |
-| **Dear ImGui retained** | `DearImGui` | `DearImguiControlsFactory` | Docking tool panels, rapid internal editors |
+| **Spark native** | `SparkNative` | `SparkUiControlsFactory` | Shipped menus, themed HUD |
+| **Dear ImGui retained** | `DearImGui` | `DearImguiControlsFactory` | Docking tools, rapid editors |
 
-Both compile when **`SPARK_ENABLE_IMGUI=ON`** (default). Use **`Ui::UiToolkitSettings`** to choose which backend owns pointer/keyboard routing for a mode.
+Both compile when **`SPARK_ENABLE_IMGUI=ON`** (default). Use **`Ui::UiToolkitSettings`** to choose pointer/keyboard routing.
+
+See also [`GUI_TOOLKIT_ARCHITECTURE.md`](../../../GUI_TOOLKIT_ARCHITECTURE.md), [`GUI_EDITOR_ROADMAP.md`](../../../GUI_EDITOR_ROADMAP.md).
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-    ECS[UiCanvasComponent on GameObject] --> Tree[IUiElement tree]
+    ECS[UiCanvasComponent] --> Tree[IUiElement tree]
     Factory[IUiControlsFactory] --> Tree
     Router[UiInputRouter] --> ECS
-    System[UiSystem facade] --> Router
-    System --> Paint[SparkUiRenderer or ImguiUiRenderer]
-    Paint --> SRP[SceneRenderParams screenRects / screenTexts]
+    System[UiSystem] --> Paint[SparkUiRenderer / ImguiUiRenderer]
+    Paint --> SRP[screenRects / screenTexts]
 ```
 
 | Piece | Role |
 |-------|------|
-| **`UiCanvasComponent`** | ECS root; sort order; hot / active / focus elements |
-| **`IUiControlsFactory`** | Creates panels, buttons, lists, dock workspaces, … |
-| **`UiSystem`** | Facade: active backend, `ProcessInput` / `Paint`, factory via `GetContext` |
-| **`ProcessUiCanvasesInput` / `PaintUiCanvases`** | World-level input + paint entry points (`spark/ui/runtime/UiScene.hpp`) |
-| **`UiTheme` / `UiThemeCatalog`** | Semantic colors per canvas (`spark/ui/core/`) |
-| **`IDockWorkspace` / `SparkDockWorkspace`** | Editor-style left / center / right panes with collapse |
-| **`UiContextMenu`** | Global right-click menus (`GetUiContextMenu()`) |
+| `UiCanvasComponent` | Canvas root, sort order, focus |
+| `ProcessUiCanvasesInput` | Hit-test + focus (`UiScene.hpp`) |
+| `PaintUiCanvases` | Emit draw lists into `SceneRenderParams` |
+| `UiConsumesGamePointer()` | Gate gameplay picking when UI captures pointer |
 
-See also [`GUI_TOOLKIT_ARCHITECTURE.md`](../../../GUI_TOOLKIT_ARCHITECTURE.md), [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](../../../ARCHITECTURE_AND_DEVELOPER_GUIDE.md), and [`GUI_EDITOR_ROADMAP.md`](../../../GUI_EDITOR_ROADMAP.md).
+## Concept: pause menu canvas
 
-## Building a retained canvas
-
-Attach **`UiCanvasComponent`** to a `GameObject`, build a tree with the active factory, then call the scene helpers each frame:
+### C++
 
 ```cpp
 #include "spark/ui/Ui.hpp"
+#include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 
 Ui::IUiControlsFactory& factory =
     Ui::UiSystem::Get().GetActiveBackendPtr()->GetControlsFactory();
@@ -57,101 +54,139 @@ btnDesc.id = Utf8String("resume");
 btnDesc.label = Utf8String("Resume");
 auto btn = factory.CreateButton(btnDesc);
 Ui::UiVoidCallback resumeCb{};
-resumeCb.fn = [](void*) { paused = false; };
+resumeCb.fn = [](void* ctx) { *static_cast<bool*>(ctx) = false; };
 btn->SetOnClick(resumeCb);
 Ui::AdoptUiChild(*panel, MoveTemp(btn));
 
-auto* canvas = uiRoot->AddComponent<UiCanvasComponent>();
+GameObject* uiRoot = world.CreateGameObject();
+UiCanvasComponent* canvas = uiRoot->AddComponent<UiCanvasComponent>();
 canvas->SetRoot(MoveTemp(panel));
+canvas->SetTheme(Ui::UiTheme::ClassicMint());
 ```
 
-**Input** (typically from `OnUpdate` or after polling input):
+### C\#
+
+```csharp
+// Use generated UiCanvasComponent mirror when available; otherwise build from native bootstrap in template.
+var uiRoot = world.CreateGameObject("UI");
+var canvas = uiRoot.AddUiCanvas();
+// Populate via UiSystem factory from Spark.Scripting helpers in spark-sharp samples.
+```
+
+### Python
+
+```python
+# UiCanvas often mounted from native demo; extend when spark-python exposes Ui bindings.
+ui_root = world.create_game_object("UI")
+```
+
+## Concept: per-frame input + paint
+
+Call **input** after polling (typically end of `OnUpdate`):
+
+### C++
 
 ```cpp
-Spark::ProcessUiCanvasesInput(world, input, fbW, fbH, contentScaleX, contentScaleY);
+void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
+    int fbW = 0, fbH = 0;
+    ctx.GetFramebufferSize(fbW, fbH);
+    ProcessUiCanvasesInput(GetWorld(), ctx.GetInput(), fbW, fbH, 1.0F, 1.0F);
 
-if (!Spark::UiScrollWheelConsumed()) {
-    // apply camera zoom from scroll wheel
-}
-if (!Spark::UiConsumesGamePointer()) {
-    // viewport pick / orbit / gameplay pointer
+    if (!UiScrollWheelConsumed()) {
+        // camera zoom
+    }
+    if (!UiConsumesGamePointer()) {
+        // viewport gameplay pick
+    }
+    Game::OnUpdate(t, ctx);
 }
 ```
 
-**Paint** (when building `SceneRenderParams`):
+**Paint** when building scene params in `OnRender`:
 
 ```cpp
-Spark::PaintUiCanvases(world, params, fbW, fbH);
+SceneRenderParams params{};
+FillStandardLitSceneFromWorld(..., params);
+PaintUiCanvases(GetWorld(), params, fbW, fbH);
+ctx.SetSceneRenderParams(params);
 ```
 
-### Input gating helpers
+### C\#
+
+```csharp
+ProcessUiCanvasesInput(World, context.GetInput(), fbW, fbH, 1f, 1f);
+// ...
+PaintUiCanvases(World, p, fbW, fbH);
+```
+
+### Python
+
+```python
+# Delegated to native host when UI is enabled in template.
+```
+
+## Input gating helpers
 
 | Function | Purpose |
 |----------|---------|
-| **`UiConsumesGamePointer()`** | UI owns gameplay pointer this frame (replaces legacy `GuiConsumesGamePointer`) |
-| **`UiPointerOverUi()`** | Cursor is over UI chrome — gate viewport picking / orbit |
-| **`UiScrollWheelConsumed()`** | UI ate the scroll wheel — gate 3D camera zoom |
+| `UiConsumesGamePointer()` | UI owns gameplay pointer |
+| `UiPointerOverUi()` | Cursor over chrome — skip world pick |
+| `UiScrollWheelConsumed()` | UI ate scroll — skip camera zoom |
 
-### Themes
+## Switching backends (tool mode)
 
-```cpp
-canvas->SetTheme(Ui::UiTheme::SceneEditorDark());
-// or Ui::UiTheme::ClassicMint(), Ui::ResolveUiTheme(Ui::UiThemePreset::TwilightSlate), …
-```
-
-### Editor docking
-
-Use **`factory.CreateDockWorkspace(DockWorkspaceDesc{})`** (`SparkDockWorkspace` or `ImguiDockWorkspace` depending on backend). **`EditorDockShell`** in `spark/editor/` hosts hierarchy / inspector / project / viewport panes. **`SparkEditor`** also uses Dear ImGui for the top **File** menu (project and scene open/save); native file pickers run outside the ImGui frame. See [`SPARK_EDITOR_PLAN.md`](../../../SPARK_EDITOR_PLAN.md).
-
-### Context menus
-
-```cpp
-Ui::GetUiContextMenu().Open(
-    screenX, screenY,
-    {Utf8String("Delete"), Utf8String("Duplicate")},
-    [](int index) { /* handle pick */ });
-```
-
-## Switching backends
+### C++
 
 ```cpp
 #include "spark/ui/runtime/UiToolkitSettings.hpp"
 
 Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
-// … tool mode …
+// tool work…
 Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::SparkNative);
 ```
 
-When Dear ImGui is preferred, **`UiToolkitSettings::ShouldProcessSparkUiInput()`** returns `false` so Spark-native canvases skip router hit-testing while ImGui owns input.
+### C\#
 
-## Dear ImGui (optional immediate-mode layer)
+```csharp
+UiToolkitSettings.SetPreferred(UiBackendKind.DearImGui);
+```
 
-CMake option **`SPARK_ENABLE_IMGUI`** (default **ON**) links the **docking** branch of Dear ImGui with GLFW + Vulkan backends (`cmake/SparkImGui.cmake`).
+### Python
 
-### Access from gameplay
+```python
+# Native-only today unless exposed by host.
+```
+
+## Dear ImGui immediate layer
+
+CMake **`SPARK_ENABLE_IMGUI`** links docking ImGui + Vulkan backend.
+
+### C++
 
 ```cpp
-#include "spark/imgui/IImGuiLayer.hpp"
-#include "spark/ui/runtime/UiToolkitSettings.hpp"
-
-void MyToolMode::Enter(Spark::IEngineContext& context) {
-    Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::DearImGui);
-    if (Spark::IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
-        imgui->SetEnabled(imgui->IsAvailable());
+void OnRender(IRenderFrame&, IEngineContext& context) override {
+    if (IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
+        if (imgui->IsAvailable() && imgui->IsEnabled()) {
+            ImGui::Begin("Debug");
+            ImGui::Text("FPS: %.1f", 1.0f / dt);
+            ImGui::End();
+        }
     }
-}
-
-void MyToolMode::Leave(Spark::IEngineContext& context) noexcept {
-    if (Spark::IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
-        imgui->SetEnabled(false);
-    }
-    Ui::UiToolkitSettings::SetPreferred(Ui::UiBackendKind::SparkNative);
+    SubmitStandardLitSceneFromWorld(...);
 }
 ```
 
-You can mix **retained** ImGui-backend controls (`DearImguiControlsFactory`) with **raw** `ImGui::Begin` windows in **`OnRender`** for debug overlays.
+**Rules:** no `ImGui::Begin` in `OnUpdate`; engine calls `NewFrame` after update.
 
-### Engine frame order (ImGui enabled)
+### C\#
+
+Use `context.TryGetImGuiLayer()` from bindings when hosting tool demos.
+
+### Python
+
+ImGui not typical in Python host — use retained UI or native tool mode.
+
+## Engine frame order (both UI stacks)
 
 ```mermaid
 sequenceDiagram
@@ -159,49 +194,33 @@ sequenceDiagram
     participant G as IGame
     participant U as UiSystem
     participant I as IImGuiLayer
-    participant V as VulkanRenderer
-    E->>E: PollEvents + input BeginFrame
-    E->>G: OnUpdate (simulation)
-    E->>U: ProcessInput (retained canvases)
-    E->>I: BeginFrame (NewFrame)
-    E->>G: OnRender (build UI + scene params)
-    E->>U: Paint (retained → params or ImGui draw lists)
-    E->>I: EndFrame (Render)
-    E->>V: PresentFrame
+    E->>G: OnUpdate
+    E->>U: ProcessInput
+    E->>I: BeginFrame
+    E->>G: OnRender
+    E->>U: Paint
+    E->>I: EndFrame
 ```
 
-**Rules:**
+## Demos
 
-1. Do **not** call `ImGui::Begin` from `OnUpdate` — `NewFrame` runs after update.
-2. Call **`InstallPlatformCallbacks`** once after `GlfwInput::WireToWindow` (the engine does this automatically).
-3. Gate game pointer with **`UiConsumesGamePointer()`** / **`UiPointerOverUi()`** when both stacks are compiled in.
+| Demo | Item | Notes |
+|------|------|-------|
+| Scene editor | **#10** | [Part 10](../10-tools-and-workflows/01-scene-editor-3d.md) |
+| ImGui docking | #20, key **G** | [Part 10](../10-tools-and-workflows/02-dear-imgui-and-tool-ui.md) |
+| Spark editor | **#24**, key **E** | [Editor direction](../10-tools-and-workflows/03-spark-editor-direction.md) |
+| Shell help HUD | **H** | `DemoHelpHud` → `screenTexts`, not `UiCanvas` |
 
-### Demo
-
-**SparkDemo** launcher item **20 — Dear ImGui tools (docking)** (hotkey **G**): docked Hierarchy / Inspector / Console, optional `ShowDemoWindow`, 3D backdrop. Source: `ImGuiShowcaseDemo` (`include/spark/demo/ImGuiShowcaseDemo.hpp`).
-
-**glTF PBR sample** — launcher item **21** (hotkey **Q**): `GltfSamples3DDemo` loads `DamagedHelmet.glb` with studio HDR sky dome and opt-in HDR IBL (`iblUseHdrSkyEnvironment`). See [Meshes and Materials](../3-3d-graphics/01-meshes-and-materials.md) and [Terrain and Sky](../3-3d-graphics/06-terrain-and-sky.md).
-
-**3D model viewer** — launcher item **22** (hotkey **V**): `ModelViewer3DDemo` cycles bundled Khronos glTF samples (chair, watch, plant, shoe, etc.) with orbit camera.
-
-### Demo help overlay
-
-`DemoHelpHud` (`include/spark/demo/DemoHelpHud.hpp`) provides a shared top-left help panel for shell demos. It patches text into `SceneRenderParams::screenTexts` via `PatchSceneRenderParams` — not a scene `TextOverlayComponent`. **Hidden by default**; press **H** to toggle globally. **F3** toggles the shell FPS overlay (also off by default). **TAB** returns to the launcher.
-
-### Disable ImGui
-
-```bash
-cmake -S . -B build -DSPARK_ENABLE_IMGUI=OFF
-```
-
-`IImGuiLayer` becomes a null object; `SPARK_ENABLE_IMGUI=0` in `spark/config.hpp`.
+Disable ImGui: `cmake … -DSPARK_ENABLE_IMGUI=OFF` → `TryGetImGuiLayer()` is null.
 
 ## Choosing a toolkit
 
-| Use Spark native (`SparkNative`) | Use Dear ImGui backend or raw ImGui |
-|----------------------------------|-------------------------------------|
-| Shipped game menus with consistent theming | Internal tools, profilers, temp editors |
-| `UiCanvasComponent` in saved scenes | Docking-heavy IDE-style layouts |
-| Full widget catalog (`TreeView`, lists, scroll panels, …) | ImGui ecosystem widgets / `imgui_demo.cpp` |
+| Spark native | Dear ImGui |
+|--------------|------------|
+| Themed game menus | Profilers, temp editors |
+| Saved scenes with `UiCanvasComponent` | Docking IDE layouts |
+| `TreeView`, scroll panels | ImGui ecosystem widgets |
 
-Next: [Sprites](../2-2d-graphics/01-sprites.md) (Part 2) or continue with [Game Component Reference](07-game-component-reference.md) for `UiCanvasComponent`.
+`UiCanvasComponent` field reference continues in the long-form sections of [Game Component Reference — UI](07-game-component-reference.md#ui).
+
+Next: [Gameplay kit](09-gameplay-kit.md) · Part 2: [Sprites](../2-2d-graphics/01-sprites.md).

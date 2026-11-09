@@ -1,105 +1,149 @@
 # AI Overview
 
+Spark AI is **ECS-driven**: `AiAgentComponent` hosts steering, optional FSM/GOAP/fuzzy modules, and path polylines. The engine does **not** auto-tick AI — call `SimulateGameAi` after physics (or before, per your demo) from `OnUpdate`.
+
+**Component usage:** [AI chapter](../7-game-components-usage/10-ai-audio-world.md) · **Demos:** `Maze3DDemo` (#9), `SteeringShowcase3DDemo`, `GameFlow2DProductPathDemo` (grid nav).
+
 ## Architecture
 
 ```mermaid
 flowchart TB
     Update[OnUpdate gameplay] --> Sim[SimulateGameAi]
+    Sim --> Grid[ProcessGridNavAgents2D]
     Sim --> Nav[ProcessNavMeshAgents]
     Sim --> Perc[ProcessPerceptionSensors]
     Sim --> Agent[AiAgentComponent::SubsystemTick]
     Agent --> FSM[FsmStateMachine]
     Agent --> GOAP[GoapPlanner]
-    Agent --> Path[GridPathfinder polyline]
     Agent --> Steer[SteeringComposer]
-    Agent --> BB[AiBlackboard]
-    Nav --> Path
 ```
 
-## Entry Point
+## Tick order (recommended)
+
+| Step | API |
+|------|-----|
+| 1 | `Game::OnUpdate` — input, animation |
+| 2 | `PhysicsSubsystem::Simulate*` |
+| 3 | `SimulateGameAi` |
+| 4 | Gameplay rules using post-move transforms |
+
+## Concept: enable AI on the world
+
+### C++
 
 ```cpp
 #include "spark/ai/GameAiSubsystem.hpp"
 
 void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
-    Game::OnUpdate(timing, context);  // player input, physics, etc.
+    Game::OnUpdate(timing, context);
+    physics.SimulateAll3D(GetWorld(), timing);
     SimulateGameAi(GetWorld(), timing, context);
 }
 ```
 
-`SimulateGameAi` runs `ProcessNavMeshAgents` and `ProcessPerceptionSensors`, then each enabled `AiAgentComponent::SubsystemTick`.
+### C\#
 
-## End-to-End: Patrol Guard (from `Maze3DDemo`)
+```csharp
+public override void OnUpdate(FrameTiming timing, IEngineContext context)
+{
+    base.OnUpdate(timing, context);
+    _physics.SimulateAll3D(World, timing);
+    GameAi.Simulate(World, timing, context);
+}
+```
 
-This pattern wires patrol path → nav mesh agent → AI agent → perception sensor:
+### Python
+
+```python
+def on_update(self, timing, context):
+    super().on_update(timing, context)
+    context.physics.simulate_all_3d(self.world, timing)
+    # SimulateGameAi when host wires game_ai.simulate(world, timing, context)
+```
+
+## Concept: patrol guard (3D)
+
+Pair `PatrolPathComponent` (on a path object) + `NavMeshAgentComponent` + `AiAgentComponent` + optional `PerceptionSensorComponent`.
+
+### C++
 
 ```cpp
-#include "spark/ecs/components/ai/AiAgentComponent.hpp"
-#include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
-#include "spark/ecs/components/ai/PatrolPathComponent.hpp"
-#include "spark/ecs/components/ai/PerceptionSensorComponent.hpp"
-
-// Patrol waypoints on a separate object
-GameObject* patrolPathGo = world.CreateGameObject();
-PatrolPathComponent* patrol = patrolPathGo->AddComponent<PatrolPathComponent>();
+PatrolPathComponent* patrol = patrolGo->AddComponent<PatrolPathComponent>();
 patrol->SetLooping(true);
-patrol->GetWaypoints().PushBack(Vector3::Zero);
-patrol->GetWaypoints().PushBack({leg, 0.0F, 0.0F});
-patrol->GetWaypoints().PushBack({leg, 0.0F, leg});
+patrol->GetWaypoints().PushBack({0, 0, 0});
+patrol->GetWaypoints().PushBack({leg, 0, leg});
 
-// Guard entity
-GameObject* guardGo = world.CreateGameObject();
-guardGo->AddComponent<TransformComponent>()->SetTranslation({pathX, 0.85F, pathZ});
-guardGo->AddComponent<MeshComponent>(unitCube, SceneMeshSlot::UnitCube, Vector3{0.92F, 0.22F, 0.18F});
+NavMeshAgentComponent* nav = guard->AddComponent<NavMeshAgentComponent>();
+nav->SetPatrolPathObject(patrolGo);
 
-NavMeshAgentComponent* nav = guardGo->AddComponent<NavMeshAgentComponent>();
-nav->SetPatrolPathObject(patrolPathGo);
-
-AiAgentComponent* agent = guardGo->AddComponent<AiAgentComponent>();
+AiAgentComponent* agent = guard->AddComponent<AiAgentComponent>();
 agent->SetMaxSpeed(3.2F);
 agent->SetSteeringPlane(AiSteeringPlane::XzWorld);
 
-PerceptionSensorComponent* perception = guardGo->AddComponent<PerceptionSensorComponent>();
-perception->SetSightRadius(9.5F);
-perception->SetSightFovDegrees(130.0F);
-perception->SetHearingRadius(6.0F);
+PerceptionSensorComponent* perc = guard->AddComponent<PerceptionSensorComponent>();
+perc->SetSightRadius(9.5F);
+perc->SetSightFovDegrees(130.0F);
 ```
 
-Each frame in `Simulate`:
+### C\#
 
-```cpp
-physics.SimulateAll3D(world, timing);
-SimulateGameAi(world, timing, context);
+```csharp
+var patrol = patrolGo.AddPatrolPath();
+patrol.SetLooping(true);
+var nav = guard.AddNavMeshAgent();
+nav.SetPatrolPathObject(patrolGo);
+guard.AddAiAgent().SetMaxSpeed(3.2f);
+guard.GetOrAddComponent<PerceptionSensorComponent>()?.SetSightRadius(9.5f);
 ```
 
-## Class Design: `AiAgentComponent`
+### Python
 
-Central ECS hook (`spark/ecs/components/ai/AiAgentComponent.hpp`):
+```python
+patrol_go.get_or_add_default_component(ComponentKind.PatrolPath)
+guard.get_or_add_default_component(ComponentKind.NavMeshAgent)
+guard.get_or_add_default_component(ComponentKind.AiAgent)
+```
 
-| Module | Enable flag | Storage |
-|--------|-------------|---------|
-| Blackboard | always | `AiBlackboard` |
-| FSM | `fsmEnabled` | `UniquePtr<FsmStateMachine>` |
-| GOAP | `goapEnabled` | `goapActions`, `goapPlan` |
-| Path follow | implicit | `pathWorldXZ`, `pathIndex` (filled by `NavMeshAgentComponent` or manual grid path) |
-| Fuzzy | `fuzzyEnabled` | `UniquePtr<FuzzyAdvisoryModule>` |
-| Motion | — | `maxSpeed`, `AiSteeringPlane` |
+## `AiAgentComponent` modules
+
+| Module | Flag | Role |
+|--------|------|------|
+| Blackboard | always | Shared floats/ints for steering |
+| FSM | `SetFsmEnabled` | Discrete states |
+| GOAP | `SetGoapEnabled` | Action planning |
+| Path | implicit | `pathWorldXZ` from nav or grid |
+| Steering | — | `maxSpeed`, `AiSteeringPlane` |
+
+### C++
 
 ```cpp
-auto* agent = enemy->AddComponent<AiAgentComponent>();
 agent->SetMaxSpeed(6.0F);
-agent->SetSteeringPlane(AiSteeringPlane::XzWorld);  // or XyRigidbody2D
+agent->SetSteeringPlane(AiSteeringPlane::XyRigidbody2D);  // 2D platformer enemies
 agent->SetFsmEnabled(true);
-agent->SetFsm(MakeUnique<FsmStateMachine>(/* ... */));
 ```
 
-## Steering Planes
+### C\#
 
-| `AiSteeringPlane` | Maps steering to |
-|-------------------|------------------|
-| `XzWorld` | World XZ (`Vector2.x` = X, `.y` = Z) |
-| `XyRigidbody2D` | `Rigidbody2DComponent` velocity XY |
+```csharp
+agent.SetSteeringPlane(AiSteeringPlane.XyRigidbody2D);
+agent.SetFsmEnabled(true);
+```
 
-See `SteeringShowcase3DDemo` (SparkDemo) for seek, flee, flock, and ECS patrol examples.
+### Python
+
+```python
+agent = enemy.get_or_add_default_component(ComponentKind.AiAgent)
+```
+
+## Steering planes
+
+| `AiSteeringPlane` | Use |
+|-------------------|-----|
+| `XzWorld` | 3D top-down / maze guards |
+| `XyRigidbody2D` | Side-view enemies with `Rigidbody2D` |
+
+2D grid games: prefer `GridNavAgent2DComponent` + `GridPathFollower2DComponent` — [Pathfinding](05-pathfinding.md).
+
+Hands-on guard/maze stack: [Perception, nav, and blackboard](06-perception-nav-and-blackboard.md) (**demo #8**).
 
 Next: [Steering Behaviors](02-steering.md).

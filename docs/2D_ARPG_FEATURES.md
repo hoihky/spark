@@ -33,7 +33,7 @@ Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`
 | **P2.1** | Inventory / equipment | Partial | `GameplayInventoryCollectorComponent`, `PickupComponent` → `GameplayPickupDelivery`, `SignalId::ItemCollected`; bag UI + equipment + save still game-specific. See [Gameplay kit](programming-guide/1-overview-architecture/09-gameplay-kit.md). |
 | **P2.2** | Dialogue / quests | Missing | Data-driven quests + UI; optional scripting hooks. |
 | **P2.3** | Save/load game state | Partial | `GameSave` + `GameFlowPersistentData` in P0 demo; not all ECS components snapshotted. |
-| **P2.4** | Minimap / fog | Partial | `Scene2DCompositeViewComponent` + GPU ortho capture (`VulkanScene2DCompositeCapture`); RGBA8 RT + HUD blit. Fog/outline feature enum reserved. See [2D runtime limits](programming-guide/7-2d-game/08-scene2d-runtime-limits.md). |
+| **P2.4** | Minimap / fog | Partial | `Scene2DCompositeViewComponent` + GPU ortho capture (`VulkanScene2DCompositeCapture`); RGBA8 RT + HUD blit. Fog/outline feature enum reserved. See [2D runtime limits](programming-guide/8-2d-game/08-scene2d-runtime-limits.md). |
 
 ## Design principles (SOLID + ECS)
 
@@ -44,6 +44,6 @@ Assessment against the current ECS (`GameWorld`, `GameComponent`), 2D physics (`
 
 | **P1.11** | **2D grid nav ECS** | Implemented | `GridNavAgent2DComponent` (tilemap A* via `TilemapGameplayGridComponent`), `GridPathFollower2DComponent` (transform / rigidbody follow), `GridNavTarget2DComponent`, `ProcessGridNavAgents2D` in `SimulateGameAi`. |
 
-**P0 product path demo:** `GameFlow2DProductPathDemo` (SparkDemo **F**) — TMX level, gameplay grid, object spawn registry, gem pool, grid nav patrol/chaser, sprite FX dissolve, GPU minimap. API walkthrough: [2D gameplay API guide](programming-guide/7-2d-game/09-2d-gameplay-api-guide.md).
+**P0 product path demo:** `GameFlow2DProductPathDemo` (SparkDemo **F**) — TMX level, gameplay grid, object spawn registry, gem pool, grid nav patrol/chaser, sprite FX dissolve, GPU minimap. API walkthrough: [2D gameplay API guide](programming-guide/8-2d-game/09-2d-gameplay-api-guide.md).
 
 Next incremental steps: inventory/equipment (P2.1), dialogue/quests (P2.2), broader ECS save blob (P2.3).

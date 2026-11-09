@@ -8,12 +8,9 @@ import sys
 from pathlib import Path
 
 try:
-    import markdown
-    from markdown.extensions.fenced_code import FencedCodeExtension
-    from markdown.extensions.tables import TableExtension
-    from markdown.extensions.toc import TocExtension
-except ImportError:
-    print("Missing dependency: pip install markdown", file=sys.stderr)
+    from md_html import md_to_html
+except ImportError as exc:
+    print(f"Missing md_html: {exc}", file=sys.stderr)
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parent
@@ -21,27 +18,6 @@ SITE = ROOT / "site"
 
 BODY_START = '<div class="doc-body">'
 BODY_END = '</div>\n          <footer class="doc-footer">'
-
-
-def md_to_html(text: str) -> str:
-    md = markdown.Markdown(
-        extensions=[
-            TableExtension(),
-            FencedCodeExtension(),
-            TocExtension(permalink=False, toc_depth=3),
-        ]
-    )
-    html = md.convert(text)
-    # MDWeb uses .html links for internal refs.
-    html = re.sub(r'href="([^"]+?)\.md(#[^"]*)?"', r'href="\1.html\2"', html)
-    html = re.sub(
-        r'<pre><code class="language-mermaid">(.*?)</code></pre>',
-        lambda m: f'<pre class="mermaid">{m.group(1)}</pre>',
-        html,
-        flags=re.DOTALL,
-    )
-    return html
-
 
 def patch_page(md_path: Path) -> bool:
     rel = md_path.relative_to(ROOT)

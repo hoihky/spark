@@ -236,7 +236,7 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   box-shadow: var(--shadow);
 }
 
-.doc-body pre code {
+.doc-body pre code:not(.hljs) {
   background: none;
   padding: 0;
   color: inherit;
@@ -251,6 +251,64 @@ a:hover { color: var(--accent-hover); text-decoration: underline; }
   overflow-x: auto;
   line-height: 1.55;
   border-radius: var(--radius);
+  color: #abb2bf;
+  background: #282c34;
+  font-size: 0.85rem;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Beat .doc-body pre code inherit — token colors for hljs (C++, C#, Python, …) */
+.doc-body pre code.hljs .hljs-comment,
+.doc-body pre code.hljs .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.doc-body pre code.hljs .hljs-doctag,
+.doc-body pre code.hljs .hljs-formula,
+.doc-body pre code.hljs .hljs-keyword {
+  color: #c678dd;
+}
+.doc-body pre code.hljs .hljs-deletion,
+.doc-body pre code.hljs .hljs-name,
+.doc-body pre code.hljs .hljs-section,
+.doc-body pre code.hljs .hljs-selector-tag,
+.doc-body pre code.hljs .hljs-subst {
+  color: #e06c75;
+}
+.doc-body pre code.hljs .hljs-literal {
+  color: #56b6c2;
+}
+.doc-body pre code.hljs .hljs-addition,
+.doc-body pre code.hljs .hljs-attribute,
+.doc-body pre code.hljs .hljs-meta .hljs-string,
+.doc-body pre code.hljs .hljs-regexp,
+.doc-body pre code.hljs .hljs-string {
+  color: #98c379;
+}
+.doc-body pre code.hljs .hljs-attr,
+.doc-body pre code.hljs .hljs-number,
+.doc-body pre code.hljs .hljs-selector-attr,
+.doc-body pre code.hljs .hljs-selector-class,
+.doc-body pre code.hljs .hljs-selector-pseudo,
+.doc-body pre code.hljs .hljs-template-variable,
+.doc-body pre code.hljs .hljs-type,
+.doc-body pre code.hljs .hljs-variable,
+.doc-body pre code.hljs .hljs-title,
+.doc-body pre code.hljs .hljs-title.class_,
+.doc-body pre code.hljs .hljs-title.function_ {
+  color: #d19a66;
+}
+.doc-body pre code.hljs .hljs-built_in,
+.doc-body pre code.hljs .hljs-class .hljs-title {
+  color: #e6c07b;
+}
+.doc-body pre code.hljs .hljs-bullet,
+.doc-body pre code.hljs .hljs-link,
+.doc-body pre code.hljs .hljs-meta,
+.doc-body pre code.hljs .hljs-selector-id,
+.doc-body pre code.hljs .hljs-symbol {
+  color: #61aeee;
 }
 
 .doc-body .mermaid {
@@ -467,6 +525,48 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/10-sparkdemo-catalog.html" class="nav-link">10 sparkdemo catalog</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/11-scenes-and-saves.html" class="nav-link">11 scenes and saves</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/12-assets-and-content-pipeline.html" class="nav-link">12 assets and content pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/13-scripting-and-bindings.html" class="nav-link">13 scripting and bindings</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/14-debugging-and-diagnostics.html" class="nav-link">14 debugging and diagnostics</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/15-arcade-single-file-games.html" class="nav-link">15 arcade single file games</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../1-overview-architecture/16-glossary-and-roadmap-hub.html" class="nav-link">16 glossary and roadmap hub</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">2 2d graphics</span>
@@ -512,6 +612,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../2-2d-graphics/06-2d-render-pipeline.html" class="nav-link">06 2d render pipeline</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/07-render-layers-and-sorting.html" class="nav-link">07 render layers and sorting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../2-2d-graphics/08-tilemap-level-authoring.html" class="nav-link">08 tilemap level authoring</a>
                             
                         </li>
                         
@@ -563,6 +675,24 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html" class="nav-link">08 vfx and sparkvfx</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/09-environment-stack.html" class="nav-link">09 environment stack</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../3-3d-graphics/10-post-process-fog-volumes.html" class="nav-link">10 post process fog volumes</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">4 ai</span>
@@ -596,6 +726,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                         <li class="nav-item depth-1">
                           
                             <a href="../4-ai/05-pathfinding.html" class="nav-link">05 pathfinding</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../4-ai/06-perception-nav-and-blackboard.html" class="nav-link">06 perception nav and blackboard</a>
                             
                         </li>
                         
@@ -647,6 +783,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/08-collision-layers-and-filters.html" class="nav-link">08 collision layers and filters</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../5-physics/09-triggers-contacts-and-showcase.html" class="nav-link">09 triggers contacts and showcase</a>
+                            
+                        </li>
+                        
                         <li class="nav-item depth-0 is-group">
                           
                             <span class="nav-group">6 sound</span>
@@ -671,117 +819,261 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                             
                         </li>
                         
-                        <li class="nav-item depth-0 is-group">
+                        <li class="nav-item depth-1">
                           
-                            <span class="nav-group">7 2d game</span>
+                            <a href="../6-sound/04-spatial-audio-and-listeners.html" class="nav-link">04 spatial audio and listeners</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../7-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/03-level-design.html" class="nav-link">03 level design</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/06-polish.html" class="nav-link">06 polish</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
-                            
-                        </li>
-                        
-                        <li class="nav-item depth-1">
-                          
-                            <a href="../7-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            <a href="../6-sound/05-ambient-zones-and-mix.html" class="nav-link">05 ambient zones and mix</a>
                             
                         </li>
                         
                         <li class="nav-item depth-0 is-group">
                           
-                            <span class="nav-group">8 3d game</span>
+                            <span class="nav-group">7 game components usage</span>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            <a href="../7-game-components-usage/00-introduction.html" class="nav-link">00 introduction</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            <a href="../7-game-components-usage/01-2d-rendering.html" class="nav-link">01 2d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            <a href="../7-game-components-usage/02-3d-rendering.html" class="nav-link">02 3d rendering</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            <a href="../7-game-components-usage/03-tilemap.html" class="nav-link">03 tilemap</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            <a href="../7-game-components-usage/04-lighting.html" class="nav-link">04 lighting</a>
                             
                         </li>
                         
                         <li class="nav-item depth-1">
                           
-                            <a href="../8-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            <a href="../7-game-components-usage/05-camera.html" class="nav-link">05 camera</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/06-physics-2d.html" class="nav-link">06 physics 2d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/07-physics-3d.html" class="nav-link">07 physics 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/08-animation.html" class="nav-link">08 animation</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/09-input-and-gameplay.html" class="nav-link">09 input and gameplay</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../7-game-components-usage/10-ai-audio-world.html" class="nav-link">10 ai audio world</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">8 2d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/00-2d-game-systems-map.html" class="nav-link">00 2d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/01-platformer-intro.html" class="nav-link">01 platformer intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/03-level-design.html" class="nav-link">03 level design</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/04-player-controller.html" class="nav-link">04 player controller</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/05-camera-hud.html" class="nav-link">05 camera hud</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/06-polish.html" class="nav-link">06 polish</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/07-p0-2d-product-path.html" class="nav-link">07 p0 2d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/08-scene2d-runtime-limits.html" class="nav-link">08 scene2d runtime limits</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/09-2d-gameplay-api-guide.html" class="nav-link">09 2d gameplay api guide</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../8-2d-game/10-2d-components-handbook.html" class="nav-link">10 2d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">9 3d game</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/00-3d-game-systems-map.html" class="nav-link">00 3d game systems map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/01-fps-intro.html" class="nav-link">01 fps intro</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/02-project-setup.html" class="nav-link">02 project setup</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/03-arena.html" class="nav-link">03 arena</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/04-shooting.html" class="nav-link">04 shooting</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/05-rendering.html" class="nav-link">05 rendering</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/06-extending.html" class="nav-link">06 extending</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/07-character-and-third-person.html" class="nav-link">07 character and third person</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/08-physics-3d-product-path.html" class="nav-link">08 physics 3d product path</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/09-maze-ai-and-perception.html" class="nav-link">09 maze ai and perception</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../9-3d-game/10-3d-components-handbook.html" class="nav-link">10 3d components handbook</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-0 is-group">
+                          
+                            <span class="nav-group">10 tools and workflows</span>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/00-tools-and-workflows-map.html" class="nav-link">00 tools and workflows map</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/01-scene-editor-3d.html" class="nav-link">01 scene editor 3d</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/02-dear-imgui-and-tool-ui.html" class="nav-link">02 dear imgui and tool ui</a>
+                            
+                        </li>
+                        
+                        <li class="nav-item depth-1">
+                          
+                            <a href="../10-tools-and-workflows/03-spark-editor-direction.html" class="nav-link">03 spark editor direction</a>
                             
                         </li>
                         
@@ -795,117 +1087,129 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>07 particles</h1>
           </header>
           <div class="doc-body"><h1 id="particles">Particles</h1>
-<h2 id="class-design-particleemittercomponent">Class Design: <code>ParticleEmitterComponent</code></h2>
-<p>CPU-simulated billboard particles collected into <code>SceneRenderParams::particles</code>:</p>
-<pre><code class="language-cpp">class ParticleEmitterComponent final : public GameComponent {
-public:
-    void SetEmissionRate(float rate) noexcept;
-    void SetLifetime(float minSec, float maxSec) noexcept;
-    void SetStartEndSize(float start, float end) noexcept;
-    void SetStartEndColor(const Vector4&amp; start, const Vector4&amp; end) noexcept;
-    void SetGravity(const Vector3&amp; g) noexcept;
-    void SetEmissionDirection(const Vector3&amp; dir) noexcept;
-    void SetUseLocalEmission(bool local) noexcept;
-    void Burst(GameObject&amp; owner, std::uint32_t count);
-    void CollectInstances(Array&lt;SceneParticleInstance&gt;&amp; out) const;
-};
+<p>Particles are <strong>CPU-simulated billboards</strong> collected into <code>SceneRenderParams::particles</code> (and optionally drawn on the <strong>2D sprite layer</strong> when <code>ParticleRenderSpace::SpriteLayer</code>). Sources: <code>ParticleEmitterComponent</code>, <code>VfxPlayerComponent</code>, <code>VfxLibrary</code> builtins, and world <code>VfxSubsystem</code> queues.</p>
+<h2 id="collection-path">Collection path</h2>
+<pre class="mermaid">flowchart TB
+  PE[ParticleEmitterComponent]
+  VP[VfxPlayerComponent]
+  PE --&gt; Collect[CollectInstances / submit walk]
+  VP --&gt; VfxProc[ProcessVfxSubsystem]
+  Collect --&gt; Params[SceneRenderParams.particles]
+  VfxProc --&gt; Params
+  Params --&gt; Vulkan[Billboard pass in scene]
+</pre>
+<p>Requires <code>enableParticles = true</code> on <code>SubmitStandardLitSceneFromWorld*</code> and a valid camera billboard basis (<code>camRight</code>, <code>camUp</code>) for world-space quads.</p>
+<h2 id="class-design-particleemittercomponent">Class design: <code>ParticleEmitterComponent</code></h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetEmissionRate</span><span class="hljs-params">(<span class="hljs-type">float</span> rate)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetLifetime</span><span class="hljs-params">(<span class="hljs-type">float</span> minSec, <span class="hljs-type">float</span> maxSec)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetStartEndSize</span><span class="hljs-params">(<span class="hljs-type">float</span> start, <span class="hljs-type">float</span> end)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetStartEndColor</span><span class="hljs-params">(<span class="hljs-type">const</span> Vector4&amp; start, <span class="hljs-type">const</span> Vector4&amp; end)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetGravity</span><span class="hljs-params">(<span class="hljs-type">const</span> Vector3&amp; g)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetEmissionDirection</span><span class="hljs-params">(<span class="hljs-type">const</span> Vector3&amp; dir)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetUseLocalEmission</span><span class="hljs-params">(<span class="hljs-type">bool</span> local)</span> <span class="hljs-keyword">noexcept</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetRenderSpace</span><span class="hljs-params">(ParticleRenderSpace space)</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Burst</span><span class="hljs-params">(GameObject&amp; owner, std::<span class="hljs-type">uint32_t</span> count)</span></span>;
 </code></pre>
-<p>Requires <code>TransformComponent</code> on the same entity (emission origin = world translation). With <code>SetUseLocalEmission(true)</code>, the emission direction follows entity rotation.</p>
-<h2 id="built-in-presets-vfxlibrary">Built-in presets (<code>VfxLibrary</code>)</h2>
-<p>See <a href="../../VFX_ROADMAP.html"><code>docs/VFX_ROADMAP.md</code></a>. Apply fire, snow, smoke, sparkle, explosion, or impact:</p>
-<pre><code class="language-cpp">#include &quot;spark/scene/vfx/VfxLibrary.hpp&quot;
+<p>Emission origin = owner <code>TransformComponent</code> world translation. <code>SetUseLocalEmission(true)</code> rotates direction with the entity.</p>
+<h2 id="concept-builtin-fire-preset">Concept: builtin fire preset</h2>
+<h3 id="c">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/scene/vfx/VfxLibrary.hpp&quot;</span></span>
 
-auto* emitter = fxGo-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
-VfxLibrary::ApplyBuiltin(VfxBuiltinId::Fire, *emitter);
-
-// One-shot burst (explosion / impact use emission rate 0)
-VfxLibrary::ApplyBuiltin(VfxBuiltinId::Explosion, *emitter);
-emitter-&gt;Burst(*fxGo, 96);
+GameObject* fxGo = world.<span class="hljs-built_in">CreateGameObject</span>();
+fxGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>});
+ParticleEmitterComponent* emitter = fxGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;ParticleEmitterComponent&gt;();
+VfxLibrary::<span class="hljs-built_in">ApplyBuiltin</span>(VfxBuiltinId::Fire, *emitter);
 </code></pre>
-<h2 id="vfxplayercomponent-assets-p2"><code>VfxPlayerComponent</code> + assets (P2)</h2>
-<p>Load a <code>.sparkvfx</code> asset or built-in by name:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/rendering/VfxPlayerComponent.hpp&quot;
-#include &quot;spark/scene/vfx/VfxSubsystemProcess.hpp&quot;
-
-// Attached player
-auto* player = fxGo-&gt;AddComponent&lt;VfxPlayerComponent&gt;();
-player-&gt;SetVfxAssetKey(&quot;vfx/explosion&quot;);  // or &quot;explosion&quot;
-player-&gt;PlayOnce(*fxGo);
-
-// World-space one-shot (pooled; call ProcessVfx each frame via Game base)
-world.GetVfxSubsystem().Queue(&quot;explosion&quot;, hitPosition);
+<h3 id="c_1">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> fxGo = world.CreateGameObject(<span class="hljs-string">&quot;Fire&quot;</span>);
+fxGo.GetOrAddTransform().SetTranslation(<span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>));
+<span class="hljs-keyword">var</span> emitter = fxGo.AddParticleEmitter();
+VfxLibrary.ApplyBuiltin(VfxBuiltinId.Fire, emitter);
 </code></pre>
-<p><code>.sparkvfx</code> format (<code>sparkvfx_v1</code>):</p>
-<pre><code class="language-text">builtin explosion
+<h3 id="python">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">fx = world.create_game_object(<span class="hljs-string">&quot;Fire&quot;</span>)
+fx.get_or_add_transform().set_translation(Vector3(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>))
+emitter = fx.add_particle_emitter()
+emitter.apply_builtin_fire()
+</code></pre>
+<h2 id="concept-one-shot-explosion">Concept: one-shot explosion</h2>
+<h3 id="c_2">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">VfxLibrary::<span class="hljs-built_in">ApplyBuiltin</span>(VfxBuiltinId::Explosion, *emitter);
+emitter-&gt;<span class="hljs-built_in">Burst</span>(*fxGo, <span class="hljs-number">96</span>);
+</code></pre>
+<h3 id="c_3">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">VfxLibrary.ApplyBuiltin(VfxBuiltinId.Explosion, emitter);
+emitter.Burst(fxGo, <span class="hljs-number">96</span>);
+</code></pre>
+<h3 id="python_1">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">emitter.apply_builtin_explosion()
+emitter.burst(<span class="hljs-number">96</span>)
+</code></pre>
+<h2 id="concept-vfxplayercomponent-sparkvfx">Concept: <code>VfxPlayerComponent</code> + <code>.sparkvfx</code></h2>
+<h3 id="c_4">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">VfxPlayerComponent* player = fxGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;VfxPlayerComponent&gt;();
+player-&gt;<span class="hljs-built_in">SetVfxAssetKey</span>(<span class="hljs-string">&quot;vfx/explosion&quot;</span>);
+player-&gt;<span class="hljs-built_in">PlayOnce</span>(*fxGo);
+
+world.<span class="hljs-built_in">GetVfxSubsystem</span>().<span class="hljs-built_in">Queue</span>(<span class="hljs-string">&quot;explosion&quot;</span>, hitPosition);
+</code></pre>
+<p>Asset format (<code>sparkvfx_v1</code>):</p>
+<pre><code class="hljs language-text language-plaintext" data-highlighted="yes">builtin explosion
 burst 112
 </code></pre>
-<p>Composite (<code>sparkvfx_v1</code>):</p>
-<pre><code class="language-text">composite
-phase 0.000 builtin rocket_trail duration 0.280
-phase 0.280 builtin explosion burst 96
-phase 0.420 builtin sparkle burst 48
-prefab prefabs/fx_extra.sparkscene
-</code></pre>
-<p>Built-in composites: <code>fireworks</code>, <code>confetti</code>, <code>meteor_strike</code>, <code>magic_impact</code>, <code>smoke_grenade</code> (via <code>VfxEffectDefinition</code>).</p>
-<p><code>VfxLibrary</code> ships <strong>30</strong> single-emitter presets (weather, ambient, combat, RPG) plus the composites above. See <code>VfxShowcaseDetail.hpp</code> for the full showcase catalog.</p>
-<h2 id="animation-events-scripting-p5">Animation events + scripting (P5)</h2>
-<p>Attach <code>AnimationEventVfxComponent</code> beside <code>AnimationEventReceiverComponent</code> to play VFX when markers fire:</p>
-<pre><code class="language-cpp">#include &quot;spark/ecs/components/animation/AnimationEventVfxComponent.hpp&quot;
-
-auto* vfxEvents = actor-&gt;AddComponent&lt;AnimationEventVfxComponent&gt;();
-vfxEvents-&gt;AddBinding(&quot;footstep&quot;, &quot;impact&quot;);
-</code></pre>
-<p>C# / managed interop:</p>
-<pre><code class="language-csharp">Native.spark_vfx_play(world, &quot;explosion&quot;, hitX, hitY, hitZ);
+<h3 id="c_5">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">fxGo.AddVfxPlayer().SetVfxAssetKey(<span class="hljs-string">&quot;vfx/explosion&quot;</span>).PlayOnce(fxGo);
+Native.spark_vfx_play(world, <span class="hljs-string">&quot;explosion&quot;</span>, hitX, hitY, hitZ);
 Native.spark_world_process_vfx(world);
 </code></pre>
-<h2 id="curves-modules-p4">Curves + modules (P4)</h2>
-<p>Life curves replace linear start/end interpolation when set on the emitter:</p>
-<pre><code class="language-cpp">#include &quot;spark/scene/vfx/ParticleCurves.hpp&quot;
-#include &quot;spark/scene/vfx/modules/ParticleModuleRegistry.hpp&quot;
-
-emitter-&gt;SetEmissionModuleId(&quot;ring&quot;);  // continuous | burst_only | ring
-emitter-&gt;SetRingRadius(0.6F);
-
-ParticleFloatCurve sizeCurve{};
-sizeCurve.SetEndpoints(0.2F, 0.02F);
-emitter-&gt;SetSizeCurve(sizeCurve);
+<h3 id="python_2">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">fx.add_vfx_player().set_vfx_asset_key(<span class="hljs-string">&quot;vfx/explosion&quot;</span>).play_once()
 </code></pre>
-<h2 id="fire-emitter-manual-tuning">Fire Emitter (manual tuning)</h2>
-<pre><code class="language-cpp">auto* fxGo = world.CreateGameObject();
-fxGo-&gt;AddComponent&lt;TransformComponent&gt;()-&gt;SetTranslation({0, 1, 0});
-
-auto* emitter = fxGo-&gt;AddComponent&lt;ParticleEmitterComponent&gt;();
-VfxLibrary::ApplyBuiltin(VfxBuiltinId::Fire, *emitter);
-</code></pre>
-<h2 id="gem-sparkles-from-maze3ddemo">Gem Sparkles (from <code>Maze3DDemo</code>)</h2>
-<p>Attach a subtle emitter to collectible props:</p>
-<pre><code class="language-cpp">if (ParticleEmitterComponent* pe = gem-&gt;AddComponent&lt;ParticleEmitterComponent&gt;()) {
-    pe-&gt;SetMaxParticles(200);
-    pe-&gt;SetEmissionRate(32.0F);
-    pe-&gt;SetLifetime(0.4F, 1.05F);
-    pe-&gt;SetStartEndSize(0.11F, 0.018F);
-    pe-&gt;SetStartEndColor(gemColor, Vector4{gemColor.x, gemColor.y, gemColor.z, 0.0F});
-}
-</code></pre>
-<h2 id="enable-in-submit">Enable in Submit</h2>
-<pre><code class="language-cpp">SubmitStandardLitSceneFromWorldWithCamera(
+<h2 id="concept-enable-in-render-submit">Concept: enable in render submit</h2>
+<h3 id="c_6">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(
     world, context, sunDir, sunColor, intensity, ambient,
-    true,   // enableParticles
+    <span class="hljs-literal">true</span>,   <span class="hljs-comment">// enableParticles</span>
     sceneTime);
 </code></pre>
-<p>Or pass <code>enableParticles = true</code> to <code>SubmitStandardLitSceneFromWorld</code>.</p>
-<h2 id="sceneparticleinstance"><code>SceneParticleInstance</code></h2>
-<pre><code class="language-cpp">struct SceneParticleInstance {
+<h3 id="c_7">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+    world, ctx, sunDir, sunColor, intensity, ambient,
+    enableParticles: <span class="hljs-literal">true</span>, sceneTime);
+</code></pre>
+<h3 id="python_3">Python</h3>
+<p>Particle submit is handled by the native game loop when the template enables VFX processing.</p>
+<h2 id="concept-2d-sprite-layer-particles">Concept: 2D sprite-layer particles</h2>
+<p>For platformers, match sprite sort domain:</p>
+<h3 id="c_8">C++</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">emitter-&gt;<span class="hljs-built_in">SetRenderSpace</span>(ParticleRenderSpace::SpriteLayer);
+emitter-&gt;<span class="hljs-built_in">SetEffectKey</span>(<span class="hljs-string">&quot;coin_pop_2d&quot;</span>);
+</code></pre>
+<p>See <a href="../2-2d-graphics/05-2d-lighting.html">2D Lighting</a>.</p>
+<h3 id="c_9">C#</h3>
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">emitter.SetRenderSpace(ParticleRenderSpace.SpriteLayer);
+</code></pre>
+<h3 id="python_4">Python</h3>
+<pre><code class="hljs language-python language-python" data-highlighted="yes">emitter.set_render_space_sprite_layer()
+</code></pre>
+<h2 id="curves-and-modules-advanced">Curves and modules (advanced)</h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">emitter-&gt;<span class="hljs-built_in">SetEmissionModuleId</span>(<span class="hljs-string">&quot;ring&quot;</span>);
+emitter-&gt;<span class="hljs-built_in">SetRingRadius</span>(<span class="hljs-number">0.6F</span>);
+ParticleFloatCurve sizeCurve{};
+sizeCurve.<span class="hljs-built_in">SetEndpoints</span>(<span class="hljs-number">0.2F</span>, <span class="hljs-number">0.02F</span>);
+emitter-&gt;<span class="hljs-built_in">SetSizeCurve</span>(sizeCurve);
+</code></pre>
+<p><code>VfxShowcaseDemo</code> (<strong>#3</strong>) lists <strong>30+</strong> builtins and composite effects — see <code>VfxShowcaseDetail.hpp</code>.</p>
+<h2 id="sceneparticleinstance-gpu-instance"><code>SceneParticleInstance</code> (GPU instance)</h2>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">SceneParticleInstance</span> {
     Vector3 position{};
-    float size = 0.1F;
-    Vector4 color{1, 1, 1, 1};
-    Vector4 uvRect{0, 0, 1, 1};
-    std::int32_t textureLayer = -1;  // resolved at submit from ParticleEmitterComponent::GetTexture()
+    <span class="hljs-type">float</span> size = <span class="hljs-number">0.1F</span>;
+    Vector4 color{<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>};
+    Vector4 uvRect{<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>};
+    std::<span class="hljs-type">int32_t</span> textureLayer = <span class="hljs-number">-1</span>;
 };
 </code></pre>
-<p>See <code>VfxShowcaseDemo</code> (SparkDemo <strong>#3</strong>) for the built-in library, live tuning, and saving custom <code>.sparkvfx</code> assets (<code>VfxShowcaseDetail.hpp</code>).</p>
-<p>Part 3 complete → <strong>Part 4</strong>: <a href="../4-ai/01-ai-overview.html">AI Overview</a>.</p></div>
+<p>Next: <a href="08-vfx-and-sparkvfx.html">VFX and <code>.sparkvfx</code></a> → <a href="09-environment-stack.html">Environment stack</a> → <a href="10-post-process-fog-volumes.html">Post-process &amp; volumes</a>.</p></div>
           <footer class="doc-footer">
             <p>Generated by <strong>MDWeb</strong></p>
           </footer>
