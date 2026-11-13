@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>05 skinned characters</h1>
           </header>
           <div class="doc-body"><h1 id="skinned-characters">Skinned Characters</h1>
-<p>Skinned rendering combines <strong><code>SkinnedMeshComponent</code></strong>, <strong><code>AnimatorComponent</code></strong> (joint palette), <strong><code>Skeleton</code></strong>, and optional <strong><code>Character3DAnimFsmComponent</code></strong>. Assets load through <code>GameWorld::LoadSkinnedGltf</code>; <code>GltfAssetBinder::BindFromPath</code> can attach skinned content automatically when the file contains a skeleton.</p>
+<p>Skinned rendering combines <strong><code>SkinnedMeshComponent</code></strong>, <strong><code>AnimatorComponent</code></strong> (joint palette), <strong><code>Skeleton</code></strong>, and optional <strong><code>Character3DAnimFsmComponent</code></strong>. Assets load through <code>WorldAssets::LoadSkinnedGltf</code>; <code>GltfAssetBinder::BindFromPath</code> can attach skinned content automatically when the file contains a skeleton.</p>
 <h2 id="playback-stack">Playback stack</h2>
 <pre class="mermaid">flowchart TB
   FSM[Character3DAnimFsmComponent priority 100]
@@ -1128,7 +1128,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p>Clip tables: <a href="../../../ANIMATION_SAMPLE_ASSETS.html"><code>docs/ANIMATION_SAMPLE_ASSETS.md</code></a>.</p>
 <h2 id="concept-spawn-animated-character">Concept: spawn animated character</h2>
 <h3 id="c">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SkinnedGltfAsset fox = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 
 GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>});
@@ -1144,7 +1144,7 @@ fsm-&gt;<span class="hljs-built_in">ConfigureLocomotionFromSkeleton</span>(*fox.
 </code></pre>
 <p>Component order on the object does not matter — stable sort by <code>UpdatePriority</code> ensures FSM before animator.</p>
 <h3 id="c_1">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> fox = world.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> fox = world.Assets.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 <span class="hljs-keyword">var</span> go = world.CreateGameObject(<span class="hljs-string">&quot;Fox&quot;</span>);
 go.GetOrAddTransform();
 go.AddSkinnedMesh(fox.Mesh);

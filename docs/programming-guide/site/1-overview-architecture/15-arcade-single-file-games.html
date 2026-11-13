@@ -1173,7 +1173,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Tetris2DDemo::Load</span><span class="hljs-params">(GameWorld&amp; w, IEngineContext&amp; context)</span> </span>{
     roots.<span class="hljs-built_in">Clear</span>();
     atlasTex = Detail::<span class="hljs-built_in">MakeTetrisBlockAtlas</span>();
-    w.<span class="hljs-built_in">RegisterTexture</span>(atlasTex, <span class="hljs-string">&quot;spark/tetris/blocks&quot;</span>);
+    w.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterTexture</span>(atlasTex, <span class="hljs-string">&quot;spark/tetris/blocks&quot;</span>);
     <span class="hljs-comment">// board tilemap, HUD, help overlay ...</span>
 }
 

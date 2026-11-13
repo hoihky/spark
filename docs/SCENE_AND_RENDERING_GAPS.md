@@ -25,7 +25,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 
 | API | Role |
 |-----|------|
-| `GameWorld` | `CreateGameObject`, `DestroyGameObject`, `SetParent`, `UpdateGameObjects`; asset I/O via **`GameWorldAssetCache`** (`Load*` / `Register*`) |
+| `GameWorld` | `CreateGameObject`, `DestroyGameObject`, `SetParent`, `UpdateGameObjects`; asset I/O via **`WorldAssets`** (`world.Assets()`) (`Load*` / `Register*`) |
 | `GameObject` | `AddComponent<T>`, `GetComponent<T>`, `GetWorldMatrix`, signals |
 | `GameComponent` | `OnAttach` / `OnUpdate` / `OnDetach` / `OnSignal`; **97** concrete `ComponentKind` values (+ `Unknown`) — see [component reference](programming-guide/1-overview-architecture/07-game-component-reference.md) |
 | `Scene` | Query iterators: `ForEachDrawable`, `ForEachSkinnedDrawable`, lights, sky, GUI, particles; frustum variants |
@@ -68,7 +68,7 @@ C <kind> <payload>
 | API | Role |
 |-----|------|
 | `Mesh`, `SkinnedMesh`, `Skeleton`, `Texture2D`, `Font` | CPU-side assets |
-| `GameWorld::LoadMesh`, `LoadGltf`, `LoadSkinnedGltf`, `LoadTexture` | Path-keyed synchronous load |
+| `WorldAssets::LoadMesh`, `LoadGltf`, `LoadSkinnedGltf`, `LoadTexture` | Path-keyed synchronous load |
 | `ScenePartitionKind`, `SceneSpatialPolicyComponent` | Frustum culling mode (BVH, octree, …) |
 | `MeshRaycast` | CPU triangle ray tests |
 

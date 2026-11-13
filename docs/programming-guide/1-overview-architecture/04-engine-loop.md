@@ -156,7 +156,7 @@ On macOS, prefer in-engine **F12** over system capture (MoltenVK windows often r
 2. `Game::OnUpdate` (components, animation, sound cue prep).
 3. `PhysicsSubsystem::Simulate2D` / `SimulateAll3D`.
 4. Game rules (scoring, spawns) that depend on physics results.
-5. Optional: `SimulateGameAi`, `ProcessVfx`, async `world.PumpAssets()`.
+5. Optional: `SimulateGameAi`, `ProcessVfx`, async `world.Assets().Pump()`.
 
 Rendering never mutates physics state — only reads transforms after simulation.
 

@@ -1343,7 +1343,7 @@ tr-&gt;<span class="hljs-built_in">SetUniformScale</span>(<span class="hljs-numb
 | <strong>Header</strong> | <code>spark/ecs/components/rendering/MeshComponent.hpp</code> |</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(meshAsset, SceneMeshSlot::Custom, tint);
 </code></pre>
-<p>Register assets: <code>world.RegisterMesh(sharedMesh, key)</code>.</p>
+<p>Register assets: <code>world.Assets().RegisterMesh(sharedMesh, key)</code> (C#: <code>world.Assets.RegisterMesh</code>).</p>
 <h3 id="materialcomponent-material"><code>MaterialComponent</code> {#material}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::Material</code> |
 | <strong>Header</strong> | <code>spark/ecs/components/rendering/MaterialComponent.hpp</code> |</p>

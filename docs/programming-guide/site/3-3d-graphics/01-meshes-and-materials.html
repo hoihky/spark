@@ -1140,7 +1140,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 </tbody>
 </table>
-<p>Register custom meshes: <code>world.RegisterMesh(mesh, "fps/unit_cube")</code>.</p>
+<p>Register custom meshes: <code>world.Assets().RegisterMesh(</code>mesh, "fps/unit_cube")`.</p>
 <h2 id="class-design-materialcomponent">Class design: <code>MaterialComponent</code></h2>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MaterialComponent</span> <span class="hljs-keyword">final</span> : <span class="hljs-keyword">public</span> GameComponent {
 <span class="hljs-keyword">public</span>:
@@ -1162,7 +1162,7 @@ go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;
 GltfAssetBinder::<span class="hljs-built_in">BindFromPath</span>(*go, <span class="hljs-string">&quot;assets/models/DamagedHelmet.glb&quot;</span>);
 </code></pre>
 <p>Manual path:</p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
 GltfAssetBinder::<span class="hljs-built_in">BindRigidMesh</span>(*go, asset, SceneMeshSlot::Custom, Vector3::One, <span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
 <span class="hljs-keyword">if</span> (MaterialComponent* mat = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;MaterialComponent&gt;()) {
     <span class="hljs-built_in">ApplyGltfMaterialDesc</span>(*mat, asset.material);
@@ -1182,7 +1182,7 @@ go.bind_gltf_from_path(<span class="hljs-string">&quot;assets/models/DamagedHelm
 <h2 id="concept-procedural-cube-fps-style">Concept: procedural cube (FPS style)</h2>
 <h3 id="c_2">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span> unitCube = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
-world.<span class="hljs-built_in">RegisterMesh</span>(unitCube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(unitCube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
 
 GameObject* target = world.<span class="hljs-built_in">CreateGameObject</span>();
 target-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">5</span>, <span class="hljs-number">1</span>, <span class="hljs-number">-3</span>});
@@ -1190,7 +1190,7 @@ target-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(
 target-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(<span class="hljs-literal">nullptr</span>)-&gt;<span class="hljs-built_in">SetRoughness</span>(<span class="hljs-number">0.35F</span>);
 </code></pre>
 <h3 id="c_3">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RegisterMesh(unitCube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.Assets.RegisterMesh(unitCube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
 <span class="hljs-keyword">var</span> target = world.CreateGameObject(<span class="hljs-string">&quot;Target&quot;</span>);
 target.GetOrAddTransform().SetTranslation(<span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">5</span>, <span class="hljs-number">1</span>, <span class="hljs-number">-3</span>));
 target.AddMesh(SceneMeshSlot.Custom, <span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">0.9f</span>, <span class="hljs-number">0.3f</span>, <span class="hljs-number">0.2f</span>));

@@ -56,6 +56,7 @@ flowchart LR
 | `Spark::IGame` / `Spark::Game` | `Spark.Bindings.IGame` / `Game` |
 | `Spark::IEngineContext` / `IInput` | `Spark.Bindings.IEngineContext` / `IInput` |
 | `Spark::Scene` / `GameWorld` / `GameObject` | Same names under `Spark.Bindings` |
+| `Spark::WorldAssets` / `world.Assets()` | `Spark.Bindings.WorldAssets` / `GameWorld.Assets` (asset load, pump, register) |
 | `ComponentKind` | `SparkComponentKind` — must match `GameComponent.hpp` via `SparkInteropComponentKinds.h` |
 
 Virtual gameplay APIs are mirrored as C# types that call `spark_*`. Structs/enums in `SparkInteropTypes.h` are emitted by ClangSharp with sequential layout.

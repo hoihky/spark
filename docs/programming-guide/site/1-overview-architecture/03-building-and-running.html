@@ -1136,7 +1136,7 @@ cmake --build build-debug -j
 cmake --preset debug -DSPARK_ENGINE_ROOT=<span class="hljs-string">&quot;<span class="hljs-subst">$(cd ../spark &amp;&amp; pwd)</span>&quot;</span>
 cmake --build build --target SparkInterop SparkScriptHost SparkRunHelloCsGameDebug
 </code></pre>
-<p>Details: <a href="../../../SPARK_SHARP.html">SPARK_SHARP.md</a>, spark-sharp <code>README.md</code>.</p>
+<p>Details: <a href="../../../site/docs/spark-sharp.html">SPARK_SHARP.md</a>, spark-sharp <code>README.md</code>.</p>
 <h3 id="python">Python</h3>
 <p>Build <strong>spark</strong> first, then <strong>spark-python</strong> against the same <code>SPARK_ENGINE_ROOT</code>. Run samples:</p>
 <pre><code class="hljs language-bash language-bash" data-highlighted="yes"><span class="hljs-built_in">cd</span> ../spark-python
@@ -1192,7 +1192,7 @@ path.<span class="hljs-built_in">AppendUtf8</span>(<span class="hljs-string">&qu
 </code></pre>
 <h3 id="c_3">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-comment">// SparkScriptHost sets asset roots from native bootstrap; use relative keys under assets/.</span>
-world.RegisterTextureFromFile(<span class="hljs-string">&quot;ui/icon&quot;</span>, <span class="hljs-string">&quot;assets/sprites/icon.png&quot;</span>);
+world.Assets.RegisterTextureFromFile(<span class="hljs-string">&quot;ui/icon&quot;</span>, <span class="hljs-string">&quot;assets/sprites/icon.png&quot;</span>);
 </code></pre>
 <h3 id="python_1">Python</h3>
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Paths resolve relative to engine asset dir when using keys like &quot;sprites/foo.png&quot;</span>

@@ -31,7 +31,7 @@ Components that populate `SceneRenderParams::draws`, `transparentDraws`, `waterD
 
 ```cpp
 auto mesh = MakeShared<Mesh>(Mesh::CreateUnitCube());
-world.RegisterMesh(mesh, "props/crate");
+world.Assets().RegisterMesh(mesh, "props/crate");
 go->AddComponent<MeshComponent>(mesh, SceneMeshSlot::Custom, Vector3{0.8F, 0.6F, 0.4F});
 ```
 

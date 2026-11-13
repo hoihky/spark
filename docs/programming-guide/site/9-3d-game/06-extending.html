@@ -1169,21 +1169,21 @@ _physics.GetCharacterController3D().SimulateCharacterControllers3D(World, timing
 <p>See <code>CharacterCameraDemo</code> for <code>SpringArm3DComponent</code> + <code>CameraFollow3DComponent</code>.</p>
 <h2 id="concept-gltf-viewmodels">Concept: glTF viewmodels</h2>
 <h3 id="c_8">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-world.<span class="hljs-built_in">PumpAssets</span>();
-<span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
-    SkinnedGltfAsset arms = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">Pump</span>();
+<span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
+    SkinnedGltfAsset arms = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
     viewModel-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkinnedMeshComponent&gt;(arms.mesh);
     viewModel-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(arms.skeleton, <span class="hljs-number">0</span>, <span class="hljs-number">1.0F</span>);
 }
 </code></pre>
 <h3 id="c_9">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> fox = world.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> fox = world.Assets.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 viewModel.AddSkinnedMesh(fox.Mesh);
 </code></pre>
 <p><a href="../3-3d-graphics/05-skinned-characters.html">Skinned characters</a>.</p>
 <h2 id="c-scripting-host">C# scripting host</h2>
-<p>Managed games use <strong><code>Spark.Bindings</code></strong> + optional <strong><code>SparkScriptHost</code></strong> (<a href="../../CSHARP_SCRIPTING.html">C# scripting</a>, <a href="../../COMPONENT_SCRIPT_CODEGEN.html">codegen</a>). Regenerate mirrors after <code>component-script-catalog.json</code> changes.</p>
+<p>Managed games use <strong><code>Spark.Bindings</code></strong> + optional <strong><code>SparkScriptHost</code></strong> (<a href="../../../site/docs/csharp-scripting.html">C# scripting</a>, <a href="../../../site/docs/component-script-codegen.html">codegen</a>). Regenerate mirrors after <code>component-script-catalog.json</code> changes.</p>
 <hr />
 <p>Continue Part 9:</p>
 <ul>

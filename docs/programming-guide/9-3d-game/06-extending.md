@@ -121,10 +121,10 @@ See `CharacterCameraDemo` for `SpringArm3DComponent` + `CameraFollow3DComponent`
 ### C++
 
 ```cpp
-world.RequestGltf("assets/models/Fox.glb");
-world.PumpAssets();
-if (world.IsGltfReady("assets/models/Fox.glb")) {
-    SkinnedGltfAsset arms = world.LoadSkinnedGltf("assets/models/Fox.glb");
+world.Assets().RequestGltf("assets/models/Fox.glb");
+world.Assets().Pump();
+if (world.Assets().IsGltfReady("assets/models/Fox.glb")) {
+    SkinnedGltfAsset arms = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
     viewModel->AddComponent<SkinnedMeshComponent>(arms.mesh);
     viewModel->AddComponent<AnimatorComponent>(arms.skeleton, 0, 1.0F);
 }
@@ -133,7 +133,7 @@ if (world.IsGltfReady("assets/models/Fox.glb")) {
 ### C\#
 
 ```csharp
-var fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+var fox = world.Assets.LoadSkinnedGltf("assets/models/Fox.glb");
 viewModel.AddSkinnedMesh(fox.Mesh);
 ```
 

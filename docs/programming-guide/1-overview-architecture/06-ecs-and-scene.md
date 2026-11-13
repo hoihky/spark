@@ -51,7 +51,7 @@ bool SetParent(GameObject* child, GameObject* newParent);
 void UpdateGameObjects(const FrameTiming& timing, IEngineContext& context);
 ```
 
-Asset caches: `RegisterMesh`, `RegisterTexture`, `LoadGltf`, `LoadSkinnedGltf`, `SetUiFont`, async `RequestGltf` + `PumpAssets`.
+**Assets:** `world.Assets()` (`WorldAssets`) — `RegisterMesh`, `RegisterTexture`, `LoadGltf`, `LoadSkinnedGltf`, async `RequestGltf` + `Pump`, lookups by key/path. **UI fonts** stay on `GameWorld`: `SetUiFont` / `SetUiBoldFont`.
 
 ## Concept: create a player entity
 

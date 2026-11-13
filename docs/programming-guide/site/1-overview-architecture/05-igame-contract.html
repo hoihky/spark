@@ -1141,7 +1141,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnAttach</span><span class="hljs-params">(IEngineContext&amp;)</span> <span class="hljs-keyword">override</span> </span>{
         <span class="hljs-keyword">auto</span>&amp; world = <span class="hljs-built_in">GetWorld</span>();
         <span class="hljs-keyword">auto</span> cube = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
-        world.<span class="hljs-built_in">RegisterMesh</span>(cube, <span class="hljs-string">&quot;demo/cube&quot;</span>);
+        world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(cube, <span class="hljs-string">&quot;demo/cube&quot;</span>);
         GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
         go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
         go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3{<span class="hljs-number">0.7F</span>, <span class="hljs-number">0.3F</span>, <span class="hljs-number">0.2F</span>});
@@ -1257,19 +1257,19 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p><code>SubmitStandardLitSceneFromWorldWithCamera</code> resolves the main <code>Camera2DComponent</code> or <code>CameraComponent</code> — add one to the scene when using this shortcut.</p>
 <h2 id="concept-async-gltf-loading">Concept: async glTF loading</h2>
 <h3 id="c_4">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-world.<span class="hljs-built_in">PumpAssets</span>();
-<span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
-    SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">Pump</span>();
+<span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
+    SkinnedGltfAsset fox = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
     <span class="hljs-comment">// spawn SkinnedMeshComponent + AnimatorComponent</span>
 }
 </code></pre>
 <h3 id="c_5">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RequestGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-world.PumpAssets();
-<span class="hljs-keyword">if</span> (world.IsGltfReady(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>))
+world.Assets.Pump();
+<span class="hljs-keyword">if</span> (world.Assets.IsGltfReady(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>))
 {
-    <span class="hljs-keyword">var</span> fox = world.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+    <span class="hljs-keyword">var</span> fox = world.Assets.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 }
 </code></pre>
 <h3 id="python_2">Python</h3>

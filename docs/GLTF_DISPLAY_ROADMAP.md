@@ -23,7 +23,7 @@ GltfAssetBinder::BindFromPath(*go, "assets/models/Anything.glb");
 |------|----------------|
 | `GltfSceneLoader` | Parses rigid glTF into `GltfSceneDocument` (local-space meshes, dedup by `cgltf_mesh*`) |
 | `GltfSceneImporter` | Walks node tree → `GameObject` hierarchy with per-node `TransformComponent` |
-| `GameWorld::TryLoadGltfScene` | Path-keyed scene cache (`CachedAssetKind::GltfScene`) |
+| `WorldAssets::LoadGltfScene` / `TryLoadGltfScene` | Path-keyed scene cache (`CachedAssetKind::GltfScene`) |
 | `BindFromPath` (rigid) | Imports scene graph instead of baking into one mesh |
 | `GltfMeshBuilder` | Shared primitive builder for merged loader + scene loader |
 

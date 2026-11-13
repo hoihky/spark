@@ -68,7 +68,7 @@ Unlit alpha-blended unit quad; tint, UV rect, `sortOrder`. Texture via `SharedPt
 #### C++
 
 ```cpp
-world.RegisterTexture(albedo, "game/hero");
+world.Assets().RegisterTexture(albedo, "game/hero");
 go->AddComponent<SpriteComponent>(
     albedo,
     Vector4{1, 1, 1, 1},
@@ -79,7 +79,7 @@ go->AddComponent<SpriteComponent>(
 #### C\#
 
 ```csharp
-world.RegisterTextureFromFile("game/hero", "assets/sprites/hero.png");
+world.Assets.RegisterTextureFromFile("game/hero", "assets/sprites/hero.png");
 go.AddSprite("game/hero", new Vector4(1, 1, 1, 1), new Vector4(0, 0, 1, 1), sortOrder: 100);
 ```
 

@@ -1098,15 +1098,15 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </thead>
 <tbody>
 <tr>
-<td><a href="../../SPARK_SHARP.html">SPARK_SHARP.md</a></td>
+<td><a href="../../../site/docs/spark-sharp.html">SPARK_SHARP.md</a></td>
 <td>Repo layout, CMake presets</td>
 </tr>
 <tr>
-<td><a href="../../CSHARP_SCRIPTING.html">CSHARP_SCRIPTING.md</a></td>
+<td><a href="../../../site/docs/csharp-scripting.html">CSHARP_SCRIPTING.md</a></td>
 <td><code>SparkScriptHost</code>, <code>HelloCsGame</code></td>
 </tr>
 <tr>
-<td><a href="../../COMPONENT_SCRIPT_CODEGEN.html">COMPONENT_SCRIPT_CODEGEN.md</a></td>
+<td><a href="../../../site/docs/component-script-codegen.html">COMPONENT_SCRIPT_CODEGEN.md</a></td>
 <td><code>component-script-catalog.json</code> → C ABI</td>
 </tr>
 <tr>
@@ -1128,6 +1128,50 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li>Regenerate (<code>spark-sharp/tools/generate-csharp-bindings.sh</code>, python stubs as documented in repos).  </li>
 <li>Update <a href="07-game-component-reference.html">component reference</a> and relevant <a href="../7-game-components-usage/00-introduction.html">Part 7</a> chapter.</li>
 </ol>
+<h2 id="gameworld-facets-c-and-c"><code>GameWorld</code> facets (C++ and C#)</h2>
+<p>C++ groups world services behind <strong>views</strong> returned from <code>GameWorld</code> (<code>include/spark/scene/core/world/*.hpp</code>). C# mirrors the same names on <code>Spark.Bindings.GameWorld</code> (see <a href="../../API_POLISH.html">API polish</a>).</p>
+<table>
+<thead>
+<tr>
+<th>C++</th>
+<th>C#</th>
+<th>Asset / gameplay notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>world.Entities()</code></td>
+<td><code>world.Entities</code></td>
+<td>Create, destroy, reparent, queries</td>
+</tr>
+<tr>
+<td><code>world.Assets()</code></td>
+<td><code>world.Assets</code></td>
+<td><strong>Load/register/pump glTF &amp; textures</strong> (replaces flat <code>GameWorld</code> asset methods)</td>
+</tr>
+<tr>
+<td><code>world.Physics(physics)</code></td>
+<td><code>world.Physics</code></td>
+<td>2D/3D step, layers</td>
+</tr>
+<tr>
+<td><code>world.Simulation()</code></td>
+<td><code>world.Simulation</code></td>
+<td><code>UpdateGameObjects</code>, VFX, audio, AI slice</td>
+</tr>
+<tr>
+<td><code>world.Rendering()</code></td>
+<td><code>world.Rendering</code></td>
+<td>Standard-lit submit</td>
+</tr>
+<tr>
+<td><code>world.QueryObjects()</code></td>
+<td><code>world.Query</code></td>
+<td>Tag/component collect</td>
+</tr>
+</tbody>
+</table>
+<p><code>Spark.Scripting.SparkGame</code> exposes <code>protected WorldAssets Assets</code> (obsolete alias <code>AssetCache</code>). Prefer <strong><code>world.Assets.LoadGltf</code></strong>, <strong><code>world.Assets.Pump</code></strong>, <strong><code>world.Assets.RegisterTextureFromFile</code></strong> over deprecated <code>GameWorld.LoadGltf</code>.</p>
 <h2 id="concept-c-game-entry">Concept: C# game entry</h2>
 <h3 id="c">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-comment">// Native bootstrap only — your game may be entirely managed:</span>
@@ -1210,7 +1254,7 @@ player.get_or_add_default_component(ComponentKind.CharacterController2D)
 </tr>
 <tr>
 <td><code>SharedPtr</code> constructors for assets</td>
-<td><code>RegisterMesh</code> / <code>AddMesh</code> mirrors in <code>CppMirrors.g.cs</code></td>
+<td><code>world.Assets.RegisterMesh</code> / <code>AddMesh</code> mirrors in <code>CppMirrors.g.cs</code></td>
 </tr>
 <tr>
 <td>Scene load / pool / some editor APIs</td>

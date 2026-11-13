@@ -1153,7 +1153,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p><strong>When to use:</strong> Static props, floors, procedural cubes. Slot <code>UnitCube</code> / <code>GroundPlane</code> or <code>Custom</code> with registered mesh.</p>
 <h4 id="c">C++</h4>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span> mesh = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
-world.<span class="hljs-built_in">RegisterMesh</span>(mesh, <span class="hljs-string">&quot;props/crate&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(mesh, <span class="hljs-string">&quot;props/crate&quot;</span>);
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(mesh, SceneMeshSlot::Custom, Vector3{<span class="hljs-number">0.8F</span>, <span class="hljs-number">0.6F</span>, <span class="hljs-number">0.4F</span>});
 </code></pre>
 <h4 id="c_1">C#</h4>

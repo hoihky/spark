@@ -1223,7 +1223,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>Game::OnUpdate</code> (components, animation, sound cue prep).</li>
 <li><code>PhysicsSubsystem::Simulate2D</code> / <code>SimulateAll3D</code>.</li>
 <li>Game rules (scoring, spawns) that depend on physics results.</li>
-<li>Optional: <code>SimulateGameAi</code>, <code>ProcessVfx</code>, async <code>world.PumpAssets()</code>.</li>
+<li>Optional: <code>SimulateGameAi</code>, <code>ProcessVfx</code>, async <code>world.Assets().Pump()</code>.</li>
 </ol>
 <p>Rendering never mutates physics state — only reads transforms after simulation.</p>
 <h2 id="demo-shell-shortcuts">Demo shell shortcuts</h2>

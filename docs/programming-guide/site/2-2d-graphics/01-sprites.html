@@ -1155,14 +1155,14 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">TryLoadFromFile</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span>* path, Texture2D&amp; out, <span class="hljs-type">bool</span> flipVerticalOnLoad = <span class="hljs-literal">true</span>)</span></span>;
 };
 </code></pre>
-<p><strong>Library keys:</strong> <code>GameWorld::RegisterTexture(tex, "game/hero")</code> lets multiple sprites share one GPU upload. Scripting hosts typically call <code>RegisterCheckerboardTexture</code> / <code>LoadTexture</code> interop helpers with the same key string you pass to <code>AddSprite</code>.</p>
+<p><strong>Library keys:</strong> <code>world.Assets().RegisterTexture(tex, "game/hero")</code> lets multiple sprites share one GPU upload. Scripting hosts typically call <code>RegisterCheckerboardTexture</code> / <code>LoadTexture</code> interop helpers (C#: <code>world.Assets</code> / <code>RegisterTextureFromFile</code>) with the same key string you pass to <code>AddSprite</code>.</p>
 <h2 id="concept-spawn-a-sprite-from-a-texture-key">Concept: spawn a sprite from a texture key</h2>
 <h3 id="c">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span> tex = <span class="hljs-built_in">MakeShared</span>&lt;Texture2D&gt;(<span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;Hero&quot;</span>));
 <span class="hljs-keyword">if</span> (!Texture2D::<span class="hljs-built_in">TryLoadFromFile</span>(<span class="hljs-string">&quot;assets/sprites/hero.png&quot;</span>, *tex)) {
     *tex = Texture2D::<span class="hljs-built_in">CreateSolid</span>(<span class="hljs-number">64</span>, <span class="hljs-number">64</span>, Vector4{<span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>});
 }
-world.<span class="hljs-built_in">RegisterTexture</span>(tex, <span class="hljs-string">&quot;game/hero&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterTexture</span>(tex, <span class="hljs-string">&quot;game/hero&quot;</span>);
 
 GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
 TransformComponent* tr = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
@@ -1177,7 +1177,7 @@ go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(
 </code></pre>
 <h3 id="c_1">C#</h3>
 <p>From a <code>GameObject</code> mirror (<code>CppMirrors.g.cs</code>):</p>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RegisterTextureFromFile(<span class="hljs-string">&quot;game/hero&quot;</span>, <span class="hljs-string">&quot;assets/sprites/hero.png&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.Assets.RegisterTextureFromFile(<span class="hljs-string">&quot;game/hero&quot;</span>, <span class="hljs-string">&quot;assets/sprites/hero.png&quot;</span>);
 
 <span class="hljs-keyword">var</span> go = world.CreateGameObject(<span class="hljs-string">&quot;Hero&quot;</span>);
 go.GetOrAddTransform().SetTranslation(<span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">2f</span>, <span class="hljs-number">1f</span>, <span class="hljs-number">0.04f</span>));

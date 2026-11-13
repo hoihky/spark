@@ -71,7 +71,7 @@ def add_solid_platform(world, tex_key, x0, y0, x1, y1, sort_order, tint):
 tileTex = MakeShared<Texture2D>(Utf8String("Tiles"));
 *tileTex = Texture2D::CreateCheckerboard(256, 32,
     Vector3{0.38F, 0.34F, 0.30F}, Vector3{0.16F, 0.48F, 0.30F});
-world.RegisterTexture(tileTex, "platformer2d_template/tiles");
+world.Assets().RegisterTexture(tileTex, "platformer2d_template/tiles");
 
 AddSolidPlatform(world, roots, tileTex, -12, -3, 24, kGroundTopY, 10, ...);
 ```

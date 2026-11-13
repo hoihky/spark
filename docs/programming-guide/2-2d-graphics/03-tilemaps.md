@@ -170,7 +170,7 @@ source->SetHotReload(true);
 source->ImportNow(*mapGo, world);
 ```
 
-`ApplyTilemapDocument` loads textures via `GameWorld::LoadTexture`, applies Kenney packed-atlas fixes, and derives `tileWorldSize` from PPU when the document leaves size at zero.
+`ApplyTilemapDocument` loads textures via `WorldAssets::LoadTexture`, applies Kenney packed-atlas fixes, and derives `tileWorldSize` from PPU when the document leaves size at zero.
 
 ### C\#
 

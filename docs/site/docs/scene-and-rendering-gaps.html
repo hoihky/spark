@@ -546,7 +546,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tbody>
 <tr>
 <td><code>GameWorld</code></td>
-<td><code>CreateGameObject</code>, <code>DestroyGameObject</code>, <code>SetParent</code>, <code>UpdateGameObjects</code>; asset I/O via <strong><code>GameWorldAssetCache</code></strong> (<code>Load*</code> / <code>Register*</code>)</td>
+<td><code>CreateGameObject</code>, <code>DestroyGameObject</code>, <code>SetParent</code>, <code>UpdateGameObjects</code>; asset I/O via <strong><code>WorldAssets</code></strong> (<code>world.Assets()</code>) (<code>Load*</code> / <code>Register*</code>)</td>
 </tr>
 <tr>
 <td><code>GameObject</code></td>
@@ -648,7 +648,7 @@ C &lt;kind&gt; &lt;payload&gt;
 <td>CPU-side assets</td>
 </tr>
 <tr>
-<td><code>GameWorld::LoadMesh</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, <code>LoadTexture</code></td>
+<td><code>WorldAssets::LoadMesh</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, <code>LoadTexture</code></td>
 <td>Path-keyed synchronous load</td>
 </tr>
 <tr>

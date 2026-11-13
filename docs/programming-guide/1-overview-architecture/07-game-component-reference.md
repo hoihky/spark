@@ -250,7 +250,7 @@ tr->SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
 Static triangle mesh + optional `SceneMeshSlot` (GroundPlane, SkyBox, Custom, …).
 
 ```cpp
-SharedPtr<Mesh> cube = world.LoadMesh("assets/models/cube.obj");
+SharedPtr<Mesh> cube = world.Assets().LoadMesh("assets/models/cube.obj");
 auto* mesh = go->AddComponent<MeshComponent>(cube, SceneMeshSlot::Custom, Vector3::One);
 mesh->SetAlbedo({0.8F, 0.2F, 0.2F});
 ```
@@ -260,7 +260,7 @@ mesh->SetAlbedo({0.8F, 0.2F, 0.2F});
 **Kind:** `Material` · **Consumed by:** Scene submit (PBR / toon, transparency partition)
 
 ```cpp
-SharedPtr<Texture2D> albedo = world.LoadTexture("assets/brick.png");
+SharedPtr<Texture2D> albedo = world.Assets().LoadTexture("assets/brick.png");
 go->AddComponent<MaterialComponent>(albedo, Vector3::One);
 auto* mat = go->GetComponent<MaterialComponent>();
 mat->SetMetallic(0.1F);
@@ -281,7 +281,7 @@ Shadow participation defaults come from `SceneRenderParams::shadowsCastByDefault
 Per-submesh material slots indexed by `MeshSubmesh::materialIndex`. Populated from a loaded glTF asset:
 
 ```cpp
-GltfAsset asset = world.LoadGltf("assets/models/Building.glb");
+GltfAsset asset = world.Assets().LoadGltf("assets/models/Building.glb");
 go->AddComponent<MeshComponent>(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
 auto* multi = go->AddComponent<MultiMaterialComponent>();
 multi->PopulateFromGltfAsset(asset);
@@ -293,7 +293,7 @@ multi->PopulateFromGltfAsset(asset);
 **Kinds:** `SkinnedMesh`, `Animator` · **Consumed by:** Scene submit (joint palette)
 
 ```cpp
-SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/Fox.glb");
+SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/Fox.glb");
 go->AddComponent<SkinnedMeshComponent>(fox.mesh);
 go->AddComponent<MaterialComponent>(fox.baseColorTexture);
 auto* anim = go->AddComponent<AnimatorComponent>(fox.skeleton, 0, 1.0F);
@@ -306,7 +306,7 @@ anim->SetClipIndexWithCrossfade(1, 0.25F);
 **Kind:** `Sprite` · **Consumed by:** Sprite pass in `SceneRenderParams`
 
 ```cpp
-SharedPtr<Texture2D> sheet = world.LoadTexture("assets/hero.png");
+SharedPtr<Texture2D> sheet = world.Assets().LoadTexture("assets/hero.png");
 auto* sprite = go->AddComponent<SpriteComponent>(sheet, Vector4{1,1,1,1}, Vector4{0,0,1,1}, 10);
 sprite->SetSortOrder(5);  // higher draws on top within layer
 ```

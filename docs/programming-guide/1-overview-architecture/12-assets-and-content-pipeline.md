@@ -1,6 +1,6 @@
 # Assets and content pipeline
 
-Games resolve **meshes, textures, sounds, and glTF** through `GameWorld` registration and async loading. Built assets land under the CMake `SPARK_BUILD_ASSETS_DIR` at build time; keys are logical strings (not always absolute paths).
+Games resolve **meshes, textures, sounds, and glTF** through **`world.Assets()`** (`WorldAssets`) — registration, synchronous load, and async pump on the main thread. Built assets land under the CMake `SPARK_BUILD_ASSETS_DIR` at build time; keys are logical strings (not always absolute paths).
 
 See also: [Building and running](03-building-and-running.md) · [Blender glTF export](../../BLENDER_GLTF_ANIMATION_EXPORT.md) · external [Materials and lighting](../../MATERIALS_AND_LIGHTING.md).
 
@@ -23,7 +23,7 @@ Utf8String path = Utf8String(SPARK_BUILD_ASSETS_DIR).AppendUtf8("/sprites/hero.p
 
 ```csharp
 // SparkScriptHost resolves asset roots from native bootstrap; use keys under assets/.
-world.RegisterTextureFromFile("game/hero", "assets/sprites/hero.png");
+world.Assets.RegisterTextureFromFile("game/hero", "assets/sprites/hero.png");
 ```
 
 ### Python
@@ -43,7 +43,7 @@ When files are missing, demos often call `Texture2D::CreateCheckerboard`, `Mesh:
 
 ```cpp
 SharedPtr<Mesh> cube = MakeShared<Mesh>(Mesh::CreateUnitCube());
-world.RegisterMesh(cube, "fps/unit_cube");
+world.Assets().RegisterMesh(cube, "fps/unit_cube");
 
 go->AddComponent<MeshComponent>(cube, SceneMeshSlot::Custom, albedoTint);
 ```
@@ -51,7 +51,7 @@ go->AddComponent<MeshComponent>(cube, SceneMeshSlot::Custom, albedoTint);
 ### C\#
 
 ```csharp
-world.RegisterMesh(Mesh.CreateUnitCube(), "fps/unit_cube");
+world.Assets.RegisterMesh(Mesh.CreateUnitCube(), "fps/unit_cube");
 go.AddMesh(SceneMeshSlot.Custom, albedo, "fps/unit_cube");
 ```
 
@@ -66,12 +66,12 @@ world.register_unit_cube_mesh("fps/unit_cube")
 ### C++
 
 ```cpp
-world.RequestGltf("assets/models/Fox.glb");
+world.Assets().RequestGltf("assets/models/Fox.glb");
 
 void OnUpdate(const FrameTiming& timing, IEngineContext& ctx) override {
-    world.PumpAssets();
-    if (world.IsGltfReady("assets/models/Fox.glb")) {
-        SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+    world.Assets().Pump();
+    if (world.Assets().IsGltfReady("assets/models/Fox.glb")) {
+        SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
         // attach SkinnedMeshComponent + AnimatorComponent once
     }
     Game::OnUpdate(timing, ctx);
@@ -83,9 +83,14 @@ Always **pump** on the main thread while loads are in flight (`ThreeDDemo`, `Cha
 ### C\#
 
 ```csharp
-World.RequestGltf("assets/models/Fox.glb");
-World.PumpAssets();
+const string foxPath = "assets/models/Fox.glb";
+World.Assets.Pump();
+while (!World.Assets.IsGltfReady(foxPath))
+    World.Assets.Pump();
+var fox = World.Assets.LoadSkinnedGltf(foxPath);
 ```
+
+> C# does not mirror `RequestGltf` yet — kick loads with `Assets.LoadGltf` / `LoadSkinnedGltf`, then **`Assets.Pump`** until `IsGltfReady` (see [spark-sharp `C_SHARP_API.md`](https://github.com/hoihky/spark-sharp/blob/main/docs/C_SHARP_API.md)).
 
 ### Python
 
@@ -97,7 +102,7 @@ World.PumpAssets();
 
 | Asset | Typical API |
 |-------|-------------|
-| 2D texture | `world.RegisterTexture` / `RegisterTextureFromFile` |
+| 2D texture | C++: `world.Assets().RegisterTexture` / `LoadTexture` · C#: `world.Assets.RegisterTextureFromFile` |
 | Sound | `SoundClip::TryLoadFromBundledAsset` — [Clips](../6-sound/02-clips.md) |
 | `.sparkvfx` | `VfxPlayerComponent` — [VFX](../3-3d-graphics/08-vfx-and-sparkvfx.md) |
 
@@ -105,7 +110,7 @@ World.PumpAssets();
 
 - [ ] Copy or install `assets/` next to the executable (CMake install rules / `SPARK_BUILD_ASSETS_DIR`).  
 - [ ] Register meshes/textures in `OnAttach` before entities reference keys.  
-- [ ] Pump glTF until `IsGltfReady` before attaching skinned meshes.  
+- [ ] Pump (`Assets().Pump` / `Assets.Pump`) until `IsGltfReady` before attaching skinned meshes.  
 - [ ] Verify Release build paths (no debug-only relative `../` assumptions).  
 - [ ] Regenerate C\# mirrors if you add catalog methods ([Scripting](13-scripting-and-bindings.md)).
 

@@ -45,7 +45,7 @@ public:
     void OnAttach(IEngineContext&) override {
         auto& world = GetWorld();
         auto cube = MakeShared<Mesh>(Mesh::CreateUnitCube());
-        world.RegisterMesh(cube, "demo/cube");
+        world.Assets().RegisterMesh(cube, "demo/cube");
         GameObject* go = world.CreateGameObject();
         go->AddComponent<TransformComponent>();
         go->AddComponent<MeshComponent>(cube, SceneMeshSlot::Custom, Vector3{0.7F, 0.3F, 0.2F});
@@ -184,10 +184,10 @@ def on_update(self, timing, context):
 ### C++
 
 ```cpp
-world.RequestGltf("assets/models/Fox.glb");
-world.PumpAssets();
-if (world.IsGltfReady("assets/models/Fox.glb")) {
-    SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+world.Assets().RequestGltf("assets/models/Fox.glb");
+world.Assets().Pump();
+if (world.Assets().IsGltfReady("assets/models/Fox.glb")) {
+    SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
     // spawn SkinnedMeshComponent + AnimatorComponent
 }
 ```
@@ -196,10 +196,10 @@ if (world.IsGltfReady("assets/models/Fox.glb")) {
 
 ```csharp
 world.RequestGltf("assets/models/Fox.glb");
-world.PumpAssets();
-if (world.IsGltfReady("assets/models/Fox.glb"))
+world.Assets.Pump();
+if (world.Assets.IsGltfReady("assets/models/Fox.glb"))
 {
-    var fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+    var fox = world.Assets.LoadSkinnedGltf("assets/models/Fox.glb");
 }
 ```
 

@@ -1178,7 +1178,7 @@ T* <span class="hljs-title">AddComponent</span><span class="hljs-params">(Args&a
 <span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">SetParent</span><span class="hljs-params">(GameObject* child, GameObject* newParent)</span></span>;
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">UpdateGameObjects</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span></span>;
 </code></pre>
-<p>Asset caches: <code>RegisterMesh</code>, <code>RegisterTexture</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, <code>SetUiFont</code>, async <code>RequestGltf</code> + <code>PumpAssets</code>.</p>
+<p><strong>Assets:</strong> <code>world.Assets()</code> (<code>WorldAssets</code>) — <code>RegisterMesh</code>, <code>RegisterTexture</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, async <code>RequestGltf</code> + <code>Pump</code>, lookups by key/path. <strong>UI fonts</strong> stay on <code>GameWorld</code>: <code>SetUiFont</code> / <code>SetUiBoldFont</code>.</p>
 <h2 id="concept-create-a-player-entity">Concept: create a player entity</h2>
 <h3 id="c">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* player = world.<span class="hljs-built_in">CreateGameObject</span>();

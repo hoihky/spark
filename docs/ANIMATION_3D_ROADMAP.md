@@ -28,7 +28,7 @@ Copy the **Issue body** block under each task when filing issues (or use the bul
 
 | Area | Status |
 |------|--------|
-| glTF skinned load (first skinned node) | Done — `TryLoadSkinnedCharacterFromGltf`, `GameWorld::LoadSkinnedGltf` |
+| glTF skinned load (first skinned node) | Done — `TryLoadSkinnedCharacterFromGltf`, `WorldAssets::LoadSkinnedGltf` |
 | Joint palette GPU skinning (≤64 joints) | Done — SSBO + `scene.vert` / shadow pass |
 | Single-clip playback | Done — `AnimatorComponent` (loop modes, crossfade, `ComputeJointPalette`) |
 | Lit + shadow skinned draws | Done — `SceneSubmit`, `VulkanRenderer` |

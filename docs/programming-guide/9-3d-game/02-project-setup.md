@@ -78,14 +78,14 @@ Register meshes **before** `MeshComponent` references them by key or shared poin
 ### C++
 
 ```cpp
-world.RegisterMesh(mesh, "unique/key");
+world.Assets().RegisterMesh(mesh, "unique/key");
 go->AddComponent<MeshComponent>(mesh, SceneMeshSlot::Custom, albedoTint);
 ```
 
 ### C\#
 
 ```csharp
-world.RegisterMesh(cube, "fps/unit_cube");
+world.Assets().RegisterMesh(cube, "fps/unit_cube");
 go.AddMesh(SceneMeshSlot.Custom, new Vector3(0.8f, 0.6f, 0.4f));
 ```
 

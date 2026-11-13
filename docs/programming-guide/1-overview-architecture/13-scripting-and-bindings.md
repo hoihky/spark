@@ -27,6 +27,21 @@ flowchart LR
 2. Regenerate (`spark-sharp/tools/generate-csharp-bindings.sh`, python stubs as documented in repos).  
 3. Update [component reference](07-game-component-reference.md) and relevant [Part 7](../7-game-components-usage/00-introduction.md) chapter.
 
+## `GameWorld` facets (C++ and C\#)
+
+C++ groups world services behind **views** returned from `GameWorld` (`include/spark/scene/core/world/*.hpp`). C# mirrors the same names on `Spark.Bindings.GameWorld` (see [API polish](../../API_POLISH.md)).
+
+| C++ | C# | Asset / gameplay notes |
+|-----|-----|------------------------|
+| `world.Entities()` | `world.Entities` | Create, destroy, reparent, queries |
+| `world.Assets()` | `world.Assets` | **Load/register/pump glTF & textures** (replaces flat `GameWorld` asset methods) |
+| `world.Physics(physics)` | `world.Physics` | 2D/3D step, layers |
+| `world.Simulation()` | `world.Simulation` | `UpdateGameObjects`, VFX, audio, AI slice |
+| `world.Rendering()` | `world.Rendering` | Standard-lit submit |
+| `world.QueryObjects()` | `world.Query` | Tag/component collect |
+
+`Spark.Scripting.SparkGame` exposes `protected WorldAssets Assets` (obsolete alias `AssetCache`). Prefer **`world.Assets.LoadGltf`**, **`world.Assets.Pump`**, **`world.Assets.RegisterTextureFromFile`** over deprecated `GameWorld.LoadGltf`.
+
 ## Concept: C\# game entry
 
 ### C++
@@ -94,7 +109,7 @@ Patterns skipped by bindgen (see [BINDINGS_COVERAGE.md](../../BINDINGS_COVERAGE.
 |---------|------------|
 | `std::function` callbacks on components | `SignalId` on managed `Game` |
 | Methods taking `GameObject& owner` for world queries | Use owner handle from your script |
-| `SharedPtr` constructors for assets | `RegisterMesh` / `AddMesh` mirrors in `CppMirrors.g.cs` |
+| `SharedPtr` constructors for assets | `world.Assets.RegisterMesh` / `AddMesh` mirrors in `CppMirrors.g.cs` |
 | Scene load / pool / some editor APIs | Keep in C++ `Game` or add SparkInterop exports |
 
 ## Signals vs polling

@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>Assets and content pipeline</h1>
           </header>
           <div class="doc-body"><h1 id="assets-and-content-pipeline">Assets and content pipeline</h1>
-<p>Games resolve <strong>meshes, textures, sounds, and glTF</strong> through <code>GameWorld</code> registration and async loading. Built assets land under the CMake <code>SPARK_BUILD_ASSETS_DIR</code> at build time; keys are logical strings (not always absolute paths).</p>
+<p>Games resolve <strong>meshes, textures, sounds, and glTF</strong> through <strong><code>world.Assets()</code></strong> (<code>WorldAssets</code>) — registration, synchronous load, and async pump on the main thread. Built assets land under the CMake <code>SPARK_BUILD_ASSETS_DIR</code> at build time; keys are logical strings (not always absolute paths).</p>
 <p>See also: <a href="03-building-and-running.html">Building and running</a> · <a href="../../BLENDER_GLTF_ANIMATION_EXPORT.html">Blender glTF export</a> · external <a href="../../MATERIALS_AND_LIGHTING.html">Materials and lighting</a>.</p>
 <h2 id="path-roots">Path roots</h2>
 <table>
@@ -1118,7 +1118,7 @@ Utf8String path = <span class="hljs-built_in">Utf8String</span>(SPARK_BUILD_ASSE
 </code></pre>
 <h3 id="c_1">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-comment">// SparkScriptHost resolves asset roots from native bootstrap; use keys under assets/.</span>
-world.RegisterTextureFromFile(<span class="hljs-string">&quot;game/hero&quot;</span>, <span class="hljs-string">&quot;assets/sprites/hero.png&quot;</span>);
+world.Assets.RegisterTextureFromFile(<span class="hljs-string">&quot;game/hero&quot;</span>, <span class="hljs-string">&quot;assets/sprites/hero.png&quot;</span>);
 </code></pre>
 <h3 id="python">Python</h3>
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Keys like &quot;sprites/foo.png&quot; resolve relative to engine asset dir when registered.</span>
@@ -1129,12 +1129,12 @@ world.register_checkerboard_texture(<span class="hljs-string">&quot;game/tiles&q
 <h2 id="concept-mesh-registration">Concept: mesh registration</h2>
 <h3 id="c_2">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Mesh&gt; cube = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
-world.<span class="hljs-built_in">RegisterMesh</span>(cube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(cube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
 
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, albedoTint);
 </code></pre>
 <h3 id="c_3">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RegisterMesh(Mesh.CreateUnitCube(), <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.Assets.RegisterMesh(Mesh.CreateUnitCube(), <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
 go.AddMesh(SceneMeshSlot.Custom, albedo, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
 </code></pre>
 <h3 id="python_1">Python</h3>
@@ -1142,12 +1142,12 @@ go.AddMesh(SceneMeshSlot.Custom, albedo, <span class="hljs-string">&quot;fps/uni
 </code></pre>
 <h2 id="concept-gltf-async-load">Concept: glTF async load</h2>
 <h3 id="c_4">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
-    world.<span class="hljs-built_in">PumpAssets</span>();
-    <span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
-        SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+    world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">Pump</span>();
+    <span class="hljs-keyword">if</span> (world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
+        SkinnedGltfAsset fox = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
         <span class="hljs-comment">// attach SkinnedMeshComponent + AnimatorComponent once</span>
     }
     Game::<span class="hljs-built_in">OnUpdate</span>(timing, ctx);
@@ -1155,9 +1155,15 @@ go.AddMesh(SceneMeshSlot.Custom, albedo, <span class="hljs-string">&quot;fps/uni
 </code></pre>
 <p>Always <strong>pump</strong> on the main thread while loads are in flight (<code>ThreeDDemo</code>, <code>CharacterCameraDemo</code>, <strong>#21</strong>).</p>
 <h3 id="c_5">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">World.RequestGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-World.PumpAssets();
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> foxPath = <span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>;
+World.Assets.Pump();
+<span class="hljs-keyword">while</span> (!World.Assets.IsGltfReady(foxPath))
+    World.Assets.Pump();
+<span class="hljs-keyword">var</span> fox = World.Assets.LoadSkinnedGltf(foxPath);
 </code></pre>
+<blockquote>
+<p>C# does not mirror <code>RequestGltf</code> yet — kick loads with <code>Assets.LoadGltf</code> / <code>LoadSkinnedGltf</code>, then <strong><code>Assets.Pump</code></strong> until <code>IsGltfReady</code> (see <a href="https://github.com/hoihky/spark-sharp/blob/main/docs/C_SHARP_API.html">spark-sharp <code>C_SHARP_API.md</code></a>).</p>
+</blockquote>
 <h3 id="python_2">Python</h3>
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># glTF pump/bindings partial — use C++ host or extend catalog when adding gameplay.</span>
 </code></pre>
@@ -1172,7 +1178,7 @@ World.PumpAssets();
 <tbody>
 <tr>
 <td>2D texture</td>
-<td><code>world.RegisterTexture</code> / <code>RegisterTextureFromFile</code></td>
+<td>C++: <code>world.Assets().RegisterTexture</code> / <code>LoadTexture</code> · C#: <code>world.Assets.RegisterTextureFromFile</code></td>
 </tr>
 <tr>
 <td>Sound</td>
@@ -1188,7 +1194,7 @@ World.PumpAssets();
 <ul>
 <li>[ ] Copy or install <code>assets/</code> next to the executable (CMake install rules / <code>SPARK_BUILD_ASSETS_DIR</code>).  </li>
 <li>[ ] Register meshes/textures in <code>OnAttach</code> before entities reference keys.  </li>
-<li>[ ] Pump glTF until <code>IsGltfReady</code> before attaching skinned meshes.  </li>
+<li>[ ] Pump (<code>Assets().Pump</code> / <code>Assets.Pump</code>) until <code>IsGltfReady</code> before attaching skinned meshes.  </li>
 <li>[ ] Verify Release build paths (no debug-only relative <code>../</code> assumptions).  </li>
 <li>[ ] Regenerate C# mirrors if you add catalog methods (<a href="13-scripting-and-bindings.html">Scripting</a>).</li>
 </ul>

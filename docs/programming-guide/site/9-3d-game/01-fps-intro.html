@@ -1178,7 +1178,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-keyword">class</span> <span class="hljs-title">FpsGame</span> : <span class="hljs-title">Game</span>
 {
     <span class="hljs-keyword">private</span> FlyCamera _camera = <span class="hljs-keyword">new</span>();
-    <span class="hljs-comment">// Meshes: world.RegisterMesh after MakeShared equivalent in bindings</span>
+    <span class="hljs-comment">// Meshes: world.Assets().RegisterMesh after MakeShared equivalent in bindings</span>
     <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> List&lt;GameObject&gt; _targets = <span class="hljs-keyword">new</span>();
 }
 </code></pre>

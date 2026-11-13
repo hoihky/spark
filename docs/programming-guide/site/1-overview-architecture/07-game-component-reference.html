@@ -1530,13 +1530,13 @@ tr-&gt;<span class="hljs-built_in">SetRotation</span>(Quaternion::<span class="h
 <h3 id="meshcomponent"><code>MeshComponent</code></h3>
 <p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
 <p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Mesh&gt; cube = world.<span class="hljs-built_in">LoadMesh</span>(<span class="hljs-string">&quot;assets/models/cube.obj&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Mesh&gt; cube = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadMesh</span>(<span class="hljs-string">&quot;assets/models/cube.obj&quot;</span>);
 <span class="hljs-keyword">auto</span>* mesh = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
 mesh-&gt;<span class="hljs-built_in">SetAlbedo</span>({<span class="hljs-number">0.8F</span>, <span class="hljs-number">0.2F</span>, <span class="hljs-number">0.2F</span>});
 </code></pre>
 <h3 id="materialcomponent"><code>MaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Material</code> · <strong>Consumed by:</strong> Scene submit (PBR / toon, transparency partition)</p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Texture2D&gt; albedo = world.<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/brick.png&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Texture2D&gt; albedo = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/brick.png&quot;</span>);
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(albedo, Vector3::One);
 <span class="hljs-keyword">auto</span>* mat = go-&gt;<span class="hljs-built_in">GetComponent</span>&lt;MaterialComponent&gt;();
 mat-&gt;<span class="hljs-built_in">SetMetallic</span>(<span class="hljs-number">0.1F</span>);
@@ -1551,7 +1551,7 @@ mat-&gt;<span class="hljs-built_in">SetShadowParticipation</span>(Spark::SceneSh
 <h3 id="multimaterialcomponent"><code>MultiMaterialComponent</code></h3>
 <p><strong>Kind:</strong> <code>Unknown</code> (serialization pending) · <strong>Sibling:</strong> <code>MeshComponent</code> on multi-material glTF meshes</p>
 <p>Per-submesh material slots indexed by <code>MeshSubmesh::materialIndex</code>. Populated from a loaded glTF asset:</p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Building.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Building.glb&quot;</span>);
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
 <span class="hljs-keyword">auto</span>* multi = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MultiMaterialComponent&gt;();
 multi-&gt;<span class="hljs-built_in">PopulateFromGltfAsset</span>(asset);
@@ -1559,7 +1559,7 @@ multi-&gt;<span class="hljs-built_in">PopulateFromGltfAsset</span>(asset);
 </code></pre>
 <h3 id="skinnedmeshcomponent-animatorcomponent"><code>SkinnedMeshComponent</code> + <code>AnimatorComponent</code></h3>
 <p><strong>Kinds:</strong> <code>SkinnedMesh</code>, <code>Animator</code> · <strong>Consumed by:</strong> Scene submit (joint palette)</p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/Fox.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SkinnedGltfAsset fox = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/Fox.glb&quot;</span>);
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkinnedMeshComponent&gt;(fox.mesh);
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(fox.baseColorTexture);
 <span class="hljs-keyword">auto</span>* anim = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(fox.skeleton, <span class="hljs-number">0</span>, <span class="hljs-number">1.0F</span>);
@@ -1568,7 +1568,7 @@ anim-&gt;<span class="hljs-built_in">SetClipIndexWithCrossfade</span>(<span clas
 </code></pre>
 <h3 id="spritecomponent"><code>SpriteComponent</code></h3>
 <p><strong>Kind:</strong> <code>Sprite</code> · <strong>Consumed by:</strong> Sprite pass in <code>SceneRenderParams</code></p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Texture2D&gt; sheet = world.<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/hero.png&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Texture2D&gt; sheet = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/hero.png&quot;</span>);
 <span class="hljs-keyword">auto</span>* sprite = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpriteComponent&gt;(sheet, Vector4{<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>}, Vector4{<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>}, <span class="hljs-number">10</span>);
 sprite-&gt;<span class="hljs-built_in">SetSortOrder</span>(<span class="hljs-number">5</span>);  <span class="hljs-comment">// higher draws on top within layer</span>
 </code></pre>

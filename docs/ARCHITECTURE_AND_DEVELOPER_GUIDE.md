@@ -15,7 +15,7 @@ Spark is a **C++23** codebase that provides:
 - **Optional** 2D and **3D** toy physics (`PhysicsSubsystem`, `PhysicsWorld2D`, `PhysicsWorld3D`).
 - A **retained-mode UI** (`UiCanvasComponent`, controls under `spark/ui/`).
 - Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
-- **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `GameWorldAssetCache` (via `GameWorld`).
+- **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `WorldAssets` (`world.Assets()`) backed by `GameWorldAssetCache`.
 
 The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **22** built-in modes (3D fly scenes, terrain sculpting, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, 3D model viewer, Dear ImGui docking demo, etc.). Launcher rows are defined in **`DemoCatalog`** (`include/spark/demo/DemoCatalog.hpp`); recommended demos are marked with `*` in the menu.
 
@@ -406,8 +406,8 @@ engine.Run();
 - Allocates **`GameObject`** instances (`CreateGameObject` / `DestroyGameObject`).
 - Maintains **parent/child** links (`SetParent` on world or object).
 - Runs **`UpdateGameObjects`** → each object’s components receive `OnUpdate`.
-- **Caches assets** via **`GameWorldAssetCache`** (`assetCache`): `LoadMesh`, `LoadGltf`, `LoadSkinnedGltf`, `LoadTexture`, `RegisterMesh`, `RegisterTexture`, `RegisterGltf`, `RegisterSkinnedGltf`, plus lookups by path/key.
-- **Async path:** use `GameWorldAssetLoader` (or `SceneManager::GetAssetLoader()`) and `Pump` each frame; caches update only on the main thread.
+- **Caches assets** via **`WorldAssets`** (`world.Assets()`): cache + loader surface: `LoadMesh`, `LoadGltf`, `LoadSkinnedGltf`, `LoadTexture`, `RegisterMesh`, `RegisterTexture`, `RegisterGltf`, `RegisterSkinnedGltf`, plus lookups by path/key.
+- **Async path:** `world.Assets().RequestGltf` / `RequestSkinnedGltf`, `world.Assets().Pump()` each frame (`SceneManager` uses `world.Assets().Loader()`); caches update only on the main thread.
 - Holds **UI fonts** for screen text: `SetUiFont` / `SetUiBoldFont` (used with `TextOverlayComponent` / `SceneRenderParams::uiFont`).
 
 ### 7.2 `GameObject`

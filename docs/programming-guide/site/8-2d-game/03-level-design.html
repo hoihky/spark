@@ -1142,7 +1142,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">tileTex = <span class="hljs-built_in">MakeShared</span>&lt;Texture2D&gt;(<span class="hljs-built_in">Utf8String</span>(<span class="hljs-string">&quot;Tiles&quot;</span>));
 *tileTex = Texture2D::<span class="hljs-built_in">CreateCheckerboard</span>(<span class="hljs-number">256</span>, <span class="hljs-number">32</span>,
     Vector3{<span class="hljs-number">0.38F</span>, <span class="hljs-number">0.34F</span>, <span class="hljs-number">0.30F</span>}, Vector3{<span class="hljs-number">0.16F</span>, <span class="hljs-number">0.48F</span>, <span class="hljs-number">0.30F</span>});
-world.<span class="hljs-built_in">RegisterTexture</span>(tileTex, <span class="hljs-string">&quot;platformer2d_template/tiles&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterTexture</span>(tileTex, <span class="hljs-string">&quot;platformer2d_template/tiles&quot;</span>);
 
 <span class="hljs-built_in">AddSolidPlatform</span>(world, roots, tileTex, <span class="hljs-number">-12</span>, <span class="hljs-number">-3</span>, <span class="hljs-number">24</span>, kGroundTopY, <span class="hljs-number">10</span>, ...);
 </code></pre>

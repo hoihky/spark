@@ -48,7 +48,7 @@ Unlike `Platformer2DDemo` (**#6**), arcade modules **do not** own a full `Game` 
 void Tetris2DDemo::Load(GameWorld& w, IEngineContext& context) {
     roots.Clear();
     atlasTex = Detail::MakeTetrisBlockAtlas();
-    w.RegisterTexture(atlasTex, "spark/tetris/blocks");
+    w.Assets().RegisterTexture(atlasTex, "spark/tetris/blocks");
     // board tilemap, HUD, help overlay ...
 }
 

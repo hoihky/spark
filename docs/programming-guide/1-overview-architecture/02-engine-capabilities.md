@@ -114,26 +114,26 @@ def on_update(self, timing: FrameTiming, context: EngineContext) -> None:
     # 3D / AI when exposed by host template
 ```
 
-## Concept: load assets through `GameWorld`
+## Concept: load assets through `WorldAssets`
 
-Caches are keyed strings shared by render submit (`RegisterMesh` / `RegisterTexture`).
+Use **`world.Assets()`** (C#: **`world.Assets`**). Caches are keyed strings shared by render submit (`RegisterMesh` / `RegisterTexture`).
 
 ### C++
 
 ```cpp
-GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
-SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
-SharedPtr<Texture2D> tex = world.LoadTexture("assets/sprites/player.png");
-world.RegisterMesh(mesh, "my_game/hero");
-world.RegisterTexture(tex, "my_game/hero_albedo");
+GltfAsset asset = world.Assets().LoadGltf("assets/models/Crate.glb");
+SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
+SharedPtr<Texture2D> tex = world.Assets().LoadTexture("assets/sprites/player.png");
+world.Assets().RegisterMesh(mesh, "my_game/hero");
+world.Assets().RegisterTexture(tex, "my_game/hero_albedo");
 ```
 
 ### C\#
 
 ```csharp
-var asset = world.LoadGltf("assets/models/Crate.glb");
-var fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
-world.RegisterTextureFromFile("my_game/hero_albedo", "assets/sprites/player.png");
+var asset = world.Assets.LoadGltf("assets/models/Crate.glb");
+var fox = world.Assets.LoadSkinnedGltf("assets/models/Fox.glb");
+world.Assets.RegisterTextureFromFile("my_game/hero_albedo", "assets/sprites/player.png");
 ```
 
 ### Python

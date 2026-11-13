@@ -507,7 +507,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Optional</strong> 2D and <strong>3D</strong> toy physics (<code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code>).</li>
 <li>A <strong>retained-mode UI</strong> (<code>UiCanvasComponent</code>, controls under <code>spark/ui/</code>).</li>
 <li>Optional <strong>Dear ImGui</strong> tool UI (<code>spark/imgui/</code>, <code>SPARK_ENABLE_IMGUI</code>, docking branch) alongside the retained stack.</li>
-<li><strong>Asset loading</strong> (meshes, glTF, textures, fonts, skinned characters) with caching on <code>GameWorldAssetCache</code> (via <code>GameWorld</code>).</li>
+<li><strong>Asset loading</strong> (meshes, glTF, textures, fonts, skinned characters) with caching on <code>WorldAssets</code> (<code>world.Assets()</code>) backed by <code>GameWorldAssetCache</code>.</li>
 </ul>
 <p>The default executable (<code>src/main.cpp</code>) constructs <code>Engine</code> with <strong><code>NewShellDemoGame()</code></strong> (<code>spark/demo/NewShellDemoGame.hpp</code>) — the interactive launcher plus <strong>22</strong> built-in modes (3D fly scenes, terrain sculpting, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, 3D model viewer, Dear ImGui docking demo, etc.). Launcher rows are defined in <strong><code>DemoCatalog</code></strong> (<code>include/spark/demo/DemoCatalog.hpp</code>); recommended demos are marked with <code>*</code> in the menu.</p>
 <hr />
@@ -1405,8 +1405,8 @@ engine.Run();
 <li>Allocates <strong><code>GameObject</code></strong> instances (<code>CreateGameObject</code> / <code>DestroyGameObject</code>).</li>
 <li>Maintains <strong>parent/child</strong> links (<code>SetParent</code> on world or object).</li>
 <li>Runs <strong><code>UpdateGameObjects</code></strong> → each object’s components receive <code>OnUpdate</code>.</li>
-<li><strong>Caches assets</strong> via <strong><code>GameWorldAssetCache</code></strong> (<code>assetCache</code>): <code>LoadMesh</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, <code>LoadTexture</code>, <code>RegisterMesh</code>, <code>RegisterTexture</code>, <code>RegisterGltf</code>, <code>RegisterSkinnedGltf</code>, plus lookups by path/key.</li>
-<li><strong>Async path:</strong> use <code>GameWorldAssetLoader</code> (or <code>SceneManager::GetAssetLoader()</code>) and <code>Pump</code> each frame; caches update only on the main thread.</li>
+<li><strong>Caches assets</strong> via <strong><code>WorldAssets</code></strong> (<code>world.Assets()</code>): cache + loader surface: <code>LoadMesh</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, <code>LoadTexture</code>, <code>RegisterMesh</code>, <code>RegisterTexture</code>, <code>RegisterGltf</code>, <code>RegisterSkinnedGltf</code>, plus lookups by path/key.</li>
+<li><strong>Async path:</strong> <code>world.Assets().RequestGltf</code> / <code>RequestSkinnedGltf</code>, <code>world.Assets().Pump()</code> each frame (<code>SceneManager</code> uses <code>world.Assets().Loader()</code>); caches update only on the main thread.</li>
 <li>Holds <strong>UI fonts</strong> for screen text: <code>SetUiFont</code> / <code>SetUiBoldFont</code> (used with <code>TextOverlayComponent</code> / <code>SceneRenderParams::uiFont</code>).</li>
 </ul>
 <h3 id="72-gameobject">7.2 <code>GameObject</code></h3>
@@ -2071,7 +2071,7 @@ physics.GetQueries2D().RebuildStatics(world);
 </tbody>
 </table>
 <p>Deprecated wrappers (<code>SimulatePhysics2D</code>, <code>SimulatePhysics3D</code>, …) delegate to the classes above.</p>
-<p>Simulation subsystems live under <code>spark/physics/simulation/</code> (<code>RigidbodyIntegrator2D/3D</code>, <code>ContactResolver2D/3D</code>, <code>TriggerDispatcher2D</code>, <code>JointSolver2D/3D</code>, <code>SweptCcd3D</code>).</p>
+<p>Simulation code lives under <code>spark/physics/2d/simulation/</code> and <code>spark/physics/3d/simulation/</code> (<code>RigidbodyIntegrator2D/3D</code>, <code>ContactResolver2D/3D</code>, <code>TriggerDispatcher2D</code>, <code>JointSolver2D/3D</code>, <code>SweptCcd3D</code>). Colliders and shapes use <code>…/colliders/</code> and <code>…/shapes/</code> under each dimension.</p>
 <p>Colliders are object-oriented: <code>Collider2D/3D</code>, <code>DynamicCollider2D/3D</code>, baked via <code>ColliderBakePipeline2D/3D</code>.</p>
 <p>Call these from your <strong><code>OnUpdate</code></strong> (or from a <code>GameComponent::OnUpdate</code>) <strong>after</strong> integrating player intent and <strong>before</strong> relying on transforms for render.</p>
 <p><strong>Static geometry rule (3D):</strong> <code>ContributesStaticCollider3D</code> (<code>spark/physics/Collision3D.hpp</code>) decides which <code>BoxCollider3D</code> / <code>CapsuleCollider3D</code> instances enter the broad-phase (non-dynamic rigidbodies or no rigidbody).</p>

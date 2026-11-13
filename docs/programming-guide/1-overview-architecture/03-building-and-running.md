@@ -93,7 +93,7 @@ path.AppendUtf8("/fonts/Roboto-Regular.ttf");
 
 ```csharp
 // SparkScriptHost sets asset roots from native bootstrap; use relative keys under assets/.
-world.RegisterTextureFromFile("ui/icon", "assets/sprites/icon.png");
+world.Assets.RegisterTextureFromFile("ui/icon", "assets/sprites/icon.png");
 ```
 
 ### Python

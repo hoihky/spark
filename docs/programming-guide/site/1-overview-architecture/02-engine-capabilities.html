@@ -1289,19 +1289,19 @@ PhysicsSubsystem physics;
     context.physics.simulate_2d(self.world, timing)
     <span class="hljs-comment"># 3D / AI when exposed by host template</span>
 </code></pre>
-<h2 id="concept-load-assets-through-gameworld">Concept: load assets through <code>GameWorld</code></h2>
-<p>Caches are keyed strings shared by render submit (<code>RegisterMesh</code> / <code>RegisterTexture</code>).</p>
+<h2 id="concept-load-assets-through-worldassets">Concept: load assets through <code>WorldAssets</code></h2>
+<p>Use <strong><code>world.Assets()</code></strong> (C#: <strong><code>world.Assets</code></strong>). Caches are keyed strings shared by render submit (<code>RegisterMesh</code> / <code>RegisterTexture</code>).</p>
 <h3 id="c_2">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
-SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-SharedPtr&lt;Texture2D&gt; tex = world.<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/sprites/player.png&quot;</span>);
-world.<span class="hljs-built_in">RegisterMesh</span>(mesh, <span class="hljs-string">&quot;my_game/hero&quot;</span>);
-world.<span class="hljs-built_in">RegisterTexture</span>(tex, <span class="hljs-string">&quot;my_game/hero_albedo&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GltfAsset asset = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadGltf</span>(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
+SkinnedGltfAsset fox = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+SharedPtr&lt;Texture2D&gt; tex = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadTexture</span>(<span class="hljs-string">&quot;assets/sprites/player.png&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(mesh, <span class="hljs-string">&quot;my_game/hero&quot;</span>);
+world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterTexture</span>(tex, <span class="hljs-string">&quot;my_game/hero_albedo&quot;</span>);
 </code></pre>
 <h3 id="c_3">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> asset = world.LoadGltf(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
-<span class="hljs-keyword">var</span> fox = world.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-world.RegisterTextureFromFile(<span class="hljs-string">&quot;my_game/hero_albedo&quot;</span>, <span class="hljs-string">&quot;assets/sprites/player.png&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> asset = world.Assets.LoadGltf(<span class="hljs-string">&quot;assets/models/Crate.glb&quot;</span>);
+<span class="hljs-keyword">var</span> fox = world.Assets.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+world.Assets.RegisterTextureFromFile(<span class="hljs-string">&quot;my_game/hero_albedo&quot;</span>, <span class="hljs-string">&quot;assets/sprites/player.png&quot;</span>);
 </code></pre>
 <h3 id="python_1">Python</h3>
 <pre><code class="hljs language-python language-python" data-highlighted="yes">world.load_texture(<span class="hljs-string">&quot;assets/sprites/player.png&quot;</span>, key=<span class="hljs-string">&quot;my_game/hero_albedo&quot;</span>)

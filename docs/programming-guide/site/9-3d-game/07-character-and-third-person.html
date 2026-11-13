@@ -1100,7 +1100,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tbody>
 <tr>
 <td>Asset load</td>
-<td><code>RequestGltf</code> + <code>PumpAssets</code> + <code>LoadSkinnedGltf</code></td>
+<td><code>RequestGltf</code> + <code>Assets().Pump()</code> (C++) / <code>Assets.Pump</code> (C#) + <code>LoadSkinnedGltf</code></td>
 </tr>
 <tr>
 <td>Locomotion</td>
@@ -1118,12 +1118,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </table>
 <h2 id="concept-load-skinned-character">Concept: load skinned character</h2>
 <h3 id="c">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
 
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
-    world.<span class="hljs-built_in">PumpAssets</span>();
-    <span class="hljs-keyword">if</span> (!foxReady &amp;&amp; world.<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
-        SkinnedGltfAsset fox = world.<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+    world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">Pump</span>();
+    <span class="hljs-keyword">if</span> (!foxReady &amp;&amp; world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">IsGltfReady</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>)) {
+        SkinnedGltfAsset fox = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadSkinnedGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
         player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SkinnedMeshComponent&gt;(fox.mesh);
         player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;AnimatorComponent&gt;(fox.skeleton, <span class="hljs-number">0</span>, <span class="hljs-number">1.0F</span>);
         foxReady = <span class="hljs-literal">true</span>;
@@ -1134,14 +1134,16 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 }
 </code></pre>
 <h3 id="c_1">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">World.RequestGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
-World.PumpAssets();
-<span class="hljs-keyword">var</span> fox = World.LoadSkinnedGltf(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">const</span> <span class="hljs-built_in">string</span> foxPath = <span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>;
+World.Assets.Pump();
+<span class="hljs-keyword">while</span> (!World.Assets.IsGltfReady(foxPath))
+    World.Assets.Pump();
+<span class="hljs-keyword">var</span> fox = World.Assets.LoadSkinnedGltf(foxPath);
 player.AddSkinnedMesh(fox.Mesh);
 player.AddAnimator(fox.Skeleton, <span class="hljs-number">0</span>, <span class="hljs-number">1f</span>);
 </code></pre>
 <h3 id="python">Python</h3>
-<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># glTF load path C++/C#-first — host CharacterCameraDemo or bind PumpAssets in py.</span>
+<pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># glTF load path C++/C#-first — host CharacterCameraDemo or bind world.Assets().Pump() in py.</span>
 </code></pre>
 <h2 id="concept-character-controller">Concept: character controller</h2>
 <h3 id="c_2">C++</h3>

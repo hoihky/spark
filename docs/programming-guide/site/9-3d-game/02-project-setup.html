@@ -1140,11 +1140,11 @@ python -m spark samples.hello_game
 <h2 id="concept-mesh-registration">Concept: mesh registration</h2>
 <p>Register meshes <strong>before</strong> <code>MeshComponent</code> references them by key or shared pointer.</p>
 <h3 id="c_3">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">RegisterMesh</span>(mesh, <span class="hljs-string">&quot;unique/key&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(mesh, <span class="hljs-string">&quot;unique/key&quot;</span>);
 go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(mesh, SceneMeshSlot::Custom, albedoTint);
 </code></pre>
 <h3 id="c_4">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.RegisterMesh(cube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">world.Assets().RegisterMesh(cube, <span class="hljs-string">&quot;fps/unit_cube&quot;</span>);
 go.AddMesh(SceneMeshSlot.Custom, <span class="hljs-keyword">new</span> Vector3(<span class="hljs-number">0.8f</span>, <span class="hljs-number">0.6f</span>, <span class="hljs-number">0.4f</span>));
 </code></pre>
 <h3 id="python_2">Python</h3>

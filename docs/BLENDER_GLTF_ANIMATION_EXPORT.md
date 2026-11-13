@@ -106,7 +106,7 @@ See `AnimationEventReceiverComponent` in `Spark.Bindings`.
 
 ## Load-time validation (M6)
 
-`GameWorld::LoadSkinnedGltf` runs `GltfSkinnedLoadValidator` after a successful parse. Non-fatal issues are logged to **stderr** with the asset path:
+`WorldAssets::LoadSkinnedGltf` runs `GltfSkinnedLoadValidator` after a successful parse. Non-fatal issues are logged to **stderr** with the asset path:
 
 | Check | Warning |
 |-------|---------|

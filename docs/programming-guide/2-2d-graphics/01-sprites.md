@@ -62,7 +62,7 @@ public:
 };
 ```
 
-**Library keys:** `GameWorld::RegisterTexture(tex, "game/hero")` lets multiple sprites share one GPU upload. Scripting hosts typically call `RegisterCheckerboardTexture` / `LoadTexture` interop helpers with the same key string you pass to `AddSprite`.
+**Library keys:** `world.Assets().RegisterTexture(tex, "game/hero")` lets multiple sprites share one GPU upload. Scripting hosts typically call `RegisterCheckerboardTexture` / `LoadTexture` interop helpers (C#: `world.Assets` / `RegisterTextureFromFile`) with the same key string you pass to `AddSprite`.
 
 ## Concept: spawn a sprite from a texture key
 
@@ -73,7 +73,7 @@ auto tex = MakeShared<Texture2D>(Utf8String("Hero"));
 if (!Texture2D::TryLoadFromFile("assets/sprites/hero.png", *tex)) {
     *tex = Texture2D::CreateSolid(64, 64, Vector4{1, 0, 0, 1});
 }
-world.RegisterTexture(tex, "game/hero");
+world.Assets().RegisterTexture(tex, "game/hero");
 
 GameObject* go = world.CreateGameObject();
 TransformComponent* tr = go->AddComponent<TransformComponent>();
@@ -92,7 +92,7 @@ go->AddComponent<SpriteComponent>(
 From a `GameObject` mirror (`CppMirrors.g.cs`):
 
 ```csharp
-world.RegisterTextureFromFile("game/hero", "assets/sprites/hero.png");
+world.Assets.RegisterTextureFromFile("game/hero", "assets/sprites/hero.png");
 
 var go = world.CreateGameObject("Hero");
 go.GetOrAddTransform().SetTranslation(new Vector3(2f, 1f, 0.04f));

@@ -213,11 +213,11 @@ Spark::ProcessUiCanvasesInput(scene, input, fbW, fbH);
 ## Asset Loading on GameWorld
 
 ```cpp
-Spark::GltfAsset asset = world.LoadGltf("assets/models/Cube.glb");
-Spark::SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
-auto tex = world.LoadTexture("assets/sprites/player.png");
-world.RegisterMesh(mesh, "my_game/hero");
-world.RegisterTexture(tex, "my_game/hero_albedo");
+Spark::GltfAsset asset = world.Assets().LoadGltf("assets/models/Cube.glb");
+Spark::SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
+auto tex = world.Assets().LoadTexture("assets/sprites/player.png");
+world.Assets().RegisterMesh(mesh, "my_game/hero");
+world.Assets().RegisterTexture(tex, "my_game/hero_albedo");
 ```
 
 Next: [Building and Running](overview-architecture/03-building-and-running.html).
@@ -434,7 +434,7 @@ public:
     void OnAttach(Spark::IEngineContext& ctx) override {
         auto& world = GetWorld();
         auto cube = Spark::MakeShared<Spark::Mesh>(Spark::Mesh::CreateUnitCube());
-        world.RegisterMesh(cube, "demo/cube");
+        world.Assets().RegisterMesh(cube, "demo/cube");
 
         auto* go = world.CreateGameObject();
         go->AddComponent<Spark::TransformComponent>();
@@ -645,7 +645,7 @@ auto tex = MakeShared<Texture2D>(Utf8String("Hero"));
 if (!Texture2D::TryLoadFromFile("assets/sprites/hero.png", *tex)) {
     *tex = Texture2D::CreateSolid(64, 64, Vector4{1, 0, 0, 1});
 }
-world.RegisterTexture(tex, "game/hero");
+world.Assets().RegisterTexture(tex, "game/hero");
 
 auto* go = world.CreateGameObject();
 auto* tr = go->AddComponent<TransformComponent>();
@@ -1012,7 +1012,7 @@ public:
 ## Spawn a Lit glTF Prop
 
 ```cpp
-GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
+GltfAsset asset = world.Assets().LoadGltf("assets/models/Crate.glb");
 auto* go = world.CreateGameObject();
 go->AddComponent<TransformComponent>()->SetTranslation({0, 0, 0});
 go->AddComponent<MeshComponent>(asset.mesh, SceneMeshSlot::Custom, Vector3::One);
@@ -1027,7 +1027,7 @@ mat->SetShadingModel(SceneShadingModel::LitPbr);
 
 ```cpp
 auto unitCube = MakeShared<Mesh>(Mesh::CreateUnitCube());
-world.RegisterMesh(unitCube, "fps/unit_cube");
+world.Assets().RegisterMesh(unitCube, "fps/unit_cube");
 
 auto* target = world.CreateGameObject();
 target->AddComponent<TransformComponent>()->SetTranslation({5, 1, -3});
@@ -1207,12 +1207,12 @@ struct SkinnedGltfAsset {
 };
 ```
 
-Load via `world.LoadSkinnedGltf("assets/models/Fox.glb")`.
+Load via `world.Assets().LoadSkinnedGltf("assets/models/Fox.glb")`.
 
 ## Components
 
 ```cpp
-SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
 
 auto* go = world.CreateGameObject();
 go->AddComponent<TransformComponent>()->SetTranslation({0, 0, 0});
@@ -2229,7 +2229,7 @@ void AddSolidPlatform(GameWorld& w, Array<GameObject*>& roots,
 tileTex = MakeShared<Texture2D>(Utf8String("Tiles"));
 *tileTex = Texture2D::CreateCheckerboard(256, 32,
     Vector3{0.38F, 0.34F, 0.30F}, Vector3{0.16F, 0.48F, 0.30F});
-world.RegisterTexture(tileTex, "platformer2d_template/tiles");
+world.Assets().RegisterTexture(tileTex, "platformer2d_template/tiles");
 
 AddSolidPlatform(world, roots, tileTex, -12, -3, 24, kGroundTopY, 10, ...);
 AddSolidPlatform(world, roots, tileTex, -2, -0.2, 2.5, 0.55, 20, ...);
@@ -2469,7 +2469,7 @@ void FpsGame::OnAttach(IEngineContext& context) {
 Always register custom meshes before `MeshComponent` references them:
 
 ```cpp
-world.RegisterMesh(mesh, "unique/key");
+world.Assets().RegisterMesh(mesh, "unique/key");
 go->AddComponent<MeshComponent>(mesh, SceneMeshSlot::Custom, albedo);
 ```
 
@@ -2665,7 +2665,7 @@ SimulatePhysics3D(world, timing, settings);
 ## glTF Weapons + Skinned Hands
 
 ```cpp
-SkinnedGltfAsset arms = world.LoadSkinnedGltf("assets/models/arms.glb");
+SkinnedGltfAsset arms = world.Assets().LoadSkinnedGltf("assets/models/arms.glb");
 // SkinnedMeshComponent + AnimatorComponent on viewmodel entity
 // Parent to camera with offset transform
 ```

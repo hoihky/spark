@@ -1,6 +1,6 @@
 # Skinned Characters
 
-Skinned rendering combines **`SkinnedMeshComponent`**, **`AnimatorComponent`** (joint palette), **`Skeleton`**, and optional **`Character3DAnimFsmComponent`**. Assets load through `GameWorld::LoadSkinnedGltf`; `GltfAssetBinder::BindFromPath` can attach skinned content automatically when the file contains a skeleton.
+Skinned rendering combines **`SkinnedMeshComponent`**, **`AnimatorComponent`** (joint palette), **`Skeleton`**, and optional **`Character3DAnimFsmComponent`**. Assets load through `WorldAssets::LoadSkinnedGltf`; `GltfAssetBinder::BindFromPath` can attach skinned content automatically when the file contains a skeleton.
 
 ## Playback stack
 
@@ -39,7 +39,7 @@ Clip tables: [`docs/ANIMATION_SAMPLE_ASSETS.md`](../../../ANIMATION_SAMPLE_ASSET
 ### C++
 
 ```cpp
-SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
 
 GameObject* go = world.CreateGameObject();
 go->AddComponent<TransformComponent>()->SetTranslation({0, 0, 0});
@@ -59,7 +59,7 @@ Component order on the object does not matter — stable sort by `UpdatePriority
 ### C\#
 
 ```csharp
-var fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+var fox = world.Assets.LoadSkinnedGltf("assets/models/Fox.glb");
 var go = world.CreateGameObject("Fox");
 go.GetOrAddTransform();
 go.AddSkinnedMesh(fox.Mesh);

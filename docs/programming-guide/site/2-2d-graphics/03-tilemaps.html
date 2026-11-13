@@ -1244,7 +1244,7 @@ source-&gt;<span class="hljs-built_in">SetPixelsPerWorldUnit</span>(<span class=
 source-&gt;<span class="hljs-built_in">SetHotReload</span>(<span class="hljs-literal">true</span>);
 source-&gt;<span class="hljs-built_in">ImportNow</span>(*mapGo, world);
 </code></pre>
-<p><code>ApplyTilemapDocument</code> loads textures via <code>GameWorld::LoadTexture</code>, applies Kenney packed-atlas fixes, and derives <code>tileWorldSize</code> from PPU when the document leaves size at zero.</p>
+<p><code>ApplyTilemapDocument</code> loads textures via <code>WorldAssets::LoadTexture</code>, applies Kenney packed-atlas fixes, and derives <code>tileWorldSize</code> from PPU when the document leaves size at zero.</p>
 <h3 id="c_7">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> source = mapGo.AddTilemapMapSource();
 source.SetTmxPath(<span class="hljs-string">&quot;sprites/kenney_tiny-dungeon/Tiled/sampleMap.tmx&quot;</span>);

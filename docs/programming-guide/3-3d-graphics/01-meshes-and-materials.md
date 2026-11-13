@@ -50,7 +50,7 @@ void SetMeshSlot(SceneMeshSlot slot);
 | `GroundPlane` | Built-in plane |
 | `Custom` | Upload `Mesh` vertices each frame |
 
-Register custom meshes: `world.RegisterMesh(mesh, "fps/unit_cube")`.
+Register custom meshes: `world.Assets().RegisterMesh(`mesh, "fps/unit_cube")`.
 
 ## Class design: `MaterialComponent`
 
@@ -84,7 +84,7 @@ GltfAssetBinder::BindFromPath(*go, "assets/models/DamagedHelmet.glb");
 Manual path:
 
 ```cpp
-GltfAsset asset = world.LoadGltf("assets/models/Crate.glb");
+GltfAsset asset = world.Assets().LoadGltf("assets/models/Crate.glb");
 GltfAssetBinder::BindRigidMesh(*go, asset, SceneMeshSlot::Custom, Vector3::One, "assets/models/Crate.glb");
 if (MaterialComponent* mat = go->GetComponent<MaterialComponent>()) {
     ApplyGltfMaterialDesc(*mat, asset.material);
@@ -115,7 +115,7 @@ go.bind_gltf_from_path("assets/models/DamagedHelmet.glb")
 
 ```cpp
 auto unitCube = MakeShared<Mesh>(Mesh::CreateUnitCube());
-world.RegisterMesh(unitCube, "fps/unit_cube");
+world.Assets().RegisterMesh(unitCube, "fps/unit_cube");
 
 GameObject* target = world.CreateGameObject();
 target->AddComponent<TransformComponent>()->SetTranslation({5, 1, -3});
@@ -126,7 +126,7 @@ target->AddComponent<MaterialComponent>(nullptr)->SetRoughness(0.35F);
 ### C\#
 
 ```csharp
-world.RegisterMesh(unitCube, "fps/unit_cube");
+world.Assets.RegisterMesh(unitCube, "fps/unit_cube");
 var target = world.CreateGameObject("Target");
 target.GetOrAddTransform().SetTranslation(new Vector3(5, 1, -3));
 target.AddMesh(SceneMeshSlot.Custom, new Vector3(0.9f, 0.3f, 0.2f));

@@ -90,7 +90,7 @@ tr->SetUniformScale(1.0F);
 go->AddComponent<MeshComponent>(meshAsset, SceneMeshSlot::Custom, tint);
 ```
 
-Register assets: `world.RegisterMesh(sharedMesh, key)`.
+Register assets: `world.Assets().RegisterMesh(sharedMesh, key)` (C#: `world.Assets.RegisterMesh`).
 
 ### `MaterialComponent` {#material}
 

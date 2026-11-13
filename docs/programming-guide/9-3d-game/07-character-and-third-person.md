@@ -8,7 +8,7 @@
 
 | System | APIs |
 |--------|------|
-| Asset load | `RequestGltf` + `PumpAssets` + `LoadSkinnedGltf` |
+| Asset load | `RequestGltf` + `Assets().Pump()` (C++) / `Assets.Pump` (C#) + `LoadSkinnedGltf` |
 | Locomotion | `CharacterController3DComponent`, `SimulateCharacterControllers3D` |
 | Camera | `SpringArm3DComponent`, `CameraFollow3DComponent`, cursor capture |
 | Animation | `AnimatorComponent`, `Character3DAnimFsmComponent` |
@@ -18,12 +18,12 @@
 ### C++
 
 ```cpp
-world.RequestGltf("assets/models/Fox.glb");
+world.Assets().RequestGltf("assets/models/Fox.glb");
 
 void OnUpdate(const FrameTiming& timing, IEngineContext& ctx) override {
-    world.PumpAssets();
-    if (!foxReady && world.IsGltfReady("assets/models/Fox.glb")) {
-        SkinnedGltfAsset fox = world.LoadSkinnedGltf("assets/models/Fox.glb");
+    world.Assets().Pump();
+    if (!foxReady && world.Assets().IsGltfReady("assets/models/Fox.glb")) {
+        SkinnedGltfAsset fox = world.Assets().LoadSkinnedGltf("assets/models/Fox.glb");
         player->AddComponent<SkinnedMeshComponent>(fox.mesh);
         player->AddComponent<AnimatorComponent>(fox.skeleton, 0, 1.0F);
         foxReady = true;
@@ -37,9 +37,11 @@ void OnUpdate(const FrameTiming& timing, IEngineContext& ctx) override {
 ### C\#
 
 ```csharp
-World.RequestGltf("assets/models/Fox.glb");
-World.PumpAssets();
-var fox = World.LoadSkinnedGltf("assets/models/Fox.glb");
+const string foxPath = "assets/models/Fox.glb";
+World.Assets.Pump();
+while (!World.Assets.IsGltfReady(foxPath))
+    World.Assets.Pump();
+var fox = World.Assets.LoadSkinnedGltf(foxPath);
 player.AddSkinnedMesh(fox.Mesh);
 player.AddAnimator(fox.Skeleton, 0, 1f);
 ```
@@ -47,7 +49,7 @@ player.AddAnimator(fox.Skeleton, 0, 1f);
 ### Python
 
 ```python
-# glTF load path C++/C#-first — host CharacterCameraDemo or bind PumpAssets in py.
+# glTF load path C++/C#-first — host CharacterCameraDemo or bind world.Assets().Pump() in py.
 ```
 
 ## Concept: character controller

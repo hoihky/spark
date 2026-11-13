@@ -48,7 +48,7 @@ This document tracks the object-oriented façade layer added without removing le
 
 ## Next increments (not done yet)
 
-- Engine, editor, and tests use `world.Assets()` for load/register/query (flat asset API removed).
+- ~~Flat `GameWorld` asset API~~ — removed; use `world.Assets()` everywhere (C#: `world.Assets`).
 - `GameplaySnapshotRegistry` single registrar instead of many `Register*SnapshotHandlers`.
 - Editor / ImGui facades on `IEngineContext`.
 - Expose `LitSceneBuilder` to C# interop when script games need fluent submit.
@@ -61,4 +61,4 @@ From **spark-sharp** with `SPARK_ENGINE_ROOT` pointing at this repo:
 ./tools/generate-csharp-bindings.sh
 ```
 
-Companion files under `Spark.Bindings/World/` should stay aligned with the C++ facet names above.
+Companion files under `Spark.Bindings/World/` should stay aligned with the C++ facet names above. C# **`WorldAssets`** (`GameWorld.Assets`) replaces **`WorldAssetCache`** / flat `LoadGltf` on `GameWorld` (obsolete forwards remain in spark-sharp for one release).

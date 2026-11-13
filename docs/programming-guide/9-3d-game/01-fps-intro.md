@@ -51,7 +51,7 @@ struct TracerBullet {
 public sealed class FpsGame : Game
 {
     private FlyCamera _camera = new();
-    // Meshes: world.RegisterMesh after MakeShared equivalent in bindings
+    // Meshes: world.Assets().RegisterMesh after MakeShared equivalent in bindings
     private readonly List<GameObject> _targets = new();
 }
 ```
