@@ -425,7 +425,7 @@ void BroadPhase2DDemo::SpawnEnemies(Spark::GameWorld& world, const Spark::Array<
             enemySpriteTextures.PushBack(spriteTex);
             char regKey[64];
             std::snprintf(regKey, sizeof(regKey), "spark/maze2d/enemy_%d_%u", ei, tile);
-            world.RegisterTexture(spriteTex, regKey);
+            world.Assets().RegisterTexture(spriteTex, regKey);
             spriteUv = Spark::Vector4{0.0F, 0.0F, 1.0F, 1.0F};
         }
 
@@ -571,15 +571,15 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         dungeonAtlasCpu = MakeTinyDungeonAtlasFallback();
     }
     dungeonAtlasTex = Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(dungeonAtlasCpu));
-    w.RegisterTexture(dungeonAtlasTex, "spark/maze2d/kenney_tiny_dungeon");
+    w.Assets().RegisterTexture(dungeonAtlasTex, "spark/maze2d/kenney_tiny_dungeon");
 
     bulletTex = Spark::MakeShared<Spark::Texture2D>(DemoAssets::MakePlayerBulletTextureFallback());
     enemyBulletTex = Spark::MakeShared<Spark::Texture2D>(DemoAssets::MakeEnemyBulletTextureFallback());
-    w.RegisterTexture(bulletTex, "spark/maze2d/bullet");
-    w.RegisterTexture(enemyBulletTex, "spark/maze2d/enemy_bullet");
+    w.Assets().RegisterTexture(bulletTex, "spark/maze2d/bullet");
+    w.Assets().RegisterTexture(enemyBulletTex, "spark/maze2d/enemy_bullet");
 
     hudWhiteTex = MakeHudWhitePixelTexture();
-    w.RegisterTexture(hudWhiteTex, "spark/maze2d/hud_white");
+    w.Assets().RegisterTexture(hudWhiteTex, "spark/maze2d/hud_white");
 
     sfxCoin = TryLoadSoundClipFromBundledAsset("assets/audio/coin.wav");
     sfxHurt = TryLoadSoundClipFromBundledAsset("assets/audio/hurt.wav");

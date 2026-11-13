@@ -1,33 +1,35 @@
 #pragma once
 
-#include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObjectQuery.hpp"
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/memory/UniquePtr.hpp"
-#include "spark/scene/assets/CachedAssetKind.hpp"
-#include "spark/scene/core/EntityId.hpp"
-#include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/assets/AssetLoadEvents.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
+#include "spark/scene/assets/GameWorldAssetCache.hpp"
+#include "spark/scene/assets/GameWorldAssetLoader.hpp"
+#include "spark/scene/core/EntityId.hpp"
+#include "spark/scene/core/GameWorldAssetStore.hpp"
+#include "spark/scene/core/GameWorldEntityGraph.hpp"
+#include "spark/scene/core/GameWorldPresentation.hpp"
 #include "spark/scene/vfx/VfxAsset.hpp"
-#include "spark/scene/vfx/VfxAssetLoader.hpp"
-#include "spark/scene/submit/SkinnedAnimationService.hpp"
-#include "spark/scene/submit/SkinnedIkService.hpp"
-#include "spark/scene/vfx/VfxSubsystem.hpp"
-#include "spark/scene/foliage/WindSubsystem.hpp"
 
 namespace Spark {
 
 class Font;
 class GameObject;
 class IEngineContext;
+class PhysicsSubsystem;
+class WorldAssets;
+class WorldEntities;
+class WorldPhysics;
+class WorldRendering;
+class WorldSimulation;
+class WorldQuery;
 
 /**
- * Owns GameObjects (ECS entities) and the parent/child graph.
- * Asset loading/caching is delegated to <c>GameWorldAssetCache</c>.
+ * Facade composing entity graph, assets, and presentation services.
+ * Flat methods remain for compatibility; prefer <c>Entities()</c>, <c>Assets()</c>, <c>Simulation()</c>, …
  */
 class GameWorld {
 public:
@@ -38,322 +40,288 @@ public:
     GameWorld& operator=(GameWorld&&) = delete;
     ~GameWorld();
 
-    [[nodiscard]] GameObject* CreateGameObject();
-
-    /**
-     * Removes <c>object</c> and its descendants. During <c>UpdateGameObjects</c> this is deferred to end-of-frame;
-     * otherwise destruction is immediate. Prefer <c>DestroyGameObjectAtEndOfFrame</c> from gameplay callbacks.
-     */
-    void DestroyGameObject(GameObject* object);
-
-    /** Queues destruction at the end of the current frame (flushes immediately if not inside <c>UpdateGameObjects</c>). */
-    void DestroyGameObjectAtEndOfFrame(GameObject* object);
-
-    /** Forces immediate removal (editor teardown, world shutdown). Avoid during component <c>OnUpdate</c>. */
-    void DestroyGameObjectImmediate(GameObject* object);
-
-    /** Applies all queued end-of-frame destroys (called automatically at the end of <c>UpdateGameObjects</c>). */
-    void FlushPendingDestroyGameObjects();
-
-    /**
-     * child and newParent must belong to this world. newParent may be nullptr (root).
-     * Returns false if newParent is not in this world, or if linking would create a cycle.
-     */
-    bool SetParent(GameObject* child, GameObject* newParent);
-
-    /** Per-frame component simulation (OnUpdate on each GameObject's components). */
-    void UpdateGameObjects(const FrameTiming& timing, IEngineContext& context);
-
-    [[nodiscard]] SharedPtr<Mesh> LoadMesh(const char* path) { return assetCache.LoadMesh(path); }
-    [[nodiscard]] GltfAsset LoadGltf(const char* path) { return assetCache.LoadGltf(path); }
-    [[nodiscard]] AssetLoadOutcome<GltfAsset> TryLoadGltf(const char* path) { return assetCache.TryLoadGltf(path); }
-    [[nodiscard]] GltfSceneDocument LoadGltfScene(const char* path) { return assetCache.LoadGltfScene(path); }
-    [[nodiscard]] AssetLoadOutcome<GltfSceneDocument> TryLoadGltfScene(const char* path) {
-        return assetCache.TryLoadGltfScene(path);
-    }
-    void RequestGltf(const char* path) { assetLoader.RequestGltf(path); }
-    void RequestSkinnedGltf(const char* path) { assetLoader.RequestSkinnedGltf(path); }
-    void OnGltfReady(const char* path, AssetLoadCallback callback) { assetLoader.OnGltfReady(path, callback); }
-    void OnSkinnedGltfReady(const char* path, AssetLoadCallback callback) {
-        assetLoader.OnSkinnedGltfReady(path, callback);
-    }
-    void OnTextureReady(const char* path, AssetLoadCallback callback) { assetLoader.OnTextureReady(path, callback); }
-    void OnAssetReady(const char* path, AssetLoadJobKind kind, AssetLoadCallback callback) {
-        assetLoader.OnAssetReady(path, kind, callback);
-    }
-    void SetAssetLoadListener(IAssetLoadListener* listener) noexcept { assetLoader.SetAssetLoadListener(listener); }
-    [[nodiscard]] IAssetLoadListener* GetAssetLoadListener() const noexcept {
-        return assetLoader.GetAssetLoadListener();
-    }
-    void PumpAssets() { assetLoader.Pump(*this); }
-    [[nodiscard]] std::size_t GetPendingAssetLoadCount() const noexcept { return assetLoader.GetPendingJobCount(); }
-    [[nodiscard]] std::size_t GetOutstandingAssetLoadCount() const noexcept {
-        return assetLoader.GetOutstandingLoadCount();
-    }
-    [[nodiscard]] bool IsGltfReady(const char* path) const { return assetLoader.IsGltfReady(path); }
-    [[nodiscard]] bool IsSkinnedGltfReady(const char* path) const { return assetLoader.IsSkinnedGltfReady(path); }
-    [[nodiscard]] AssetLoadState GetAssetLoadState(const char* path, AssetLoadJobKind kind) const {
-        return assetLoader.GetState(path, kind);
-    }
-    [[nodiscard]] Utf8String GetAssetLoadError(const char* path, AssetLoadJobKind kind) const {
-        return assetLoader.GetLoadError(path, kind);
-    }
-    void RegisterGltf(const GltfAsset& asset, const char* cacheKey) { assetCache.RegisterGltf(asset, cacheKey); }
-    [[nodiscard]] SkinnedGltfAsset LoadSkinnedGltf(const char* path) { return assetCache.LoadSkinnedGltf(path); }
-    [[nodiscard]] AssetLoadOutcome<SkinnedGltfAsset> TryLoadSkinnedGltf(const char* path) {
-        return assetCache.TryLoadSkinnedGltf(path);
-    }
-    void RegisterSkinnedGltf(const SkinnedGltfAsset& asset, const char* cacheKey) {
-        assetCache.RegisterSkinnedGltf(asset, cacheKey);
-    }
-    [[nodiscard]] SharedPtr<Texture2D> LoadTexture(const char* path) { return assetCache.LoadTexture(path); }
-    [[nodiscard]] AssetLoadOutcome<SharedPtr<Texture2D>> TryLoadTexture(const char* path) {
-        return assetCache.TryLoadTexture(path);
-    }
-    SharedPtr<Mesh> RegisterMesh(const SharedPtr<Mesh>& mesh, const char* cacheKey = nullptr) {
-        return assetCache.RegisterMesh(mesh, cacheKey);
-    }
-    SharedPtr<Texture2D> RegisterTexture(const SharedPtr<Texture2D>& texture, const char* cacheKey = nullptr) {
-        return assetCache.RegisterTexture(texture, cacheKey);
-    }
-    SharedPtr<RenderTexture> RegisterRenderTexture(
-            const SharedPtr<RenderTexture>& texture,
-            const char* cacheKey = nullptr) {
-        return assetCache.RegisterRenderTexture(texture, cacheKey);
-    }
-    [[nodiscard]] SharedPtr<Mesh> TryGetMeshByKeyOrPath(const char* keyOrPath) const {
-        return assetCache.TryGetMeshByKeyOrPath(keyOrPath);
-    }
-    [[nodiscard]] SharedPtr<Texture2D> TryGetTextureByKeyOrPath(const char* keyOrPath) const {
-        return assetCache.TryGetTextureByKeyOrPath(keyOrPath);
-    }
-    [[nodiscard]] SharedPtr<RenderTexture> TryGetRenderTextureByKey(const char* cacheKey) const {
-        return assetCache.TryGetRenderTextureByKey(cacheKey);
-    }
-    [[nodiscard]] bool TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const {
-        return assetCache.TryGetCachedSkinnedGltf(path, out);
-    }
-    [[nodiscard]] bool TryGetCachedGltf(const char* path, GltfAsset& out) const {
-        return assetCache.TryGetCachedGltf(path, out);
-    }
-    /** Synchronous load for editor/scripting call sites (blocks the calling thread; no spin-wait). */
-    [[nodiscard]] bool AwaitGltf(const char* path, GltfAsset& out);
-    /** Synchronous load for editor/scripting call sites (blocks the calling thread; no spin-wait). */
-    [[nodiscard]] bool AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out);
-    [[nodiscard]] bool TryGetAxisAlignedBoundsForKeyOrPath(const char* keyOrPath, Vector3& outMin, Vector3& outMax)
-            const {
-        return assetCache.TryGetAxisAlignedBoundsForKeyOrPath(keyOrPath, outMin, outMax);
-    }
-    [[nodiscard]] MaterialAsset LoadMaterial(const char* path) { return assetCache.LoadMaterial(path); }
-    [[nodiscard]] AssetLoadOutcome<MaterialAsset> TryLoadMaterial(const char* path) {
-        return assetCache.TryLoadMaterial(path);
-    }
-    void RegisterMaterial(const MaterialAsset& material, const char* cacheKey) {
-        assetCache.RegisterMaterial(material, cacheKey);
-    }
-    [[nodiscard]] const MaterialAsset* TryGetMaterialByKeyOrPath(const char* keyOrPath) const {
-        return assetCache.TryGetMaterialByKeyOrPath(keyOrPath);
-    }
-    [[nodiscard]] VfxAsset LoadVfx(const char* path) { return assetCache.LoadVfx(path); }
-    [[nodiscard]] AssetLoadOutcome<VfxAsset> TryLoadVfx(const char* path) { return assetCache.TryLoadVfx(path); }
-    void RegisterVfx(const VfxAsset& asset, const char* cacheKey) { assetCache.RegisterVfx(asset, cacheKey); }
-    [[nodiscard]] const VfxAsset* TryGetVfxByKeyOrPath(const char* keyOrPath) const {
-        return assetCache.TryGetVfxByKeyOrPath(keyOrPath);
-    }
-    [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return vfxSubsystem; }
-    [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return vfxSubsystem; }
-    [[nodiscard]] WindSubsystem& GetWindSubsystem() noexcept { return windSubsystem; }
-    [[nodiscard]] const WindSubsystem& GetWindSubsystem() const noexcept { return windSubsystem; }
-    [[nodiscard]] SkinnedAnimationService& GetSkinnedAnimationService() noexcept { return skinnedAnimationService; }
-    [[nodiscard]] const SkinnedAnimationService& GetSkinnedAnimationService() const noexcept {
-        return skinnedAnimationService;
-    }
-    [[nodiscard]] SkinnedIkService& GetSkinnedIkService() noexcept { return skinnedIkService; }
-    [[nodiscard]] const SkinnedIkService& GetSkinnedIkService() const noexcept { return skinnedIkService; }
-    void RequestMaterial(const char* path) { assetLoader.RequestMaterial(path); }
-    void InvalidateAssetLoadState(const char* path, AssetLoadJobKind kind) {
-        assetLoader.InvalidateAssetLoadState(path, kind);
-    }
-    void OnMaterialReady(const char* path, AssetLoadCallback callback) {
-        assetLoader.OnMaterialReady(path, callback);
-    }
-    [[nodiscard]] bool IsMaterialReady(const char* path) const { return assetLoader.IsMaterialReady(path); }
-    [[nodiscard]] bool SaveMaterialAsset(
-            const char* path,
-            const MaterialAsset& material,
-            const char* relativeToDir = nullptr,
-            const GameWorldAssetCache* textureKeys = nullptr) {
-        return MaterialAssetLoader::TrySaveToFile(path, material, relativeToDir, textureKeys);
-    }
-    void RetainAsset(CachedAssetKind kind, const char* key) { assetCache.RetainAsset(kind, key); }
-    bool ReleaseAsset(CachedAssetKind kind, const char* key) { return assetCache.ReleaseAsset(kind, key); }
-    [[nodiscard]] std::uint32_t GetAssetRetainCount(CachedAssetKind kind, const char* key) const {
-        return assetCache.GetAssetRetainCount(kind, key);
-    }
-    [[nodiscard]] bool BuildTextureAtlas(const char* atlasKey, const char* const* textureKeys, std::size_t count) {
-        return assetCache.BuildTextureAtlas(atlasKey, textureKeys, count);
-    }
-    [[nodiscard]] bool TryAutoPackTextureIntoAtlas(const char* atlasGroupKey, const SharedPtr<Texture2D>& texture) {
-        return assetCache.TryAutoPackTextureIntoAtlas(atlasGroupKey, texture);
-    }
-    void FinalizePendingAutoPackAtlas(const char* atlasGroupKey) {
-        assetCache.FinalizePendingAutoPackAtlas(atlasGroupKey);
+    // --- Entity graph (delegates to <c>entityGraph_</c>) ---
+    [[nodiscard]] GameObject* CreateGameObject() { return entityGraph_.Create(); }
+    void DestroyGameObject(GameObject* object) { entityGraph_.Destroy(object); }
+    void DestroyGameObjectAtEndOfFrame(GameObject* object) { entityGraph_.DestroyAtEndOfFrame(object); }
+    void DestroyGameObjectImmediate(GameObject* object) { entityGraph_.DestroyImmediate(object); }
+    void FlushPendingDestroyGameObjects() { entityGraph_.FlushPendingDestroys(); }
+    [[nodiscard]] bool SetParent(GameObject* child, GameObject* newParent) {
+        return entityGraph_.SetParent(child, newParent);
     }
 
-    /** Font used for TextOverlayComponent / screen text when set on SceneRenderParams. */
-    void SetUiFont(SharedPtr<Font> font);
-    [[nodiscard]] const SharedPtr<Font>& GetUiFont() const noexcept { return uiFont; }
-    void SetUiBoldFont(SharedPtr<Font> font);
-    [[nodiscard]] const SharedPtr<Font>& GetUiBoldFont() const noexcept { return uiBoldFont; }
-
-    [[nodiscard]] std::size_t GetGameObjectCount() const noexcept { return objects.GetSize(); }
+    [[nodiscard]] std::size_t GetGameObjectCount() const noexcept { return entityGraph_.GetCount(); }
 
     template<typename Fn>
     void ForEachGameObject(Fn&& fn) {
-        for (std::size_t i = 0; i < objects.GetSize(); ++i) {
-            fn(objects[i].Get());
-        }
+        entityGraph_.ForEach(Forward<Fn>(fn));
     }
 
     template<typename Fn>
     void ForEachGameObject(Fn&& fn) const {
-        for (std::size_t i = 0; i < objects.GetSize(); ++i) {
-            fn(objects[i].Get());
-        }
+        entityGraph_.ForEach(Forward<Fn>(fn));
     }
 
-    /** Visits objects matching <c>filter</c> (default skips inactive hierarchy). */
     template<typename Fn>
     void ForEachGameObject(Fn&& fn, const GameObjectQueryFilter& filter) {
-        ForEachGameObject([&](GameObject* object) {
-            if (GameObjectPassesQueryFilter(object, filter)) {
-                fn(object);
-            }
-        });
+        entityGraph_.ForEach(Forward<Fn>(fn), filter);
     }
 
     template<typename Fn>
     void ForEachGameObject(Fn&& fn, const GameObjectQueryFilter& filter) const {
-        ForEachGameObject([&](GameObject* object) {
-            if (GameObjectPassesQueryFilter(object, filter)) {
-                fn(object);
-            }
-        });
+        entityGraph_.ForEach(Forward<Fn>(fn), filter);
     }
 
-    /** Visits objects that are active in the hierarchy (simulation / render default). */
     template<typename Fn>
     void ForEachActiveGameObject(Fn&& fn) {
-        GameObjectQueryFilter filter;
-        filter.includeInactive = false;
-        ForEachGameObject(Forward<Fn>(fn), filter);
+        entityGraph_.ForEachActive(Forward<Fn>(fn));
     }
 
     template<typename Fn>
     void ForEachActiveGameObject(Fn&& fn) const {
-        GameObjectQueryFilter filter;
-        filter.includeInactive = false;
-        ForEachGameObject(Forward<Fn>(fn), filter);
+        entityGraph_.ForEachActive(Forward<Fn>(fn));
     }
 
-    /**
-     * Visits objects that pass <c>filter</c> and have every listed component type.
-     * Example: <c>ForEachGameObjectWithComponents&lt;MeshComponent, MaterialComponent&gt;(fn);</c>
-     */
     template<typename... ComponentTypes, typename Fn>
     void ForEachGameObjectWithComponents(Fn&& fn, const GameObjectQueryFilter& filter = {}) {
-        ForEachGameObject(
-                [&](GameObject* object) {
-                    if (GameObjectHasAllComponents<ComponentTypes...>(object)) {
-                        fn(object);
-                    }
-                },
-                filter);
+        entityGraph_.ForEachWithComponents<ComponentTypes...>(Forward<Fn>(fn), filter);
     }
 
     template<typename... ComponentTypes, typename Fn>
     void ForEachGameObjectWithComponents(Fn&& fn, const GameObjectQueryFilter& filter = {}) const {
-        ForEachGameObject(
-                [&](GameObject* object) {
-                    if (GameObjectHasAllComponents<ComponentTypes...>(object)) {
-                        fn(object);
-                    }
-                },
-                filter);
+        entityGraph_.ForEachWithComponents<ComponentTypes...>(Forward<Fn>(fn), filter);
     }
 
-    /** Visits each matching component instance: <c>fn(object, component)</c>. */
     template<typename T, typename Fn>
     void ForEachComponent(Fn&& fn, const GameObjectQueryFilter& filter = {}) {
-        ForEachGameObjectWithComponents<T>([&](GameObject* object) { fn(object, *object->GetComponent<T>()); }, filter);
+        entityGraph_.ForEachComponent<T>(Forward<Fn>(fn), filter);
     }
 
     template<typename T, typename Fn>
     void ForEachComponent(Fn&& fn, const GameObjectQueryFilter& filter = {}) const {
-        ForEachGameObjectWithComponents<T>([&](GameObject* object) { fn(object, *object->GetComponent<T>()); }, filter);
+        entityGraph_.ForEachComponent<T>(Forward<Fn>(fn), filter);
     }
 
     template<typename... ComponentTypes>
-    [[nodiscard]] GameObject* FindFirstGameObjectWithComponents(
-            const GameObjectQueryFilter& filter = {}) {
-        GameObject* found = nullptr;
-        ForEachGameObjectWithComponents<ComponentTypes...>([&](GameObject* object) {
-            if (found == nullptr) {
-                found = object;
-            }
-        }, filter);
-        return found;
+    [[nodiscard]] GameObject* FindFirstGameObjectWithComponents(const GameObjectQueryFilter& filter = {}) {
+        return entityGraph_.FindFirstWithComponents<ComponentTypes...>(filter);
     }
 
     template<typename... ComponentTypes>
     [[nodiscard]] GameObject* FindFirstGameObjectWithComponents(const GameObjectQueryFilter& filter = {}) const {
-        GameObject* found = nullptr;
-        ForEachGameObjectWithComponents<ComponentTypes...>([&](GameObject* object) {
-            if (found == nullptr) {
-                found = object;
-            }
-        }, filter);
-        return found;
+        return entityGraph_.FindFirstWithComponents<ComponentTypes...>(filter);
     }
 
-    [[nodiscard]] GameObject* FindGameObjectById(std::uint64_t id) const noexcept;
-    [[nodiscard]] GameObject* TryGetGameObject(EntityId id) const noexcept { return FindGameObjectById(id); }
+    [[nodiscard]] GameObject* FindGameObjectById(std::uint64_t id) const noexcept { return entityGraph_.FindById(id); }
+    [[nodiscard]] GameObject* TryGetGameObject(EntityId id) const noexcept { return entityGraph_.TryGet(id); }
+    [[nodiscard]] bool IsGameObjectAlive(const GameObject* object) const noexcept { return entityGraph_.IsAlive(object); }
+    [[nodiscard]] GameObject* FindGameObjectByName(const char* name, const GameObjectQueryFilter& filter = {}) const {
+        return entityGraph_.FindByName(name, filter);
+    }
+    [[nodiscard]] GameObject* FindGameObjectWithTag(const char* tag, const GameObjectQueryFilter& filter = {}) const {
+        return entityGraph_.FindWithTag(tag, filter);
+    }
+    void CollectGameObjects(GameObjectQueryResult& out, const GameObjectQueryFilter& filter) const {
+        entityGraph_.Collect(out, filter);
+    }
+    [[nodiscard]] GameObjectQueryResult QueryGameObjects(const GameObjectQueryFilter& filter = {}) const {
+        return entityGraph_.Query(filter);
+    }
 
-    /** Pointer is non-null, belongs to this world, and is not queued for end-of-frame destroy. */
-    [[nodiscard]] bool IsGameObjectAlive(const GameObject* object) const noexcept;
-    [[nodiscard]] GameObject* FindGameObjectByName(const char* name, const GameObjectQueryFilter& filter = {}) const;
-    [[nodiscard]] GameObject* FindGameObjectWithTag(const char* tag, const GameObjectQueryFilter& filter = {}) const;
+    void UpdateGameObjects(const FrameTiming& timing, IEngineContext& context);
 
-    void CollectGameObjects(GameObjectQueryResult& out, const GameObjectQueryFilter& filter) const;
-    [[nodiscard]] GameObjectQueryResult QueryGameObjects(const GameObjectQueryFilter& filter = {}) const;
+    // --- Assets (delegates to <c>WorldAssets</c> via compat wrappers) ---
+    [[nodiscard]] SharedPtr<Mesh> LoadMesh(const char* path) { return assetStore_.Cache().LoadMesh(path); }
+    [[nodiscard]] GltfAsset LoadGltf(const char* path) { return assetStore_.Cache().LoadGltf(path); }
+    [[nodiscard]] AssetLoadOutcome<GltfAsset> TryLoadGltf(const char* path) {
+        return assetStore_.Cache().TryLoadGltf(path);
+    }
+    [[nodiscard]] GltfSceneDocument LoadGltfScene(const char* path) { return assetStore_.Cache().LoadGltfScene(path); }
+    [[nodiscard]] AssetLoadOutcome<GltfSceneDocument> TryLoadGltfScene(const char* path) {
+        return assetStore_.Cache().TryLoadGltfScene(path);
+    }
+    void RequestGltf(const char* path) { assetStore_.Loader().RequestGltf(path); }
+    void RequestSkinnedGltf(const char* path) { assetStore_.Loader().RequestSkinnedGltf(path); }
+    void OnGltfReady(const char* path, AssetLoadCallback callback) {
+        assetStore_.Loader().OnGltfReady(path, callback);
+    }
+    void OnSkinnedGltfReady(const char* path, AssetLoadCallback callback) {
+        assetStore_.Loader().OnSkinnedGltfReady(path, callback);
+    }
+    void OnTextureReady(const char* path, AssetLoadCallback callback) {
+        assetStore_.Loader().OnTextureReady(path, callback);
+    }
+    void OnAssetReady(const char* path, AssetLoadJobKind kind, AssetLoadCallback callback) {
+        assetStore_.Loader().OnAssetReady(path, kind, callback);
+    }
+    void SetAssetLoadListener(IAssetLoadListener* listener) noexcept {
+        assetStore_.Loader().SetAssetLoadListener(listener);
+    }
+    [[nodiscard]] IAssetLoadListener* GetAssetLoadListener() const noexcept {
+        return assetStore_.Loader().GetAssetLoadListener();
+    }
+    void PumpAssets() { assetStore_.Loader().Pump(*this); }
+    [[nodiscard]] std::size_t GetPendingAssetLoadCount() const noexcept {
+        return assetStore_.Loader().GetPendingJobCount();
+    }
+    [[nodiscard]] std::size_t GetOutstandingAssetLoadCount() const noexcept {
+        return assetStore_.Loader().GetOutstandingLoadCount();
+    }
+    [[nodiscard]] bool IsGltfReady(const char* path) const { return assetStore_.Loader().IsGltfReady(path); }
+    [[nodiscard]] bool IsSkinnedGltfReady(const char* path) const {
+        return assetStore_.Loader().IsSkinnedGltfReady(path);
+    }
+    [[nodiscard]] AssetLoadState GetAssetLoadState(const char* path, AssetLoadJobKind kind) const {
+        return assetStore_.Loader().GetState(path, kind);
+    }
+    [[nodiscard]] Utf8String GetAssetLoadError(const char* path, AssetLoadJobKind kind) const {
+        return assetStore_.Loader().GetLoadError(path, kind);
+    }
+    void RegisterGltf(const GltfAsset& asset, const char* cacheKey) {
+        assetStore_.Cache().RegisterGltf(asset, cacheKey);
+    }
+    [[nodiscard]] SkinnedGltfAsset LoadSkinnedGltf(const char* path) {
+        return assetStore_.Cache().LoadSkinnedGltf(path);
+    }
+    [[nodiscard]] AssetLoadOutcome<SkinnedGltfAsset> TryLoadSkinnedGltf(const char* path) {
+        return assetStore_.Cache().TryLoadSkinnedGltf(path);
+    }
+    void RegisterSkinnedGltf(const SkinnedGltfAsset& asset, const char* cacheKey) {
+        assetStore_.Cache().RegisterSkinnedGltf(asset, cacheKey);
+    }
+    [[nodiscard]] SharedPtr<Texture2D> LoadTexture(const char* path) { return assetStore_.Cache().LoadTexture(path); }
+    [[nodiscard]] AssetLoadOutcome<SharedPtr<Texture2D>> TryLoadTexture(const char* path) {
+        return assetStore_.Cache().TryLoadTexture(path);
+    }
+    SharedPtr<Mesh> RegisterMesh(const SharedPtr<Mesh>& mesh, const char* cacheKey = nullptr) {
+        return assetStore_.Cache().RegisterMesh(mesh, cacheKey);
+    }
+    SharedPtr<Texture2D> RegisterTexture(const SharedPtr<Texture2D>& texture, const char* cacheKey = nullptr) {
+        return assetStore_.Cache().RegisterTexture(texture, cacheKey);
+    }
+    SharedPtr<RenderTexture> RegisterRenderTexture(
+            const SharedPtr<RenderTexture>& texture,
+            const char* cacheKey = nullptr) {
+        return assetStore_.Cache().RegisterRenderTexture(texture, cacheKey);
+    }
+    [[nodiscard]] SharedPtr<Mesh> TryGetMeshByKeyOrPath(const char* keyOrPath) const {
+        return assetStore_.Cache().TryGetMeshByKeyOrPath(keyOrPath);
+    }
+    [[nodiscard]] SharedPtr<Texture2D> TryGetTextureByKeyOrPath(const char* keyOrPath) const {
+        return assetStore_.Cache().TryGetTextureByKeyOrPath(keyOrPath);
+    }
+    [[nodiscard]] SharedPtr<RenderTexture> TryGetRenderTextureByKey(const char* cacheKey) const {
+        return assetStore_.Cache().TryGetRenderTextureByKey(cacheKey);
+    }
+    [[nodiscard]] bool TryGetCachedSkinnedGltf(const char* path, SkinnedGltfAsset& out) const {
+        return assetStore_.Cache().TryGetCachedSkinnedGltf(path, out);
+    }
+    [[nodiscard]] bool TryGetCachedGltf(const char* path, GltfAsset& out) const {
+        return assetStore_.Cache().TryGetCachedGltf(path, out);
+    }
+    [[nodiscard]] bool AwaitGltf(const char* path, GltfAsset& out);
+    [[nodiscard]] bool AwaitSkinnedGltf(const char* path, SkinnedGltfAsset& out);
+    [[nodiscard]] bool TryGetAxisAlignedBoundsForKeyOrPath(const char* keyOrPath, Vector3& outMin, Vector3& outMax)
+            const {
+        return assetStore_.Cache().TryGetAxisAlignedBoundsForKeyOrPath(keyOrPath, outMin, outMax);
+    }
+    [[nodiscard]] MaterialAsset LoadMaterial(const char* path) { return assetStore_.Cache().LoadMaterial(path); }
+    [[nodiscard]] AssetLoadOutcome<MaterialAsset> TryLoadMaterial(const char* path) {
+        return assetStore_.Cache().TryLoadMaterial(path);
+    }
+    void RegisterMaterial(const MaterialAsset& material, const char* cacheKey) {
+        assetStore_.Cache().RegisterMaterial(material, cacheKey);
+    }
+    [[nodiscard]] const MaterialAsset* TryGetMaterialByKeyOrPath(const char* keyOrPath) const {
+        return assetStore_.Cache().TryGetMaterialByKeyOrPath(keyOrPath);
+    }
+    [[nodiscard]] VfxAsset LoadVfx(const char* path) { return assetStore_.Cache().LoadVfx(path); }
+    [[nodiscard]] AssetLoadOutcome<VfxAsset> TryLoadVfx(const char* path) {
+        return assetStore_.Cache().TryLoadVfx(path);
+    }
+    void RegisterVfx(const VfxAsset& asset, const char* cacheKey) {
+        assetStore_.Cache().RegisterVfx(asset, cacheKey);
+    }
+    [[nodiscard]] const VfxAsset* TryGetVfxByKeyOrPath(const char* keyOrPath) const {
+        return assetStore_.Cache().TryGetVfxByKeyOrPath(keyOrPath);
+    }
+    void RequestMaterial(const char* path) { assetStore_.Loader().RequestMaterial(path); }
+    void InvalidateAssetLoadState(const char* path, AssetLoadJobKind kind) {
+        assetStore_.Loader().InvalidateAssetLoadState(path, kind);
+    }
+    void OnMaterialReady(const char* path, AssetLoadCallback callback) {
+        assetStore_.Loader().OnMaterialReady(path, callback);
+    }
+    [[nodiscard]] bool IsMaterialReady(const char* path) const { return assetStore_.Loader().IsMaterialReady(path); }
+    [[nodiscard]] bool SaveMaterialAsset(
+            const char* path,
+            const MaterialAsset& material,
+            const char* relativeToDir = nullptr,
+            const GameWorldAssetCache* textureKeys = nullptr);
+    void RetainAsset(CachedAssetKind kind, const char* key) { assetStore_.Cache().RetainAsset(kind, key); }
+    bool ReleaseAsset(CachedAssetKind kind, const char* key) { return assetStore_.Cache().ReleaseAsset(kind, key); }
+    [[nodiscard]] std::uint32_t GetAssetRetainCount(CachedAssetKind kind, const char* key) const {
+        return assetStore_.Cache().GetAssetRetainCount(kind, key);
+    }
+    [[nodiscard]] bool BuildTextureAtlas(const char* atlasKey, const char* const* textureKeys, std::size_t count) {
+        return assetStore_.Cache().BuildTextureAtlas(atlasKey, textureKeys, count);
+    }
+    [[nodiscard]] bool TryAutoPackTextureIntoAtlas(const char* atlasGroupKey, const SharedPtr<Texture2D>& texture) {
+        return assetStore_.Cache().TryAutoPackTextureIntoAtlas(atlasGroupKey, texture);
+    }
+    void FinalizePendingAutoPackAtlas(const char* atlasGroupKey) {
+        assetStore_.Cache().FinalizePendingAutoPackAtlas(atlasGroupKey);
+    }
 
-    [[nodiscard]] GameWorldAssetCache& GetAssetCache() noexcept { return assetCache; }
-    [[nodiscard]] const GameWorldAssetCache& GetAssetCache() const noexcept { return assetCache; }
-    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return assetLoader; }
-    [[nodiscard]] const GameWorldAssetLoader& GetAssetLoader() const noexcept { return assetLoader; }
+    [[nodiscard]] GameWorldAssetCache& GetAssetCache() noexcept { return assetStore_.Cache(); }
+    [[nodiscard]] const GameWorldAssetCache& GetAssetCache() const noexcept { return assetStore_.Cache(); }
+    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return assetStore_.Loader(); }
+    [[nodiscard]] const GameWorldAssetLoader& GetAssetLoader() const noexcept { return assetStore_.Loader(); }
+
+    // --- Presentation ---
+    [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return presentation_.Vfx(); }
+    [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return presentation_.Vfx(); }
+    [[nodiscard]] WindSubsystem& GetWindSubsystem() noexcept { return presentation_.Wind(); }
+    [[nodiscard]] const WindSubsystem& GetWindSubsystem() const noexcept { return presentation_.Wind(); }
+    [[nodiscard]] SkinnedAnimationService& GetSkinnedAnimationService() noexcept {
+        return presentation_.SkinnedAnimation();
+    }
+    [[nodiscard]] const SkinnedAnimationService& GetSkinnedAnimationService() const noexcept {
+        return presentation_.SkinnedAnimation();
+    }
+    [[nodiscard]] SkinnedIkService& GetSkinnedIkService() noexcept { return presentation_.SkinnedIk(); }
+    [[nodiscard]] const SkinnedIkService& GetSkinnedIkService() const noexcept { return presentation_.SkinnedIk(); }
+    void SetUiFont(SharedPtr<Font> font);
+    [[nodiscard]] const SharedPtr<Font>& GetUiFont() const noexcept { return presentation_.GetUiFont(); }
+    void SetUiBoldFont(SharedPtr<Font> font);
+    [[nodiscard]] const SharedPtr<Font>& GetUiBoldFont() const noexcept { return presentation_.GetUiBoldFont(); }
+
+    // --- Grouped views ---
+    [[nodiscard]] WorldEntities Entities() noexcept;
+    [[nodiscard]] WorldEntities Entities() const noexcept;
+    [[nodiscard]] WorldAssets Assets() noexcept;
+    [[nodiscard]] WorldAssets Assets() const noexcept;
+    [[nodiscard]] WorldSimulation Simulation() noexcept;
+    [[nodiscard]] WorldSimulation Simulation() const noexcept;
+    [[nodiscard]] WorldRendering Rendering() noexcept;
+    [[nodiscard]] WorldRendering Rendering() const noexcept;
+    [[nodiscard]] WorldPhysics Physics(PhysicsSubsystem& physics) noexcept;
+    [[nodiscard]] WorldPhysics Physics(PhysicsSubsystem& physics) const noexcept;
+
+    [[nodiscard]] WorldQuery QueryObjects() noexcept;
+    [[nodiscard]] WorldQuery QueryObjects() const noexcept;
+
+    [[nodiscard]] GameWorldEntityGraph& GetEntityGraph() noexcept { return entityGraph_; }
+    [[nodiscard]] const GameWorldEntityGraph& GetEntityGraph() const noexcept { return entityGraph_; }
 
 private:
     friend class GameObject;
 
-    void EraseGameObjectStorage(GameObject* pointer);
-    static void CollectSubtreePostOrder(GameObject* root, Array<GameObject*>& out);
-    void EnqueueDestroyGameObject(GameObject* object);
-    void DestroyGameObjectImmediateInternal(GameObject* object);
-    static void MarkSubtreePendingDestroy(GameObject* root);
-    static bool HasPendingDestroyAncestor(const GameObject* object);
-
-    Array<UniquePtr<GameObject>> objects;
-    Array<GameObject*> pendingDestroyRoots;
-    bool updatingGameObjects = false;
-    GameWorldAssetCache assetCache;
-    GameWorldAssetLoader assetLoader;
-    VfxSubsystem vfxSubsystem{};
-    WindSubsystem windSubsystem{};
-    SkinnedAnimationService skinnedAnimationService{};
-    SkinnedIkService skinnedIkService{};
-    SharedPtr<Font> uiFont{};
-    SharedPtr<Font> uiBoldFont{};
-    std::uint64_t nextObjectId = 1;
+    GameWorldEntityGraph entityGraph_;
+    GameWorldAssetStore assetStore_;
+    GameWorldPresentation presentation_;
 };
 
 }  // namespace Spark
+
+#include "spark/scene/core/GameWorldFacets.hpp"

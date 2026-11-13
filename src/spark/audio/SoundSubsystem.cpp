@@ -10,9 +10,15 @@
 
 namespace Spark {
 
-void ProcessSoundCues(GameWorld& world, IEngineContext& context) {
+void SoundSubsystem::UpdateListeners(const GameWorld& world) noexcept {
     ProcessAudioListeners(world);
+}
+
+void SoundSubsystem::UpdateAmbient(const GameWorld& world) noexcept {
     ProcessAmbientZones(world);
+}
+
+void SoundSubsystem::DrainSoundCues(GameWorld& world, IEngineContext& context) {
     SoundEngine* audio = context.TryGetSoundEngine();
     if (audio == nullptr || !audio->IsRunning()) {
         return;
@@ -26,6 +32,16 @@ void ProcessSoundCues(GameWorld& world, IEngineContext& context) {
             sc->FlushTo(audio);
         }
     });
+}
+
+void SoundSubsystem::ProcessFrame(GameWorld& world, IEngineContext& context) {
+    UpdateListeners(world);
+    UpdateAmbient(world);
+    DrainSoundCues(world, context);
+}
+
+void ProcessSoundCues(GameWorld& world, IEngineContext& context) {
+    SoundSubsystem::ProcessFrame(world, context);
 }
 
 }  // namespace Spark

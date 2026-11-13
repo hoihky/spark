@@ -183,14 +183,14 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         if (Spark::Texture2D::TryLoadFromFile(SPARK_SKY_TEXTURE_PATH, skyDecoded)) {
             *skyEquirectTex = Spark::MoveTemp(skyDecoded);
             mazeSkyHasEquirect = true;
-            w.RegisterTexture(skyEquirectTex, "spark/maze3d/sky_equirect");
+            w.Assets().RegisterTexture(skyEquirectTex, "spark/maze3d/sky_equirect");
         } else {
             Spark::Utf8String altSky(SPARK_ASSETS_DIR);
             altSky.AppendUtf8("/textures/sky/equirect_sky_1k.hdr");
             if (Spark::Texture2D::TryLoadFromFile(altSky.CStr(), skyDecoded)) {
                 *skyEquirectTex = Spark::MoveTemp(skyDecoded);
                 mazeSkyHasEquirect = true;
-                w.RegisterTexture(skyEquirectTex, "spark/maze3d/sky_equirect");
+                w.Assets().RegisterTexture(skyEquirectTex, "spark/maze3d/sky_equirect");
             }
         }
 
@@ -205,18 +205,18 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("Maze3DUnitCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        w.RegisterMesh(unitCubeAsset, "spark/maze3d/unit_cube");
+        w.Assets().RegisterMesh(unitCubeAsset, "spark/maze3d/unit_cube");
 
         groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("Maze3DGround"));
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
-        w.RegisterMesh(groundAsset, "spark/maze3d/ground");
+        w.Assets().RegisterMesh(groundAsset, "spark/maze3d/ground");
 
         wallBrickTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("Maze3DWallBrick"));
         if (!DemoAssets::TryLoadWallBrickStoneTexture(*wallBrickTex)) {
             *wallBrickTex = Spark::Texture2D::CreateBrickPattern(256, 256);
-            w.RegisterTexture(wallBrickTex, "spark/maze3d/wall_brick_fallback");
+            w.Assets().RegisterTexture(wallBrickTex, "spark/maze3d/wall_brick_fallback");
         } else {
-            w.RegisterTexture(wallBrickTex, "spark/maze3d/wall_bricks");
+            w.Assets().RegisterTexture(wallBrickTex, "spark/maze3d/wall_bricks");
         }
 
         Spark::GameObject* ground = w.CreateGameObject();
@@ -394,17 +394,17 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         Spark::Utf8String cesiumPath(SPARK_ASSETS_DIR);
         cesiumPath.AppendUtf8("/models/CesiumMan.glb");
-        Spark::SkinnedGltfAsset humanAsset = w.LoadSkinnedGltf(cesiumPath.CStr());
+        Spark::SkinnedGltfAsset humanAsset = w.Assets().LoadSkinnedGltf(cesiumPath.CStr());
         const bool loadedCesium = humanAsset.mesh && humanAsset.skeleton;
         if (!loadedCesium) {
             Spark::Utf8String foxPath(SPARK_ASSETS_DIR);
             foxPath.AppendUtf8("/models/Fox.glb");
-            humanAsset = w.LoadSkinnedGltf(foxPath.CStr());
+            humanAsset = w.Assets().LoadSkinnedGltf(foxPath.CStr());
         }
         if (humanAsset.mesh && humanAsset.skeleton) {
             useHumanAvatar = true;
             if (humanAsset.baseColorTexture) {
-                w.RegisterTexture(humanAsset.baseColorTexture, "spark/maze3d/human_basecolor");
+                w.Assets().RegisterTexture(humanAsset.baseColorTexture, "spark/maze3d/human_basecolor");
             }
             humanModelBindFix = humanAsset.bindUpAlignment.Normalized();
             humanModelYawOffset = humanAsset.bindFacingYawOffset + Spark::Pi;

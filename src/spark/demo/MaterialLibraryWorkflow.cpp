@@ -37,7 +37,7 @@ bool MaterialLibraryWorkflow::TrySaveFromComponent(GameWorld& world, const Mater
     MaterialAsset asset{};
     asset.name = assetKey;
     asset.CaptureFromMaterial(source);
-    if (!world.SaveMaterialAsset(filePath.CStr(), asset, SPARK_BUILD_ASSETS_DIR, &world.GetAssetCache())) {
+    if (!world.Assets().SaveMaterialAsset(filePath.CStr(), asset, SPARK_BUILD_ASSETS_DIR, &world.Assets().Cache())) {
         SetMessage(Utf8String("Failed to write .sparkmat file."));
         return false;
     }
@@ -54,11 +54,11 @@ void MaterialLibraryWorkflow::RequestAsyncLoad(GameWorld& world) {
         return;
     }
 
-    (void)world.ReleaseAsset(CachedAssetKind::Material, assetKey.CStr());
-    world.InvalidateAssetLoadState(assetKey.CStr(), AssetLoadJobKind::Material);
+    (void)world.Assets().ReleaseAsset(CachedAssetKind::Material, assetKey.CStr());
+    world.Assets().InvalidateLoadState(assetKey.CStr(), AssetLoadJobKind::Material);
 
     asyncState = AsyncState::Pending;
-    world.RequestMaterial(assetKey.CStr());
+    world.Assets().RequestMaterial(assetKey.CStr());
     SetMessage(Utf8String(std::format("Loading {}…", assetKey.CStr()).c_str()));
 }
 
@@ -67,7 +67,7 @@ void MaterialLibraryWorkflow::PollAsyncLoad(GameWorld& world, MaterialComponent*
         return;
     }
 
-    const AssetLoadState state = world.GetAssetLoadState(assetKey.CStr(), AssetLoadJobKind::Material);
+    const AssetLoadState state = world.Assets().GetLoadState(assetKey.CStr(), AssetLoadJobKind::Material);
     if (state == AssetLoadState::Ready) {
         if (previewTarget != nullptr) {
             previewTarget->SetMaterialAsset(world, assetKey.CStr());
@@ -114,7 +114,7 @@ bool MaterialLibraryWorkflow::TryBuildAtlas(
         SetMessage(Utf8String("No textures selected for atlas build."));
         return false;
     }
-    if (!world.BuildTextureAtlas("matshow_demo", textureKeys, count)) {
+    if (!world.Assets().BuildTextureAtlas("matshow_demo", textureKeys, count)) {
         SetMessage(Utf8String("Texture atlas build failed."));
         return false;
     }
@@ -129,7 +129,7 @@ std::uint32_t MaterialLibraryWorkflow::GetMaterialRetainCount(GameWorld& world) 
     if (assetKey.IsEmpty()) {
         return 0U;
     }
-    return world.GetAssetRetainCount(CachedAssetKind::Material, assetKey.CStr());
+    return world.Assets().GetAssetRetainCount(CachedAssetKind::Material, assetKey.CStr());
 }
 
 }  // namespace Spark

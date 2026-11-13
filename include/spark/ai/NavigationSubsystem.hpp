@@ -33,4 +33,36 @@ void ProcessGridNavAgents2D(GameWorld& world, float deltaTimeSeconds) noexcept;
         float arriveRadius,
         float deltaTimeSeconds) noexcept;
 
+/** Navigation services (static façade over the free helpers above). */
+class NavSubsystem final {
+public:
+    static void ProcessNavMesh(GameWorld& world) noexcept { ProcessNavMeshAgents(world); }
+
+    static void ProcessGridNav2D(GameWorld& world, float deltaTimeSeconds) noexcept {
+        ProcessGridNavAgents2D(world, deltaTimeSeconds);
+    }
+
+    [[nodiscard]] static bool ApplyGridNavRigidbodyMotion(
+            GridNavAgent2DComponent& agent,
+            TransformComponent& transform,
+            Rigidbody2DComponent& rigidbody,
+            float maxSpeed,
+            float arriveRadius,
+            float deltaTimeSeconds) noexcept {
+        return ApplyGridNavAgent2DRigidbodyMotion(
+                agent, transform, rigidbody, maxSpeed, arriveRadius, deltaTimeSeconds);
+    }
+
+    [[nodiscard]] static bool ApplyGridNavSteeringMotion(
+            GridNavAgent2DComponent& agent,
+            TransformComponent& transform,
+            Rigidbody2DComponent& rigidbody,
+            float maxSpeed,
+            float arriveRadius,
+            float deltaTimeSeconds) noexcept {
+        return ApplyGridNavAgent2DSteeringMotion(
+                agent, transform, rigidbody, maxSpeed, arriveRadius, deltaTimeSeconds);
+    }
+};
+
 }  // namespace Spark

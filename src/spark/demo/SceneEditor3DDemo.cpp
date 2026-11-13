@@ -47,11 +47,11 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SceneEditorUnitCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        w.RegisterMesh(unitCubeAsset, "spark/scene_editor/unit_cube");
+        w.Assets().RegisterMesh(unitCubeAsset, "spark/scene_editor/unit_cube");
 
         groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SceneEditorGround"));
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
-        w.RegisterMesh(groundAsset, "spark/scene_editor/ground");
+        w.Assets().RegisterMesh(groundAsset, "spark/scene_editor/ground");
 
         Spark::GameObject* ground = w.CreateGameObject();
         ground->GetName() = Spark::Utf8String("SceneEditorGround");
@@ -877,7 +877,7 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
                 full.AppendUtf8("/");
                 full.AppendUtf8(key);
                 Spark::GltfAsset g{};
-                if (!w.AwaitGltf(full.CStr(), g) || !g.mesh) {
+                if (!w.Assets().AwaitGltf(full.CStr(), g) || !g.mesh) {
                     w.DestroyGameObject(go);
                     continue;
                 }
@@ -968,11 +968,11 @@ void SceneEditor3DDemo::TrySaveSelectedMaterial(Spark::GameWorld& w)
         Spark::MaterialAsset asset{};
         asset.name = Spark::Utf8String(kAssetKey);
         asset.CaptureFromMaterial(*mat);
-        if (!w.SaveMaterialAsset(path, asset, SPARK_BUILD_ASSETS_DIR, &w.GetAssetCache())) {
+        if (!w.Assets().SaveMaterialAsset(path, asset, SPARK_BUILD_ASSETS_DIR, &w.Assets().Cache())) {
             SetStatusMessage(Spark::Utf8String("Failed to save .sparkmat file."));
             return;
         }
-        w.RegisterMaterial(asset, kAssetKey);
+        w.Assets().RegisterMaterial(asset, kAssetKey);
         mat->SetMaterialAsset(w, kAssetKey);
         SetStatusMessage(Spark::Utf8String("Saved materials/editor_selection.sparkmat (F10 to reload)."));
 }
@@ -991,15 +991,15 @@ void SceneEditor3DDemo::TryLoadSelectedMaterial(Spark::GameWorld& w)
 
         constexpr const char* kAssetKey = "materials/editor_selection.sparkmat";
 
-        (void)w.ReleaseAsset(Spark::CachedAssetKind::Material, kAssetKey);
-        w.InvalidateAssetLoadState(kAssetKey, Spark::AssetLoadJobKind::Material);
+        (void)w.Assets().ReleaseAsset(Spark::CachedAssetKind::Material, kAssetKey);
+        w.Assets().InvalidateLoadState(kAssetKey, Spark::AssetLoadJobKind::Material);
 
-        const Spark::AssetLoadOutcome<Spark::MaterialAsset> outcome = w.TryLoadMaterial(kAssetKey);
+        const Spark::AssetLoadOutcome<Spark::MaterialAsset> outcome = w.Assets().TryLoadMaterial(kAssetKey);
         if (!outcome.ok) {
             SetStatusMessage(Spark::Utf8String("Failed to load .sparkmat (save with F9 first)."));
             return;
         }
-        w.RegisterMaterial(outcome.value, kAssetKey);
+        w.Assets().RegisterMaterial(outcome.value, kAssetKey);
         mat->SetMaterialAsset(w, kAssetKey);
         mat->TryApplyMaterialAsset(w);
         SetStatusMessage(Spark::Utf8String("Loaded materials/editor_selection.sparkmat onto selection."));

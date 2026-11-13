@@ -43,7 +43,7 @@ namespace {
     Texture2D decoded;
     if (Texture2D::TryLoadFromFile(SPARK_STUDIO_HDR_PATH, decoded)) {
         outTex = MakeShared<Texture2D>(MoveTemp(decoded));
-        w.RegisterTexture(outTex, "spark/demo/gltf_env_hdr");
+        w.Assets().RegisterTexture(outTex, "spark/demo/gltf_env_hdr");
         return true;
     }
     const char* relativePath = "/textures/sky/venice_sunset_1k.hdr";
@@ -53,7 +53,7 @@ namespace {
         std::snprintf(pathBuf, sizeof(pathBuf), "%s%s", roots[ri], relativePath);
         if (Texture2D::TryLoadFromFile(pathBuf, decoded)) {
             outTex = MakeShared<Texture2D>(MoveTemp(decoded));
-            w.RegisterTexture(outTex, "spark/demo/gltf_env_hdr");
+            w.Assets().RegisterTexture(outTex, "spark/demo/gltf_env_hdr");
             return true;
         }
     }
@@ -73,7 +73,7 @@ bool GltfSamples3DDemo::TryPlaceRigidGltf(
         return false;
     }
 
-    const GltfAsset asset = w.LoadGltf(pathBuf);
+    const GltfAsset asset = w.Assets().LoadGltf(pathBuf);
     if (!asset.mesh) {
         return false;
     }
@@ -140,7 +140,7 @@ void GltfSamples3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
 
     groundMesh = MakeShared<Mesh>(Utf8String("GltfSamplesGround"));
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    w.RegisterMesh(groundMesh, "spark/demo/gltf_samples_ground");
+    w.Assets().RegisterMesh(groundMesh, "spark/demo/gltf_samples_ground");
 
     GameObject* ground = w.CreateGameObject();
     ground->GetName() = Utf8String("Ground");

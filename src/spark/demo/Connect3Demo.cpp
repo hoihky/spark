@@ -15,7 +15,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
         roots.Clear();
         atlasTex = Detail::MakeGemAtlas();
-        w.RegisterTexture(atlasTex, "spark/connect3/gems");
+        w.Assets().RegisterTexture(atlasTex, "spark/connect3/gems");
 
         boardGo = w.CreateGameObject();
         boardGo->GetName() = Utf8String("Connect3Board");

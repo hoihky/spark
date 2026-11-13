@@ -36,7 +36,7 @@ void VfxShowcase2DDemo::Load(GameWorld& world, IEngineContext& context) {
     SharedPtr<Texture2D> floorTex = MakeShared<Texture2D>(Utf8String("VfxShowcase2DFloor"));
     *floorTex = Texture2D::CreateCheckerboard(
             256, 32, Vector3{0.22F, 0.26F, 0.32F}, Vector3{0.28F, 0.34F, 0.42F});
-    world.RegisterTexture(floorTex, "spark/vfx_showcase_2d/floor");
+    world.Assets().RegisterTexture(floorTex, "spark/vfx_showcase_2d/floor");
 
     GameObject& floor = AddRoot(world, roots, "Floor");
     TransformComponent& floorTr = *floor.AddComponent<TransformComponent>();
@@ -46,7 +46,7 @@ void VfxShowcase2DDemo::Load(GameWorld& world, IEngineContext& context) {
 
     SharedPtr<Texture2D> markerTex = MakeShared<Texture2D>(Utf8String("VfxShowcase2DMarker"));
     *markerTex = Texture2D::CreateSolid(8, 8, Vector3{0.95F, 0.82F, 0.22F}, 0.85F);
-    world.RegisterTexture(markerTex, "spark/vfx_showcase_2d/marker");
+    world.Assets().RegisterTexture(markerTex, "spark/vfx_showcase_2d/marker");
 
     GameObject& marker = AddRoot(world, roots, "SpawnMarker");
     TransformComponent& markerTr = *marker.AddComponent<TransformComponent>();

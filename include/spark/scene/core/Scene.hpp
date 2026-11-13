@@ -39,6 +39,9 @@ public:
      * Copies partition kind from the first GameObject that has a SceneSpatialPolicyComponent (if any).
      * Call from your frame loop when designers drive culling mode from ECS.
      */
+    /** Short alias for <c>ApplySpatialPolicyFromFirstMatchingObject</c>. */
+    void ApplySpatialPolicy() noexcept { ApplySpatialPolicyFromFirstMatchingObject(); }
+
     void ApplySpatialPolicyFromFirstMatchingObject() noexcept {
         bool found = false;
         world.ForEachActiveGameObject([this, &found](GameObject* o) {

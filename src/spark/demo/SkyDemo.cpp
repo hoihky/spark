@@ -18,7 +18,7 @@ bool TryLoadSkyHdrTexture(Spark::GameWorld& w, Spark::SharedPtr<Spark::Texture2D
     Spark::Texture2D decoded;
     if (Spark::Texture2D::TryLoadFromFile(SPARK_SKY_TEXTURE_PATH, decoded)) {
         outTex = Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(decoded));
-        w.RegisterTexture(outTex, "spark/demo/sky_equirect");
+        w.Assets().RegisterTexture(outTex, "spark/demo/sky_equirect");
         outLabel = Spark::Utf8String("HDR (build default)");
         return true;
     }
@@ -41,7 +41,7 @@ bool TryLoadSkyHdrTexture(Spark::GameWorld& w, Spark::SharedPtr<Spark::Texture2D
             path.AppendUtf8(kRelativeHdrPaths[pi]);
             if (Spark::Texture2D::TryLoadFromFile(path.CStr(), decoded)) {
                 outTex = Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(decoded));
-                w.RegisterTexture(outTex, "spark/demo/sky_equirect");
+                w.Assets().RegisterTexture(outTex, "spark/demo/sky_equirect");
                 outLabel = Spark::Utf8String(kLabels[pi]);
                 return true;
             }
@@ -92,19 +92,19 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         groundDiffTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("SkyDemoGroundDiffuse"));
         bool groundFromTiles = false;
         if (DemoAssets::TryLoadTerrainDemoSoilTexture(*groundDiffTex)) {
-            w.RegisterTexture(groundDiffTex, "spark/demo/ground_soil");
+            w.Assets().RegisterTexture(groundDiffTex, "spark/demo/ground_soil");
         } else {
             const DemoAssets::RandomSoilGroundResult baked =
                     DemoAssets::BuildJitteredSoilWithGrassPatchesTexture(768U, 0x5F3759DFU);
             *groundDiffTex = Spark::MoveTemp(baked.texture);
             groundFromTiles = baked.fromKenneyTiles;
-            w.RegisterTexture(groundDiffTex, "spark/demo/ground_baked");
+            w.Assets().RegisterTexture(groundDiffTex, "spark/demo/ground_baked");
         }
 
         const float groundWorldSpan = DemoAssets::ProceduralTextureSpanWorldUnits(Spark::kSceneGroundHalfExtent);
         groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SkyDemoGround"));
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent, groundWorldSpan);
-        w.RegisterMesh(groundAsset, "spark/demo/ground");
+        w.Assets().RegisterMesh(groundAsset, "spark/demo/ground");
 
         groundObject = w.CreateGameObject();
         groundObject->GetName() = Spark::Utf8String("Ground");
@@ -120,7 +120,7 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SkyDemoCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        w.RegisterMesh(unitCubeAsset, "spark/demo/unit_cube");
+        w.Assets().RegisterMesh(unitCubeAsset, "spark/demo/unit_cube");
 
         roots.PushBack(SpawnReferenceCube(
                 w, unitCubeAsset, {0.0F, 0.62F, 0.0F}, 1.25F, {0.78F, 0.52F, 0.28F}, 0.42F, 0.08F));

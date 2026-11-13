@@ -78,7 +78,7 @@ constexpr std::size_t kModelCount = sizeof(kModels) / sizeof(kModels[0]);
         std::snprintf(pathBuf, sizeof(pathBuf), "%s%s", roots[ri], relativePath);
         if (Texture2D::TryLoadFromFile(pathBuf, decoded)) {
             outTex = MakeShared<Texture2D>(MoveTemp(decoded));
-            w.RegisterTexture(outTex, "spark/demo/model_viewer_env_hdr");
+            w.Assets().RegisterTexture(outTex, "spark/demo/model_viewer_env_hdr");
             return true;
         }
     }
@@ -232,7 +232,7 @@ void ModelViewer3DDemo::ShowModel(GameWorld& w, const std::size_t index) {
     if (GltfAssetBinder::BindFromPath(*modelPivot, pathBuf, SceneMeshSlot::Custom, Vector3::One)) {
         placed = true;
     } else {
-        const SkinnedGltfAsset skinned = w.LoadSkinnedGltf(pathBuf);
+        const SkinnedGltfAsset skinned = w.Assets().LoadSkinnedGltf(pathBuf);
         if (skinned.mesh) {
             GltfAssetBinder::BindSkinnedMesh(*modelPivot, skinned, Vector3::One, pathBuf);
             if (skinned.skeleton && skinned.skeleton->GetClipCount() > 0U) {
@@ -241,7 +241,7 @@ void ModelViewer3DDemo::ShowModel(GameWorld& w, const std::size_t index) {
             }
             placed = true;
         } else {
-            const GltfAsset rigid = w.LoadGltf(pathBuf);
+            const GltfAsset rigid = w.Assets().LoadGltf(pathBuf);
             if (rigid.mesh) {
                 GltfAssetBinder::BindRigidMesh(*modelPivot, rigid, SceneMeshSlot::Custom, Vector3::One, pathBuf);
                 placed = true;
@@ -303,7 +303,7 @@ void ModelViewer3DDemo::Load(GameWorld& w, IEngineContext& context) {
 
     groundMesh = MakeShared<Mesh>(Utf8String("ModelViewerGround"));
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    w.RegisterMesh(groundMesh, "spark/demo/model_viewer_ground");
+    w.Assets().RegisterMesh(groundMesh, "spark/demo/model_viewer_ground");
 
     GameObject* ground = w.CreateGameObject();
     ground->GetName() = Utf8String("Ground");

@@ -101,7 +101,7 @@ void SparkPixShowcase2DDemo::Load(GameWorld& world, IEngineContext& context) {
     floorTr.SetScale({16.0F, kFloorScaleY, 1.0F});
     SharedPtr<Texture2D> floorTex = MakeShared<Texture2D>(Utf8String("SparkPixFloor"));
     *floorTex = Texture2D::CreateSolid(4, 4, Vector3{0.18F, 0.22F, 0.28F}, 1.0F);
-    world.RegisterTexture(floorTex, "spark/spark_pix/floor");
+    world.Assets().RegisterTexture(floorTex, "spark/spark_pix/floor");
     floor.AddComponent<SpriteComponent>(
             floorTex, Vector4{1.0F, 1.0F, 1.0F, 1.0F}, Vector4{0.0F, 0.0F, 1.0F, 1.0F}, -5);
 
@@ -116,7 +116,7 @@ void SparkPixShowcase2DDemo::Load(GameWorld& world, IEngineContext& context) {
         if (!TryLoadSparkPixAtlasTexture(hero.manifest, hero.manifestPath, *hero.texture)) {
             continue;
         }
-        world.RegisterTexture(hero.texture, spec.textureRegisterId);
+        world.Assets().RegisterTexture(hero.texture, spec.textureRegisterId);
 
         Utf8String goName{};
         goName.AppendUtf8("Hero_");

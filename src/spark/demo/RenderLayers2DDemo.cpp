@@ -83,7 +83,7 @@ void RenderLayers2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& contex
                 Spark::Vector3{0.55F, 0.38F, 0.22F});
         farmTilesTex->GetName() = Spark::Utf8String("FarmTilesFallback");
     }
-    w.RegisterTexture(farmTilesTex, "spark/render_layers/farm_tiles");
+    w.Assets().RegisterTexture(farmTilesTex, "spark/render_layers/farm_tiles");
 
     farmerAtlasTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("FarmFarmerAtlas"));
     usingKenneyFarmer = DemoAssets::TryBuildKenneyPlayerAtlas(*farmerAtlasTex, farmerAtlasCols);
@@ -91,7 +91,7 @@ void RenderLayers2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& contex
         *farmerAtlasTex = DemoAssets::MakePlayerRunAtlasFallback();
         farmerAtlasCols = DemoAssets::kPlayerAtlasFallbackCols;
     }
-    w.RegisterTexture(farmerAtlasTex, "spark/render_layers/farmer_atlas");
+    w.Assets().RegisterTexture(farmerAtlasTex, "spark/render_layers/farmer_atlas");
 
     cropItemTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("FarmCropItem"));
     usingKenneyCrop = DemoAssets::TryLoadKenneyGemCollectible(*cropItemTex);
@@ -99,7 +99,7 @@ void RenderLayers2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& contex
         *cropItemTex = DemoAssets::MakeGemTextureFallback();
         cropItemTex->GetName() = Spark::Utf8String("FarmCropFallback");
     }
-    w.RegisterTexture(cropItemTex, "spark/render_layers/crop_item");
+    w.Assets().RegisterTexture(cropItemTex, "spark/render_layers/crop_item");
 
     Spark::RenderLayerRegistry& layers = Spark::RenderLayerRegistry::Instance();
     const Spark::RenderLayerId backgroundLayer = layers.FindLayerIdByName("Background");

@@ -38,6 +38,7 @@ public:
 
 private:
     friend class GameWorld;
+    friend class GameWorldEntityGraph;
     Array<GameObject*> objects;
 };
 

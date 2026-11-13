@@ -1,10 +1,9 @@
 #pragma once
 
-#include "spark/audio/SoundSubsystem.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 #include "spark/engine/IGame.hpp"
 #include "spark/engine/ISceneProvider.hpp"
 #include "spark/scene/core/Scene.hpp"
+#include "spark/scene/core/world/WorldSimulation.hpp"
 
 namespace Spark {
 
@@ -25,9 +24,7 @@ public:
     void OnAttach(IEngineContext& /*context*/) override {}
     void OnDetach() override {}
     void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
-        GetWorld().UpdateGameObjects(timing, context);
-        ProcessVfx(GetWorld());
-        ProcessSoundCues(GetWorld(), context);
+        GetWorld().Simulation().RunDefaultSlice(timing, context);
     }
     void OnRender(IRenderFrame& /*frame*/, IEngineContext& /*context*/) override {}
 

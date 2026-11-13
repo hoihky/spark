@@ -25,7 +25,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         } else {
             shipsTex = Detail::MakeSpaceInvadersAtlas();
         }
-        w.RegisterTexture(shipsTex, "spark/spaceinv/ships");
+        w.Assets().RegisterTexture(shipsTex, "spark/spaceinv/ships");
 
         projectilesTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("SpaceInvadersProjectiles"));
         if (DemoAssets::TryLoadSpaceShooterProjectiles(*projectilesTex)) {
@@ -33,10 +33,10 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         } else {
             projectilesTex = shipsTex;
         }
-        w.RegisterTexture(projectilesTex, "spark/spaceinv/projectiles");
+        w.Assets().RegisterTexture(projectilesTex, "spark/spaceinv/projectiles");
 
         fxTex = Detail::MakeSpaceInvadersAtlas();
-        w.RegisterTexture(fxTex, "spark/spaceinv/fx");
+        w.Assets().RegisterTexture(fxTex, "spark/spaceinv/fx");
 
         hudGo = w.CreateGameObject();
         hudGo->GetName() = Spark::Utf8String("SpaceInvadersHud");

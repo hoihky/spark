@@ -117,6 +117,7 @@ public:
 
 private:
     friend class GameWorld;
+    friend class GameWorldEntityGraph;
 
     explicit GameObject(GameWorld& w, std::uint64_t objectId);
 

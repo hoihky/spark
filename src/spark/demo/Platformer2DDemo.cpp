@@ -231,11 +231,11 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     bgHillsTex = MakeHillSilhouetteTexture(false);
     bgCloudTex = MakeCloudTexture();
     goalFlagTex = MakeGoalFlagTexture();
-    world.RegisterTexture(bgSkyTex, "spark/plat/bg_sky");
-    world.RegisterTexture(bgMountainsTex, "spark/plat/bg_mountains");
-    world.RegisterTexture(bgHillsTex, "spark/plat/bg_hills");
-    world.RegisterTexture(bgCloudTex, "spark/plat/bg_cloud");
-    world.RegisterTexture(goalFlagTex, "spark/plat/goal_flag");
+    world.Assets().RegisterTexture(bgSkyTex, "spark/plat/bg_sky");
+    world.Assets().RegisterTexture(bgMountainsTex, "spark/plat/bg_mountains");
+    world.Assets().RegisterTexture(bgHillsTex, "spark/plat/bg_hills");
+    world.Assets().RegisterTexture(bgCloudTex, "spark/plat/bg_cloud");
+    world.Assets().RegisterTexture(goalFlagTex, "spark/plat/goal_flag");
 
     bgSkyGo = world.CreateGameObject();
     bgSkyGo->GetName() = Spark::Utf8String("PlatBgSky");
@@ -456,14 +456,14 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 Spark::Vector3{0.18F, 0.52F, 0.34F});
         platformTilesTex->GetName() = Spark::Utf8String("PlatCheckerFallback");
     }
-    w.RegisterTexture(platformTilesTex, "spark/plat/kenney_simplified_tilesheet");
+    w.Assets().RegisterTexture(platformTilesTex, "spark/plat/kenney_simplified_tilesheet");
 
     playerAtlasTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("PlatPlayerAtlas"));
     if (!TryBuildKenneyPlayerAtlas(*playerAtlasTex, playerAtlasColumns)) {
         *playerAtlasTex = MakePlayerRunAtlasFallback();
         playerAtlasColumns = 5U;
     }
-    w.RegisterTexture(playerAtlasTex, "spark/plat/player_atlas");
+    w.Assets().RegisterTexture(playerAtlasTex, "spark/plat/player_atlas");
 
     {
         const Spark::DemoAssets::PlatformerEnemyAtlasResult enemyAtlas = BuildPlatformerEnemyAtlas();
@@ -475,22 +475,22 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 ? SpriteAnimatorComponent::ComputeUniformGridUv(
                           enemyAtlasColumns, 1U, 1U, enemyAtlasTex->GetWidth(), enemyAtlasTex->GetHeight())
                 : enemyIdleUv;
-        w.RegisterTexture(enemyAtlasTex, "spark/plat/enemy_atlas");
+        w.Assets().RegisterTexture(enemyAtlasTex, "spark/plat/enemy_atlas");
     }
 
     playerBulletTex = Spark::MakeShared<Spark::Texture2D>(MakePlayerBulletTextureFallback());
     enemyBulletTex = Spark::MakeShared<Spark::Texture2D>(MakeEnemyBulletTextureFallback());
     hudWhiteTex = MakeHudWhitePixelTexture();
-    w.RegisterTexture(playerBulletTex, "spark/plat/player_bullet");
-    w.RegisterTexture(enemyBulletTex, "spark/plat/enemy_bullet");
-    w.RegisterTexture(hudWhiteTex, "spark/plat/hud_white");
+    w.Assets().RegisterTexture(playerBulletTex, "spark/plat/player_bullet");
+    w.Assets().RegisterTexture(enemyBulletTex, "spark/plat/enemy_bullet");
+    w.Assets().RegisterTexture(hudWhiteTex, "spark/plat/hud_white");
 
     gemTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("PlatGem"));
     if (!TryLoadKenneyGemCollectible(*gemTex)) {
         *gemTex = MakeGemTextureFallback();
         gemTex->GetName() = Spark::Utf8String("PlatGemFallback");
     }
-    w.RegisterTexture(gemTex, "spark/plat/gem_collectible");
+    w.Assets().RegisterTexture(gemTex, "spark/plat/gem_collectible");
     playerNormalTex = Spark::MakeShared<Spark::Texture2D>(
             Spark::Texture2D::CreateNormalAtlasForUniformGrid(
                     playerAtlasColumns,
@@ -498,7 +498,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                     playerAtlasTex ? std::max(1U, playerAtlasTex->GetWidth() / std::max(1U, playerAtlasColumns)) : 32U,
                     playerAtlasTex ? std::max(1U, playerAtlasTex->GetHeight() / std::max(1U, kPlayerAtlasRows)) : 32U));
     playerNormalTex->GetName() = Spark::Utf8String("spark/plat/player_normal_atlas");
-    w.RegisterTexture(playerNormalTex, "spark/plat/player_normal_atlas");
+    w.Assets().RegisterTexture(playerNormalTex, "spark/plat/player_normal_atlas");
 
     sfxJump = LoadPlatformerSfx("assets/audio/jump.wav");
     sfxCoin = LoadPlatformerSfx("assets/audio/coin.wav");

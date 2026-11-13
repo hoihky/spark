@@ -55,7 +55,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
     SharedPtr<Texture2D> skyHdrTex;
     skyHasHdr = TryLoadSkyHdr(skyHdrTex);
     if (skyHasHdr) {
-        world.RegisterTexture(skyHdrTex, "spark/demo/water_lake_sky");
+        world.Assets().RegisterTexture(skyHdrTex, "spark/demo/water_lake_sky");
     }
 
     skyObject = world.CreateGameObject();
@@ -151,11 +151,11 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
 
     const SharedPtr<Mesh> absorptionCubeMesh = MakeShared<Mesh>(Utf8String("WaterLakeAbsorptionCube"));
     *absorptionCubeMesh = Mesh::CreateUnitCube();
-    world.RegisterMesh(absorptionCubeMesh, "spark/demo/water_lake_absorption_cube");
+    world.Assets().RegisterMesh(absorptionCubeMesh, "spark/demo/water_lake_absorption_cube");
 
     const SharedPtr<Mesh> seabedMesh = MakeShared<Mesh>(Utf8String("WaterLakeSeabed"));
     *seabedMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent * 2.0F);
-    world.RegisterMesh(seabedMesh, "spark/demo/water_lake_seabed");
+    world.Assets().RegisterMesh(seabedMesh, "spark/demo/water_lake_seabed");
 
     GameObject* seabed = world.CreateGameObject();
     seabed->GetName() = Utf8String("Seabed");

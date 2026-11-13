@@ -17,7 +17,7 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         if (!DemoAssets::TryLoadTerrainDemoSoilTexture(*groundTex)) {
             *groundTex = Spark::Texture2D::CreateVariedSoilGroundPattern(1024, 1024);
         }
-        w.RegisterTexture(groundTex, "spark/terrain/ground");
+        w.Assets().RegisterTexture(groundTex, "spark/terrain/ground");
 
         Spark::TerrainGeneratorSettings ts{};
         ts.subdivX = 288;
@@ -46,7 +46,7 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TerrainMarkerCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        w.RegisterMesh(unitCubeAsset, "spark/terrain/marker_cube");
+        w.Assets().RegisterMesh(unitCubeAsset, "spark/terrain/marker_cube");
         markerObject = w.CreateGameObject();
         markerObject->GetName() = Spark::Utf8String("TerrainMarker");
         {

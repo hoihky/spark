@@ -15,15 +15,15 @@ namespace Spark {
 void ThreeDDemo::RequestGltfAssets(Spark::GameWorld& world) noexcept {
     Spark::Utf8String helmetPath(SPARK_ASSETS_DIR);
     helmetPath.AppendUtf8("/models/DamagedHelmet.glb");
-    world.RequestGltf(helmetPath.CStr());
+    world.Assets().RequestGltf(helmetPath.CStr());
 
     Spark::Utf8String sheenChairPath(SPARK_ASSETS_DIR);
     sheenChairPath.AppendUtf8("/models/SheenChair.glb");
-    world.RequestGltf(sheenChairPath.CStr());
+    world.Assets().RequestGltf(sheenChairPath.CStr());
 
     Spark::Utf8String foxPath(SPARK_ASSETS_DIR);
     foxPath.AppendUtf8("/models/Fox.glb");
-    world.RequestSkinnedGltf(foxPath.CStr());
+    world.Assets().RequestSkinnedGltf(foxPath.CStr());
 }
 
 void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
@@ -34,11 +34,11 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("UnitCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        w.RegisterMesh(unitCubeAsset, "spark/demo/unit_cube");
+        w.Assets().RegisterMesh(unitCubeAsset, "spark/demo/unit_cube");
 
         groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("Ground"));
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
-        w.RegisterMesh(groundAsset, "spark/demo/ground");
+        w.Assets().RegisterMesh(groundAsset, "spark/demo/ground");
 
         checkerTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("DemoGroundTex"));
         if (!DemoAssets::TryLoadGroundDirtTexture(*checkerTex)) {
@@ -49,14 +49,14 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                     Spark::Vector3{0.25F, 0.35F, 0.55F});
             checkerTex->GetName() = Spark::Utf8String("DemoCheckerFallback");
         }
-        w.RegisterTexture(checkerTex, "spark/demo/checker");
+        w.Assets().RegisterTexture(checkerTex, "spark/demo/checker");
 
         brickTex = Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String("BrickPattern"));
         if (!DemoAssets::TryLoadBrickTexture(*brickTex)) {
             *brickTex = Spark::Texture2D::CreateBrickPattern(256, 256);
-            w.RegisterTexture(brickTex, "spark/demo/brick_fallback");
+            w.Assets().RegisterTexture(brickTex, "spark/demo/brick_fallback");
         } else {
-            w.RegisterTexture(brickTex, "spark/demo/bricks");
+            w.Assets().RegisterTexture(brickTex, "spark/demo/bricks");
         }
 
         groundObject = w.CreateGameObject();
@@ -210,7 +210,7 @@ void ThreeDDemo::SpawnHero(
     } else {
         heroMeshAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SimpleCar"));
         *heroMeshAsset = Spark::Mesh::CreateSimpleCar();
-        w.RegisterMesh(heroMeshAsset, "spark/demo/simple_car");
+        w.Assets().RegisterMesh(heroMeshAsset, "spark/demo/simple_car");
         std::println(
                 std::cerr,
                 "Spark: DamagedHelmet.glb not loaded from {} — using procedural SimpleCar fallback",
@@ -329,8 +329,8 @@ void ThreeDDemo::PollPendingGltfLoads(Spark::GameWorld& w) {
         }
         if (pending.kind == PendingGltfKind::Fox) {
             Spark::SkinnedGltfAsset skinned{};
-            if (!w.TryGetCachedSkinnedGltf(pending.path.CStr(), skinned)) {
-                if (w.GetAssetLoadState(pending.path.CStr(), Spark::AssetLoadJobKind::SkinnedGltf) ==
+            if (!w.Assets().TryGetCachedSkinnedGltf(pending.path.CStr(), skinned)) {
+                if (w.Assets().GetLoadState(pending.path.CStr(), Spark::AssetLoadJobKind::SkinnedGltf) ==
                     Spark::AssetLoadState::Failed) {
                     std::println(
                             std::cerr,
@@ -346,8 +346,8 @@ void ThreeDDemo::PollPendingGltfLoads(Spark::GameWorld& w) {
         }
 
         Spark::GltfAsset asset{};
-        if (!w.TryGetCachedGltf(pending.path.CStr(), asset)) {
-            if (w.GetAssetLoadState(pending.path.CStr(), Spark::AssetLoadJobKind::Gltf) ==
+        if (!w.Assets().TryGetCachedGltf(pending.path.CStr(), asset)) {
+            if (w.Assets().GetLoadState(pending.path.CStr(), Spark::AssetLoadJobKind::Gltf) ==
                 Spark::AssetLoadState::Failed) {
                 if (pending.kind == PendingGltfKind::Hero) {
                     SpawnHero(w, {}, pending.path);

@@ -60,7 +60,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 {
         roots.Clear();
         atlasTex = Detail::MakeTetrisBlockAtlas();
-        w.RegisterTexture(atlasTex, "spark/tetris/blocks");
+        w.Assets().RegisterTexture(atlasTex, "spark/tetris/blocks");
 
         boardGo = w.CreateGameObject();
         boardGo->GetName() = Spark::Utf8String("TetrisBoard");

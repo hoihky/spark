@@ -195,19 +195,19 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         const bool loadedSoil = DemoAssets::TryLoadCharacterCameraSoilTexture(*groundDiffTex);
         if (!loadedSoil) {
             *groundDiffTex = Spark::Texture2D::CreateSoilPattern(256, 256);
-            w.RegisterTexture(groundDiffTex, "spark/char/soil_fallback");
+            w.Assets().RegisterTexture(groundDiffTex, "spark/char/soil_fallback");
         } else {
-            w.RegisterTexture(groundDiffTex, "spark/char/ground_soil");
+            w.Assets().RegisterTexture(groundDiffTex, "spark/char/ground_soil");
         }
 
         const float groundUvRepeat = DemoAssets::ProceduralTextureSpanWorldUnits(kCharGroundHalfExtent);
         groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("CharGroundMesh"));
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent, groundUvRepeat);
-        w.RegisterMesh(groundAsset, kGround);
+        w.Assets().RegisterMesh(groundAsset, kGround);
 
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("CharCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        w.RegisterMesh(unitCubeAsset, kCube);
+        w.Assets().RegisterMesh(unitCubeAsset, kCube);
 
         skyBoxMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("CharSkySphere"));
         *skyBoxMesh = Spark::Mesh::CreateSkySphere(1.0F, 16, 32);
@@ -216,14 +216,14 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         if (Spark::Texture2D::TryLoadFromFile(SPARK_SKY_TEXTURE_PATH, skyDecoded)) {
             *skyEquirectTex = Spark::MoveTemp(skyDecoded);
             charSkyHasEquirect = true;
-            w.RegisterTexture(skyEquirectTex, "spark/char/sky_equirect");
+            w.Assets().RegisterTexture(skyEquirectTex, "spark/char/sky_equirect");
         } else {
             Spark::Utf8String altSky(SPARK_ASSETS_DIR);
             altSky.AppendUtf8("/textures/sky/equirect_sky_1k.hdr");
             if (Spark::Texture2D::TryLoadFromFile(altSky.CStr(), skyDecoded)) {
                 *skyEquirectTex = Spark::MoveTemp(skyDecoded);
                 charSkyHasEquirect = true;
-                w.RegisterTexture(skyEquirectTex, "spark/char/sky_equirect");
+                w.Assets().RegisterTexture(skyEquirectTex, "spark/char/sky_equirect");
             }
         }
 
@@ -299,15 +299,15 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         cesiumPath.AppendUtf8("/models/CesiumMan.glb");
         Spark::Utf8String foxPath(SPARK_ASSETS_DIR);
         foxPath.AppendUtf8("/models/Fox.glb");
-        cesiumAssetCached = w.LoadSkinnedGltf(cesiumPath.CStr());
-        foxAssetCached = w.LoadSkinnedGltf(foxPath.CStr());
+        cesiumAssetCached = w.Assets().LoadSkinnedGltf(cesiumPath.CStr());
+        foxAssetCached = w.Assets().LoadSkinnedGltf(foxPath.CStr());
         cesiumAssetReady = cesiumAssetCached.mesh && cesiumAssetCached.skeleton;
         foxAssetReady = foxAssetCached.mesh && foxAssetCached.skeleton;
         if (cesiumAssetCached.baseColorTexture) {
-            w.RegisterTexture(cesiumAssetCached.baseColorTexture, "spark/char/cesium_basecolor");
+            w.Assets().RegisterTexture(cesiumAssetCached.baseColorTexture, "spark/char/cesium_basecolor");
         }
         if (foxAssetCached.baseColorTexture) {
-            w.RegisterTexture(foxAssetCached.baseColorTexture, "spark/char/fox_basecolor");
+            w.Assets().RegisterTexture(foxAssetCached.baseColorTexture, "spark/char/fox_basecolor");
         }
 
         if (foxAssetReady || cesiumAssetReady) {
@@ -912,8 +912,8 @@ void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
 
     Spark::GltfAsset treeLarge{};
     Spark::GltfAsset treeSmall{};
-    (void)w.AwaitGltf(treeLargePath.CStr(), treeLarge);
-    (void)w.AwaitGltf(treeSmallPath.CStr(), treeSmall);
+    (void)w.Assets().AwaitGltf(treeLargePath.CStr(), treeLarge);
+    (void)w.Assets().AwaitGltf(treeSmallPath.CStr(), treeSmall);
     if (!treeLarge.mesh && !treeSmall.mesh) {
         std::println(
                 std::cerr,
@@ -924,12 +924,12 @@ void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
     }
 
     if (treeLarge.baseColorTexture) {
-        w.RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_large_basecolor");
+        w.Assets().RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_large_basecolor");
     }
     if (treeSmall.baseColorTexture) {
-        w.RegisterTexture(treeSmall.baseColorTexture, "spark/char/tree_small_basecolor");
+        w.Assets().RegisterTexture(treeSmall.baseColorTexture, "spark/char/tree_small_basecolor");
     } else if (treeLarge.baseColorTexture) {
-        w.RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_small_basecolor");
+        w.Assets().RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_small_basecolor");
     }
 
     static constexpr CharTreeLayoutSpec kTreeLayouts[] = {

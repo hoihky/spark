@@ -42,7 +42,7 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
 
     SharedPtr<Mesh> groundRef = MakeShared<Mesh>(Utf8String("FoliageWindGroundRef"));
     *groundRef = Mesh::CreateGroundPlane(kSceneGroundHalfExtent, kMeadowHalfExtent * 2.0F);
-    world.RegisterMesh(groundRef, "spark/demo/foliage_wind_ground");
+    world.Assets().RegisterMesh(groundRef, "spark/demo/foliage_wind_ground");
 
     GameObject* groundObject = world.CreateGameObject();
     groundObject->GetName() = Utf8String("Ground");
@@ -71,10 +71,10 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
     roots.PushBack(windEnvironmentObject);
 
     SharedPtr<Mesh> bladeMesh = GrassBladeMesh::CreateSharedBladeMesh();
-    world.RegisterMesh(bladeMesh, "spark/demo/grass_blade");
+    world.Assets().RegisterMesh(bladeMesh, "spark/demo/grass_blade");
 
     SharedPtr<Texture2D> grassTex = GrassFoliageAlbedoTexture::CreateSharedBladeAlbedo();
-    world.RegisterTexture(grassTex, "spark/demo/foliage_wind_grass_albedo");
+    world.Assets().RegisterTexture(grassTex, "spark/demo/foliage_wind_grass_albedo");
 
     GameObject* field = world.CreateGameObject();
     field->GetName() = Utf8String("GrassField");

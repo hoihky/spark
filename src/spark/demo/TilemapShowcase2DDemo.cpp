@@ -184,7 +184,7 @@ void PlacePlayerOnFirstWalkableCell(
 void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     roots.Clear();
     atlasTex = Detail::MakeShowcaseAtlas();
-    w.RegisterTexture(atlasTex, "spark/tilemap_showcase/atlas");
+    w.Assets().RegisterTexture(atlasTex, "spark/tilemap_showcase/atlas");
 
     boardGo = w.CreateGameObject();
     boardGo->GetName() = Spark::Utf8String("TilemapShowcaseBoard");

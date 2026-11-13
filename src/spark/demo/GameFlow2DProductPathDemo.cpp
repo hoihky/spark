@@ -1142,7 +1142,7 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     roots.Track(flowObject);
 
     SharedPtr<Texture2D> playerTex = MakePlayerTexture();
-    world.RegisterTexture(playerTex, "spark/p0_demo/player");
+    world.Assets().RegisterTexture(playerTex, "spark/p0_demo/player");
 
     playerObject = world.CreateGameObject();
     playerObject->GetName() = Utf8String("P0Player");

@@ -739,6 +739,12 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/camera/Camera.cpp
         src/spark/scene/camera/CharacterCameraRig.cpp
         src/spark/scene/core/GameWorld.cpp
+        src/spark/scene/core/GameWorldEntityGraph.cpp
+        src/spark/scene/core/GameWorldAssetStore.cpp
+        src/spark/scene/core/GameWorldPresentation.cpp
+        src/spark/scene/core/GameWorldFacets.cpp
+        src/spark/scene/core/world/WorldAssets.cpp
+        src/spark/scene/core/world/WorldQuery.cpp
         src/spark/scene/foliage/WindSettings.cpp
         src/spark/scene/foliage/WindFrameState.cpp
         src/spark/scene/foliage/WindSubsystem.cpp
@@ -1064,7 +1070,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ai/path/GridPathfinder.cpp
         src/spark/ai/goap/GoapPlanner.cpp
         src/spark/ai/fuzzy/FuzzyLogic.cpp
-        src/spark/ai/GameAiSubsystem.cpp
+        src/spark/ai/AiSubsystem.cpp
         src/spark/ai/NavigationSubsystem.cpp
         src/spark/ai/PerceptionSubsystem.cpp
         src/spark/ecs/components/ai/AiAgentComponent.cpp

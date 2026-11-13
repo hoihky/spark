@@ -19,11 +19,11 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
 
     unitCube = MakeShared<Mesh>(Utf8String("ToonDemoCube"));
     *unitCube = Mesh::CreateUnitCube();
-    w.RegisterMesh(unitCube, "spark/demo/toon_cube");
+    w.Assets().RegisterMesh(unitCube, "spark/demo/toon_cube");
 
     groundMesh = MakeShared<Mesh>(Utf8String("ToonDemoGround"));
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    w.RegisterMesh(groundMesh, "spark/demo/toon_ground");
+    w.Assets().RegisterMesh(groundMesh, "spark/demo/toon_ground");
 
     GameObject* ground = w.CreateGameObject();
     ground->GetName() = Utf8String("Ground");

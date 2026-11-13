@@ -57,7 +57,7 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     if (!DemoAssets::TryLoadTerrainDemoSoilTexture(*groundTex)) {
         *groundTex = Texture2D::CreateVariedSoilGroundPattern(1024, 1024);
     }
-    world.RegisterTexture(groundTex, "spark/demo/grass_field_terrain_soil");
+    world.Assets().RegisterTexture(groundTex, "spark/demo/grass_field_terrain_soil");
 
     TerrainGeneratorSettings terrainSettings{};
     terrainSettings.subdivX = 96;
@@ -103,10 +103,10 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     roots.PushBack(viewTargetObject);
 
     SharedPtr<Mesh> bladeMesh = GrassBladeMesh::CreateSharedBladeMesh();
-    world.RegisterMesh(bladeMesh, "spark/demo/grass_field_blade");
+    world.Assets().RegisterMesh(bladeMesh, "spark/demo/grass_field_blade");
 
     SharedPtr<Texture2D> grassTex = GrassFoliageAlbedoTexture::CreateSharedBladeAlbedo();
-    world.RegisterTexture(grassTex, "spark/demo/grass_field_albedo");
+    world.Assets().RegisterTexture(grassTex, "spark/demo/grass_field_albedo");
 
     GameObject* grassRoot = world.CreateGameObject();
     grassRoot->GetName() = Utf8String("TerrainGrassField");

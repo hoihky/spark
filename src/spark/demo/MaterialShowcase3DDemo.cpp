@@ -337,23 +337,23 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
 
     sphereMesh = MakeShared<Mesh>(Utf8String("MatShowSphere"));
     *sphereMesh = Mesh::CreateSkySphere(0.72F, 18, 32);
-    w.RegisterMesh(sphereMesh, "spark/demo/matshow_sphere");
+    w.Assets().RegisterMesh(sphereMesh, "spark/demo/matshow_sphere");
 
     groundMesh = MakeShared<Mesh>(Utf8String("MatShowGround"));
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    w.RegisterMesh(groundMesh, "spark/demo/matshow_ground");
+    w.Assets().RegisterMesh(groundMesh, "spark/demo/matshow_ground");
 
     baseColorTex = MakeShared<Texture2D>(Utf8String("MatShowBase"));
     if (!DemoAssets::TryLoadBrickTexture(*baseColorTex)) {
         *baseColorTex = Texture2D::CreateCheckerboard(128, 16, Vector3{0.92F, 0.35F, 0.28F}, Vector3{0.18F, 0.22F, 0.55F});
     }
-    w.RegisterTexture(baseColorTex, "spark/demo/matshow_base");
+    w.Assets().RegisterTexture(baseColorTex, "spark/demo/matshow_base");
     normalTex = MakeShared<Texture2D>(Utf8String("MatShowNormal"));
     *normalTex = BuildTangentNormalRipples(128, Utf8String("MatShowNormalData"));
-    w.RegisterTexture(normalTex, "spark/demo/matshow_normal");
+    w.Assets().RegisterTexture(normalTex, "spark/demo/matshow_normal");
     emissiveTex = MakeShared<Texture2D>(Utf8String("MatShowEmissive"));
     *emissiveTex = BuildEmissiveLayerMap(128, Utf8String("MatShowEmissiveData"));
-    w.RegisterTexture(emissiveTex, "spark/demo/matshow_emissive");
+    w.Assets().RegisterTexture(emissiveTex, "spark/demo/matshow_emissive");
 
     char matFilePath[512];
     std::snprintf(

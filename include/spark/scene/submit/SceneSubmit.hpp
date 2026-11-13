@@ -8,6 +8,8 @@
 
 namespace Spark {
 
+/** Prefer <c>LitScene</c> and <c>WorldRendering</c> for shorter names; symbols here remain stable. */
+
 class GameWorld;
 class IEngineContext;
 class MaterialComponent;
