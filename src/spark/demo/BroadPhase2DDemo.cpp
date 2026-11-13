@@ -1,11 +1,11 @@
 #include "spark/demo/BroadPhase2DDemo.hpp"
-#include "spark/gameplay/SparkGameplayModule.hpp"
+#include "spark/scene/core/world/WorldSimulation.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/demo/platformer2d/Platformer2DCombatMath.hpp"
 #include "spark/demo/platformer2d/Platformer2DConfig.hpp"
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
-#include "spark/physics/CollisionFilter2D.hpp"
+#include "spark/physics/2d/CollisionFilter2D.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
@@ -974,7 +974,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
         }
 
         physics.Simulate2D(world, timing);
-        SparkGameplayAfterPhysics2D(world);
+        world.Simulation().RunGameplaySlice();
 
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
         TickEnemies(dt, p.x, p.y);

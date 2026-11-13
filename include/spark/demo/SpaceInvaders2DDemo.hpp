@@ -262,7 +262,6 @@ private:
     float cameraShakeT = 0.0F;
     float cameraShakeMag = 0.0F;
     bool winVfxPlayed = false;
-    float fpsSmoothed = 0.0F;
     std::uint32_t rng = 1;
 
 };

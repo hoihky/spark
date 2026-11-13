@@ -102,7 +102,7 @@ public:
     void SetupUnitCube() {
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SmokeUnitCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
-        world.RegisterMesh(unitCubeAsset, "spark/scene_editor/unit_cube");
+        world.Assets().RegisterMesh(unitCubeAsset, "spark/scene_editor/unit_cube");
     }
 
     void UnloadEditorSceneContent() {
@@ -471,7 +471,7 @@ TEST(SceneEditorSmokeTest, LegacyPrefabMeshPathRestoresAsUnitCube) {
     Spark::GameObject* object = world.CreateGameObject();
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = SPARK_ASSETS_DIR;
-    applyCtx.assetLoader = &world.GetAssetLoader();
+    applyCtx.assetLoader = &world.Assets().Loader();
 
     Spark::ComponentRecord record{};
     record.kind = Spark::Utf8String("mesh");

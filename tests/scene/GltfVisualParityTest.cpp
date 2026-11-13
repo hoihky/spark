@@ -83,7 +83,7 @@ TEST(GltfVisualParityTest, ChronographWatchRigidLoaderBindsMaterials) {
     }
 
     Spark::GameWorld world{};
-    const Spark::AssetLoadOutcome<Spark::GltfAsset> loaded = world.TryLoadGltf(watchPath.CStr());
+    const Spark::AssetLoadOutcome<Spark::GltfAsset> loaded = world.Assets().TryLoadGltf(watchPath.CStr());
     ASSERT_TRUE(loaded.ok) << loaded.errorMessage.CStr();
     ASSERT_TRUE(static_cast<bool>(loaded.value.mesh));
 

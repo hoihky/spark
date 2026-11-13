@@ -26,21 +26,4 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 };
 
-/** @deprecated Use <c>SceneTextureArrayFormat</c>. Kept for existing renderer call sites. */
-class VulkanTextureFormatSupport {
-public:
-    [[nodiscard]] static bool IsFormatSupported(VkPhysicalDevice physicalDevice, VkFormat format) noexcept {
-        return SceneTextureArrayFormat::IsFormatSupported(physicalDevice, format);
-    }
-    [[nodiscard]] static SceneTextureArrayMode SelectSceneArrayMode(VkPhysicalDevice physicalDevice) noexcept {
-        return SceneTextureArrayFormat::SelectSceneArrayMode(physicalDevice);
-    }
-    [[nodiscard]] static VkFormat ToVkFormat(const SceneTextureArrayMode mode) noexcept {
-        return SceneTextureArrayFormat::ToVkFormat(mode);
-    }
-    [[nodiscard]] static TexturePixelFormat ToPixelFormat(const SceneTextureArrayMode mode) noexcept {
-        return SceneTextureArrayFormat::ToPixelFormat(mode);
-    }
-};
-
 }  // namespace Spark

@@ -949,8 +949,6 @@ set(SPARK_ENGINE_SOURCES
         src/spark/animation/ik/SkinnedIkPipeline.cpp
         src/spark/ecs/components/animation/FootIkComponent.cpp
         src/spark/ecs/components/animation/AimIkComponent.cpp
-        src/spark/physics/PhysicsQueries3D.cpp
-        src/spark/physics/PhysicsQueryDynamicCatalog3D.cpp
         src/spark/scene/submit/SkinnedSceneDrawMaterialApplicator.cpp
         src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitWater.cpp
@@ -994,62 +992,67 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/prefab/PrefabInstantiator.cpp
         src/spark/scene/assets/GameWorldAssetLoader.cpp
         src/spark/scene/core/SceneManager.cpp
-        src/spark/physics/BroadPhase2D.cpp
-        src/spark/physics/BroadPhase3D.cpp
-        src/spark/physics/colliders/Collider2D.cpp
-        src/spark/physics/colliders/Collider3D.cpp
-        src/spark/physics/colliders/ColliderBakePipeline2D.cpp
-        src/spark/physics/colliders/ColliderBakePipeline3D.cpp
-        src/spark/physics/colliders/ColliderBakeStrategies2D.cpp
-        src/spark/physics/colliders/ColliderBakeStrategies3D.cpp
-        src/spark/physics/colliders/DynamicCollider2D.cpp
-        src/spark/physics/colliders/DynamicCollider3D.cpp
-        src/spark/physics/colliders/DynamicBody2D.cpp
-        src/spark/physics/colliders/DynamicBody3D.cpp
+        src/spark/physics/2d/shapes/BoxShape2D.cpp
+        src/spark/physics/2d/BroadPhase2D.cpp
+        src/spark/physics/2d/CharacterController2D.cpp
+        src/spark/physics/2d/shapes/CircleShape2D.cpp
+        src/spark/physics/2d/colliders/Collider2D.cpp
+        src/spark/physics/2d/colliders/ColliderBakePipeline2D.cpp
+        src/spark/physics/2d/colliders/ColliderBakeStrategies2D.cpp
+        src/spark/physics/2d/Collision2D.cpp
+        src/spark/physics/2d/simulation/ContactResolver2D.cpp
+        src/spark/physics/2d/shapes/ConvexPolygonShape2D.cpp
+        src/spark/physics/2d/colliders/DynamicBody2D.cpp
+        src/spark/physics/2d/colliders/DynamicCollider2D.cpp
+        src/spark/physics/2d/simulation/JointSolver2D.cpp
+        src/spark/physics/2d/shapes/NarrowPhase2D.cpp
+        src/spark/physics/2d/PhysicsMaterial2D.cpp
+        src/spark/physics/2d/PhysicsQueries2D.cpp
+        src/spark/physics/2d/PhysicsWorld2D.cpp
+        src/spark/physics/2d/PolygonCollider2D.cpp
+        src/spark/physics/2d/simulation/RigidbodyIntegrator2D.cpp
+        src/spark/physics/2d/shapes/ShapeContact2DDetail.cpp
+        src/spark/physics/2d/shapes/ShapeFactory2D.cpp
+        src/spark/physics/2d/SpatialHashGrid2D.cpp
+        src/spark/physics/2d/TilemapCollider2D.cpp
+        src/spark/physics/2d/TilemapCollisionBake.cpp
+        src/spark/physics/2d/simulation/TriggerDispatcher2D.cpp
+        src/spark/physics/2d/TriggerVolume2D.cpp
+        src/spark/physics/3d/shapes/BoxShape3D.cpp
+        src/spark/physics/3d/BroadPhase3D.cpp
+        src/spark/physics/3d/shapes/CapsuleShape3D.cpp
+        src/spark/physics/3d/CharacterController3D.cpp
+        src/spark/physics/3d/colliders/Collider3D.cpp
+        src/spark/physics/3d/colliders/ColliderBakePipeline3D.cpp
+        src/spark/physics/3d/colliders/ColliderBakeStrategies3D.cpp
+        src/spark/physics/3d/Collision3D.cpp
+        src/spark/physics/3d/simulation/ContactResolver3D.cpp
+        src/spark/physics/3d/colliders/DynamicBody3D.cpp
+        src/spark/physics/3d/colliders/DynamicCollider3D.cpp
+        src/spark/physics/3d/simulation/JointSolver3D.cpp
+        src/spark/physics/3d/MeshCollider3D.cpp
+        src/spark/physics/3d/shapes/NarrowPhase3D.cpp
+        src/spark/physics/3d/PhysicsBodyHandoff3D.cpp
+        src/spark/physics/3d/colliders/PhysicsCollider3DFilter.cpp
+        src/spark/physics/3d/simulation/PhysicsContactBroadcaster3D.cpp
+        src/spark/physics/3d/simulation/PhysicsFixedStepClock.cpp
+        src/spark/physics/3d/PhysicsQueries3D.cpp
+        src/spark/physics/3d/PhysicsQueryDynamicCatalog3D.cpp
+        src/spark/physics/3d/simulation/PhysicsSimulationRecorder3D.cpp
+        src/spark/physics/3d/PhysicsWorld3D.cpp
+        src/spark/physics/3d/simulation/RigidbodyIntegrator3D.cpp
+        src/spark/physics/3d/shapes/ShapeContact3DDetail.cpp
+        src/spark/physics/3d/shapes/ShapeFactory3D.cpp
+        src/spark/physics/3d/SpatialHashGrid3D.cpp
+        src/spark/physics/3d/shapes/SphereShape3D.cpp
+        src/spark/physics/3d/simulation/SweptCcd3D.cpp
+        src/spark/physics/3d/TriggerVolume3D.cpp
+        src/spark/physics/PhysicsJoints.cpp
+        src/spark/physics/PhysicsSubsystem.cpp
         src/spark/physics/core/ColliderFilter.cpp
         src/spark/physics/core/ColliderMaterial.cpp
-        src/spark/physics/shapes/BoxShape2D.cpp
-        src/spark/physics/shapes/CircleShape2D.cpp
-        src/spark/physics/shapes/ConvexPolygonShape2D.cpp
-        src/spark/physics/shapes/ShapeContact2DDetail.cpp
-        src/spark/physics/shapes/NarrowPhase2D.cpp
-        src/spark/physics/shapes/ShapeFactory2D.cpp
-        src/spark/physics/shapes/BoxShape3D.cpp
-        src/spark/physics/shapes/SphereShape3D.cpp
-        src/spark/physics/shapes/CapsuleShape3D.cpp
-        src/spark/physics/shapes/ShapeContact3DDetail.cpp
-        src/spark/physics/shapes/NarrowPhase3D.cpp
-        src/spark/physics/shapes/ShapeFactory3D.cpp
-        src/spark/physics/Collision2D.cpp
-        src/spark/physics/TilemapCollider2D.cpp
-        src/spark/physics/TilemapCollisionBake.cpp
-        src/spark/physics/PhysicsMaterial2D.cpp
-        src/spark/physics/MeshCollider3D.cpp
-        src/spark/physics/PhysicsJoints.cpp
-        src/spark/physics/PolygonCollider2D.cpp
-        src/spark/physics/SpatialHashGrid2D.cpp
-        src/spark/physics/PhysicsSubsystem.cpp
-        src/spark/physics/PhysicsWorld2D.cpp
-        src/spark/physics/simulation/ContactResolver2D.cpp
-        src/spark/physics/simulation/ContactResolver3D.cpp
-        src/spark/physics/simulation/JointSolver2D.cpp
-        src/spark/physics/simulation/JointSolver3D.cpp
-        src/spark/physics/simulation/RigidbodyIntegrator2D.cpp
-        src/spark/physics/simulation/RigidbodyIntegrator3D.cpp
-        src/spark/physics/simulation/SweptCcd3D.cpp
-        src/spark/physics/simulation/PhysicsFixedStepClock.cpp
-        src/spark/physics/simulation/PhysicsContactBroadcaster3D.cpp
-        src/spark/physics/simulation/PhysicsSimulationRecorder3D.cpp
-        src/spark/physics/PhysicsBodyHandoff3D.cpp
         src/spark/ecs/components/physics/3d/PhysicsContactListener3DComponent.cpp
         src/spark/ecs/components/physics/3d/PhysicsAttachedBody3DComponent.cpp
-        src/spark/physics/simulation/TriggerDispatcher2D.cpp
-        src/spark/physics/PhysicsQueries2D.cpp
-        src/spark/physics/Collision3D.cpp
-        src/spark/physics/SpatialHashGrid3D.cpp
-        src/spark/physics/PhysicsWorld3D.cpp
-        src/spark/physics/CharacterController2D.cpp
-        src/spark/physics/CharacterController3D.cpp
         src/spark/character/KinematicCharacterMotor.cpp
         src/spark/character/MotionArbitrator.cpp
         src/spark/character/CharacterRootMotionApplicator.cpp
@@ -1058,9 +1061,6 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/character/Character3DVisualComponent.cpp
         src/spark/animation/AnimationJointMask.cpp
         src/spark/ecs/components/animation/AnimationLayerStackComponent.cpp
-        src/spark/physics/colliders/PhysicsCollider3DFilter.cpp
-        src/spark/physics/TriggerVolume2D.cpp
-        src/spark/physics/TriggerVolume3D.cpp
         src/spark/ecs/components/physics/3d/Hurtbox3DComponent.cpp
         src/spark/ai/fsm/FiniteStateMachine.cpp
         src/spark/ai/steering/SteeringBehaviors.cpp

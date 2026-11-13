@@ -100,8 +100,8 @@ TEST(GltfSceneGraphTest, SceneCacheReturnsSameDocument) {
     }
 
     Spark::GameWorld world{};
-    const Spark::AssetLoadOutcome<Spark::GltfSceneDocument> first = world.TryLoadGltfScene(treePath.CStr());
-    const Spark::AssetLoadOutcome<Spark::GltfSceneDocument> second = world.TryLoadGltfScene(treePath.CStr());
+    const Spark::AssetLoadOutcome<Spark::GltfSceneDocument> first = world.Assets().TryLoadGltfScene(treePath.CStr());
+    const Spark::AssetLoadOutcome<Spark::GltfSceneDocument> second = world.Assets().TryLoadGltfScene(treePath.CStr());
     ASSERT_TRUE(first.ok);
     ASSERT_TRUE(second.ok);
     EXPECT_EQ(first.value.nodes.GetSize(), second.value.nodes.GetSize());

@@ -65,7 +65,19 @@ function(spark_setup_gltf_draco target)
     set(DRACO_JS_GLUE OFF CACHE BOOL "" FORCE)
     set(DRACO_WASM OFF CACHE BOOL "" FORCE)
 
+    set(_spark_draco_saved_cxx_flags "${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
     add_subdirectory("${SPARK_DRACO_SRC}" "${CMAKE_BINARY_DIR}/_deps/spark_draco-build")
+    set(CMAKE_CXX_FLAGS "${_spark_draco_saved_cxx_flags}")
+
+    get_cmake_property(_spark_draco_targets BUILDSYSTEM_TARGETS)
+    foreach (_spark_draco_target IN LISTS _spark_draco_targets)
+        if (_spark_draco_target MATCHES "^draco")
+            if (TARGET ${_spark_draco_target})
+                target_compile_options(${_spark_draco_target} PRIVATE -w)
+            endif ()
+        endif ()
+    endforeach ()
 
     set(DRACO_PLY_READER "${SPARK_DRACO_SRC}/src/draco/io/ply_reader.cc")
     if (EXISTS "${DRACO_PLY_READER}")
@@ -81,7 +93,7 @@ function(spark_setup_gltf_draco target)
     else ()
         target_link_libraries(${target} PUBLIC draco_static)
     endif ()
-    target_include_directories(${target} PUBLIC
+    target_include_directories(${target} SYSTEM PUBLIC
             ${SPARK_DRACO_SRC}/src
             ${CMAKE_BINARY_DIR})
     if (TARGET draco_static)

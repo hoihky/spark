@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector2.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
 
 #include <cstdint>
 

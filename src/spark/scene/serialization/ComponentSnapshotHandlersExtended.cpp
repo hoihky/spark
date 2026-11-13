@@ -93,27 +93,27 @@ bool TryDeferAsset(
     request();
     switch (kind) {
         case AssetLoadJobKind::Gltf:
-            if (world.TryGetMeshByKeyOrPath(fullPath)) {
+            if (world.Assets().TryGetMeshByKeyOrPath(fullPath)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::SkinnedGltf:
-            if (SkinnedGltfAsset tmp{}; world.TryGetCachedSkinnedGltf(fullPath, tmp)) {
+            if (SkinnedGltfAsset tmp{}; world.Assets().TryGetCachedSkinnedGltf(fullPath, tmp)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::Texture:
-            if (world.TryGetTextureByKeyOrPath(fullPath)) {
+            if (world.Assets().TryGetTextureByKeyOrPath(fullPath)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::MeshObj:
-            if (world.TryGetMeshByKeyOrPath(fullPath)) {
+            if (world.Assets().TryGetMeshByKeyOrPath(fullPath)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::Material:
-            if (world.TryGetMaterialByKeyOrPath(fullPath) != nullptr) {
+            if (world.Assets().TryGetMaterialByKeyOrPath(fullPath) != nullptr) {
                 return false;
             }
             break;
@@ -339,9 +339,9 @@ public:
                         [&]() { ctx.assetLoader->RequestTexture(full.CStr()); })) {
                 return true;
             }
-            if (SharedPtr<Texture2D> tex = world.TryGetTextureByKeyOrPath(full.CStr())) {
+            if (SharedPtr<Texture2D> tex = world.Assets().TryGetTextureByKeyOrPath(full.CStr())) {
                 sky->SetSkyTexture(tex);
-            } else if (SharedPtr<Texture2D> loaded = world.LoadTexture(full.CStr())) {
+            } else if (SharedPtr<Texture2D> loaded = world.Assets().LoadTexture(full.CStr())) {
                 sky->SetSkyTexture(loaded);
             }
         }
@@ -421,9 +421,9 @@ public:
                         [&]() { ctx.assetLoader->RequestTexture(full.CStr()); })) {
                 return true;
             }
-            texture = world.TryGetTextureByKeyOrPath(full.CStr());
+            texture = world.Assets().TryGetTextureByKeyOrPath(full.CStr());
             if (!texture) {
-                texture = world.LoadTexture(full.CStr());
+                texture = world.Assets().LoadTexture(full.CStr());
             }
         }
         if (!texture) {

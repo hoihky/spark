@@ -62,7 +62,7 @@ void BuildGameplayScene(Spark::GameWorld& world) {
     Spark::GameObject* anchor = world.CreateGameObject();
     anchor->GetName() = Spark::Utf8String("Anchor");
     anchor->AddComponent<Spark::TransformComponent>()->SetTranslation({2.0F, 0.0F, 0.0F});
-    world.SetParent(anchor, root);
+    (void)world.SetParent(anchor, root);
 
     Spark::GameObject* platform = world.CreateGameObject();
     platform->GetName() = Spark::Utf8String("Platform");
@@ -76,14 +76,14 @@ void BuildGameplayScene(Spark::GameWorld& world) {
     Spark::DistanceJoint2DComponent* joint = platform->AddComponent<Spark::DistanceJoint2DComponent>();
     joint->SetConnectedBody(anchor);
     joint->SetRestLength(2.5F);
-    world.SetParent(platform, root);
+    (void)world.SetParent(platform, root);
 
     Spark::GameObject* tilemapObject = world.CreateGameObject();
     tilemapObject->GetName() = Spark::Utf8String("GroundTilemap");
     tilemapObject->AddComponent<Spark::TransformComponent>();
     Spark::Texture2D placeholder{};
     placeholder.GetName() = Spark::Utf8String("tests/tilemap_atlas");
-    const Spark::SharedPtr<Spark::Texture2D> atlas = world.RegisterTexture(
+    const Spark::SharedPtr<Spark::Texture2D> atlas = world.Assets().RegisterTexture(
             Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(placeholder)), "tests/tilemap_atlas");
     Spark::TilemapComponent* tilemap = tilemapObject->AddComponent<Spark::TilemapComponent>(
             Spark::MakeShared<Spark::Tileset>(atlas, 8U, 8U), 4U, 4U, 1.0F, 0);
@@ -93,7 +93,7 @@ void BuildGameplayScene(Spark::GameWorld& world) {
     Spark::TilemapGameplayGridComponent* grid = tilemapObject->AddComponent<Spark::TilemapGameplayGridComponent>();
     grid->SetWalkRule(Spark::TilemapGameplayWalkRule::OccupiedWalkable);
     grid->SetAutoRebake(true);
-    world.SetParent(tilemapObject, root);
+    (void)world.SetParent(tilemapObject, root);
 
     Spark::GameObject* spawn = world.CreateGameObject();
     spawn->GetName() = Spark::Utf8String("PlayerSpawn");
@@ -241,7 +241,7 @@ TEST(SceneDocumentRoundTripTest, ProgrammaticGameplaySceneRoundTrip) {
     Spark::GameWorld restoredWorld{};
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = "assets";
-    applyCtx.assetLoader = &restoredWorld.GetAssetLoader();
+    applyCtx.assetLoader = &restoredWorld.Assets().Loader();
     Spark::SceneDeserializer deserializer{};
     ASSERT_TRUE(deserializer.Apply(document, restoredWorld, applyCtx));
 
@@ -267,7 +267,7 @@ TEST(SceneDocumentRoundTripTest, BundledArenaSceneFileRoundTrip) {
     Spark::GameWorld firstPass{};
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = SPARK_ASSETS_DIR;
-    applyCtx.assetLoader = &firstPass.GetAssetLoader();
+    applyCtx.assetLoader = &firstPass.Assets().Loader();
     ASSERT_TRUE(deserializer.Apply(original, firstPass, applyCtx));
     EXPECT_EQ(firstPass.GetGameObjectCount(), 5U);
 
@@ -297,7 +297,7 @@ TEST(SceneDocumentRoundTripTest, BundledArenaSceneFileRoundTrip) {
     Spark::GameWorld secondPass{};
     Spark::SceneApplyContext secondApplyCtx{};
     secondApplyCtx.assetsRoot = SPARK_ASSETS_DIR;
-    secondApplyCtx.assetLoader = &secondPass.GetAssetLoader();
+    secondApplyCtx.assetLoader = &secondPass.Assets().Loader();
     ASSERT_TRUE(deserializer.Apply(reparsed, secondPass, secondApplyCtx));
     EXPECT_EQ(secondPass.GetGameObjectCount(), original.entities.GetSize());
     EXPECT_NE(FindByName(secondPass, "WarmLight"), nullptr);

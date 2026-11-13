@@ -38,7 +38,7 @@ TEST(SkinnedIkTest, FoxFootIkResolvesDistinctHindLimbs) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     Spark::FootIkComponent footIk{};
@@ -61,7 +61,7 @@ TEST(SkinnedIkTest, AimIkConfiguresSpineChain) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     Spark::AimIkComponent aimIk{};

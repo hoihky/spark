@@ -6,7 +6,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/gameplay/Combat2D.hpp"
 #include "spark/math/Matrix4.hpp"
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>
@@ -164,7 +164,7 @@ void DamageZone2DComponent::ApplyDamageInVolume(GameObject& owner, const float d
     }
 
     for (std::size_t i = 0; i < victims.GetSize(); ++i) {
-        Combat2DTarget{*victims[i]}.ApplyDamage(damageInstigator, tickDamage);
+        (void)Combat2DTarget{*victims[i]}.ApplyDamage(damageInstigator, tickDamage);
     }
 }
 

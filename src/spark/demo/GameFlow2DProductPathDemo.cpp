@@ -1,6 +1,6 @@
 #include "spark/demo/GameFlow2DProductPathDemo.hpp"
 
-#include "spark/gameplay/SparkGameplayModule.hpp"
+#include "spark/scene/core/world/WorldSimulation.hpp"
 #include "spark/demo/ShellDemoInternalIncludes.hpp"
 #include "spark/demo/platformer2d/Platformer2DLevelPipeline.hpp"
 #include "spark/engine/IEngineContext.hpp"
@@ -20,7 +20,7 @@
 #include "spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
 #include "spark/save/GameSave.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/scene/core/SceneSpawn.hpp"
@@ -338,7 +338,7 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
     }
 
     if (objects->GetLayerCount() == 0U) {
-        objects->AddObjectLayer("P0Objects");
+        (void)objects->AddObjectLayer("P0Objects");
     }
     const std::uint32_t layerIndex = 0U;
     objects->ClearMarkers(layerIndex);
@@ -364,7 +364,7 @@ void GameFlow2DProductPathDemo::SetupGameplaySpawnAndMarkers(
         marker.cellX = cell.x;
         marker.cellY = cell.y;
         marker.mode = TilemapObjectMarkerMode::Runtime;
-        objects->AddMarker(layerIndex, marker);
+        (void)objects->AddMarker(layerIndex, marker);
     };
 
     for (int gemIndex = 0; gemIndex < gemsRequired; ++gemIndex) {
@@ -1372,7 +1372,7 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
 
     if (canMove) {
         physics.Simulate2D(world, timing);
-        SparkGameplayAfterPhysics2D(world);
+        world.Simulation().RunGameplaySlice();
         if (fogOfWar != nullptr && walkGrid != nullptr && playerObject != nullptr) {
             const Vector3 playerPos = playerObject->GetWorldMatrix().TransformPoint(Vector3::Zero);
             fogOfWar->RevealAtWorldPosition({playerPos.x, playerPos.y}, walkGrid->GetGridFrame());

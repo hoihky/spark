@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
-#include "spark/physics/SpatialHashGrid2D.hpp"
-#include "spark/physics/colliders/ColliderBakePipeline2D.hpp"
-#include "spark/physics/colliders/ColliderBakePipeline3D.hpp"
-#include "spark/physics/colliders/IColliderBakeStrategy2D.hpp"
-#include "spark/physics/colliders/IColliderBakeStrategy3D.hpp"
+#include "spark/physics/2d/SpatialHashGrid2D.hpp"
+#include "spark/physics/2d/colliders/ColliderBakePipeline2D.hpp"
+#include "spark/physics/3d/colliders/ColliderBakePipeline3D.hpp"
+#include "spark/physics/2d/colliders/IColliderBakeStrategy2D.hpp"
+#include "spark/physics/3d/colliders/IColliderBakeStrategy3D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace {

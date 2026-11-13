@@ -14,7 +14,7 @@ namespace Spark {
 
 void VfxAsset::ApplyTo(ParticleEmitterComponent& emitterOut) const {
     if (!builtinName.IsEmpty()) {
-        VfxLibrary::TryApplyBuiltinByName(builtinName.CStr(), emitterOut);
+        (void)VfxLibrary::TryApplyBuiltinByName(builtinName.CStr(), emitterOut);
     } else {
         emitter.ApplyTo(emitterOut);
     }
@@ -65,13 +65,13 @@ bool VfxAsset::TryResolve(const char* keyOrBuiltin, GameWorld& world, VfxAsset& 
     if (keyOrBuiltin == nullptr || keyOrBuiltin[0] == '\0') {
         return false;
     }
-    if (const VfxAsset* cached = world.TryGetVfxByKeyOrPath(keyOrBuiltin)) {
+    if (const VfxAsset* cached = world.Assets().TryGetVfxByKeyOrPath(keyOrBuiltin)) {
         out = *cached;
         return true;
     }
-    const AssetLoadOutcome<VfxAsset> loaded = world.TryLoadVfx(keyOrBuiltin);
+    const AssetLoadOutcome<VfxAsset> loaded = world.Assets().TryLoadVfx(keyOrBuiltin);
     if (loaded.ok) {
-        if (const VfxAsset* cached = world.TryGetVfxByKeyOrPath(keyOrBuiltin)) {
+        if (const VfxAsset* cached = world.Assets().TryGetVfxByKeyOrPath(keyOrBuiltin)) {
             out = *cached;
             return true;
         }

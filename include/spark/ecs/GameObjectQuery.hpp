@@ -25,6 +25,46 @@ struct GameObjectQueryFilter {
     ComponentKind requiredComponent = ComponentKind::Unknown;
 };
 
+/** Short builders for <c>GameObjectQueryFilter</c>. */
+class QueryFilter final {
+public:
+    [[nodiscard]] static GameObjectQueryFilter ActiveOnly() noexcept { return {}; }
+
+    [[nodiscard]] static GameObjectQueryFilter IncludeInactive() noexcept {
+        GameObjectQueryFilter f{};
+        f.includeInactive = true;
+        return f;
+    }
+
+    [[nodiscard]] static GameObjectQueryFilter WithTag(const char* tag, bool includeInactive = false) noexcept {
+        GameObjectQueryFilter f{};
+        f.includeInactive = includeInactive;
+        f.tagEquals = tag;
+        return f;
+    }
+
+    [[nodiscard]] static GameObjectQueryFilter WithComponent(ComponentKind kind, bool includeInactive = false) noexcept {
+        GameObjectQueryFilter f{};
+        f.includeInactive = includeInactive;
+        f.requiredComponent = kind;
+        return f;
+    }
+
+    [[nodiscard]] static GameObjectQueryFilter RootsOnly(bool includeInactive = false) noexcept {
+        GameObjectQueryFilter f{};
+        f.includeInactive = includeInactive;
+        f.rootsOnly = true;
+        return f;
+    }
+
+    [[nodiscard]] static GameObjectQueryFilter ForScene(SceneInstanceId sceneId, bool includeInactive = false) noexcept {
+        GameObjectQueryFilter f{};
+        f.includeInactive = includeInactive;
+        f.sceneInstanceId = sceneId;
+        return f;
+    }
+};
+
 /** Ordered list of objects produced by <c>GameWorld::QueryGameObjects</c>. */
 class GameObjectQueryResult {
 public:

@@ -12,7 +12,7 @@ namespace {
 Spark::SharedPtr<Spark::Tileset> MakeTestTileset(Spark::GameWorld& world) {
     Spark::Texture2D placeholder{};
     placeholder.GetName() = Spark::Utf8String("tests/tilemap_edit_atlas");
-    const Spark::SharedPtr<Spark::Texture2D> atlas = world.RegisterTexture(
+    const Spark::SharedPtr<Spark::Texture2D> atlas = world.Assets().RegisterTexture(
             Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(placeholder)), "tests/tilemap_edit_atlas");
     return Spark::MakeShared<Spark::Tileset>(atlas, 4U, 4U);
 }

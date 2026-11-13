@@ -27,7 +27,7 @@ TEST(SampleAssetCatalogTest, FoxMatchesDocumentedClips) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     EXPECT_EQ(asset.skeleton->GetJointCount(), 24U);
     EXPECT_EQ(asset.skeleton->GetClipCount(), 3U);
@@ -53,7 +53,7 @@ TEST(SampleAssetCatalogTest, CesiumManMatchesDocumentedClips) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     EXPECT_EQ(asset.skeleton->GetJointCount(), 19U);
     EXPECT_EQ(asset.skeleton->GetClipCount(), 1U);

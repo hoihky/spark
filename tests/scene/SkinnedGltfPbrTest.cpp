@@ -29,7 +29,7 @@ TEST(SkinnedGltfPbrTest, PresenterAndApplicatorBindSkinnedMaterials) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
     ASSERT_FALSE(asset.materials.IsEmpty());
 

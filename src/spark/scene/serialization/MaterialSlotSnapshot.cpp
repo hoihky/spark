@@ -134,11 +134,11 @@ void BindTexturePath(
         if (key == nullptr || key[0] == '\0') {
             return false;
         }
-        if (SharedPtr<Texture2D> tex = world.TryGetTextureByKeyOrPath(key)) {
+        if (SharedPtr<Texture2D> tex = world.Assets().TryGetTextureByKeyOrPath(key)) {
             outTexture = MoveTemp(tex);
             return true;
         }
-        if (SharedPtr<Texture2D> loaded = world.LoadTexture(key)) {
+        if (SharedPtr<Texture2D> loaded = world.Assets().LoadTexture(key)) {
             outTexture = MoveTemp(loaded);
             return true;
         }

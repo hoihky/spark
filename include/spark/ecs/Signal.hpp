@@ -16,7 +16,7 @@ enum class SignalId : std::uint32_t {
     /**
      * 2D trigger overlap: <c>ptr</c> = other <c>GameObject*</c>, <c>a</c> = other object's id.
      * <c>b</c> = baked static collider index in <c>PhysicsWorld2D</c>'s static array, or
-     * <c>kPhysics2DTriggerOverlapNoStaticIndex</c> when the other body is dynamic (see <c>spark/physics/PhysicsQueries2D.hpp</c>).
+     * <c>kPhysics2DTriggerOverlapNoStaticIndex</c> when the other body is dynamic (see <c>spark/physics/2d/PhysicsQueries2D.hpp</c>).
      */
     Physics2DTriggerOverlap = 4,
     /** 3D trigger enter: <c>ptr</c> = other <c>GameObject*</c>, <c>a</c> = other object id. */

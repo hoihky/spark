@@ -39,10 +39,10 @@ SharedPtr<Texture2D> SetMaterialInspectorCommand::ResolveTexture(GameWorld& worl
     if (path.IsEmpty()) {
         return {};
     }
-    if (SharedPtr<Texture2D> cached = world.TryGetTextureByKeyOrPath(path.CStr())) {
+    if (SharedPtr<Texture2D> cached = world.Assets().TryGetTextureByKeyOrPath(path.CStr())) {
         return cached;
     }
-    return world.LoadTexture(path.CStr());
+    return world.Assets().LoadTexture(path.CStr());
 }
 
 void SetMaterialInspectorCommand::Apply(

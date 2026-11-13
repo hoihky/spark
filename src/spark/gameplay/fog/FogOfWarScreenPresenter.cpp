@@ -28,7 +28,7 @@ void FogOfWarScreenPresenter::AppendWorldSprite(
         return;
     }
 
-    static_cast<void>(world.RegisterTexture(fogMaskTexture, "spark/fog/mask"));
+    static_cast<void>(world.Assets().RegisterTexture(fogMaskTexture, "spark/fog/mask"));
     const std::int32_t textureLayer = findSceneTexture(fogMaskTexture, nullptr, nullptr);
     if (textureLayer < 0) {
         return;

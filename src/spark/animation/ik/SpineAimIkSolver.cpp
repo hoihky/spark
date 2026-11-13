@@ -69,7 +69,7 @@ void SpineAimIkSolver::ApplyChain(
         Matrix4 parentWorld = Matrix4::Identity;
         const std::int32_t parentIndex = skeleton.GetJointParent(jointIndex);
         if (parentIndex >= 0) {
-            skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(parentIndex), parentWorld);
+            (void)skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(parentIndex), parentWorld);
         }
 
         RotateJointToward(pose[jointIndex], parentWorld, jointPosition, targetWorld, perJointWeight);

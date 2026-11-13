@@ -66,7 +66,10 @@ void ApplySparkSceneContentTypes(NSSavePanel* panel) noexcept {
             panel.allowedContentTypes = @[ sceneType ];
         }
     } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         panel.allowedFileTypes = @[ @"sparkscene" ];
+#pragma clang diagnostic pop
     }
 }
 
@@ -77,7 +80,10 @@ void ApplySparkSceneContentTypes(NSOpenPanel* panel) noexcept {
             panel.allowedContentTypes = @[ sceneType ];
         }
     } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         panel.allowedFileTypes = @[ @"sparkscene" ];
+#pragma clang diagnostic pop
     }
     panel.allowsOtherFileTypes = YES;
 }
@@ -224,7 +230,10 @@ bool NativeFilePicker::TryPickGltfFile(Utf8String& outAbsolutePath) noexcept {
                 panel.allowedContentTypes = types;
             }
         } else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
             panel.allowedFileTypes = @[ @"glb", @"gltf" ];
+#pragma clang diagnostic pop
         }
         panel.allowsOtherFileTypes = YES;
         panel.title = @"Import glTF Model";

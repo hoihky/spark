@@ -198,7 +198,7 @@ bool VulkanCustomMeshPool::EnsureDeviceCapacity(
     return true;
 }
 
-std::uint64_t VulkanCustomMeshPool::ComputeFingerprint(const SceneRenderParams& scene) const {
+std::uint64_t VulkanCustomMeshPool::ComputeFingerprint(const SceneRenderParams& /*scene*/) const {
     return ComputeKnownFingerprint();
 }
 

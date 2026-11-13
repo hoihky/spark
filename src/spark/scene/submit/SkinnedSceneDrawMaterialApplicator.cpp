@@ -9,9 +9,8 @@
 namespace Spark {
 
 SkinnedSceneDrawMaterialApplicator::TextureLayerResolver::TextureLayerResolver(
-        SceneRenderParams& inRenderParams,
         const SceneSubmitDetail::FindSceneTextureFn& inFindTexture)
-        : renderParams(inRenderParams), findTexture(inFindTexture) {}
+        : findTexture(inFindTexture) {}
 
 std::int32_t SkinnedSceneDrawMaterialApplicator::TextureLayerResolver::Resolve(
         const SharedPtr<Texture2D>& texture,
@@ -23,7 +22,7 @@ std::int32_t SkinnedSceneDrawMaterialApplicator::TextureLayerResolver::Resolve(
 SkinnedSceneDrawMaterialApplicator::SkinnedSceneDrawMaterialApplicator(
         SceneRenderParams& inRenderParams,
         const SceneSubmitDetail::FindSceneTextureFn& findTexture)
-        : renderParams(inRenderParams), textureResolver(inRenderParams, findTexture) {}
+        : renderParams(inRenderParams), textureResolver(findTexture) {}
 
 void SkinnedSceneDrawMaterialApplicator::ApplyMaterial(SceneDrawItem& item, const MaterialComponent& material) {
     ApplyMaterialComponentToSceneDrawItem(item, &material, &renderParams);

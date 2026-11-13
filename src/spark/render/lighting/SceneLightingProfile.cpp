@@ -213,7 +213,7 @@ ResolvedSceneLighting ResolveSceneLightingFromParams(
         const bool shadowsCastByDefault,
         const bool shadowsReceiveByDefault,
         const bool useTimeOfDay,
-        const float timeOfDayNormalized) noexcept {
+        const float timeOfDayNormalized [[maybe_unused]]) noexcept {
     const SceneLightingProfileSettings preset = LightingProfileSettingsFor(profile);
     ResolvedSceneLighting out{};
     out.exposure = PickOverride(exposureOverride, preset.exposure);

@@ -1504,8 +1504,6 @@ void VulkanScreenUiPass::RecordTextOverlaysFor(
     std::size_t batchClipTextIndex = 0;
     bool haveTextBatch = false;
 
-    constexpr VkDeviceSize kBytesPerTextGlyphVerts = sizeof(float) * 4U * 6U;
-    constexpr VkDeviceSize kBytesPerTextGlyphIndices = sizeof(std::uint32_t) * 6U;
     constexpr std::size_t kMaxTextFloats = static_cast<std::size_t>(kTextVertexBytes / sizeof(float));
     constexpr std::size_t kMaxTextIndices = static_cast<std::size_t>(kTextIndexBytes / sizeof(std::uint32_t));
 

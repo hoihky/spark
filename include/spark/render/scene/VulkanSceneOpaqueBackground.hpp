@@ -54,10 +54,6 @@ public:
     [[nodiscard]] VkImageView DepthView(std::uint32_t frameIndex) const noexcept;
     [[nodiscard]] VkSampler ColorSampler() const noexcept { return colorSampler; }
     [[nodiscard]] VkSampler DepthSampler() const noexcept { return depthSampler; }
-    /** @deprecated Use <c>ColorView</c>. */
-    [[nodiscard]] VkImageView View(std::uint32_t frameIndex) const noexcept { return ColorView(frameIndex); }
-    /** @deprecated Use <c>ColorSampler</c>. */
-    [[nodiscard]] VkSampler Sampler() const noexcept { return ColorSampler(); }
     [[nodiscard]] bool HasFlight(std::uint32_t frameIndex) const noexcept {
         return frameIndex < flights.GetSize() && flights[frameIndex].colorView != VK_NULL_HANDLE;
     }

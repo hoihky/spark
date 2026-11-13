@@ -55,9 +55,9 @@ void VulkanSceneTextureUploader::CreateResources(
     this->physicalDevice = physicalDevice;
     this->device = device;
 
-    arrayMode = VulkanTextureFormatSupport::SelectSceneArrayMode(physicalDevice);
-    arrayFormat = VulkanTextureFormatSupport::ToVkFormat(arrayMode);
-    pixelFormat = VulkanTextureFormatSupport::ToPixelFormat(arrayMode);
+    arrayMode = SceneTextureArrayFormat::SelectSceneArrayMode(physicalDevice);
+    arrayFormat = SceneTextureArrayFormat::ToVkFormat(arrayMode);
+    pixelFormat = SceneTextureArrayFormat::ToPixelFormat(arrayMode);
     mipLevelCount = CountMipLevels(kLayerSize, kLayerSize);
     samplerMaxLod = static_cast<float>(mipLevelCount > 0 ? mipLevelCount - 1U : 0U);
 

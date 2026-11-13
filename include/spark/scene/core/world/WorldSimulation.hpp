@@ -5,6 +5,10 @@
 #include "spark/scene/core/world/WorldView.hpp"
 #include "spark/scene/vfx/VfxSubsystem.hpp"
 
+#if SPARK_HAS_GAMEPLAY
+#include "spark/gameplay/GameplaySubsystem.hpp"
+#endif
+
 namespace Spark {
 
 class IEngineContext;
@@ -31,6 +35,15 @@ public:
         UpdateComponents(timing, context);
         ProcessVfx();
         ProcessAudio(context);
+    }
+
+    /** Post-physics gameplay flush (pickup destroys). No-op when <c>SPARK_HAS_GAMEPLAY</c> is 0. Call after <c>Physics().Simulate2D</c>. */
+    void RunGameplaySlice() noexcept {
+#if SPARK_HAS_GAMEPLAY
+        GameplaySubsystem::AfterPhysics2D(world_);
+#else
+        (void)world_;
+#endif
     }
 };
 

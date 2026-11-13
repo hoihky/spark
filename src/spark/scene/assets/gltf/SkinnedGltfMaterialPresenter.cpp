@@ -62,7 +62,7 @@ const GltfMaterial& SkinnedGltfMaterialPresenter::ResolveMaterial(
                 materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
         return asset.materials[resolvedIndex];
     }
-    return asset.material;
+    return asset.PrimaryMaterial();
 }
 
 Utf8String SkinnedGltfMaterialPresenter::ResolveLibraryKey(const char* gltfLibraryKey) const noexcept {

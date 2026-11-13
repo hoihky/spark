@@ -24,29 +24,49 @@ namespace Spark {
 /** Result of loading a glTF asset (mesh + full PBR material table). */
 struct GltfAsset {
     SharedPtr<Mesh> mesh;
-    /** @deprecated Use <c>materials[0]</c> or <c>material.baseColor</c>. */
-    SharedPtr<Texture2D> baseColorTexture;
-    /** @deprecated Use <c>materials</c>; kept for existing call sites. */
-    GltfMaterialDesc material;
     /** All materials in the glTF file, indexed by primitive material index. */
     Array<GltfMaterialDesc> materials;
     /** KHR_materials_variants names (empty when absent). */
     Array<Utf8String> materialVariantNames;
+
+    [[nodiscard]] const GltfMaterialDesc& PrimaryMaterial() const noexcept {
+        static const GltfMaterialDesc kEmpty{};
+        return materials.IsEmpty() ? kEmpty : materials[0];
+    }
+
+    [[nodiscard]] GltfMaterialDesc& PrimaryMaterialMutable() noexcept {
+        if (materials.IsEmpty()) {
+            materials.Resize(1);
+        }
+        return materials[0];
+    }
+
+    [[nodiscard]] SharedPtr<Texture2D> PrimaryBaseColor() const noexcept { return PrimaryMaterial().baseColor; }
 };
 
 /** Skinned glTF: mesh + skeleton + animations + full PBR material table. */
 struct SkinnedGltfAsset {
     SharedPtr<SkinnedMesh> mesh;
     SharedPtr<Skeleton> skeleton;
-    /** @deprecated Use <c>materials[0]</c> or <c>material.baseColor</c>. */
-    SharedPtr<Texture2D> baseColorTexture;
-    /** @deprecated Use <c>materials</c>. */
-    GltfMaterialDesc material;
     Array<GltfMaterialDesc> materials;
     Array<Utf8String> materialVariantNames;
     std::uint32_t walkClipIndex = 0;
     Quaternion bindUpAlignment{Quaternion::Identity};
     float bindFacingYawOffset = 0.0F;
+
+    [[nodiscard]] const GltfMaterialDesc& PrimaryMaterial() const noexcept {
+        static const GltfMaterialDesc kEmpty{};
+        return materials.IsEmpty() ? kEmpty : materials[0];
+    }
+
+    [[nodiscard]] GltfMaterialDesc& PrimaryMaterialMutable() noexcept {
+        if (materials.IsEmpty()) {
+            materials.Resize(1);
+        }
+        return materials[0];
+    }
+
+    [[nodiscard]] SharedPtr<Texture2D> PrimaryBaseColor() const noexcept { return PrimaryMaterial().baseColor; }
 };
 
 namespace Detail {

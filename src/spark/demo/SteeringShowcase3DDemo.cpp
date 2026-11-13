@@ -1,6 +1,6 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 
-#include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/ai/AiSubsystem.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
@@ -391,7 +391,7 @@ void SteeringShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         }
 
         ResolveSteeringDemoCollisions();
-        SimulateGameAi(world, timing, context);
+        AiSubsystem::RunFrame(world, timing, context);
 
         helpHud.SetDetail(ModeName(mode));
         helpHud.Update(timing, context);

@@ -23,7 +23,7 @@ TEST(GltfAnimationEventsTest, FoxSidecarLoadsActiveWindowEvents) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     const std::int32_t runIdx = asset.skeleton->FindClipIndexIfNameContains("run");
@@ -54,7 +54,7 @@ TEST(GltfAnimationEventsTest, EventReceiverImportsLoadedFoxEvents) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     Spark::AnimationEventReceiverComponent receiver{};

@@ -50,7 +50,7 @@ Pattern from `PhysicsShowcase3DDemo`:
 ### C++
 
 ```cpp
-#include "spark/physics/CollisionFilter3D.hpp"
+#include "spark/physics/3d/CollisionFilter3D.hpp"
 
 using namespace Spark;
 using namespace CollisionFilter3D;

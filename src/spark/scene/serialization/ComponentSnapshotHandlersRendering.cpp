@@ -552,7 +552,7 @@ private:
             }
             if (assetKey[0] != '\0') {
                 multi->SetSlotMaterialAsset(world, i, assetKey);
-                if (world.TryGetMaterialByKeyOrPath(assetKey) == nullptr && ctx.onDeferredComponent != nullptr) {
+                if (world.Assets().TryGetMaterialByKeyOrPath(assetKey) == nullptr && ctx.onDeferredComponent != nullptr) {
                     ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
                 }
             }

@@ -1056,7 +1056,7 @@ void SceneEditor3DDemo::OpenSceneContextMenu(
                 Spark::MoveTemp(labels),
                 [self, hit, selected, &world](const int idx) {
                     ScenePlacementContext placementCtx = self->MakePlacementContext(world, hit, selected);
-                    self->placementActions.Execute(static_cast<std::size_t>(idx), placementCtx);
+                    (void)self->placementActions.Execute(static_cast<std::size_t>(idx), placementCtx);
                 });
     }
 
@@ -1207,7 +1207,7 @@ void SceneEditor3DDemo::LoadSceneFromPath(Spark::GameWorld& w, const char* relat
         SetStatusMessage(Spark::Utf8String("Unsupported scene format (use spark_scene_v4)."));
     }
 
-void SceneEditor3DDemo::PlacePrefabFromAsset(Spark::GameWorld& w, const SceneEditorAssetEntry& entry)
+void SceneEditor3DDemo::PlacePrefabFromAsset(Spark::GameWorld& /*w*/, const SceneEditorAssetEntry& entry)
 {
         if (entry.kind != SceneEditorAssetKind::Prefab || !sceneManager) {
             SetStatusMessage(Spark::Utf8String("Select a prefab in the asset browser."));

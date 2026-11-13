@@ -763,7 +763,7 @@ physics.GetQueries2D().RebuildStatics(world);
 
 Deprecated wrappers (`SimulatePhysics2D`, `SimulatePhysics3D`, …) delegate to the classes above.
 
-Simulation subsystems live under `spark/physics/simulation/` (`RigidbodyIntegrator2D/3D`, `ContactResolver2D/3D`, `TriggerDispatcher2D`, `JointSolver2D/3D`, `SweptCcd3D`).
+Simulation code lives under `spark/physics/2d/simulation/` and `spark/physics/3d/simulation/` (`RigidbodyIntegrator2D/3D`, `ContactResolver2D/3D`, `TriggerDispatcher2D`, `JointSolver2D/3D`, `SweptCcd3D`). Colliders and shapes use `…/colliders/` and `…/shapes/` under each dimension.
 
 Colliders are object-oriented: `Collider2D/3D`, `DynamicCollider2D/3D`, baked via `ColliderBakePipeline2D/3D`.
 

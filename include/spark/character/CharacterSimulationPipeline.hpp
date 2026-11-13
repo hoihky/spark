@@ -1,12 +1,12 @@
 #pragma once
 
 #include "spark/character/CharacterIntent.hpp"
-#include "spark/physics/CharacterController3D.hpp"
+#include "spark/physics/3d/CharacterController3D.hpp"
 
 namespace Spark {
 
 class Character3DBodyComponent;
-class FrameTiming;
+struct FrameTiming;
 class GameWorld;
 class IEngineContext;
 class PhysicsQueryWorld3D;

@@ -130,7 +130,6 @@ private:
     std::size_t size = 0;
     AudioQueueRef queue = nullptr;
     AudioQueueBufferRef buffers[kNumBuffers]{};
-    std::uint32_t sampleRate = 48000;
 };
 
 }  // namespace

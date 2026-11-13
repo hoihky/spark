@@ -17,7 +17,7 @@ namespace {
 
 Platformer2DSpawnHostContext g_context{};
 
-Spark::Vector2 MarkerWorldXY(const GameObject& mapOwner, const TilemapObjectMarker& marker, const TilemapGridFrame& frame)
+Spark::Vector2 MarkerWorldXY(const GameObject& /*mapOwner*/, const TilemapObjectMarker& marker, const TilemapGridFrame& frame)
 {
     const GridPathfinder::Cell cell{marker.cellX, marker.cellY};
     Spark::Vector2 world = frame.CellCenterToWorldXY(cell);

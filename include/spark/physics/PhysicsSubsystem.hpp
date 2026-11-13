@@ -1,14 +1,14 @@
 #pragma once
 
-#include "spark/physics/CharacterController2D.hpp"
-#include "spark/physics/CharacterController3D.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
-#include "spark/physics/PhysicsQueries3D.hpp"
-#include "spark/physics/PhysicsWorld2D.hpp"
-#include "spark/physics/PhysicsWorld3D.hpp"
-#include "spark/physics/simulation/PhysicsSimulationRecorder3D.hpp"
-#include "spark/physics/TriggerVolume2D.hpp"
-#include "spark/physics/TriggerVolume3D.hpp"
+#include "spark/physics/2d/CharacterController2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/PhysicsWorld2D.hpp"
+#include "spark/physics/2d/TriggerVolume2D.hpp"
+#include "spark/physics/3d/CharacterController3D.hpp"
+#include "spark/physics/3d/PhysicsQueries3D.hpp"
+#include "spark/physics/3d/PhysicsWorld3D.hpp"
+#include "spark/physics/3d/TriggerVolume3D.hpp"
+#include "spark/physics/3d/simulation/PhysicsSimulationRecorder3D.hpp"
 #include "spark/engine/FrameTiming.hpp"
 
 namespace Spark {

@@ -5,8 +5,8 @@
 #include "spark/ecs/components/character/Character3DBodyComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
-#include "spark/physics/CharacterController3D.hpp"
-#include "spark/physics/PhysicsQueries3D.hpp"
+#include "spark/physics/3d/CharacterController3D.hpp"
+#include "spark/physics/3d/PhysicsQueries3D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/SkinnedIkService.hpp"
 

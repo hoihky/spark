@@ -9,7 +9,7 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 

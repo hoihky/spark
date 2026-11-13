@@ -40,7 +40,7 @@ void RoundTripComponent(
     Spark::GameWorld restoreWorld{};
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = "assets";
-    applyCtx.assetLoader = &restoreWorld.GetAssetLoader();
+    applyCtx.assetLoader = &restoreWorld.Assets().Loader();
     ASSERT_TRUE(handler->TryRestore(restored, captured, restoreWorld, applyCtx));
 }
 
@@ -150,7 +150,7 @@ TEST(GameplayComponentRoundTripTest, TilemapStackRoundTrip) {
     Spark::Texture2D placeholder{};
     placeholder.GetName() = Spark::Utf8String("tests/tilemap_atlas");
     const Spark::SharedPtr<Spark::Texture2D> atlas =
-            world.RegisterTexture(Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(placeholder)), "tests/tilemap_atlas");
+            world.Assets().RegisterTexture(Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(placeholder)), "tests/tilemap_atlas");
 
     Spark::TilemapComponent* tilemap = source->AddComponent<Spark::TilemapComponent>(
             Spark::MakeShared<Spark::Tileset>(atlas, 8U, 8U), 4U, 4U, 1.0F, 0);

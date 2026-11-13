@@ -8,6 +8,7 @@
 #include "spark/gameplay/GameplayDamageApplier.hpp"
 #include "spark/gameplay/GameplayDamageDeal.hpp"
 #include "spark/gameplay/GameplayDamageEvent.hpp"
+#include "spark/gameplay/GameplaySubsystem.hpp"
 #include "spark/gameplay/GameplayInteractionCandidate.hpp"
 #include "spark/gameplay/GameplayInteractionProcessor.hpp"
 #include "spark/gameplay/GameplayInteractionQuery.hpp"
@@ -19,4 +20,3 @@
 #include "spark/gameplay/GameplayTeamPolicy.hpp"
 #include "spark/gameplay/GameplayTeamRelation.hpp"
 #include "spark/gameplay/IGameplayInventorySink.hpp"
-#include "spark/gameplay/Interaction2D.hpp"

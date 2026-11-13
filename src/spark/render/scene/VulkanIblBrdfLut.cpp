@@ -65,8 +65,6 @@ void IntegrateBrdf(const float roughness, const float nDotV, float& outA, float&
         float hy = 0.0F;
         float hz = 0.0F;
         ImportanceSampleGGX(xiX, xiY, roughness, hx, hy, hz);
-        const float lx = 2.0F * (vx * hx + vy * hy + vz * hz) * hx - vx;
-        const float ly = 2.0F * (vx * hx + vy * hy + vz * hz) * hy - vy;
         const float lz = 2.0F * (vx * hx + vy * hy + vz * hz) * hz - vz;
         const float nDotL = std::max(lz, 0.0F);
         const float nDotH = std::max(hz, 0.0F);

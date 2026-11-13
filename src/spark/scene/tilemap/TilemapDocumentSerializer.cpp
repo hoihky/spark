@@ -15,13 +15,6 @@ std::uint32_t ComputeTilesV(const TilemapDocumentTileset& set) noexcept {
     return (count + set.columns - 1U) / set.columns;
 }
 
-bool WriteLine(std::FILE* f, const char* line) {
-    if (f == nullptr || line == nullptr) {
-        return false;
-    }
-    return std::fputs(line, f) >= 0 && std::fputc('\n', f) >= 0;
-}
-
 void AppendLine(Utf8String& out, const char* line) {
     out.AppendUtf8(line);
     out.AppendUtf8("\n");

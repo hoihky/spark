@@ -211,18 +211,6 @@ bool FindJsonArrayAfterKey(const char* json, const char* key, const char*& array
     return false;
 }
 
-bool ParseSparkEventsJson(const char* json, Array<AnimationClipEvent>& out) noexcept {
-    if (json == nullptr) {
-        return false;
-    }
-    const char* arrayStart = nullptr;
-    if (!FindJsonArrayAfterKey(json, "sparkEvents", arrayStart)) {
-        return false;
-    }
-    const char* cursor = arrayStart;
-    return ParseEventsArray(cursor, out);
-}
-
 bool ParseSidecarJson(const char* json, Skeleton& skeleton) noexcept {
     if (json == nullptr) {
         return false;
@@ -373,17 +361,6 @@ Utf8String SidecarPathForGltf(const char* gltfPath) noexcept {
     }
     path.AppendUtf8(".spark-anim-events.json");
     return path;
-}
-
-void MergeClipEvents(Skeleton& skeleton, const std::uint32_t clipIndex, Array<AnimationClipEvent>&& events) {
-    if (events.IsEmpty() || clipIndex >= skeleton.GetClipCount()) {
-        return;
-    }
-    Array<AnimationClipEvent> merged = skeleton.GetClipEvents(clipIndex);
-    for (std::size_t i = 0; i < events.GetSize(); ++i) {
-        merged.PushBack(MoveTemp(events[i]));
-    }
-    skeleton.SetClipEvents(clipIndex, MoveTemp(merged));
 }
 
 }  // namespace

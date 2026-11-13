@@ -21,7 +21,7 @@ class SkinnedSceneDrawMaterialApplicator {
 public:
     class TextureLayerResolver {
     public:
-        TextureLayerResolver(SceneRenderParams& renderParams, const SceneSubmitDetail::FindSceneTextureFn& findTexture);
+        explicit TextureLayerResolver(const SceneSubmitDetail::FindSceneTextureFn& findTexture);
 
         [[nodiscard]] std::int32_t Resolve(
                 const SharedPtr<Texture2D>& texture,
@@ -33,7 +33,6 @@ public:
         }
 
     private:
-        SceneRenderParams& renderParams;
         SceneSubmitDetail::FindSceneTextureFn findTexture;
     };
 

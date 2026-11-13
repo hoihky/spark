@@ -41,7 +41,7 @@ TEST(TilemapGameplayPlacementTest, P0SpawnUsesLargestWalkableRegionNearCourtyard
     Spark::GameWorld world{};
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = SPARK_ASSETS_DIR;
-    applyCtx.assetLoader = &world.GetAssetLoader();
+    applyCtx.assetLoader = &world.Assets().Loader();
     ASSERT_TRUE(deserializer.Apply(document, world, applyCtx));
 
     Spark::GameObject* level = const_cast<Spark::GameObject*>(FindByName(world, "Level"));

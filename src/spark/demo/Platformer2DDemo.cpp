@@ -1,5 +1,5 @@
 #include "spark/demo/Platformer2DDemo.hpp"
-#include "spark/gameplay/SparkGameplayModule.hpp"
+#include "spark/scene/core/world/WorldSimulation.hpp"
 #include "spark/demo/Platformer2DDemo_detail.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/save/GameSave.hpp"
@@ -16,7 +16,7 @@
 #include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
 #include "spark/scene/core/SceneSpawn2D.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
-#include "spark/physics/CollisionFilter2D.hpp"
+#include "spark/physics/2d/CollisionFilter2D.hpp"
 #include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
@@ -1006,7 +1006,7 @@ void Platformer2DDemo::Simulate(
     }
 
     physics.Simulate2D(world, timing);
-    SparkGameplayAfterPhysics2D(world);
+    world.Simulation().RunGameplaySlice();
 
     if (playerTr != nullptr) {
         const bool attackPressed =

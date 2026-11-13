@@ -129,7 +129,7 @@ TEST(ParticleEmitterSnapshotTest, P4FieldsRoundTrip) {
 
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = "assets";
-    applyCtx.assetLoader = &world.GetAssetLoader();
+    applyCtx.assetLoader = &world.Assets().Loader();
     ASSERT_TRUE(handler->TryRestore(*restored, captured, world, applyCtx));
 
     const Spark::ParticleEmitterComponent* restoredPe = restored->GetComponent<Spark::ParticleEmitterComponent>();

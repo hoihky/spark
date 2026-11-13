@@ -6,11 +6,11 @@
 #include "spark/ecs/components/physics/3d/Rigidbody3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
-#include "spark/physics/CollisionFilter3D.hpp"
-#include "spark/physics/PhysicsQueries3D.hpp"
+#include "spark/physics/3d/CollisionFilter3D.hpp"
+#include "spark/physics/3d/PhysicsQueries3D.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
-#include "spark/physics/PhysicsWorld3D.hpp"
-#include "spark/physics/simulation/PhysicsFixedStepClock.hpp"
+#include "spark/physics/3d/PhysicsWorld3D.hpp"
+#include "spark/physics/3d/simulation/PhysicsFixedStepClock.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace {

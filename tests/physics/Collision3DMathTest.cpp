@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "spark/math/Vector3.hpp"
-#include "spark/physics/Collision3D.hpp"
+#include "spark/physics/3d/Collision3D.hpp"
 #include "spark/physics/core/PhysicsCore.hpp"
 
 namespace {

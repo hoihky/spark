@@ -49,12 +49,6 @@ class ShellGame;
 
 namespace {
 
-struct LauncherThemeBinding {
-    ShellGame* game = nullptr;
-};
-
-void LauncherThemePrev(void* userData);
-void LauncherThemeNext(void* userData);
 void LauncherDemoSelected(void* userData, int index);
 
 }  // namespace
@@ -1132,9 +1126,6 @@ private:
     UiCanvasComponent* launcherCanvas = nullptr;
     Ui::ILabel* launcherThemeLabel = nullptr;
     Ui::IList* launcherList = nullptr;
-    LauncherThemeBinding themePrevBinding{};
-    LauncherThemeBinding themeNextBinding{};
-
     DemoMode mode = DemoMode::Menu;
     int launcherSelectedIndex = -1;
     int pendingDemoLaunch = -1;
@@ -1203,26 +1194,6 @@ private:
 };
 
 namespace {
-
-void LauncherThemePrev(void* userData) {
-    if (userData == nullptr) {
-        return;
-    }
-    auto* binding = static_cast<LauncherThemeBinding*>(userData);
-    if (binding->game != nullptr) {
-        binding->game->CycleShellTheme(-1);
-    }
-}
-
-void LauncherThemeNext(void* userData) {
-    if (userData == nullptr) {
-        return;
-    }
-    auto* binding = static_cast<LauncherThemeBinding*>(userData);
-    if (binding->game != nullptr) {
-        binding->game->CycleShellTheme(1);
-    }
-}
 
 void LauncherDemoSelected(void* userData, const int index) {
     if (userData == nullptr) {

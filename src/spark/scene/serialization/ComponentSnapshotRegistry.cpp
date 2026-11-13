@@ -212,14 +212,14 @@ void NormalizeMeshAssetPath(char* asset, const std::size_t cap, const SceneMeshS
 }
 
 SharedPtr<Mesh> ResolveBuiltinUnitCubeMesh(GameWorld& world) {
-    SharedPtr<Mesh> mesh = world.TryGetMeshByKeyOrPath("spark/scene_editor/unit_cube");
+    SharedPtr<Mesh> mesh = world.Assets().TryGetMeshByKeyOrPath("spark/scene_editor/unit_cube");
     if (!mesh) {
-        mesh = world.TryGetMeshByKeyOrPath("spark/demo/unit_cube");
+        mesh = world.Assets().TryGetMeshByKeyOrPath("spark/demo/unit_cube");
     }
     if (!mesh) {
         auto created = MakeShared<Mesh>(Utf8String("UnitCube"));
         *created = Mesh::CreateUnitCube();
-        mesh = world.RegisterMesh(created, "spark/scene/serialized_unit_cube");
+        mesh = world.Assets().RegisterMesh(created, "spark/scene/serialized_unit_cube");
     }
     return mesh;
 }
@@ -300,10 +300,10 @@ public:
             if (ctx.assetLoader != nullptr) {
                 ctx.assetLoader->RequestGltf(full.CStr());
                 GltfAsset gltfAsset{};
-                if (world.TryGetCachedGltf(full.CStr(), gltfAsset)) {
+                if (world.Assets().TryGetCachedGltf(full.CStr(), gltfAsset)) {
                     mesh = gltfAsset.mesh;
                 } else {
-                    mesh = world.TryGetMeshByKeyOrPath(full.CStr());
+                    mesh = world.Assets().TryGetMeshByKeyOrPath(full.CStr());
                 }
                 if (!mesh) {
                     if (ctx.onDeferredComponent != nullptr) {
@@ -315,12 +315,12 @@ public:
                 if (owner.GetComponent<MeshComponent>() == nullptr) {
                     owner.AddComponent<MeshComponent>(mesh, slot, albedo);
                 }
-                if (world.TryGetCachedGltf(full.CStr(), gltfAsset) && gltfAsset.mesh) {
+                if (world.Assets().TryGetCachedGltf(full.CStr(), gltfAsset) && gltfAsset.mesh) {
                     GltfAssetBinder::ApplyMaterials(owner, gltfAsset, full.CStr());
                 }
                 return true;
             } else {
-                const GltfAsset g = world.LoadGltf(full.CStr());
+                const GltfAsset g = world.Assets().LoadGltf(full.CStr());
                 mesh = g.mesh;
                 if (mesh) {
                     if (owner.GetComponent<MeshComponent>() == nullptr) {
@@ -449,7 +449,7 @@ private:
         }
         if (assetKey[0] != '\0') {
             mat->SetMaterialAsset(world, assetKey);
-            if (world.TryGetMaterialByKeyOrPath(assetKey) == nullptr && ctx.onDeferredComponent != nullptr) {
+            if (world.Assets().TryGetMaterialByKeyOrPath(assetKey) == nullptr && ctx.onDeferredComponent != nullptr) {
                 ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
             }
         }
@@ -642,11 +642,11 @@ private:
             if (key == nullptr || key[0] == '\0') {
                 return false;
             }
-            if (SharedPtr<Texture2D> tex = world.TryGetTextureByKeyOrPath(key)) {
+            if (SharedPtr<Texture2D> tex = world.Assets().TryGetTextureByKeyOrPath(key)) {
                 (mat->*setter)(MoveTemp(tex));
                 return true;
             }
-            if (SharedPtr<Texture2D> loaded = world.LoadTexture(key)) {
+            if (SharedPtr<Texture2D> loaded = world.Assets().LoadTexture(key)) {
                 (mat->*setter)(MoveTemp(loaded));
                 return true;
             }
@@ -935,7 +935,7 @@ public:
         const Utf8String full = JoinAssetsRootPath(ctx.assetsRoot, asset);
         if (ctx.assetLoader != nullptr) {
             ctx.assetLoader->RequestSkinnedGltf(full.CStr());
-            if (!world.TryGetCachedSkinnedGltf(full.CStr(), skinned)) {
+            if (!world.Assets().TryGetCachedSkinnedGltf(full.CStr(), skinned)) {
                 if (ctx.onDeferredComponent != nullptr) {
                     ctx.onDeferredComponent(&owner, record, ctx.deferredUserData);
                     return true;
@@ -943,7 +943,7 @@ public:
                 return false;
             }
         } else {
-            skinned = world.LoadSkinnedGltf(full.CStr());
+            skinned = world.Assets().LoadSkinnedGltf(full.CStr());
         }
         if (!skinned.mesh || !skinned.skeleton) {
             return false;

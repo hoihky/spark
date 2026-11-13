@@ -9,7 +9,7 @@
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/gameplay/Combat3D.hpp"
-#include "spark/physics/CollisionFilter3D.hpp"
+#include "spark/physics/3d/CollisionFilter3D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace {

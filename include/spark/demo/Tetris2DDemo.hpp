@@ -144,7 +144,6 @@ private:
     float lockPulseT = 0.0F;
     float cameraShakeT = 0.0F;
     float cameraShakeMag = 0.0F;
-    float fpsSmoothed = 0.0F;
 
     Spark::Array<std::uint8_t> grid{};
     int anchorX = 0;

@@ -18,10 +18,10 @@ class Texture2D;
 class RenderTexture;
 struct GltfAsset;
 struct GltfSceneDocument;
-struct MaterialAsset;
+class MaterialAsset;
 struct SkinnedGltfAsset;
 
-/** Asset cache + async I/O surface for one world (implements former flat <c>GameWorld</c> asset API). */
+/** Asset cache + async I/O surface for one world. */
 class WorldAssets final : public WorldView {
 public:
     using WorldView::WorldView;

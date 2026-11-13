@@ -84,7 +84,7 @@ void VfxPlayerComponent::ClearCompositeChildren(GameObject& owner) noexcept {
     playbackAge = 0.0F;
 }
 
-void VfxPlayerComponent::TriggerCompositePhase(GameObject& owner, const std::size_t phaseIndex) {
+void VfxPlayerComponent::TriggerCompositePhase(GameObject& /*owner*/, const std::size_t phaseIndex) {
     if (phaseIndex >= compositePhases.GetSize() || phaseIndex >= activeAsset.definition.emitters.GetSize()) {
         return;
     }

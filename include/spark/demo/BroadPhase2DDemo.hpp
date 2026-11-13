@@ -15,11 +15,11 @@
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/physics/2d/HingeJoint2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
-#include "spark/physics/colliders/Collider2D.hpp"
-#include "spark/physics/colliders/ColliderBakePipeline2D.hpp"
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/2d/colliders/Collider2D.hpp"
+#include "spark/physics/2d/colliders/ColliderBakePipeline2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
-#include "spark/physics/SpatialHashGrid2D.hpp"
+#include "spark/physics/2d/SpatialHashGrid2D.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
 
 #include <algorithm>

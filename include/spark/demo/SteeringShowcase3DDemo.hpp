@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/demo/DemoHelpHud.hpp"
-#include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/ai/AiSubsystem.hpp"
 #include "spark/ecs/components/ai/AiAgentComponent.hpp"
 #include "spark/ecs/components/ai/NavMeshAgentComponent.hpp"
 #include "spark/ecs/components/ai/PatrolPathComponent.hpp"
@@ -15,7 +15,7 @@
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/physics/Collision3D.hpp"
+#include "spark/physics/3d/Collision3D.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/core/Scene.hpp"
 

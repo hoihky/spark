@@ -36,7 +36,7 @@ public:
     SceneManager& operator=(const SceneManager&) = delete;
 
     [[nodiscard]] GameWorld& GetWorld() noexcept { return world; }
-    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return world.GetAssetLoader(); }
+    [[nodiscard]] GameWorldAssetLoader& GetAssetLoader() noexcept { return world.Assets().Loader(); }
 
     /**
      * Reads the scene file and instantiates entities. Asset decode runs on a worker thread;

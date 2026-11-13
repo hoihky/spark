@@ -340,7 +340,7 @@ void GameWorldAssetLoader::Pump(GameWorld& world) {
         const JobKey key{c.path, AssetLoadJobKind::Gltf};
         activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.asset.mesh) {
-            world.RegisterGltf(c.asset, c.path.CStr());
+            world.Assets().RegisterGltf(c.asset, c.path.CStr());
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 states.Add(key, AssetLoadState::Ready);
@@ -366,7 +366,7 @@ void GameWorldAssetLoader::Pump(GameWorld& world) {
         const JobKey key{c.path, AssetLoadJobKind::SkinnedGltf};
         activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.asset.mesh && c.asset.skeleton) {
-            world.RegisterSkinnedGltf(c.asset, c.path.CStr());
+            world.Assets().RegisterSkinnedGltf(c.asset, c.path.CStr());
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 states.Add(key, AssetLoadState::Ready);
@@ -392,7 +392,7 @@ void GameWorldAssetLoader::Pump(GameWorld& world) {
         const JobKey key{c.path, AssetLoadJobKind::Texture};
         activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.texture) {
-            world.RegisterTexture(c.texture, c.path.CStr());
+            world.Assets().RegisterTexture(c.texture, c.path.CStr());
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 states.Add(key, AssetLoadState::Ready);
@@ -418,7 +418,7 @@ void GameWorldAssetLoader::Pump(GameWorld& world) {
         const JobKey key{c.path, AssetLoadJobKind::MeshObj};
         activeWorkerJobs.fetch_sub(1, std::memory_order_acq_rel);
         if (c.ok && c.mesh) {
-            world.RegisterMesh(c.mesh, c.path.CStr());
+            world.Assets().RegisterMesh(c.mesh, c.path.CStr());
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 states.Add(key, AssetLoadState::Ready);
@@ -441,8 +441,8 @@ void GameWorldAssetLoader::Pump(GameWorld& world) {
             MaterialAsset asset = c.payload.asset;
             const Utf8String resolvedPath = MaterialAssetLoader::ResolveReadablePath(c.path.CStr());
             MaterialAssetLoader::ResolveMaterialTextures(
-                    world.GetAssetCache(), resolvedPath.CStr(), c.payload.slot, asset);
-            world.RegisterMaterial(asset, c.path.CStr());
+                    world.Assets().Cache(), resolvedPath.CStr(), c.payload.slot, asset);
+            world.Assets().RegisterMaterial(asset, c.path.CStr());
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 states.Add(key, AssetLoadState::Ready);
@@ -488,10 +488,6 @@ void GameWorldAssetLoader::WorkerLoop() {
                 if (result.ok && loaded.mesh) {
                     result.asset.mesh = loaded.mesh;
                     result.asset.materials = loaded.materials;
-                    if (!loaded.materials.IsEmpty()) {
-                        result.asset.material = loaded.materials[0];
-                        result.asset.baseColorTexture = loaded.materials[0].baseColor;
-                    }
                 } else {
                     result.ok = false;
                     result.errorMessage = loaded.errorMessage;
@@ -526,8 +522,9 @@ void GameWorldAssetLoader::WorkerLoop() {
                     result.asset.mesh = MakeShared<SkinnedMesh>(MoveTemp(mesh));
                     result.asset.skeleton = MakeShared<Skeleton>(MoveTemp(skeleton));
                     result.asset.materials = materials;
-                    result.asset.material = material;
-                    result.asset.baseColorTexture = material.baseColor;
+                    if (result.asset.materials.IsEmpty()) {
+                        result.asset.PrimaryMaterialMutable() = material;
+                    }
                     result.asset.walkClipIndex = walkClip;
                     result.asset.bindUpAlignment = bindUp;
                     result.asset.bindFacingYawOffset = facingYaw;

@@ -35,7 +35,7 @@ TEST(SkeletonPaletteBlendTest, BlendEndpointsMatchSingleClips) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     const std::int32_t walkIdx = asset.skeleton->FindClipIndexIfNameContains("walk");
@@ -81,7 +81,7 @@ TEST(SkeletonPaletteBlendTest, AnimatorCrossfadeFromLocomotionBlend) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     const std::int32_t walkIdx = asset.skeleton->FindClipIndexIfNameContains("walk");

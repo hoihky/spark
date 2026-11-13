@@ -54,7 +54,7 @@ void PatchScene2DMinimapHud(
         return;
     }
 
-    static_cast<void>(world.RegisterTexture(texture, "spark/p0_demo/minimap"));
+    static_cast<void>(world.Assets().RegisterTexture(texture, "spark/p0_demo/minimap"));
 
     std::int32_t layer = -1;
     for (std::size_t i = 0; i < params.uiTextures.GetSize(); ++i) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spark/core/Utility.hpp"
 #include "spark/scene/core/EntityId.hpp"
 #include "spark/scene/core/world/WorldQuery.hpp"
 #include "spark/scene/core/world/WorldView.hpp"
@@ -7,10 +8,11 @@
 namespace Spark {
 
 class GameObject;
+class GameWorldEntityGraph;
 struct GameObjectQueryFilter;
-struct GameObjectQueryResult;
+class GameObjectQueryResult;
 
-/** Entity graph operations on a world (create, destroy, hierarchy, lookup). */
+/** Entity graph: lifecycle, iteration, and query entry (mirrors <c>GameWorldEntityGraph</c>). */
 class WorldEntities final : public WorldView {
 public:
     using WorldView::WorldView;
@@ -29,6 +31,8 @@ public:
 
     [[nodiscard]] WorldQuery Query() const noexcept { return WorldQuery{const_cast<GameWorld&>(world_)}; }
 
+#include "spark/scene/core/world/WorldEntitiesIteration.inl"
+
     [[nodiscard]] GameObject* FindByTag(const char* tag, const GameObjectQueryFilter& filter = {}) const {
         return world_.FindGameObjectWithTag(tag, filter);
     }
@@ -40,6 +44,14 @@ public:
     [[nodiscard]] bool IsAlive(const GameObject* object) const noexcept { return world_.IsGameObjectAlive(object); }
 
     [[nodiscard]] std::size_t Count() const noexcept { return world_.GetGameObjectCount(); }
+
+    void Collect(GameObjectQueryResult& out, const GameObjectQueryFilter& filter = {}) const {
+        world_.CollectGameObjects(out, filter);
+    }
+
+    [[nodiscard]] GameObjectQueryResult Select(const GameObjectQueryFilter& filter = {}) const {
+        return world_.QueryGameObjects(filter);
+    }
 };
 
 }  // namespace Spark

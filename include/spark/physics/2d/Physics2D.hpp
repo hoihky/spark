@@ -1,0 +1,17 @@
+#pragma once
+
+#include "spark/physics/2d/BroadPhase2D.hpp"
+#include "spark/physics/2d/CharacterController2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
+#include "spark/physics/2d/CollisionFilter2D.hpp"
+#include "spark/physics/2d/PhysicsMaterial2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/PhysicsWorld2D.hpp"
+#include "spark/physics/2d/PolygonCollider2D.hpp"
+#include "spark/physics/2d/SpatialHashGrid2D.hpp"
+#include "spark/physics/2d/TilemapCollider2D.hpp"
+#include "spark/physics/2d/TilemapCollisionBake.hpp"
+#include "spark/physics/2d/TriggerVolume2D.hpp"
+#include "spark/physics/2d/colliders/Colliders.hpp"
+#include "spark/physics/2d/shapes/Shapes.hpp"
+#include "spark/physics/2d/simulation/Simulation.hpp"

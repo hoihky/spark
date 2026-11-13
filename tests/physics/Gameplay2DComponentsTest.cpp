@@ -12,7 +12,6 @@
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/TriggerVolume2DComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"
-#include "spark/gameplay/Interaction2D.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
@@ -134,7 +133,7 @@ TEST(Gameplay2DComponents, InteractableManualCollect) {
     Spark::TransformComponent* playerTr = player->AddComponent<Spark::TransformComponent>();
     playerTr->SetTranslation({0.5F, 0.0F, 0.0F});
 
-    Spark::ProcessInteractables2D(world, *player, true);
+    world.Gameplay().InteractIfPressed2D(*player, true);
     EXPECT_TRUE(collected);
 }
 

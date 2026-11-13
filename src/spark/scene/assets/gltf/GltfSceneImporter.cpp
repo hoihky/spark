@@ -26,16 +26,6 @@ GltfAsset MakeAssetView(const GltfSceneDocument& document, const GltfSceneNode& 
     }
     asset.materials = document.materials;
     asset.materialVariantNames = document.materialVariantNames;
-    std::uint32_t materialIndex = 0;
-    if (asset.mesh && !asset.mesh->GetSubmeshes().IsEmpty()) {
-        materialIndex = asset.mesh->GetSubmeshes()[0].materialIndex;
-    }
-    if (!asset.materials.IsEmpty()) {
-        const std::size_t resolvedIndex =
-                materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
-        asset.material = asset.materials[resolvedIndex];
-        asset.baseColorTexture = asset.material.baseColor;
-    }
     return asset;
 }
 
@@ -49,16 +39,6 @@ SkinnedGltfAsset MakeSkinnedAssetView(const GltfSceneDocument& document, const G
     }
     asset.materials = document.materials;
     asset.materialVariantNames = document.materialVariantNames;
-    std::uint32_t materialIndex = 0;
-    if (asset.mesh && !asset.mesh->GetSubmeshes().IsEmpty()) {
-        materialIndex = asset.mesh->GetSubmeshes()[0].materialIndex;
-    }
-    if (!asset.materials.IsEmpty()) {
-        const std::size_t resolvedIndex =
-                materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
-        asset.material = asset.materials[resolvedIndex];
-        asset.baseColorTexture = asset.material.baseColor;
-    }
     return asset;
 }
 
@@ -101,7 +81,7 @@ void ImportNode(
         if (childObject == nullptr) {
             continue;
         }
-        world.SetParent(childObject, &object);
+        (void)world.SetParent(childObject, &object);
         ImportNode(*childObject, document, static_cast<std::uint32_t>(childIndex), slot, albedo, gltfLibraryKey);
     }
 }
@@ -140,7 +120,7 @@ bool GltfSceneImporter::ImportInto(
         if (rootObject == nullptr) {
             continue;
         }
-        world.SetParent(rootObject, &owner);
+        (void)world.SetParent(rootObject, &owner);
         ImportNode(*rootObject, document, rootIndex, slot, albedo, libraryKey);
     }
     return true;

@@ -11,14 +11,6 @@
 
 namespace Spark {
 
-namespace {
-
-CombatActionKind ToActionKind(const int value) noexcept {
-    return CombatActionKind::FromInt(value);
-}
-
-}  // namespace
-
 bool Character3DCombatGraphDriver::ClipValid_(const AnimatorComponent& anim, const std::uint32_t clip) const noexcept {
     return clip < anim.GetClipCount();
 }

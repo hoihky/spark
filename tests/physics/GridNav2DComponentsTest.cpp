@@ -18,7 +18,7 @@ Spark::SharedPtr<Spark::Tileset> MakeTestTileset(Spark::GameWorld& world) {
     Spark::Texture2D placeholder{};
     placeholder.GetName() = Spark::Utf8String("tests/grid_nav_atlas");
     const Spark::SharedPtr<Spark::Texture2D> atlas =
-            world.RegisterTexture(Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(placeholder)), "tests/grid_nav_atlas");
+            world.Assets().RegisterTexture(Spark::MakeShared<Spark::Texture2D>(Spark::MoveTemp(placeholder)), "tests/grid_nav_atlas");
     return Spark::MakeShared<Spark::Tileset>(atlas, 8U, 8U);
 }
 

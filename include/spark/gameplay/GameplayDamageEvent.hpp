@@ -5,7 +5,7 @@
 namespace Spark {
 
 class GameObject;
-class DamageSignalPayload;
+struct DamageSignalPayload;
 
 /** Read-only view of a <c>SignalId::DamageApplied</c> dispatch. */
 class GameplayDamageEvent final {

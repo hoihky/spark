@@ -1,8 +1,8 @@
 #include "spark/physics/core/ColliderFilter.hpp"
 
-#include "spark/physics/Collision2D.hpp"
-#include "spark/physics/Collision3D.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
+#include "spark/physics/3d/Collision3D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
 
 namespace Spark {
 

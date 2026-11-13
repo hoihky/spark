@@ -5,7 +5,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/gameplay/Combat2D.hpp"
 #include "spark/math/Matrix4.hpp"
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <algorithm>

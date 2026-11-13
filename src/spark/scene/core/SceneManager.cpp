@@ -61,7 +61,7 @@ void SceneManager::RetryPendingComponents(LoadedSceneInstance& instance) {
     SceneApplyContext ctx{};
     ctx.assetsRoot = instance.options.assetsRoot;
     ctx.sceneInstanceId = instance.id;
-    ctx.assetLoader = &world.GetAssetLoader();
+    ctx.assetLoader = &world.Assets().Loader();
     ctx.onDeferredComponent = nullptr;
 
     Array<PendingComponentRestore> stillPending;
@@ -105,7 +105,7 @@ void SceneManager::ApplyDocumentInstance(
     ctx.assetsRoot = options.assetsRoot != nullptr && options.assetsRoot[0] != '\0' ? options.assetsRoot
                     : (!document.header.assetsRoot.IsEmpty() ? document.header.assetsRoot.CStr() : nullptr);
     ctx.sceneInstanceId = instance.id;
-    ctx.assetLoader = &world.GetAssetLoader();
+    ctx.assetLoader = &world.Assets().Loader();
     ctx.onDeferredComponent = OnDeferredComponentStatic;
     ctx.deferredUserData = &instance;
 
@@ -210,7 +210,7 @@ SceneInstanceId SceneManager::BeginLoadSceneAsync(
 }
 
 void SceneManager::Pump() {
-    world.GetAssetLoader().Pump(world);
+    world.Assets().Pump();
     for (std::size_t i = 0; i < instances.GetSize(); ++i) {
         LoadedSceneInstance& instance = instances[i];
         if (instance.ready || instance.failed) {

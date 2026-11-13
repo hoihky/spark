@@ -2,8 +2,8 @@
 
 #include "spark/ecs/components/physics/3d/BoxCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsLayer3DComponent.hpp"
-#include "spark/physics/CollisionFilter3D.hpp"
-#include "spark/physics/colliders/PhysicsCollider3DFilter.hpp"
+#include "spark/physics/3d/CollisionFilter3D.hpp"
+#include "spark/physics/3d/colliders/PhysicsCollider3DFilter.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 TEST(PhysicsCollider3DFilterTest, BoxColliderBitsOverrideLayerComponent) {

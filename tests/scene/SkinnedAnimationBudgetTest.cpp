@@ -25,7 +25,7 @@ TEST(SkinnedAnimationBudgetTest, PaletteUpdateCapFallsBackToBindPose) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
 
@@ -61,7 +61,7 @@ TEST(SkinnedAnimationBudgetTest, SkinnedDrawCapSkipsExtraCharacters) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
 
@@ -94,7 +94,7 @@ TEST(SkinnedAnimationBudgetTest, SharedSkeletonUsesPaletteCacheHit) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
 

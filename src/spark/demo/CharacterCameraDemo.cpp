@@ -8,7 +8,7 @@
 #include "spark/ecs/components/gameplay/CombatHurtFlash3DComponent.hpp"
 #include "spark/ecs/components/gameplay/GameplayTeamComponent.hpp"
 #include "spark/ecs/components/physics/3d/Hurtbox3DComponent.hpp"
-#include "spark/physics/CollisionFilter3D.hpp"
+#include "spark/physics/3d/CollisionFilter3D.hpp"
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/demo/DemoFoundation.hpp"
 
@@ -33,7 +33,7 @@
 #include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
-#include "spark/physics/CharacterController3D.hpp"
+#include "spark/physics/3d/CharacterController3D.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 #include <algorithm>
@@ -121,13 +121,13 @@ struct CharTreeLayoutSpec {
             placement.z});
     tr->SetRotation(Spark::Quaternion::FromAxisAngle(Spark::Vector3::UnitY, placement.yawRadians));
     const Spark::Vector3 meshAlbedo =
-            (asset.material.HasAnyTexture() || asset.baseColorTexture)
+            (asset.PrimaryMaterial().HasAnyTexture() || asset.PrimaryBaseColor())
                     ? Spark::Vector3::One
                     : Spark::Vector3{0.42F, 0.68F, 0.34F};
     tree->AddComponent<Spark::MeshComponent>(asset.mesh, Spark::SceneMeshSlot::Custom, meshAlbedo);
-    if (asset.material.HasAnyTexture() || asset.baseColorTexture) {
+    if (asset.PrimaryMaterial().HasAnyTexture() || asset.PrimaryBaseColor()) {
         if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>()) {
-            Spark::ApplyGltfMaterialDesc(*mat, asset.material);
+            Spark::ApplyGltfMaterialDesc(*mat, asset.PrimaryMaterial());
         }
     } else if (Spark::MaterialComponent* mat = tree->AddComponent<Spark::MaterialComponent>()) {
         mat->SetTint(meshAlbedo);
@@ -303,11 +303,11 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         foxAssetCached = w.Assets().LoadSkinnedGltf(foxPath.CStr());
         cesiumAssetReady = cesiumAssetCached.mesh && cesiumAssetCached.skeleton;
         foxAssetReady = foxAssetCached.mesh && foxAssetCached.skeleton;
-        if (cesiumAssetCached.baseColorTexture) {
-            w.Assets().RegisterTexture(cesiumAssetCached.baseColorTexture, "spark/char/cesium_basecolor");
+        if (cesiumAssetCached.PrimaryBaseColor()) {
+            w.Assets().RegisterTexture(cesiumAssetCached.PrimaryBaseColor(), "spark/char/cesium_basecolor");
         }
-        if (foxAssetCached.baseColorTexture) {
-            w.Assets().RegisterTexture(foxAssetCached.baseColorTexture, "spark/char/fox_basecolor");
+        if (foxAssetCached.PrimaryBaseColor()) {
+            w.Assets().RegisterTexture(foxAssetCached.PrimaryBaseColor(), "spark/char/fox_basecolor");
         }
 
         if (foxAssetReady || cesiumAssetReady) {
@@ -923,13 +923,13 @@ void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
         return;
     }
 
-    if (treeLarge.baseColorTexture) {
-        w.Assets().RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_large_basecolor");
+    if (treeLarge.PrimaryBaseColor()) {
+        w.Assets().RegisterTexture(treeLarge.PrimaryBaseColor(), "spark/char/tree_large_basecolor");
     }
-    if (treeSmall.baseColorTexture) {
-        w.Assets().RegisterTexture(treeSmall.baseColorTexture, "spark/char/tree_small_basecolor");
-    } else if (treeLarge.baseColorTexture) {
-        w.Assets().RegisterTexture(treeLarge.baseColorTexture, "spark/char/tree_small_basecolor");
+    if (treeSmall.PrimaryBaseColor()) {
+        w.Assets().RegisterTexture(treeSmall.PrimaryBaseColor(), "spark/char/tree_small_basecolor");
+    } else if (treeLarge.PrimaryBaseColor()) {
+        w.Assets().RegisterTexture(treeLarge.PrimaryBaseColor(), "spark/char/tree_small_basecolor");
     }
 
     static constexpr CharTreeLayoutSpec kTreeLayouts[] = {
@@ -975,8 +975,8 @@ void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
     for (const CharTreeLayoutSpec& layout : kTreeLayouts) {
         const CharTreePlacement placement = MakeTreePlacement(layout);
         Spark::GltfAsset asset = placement.useLargeTree ? treeLarge : treeSmall;
-        if (!asset.baseColorTexture && treeLarge.baseColorTexture) {
-            asset.baseColorTexture = treeLarge.baseColorTexture;
+        if (!asset.PrimaryBaseColor() && treeLarge.PrimaryBaseColor()) {
+            asset.PrimaryMaterialMutable().baseColor = treeLarge.PrimaryBaseColor();
         }
         const char* name = placement.useLargeTree ? "CharTreeLarge" : "CharTreeSmall";
         if (SpawnCharacterCameraTree(w, roots, asset, placement, name) != nullptr) {
@@ -990,7 +990,7 @@ void CharacterCameraDemo::SpawnForestTrees(Spark::GameWorld& w) {
             spawned,
             treeLarge.mesh ? "ok" : "missing",
             treeSmall.mesh ? "ok" : "missing",
-            (treeLarge.baseColorTexture || treeSmall.baseColorTexture) ? "ok" : "missing");
+            (treeLarge.PrimaryBaseColor() || treeSmall.PrimaryBaseColor()) ? "ok" : "missing");
 }
 
 void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
@@ -1094,9 +1094,9 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
         animLayers->ConfigureUpperBodyMaskFromSpine(*asset.skeleton, "spine");
         playerAnimator = characterVisual->AddComponent<Spark::AnimatorComponent>(
                 asset.skeleton, asset.walkClipIndex, 1.0F);
-        if (asset.material.HasAnyTexture() || asset.baseColorTexture) {
+        if (asset.PrimaryMaterial().HasAnyTexture() || asset.PrimaryBaseColor()) {
             characterMaterial = characterVisual->AddComponent<Spark::MaterialComponent>();
-            Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.material);
+            Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.PrimaryMaterial());
         } else {
             characterMaterial = characterVisual->AddComponent<Spark::MaterialComponent>();
         }
@@ -1108,7 +1108,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
             playerAnimator->RestartCurrentClip();
         }
         if (characterMaterial != nullptr) {
-            Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.material);
+            Spark::ApplyGltfMaterialDesc(*characterMaterial, asset.PrimaryMaterial());
         }
     }
 

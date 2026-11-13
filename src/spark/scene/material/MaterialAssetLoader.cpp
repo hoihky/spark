@@ -161,14 +161,6 @@ bool TryReadSparkMatBodyFromDisk(const char* diskPath, MaterialSlotSnapshot::Dat
     return MaterialSlotSnapshot::TryParseSlotV1(cursor, slot);
 }
 
-bool TryReadSparkMatBody(const char* path, MaterialSlotSnapshot::Data& slot) {
-    const Utf8String resolved = MaterialAssetLoader::ResolveReadablePath(path);
-    if (resolved.IsEmpty()) {
-        return false;
-    }
-    return TryReadSparkMatBodyFromDisk(resolved.CStr(), slot);
-}
-
 }  // namespace
 
 Utf8String MaterialAssetLoader::MakeGltfMaterialLibraryKey(

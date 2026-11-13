@@ -34,7 +34,7 @@ TEST(GltfSkinnedLoadValidationTest, FoxLoadsWithJointPaletteSample) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
     const std::uint32_t jointCount = asset.skeleton->GetJointCount();
@@ -57,7 +57,7 @@ TEST(GltfSkinnedLoadValidationTest, ValidatorAcceptsFoxAsset) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
 

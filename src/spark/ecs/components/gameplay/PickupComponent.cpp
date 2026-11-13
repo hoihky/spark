@@ -57,7 +57,7 @@ bool PickupComponent::TryCollect(GameObject& collector) noexcept {
     if (onCollected) {
         onCollected(collector, itemId.CStr(), quantity);
     } else {
-        GameplayPickupDelivery::TryDeliverToCollector(collector, itemId.CStr(), quantity, GetOwner());
+        (void)GameplayPickupDelivery::TryDeliverToCollector(collector, itemId.CStr(), quantity, GetOwner());
     }
     return true;
 }

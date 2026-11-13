@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/physics/PhysicsQueries3D.hpp"
+#include "spark/physics/3d/PhysicsQueries3D.hpp"
 #include "spark/scene/query/SceneRaycast.hpp"
 
 namespace Spark {

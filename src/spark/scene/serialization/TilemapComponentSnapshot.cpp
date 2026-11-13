@@ -56,17 +56,17 @@ void AppendCellRecord(Utf8String& out, const std::uint32_t x, const std::uint32_
     if (textureKey == nullptr || textureKey[0] == '\0') {
         return SharedPtr<Texture2D>();
     }
-    if (SharedPtr<Texture2D> cached = world.TryGetTextureByKeyOrPath(textureKey)) {
+    if (SharedPtr<Texture2D> cached = world.Assets().TryGetTextureByKeyOrPath(textureKey)) {
         return cached;
     }
     if (ctx.assetsRoot != nullptr) {
         char joined[1024]{};
         std::snprintf(joined, sizeof(joined), "%s/%s", ctx.assetsRoot, textureKey);
-        if (SharedPtr<Texture2D> loaded = world.LoadTexture(joined)) {
+        if (SharedPtr<Texture2D> loaded = world.Assets().LoadTexture(joined)) {
             return loaded;
         }
     }
-    return world.LoadTexture(textureKey);
+    return world.Assets().LoadTexture(textureKey);
 }
 
 }  // namespace
@@ -164,7 +164,7 @@ bool TilemapComponentSnapshot::TryRestore(
     if (!atlas) {
         Texture2D placeholder{};
         placeholder.GetName() = Utf8String(textureKey);
-        atlas = world.RegisterTexture(MakeShared<Texture2D>(MoveTemp(placeholder)), textureKey);
+        atlas = world.Assets().RegisterTexture(MakeShared<Texture2D>(MoveTemp(placeholder)), textureKey);
     }
 
     TilemapComponent* tilemap = owner.GetComponent<TilemapComponent>();
@@ -182,7 +182,7 @@ bool TilemapComponentSnapshot::TryRestore(
         tilemap->RemoveLayer(tilemap->GetLayerCount() - 1U);
     }
     while (tilemap->GetLayerCount() < layerCount) {
-        tilemap->AddLayer();
+        (void)tilemap->AddLayer();
     }
 
     for (std::uint32_t layerIndex = 0; layerIndex < layerCount; ++layerIndex) {

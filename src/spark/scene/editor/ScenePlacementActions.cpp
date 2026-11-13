@@ -90,7 +90,7 @@ public:
 
         Utf8String full = ScenePathResolver::SourceAssetPath(nullptr, rel);
         GltfAsset gltf{};
-        if (!ctx.world.AwaitGltf(full.CStr(), gltf) || !gltf.mesh) {
+        if (!ctx.world.Assets().AwaitGltf(full.CStr(), gltf) || !gltf.mesh) {
             ctx.world.DestroyGameObject(object);
             ReportStatus(ctx, "Could not load mesh preset.");
             return false;

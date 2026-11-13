@@ -70,7 +70,7 @@ bool TwoBoneIkSolver::Apply(
     Matrix4 rootParentWorld = Matrix4::Identity;
     const std::int32_t rootParent = skeleton.GetJointParent(rootJoint);
     if (rootParent >= 0) {
-        skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(rootParent), rootParentWorld);
+        (void)skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(rootParent), rootParentWorld);
     }
 
     Matrix4 parentInv{};
@@ -85,12 +85,12 @@ bool TwoBoneIkSolver::Apply(
                 Quaternion::Slerp(rootLocal.rotation, localDelta * rootLocal.rotation, weight).Normalized();
     }
 
-    skeleton.TryComputeJointWorldFromPose(pose, midJoint, midWorld);
+    (void)skeleton.TryComputeJointWorldFromPose(pose, midJoint, midWorld);
     const Vector3 updatedMidPos = ExtractTranslation(midWorld);
     Matrix4 midParentWorld = Matrix4::Identity;
     const std::int32_t midParent = skeleton.GetJointParent(midJoint);
     if (midParent >= 0) {
-        skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(midParent), midParentWorld);
+        (void)skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(midParent), midParentWorld);
     }
     if (midParentWorld.TryInvert(parentInv)) {
         const Vector3 currentDir = (endPos - updatedMidPos).Normalized();
@@ -102,12 +102,12 @@ bool TwoBoneIkSolver::Apply(
         midLocal.rotation = Quaternion::Slerp(midLocal.rotation, localDelta * midLocal.rotation, weight).Normalized();
     }
 
-    skeleton.TryComputeJointWorldFromPose(pose, endJoint, endWorld);
+    (void)skeleton.TryComputeJointWorldFromPose(pose, endJoint, endWorld);
     const Vector3 updatedEndPos = ExtractTranslation(endWorld);
     Matrix4 endParentWorld = Matrix4::Identity;
     const std::int32_t endParent = skeleton.GetJointParent(endJoint);
     if (endParent >= 0) {
-        skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(endParent), endParentWorld);
+        (void)skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(endParent), endParentWorld);
     }
     if (endParentWorld.TryInvert(parentInv)) {
         const Vector3 currentDir = (updatedEndPos - updatedMidPos).Normalized();

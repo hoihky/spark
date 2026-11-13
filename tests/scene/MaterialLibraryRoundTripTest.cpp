@@ -29,8 +29,8 @@ Spark::Utf8String TestMaterialDiskPath() {
 
 void PumpUntilMaterialReady(Spark::GameWorld& world, const char* key, const int maxFrames = 200) {
     for (int frame = 0; frame < maxFrames; ++frame) {
-        world.GetAssetLoader().Pump(world);
-        if (world.IsMaterialReady(key)) {
+        world.Assets().Pump();
+        if (world.Assets().IsMaterialReady(key)) {
             return;
         }
     }
@@ -101,13 +101,13 @@ TEST(MaterialLibraryRoundTripTest, SparkMatSaveLoadRoundTrip) {
     source.emissiveColor = {1.0F, 0.5F, 0.1F};
     source.emissiveIntensity = 2.5F;
 
-    ASSERT_TRUE(world.SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR));
+    ASSERT_TRUE(world.Assets().SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR));
 
     Spark::MaterialAssetFilePayload decoded{};
     ASSERT_TRUE(Spark::MaterialAssetLoader::TryDecodeFromFile(kTestMaterialKey, decoded))
             << "decode failed for saved sparkmat";
 
-    const Spark::AssetLoadOutcome<Spark::MaterialAsset> loaded = world.TryLoadMaterial(kTestMaterialKey);
+    const Spark::AssetLoadOutcome<Spark::MaterialAsset> loaded = world.Assets().TryLoadMaterial(kTestMaterialKey);
     ASSERT_TRUE(loaded.ok) << loaded.errorMessage.CStr();
     EXPECT_FLOAT_EQ(loaded.value.tint.x, source.tint.x);
     EXPECT_FLOAT_EQ(loaded.value.metallic, source.metallic);
@@ -126,7 +126,7 @@ TEST(MaterialLibraryRoundTripTest, MaterialComponentAssetAsyncApply) {
     source.tint = {0.15F, 0.85F, 0.4F};
     source.metallic = 0.75F;
     source.roughness = 0.25F;
-    ASSERT_TRUE(world.SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR));
+    ASSERT_TRUE(world.Assets().SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR));
 
     Spark::GameObject* object = world.CreateGameObject();
     Spark::MaterialComponent* material = object->AddComponent<Spark::MaterialComponent>();
@@ -138,7 +138,7 @@ TEST(MaterialLibraryRoundTripTest, MaterialComponentAssetAsyncApply) {
     PumpUntilMaterialReady(world, kTestMaterialKey);
     material->TryApplyMaterialAsset(world);
 
-    EXPECT_TRUE(world.IsMaterialReady(kTestMaterialKey));
+    EXPECT_TRUE(world.Assets().IsMaterialReady(kTestMaterialKey));
     EXPECT_FLOAT_EQ(material->GetTint().x, source.tint.x);
     EXPECT_FLOAT_EQ(material->GetMetallic(), source.metallic);
     EXPECT_FLOAT_EQ(material->GetRoughness(), source.roughness);
@@ -158,24 +158,24 @@ TEST(MaterialLibraryRoundTripTest, AsyncLoadResolvesCacheKeyTexture) {
             Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String(kTextureKey));
     *texture = Spark::Texture2D::CreateCheckerboard(
             8, 2, Spark::Vector3{1.0F, 0.0F, 0.0F}, Spark::Vector3{0.0F, 0.0F, 1.0F});
-    world.RegisterTexture(texture, kTextureKey);
+    world.Assets().RegisterTexture(texture, kTextureKey);
 
     Spark::MaterialAsset source{};
     source.baseColor = texture;
     source.tint = {0.9F, 0.8F, 0.7F};
     source.metallic = 0.5F;
     source.roughness = 0.4F;
-    ASSERT_TRUE(world.SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR, &world.GetAssetCache()));
+    ASSERT_TRUE(world.Assets().SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR, &world.Assets().Cache()));
 
     Spark::MaterialAssetFilePayload decoded{};
     ASSERT_TRUE(Spark::MaterialAssetLoader::TryDecodeFromFile(kTestMaterialKey, decoded));
     EXPECT_FALSE(decoded.asset.baseColor);
     EXPECT_STREQ(decoded.slot.baseColorPath.CStr(), kTextureKey);
 
-    world.RequestMaterial(kTestMaterialKey);
+    world.Assets().RequestMaterial(kTestMaterialKey);
     PumpUntilMaterialReady(world, kTestMaterialKey);
 
-    const Spark::MaterialAsset* loaded = world.TryGetMaterialByKeyOrPath(kTestMaterialKey);
+    const Spark::MaterialAsset* loaded = world.Assets().TryGetMaterialByKeyOrPath(kTestMaterialKey);
     ASSERT_NE(loaded, nullptr);
     ASSERT_TRUE(loaded->baseColor);
     EXPECT_EQ(loaded->baseColor.Get(), texture.Get());
@@ -196,19 +196,19 @@ TEST(MaterialLibraryRoundTripTest, AsyncLoadResolvesTextureDisplayNameAlias) {
             Spark::MakeShared<Spark::Texture2D>(Spark::Utf8String(kDisplayName));
     *texture = Spark::Texture2D::CreateCheckerboard(
             8, 2, Spark::Vector3{1.0F, 0.0F, 0.0F}, Spark::Vector3{0.0F, 0.0F, 1.0F});
-    world.RegisterTexture(texture, kTextureKey);
+    world.Assets().RegisterTexture(texture, kTextureKey);
 
     Spark::MaterialAsset source{};
     source.baseColor = texture;
     source.tint = {0.4F, 0.5F, 0.6F};
-    ASSERT_TRUE(world.SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR));
+    ASSERT_TRUE(world.Assets().SaveMaterialAsset(diskPath.CStr(), source, SPARK_BUILD_ASSETS_DIR));
 
-    world.ReleaseAsset(Spark::CachedAssetKind::Material, kTestMaterialKey);
-    world.InvalidateAssetLoadState(kTestMaterialKey, Spark::AssetLoadJobKind::Material);
-    world.RequestMaterial(kTestMaterialKey);
+    world.Assets().ReleaseAsset(Spark::CachedAssetKind::Material, kTestMaterialKey);
+    world.Assets().InvalidateLoadState(kTestMaterialKey, Spark::AssetLoadJobKind::Material);
+    world.Assets().RequestMaterial(kTestMaterialKey);
     PumpUntilMaterialReady(world, kTestMaterialKey);
 
-    const Spark::MaterialAsset* loaded = world.TryGetMaterialByKeyOrPath(kTestMaterialKey);
+    const Spark::MaterialAsset* loaded = world.Assets().TryGetMaterialByKeyOrPath(kTestMaterialKey);
     ASSERT_NE(loaded, nullptr);
     ASSERT_TRUE(loaded->baseColor);
     EXPECT_EQ(loaded->baseColor.Get(), texture.Get());
@@ -225,8 +225,8 @@ TEST(MaterialLibraryRoundTripTest, SceneMaterialV4RoundTrip) {
     sourceAsset.tint = {0.55F, 0.35F, 0.95F};
     sourceAsset.metallic = 0.18F;
     sourceAsset.roughness = 0.82F;
-    ASSERT_TRUE(sourceWorld.SaveMaterialAsset(diskPath.CStr(), sourceAsset, SPARK_BUILD_ASSETS_DIR));
-    sourceWorld.RegisterMaterial(sourceAsset, kTestMaterialKey);
+    ASSERT_TRUE(sourceWorld.Assets().SaveMaterialAsset(diskPath.CStr(), sourceAsset, SPARK_BUILD_ASSETS_DIR));
+    sourceWorld.Assets().RegisterMaterial(sourceAsset, kTestMaterialKey);
 
     Spark::GameObject* sourceObject = sourceWorld.CreateGameObject();
     sourceObject->GetName() = Spark::Utf8String("MaterialRoundTripSource");
@@ -246,7 +246,7 @@ TEST(MaterialLibraryRoundTripTest, SceneMaterialV4RoundTrip) {
     Spark::GameObject* restoreObject = restoreWorld.CreateGameObject();
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = SPARK_BUILD_ASSETS_DIR;
-    applyCtx.assetLoader = &restoreWorld.GetAssetLoader();
+    applyCtx.assetLoader = &restoreWorld.Assets().Loader();
     ASSERT_TRUE(handler->TryRestore(*restoreObject, captured, restoreWorld, applyCtx));
 
     Spark::MaterialComponent* restored = restoreObject->GetComponent<Spark::MaterialComponent>();
@@ -278,8 +278,8 @@ TEST(MaterialLibraryRoundTripTest, MultiMaterialV2RoundTrip) {
     sourceAsset.toonDiffuseBands = 4;
     sourceAsset.toonRimIntensity = 0.6F;
     sourceAsset.toonRimPower = 2.5F;
-    ASSERT_TRUE(sourceWorld.SaveMaterialAsset(diskPath.CStr(), sourceAsset, SPARK_BUILD_ASSETS_DIR));
-    sourceWorld.RegisterMaterial(sourceAsset, kTestMaterialKey);
+    ASSERT_TRUE(sourceWorld.Assets().SaveMaterialAsset(diskPath.CStr(), sourceAsset, SPARK_BUILD_ASSETS_DIR));
+    sourceWorld.Assets().RegisterMaterial(sourceAsset, kTestMaterialKey);
 
     Spark::GameObject* sourceObject = sourceWorld.CreateGameObject();
     Spark::MultiMaterialComponent* sourceMulti = sourceObject->AddComponent<Spark::MultiMaterialComponent>();
@@ -303,7 +303,7 @@ TEST(MaterialLibraryRoundTripTest, MultiMaterialV2RoundTrip) {
     Spark::GameObject* restoreObject = restoreWorld.CreateGameObject();
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = SPARK_BUILD_ASSETS_DIR;
-    applyCtx.assetLoader = &restoreWorld.GetAssetLoader();
+    applyCtx.assetLoader = &restoreWorld.Assets().Loader();
     ASSERT_TRUE(handler->TryRestore(*restoreObject, captured, restoreWorld, applyCtx));
 
     Spark::MultiMaterialComponent* restored = restoreObject->GetComponent<Spark::MultiMaterialComponent>();
@@ -342,10 +342,10 @@ TEST(MaterialLibraryRoundTripTest, LoadGltfRegistersMaterialLibraryKeys) {
     }
 
     Spark::GameWorld world{};
-    (void)world.LoadGltf(gltfPath.CStr());
+    (void)world.Assets().LoadGltf(gltfPath.CStr());
     const Spark::Utf8String materialKey =
             Spark::MaterialAssetLoader::MakeGltfMaterialLibraryKey(gltfPath.CStr(), 0);
-    const Spark::MaterialAsset* material = world.TryGetMaterialByKeyOrPath(materialKey.CStr());
+    const Spark::MaterialAsset* material = world.Assets().TryGetMaterialByKeyOrPath(materialKey.CStr());
     ASSERT_NE(material, nullptr);
     EXPECT_TRUE(material->HasAnyTexture());
 }

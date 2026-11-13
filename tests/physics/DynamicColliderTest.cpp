@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "spark/physics/colliders/DynamicCollider2D.hpp"
-#include "spark/physics/colliders/DynamicCollider3D.hpp"
+#include "spark/physics/2d/colliders/DynamicCollider2D.hpp"
+#include "spark/physics/3d/colliders/DynamicCollider3D.hpp"
 
 TEST(DynamicColliderTest, Collider2DLegacyRoundTripPreservesBounds) {
     Spark::DynamicCollider2DSim legacy{};

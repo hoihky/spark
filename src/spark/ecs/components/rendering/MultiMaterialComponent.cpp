@@ -102,9 +102,9 @@ void MultiMaterialComponent::PopulateFromGltfAsset(const GltfAsset& asset) {
     slots.Clear();
     slotBindings.Clear();
     if (asset.materials.IsEmpty()) {
-        if (asset.material.HasAnyTexture()) {
+        if (asset.PrimaryMaterial().HasAnyTexture()) {
             slots.Resize(1);
-            asset.material.ApplyTo(slots[0]);
+            asset.PrimaryMaterial().ApplyTo(slots[0]);
         }
         return;
     }
@@ -118,9 +118,9 @@ void MultiMaterialComponent::PopulateFromSkinnedGltfAsset(const SkinnedGltfAsset
     slots.Clear();
     slotBindings.Clear();
     if (asset.materials.IsEmpty()) {
-        if (asset.material.HasPresentationContent()) {
+        if (asset.PrimaryMaterial().HasPresentationContent()) {
             slots.Resize(1);
-            asset.material.ApplyTo(slots[0]);
+            asset.PrimaryMaterial().ApplyTo(slots[0]);
         }
         return;
     }
@@ -136,9 +136,9 @@ void MultiMaterialComponent::BindFromSkinnedGltfAsset(
         const SkinnedGltfAsset& asset) {
     Clear();
     if (asset.materials.IsEmpty()) {
-        if (asset.material.HasPresentationContent()) {
+        if (asset.PrimaryMaterial().HasPresentationContent()) {
             slots.Resize(1);
-            asset.material.ApplyTo(slots[0]);
+            asset.PrimaryMaterial().ApplyTo(slots[0]);
         }
         return;
     }
@@ -164,9 +164,9 @@ void MultiMaterialComponent::BindFromGltfAsset(
         const GltfAsset& asset) {
     Clear();
     if (asset.materials.IsEmpty()) {
-        if (asset.material.HasPresentationContent()) {
+        if (asset.PrimaryMaterial().HasPresentationContent()) {
             slots.Resize(1);
-            asset.material.ApplyTo(slots[0]);
+            asset.PrimaryMaterial().ApplyTo(slots[0]);
         }
         return;
     }

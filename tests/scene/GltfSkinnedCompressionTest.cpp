@@ -23,7 +23,7 @@ TEST(GltfSkinnedCompressionTest, FoxSkinnedMeshStillLoads) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
     EXPECT_GT(asset.mesh->GetVertices().GetSize(), 0U);
     EXPECT_TRUE(static_cast<bool>(asset.skeleton));
@@ -38,7 +38,7 @@ TEST(GltfSkinnedCompressionTest, DecoderRegistryReadsSkinnedAttributes) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(foxPath.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(foxPath.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.mesh));
     const Spark::SkinnedMesh::Vertex& vertex = asset.mesh->GetVertices()[0];
     const float weightSum = vertex.weights[0] + vertex.weights[1] + vertex.weights[2] + vertex.weights[3];

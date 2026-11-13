@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 
 namespace Spark::Platformer2D {
 
@@ -157,7 +158,7 @@ void HealthHud::SyncToCamera(
                 "HP %.0f / %.0f",
                 static_cast<double>(currentHealth),
                 static_cast<double>(maxHealth));
-        if (label != lastHealthLabel) {
+        if (std::strncmp(label, lastHealthLabel, sizeof(label)) != 0) {
             std::snprintf(lastHealthLabel, sizeof(lastHealthLabel), "%s", label);
             healthText->SetText(Spark::Utf8String(label));
         }

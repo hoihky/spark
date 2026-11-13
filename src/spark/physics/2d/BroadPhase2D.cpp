@@ -1,0 +1,17 @@
+#include "spark/physics/2d/BroadPhase2D.hpp"
+
+#include "spark/physics/2d/colliders/ColliderBakePipeline2D.hpp"
+#include "spark/scene/core/GameWorld.hpp"
+
+namespace Spark {
+
+void BroadPhase2D::Rebuild(GameWorld& world, const float cellWorldSize) {
+    ColliderBakePipeline2D::GetDefault().Rebuild(world, cellWorldSize, colliders, grid);
+}
+
+void BroadPhase2D::Clear() noexcept {
+    colliders.Clear();
+    grid.Clear();
+}
+
+}  // namespace Spark

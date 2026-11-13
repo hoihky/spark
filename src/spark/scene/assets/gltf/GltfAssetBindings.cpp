@@ -21,10 +21,6 @@ bool ShouldBindGltfMaterials(const GltfAsset& asset) noexcept {
     return static_cast<bool>(asset.mesh);
 }
 
-bool ShouldBindGltfMaterials(const SkinnedGltfAsset& asset) noexcept {
-    return static_cast<bool>(asset.mesh);
-}
-
 [[nodiscard]] Utf8String ResolveGltfLibraryKey(const char* gltfPath) noexcept {
     if (gltfPath == nullptr || gltfPath[0] == '\0') {
         return {};
@@ -55,7 +51,7 @@ bool ShouldBindGltfMaterials(const SkinnedGltfAsset& asset) noexcept {
                 materialIndex < asset.materials.GetSize() ? materialIndex : 0U;
         return asset.materials[resolvedIndex];
     }
-    return asset.material;
+    return asset.PrimaryMaterial();
 }
 
 void BindMaterials(GameObject& owner, const GltfAsset& asset, const char* gltfLibraryKey) {
@@ -148,7 +144,7 @@ bool GltfAssetBinder::BindFromPath(
         return false;
     }
     GameWorld& world = owner.GetWorld();
-    const AssetLoadOutcome<GltfSceneDocument> sceneOutcome = world.TryLoadGltfScene(resolvedPath.CStr());
+    const AssetLoadOutcome<GltfSceneDocument> sceneOutcome = world.Assets().TryLoadGltfScene(resolvedPath.CStr());
     if (!sceneOutcome.ok) {
         return false;
     }

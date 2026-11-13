@@ -2,6 +2,7 @@
 
 #include "spark/scene/core/world/WorldAssets.hpp"
 #include "spark/scene/core/world/WorldEntities.hpp"
+#include "spark/scene/core/world/WorldGameplay.hpp"
 #include "spark/scene/core/world/WorldPhysics.hpp"
 #include "spark/scene/core/world/WorldQuery.hpp"
 #include "spark/scene/core/world/WorldRendering.hpp"
@@ -55,6 +56,14 @@ WorldQuery GameWorld::QueryObjects() noexcept {
 
 WorldQuery GameWorld::QueryObjects() const noexcept {
     return WorldQuery{const_cast<GameWorld&>(*this)};
+}
+
+WorldGameplay GameWorld::Gameplay() noexcept {
+    return WorldGameplay{*this};
+}
+
+WorldGameplay GameWorld::Gameplay() const noexcept {
+    return WorldGameplay{const_cast<GameWorld&>(*this)};
 }
 
 }  // namespace Spark

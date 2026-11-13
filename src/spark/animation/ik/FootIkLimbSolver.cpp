@@ -29,7 +29,7 @@ bool FootIkLimbSolver::Apply(
     Matrix4 parentWorld = Matrix4::Identity;
     const std::int32_t parentIndex = skeleton.GetJointParent(limb.endJoint);
     if (parentIndex >= 0) {
-        skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(parentIndex), parentWorld);
+        (void)skeleton.TryComputeJointWorldFromPose(pose, static_cast<std::uint32_t>(parentIndex), parentWorld);
     }
 
     Matrix4 parentInv{};

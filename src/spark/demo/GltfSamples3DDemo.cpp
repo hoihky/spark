@@ -102,8 +102,8 @@ bool GltfSamples3DDemo::TryPlaceRigidGltf(
     if (MaterialComponent* mat = go->GetComponent<MaterialComponent>()) {
         if (!asset.materials.IsEmpty()) {
             ApplyGltfMaterialDesc(*mat, asset.materials[0]);
-        } else if (asset.material.HasAnyTexture()) {
-            ApplyGltfMaterialDesc(*mat, asset.material);
+        } else if (asset.PrimaryMaterial().HasAnyTexture()) {
+            ApplyGltfMaterialDesc(*mat, asset.PrimaryMaterial());
         }
     }
     roots.PushBack(go);

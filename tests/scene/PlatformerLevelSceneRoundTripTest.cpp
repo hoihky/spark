@@ -38,7 +38,7 @@ TEST(PlatformerLevelSceneRoundTripTest, BundledPlatformerLevelPreservesMapSource
     Spark::GameWorld world{};
     Spark::SceneApplyContext applyCtx{};
     applyCtx.assetsRoot = SPARK_ASSETS_DIR;
-    applyCtx.assetLoader = &world.GetAssetLoader();
+    applyCtx.assetLoader = &world.Assets().Loader();
     ASSERT_TRUE(deserializer.Apply(original, world, applyCtx));
 
     const Spark::GameObject* level = FindByName(world, "Level");

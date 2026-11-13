@@ -60,7 +60,7 @@ TEST(GltfDisplayCompatibilityTest, RigidLoaderRejectsSkinnedFile) {
     }
 
     Spark::GameWorld world{};
-    const Spark::AssetLoadOutcome<Spark::GltfAsset> outcome = world.TryLoadGltf(foxPath.CStr());
+    const Spark::AssetLoadOutcome<Spark::GltfAsset> outcome = world.Assets().TryLoadGltf(foxPath.CStr());
     EXPECT_FALSE(outcome.ok);
     EXPECT_FALSE(outcome.errorMessage.IsEmpty());
 }

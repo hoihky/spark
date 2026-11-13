@@ -42,7 +42,7 @@ TEST(SkeletonPaletteCacheTest, IdenticalPlaybackSharesPalette) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     Spark::GameObject* first = world.CreateGameObject();
@@ -77,7 +77,7 @@ TEST(SkeletonPaletteCacheTest, DifferentQuantizedTimeMissesCache) {
     }
 
     Spark::GameWorld world{};
-    const Spark::SkinnedGltfAsset asset = world.LoadSkinnedGltf(path.CStr());
+    const Spark::SkinnedGltfAsset asset = world.Assets().LoadSkinnedGltf(path.CStr());
     ASSERT_TRUE(static_cast<bool>(asset.skeleton));
 
     Spark::GameObject* first = world.CreateGameObject();

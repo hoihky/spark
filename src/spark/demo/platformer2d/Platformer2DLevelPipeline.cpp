@@ -50,7 +50,7 @@ void SeedMarkerAtWorld(
     marker.offsetX = 0.5F;
     marker.offsetY = 0.5F;
     marker.mode = TilemapObjectMarkerMode::Runtime;
-    objects.AddMarker(layerIndex, marker);
+    (void)objects.AddMarker(layerIndex, marker);
 }
 
 }  // namespace
@@ -62,7 +62,7 @@ void Platformer2DLevelPipeline::SeedLegacyPlatformerMarkers(GameObject& levelRoo
         return;
     }
     if (objects->GetLayerCount() == 0U) {
-        objects->AddObjectLayer("Gameplay");
+        (void)objects->AddObjectLayer("Gameplay");
     }
     const std::uint32_t layerIndex = 0U;
     objects->ClearMarkers(layerIndex);

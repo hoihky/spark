@@ -71,7 +71,6 @@ private:
     bool brokenShadowOnTop = true;
     bool brokenFacingLeft = false;
     bool groupedFacingLeft = false;
-    float fpsSmoothed = 0.0F;
     float sceneTime = 0.0F;
 };
 

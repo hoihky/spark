@@ -11,7 +11,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/physics/Collision3D.hpp"
+#include "spark/physics/3d/Collision3D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <cmath>

@@ -169,7 +169,7 @@ GltfPrefabImportResult GltfPrefabImporter::ImportFromGltf(
         return result;
     }
 
-    const AssetLoadOutcome<GltfSceneDocument> loaded = world.TryLoadGltfScene(readablePath.CStr());
+    const AssetLoadOutcome<GltfSceneDocument> loaded = world.Assets().TryLoadGltfScene(readablePath.CStr());
     if (!loaded.ok || loaded.value.IsEmpty()) {
         result.errorMessage = loaded.errorMessage.IsEmpty() ? Utf8String("Could not parse glTF scene.") : loaded.errorMessage;
         return result;

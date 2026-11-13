@@ -3,7 +3,7 @@
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
-#include "spark/ai/GameAiSubsystem.hpp"
+#include "spark/ai/AiSubsystem.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
@@ -403,8 +403,8 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
         if (humanAsset.mesh && humanAsset.skeleton) {
             useHumanAvatar = true;
-            if (humanAsset.baseColorTexture) {
-                w.Assets().RegisterTexture(humanAsset.baseColorTexture, "spark/maze3d/human_basecolor");
+            if (humanAsset.PrimaryBaseColor()) {
+                w.Assets().RegisterTexture(humanAsset.PrimaryBaseColor(), "spark/maze3d/human_basecolor");
             }
             humanModelBindFix = humanAsset.bindUpAlignment.Normalized();
             humanModelYawOffset = humanAsset.bindFacingYawOffset + Spark::Pi;
@@ -459,9 +459,9 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             playerCharAnimFsm->SetWalkSpeedThreshold(0.35F);
             playerCharAnimFsm->SetRunSpeedThreshold(2.5F);
             playerCharAnimFsm->SetLocomotionBlendEnabled(true);
-            if (humanAsset.baseColorTexture) {
+            if (humanAsset.PrimaryBaseColor()) {
                 if (Spark::MaterialComponent* fm = vis->AddComponent<Spark::MaterialComponent>(
-                            humanAsset.baseColorTexture, Spark::Vector3::One)) {
+                            humanAsset.PrimaryBaseColor(), Spark::Vector3::One)) {
                     fm->SetMetallic(0.0F);
                     fm->SetRoughness(0.55F);
                 }
@@ -773,7 +773,7 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
             }
 
             physics.Simulate3D(world, timing);
-            Spark::SimulateGameAi(world, timing, context);
+            Spark::AiSubsystem::RunFrame(world, timing, context);
 
             const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
             rig.characterPosition.x = p.x;

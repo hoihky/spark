@@ -28,9 +28,4 @@ constexpr std::uint32_t kMaxQuadInstancesGpu =
 constexpr std::size_t kQuadInstanceSsboBytes =
         sizeof(VulkanSpriteInstanceGpu) * static_cast<std::size_t>(kMaxQuadInstancesGpu);
 
-/** @deprecated Use <c>kMaxQuadInstancesGpu</c>. */
-constexpr std::uint32_t kMaxSpriteInstancesGpu = kMaxQuadInstancesGpu;
-/** @deprecated Use <c>kQuadInstanceSsboBytes</c>. */
-constexpr std::size_t kSpriteInstanceSsboBytes = kQuadInstanceSsboBytes;
-
 }  // namespace Spark

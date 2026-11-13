@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/physics/CollisionFilter2D.hpp"
+#include "spark/physics/2d/CollisionFilter2D.hpp"
 
 namespace Spark::Platformer2D {
 

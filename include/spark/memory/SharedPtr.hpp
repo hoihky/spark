@@ -33,7 +33,14 @@ struct SharedControlBlock {
             --strongCount;
         }
         if (strongCount == 0 && object != nullptr) {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdelete-incomplete"
+#endif
             delete object;
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
             object = nullptr;
         }
         if (strongCount == 0 && weakCount == 0) {

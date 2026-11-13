@@ -8,31 +8,31 @@
 namespace Spark {
 
 GameWorldAssetCache& WorldAssets::Cache() noexcept {
-    return world_.GetAssetCache();
+    return world_.AssetStore().Cache();
 }
 
 const GameWorldAssetCache& WorldAssets::Cache() const noexcept {
-    return world_.GetAssetCache();
+    return world_.AssetStore().Cache();
 }
 
 GameWorldAssetLoader& WorldAssets::Loader() noexcept {
-    return world_.GetAssetLoader();
+    return world_.AssetStore().Loader();
 }
 
 const GameWorldAssetLoader& WorldAssets::Loader() const noexcept {
-    return world_.GetAssetLoader();
+    return world_.AssetStore().Loader();
 }
 
 void WorldAssets::Pump() {
-    world_.PumpAssets();
+    world_.AssetStore().Loader().Pump(world_);
 }
 
 std::size_t WorldAssets::PendingLoadCount() const noexcept {
-    return world_.GetPendingAssetLoadCount();
+    return world_.AssetStore().Loader().GetPendingJobCount();
 }
 
 std::size_t WorldAssets::OutstandingLoadCount() const noexcept {
-    return world_.GetOutstandingAssetLoadCount();
+    return world_.AssetStore().Loader().GetOutstandingLoadCount();
 }
 
 SharedPtr<Mesh> WorldAssets::LoadMesh(const char* path) {

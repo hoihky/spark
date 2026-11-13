@@ -4,7 +4,7 @@
 #include "spark/core/Function.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector2.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
 
 #include <algorithm>
 #include <cstdint>

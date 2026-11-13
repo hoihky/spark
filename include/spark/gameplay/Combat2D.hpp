@@ -1,8 +1,8 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/physics/Collision2D.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
 
 namespace Spark {
 

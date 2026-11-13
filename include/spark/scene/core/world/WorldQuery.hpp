@@ -2,6 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/ecs/GameObjectQuery.hpp"
+#include "spark/scene/core/SceneInstanceId.hpp"
 #include "spark/scene/core/world/WorldView.hpp"
 
 namespace Spark {
@@ -42,6 +43,21 @@ public:
 
     [[nodiscard]] GameObject* FindByName(const char* name, bool includeInactive = false) const;
 
+    [[nodiscard]] GameObject* FindFirstWithTag(const char* tag, bool includeInactive = false) const {
+        return FindWithTag(tag, includeInactive);
+    }
+
+    [[nodiscard]] GameObject* FindFirstWithName(const char* name, bool includeInactive = false) const {
+        return FindByName(name, includeInactive);
+    }
+
+    [[nodiscard]] std::size_t CollectRoots(Array<GameObject*>& out, bool includeInactive = false) const;
+
+    [[nodiscard]] std::size_t CollectScene(
+            SceneInstanceId sceneId,
+            Array<GameObject*>& out,
+            bool includeInactive = false) const;
+
     [[nodiscard]] std::size_t CollectWithComponent(
             ComponentKind kind,
             Array<GameObject*>& out,
@@ -64,7 +80,7 @@ std::size_t WorldQuery::CollectWithComponents(
         Array<GameObject*>& out,
         const GameObjectQueryFilter& filter) const {
     const std::size_t before = out.GetSize();
-    world_.ForEachGameObjectWithComponents<ComponentTypes...>(
+    world_.GetEntityGraph().ForEachWithComponents<ComponentTypes...>(
             [&](GameObject* object) { out.PushBack(object); }, filter);
     return out.GetSize() - before;
 }

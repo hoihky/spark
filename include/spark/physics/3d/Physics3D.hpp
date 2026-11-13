@@ -1,0 +1,16 @@
+#pragma once
+
+#include "spark/physics/3d/BroadPhase3D.hpp"
+#include "spark/physics/3d/CharacterController3D.hpp"
+#include "spark/physics/3d/Collision3D.hpp"
+#include "spark/physics/3d/CollisionFilter3D.hpp"
+#include "spark/physics/3d/MeshCollider3D.hpp"
+#include "spark/physics/3d/PhysicsBodyHandoff3D.hpp"
+#include "spark/physics/3d/PhysicsQueries3D.hpp"
+#include "spark/physics/3d/PhysicsQueryDynamicCatalog3D.hpp"
+#include "spark/physics/3d/PhysicsWorld3D.hpp"
+#include "spark/physics/3d/SpatialHashGrid3D.hpp"
+#include "spark/physics/3d/TriggerVolume3D.hpp"
+#include "spark/physics/3d/colliders/Colliders.hpp"
+#include "spark/physics/3d/shapes/Shapes.hpp"
+#include "spark/physics/3d/simulation/Simulation.hpp"

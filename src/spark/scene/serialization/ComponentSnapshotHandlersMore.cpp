@@ -116,27 +116,27 @@ bool TryDeferAsset(
     request();
     switch (kind) {
         case AssetLoadJobKind::Gltf:
-            if (world.TryGetMeshByKeyOrPath(fullPath)) {
+            if (world.Assets().TryGetMeshByKeyOrPath(fullPath)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::SkinnedGltf:
-            if (SkinnedGltfAsset tmp{}; world.TryGetCachedSkinnedGltf(fullPath, tmp)) {
+            if (SkinnedGltfAsset tmp{}; world.Assets().TryGetCachedSkinnedGltf(fullPath, tmp)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::Texture:
-            if (world.TryGetTextureByKeyOrPath(fullPath)) {
+            if (world.Assets().TryGetTextureByKeyOrPath(fullPath)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::MeshObj:
-            if (world.TryGetMeshByKeyOrPath(fullPath)) {
+            if (world.Assets().TryGetMeshByKeyOrPath(fullPath)) {
                 return false;
             }
             break;
         case AssetLoadJobKind::Material:
-            if (world.TryGetMaterialByKeyOrPath(fullPath) != nullptr) {
+            if (world.Assets().TryGetMaterialByKeyOrPath(fullPath) != nullptr) {
                 return false;
             }
             break;
@@ -354,9 +354,9 @@ bool TryRestoreParticleEmitterP4Extension(
                     [&]() { ctx.assetLoader->RequestTexture(full.CStr()); })) {
             return true;
         }
-        if (SharedPtr<Texture2D> texture = world.TryGetTextureByKeyOrPath(full.CStr())) {
+        if (SharedPtr<Texture2D> texture = world.Assets().TryGetTextureByKeyOrPath(full.CStr())) {
             pe.SetTexture(texture);
-        } else if (SharedPtr<Texture2D> loaded = world.LoadTexture(full.CStr())) {
+        } else if (SharedPtr<Texture2D> loaded = world.Assets().LoadTexture(full.CStr())) {
             pe.SetTexture(loaded);
         }
     }

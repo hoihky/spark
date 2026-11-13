@@ -4,7 +4,7 @@
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
-#include "spark/physics/CollisionFilter2D.hpp"
+#include "spark/physics/2d/CollisionFilter2D.hpp"
 
 #include <algorithm>
 #include <cmath>

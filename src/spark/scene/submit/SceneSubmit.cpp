@@ -403,7 +403,7 @@ void FillStandardLitSceneFromWorld(
     auto findOrAddTexture = [&params, &world](const SharedPtr<Texture2D>& tex, Vector2* uvScale, Vector2* uvOffset) -> std::int32_t {
         if (tex && !tex->HasAtlasBinding() &&
             params.sceneTextures.GetSize() + 4U >= SceneRenderParams::MaxSceneTextures) {
-            world.TryAutoPackTextureIntoAtlas("scene_auto", tex);
+            (void)world.Assets().TryAutoPackTextureIntoAtlas("scene_auto", tex);
         }
         return SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
     };
@@ -696,7 +696,7 @@ void FillStandardLitSceneFromWorld(
 
     SceneSubmitDetail::ResolveIblEnvironmentLayer(params);
 
-    world.FinalizePendingAutoPackAtlas("scene_auto");
+    world.Assets().FinalizePendingAutoPackAtlas("scene_auto");
 
     if (params.draws.IsEmpty() && (!params.sprites.IsEmpty() || !params.tilemaps.IsEmpty())) {
         params.directionalShadowsEnabled = false;

@@ -51,11 +51,11 @@ EditorApplication::~EditorApplication() = default;
 void EditorApplication::BootstrapDefaultScene(GameWorld& world) {
     groundMesh = MakeShared<Mesh>(Utf8String("EditorGround"));
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    world.RegisterMesh(groundMesh, "spark/editor/ground");
+    world.Assets().RegisterMesh(groundMesh, "spark/editor/ground");
 
     unitCubeAsset = MakeShared<Mesh>(Utf8String("EditorUnitCube"));
     *unitCubeAsset = Mesh::CreateUnitCube();
-    world.RegisterMesh(unitCubeAsset, "spark/scene_editor/unit_cube");
+    world.Assets().RegisterMesh(unitCubeAsset, "spark/scene_editor/unit_cube");
 
     GameObject* ground = world.CreateGameObject();
     ground->GetName() = Utf8String("Ground");
@@ -941,7 +941,7 @@ void EditorApplication::OnAssetBrowserRefreshCatalog() {
     statusLine = Utf8String("Asset list refreshed.");
 }
 
-void EditorApplication::HandleEditModeInput(IEngineContext& context, GameWorld& world) {
+void EditorApplication::HandleEditModeInput(IEngineContext& context, GameWorld& /*world*/) {
     IInput& input = context.GetInput();
     const bool ctrlDown = input.IsKeyDown(GLFW_KEY_LEFT_CONTROL) || input.IsKeyDown(GLFW_KEY_RIGHT_CONTROL);
 

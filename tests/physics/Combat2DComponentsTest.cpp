@@ -11,7 +11,7 @@
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/gameplay/Combat2D.hpp"
-#include "spark/physics/PhysicsQueries2D.hpp"
+#include "spark/physics/2d/PhysicsQueries2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace {

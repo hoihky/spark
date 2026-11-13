@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "spark/physics/colliders/Collider2D.hpp"
-#include "spark/physics/colliders/Collider3D.hpp"
-#include "spark/physics/shapes/ShapeFactory2D.hpp"
-#include "spark/physics/shapes/ShapeFactory3D.hpp"
+#include "spark/physics/2d/colliders/Collider2D.hpp"
+#include "spark/physics/3d/colliders/Collider3D.hpp"
+#include "spark/physics/2d/shapes/ShapeFactory2D.hpp"
+#include "spark/physics/3d/shapes/ShapeFactory3D.hpp"
 
 TEST(ColliderSnapshotTest, Collider2DLegacyRoundTripPreservesOverlap) {
     Spark::StaticCollider2D legacy{};

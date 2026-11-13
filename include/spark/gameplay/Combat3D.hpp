@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/physics/PhysicsQueries3D.hpp"
+#include "spark/physics/3d/PhysicsQueries3D.hpp"
 
 namespace Spark {
 

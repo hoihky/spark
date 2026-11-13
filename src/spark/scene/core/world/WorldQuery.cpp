@@ -28,10 +28,7 @@ std::size_t WorldQuery::CollectWithTag(const char* tag, Array<GameObject*>& out,
     if (tag == nullptr) {
         return 0;
     }
-    GameObjectQueryFilter filter;
-    filter.includeInactive = includeInactive;
-    filter.tagEquals = tag;
-    return CollectInto(out, filter);
+    return CollectInto(out, QueryFilter::WithTag(tag, includeInactive));
 }
 
 std::size_t WorldQuery::CollectWithTag(const char* tag, GameObjectQueryResult& out, bool includeInactive) const {
@@ -39,34 +36,36 @@ std::size_t WorldQuery::CollectWithTag(const char* tag, GameObjectQueryResult& o
         out.Clear();
         return 0;
     }
-    GameObjectQueryFilter filter;
-    filter.includeInactive = includeInactive;
-    filter.tagEquals = tag;
     out.Clear();
-    Collect(out, filter);
+    Collect(out, QueryFilter::WithTag(tag, includeInactive));
     return out.GetSize();
 }
 
 GameObject* WorldQuery::FindWithTag(const char* tag, bool includeInactive) const {
-    GameObjectQueryFilter filter;
-    filter.includeInactive = includeInactive;
-    return world_.FindGameObjectWithTag(tag, filter);
+    return world_.FindGameObjectWithTag(tag, QueryFilter::WithTag(tag, includeInactive));
 }
 
 GameObject* WorldQuery::FindByName(const char* name, bool includeInactive) const {
-    GameObjectQueryFilter filter;
-    filter.includeInactive = includeInactive;
-    return world_.FindGameObjectByName(name, filter);
+    GameObjectQueryFilter f = includeInactive ? QueryFilter::IncludeInactive() : QueryFilter::ActiveOnly();
+    return world_.FindGameObjectByName(name, f);
 }
 
 std::size_t WorldQuery::CollectWithComponent(
         ComponentKind kind,
         Array<GameObject*>& out,
         bool includeInactive) const {
-    GameObjectQueryFilter filter;
-    filter.includeInactive = includeInactive;
-    filter.requiredComponent = kind;
-    return CollectInto(out, filter);
+    return CollectInto(out, QueryFilter::WithComponent(kind, includeInactive));
+}
+
+std::size_t WorldQuery::CollectRoots(Array<GameObject*>& out, bool includeInactive) const {
+    return CollectInto(out, QueryFilter::RootsOnly(includeInactive));
+}
+
+std::size_t WorldQuery::CollectScene(
+        SceneInstanceId sceneId,
+        Array<GameObject*>& out,
+        bool includeInactive) const {
+    return CollectInto(out, QueryFilter::ForScene(sceneId, includeInactive));
 }
 
 }  // namespace Spark

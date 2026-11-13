@@ -11,7 +11,7 @@ namespace Spark {
 
 void VfxEmitterSpec::ApplyTo(ParticleEmitterComponent& emitterOut) const {
     if (UsesBuiltin()) {
-        VfxLibrary::TryApplyBuiltinByName(builtinName.CStr(), emitterOut);
+        (void)VfxLibrary::TryApplyBuiltinByName(builtinName.CStr(), emitterOut);
     } else {
         emitter.ApplyTo(emitterOut);
     }

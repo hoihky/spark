@@ -113,13 +113,13 @@ TilemapDocumentApplier::Result TilemapDocumentApplier::Apply(
         return result;
     }
 
-    SharedPtr<Texture2D> atlas = world.LoadTexture(texturePath.CStr());
+    SharedPtr<Texture2D> atlas = world.Assets().LoadTexture(texturePath.CStr());
     if (!atlas) {
         result.errorMessage = Utf8String("Failed to load tileset texture");
         result.errorMessage.AppendUtf8(texturePath.CStr());
         return result;
     }
-    static_cast<void>(world.RegisterTexture(atlas, texturePath.CStr()));
+    static_cast<void>(world.Assets().RegisterTexture(atlas, texturePath.CStr()));
 
     const std::uint32_t tilesU = primary->columns > 0U ? primary->columns : 1U;
     std::uint32_t tilesV = ComputeTilesV(*primary);

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "spark/physics/Collision2D.hpp"
+#include "spark/physics/2d/Collision2D.hpp"
 #include "spark/physics/core/PhysicsCore.hpp"
 
 using namespace Spark;
