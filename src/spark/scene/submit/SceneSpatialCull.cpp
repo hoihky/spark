@@ -1,6 +1,10 @@
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 
 #include "spark/core/Array.hpp"
+#include "spark/scene/spatial/BvhTree.hpp"
+#include "spark/scene/spatial/OctTree.hpp"
+#include "spark/scene/spatial/QuadTree.hpp"
+#include "spark/scene/spatial/SpatialBoundsUtil.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
@@ -13,10 +17,8 @@
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstdint>
-#include <vector>
 
 namespace Spark {
 
@@ -169,365 +171,19 @@ void BruteForceSkinnedCull(const Array<SkinnedRecord>& records, const Frustum& f
     }
 }
 
-struct BvhNode {
-    AxisAlignedBox bounds{};
-    int left = -1;
-    int right = -1;
-    int first = 0;
-    int count = 0;
-};
-
-[[nodiscard]] AxisAlignedBox BoundsOfRange(
-        const Array<DrawableRecord>& recs, const std::vector<int>& ids, int first, int count) {
-    AxisAlignedBox b{recs[static_cast<std::size_t>(ids[static_cast<std::size_t>(first)])].aabbMin,
-            recs[static_cast<std::size_t>(ids[static_cast<std::size_t>(first)])].aabbMax};
-    for (int i = 1; i < count; ++i) {
-        const DrawableRecord& r = recs[static_cast<std::size_t>(ids[static_cast<std::size_t>(first + i)])];
-        b = AxisAlignedBox::UnionOf(b, AxisAlignedBox{r.aabbMin, r.aabbMax});
-    }
-    return b;
-}
-
-[[nodiscard]] Vector3 Centroid(const DrawableRecord& r) {
-    return (r.aabbMin + r.aabbMax) * 0.5F;
-}
-
-int BuildBvhRecursive(const Array<DrawableRecord>& recs,
-        std::vector<int>& ids,
-        int first,
-        int count,
-        int depth,
-        int axisMode,
-        std::vector<BvhNode>& nodes,
-        int maxLeaf,
-        int maxDepth) {
-    const int nodeIndex = static_cast<int>(nodes.size());
-    BvhNode node{};
-    node.first = first;
-    node.count = count;
-    node.bounds = BoundsOfRange(recs, ids, first, count);
-    nodes.push_back(node);
-
-    if (count <= maxLeaf || depth >= maxDepth) {
-        return nodeIndex;
-    }
-
-    int axis = 0;
-    if (axisMode == 0) {
-        const Vector3 e = node.bounds.max - node.bounds.min;
-        axis = (e.x >= e.y && e.x >= e.z) ? 0 : (e.y >= e.z ? 1 : 2);
-    } else {
-        axis = depth % 3;
-    }
-
-    const int begin = first;
-    const int end = first + count;
-    const int midOff = count / 2;
-    std::nth_element(ids.begin() + begin, ids.begin() + begin + midOff, ids.begin() + end,
-            [&recs, axis](int a, int b) {
-                const Vector3 ca3 = Centroid(recs[static_cast<std::size_t>(a)]);
-                const Vector3 cb3 = Centroid(recs[static_cast<std::size_t>(b)]);
-                const float ca = axis == 0 ? ca3.x : (axis == 1 ? ca3.y : ca3.z);
-                const float cb = axis == 0 ? cb3.x : (axis == 1 ? cb3.y : cb3.z);
-                if (ca < cb) {
-                    return true;
-                }
-                if (cb < ca) {
-                    return false;
-                }
-                return a < b;
-            });
-    const int mid = first + count / 2;
-    const int leftCount = mid - first;
-    const int rightCount = count - leftCount;
-    if (leftCount == 0 || rightCount == 0) {
-        return nodeIndex;
-    }
-
-    const int L = BuildBvhRecursive(recs, ids, first, leftCount, depth + 1, axisMode, nodes, maxLeaf, maxDepth);
-    const int R = BuildBvhRecursive(recs, ids, mid, rightCount, depth + 1, axisMode, nodes, maxLeaf, maxDepth);
-    nodes[static_cast<std::size_t>(nodeIndex)].left = L;
-    nodes[static_cast<std::size_t>(nodeIndex)].right = R;
-    nodes[static_cast<std::size_t>(nodeIndex)].count = 0;
-    return nodeIndex;
-}
-
-void QueryBvh(const Array<DrawableRecord>& recs,
-        const std::vector<int>& ids,
-        const std::vector<BvhNode>& nodes,
-        int nodeIndex,
-        const Frustum& frustum,
-        DrawableFrustumSink& sink) {
-    if (nodeIndex < 0) {
-        return;
-    }
-    const BvhNode& n = nodes[static_cast<std::size_t>(nodeIndex)];
-    if (!frustum.Intersects(n.bounds)) {
-        return;
-    }
-    if (n.count > 0) {
-        for (int i = 0; i < n.count; ++i) {
-            const int pi = ids[static_cast<std::size_t>(n.first + i)];
-            const DrawableRecord& r = recs[static_cast<std::size_t>(pi)];
-            if (frustum.IntersectsAxisAlignedBox(r.aabbMin, r.aabbMax)) {
-                sink.OnDrawable(r.object, *r.mesh, r.material, r.world);
-            }
-        }
-        return;
-    }
-    QueryBvh(recs, ids, nodes, n.left, frustum, sink);
-    QueryBvh(recs, ids, nodes, n.right, frustum, sink);
-}
-
-// --- Octree: single placement when a child cell fully contains the drawable AABB ---
-
-struct OctNode {
-    AxisAlignedBox cell{};
-    std::vector<int> prims;
-    std::array<int, 8> children{};
-    OctNode() { children.fill(-1); }
-};
-
-[[nodiscard]] AxisAlignedBox OctantOf(const AxisAlignedBox& parent, int oct) {
-    const Vector3 c = (parent.min + parent.max) * 0.5F;
-    Vector3 mn = parent.min;
-    Vector3 mx = parent.max;
-    if ((oct & 1) != 0) {
-        mn.x = c.x;
-    } else {
-        mx.x = c.x;
-    }
-    if ((oct & 2) != 0) {
-        mn.y = c.y;
-    } else {
-        mx.y = c.y;
-    }
-    if ((oct & 4) != 0) {
-        mn.z = c.z;
-    } else {
-        mx.z = c.z;
-    }
-    return AxisAlignedBox{mn, mx};
-}
-
-[[nodiscard]] bool CellFullyContains(const AxisAlignedBox& cell, const Vector3& amin, const Vector3& amax) noexcept {
-    return amin.x >= cell.min.x && amax.x <= cell.max.x && amin.y >= cell.min.y && amax.y <= cell.max.y &&
-            amin.z >= cell.min.z && amax.z <= cell.max.z;
-}
-
-void OctInsert(std::vector<OctNode>& nodes,
-        int nodeIndex,
-        int prim,
-        const Array<DrawableRecord>& recs,
-        int depth,
-        int maxDepth,
-        int maxLeaf) {
-    OctNode& n = nodes[static_cast<std::size_t>(nodeIndex)];
-    const DrawableRecord& r = recs[static_cast<std::size_t>(prim)];
-
-    if (n.children[0] < 0 && (depth >= maxDepth || static_cast<int>(n.prims.size()) < maxLeaf)) {
-        n.prims.push_back(prim);
-        return;
-    }
-
-    if (n.children[0] < 0) {
-        const std::vector<int> old = std::move(n.prims);
-        n.prims.clear();
-        for (int o = 0; o < 8; ++o) {
-            OctNode child{};
-            child.cell = OctantOf(n.cell, o);
-            n.children[static_cast<std::size_t>(o)] = static_cast<int>(nodes.size());
-            nodes.push_back(child);
-        }
-        for (int p : old) {
-            OctInsert(nodes, nodeIndex, p, recs, depth, maxDepth, maxLeaf);
-        }
-    }
-
-    int targetChild = -1;
-    if (depth < maxDepth) {
-        for (int o = 0; o < 8; ++o) {
-            const int ci = n.children[static_cast<std::size_t>(o)];
-            if (CellFullyContains(nodes[static_cast<std::size_t>(ci)].cell, r.aabbMin, r.aabbMax)) {
-                targetChild = ci;
-                break;
-            }
-        }
-    }
-    if (targetChild >= 0) {
-        OctInsert(nodes, targetChild, prim, recs, depth + 1, maxDepth, maxLeaf);
-    } else {
-        n.prims.push_back(prim);
+void GatherDrawableBounds(const Array<DrawableRecord>& records, Array<AxisAlignedBox>& outBounds) {
+    outBounds.Clear();
+    outBounds.Reserve(records.GetSize());
+    for (std::size_t i = 0; i < records.GetSize(); ++i) {
+        const DrawableRecord& r = records[i];
+        outBounds.PushBack(AxisAlignedBox{r.aabbMin, r.aabbMax});
     }
 }
 
-void OctQuery(const std::vector<OctNode>& nodes,
-        int nodeIndex,
-        const Frustum& frustum,
-        const Array<DrawableRecord>& recs,
-        DrawableFrustumSink& sink) {
-    if (nodeIndex < 0 || nodeIndex >= static_cast<int>(nodes.size())) {
-        return;
-    }
-    const OctNode& n = nodes[static_cast<std::size_t>(nodeIndex)];
-    if (!frustum.Intersects(n.cell)) {
-        return;
-    }
-    for (int pi : n.prims) {
-        const DrawableRecord& r = recs[static_cast<std::size_t>(pi)];
-        if (frustum.IntersectsAxisAlignedBox(r.aabbMin, r.aabbMax)) {
-            sink.OnDrawable(r.object, *r.mesh, r.material, r.world);
-        }
-    }
-    for (int o = 0; o < 8; ++o) {
-        const int ci = n.children[static_cast<std::size_t>(o)];
-        if (ci >= 0) {
-            OctQuery(nodes, ci, frustum, recs, sink);
-        }
-    }
+void EmitDrawable(DrawableFrustumSink& sink, const Array<DrawableRecord>& records, int index) {
+    const DrawableRecord& r = records[static_cast<std::size_t>(index)];
+    sink.OnDrawable(r.object, *r.mesh, r.material, r.world);
 }
-
-// --- Quadtree on XZ (world vertical = Y); 3D frustum test at leaves ---
-
-struct QuadNode {
-    float minX = 0.0F;
-    float maxX = 0.0F;
-    float minZ = 0.0F;
-    float maxZ = 0.0F;
-    std::vector<int> prims;
-    std::array<int, 4> children{};
-    QuadNode() { children.fill(-1); }
-};
-
-[[nodiscard]] bool QuadCellFullyContains(float minX, float maxX, float minZ, float maxZ, const Vector3& amin, const Vector3& amax) noexcept {
-    return amin.x >= minX && amax.x <= maxX && amin.z >= minZ && amax.z <= maxZ;
-}
-
-void QuadChildBounds(
-        float pminX, float pmaxX, float pminZ, float pmaxZ, int quadrant, float& cminX, float& cmaxX, float& cminZ, float& cmaxZ) {
-    const float midX = (pminX + pmaxX) * 0.5F;
-    const float midZ = (pminZ + pmaxZ) * 0.5F;
-    switch (quadrant) {
-        case 0:
-            cminX = pminX;
-            cmaxX = midX;
-            cminZ = pminZ;
-            cmaxZ = midZ;
-            break;
-        case 1:
-            cminX = midX;
-            cmaxX = pmaxX;
-            cminZ = pminZ;
-            cmaxZ = midZ;
-            break;
-        case 2:
-            cminX = pminX;
-            cmaxX = midX;
-            cminZ = midZ;
-            cmaxZ = pmaxZ;
-            break;
-        default:
-            cminX = midX;
-            cmaxX = pmaxX;
-            cminZ = midZ;
-            cmaxZ = pmaxZ;
-            break;
-    }
-}
-
-void QuadInsert(std::vector<QuadNode>& nodes,
-        int nodeIndex,
-        int prim,
-        const Array<DrawableRecord>& recs,
-        int depth,
-        int maxDepth,
-        int maxLeaf) {
-    QuadNode& n = nodes[static_cast<std::size_t>(nodeIndex)];
-    const DrawableRecord& r = recs[static_cast<std::size_t>(prim)];
-
-    if (n.children[0] < 0 && (depth >= maxDepth || static_cast<int>(n.prims.size()) < maxLeaf)) {
-        n.prims.push_back(prim);
-        return;
-    }
-
-    if (n.children[0] < 0) {
-        const std::vector<int> old = std::move(n.prims);
-        n.prims.clear();
-        for (int q = 0; q < 4; ++q) {
-            QuadNode child{};
-            QuadChildBounds(n.minX, n.maxX, n.minZ, n.maxZ, q, child.minX, child.maxX, child.minZ, child.maxZ);
-            n.children[static_cast<std::size_t>(q)] = static_cast<int>(nodes.size());
-            nodes.push_back(child);
-        }
-        for (int p : old) {
-            QuadInsert(nodes, nodeIndex, p, recs, depth, maxDepth, maxLeaf);
-        }
-    }
-
-    int target = -1;
-    if (depth < maxDepth) {
-        for (int q = 0; q < 4; ++q) {
-            const int ci = n.children[static_cast<std::size_t>(q)];
-            const QuadNode& ch = nodes[static_cast<std::size_t>(ci)];
-            if (QuadCellFullyContains(ch.minX, ch.maxX, ch.minZ, ch.maxZ, r.aabbMin, r.aabbMax)) {
-                target = ci;
-                break;
-            }
-        }
-    }
-    if (target >= 0) {
-        QuadInsert(nodes, target, prim, recs, depth + 1, maxDepth, maxLeaf);
-    } else {
-        n.prims.push_back(prim);
-    }
-}
-
-void QuadQuery(const std::vector<QuadNode>& nodes,
-        int nodeIndex,
-        const Frustum& frustum,
-        const Array<DrawableRecord>& recs,
-        DrawableFrustumSink& sink) {
-    if (nodeIndex < 0 || nodeIndex >= static_cast<int>(nodes.size())) {
-        return;
-    }
-    const QuadNode& n = nodes[static_cast<std::size_t>(nodeIndex)];
-    const Vector3 qmn{n.minX, -1.0e9F, n.minZ};
-    const Vector3 qmx{n.maxX, 1.0e9F, n.maxZ};
-    if (!frustum.IntersectsAxisAlignedBox(qmn, qmx)) {
-        return;
-    }
-    for (int pi : n.prims) {
-        const DrawableRecord& r = recs[static_cast<std::size_t>(pi)];
-        if (frustum.IntersectsAxisAlignedBox(r.aabbMin, r.aabbMax)) {
-            sink.OnDrawable(r.object, *r.mesh, r.material, r.world);
-        }
-    }
-    for (int q = 0; q < 4; ++q) {
-        const int ci = n.children[static_cast<std::size_t>(q)];
-        if (ci >= 0) {
-            QuadQuery(nodes, ci, frustum, recs, sink);
-        }
-    }
-}
-
-[[nodiscard]] AxisAlignedBox UnionSceneBounds(const Array<DrawableRecord>& recs) {
-    if (recs.IsEmpty()) {
-        return AxisAlignedBox{Vector3::Zero, Vector3::Zero};
-    }
-    AxisAlignedBox b{recs[0].aabbMin, recs[0].aabbMax};
-    for (std::size_t i = 1; i < recs.GetSize(); ++i) {
-        b = AxisAlignedBox::UnionOf(b, AxisAlignedBox{recs[i].aabbMin, recs[i].aabbMax});
-    }
-    const Vector3 pad = (b.max - b.min) * 0.02F + Vector3{0.25F, 0.25F, 0.25F};
-    return AxisAlignedBox{b.min - pad, b.max + pad};
-}
-
-struct DrawableBvhCache {
-    std::size_t recordCount = 0;
-    std::uint64_t recordsFingerprint = 0;
-    std::vector<int> ids;
-    std::vector<BvhNode> nodes;
-};
 
 [[nodiscard]] std::uint64_t FingerprintDrawableRecords(const Array<DrawableRecord>& records) noexcept {
     std::uint64_t h = 1469598103934665603ULL;
@@ -554,6 +210,11 @@ void RunDrawableCull(
     if (records.IsEmpty()) {
         return;
     }
+    Array<AxisAlignedBox> bounds;
+    GatherDrawableBounds(records, bounds);
+    const AxisAlignedBox* boundsPtr = bounds.GetData();
+    const std::size_t count = bounds.GetSize();
+
     switch (mode) {
         case ScenePartitionKind::None:
             break;
@@ -561,58 +222,48 @@ void RunDrawableCull(
             BruteForceCull(records, frustum, sink);
             break;
         case ScenePartitionKind::BoundingVolumeHierarchy: {
-            static DrawableBvhCache cache{};
-            const std::uint64_t fingerprint = FingerprintDrawableRecords(records);
-            if (cache.recordCount != records.GetSize() || cache.recordsFingerprint != fingerprint) {
-                cache.ids.resize(records.GetSize());
-                for (std::size_t i = 0; i < records.GetSize(); ++i) {
-                    cache.ids[i] = static_cast<int>(i);
-                }
-                cache.nodes.clear();
-                cache.nodes.reserve(records.GetSize() * 2);
-                BuildBvhRecursive(records, cache.ids, 0, static_cast<int>(records.GetSize()), 0, 0, cache.nodes, 4, 24);
-                cache.recordCount = records.GetSize();
-                cache.recordsFingerprint = fingerprint;
-            }
-            QueryBvh(records, cache.ids, cache.nodes, 0, frustum, sink);
+            static BvhTree cache{};
+            BvhTree::BuildOptions opts{};
+            opts.maxLeafSize = 4;
+            opts.maxDepth = 24;
+            opts.splitPolicy = BvhTree::SplitPolicy::LongestExtent;
+            cache.BuildIfChanged(boundsPtr, count, FingerprintDrawableRecords(records), opts);
+            cache.QueryFrustum(frustum, boundsPtr, [&](const int idx) { EmitDrawable(sink, records, idx); });
             break;
         }
         case ScenePartitionKind::AxisAlignedBinarySpacePartition: {
-            std::vector<int> ids(records.GetSize());
-            for (std::size_t i = 0; i < records.GetSize(); ++i) {
-                ids[i] = static_cast<int>(i);
-            }
-            std::vector<BvhNode> nodes;
-            nodes.reserve(records.GetSize() * 2);
-            BuildBvhRecursive(records, ids, 0, static_cast<int>(records.GetSize()), 0, 1, nodes, 6, 28);
-            QueryBvh(records, ids, nodes, 0, frustum, sink);
+            BvhTree bsp{};
+            BvhTree::BuildOptions opts{};
+            opts.maxLeafSize = 6;
+            opts.maxDepth = 28;
+            opts.splitPolicy = BvhTree::SplitPolicy::CyclicByDepth;
+            bsp.Build(boundsPtr, count, opts);
+            bsp.QueryFrustum(frustum, boundsPtr, [&](const int idx) { EmitDrawable(sink, records, idx); });
             break;
         }
         case ScenePartitionKind::Octree: {
-            const AxisAlignedBox rootBox = UnionSceneBounds(records);
-            std::vector<OctNode> oct;
-            OctNode root{};
-            root.cell = rootBox;
-            oct.push_back(root);
-            for (std::size_t i = 0; i < records.GetSize(); ++i) {
-                OctInsert(oct, 0, static_cast<int>(i), records, 0, 14, 8);
+            OctTree oct{};
+            OctTree::Options octOpts{};
+            octOpts.maxDepth = 14;
+            octOpts.maxLeafSize = 8;
+            oct.Reset(SpatialBoundsUtil::UnionSceneItemsPadded(boundsPtr, count), octOpts);
+            for (std::size_t i = 0; i < count; ++i) {
+                oct.Insert(static_cast<int>(i), boundsPtr, count);
             }
-            OctQuery(oct, 0, frustum, records, sink);
+            oct.QueryFrustum(frustum, boundsPtr, [&](const int idx) { EmitDrawable(sink, records, idx); });
             break;
         }
         case ScenePartitionKind::QuadTree: {
-            const AxisAlignedBox u = UnionSceneBounds(records);
-            std::vector<QuadNode> qt;
-            QuadNode root{};
-            root.minX = u.min.x;
-            root.maxX = u.max.x;
-            root.minZ = u.min.z;
-            root.maxZ = u.max.z;
-            qt.push_back(root);
-            for (std::size_t i = 0; i < records.GetSize(); ++i) {
-                QuadInsert(qt, 0, static_cast<int>(i), records, 0, 16, 10);
+            const AxisAlignedBox root = SpatialBoundsUtil::UnionSceneItemsPadded(boundsPtr, count);
+            QuadTree quad{};
+            QuadTree::Options quadOpts{};
+            quadOpts.maxDepth = 16;
+            quadOpts.maxLeafSize = 10;
+            quad.Reset(root.min.x, root.max.x, root.min.z, root.max.z, quadOpts);
+            for (std::size_t i = 0; i < count; ++i) {
+                quad.Insert(static_cast<int>(i), boundsPtr, count);
             }
-            QuadQuery(qt, 0, frustum, records, sink);
+            quad.QueryFrustum(frustum, boundsPtr, [&](const int idx) { EmitDrawable(sink, records, idx); });
             break;
         }
     }

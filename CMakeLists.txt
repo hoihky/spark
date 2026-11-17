@@ -768,6 +768,10 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/foliage/GrassFieldComponent.cpp
         src/spark/scene/assets/GameWorldAssetCache.cpp
         src/spark/scene/query/SpatialMath.cpp
+        src/spark/scene/spatial/BvhTree.cpp
+        src/spark/scene/spatial/OctTree.cpp
+        src/spark/scene/spatial/QuadTree.cpp
+        src/spark/scene/spatial/SpatialBoundsUtil.cpp
         src/spark/scene/submit/SceneSpatialCull.cpp
         src/spark/scene/submit/SceneSpriteTileCull.cpp
         src/spark/scene/texture/SceneTileAtlas.cpp
