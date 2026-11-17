@@ -221,7 +221,7 @@ opts.WithDirectionalLight(sunDir, sunColor, sunIntensity).WithSceneTime(sceneTim
 Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor)
     .WithShadowCascades(0.12F, 1200.0F)
     .WithShadowDistanceFade(150.0F)
-    .ApplyTo(params);  // optional: or chain on LitSceneBuilder
+    .ApplyTo(params);  // optional: or chain on LitScene::Builder
 
 Spark::LitScene::Builder(world, context)
     .WithLightingSetup(Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor))

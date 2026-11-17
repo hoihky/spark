@@ -11,6 +11,10 @@
 
 These are listed in **`.gitignore`**.
 
+## Scene submit docs
+
+Interop and factoring notes use the same placeholder paths as build scripts: [SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md), [CSHARP_SCENE_SUBMIT_SYNC.md](CSHARP_SCENE_SUBMIT_SYNC.md).
+
 ## Source and scripts (conventions)
 
 - **CMake / presets** use `${sourceDir}`, `CMAKE_BINARY_DIR`, and options — no hardcoded user paths.

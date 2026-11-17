@@ -40,8 +40,9 @@ Nothing in this tree is orphaned; overlap was **organizational** (spawn vs load 
 | `world.QueryObjects().CollectWithTag` | `CollectGameObjects` / `FindGameObjectWithTag` |
 | `load/SceneLoadSession` | Calling `SceneManager` pump manually only |
 
-## Refactor notes (2025)
+## Refactor notes (2025–2026)
 
 - **`spawn/`** and **`load/`** are the public include paths (e.g. `spark/scene/core/load/SceneManager.hpp`).
 - **`SpawnPoint*Service`** implementations live in `SceneSpawn.cpp` / `SceneSpawn2D.cpp` (single TU per axis).
 - Removed unused **`WorldSceneIteration.hpp`** — use `world.Entities()` directly.
+- **GPU submit** lives under `spark/scene/submit/` (not `scene/core`). Spatial indexes: `spark/scene/spatial/` — see [SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md).

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Update #include paths after scene folder reorganization."""
+"""Update #include paths after scene folder reorganization (historical migration helper).
+
+See docs/SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md for the current submit/spatial layout.
+"""
 from __future__ import annotations
 
 import re

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Reorganize spark/scene into functional subfolders.
+# One-time git-mv helper for an older scene layout migration (paths inside may predate LitSceneSubmitter / SceneDrawListSorter).
+# Current map: docs/SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md — do not re-run unless you are replaying that migration.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

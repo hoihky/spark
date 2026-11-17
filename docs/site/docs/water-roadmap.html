@@ -496,7 +496,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <article class="doc-body">
         <h1 id="water-engine-roadmap-tracked-tasks">Water — Engine Roadmap &amp; Tracked Tasks</h1>
 <p>Living plan for <strong>realistic water surfaces</strong>, <strong>wave simulation</strong>, <strong>shoreline integration</strong>, and <strong>gameplay coupling</strong> (buoyancy, swimming, splashes). It complements atmosphere/weather items in <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase D) and rendering gaps in <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a>.</p>
-<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.7 (terrain/sky), <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> (HDR frame flow, transparent pass), <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a> (PBR / IBL), <code>include/spark/engine/SceneRenderParams.hpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>src/spark/render/core/VulkanRenderer.cpp</code>, <code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code>, <code>shaders/scene.frag</code>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.7 (terrain/sky), <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a> (HDR frame flow, transparent pass), <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a> (PBR / IBL), <code>include/spark/engine/SceneRenderParams.hpp</code>, <code>src/spark/scene/submit/</code> (<code>SceneWaterSubmit</code>, <code>SceneDrawListSorter</code>), <code>src/spark/render/core/VulkanRenderer.cpp</code>, <code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code>, <code>shaders/scene.frag</code>.</p>
 <p><strong>Related gameplay systems:</strong> <code>TerrainComponent</code> (shore height), <code>VfxLibrary::WaterSplash</code>, <code>PhysicsQueryWorld3D</code>, <code>CharacterController3DComponent</code>, <code>FogVolumeComponent</code>, <code>PostProcessVolumeComponent</code>.</p>
 <p><strong>Non-goals (defer):</strong> full Navier–Stokes fluid simulation, large-scale ocean CFD, city-scale fluid coupling.</p>
 <hr />
@@ -1429,7 +1429,7 @@ done
 <td>Draw lists, fog, IBL, SSAO flags</td>
 </tr>
 <tr>
-<td><code>src/spark/scene/SceneSubmitDrawPartition.cpp</code></td>
+<td><code>src/spark/scene/submit/SceneDrawListSorter.cpp</code></td>
 <td>Opaque vs transparent partition</td>
 </tr>
 <tr>

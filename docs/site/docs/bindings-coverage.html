@@ -567,6 +567,7 @@ python3 tools/scan-cpp-component-api.py
 </tbody>
 </table>
 <p>Non-component engine APIs (Vulkan, <code>IEngineContext</code>, editor, raw physics world) remain C++-only unless added manually to <strong><code>SparkInterop.h</code></strong>.</p>
+<p><strong>Scene submit / spatial (2026):</strong> C++ refactor (<code>LitSceneSubmitter</code>, <code>spark/scene/spatial</code>, <code>SceneDrawListSorter</code>) stays native-internal. Script surface: <code>LitSceneSubmitOptions</code>, <code>LitScene.Builder</code>, camera resolve, frustum flag — see <strong><a href="csharp-scene-submit-sync.html">CSHARP_SCENE_SUBMIT_SYNC.md</a></strong> and <strong><a href="scene-submit-and-spatial-refactor.html">SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md</a></strong>.</p>
 <h2 id="closing-a-gap">Closing a gap</h2>
 <ol>
 <li>Add <code>{ "suffix", "member" }</code> to <strong><code>component-script-catalog.json</code></strong> in <strong>spark-sharp</strong> and implement the C++ member in <strong><code>include/spark/ecs/components/...</code></strong> (this repo).</li>

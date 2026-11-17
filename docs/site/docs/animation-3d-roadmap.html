@@ -496,7 +496,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <article class="doc-body">
         <h1 id="3d-animation-engine-roadmap-tracked-tasks">3D Animation — Engine Roadmap &amp; Tracked Tasks</h1>
 <p>Living plan for <strong>skeletal mesh playback</strong>, <strong>gameplay-driven clip control</strong>, <strong>blending</strong>, <strong>events</strong>, and <strong>scale</strong>. It complements the high-level traversal/combat items in <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> (Phase F) with concrete engine work items, and the cross-system gap summary in <a href="3d-action-game-gaps.html"><code>3D_ACTION_GAME_GAPS.md</code></a>.</p>
-<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.8, <a href="animation-sample-assets.html"><code>ANIMATION_SAMPLE_ASSETS.md</code></a>, <code>include/spark/animation/Skeleton.hpp</code>, <code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code>, <code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>src/spark/scene/SceneSubmit*.cpp</code>, <code>shaders/scene.vert</code>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.8, <a href="animation-sample-assets.html"><code>ANIMATION_SAMPLE_ASSETS.md</code></a>, <code>include/spark/animation/Skeleton.hpp</code>, <code>include/spark/ecs/components/animation/AnimatorComponent.hpp</code>, <code>include/spark/ecs/components/animation/Character3DAnimFsmComponent.hpp</code>, <code>src/spark/scene/skinned_mesh_gltf.cpp</code>, <code>src/spark/scene/submit/</code> (<code>LitSceneSubmitter</code>, <code>SceneMeshSubmitCollectors</code>), <code>shaders/scene.vert</code>.</p>
 <p><strong>2D reference (target parity for gameplay drivers):</strong> <code>SpriteAnimatorComponent</code>, <code>Sprite2DCharacterAnimFsmComponent</code> — see <a href="2d-arpg-features.html"><code>2D_ARPG_FEATURES.md</code></a>.</p>
 <hr />
 <h2 id="how-to-track-work">How to track work</h2>
@@ -1276,19 +1276,23 @@ done
 <td>2D FSM pattern to mirror</td>
 </tr>
 <tr>
-<td><code>src/spark/scene/SceneSubmit.cpp</code></td>
-<td>Skinned draw submission (core walk)</td>
+<td><code>src/spark/scene/submit/SceneSubmit.cpp</code></td>
+<td>Thin wrappers to <code>LitSceneSubmitter</code></td>
 </tr>
 <tr>
-<td><code>src/spark/scene/SceneSubmitLighting.cpp</code></td>
+<td><code>src/spark/scene/submit/LitSceneSubmitter.cpp</code></td>
+<td>Skinned + rigid collect inside full-world fill</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/submit/SceneSubmitLighting.cpp</code></td>
 <td>Directional light / profile overrides during submit</td>
 </tr>
 <tr>
-<td><code>src/spark/scene/SceneSubmitMaterial.cpp</code></td>
+<td><code>src/spark/scene/submit/SceneSubmitMaterial.cpp</code></td>
 <td>Material texture resolve into <code>sceneTextures</code></td>
 </tr>
 <tr>
-<td><code>src/spark/scene/SceneSubmitDrawPartition.cpp</code></td>
+<td><code>src/spark/scene/submit/SceneDrawListSorter.cpp</code></td>
 <td>Opaque vs transparent draw partition</td>
 </tr>
 <tr>

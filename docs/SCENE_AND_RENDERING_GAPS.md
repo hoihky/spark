@@ -36,7 +36,7 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 |-----|------|
 | `FillStandardLitSceneFromWorld` | Walk ECS → fill `SceneRenderParams` (optional `Scene*` for frustum culling) |
 | `SubmitStandardLitSceneFromWorld` | Fill + `IEngineContext::SetSceneRenderParams` |
-| `SceneSubmitLighting.cpp` / `SceneSubmitMaterial.cpp` / `SceneSubmitDrawPartition.cpp` | Lighting overrides, material texture resolve, opaque/transparent partition |
+| `LitSceneSubmitter` + `SceneSubmitLighting.cpp` / `SceneSubmitMaterial.cpp` / `SceneDrawListSorter.cpp` | Fill orchestration, lighting/material resolve, opaque/transparent partition ([refactor log](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md)) |
 | `ApplyMaterialComponentToSceneDrawItem` | Map `MaterialComponent` textures/scalars onto `SceneDrawItem` |
 | `PaintUiCanvases` / `ProcessUiCanvasesInput` | Retained UI → params + input |
 

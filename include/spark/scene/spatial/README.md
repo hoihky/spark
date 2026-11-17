@@ -11,4 +11,4 @@ Reusable acceleration structures for axis-aligned bounds:
 
 Frustum queries call `QueryFrustum(frustum, boundsArray, onIndex)` with conservative per-leaf tests.
 
-Primary consumer: `SceneSpatialCull.cpp` (`ScenePartitionKind::*`).
+Primary consumer: `src/spark/scene/submit/SceneSpatialCull.cpp` (`ScenePartitionKind::*`). Overview: `docs/SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md`.

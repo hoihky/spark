@@ -11,6 +11,10 @@
 | [**GLTF_DISPLAY_ROADMAP.md**](GLTF_DISPLAY_ROADMAP.md) | Rendering / assets | glTF display compatibility phases and test matrix |
 | [**ARCHITECTURE_AND_DEVELOPER_GUIDE.md**](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine & gameplay devs | Loop, ECS, rendering, feature catalog |
 | [**SCENE_AND_RENDERING_GAPS.md**](SCENE_AND_RENDERING_GAPS.md) | Gameplay devs | C++ public API gaps — scene, ECS, rendering (`include/spark/`) |
+| [**SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md**](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md) | Engine devs | Submit pipeline + spatial tree factoring; C# sync pointers |
+| [**CSHARP_SCENE_SUBMIT_SYNC.md**](CSHARP_SCENE_SUBMIT_SYNC.md) | Scripting | C# surface for lit submit after native refactor |
+| [**MODULE_LAYOUT.md**](MODULE_LAYOUT.md) | Engine devs | Include path moves (`memory` → `core`, `scene/submit`, …) |
+| [**API_POLISH.md**](API_POLISH.md) | API design | Facades / legacy aliases tracker |
 | [**CLION.md**](CLION.md) | IDE users | CMake presets, editor-debug profile |
 | [**SPARK_EDITOR_PLAN.md**](SPARK_EDITOR_PLAN.md) | Editor contributors | Godot-style editor milestones M0–M6; scene save/load, `project.spark`, glTF prefab overrides |
 | [**VFX_ROADMAP.md**](VFX_ROADMAP.md) | VFX / gameplay | Particle system phases P1–P5, built-in effects, `VfxLibrary` |

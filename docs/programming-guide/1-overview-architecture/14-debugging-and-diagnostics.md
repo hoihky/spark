@@ -85,7 +85,7 @@ Do not disable validation to “fix” errors; adjust submit/sanitize paths inst
 
 ## Scene submit sanitization
 
-`SceneRenderParams::Sanitize()` clamps unsafe lighting, fog, SSAO, and budget fields before Vulkan records draws. Demos that push extreme exposure or particle counts should still call sanitize via `SubmitStandardLitSceneFromWorld` / `LitSceneBuilder`.
+`SceneRenderParams::Sanitize()` clamps unsafe lighting, fog, SSAO, and budget fields before Vulkan records draws. Demos that push extreme exposure or particle counts should still call sanitize via `SubmitStandardLitSceneFromWorld` / `LitScene::Builder` / `LitScene::Submit`.
 
 ### C++
 

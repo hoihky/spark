@@ -1,6 +1,6 @@
 # `spark/scene/submit`
 
-ECS → `SceneRenderParams` for the standard lit renderer.
+ECS → `SceneRenderParams` for the standard lit renderer. Refactor log: `docs/SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md`.
 
 ## Layers (what to use)
 

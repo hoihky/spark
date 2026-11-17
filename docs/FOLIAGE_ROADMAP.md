@@ -2,7 +2,7 @@
 
 Living plan for **grass fields**, **wind-reactive tree foliage**, **GPU instancing**, and **LOD/impostors** at open-world scale without melting the forward renderer. Complements [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) Phase C (LOD/visibility) and Phase D (weather/wind), and shares a global **wind field** with [`WATER_ROADMAP.md`](WATER_ROADMAP.md).
 
-**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.7 (terrain/sky), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) (instancing gap), [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), `include/spark/engine/SceneRenderParams.hpp`, `src/spark/scene/SceneSubmit*.cpp`, `src/spark/scene/submit/SceneSpatialCull.cpp`, `src/spark/render/sprites2d/VulkanTilemapPass.cpp` (2D instancing reference), `src/spark/render/scene/VulkanSceneOpaquePass.cpp`, `shaders/scene.vert`, `shaders/scene.frag`.
+**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.7 (terrain/sky), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) (instancing gap), [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), `include/spark/engine/SceneRenderParams.hpp`, `src/spark/scene/submit/` (`LitSceneSubmitter`, foliage collect), `src/spark/scene/submit/SceneSpatialCull.cpp`, `src/spark/render/sprites2d/VulkanTilemapPass.cpp` (2D instancing reference), `src/spark/render/scene/VulkanSceneOpaquePass.cpp`, `shaders/scene.vert`, `shaders/scene.frag`.
 
 **Related content:** Khronos sample trees `assets/models/Tree_1_C_Color1.gltf`, `Tree_3_A_Color1.gltf` (placed per-entity in `CharacterCameraDemo` today); `TerrainComponent` for height/slope masks; `BillboardComponent` for impostor direction.
 

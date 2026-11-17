@@ -1,6 +1,8 @@
 # C# sync: scene submit & spatial (engine refactor)
 
-Companion repo: **[spark-sharp](../SPARK_SHARP.md)**. Regenerate ClangSharp bindings after editing `SparkInterop.h` / `SparkInteropTypes.h`.
+Companion repo: **[spark-sharp](../SPARK_SHARP.md)**. Engine-side factoring log: **[SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md)**. Regenerate ClangSharp bindings after editing `SparkInterop.h` / `SparkInteropTypes.h`.
+
+**Privacy:** use `SPARK_ENGINE_ROOT=/path/to/spark` in examples; run `./tools/check-paths-privacy.sh` in each repo before push ([PATHS_AND_PRIVACY.md](PATHS_AND_PRIVACY.md)).
 
 ## C++ changes consolidated
 
@@ -44,3 +46,10 @@ Set `LitSceneSubmitOptions.UseSceneFrustumCulling = true` before fill/submit. Na
 - `SparkScenePartitionKind` / `SparkLitSceneSubmitOptions` in `SparkInteropTypes.h`
 
 See **spark-sharp** `docs/C_SHARP_API.md` for usage examples.
+
+### C# bindings quirks
+
+- **`Vector3`** is a readonly struct in generated bindings — use object initializers (`new Vector3 { X = …, Y = …, Z = … }`), not `new Vector3(x, y, z)`.
+- **`FromNative`** on blittable structs: pass by value in hand-written wrappers (generated P/Invoke may not accept `in` on argument 1).
+
+*Last updated: 2026-11.*

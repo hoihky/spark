@@ -553,7 +553,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Components:</strong> <code>spark/ecs/components/</code> — domain subfolders (<code>core/</code>, <code>rendering/</code>, <code>lighting/</code>, <code>camera/</code>, <code>physics/2d|3d/</code>, <code>animation/</code>, <code>ai/</code>, <code>audio/</code>, <code>ui/</code>, <code>world/</code>).</li>
 <li><strong>Math &amp; containers:</strong> <code>spark/math/</code>, <code>spark/core/</code>, <code>spark/core/</code> (<code>SharedPtr</code>, <code>UniquePtr</code>, <code>Array</code>, <code>Utf8String</code>, <code>Optional</code>, <code>Function</code>, <code>HashMap</code>, <code>Queue</code>).</li>
 <li><strong>Rendering contract:</strong> <code>spark/engine/SceneRenderParams.hpp</code> — what the GPU path consumes each frame.</li>
-<li><strong>Fast path for lit scenes:</strong> <code>spark/scene/submit/SceneSubmit.hpp</code> — <code>SubmitStandardLitSceneFromWorld</code> (implementation split across <code>SceneSubmit.cpp</code>, <code>SceneSubmitLighting.cpp</code>, <code>SceneSubmitMaterial.cpp</code>, <code>SceneSubmitDrawPartition.cpp</code>).</li>
+<li><strong>Fast path for lit scenes:</strong> <code>spark/scene/submit/SceneSubmit.hpp</code> — <code>SubmitStandardLitSceneFromWorld</code> (<code>LitSceneSubmitter</code>, <code>SceneMeshSubmitCollectors</code>, <code>SceneDrawListSorter</code>, <code>SceneSubmitMaterial.cpp</code>, …). See <code>include/spark/scene/submit/README.md</code>.</li>
 </ul>
 <hr />
 <h2 id="3-build-run-c">3. Build &amp; Run (C++)</h2>
@@ -849,7 +849,7 @@ cmake --build cmake-build-debug -j
 <tr>
 <td><strong>Lit scene facade</strong></td>
 <td>Fluent camera + lighting + submit</td>
-<td><code>LitSceneBuilder</code>, <code>LitSceneSubmitOptions</code> (<code>spark/scene/submit/</code>)</td>
+<td><code>LitScene::Builder</code>, <code>LitSceneSubmitOptions</code> (<code>LitScene.hpp</code>)</td>
 </tr>
 <tr>
 <td><strong>Lighting preset setup</strong></td>
@@ -871,7 +871,7 @@ cmake --build cmake-build-debug -j
 <p>Gap analysis (more light types, material channels, IBL, caps): <a href="materials-and-lighting.html"><code>MATERIALS_AND_LIGHTING.md</code></a>.</p>
 <h4 id="recommended-lit-scene-path-additive-api">Recommended lit-scene path (additive API)</h4>
 <p>Existing positional APIs are unchanged. For new gameplay code, prefer the options struct or builder:</p>
-<pre><code class="language-cpp">#include &quot;spark/scene/submit/LitSceneBuilder.hpp&quot;
+<pre><code class="language-cpp">#include &quot;spark/scene/submit/LitScene.hpp&quot;
 #include &quot;spark/scene/submit/LitSceneSubmitOptions.hpp&quot;
 #include &quot;spark/render/lighting/SceneLightingSetup.hpp&quot;
 
@@ -881,9 +881,9 @@ opts.WithDirectionalLight(sunDir, sunColor, sunIntensity).WithSceneTime(sceneTim
 Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor)
     .WithShadowCascades(0.12F, 1200.0F)
     .WithShadowDistanceFade(150.0F)
-    .ApplyTo(params);  // optional: or chain on LitSceneBuilder
+    .ApplyTo(params);  // optional: or chain on LitScene::Builder
 
-Spark::LitSceneBuilder(world, context)
+Spark::LitScene::Builder(world, context)
     .WithLightingSetup(Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor))
     .WithOptions(opts)
     .WithCameraFromWorld()

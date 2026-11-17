@@ -83,7 +83,7 @@ Spark has a **solid prototype foundation**: skeletal playback, forward PBR, addi
 | Capability | Evidence |
 |------------|----------|
 | Full PBR material model (albedo, normal, ORM, emissive, AO) | `include/spark/ecs/components/rendering/MaterialComponent.hpp`, `shaders/scene.frag` |
-| Per-draw texture layers via push constants + 32-layer array | `include/spark/render/scene/VulkanSceneDescriptors.hpp`, `src/spark/scene/SceneSubmitMaterial.cpp` |
+| Per-draw texture layers via push constants + 32-layer array | `include/spark/render/scene/VulkanSceneDescriptors.hpp`, `src/spark/scene/submit/SceneSubmitMaterial.cpp` |
 | glTF PBR material import (base color, normal, ORM, emissive + factors) | `include/spark/scene/material/GltfMaterial.hpp`, `src/spark/scene/gltf_material.cpp` |
 | Mipmapped scene texture array (GPU blit or uploaded mips) | `src/spark/render/scene/VulkanSceneTextureUploader.cpp` |
 | BC7 runtime encode + ASTC via KTX2 (`Texture2D::TryLoadFromKtx2File`) | `src/spark/scene/texture_block_compression.cpp`, `src/spark/scene/texture_ktx2.cpp` |
@@ -135,7 +135,7 @@ See `include/spark/engine/SceneRenderParams.hpp` (`MaxSceneTextures = 32`) and `
 | `SceneManager` — additive/replace load, async assets | `include/spark/scene/core/load/SceneManager.hpp`, `include/spark/scene/assets/GameWorldAssetLoader.hpp` |
 | `spark_scene_v4` text serialization | `include/spark/scene/serialization/SceneDocument.hpp`, `SceneSerializer.hpp` |
 | ~28 component snapshot handlers | `src/spark/scene/serialization/ComponentSnapshotRegistry.cpp` |
-| Frustum spatial culling (BVH/octree/etc.) | `include/spark/scene/core/ScenePartitionKind.hpp`, `src/spark/scene/SceneSpatialCull.cpp` |
+| Frustum spatial culling (BVH/octree/etc.) | `include/spark/scene/core/ScenePartitionKind.hpp`, `include/spark/scene/spatial/`, `src/spark/scene/submit/SceneSpatialCull.cpp` |
 | 3D trigger volumes | `include/spark/ecs/components/physics3d/TriggerVolume3DComponent.hpp` |
 | Editor prototype save/load | `src/spark/demo/SceneEditor3DDemo.cpp` |
 | Regional fog/post volumes | `include/spark/scene/volume/RenderVolumes.hpp` |

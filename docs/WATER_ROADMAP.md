@@ -2,7 +2,7 @@
 
 Living plan for **realistic water surfaces**, **wave simulation**, **shoreline integration**, and **gameplay coupling** (buoyancy, swimming, splashes). It complements atmosphere/weather items in [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) (Phase D) and rendering gaps in [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md).
 
-**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.7 (terrain/sky), [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (HDR frame flow, transparent pass), [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md) (PBR / IBL), `include/spark/engine/SceneRenderParams.hpp`, `src/spark/scene/SceneSubmit*.cpp`, `src/spark/render/core/VulkanRenderer.cpp`, `src/spark/render/scene/VulkanSceneOpaquePass.cpp`, `shaders/scene.frag`.
+**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.7 (terrain/sky), [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) (HDR frame flow, transparent pass), [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md) (PBR / IBL), `include/spark/engine/SceneRenderParams.hpp`, `src/spark/scene/submit/` (`SceneWaterSubmit`, `SceneDrawListSorter`), `src/spark/render/core/VulkanRenderer.cpp`, `src/spark/render/scene/VulkanSceneOpaquePass.cpp`, `shaders/scene.frag`.
 
 **Related gameplay systems:** `TerrainComponent` (shore height), `VfxLibrary::WaterSplash`, `PhysicsQueryWorld3D`, `CharacterController3DComponent`, `FogVolumeComponent`, `PostProcessVolumeComponent`.
 
@@ -413,7 +413,7 @@ done
 | Path | Role |
 |------|------|
 | `include/spark/engine/SceneRenderParams.hpp` | Draw lists, fog, IBL, SSAO flags |
-| `src/spark/scene/SceneSubmitDrawPartition.cpp` | Opaque vs transparent partition |
+| `src/spark/scene/submit/SceneDrawListSorter.cpp` | Opaque vs transparent partition |
 | `src/spark/render/scene/VulkanSceneOpaquePass.cpp` | Opaque HDR + transparent/transmission |
 | `src/spark/render/core/VulkanRenderer.cpp` | Pass composition |
 | `include/spark/render/post/VulkanScreenSpaceEffectsPass.hpp` | Depth copy pattern (SSAO) |

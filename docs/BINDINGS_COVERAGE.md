@@ -38,7 +38,7 @@ These patterns are skipped by bindgen (`validate_component_script_catalog.py` / 
 
 Non-component engine APIs (Vulkan, `IEngineContext`, editor, raw physics world) remain C++-only unless added manually to **`SparkInterop.h`**.
 
-**Scene submit / spatial (Nov 2025):** C++ refactor (`LitSceneSubmitter`, `spark/scene/spatial`, `SceneDrawListSorter`) stays native-internal. Script surface: `LitSceneSubmitOptions`, `LitScene.Builder`, camera resolve, frustum flag — see **[CSHARP_SCENE_SUBMIT_SYNC.md](CSHARP_SCENE_SUBMIT_SYNC.md)**.
+**Scene submit / spatial (2026):** C++ refactor (`LitSceneSubmitter`, `spark/scene/spatial`, `SceneDrawListSorter`) stays native-internal. Script surface: `LitSceneSubmitOptions`, `LitScene.Builder`, camera resolve, frustum flag — see **[CSHARP_SCENE_SUBMIT_SYNC.md](CSHARP_SCENE_SUBMIT_SYNC.md)** and **[SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md)**.
 
 ## Closing a gap
 
