@@ -1,5 +1,7 @@
 #include "spark/scene/submit/SceneTilemapSubmit.hpp"
 
+#include "spark/scene/submit/SceneDrawListSorter.hpp"
+
 #include "spark/ecs/components/tilemap/TilemapAutotileComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp"
 #include "spark/scene/submit/DrawableSortKey.hpp"
@@ -13,9 +15,7 @@
 
 namespace Spark {
 
-namespace {
-
-void FillAtlasFields(const TilemapComponent& tilemap, SceneTilemapDraw& draw) noexcept {
+void SceneTilemapSubmit::FillAtlasFields(const TilemapComponent& tilemap, SceneTilemapDraw& draw) noexcept {
     draw.atlasTilesU = tilemap.GetAtlasTilesU();
     draw.atlasTilesV = tilemap.GetAtlasTilesV();
     if (const SharedPtr<Tileset>& tileset = tilemap.GetTileset(); tileset) {
@@ -37,33 +37,7 @@ void FillAtlasFields(const TilemapComponent& tilemap, SceneTilemapDraw& draw) no
     }
 }
 
-}  // namespace
-
-void SceneTilemapSubmitter::StableSortTilemapDraws(Array<SceneTilemapDraw>& draws) noexcept {
-    const auto moreInFront = [](const SceneTilemapDraw& a, const SceneTilemapDraw& b) noexcept -> bool {
-        const DrawableSortKey keyA{a.sortingLayerOrder, a.sortOrderBase};
-        const DrawableSortKey keyB{b.sortingLayerOrder, b.sortOrderBase};
-        if (DrawableSortMoreInFront(keyA, keyB)) {
-            return true;
-        }
-        if (DrawableSortMoreInFront(keyB, keyA)) {
-            return false;
-        }
-        return a.sortWorldYAnchor < b.sortWorldYAnchor;
-    };
-    const std::size_t n = draws.GetSize();
-    for (std::size_t i = 1; i < n; ++i) {
-        SceneTilemapDraw key = draws[i];
-        std::size_t j = i;
-        while (j > 0 && moreInFront(draws[j - 1], key)) {
-            draws[j] = draws[j - 1];
-            --j;
-        }
-        draws[j] = key;
-    }
-}
-
-void SceneTilemapSubmitter::Submit(
+void SceneTilemapSubmit::Submit(
         GameWorld& world,
         SceneRenderParams& params,
         const SceneSpriteTileCull& cull,
@@ -165,7 +139,7 @@ void SceneTilemapSubmitter::Submit(
         }
     });
 
-    StableSortTilemapDraws(params.tilemaps);
+    SceneDrawListSorter::StableSortTilemaps(params.tilemaps);
 }
 
 }  // namespace Spark

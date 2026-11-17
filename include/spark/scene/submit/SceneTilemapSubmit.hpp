@@ -11,13 +11,13 @@
 namespace Spark {
 
 class GameWorld;
-class TilemapComponent;
+class TilemapComponent;  // FillAtlasFields
 
 /**
  * Walks ECS tilemaps and fills <c>SceneRenderParams::tilemaps</c> plus the shared
  * <c>tilemapTiles</c> pool with view-culled tile instances.
  */
-class SceneTilemapSubmitter {
+class SceneTilemapSubmit {
 public:
     using FindTextureLayerFn = Function<std::int32_t(const SharedPtr<Texture2D>&)>;
     using ResolveBlendModeFn = Function<SceneBlendMode(const GameObject&)>;
@@ -29,7 +29,8 @@ public:
             const FindTextureLayerFn& findTextureLayer,
             const ResolveBlendModeFn& resolveBlendMode) const noexcept;
 
-    static void StableSortTilemapDraws(Array<SceneTilemapDraw>& draws) noexcept;
+private:
+    static void FillAtlasFields(const TilemapComponent& tilemap, SceneTilemapDraw& draw) noexcept;
 };
 
 }  // namespace Spark

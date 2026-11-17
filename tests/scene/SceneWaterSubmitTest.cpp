@@ -8,7 +8,7 @@
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/scene/submit/SceneWaterSubmit.hpp"
 
 namespace {
 
@@ -36,7 +36,7 @@ TEST(SceneWaterSubmitTest, WaterBodyReceivesDirectionalShadowsByDefault) {
         return -1;
     };
 
-    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+    Spark::SceneWaterSubmit{}.SubmitFromWorld(
             world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
 
     EXPECT_EQ(params.waterDraws.GetSize(), 1U);
@@ -56,7 +56,7 @@ TEST(SceneWaterSubmitTest, WaterBodySkipsShadowReceiveWhenDisabled) {
         return -1;
     };
 
-    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+    Spark::SceneWaterSubmit{}.SubmitFromWorld(
             world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
 
     EXPECT_EQ(params.waterDraws.GetSize(), 1U);
@@ -76,7 +76,7 @@ TEST(SceneWaterSubmitTest, WaterMaterialCanDisableShadowReceive) {
         return -1;
     };
 
-    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+    Spark::SceneWaterSubmit{}.SubmitFromWorld(
             world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
 
     EXPECT_EQ(params.waterDraws.GetSize(), 1U);
@@ -93,7 +93,7 @@ TEST(SceneWaterSubmitTest, WaterDrawsSortFartherFirst) {
         return -1;
     };
 
-    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+    Spark::SceneWaterSubmit{}.SubmitFromWorld(
             world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
 
     EXPECT_EQ(params.waterDraws.GetSize(), 2U);
@@ -115,7 +115,7 @@ TEST(SceneWaterSubmitTest, OpaquePartitionExcludesWaterMeshes) {
     const auto findTex = [](const Spark::SharedPtr<Spark::Texture2D>&, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
         return -1;
     };
-    Spark::SceneSubmitDetail::SubmitWaterBodiesFromWorld(
+    Spark::SceneWaterSubmit{}.SubmitFromWorld(
             world, Spark::Matrix4::Identity, {0.0F, 0.0F, 0.0F}, params, findTex, nullptr);
 
     EXPECT_EQ(params.draws.GetSize(), 1U);

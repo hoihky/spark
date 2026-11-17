@@ -1,9 +1,12 @@
 #pragma once
 
+#include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
+#include "spark/render/lighting/SceneLightingSetup.hpp"
 #include "spark/scene/submit/LitSceneSubmitOptions.hpp"
+#include "spark/scene/submit/SceneDrawListSorter.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
 
 namespace Spark {
@@ -15,11 +18,35 @@ class Scene;
 struct SceneDrawItem;
 
 /**
- * Shorter names for the standard lit ECS → <c>SceneRenderParams</c> path.
+ * Public API for lit ECS → <c>SceneRenderParams</c>: static helpers plus fluent <c>Builder</c>.
  * Long free functions in <c>SceneSubmit.hpp</c> remain for compatibility.
  */
 class LitScene final {
 public:
+    class Builder {
+    public:
+        Builder(GameWorld& world, IEngineContext& context) noexcept;
+
+        Builder& WithView(const Matrix4& viewProjection, const Vector3& cameraPositionWorld) noexcept;
+        [[nodiscard]] bool WithCameraFromWorld() noexcept;
+
+        Builder& WithOptions(const LitSceneSubmitOptions& options) noexcept;
+        Builder& WithLightingSetup(const SceneLightingSetup& setup) noexcept;
+
+        [[nodiscard]] bool Fill(SceneRenderParams& outParams) const noexcept;
+        [[nodiscard]] bool Submit() const noexcept;
+
+    private:
+        GameWorld& hostWorld;
+        IEngineContext& engineContext;
+        LitSceneSubmitOptions submitOptions{};
+        SceneLightingSetup lightingSetup{SceneLightingSetup::FromProfile(SceneLightingProfile::Default)};
+        bool hasLightingSetup = false;
+        Matrix4 viewProjection{};
+        Vector3 cameraPositionWorld{};
+        bool hasView = false;
+    };
+
     static void ApplyMaterial(
             SceneDrawItem& item,
             const MaterialComponent* material,
@@ -38,7 +65,7 @@ public:
             const Array<SceneDrawItem>& sortedDrawList,
             SceneRenderParams& params,
             const Vector3& cameraPositionWorld) noexcept {
-        PartitionSortedDrawItemsIntoSceneParams(sortedDrawList, params, cameraPositionWorld);
+        SceneDrawListSorter::PartitionIntoSceneParams(sortedDrawList, params, cameraPositionWorld);
     }
 
     static void Fill(

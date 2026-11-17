@@ -936,12 +936,16 @@ set(SPARK_ENGINE_SOURCES
         src/spark/render/lighting/SceneLightingSetup.cpp
         src/spark/render/lighting/SceneShadowParticipation.cpp
         src/spark/engine/SceneRenderParams.cpp
-        src/spark/scene/submit/LitSceneBuilder.cpp
         src/spark/render/present/VulkanDepthResources.cpp
         src/spark/render/present/VulkanPresentationSwapchain.cpp
         src/spark/render/present/VulkanPresentationFramebuffers.cpp
         src/spark/scene/volume/RenderVolumes.cpp
         src/spark/scene/volume/VolumeRegions.cpp
+        src/spark/scene/submit/LitScene.cpp
+        src/spark/scene/submit/LitSceneSubmitter.cpp
+        src/spark/scene/submit/SceneDrawListSorter.cpp
+        src/spark/scene/submit/SceneMeshSubmitCollectors.cpp
+        src/spark/scene/submit/SceneRigidMeshDrawBuilder.cpp
         src/spark/scene/submit/SceneSubmit.cpp
         src/spark/scene/submit/SkinnedAnimationBudget.cpp
         src/spark/scene/submit/SkinnedPaletteResolver.cpp
@@ -955,7 +959,6 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/animation/FootIkComponent.cpp
         src/spark/ecs/components/animation/AimIkComponent.cpp
         src/spark/scene/submit/SkinnedSceneDrawMaterialApplicator.cpp
-        src/spark/scene/submit/SceneSubmitDrawPartition.cpp
         src/spark/scene/submit/SceneSubmitWater.cpp
         src/spark/scene/submit/SceneSubmitLighting.cpp
         src/spark/scene/submit/SceneSubmitMaterial.cpp

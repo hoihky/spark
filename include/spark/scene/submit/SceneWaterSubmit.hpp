@@ -29,15 +29,6 @@ public:
             const Scene* sceneForCulling = nullptr);
 
 private:
-    [[nodiscard]] static float SquaredDistanceFromCamera(
-            const Matrix4& world,
-            const Vector3& cameraPositionWorld) noexcept;
-
-    void SortDrawsBackToFront(
-            Array<SceneWaterDraw>& items,
-            const Vector3& cameraPositionWorld,
-            SceneWaterSortMode sortMode) const;
-
     void PushMeshDraws(
             Array<SceneWaterDraw>& outDraws,
             SceneDrawItem baseItem,

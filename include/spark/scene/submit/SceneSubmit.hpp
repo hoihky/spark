@@ -31,7 +31,10 @@ void ApplyMultiMaterialSlotToSceneDrawItem(
         const MultiMaterialComponent::Slot& slot,
         SceneRenderParams* resolveTextures = nullptr) noexcept;
 
-/** Splits a stable-sorted draw list into <c>params.draws</c> and <c>params.transparentDraws</c> (back-to-front). */
+/**
+ * Splits a stable-sorted draw list into <c>params.draws</c> and <c>params.transparentDraws</c> (back-to-front).
+ * Prefer <c>SceneDrawListSorter::PartitionIntoSceneParams</c> in new code.
+ */
 void PartitionSortedDrawItemsIntoSceneParams(
         const Array<SceneDrawItem>& sortedDrawList,
         SceneRenderParams& params,

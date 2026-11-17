@@ -1,4 +1,4 @@
-#include "spark/scene/submit/LitSceneBuilder.hpp"
+#include "spark/scene/submit/LitScene.hpp"
 
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
@@ -7,10 +7,10 @@
 
 namespace Spark {
 
-LitSceneBuilder::LitSceneBuilder(GameWorld& world, IEngineContext& context) noexcept
+LitScene::Builder::Builder(GameWorld& world, IEngineContext& context) noexcept
         : hostWorld(world), engineContext(context) {}
 
-LitSceneBuilder& LitSceneBuilder::WithView(
+LitScene::Builder& LitScene::Builder::WithView(
         const Matrix4& view,
         const Vector3& cameraWorld) noexcept {
     viewProjection = view;
@@ -19,7 +19,7 @@ LitSceneBuilder& LitSceneBuilder::WithView(
     return *this;
 }
 
-bool LitSceneBuilder::WithCameraFromWorld() noexcept {
+bool LitScene::Builder::WithCameraFromWorld() noexcept {
     int fbW = 0;
     int fbH = 0;
     engineContext.GetFramebufferSize(fbW, fbH);
@@ -48,18 +48,18 @@ bool LitSceneBuilder::WithCameraFromWorld() noexcept {
     return true;
 }
 
-LitSceneBuilder& LitSceneBuilder::WithOptions(const LitSceneSubmitOptions& options) noexcept {
+LitScene::Builder& LitScene::Builder::WithOptions(const LitSceneSubmitOptions& options) noexcept {
     submitOptions = options;
     return *this;
 }
 
-LitSceneBuilder& LitSceneBuilder::WithLightingSetup(const SceneLightingSetup& setup) noexcept {
+LitScene::Builder& LitScene::Builder::WithLightingSetup(const SceneLightingSetup& setup) noexcept {
     lightingSetup = setup;
     hasLightingSetup = true;
     return *this;
 }
 
-bool LitSceneBuilder::Fill(SceneRenderParams& outParams) const noexcept {
+bool LitScene::Builder::Fill(SceneRenderParams& outParams) const noexcept {
     if (!hasView) {
         return false;
     }
@@ -77,7 +77,7 @@ bool LitSceneBuilder::Fill(SceneRenderParams& outParams) const noexcept {
     return true;
 }
 
-bool LitSceneBuilder::Submit() const noexcept {
+bool LitScene::Builder::Submit() const noexcept {
     SceneRenderParams params{};
     if (!Fill(params)) {
         return false;

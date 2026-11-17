@@ -4,6 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/submit/SceneDrawListSorter.hpp"
 #include "spark/ui/text/Font.hpp"
 
 #include <algorithm>
@@ -12,22 +13,6 @@
 #include <print>
 
 namespace Spark {
-
-namespace {
-
-int DrawSortLayer(SceneMeshSlot s) {
-    switch (s) {
-    case SceneMeshSlot::GroundPlane:
-        return 0;
-    case SceneMeshSlot::UnitCube:
-        return 1;
-    case SceneMeshSlot::Custom:
-        return 2;
-    }
-    return 1;
-}
-
-}  // namespace
 
 /** Orthonormal columns col0,col1,col2 (rotation matrix) → unit quaternion (x,y,z,w). */
 Quaternion QuaternionFromRotationColumns(
@@ -59,23 +44,11 @@ Quaternion QuaternionFromRotationColumns(
 }
 
 int DrawSortKey(const SceneDrawItem& it) {
-    if (it.skyMode != SceneSkyMode::None) {
-        return -100;
-    }
-    return DrawSortLayer(it.mesh);
+    return SceneDrawListSorter::OpaqueDrawSortKey(it);
 }
 
 void StableSortDrawItems(Array<SceneDrawItem>& items) {
-    const std::size_t n = items.GetSize();
-    for (std::size_t i = 1; i < n; ++i) {
-        SceneDrawItem key = items[i];
-        std::size_t j = i;
-        while (j > 0 && DrawSortKey(items[j - 1]) > DrawSortKey(key)) {
-            items[j] = items[j - 1];
-            --j;
-        }
-        items[j] = key;
-    }
+    SceneDrawListSorter::StableSortOpaqueDraws(items);
 }
 
 [[nodiscard]] bool TerrainScreenToWorldRay(

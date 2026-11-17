@@ -83,14 +83,7 @@ void PopulateSkyDrawItem(
         const Matrix4& worldM,
         SceneRenderParams& params) noexcept;
 
-void SubmitWaterBodiesFromWorld(
-        GameWorld& world,
-        const Matrix4& viewProjection,
-        const Vector3& cameraPositionWorld,
-        SceneRenderParams& params,
-        const FindSceneTextureFn& findOrAddTexture,
-        const Scene* sceneForCulling);
-
+/** Implemented in <c>SceneDrawListSorter.cpp</c>; use <c>SceneDrawListSorter</c> in new code. */
 void StableSortDrawItems(Array<SceneDrawItem>& items);
 void StableSortSprites(Array<SceneSpriteDraw>& items, SceneSpriteSortMode mode);
 [[nodiscard]] SceneBlendMode ResolveSpriteBlendMode(const GameObject& object) noexcept;
