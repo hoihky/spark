@@ -27,7 +27,7 @@ void ProcessTimeOfDayDrivers(GameWorld& world, const float deltaTimeSeconds) noe
     gTimeOfDay = FrameTimeOfDayState{};
     bool found = false;
     std::int32_t bestPriority = 0;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -63,7 +63,7 @@ void ApplyRegionalRenderVolumes(
 
     bool fogFound = false;
     std::int32_t fogPriority = 0;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -87,7 +87,7 @@ void ApplyRegionalRenderVolumes(
 
     bool postFound = false;
     std::int32_t postPriority = 0;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

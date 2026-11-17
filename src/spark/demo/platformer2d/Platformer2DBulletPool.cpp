@@ -71,7 +71,7 @@ void BulletPool::Initialize(
     slots.Clear();
     slots.Resize(static_cast<std::size_t>(capacity));
     for (int bi = 0; bi < capacity; ++bi) {
-        Spark::GameObject* go = world.CreateGameObject();
+        Spark::GameObject* go = world.Entities().Create();
         go->GetName() = debugNamePrefix;
         Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation({-120.0F, -120.0F, 0.0F});

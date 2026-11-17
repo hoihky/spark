@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/memory/SharedPtr.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 
 namespace Spark {
 

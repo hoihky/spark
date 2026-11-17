@@ -914,7 +914,7 @@ void ContactResolver2D::ResolveAllDynamicsAgainstStatics(
         GameWorld& world,
         const Array<Collider2D>& colliders,
         SpatialHashGrid2D& broadPhase) {
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

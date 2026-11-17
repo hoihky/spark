@@ -21,7 +21,7 @@ bool TryResolveCameraBounds2DForTarget(
     const GameObject* bestOwner = nullptr;
     int bestPriority = -1;
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

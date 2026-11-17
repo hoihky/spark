@@ -6,11 +6,11 @@
 namespace Spark {
 
 void WorldGameplay::AfterPhysics2D() noexcept {
-    GameplaySubsystem::AfterPhysics2D(world_);
+    GameplaySubsystem::AfterPhysics2D(hostWorld);
 }
 
 bool WorldGameplay::InteractPress(GameObject& instigator) noexcept {
-    return GameplaySubsystem::ProcessInteractPress(world_, instigator);
+    return GameplaySubsystem::ProcessInteractPress(hostWorld, instigator);
 }
 
 void WorldGameplay::InteractIfPressed2D(GameObject& instigator, const bool pressed) noexcept {

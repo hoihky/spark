@@ -25,7 +25,7 @@ GameplayInteractionCandidate GameplayInteractionQuery::FindBest(
     GameObject* bestOwner = nullptr;
     float bestDist2 = std::numeric_limits<float>::max();
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr || object == &instigator) {
             return;
         }

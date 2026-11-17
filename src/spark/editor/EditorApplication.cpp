@@ -597,7 +597,7 @@ void EditorApplication::EnsureEditorBootstrapScene(GameWorld& world) {
             return false;
         }
         bool alive = false;
-        world.ForEachGameObject([&](const GameObject* obj) {
+        world.Entities().ForEach([&](const GameObject* obj) {
             if (obj == candidate) {
                 alive = true;
             }

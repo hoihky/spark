@@ -28,7 +28,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         constexpr float kBallRadius = 0.12F;
         *ballMesh = Spark::Mesh::CreateSkySphere(kBallRadius, 10, 20);
 
-        Spark::GameObject* sky = w.CreateGameObject();
+        Spark::GameObject* sky = w.Entities().Create();
         sky->GetName() = Spark::Utf8String("PhysBallSky");
         Spark::TransformComponent* skyTr = sky->AddComponent<Spark::TransformComponent>();
         skyTr->SetUniformScale(96.0F);
@@ -37,7 +37,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         sky->AddComponent<Spark::MeshComponent>(skyMesh, Spark::SceneMeshSlot::Custom, Spark::Vector3{0.35F, 0.48F, 0.72F});
         roots.PushBack(sky);
 
-        Spark::GameObject* ground = w.CreateGameObject();
+        Spark::GameObject* ground = w.Entities().Create();
         ground->GetName() = Spark::Utf8String("PhysBallGround");
         ground->AddComponent<Spark::TransformComponent>();
         ground->AddComponent<Spark::MeshComponent>(
@@ -65,7 +65,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         };
         std::size_t cubeIndex = 0;
         for (const CubeDef& c : kCubes) {
-            Spark::GameObject* box = w.CreateGameObject();
+            Spark::GameObject* box = w.Entities().Create();
             box->GetName() = Spark::Utf8String("PhysBallBox");
             Spark::TransformComponent* tr = box->AddComponent<Spark::TransformComponent>();
             tr->SetTranslation({c.x, 1.0F, c.z});
@@ -86,7 +86,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
             ++cubeIndex;
         }
 
-        Spark::GameObject* ball = w.CreateGameObject();
+        Spark::GameObject* ball = w.Entities().Create();
         ball->GetName() = Spark::Utf8String("PhysBall");
         ballTr = ball->AddComponent<Spark::TransformComponent>();
         ballTr->SetTranslation({0.0F, 1.25F, 2.0F});
@@ -106,7 +106,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
         {
             constexpr float kPendRadius = 0.11F;
             constexpr float kPendRestLength = 2.1F;
-            Spark::GameObject* anchor = w.CreateGameObject();
+            Spark::GameObject* anchor = w.Entities().Create();
             anchor->GetName() = Spark::Utf8String("PhysBallPendulumAnchor");
             Spark::TransformComponent* anchorTr = anchor->AddComponent<Spark::TransformComponent>();
             anchorTr->SetTranslation({-5.5F, 4.8F, -2.5F});
@@ -116,7 +116,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
             anchor->AddComponent<Spark::Rigidbody3DComponent>(Spark::RigidbodyBodyType3D::Static, 1.0F);
             roots.PushBack(anchor);
 
-            Spark::GameObject* bob = w.CreateGameObject();
+            Spark::GameObject* bob = w.Entities().Create();
             bob->GetName() = Spark::Utf8String("PhysBallPendulumBob");
             Spark::TransformComponent* bobTr = bob->AddComponent<Spark::TransformComponent>();
             bobTr->SetTranslation({-5.5F, 4.8F - kPendRestLength, -2.5F});
@@ -132,7 +132,7 @@ void PhysicsBallThrow3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& co
             roots.PushBack(bob);
         }
 
-        Spark::GameObject* light = w.CreateGameObject();
+        Spark::GameObject* light = w.Entities().Create();
         light->GetName() = Spark::Utf8String("PhysBallSun");
         Spark::TransformComponent* ltr = light->AddComponent<Spark::TransformComponent>();
         ltr->SetTranslation({18.0F, 28.0F, 14.0F});
@@ -222,7 +222,7 @@ void PhysicsBallThrow3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::I
         phys.jointIterations = 8;
         /** Impulses are first-iter only in the solver; Baumgarte here fights clean bouncing. */
         phys.baumgarteContactBias = 0.0F;
-        physics.Simulate3D(world, timing);
+        world.Physics(physics).Simulate3D(timing);
 
         if (ballRb != nullptr) {
             const Spark::Vector3 va = ballRb->GetVelocity();
@@ -386,7 +386,7 @@ void PhysicsBallThrow3DDemo::BuildRetainedUi(Spark::GameWorld& world) {
         uiRoot = nullptr;
         uiCanvas = nullptr;
     }
-    uiRoot = world.CreateGameObject();
+    uiRoot = world.Entities().Create();
     uiRoot->GetName() = Spark::Utf8String("PhysBallUi");
     uiCanvas = uiRoot->AddComponent<UiCanvasComponent>();
     uiCanvas->SetSortOrder(100);

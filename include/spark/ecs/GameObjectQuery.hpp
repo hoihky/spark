@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 
 namespace Spark {
 
@@ -89,25 +89,14 @@ namespace GameObjectQueryDetail {
 template<typename T>
 [[nodiscard]] bool HasComponent(const GameObject* object) noexcept;
 
-template<typename T, typename... Rest>
-[[nodiscard]] bool HasAllComponents(const GameObject* object) noexcept {
-    return HasComponent<T>(object) && HasAllComponents<Rest...>(object);
-}
-
-template<typename T>
-[[nodiscard]] bool HasAllComponents(const GameObject* object) noexcept {
-    return HasComponent<T>(object);
-}
-
 }  // namespace GameObjectQueryDetail
 
 template<typename... ComponentTypes>
 [[nodiscard]] bool GameObjectHasAllComponents(const GameObject* object) noexcept {
     if constexpr (sizeof...(ComponentTypes) == 0) {
         return object != nullptr;
-    } else {
-        return GameObjectQueryDetail::HasAllComponents<ComponentTypes...>(object);
     }
+    return object != nullptr && (GameObjectQueryDetail::HasComponent<ComponentTypes>(object) && ...);
 }
 
 }  // namespace Spark

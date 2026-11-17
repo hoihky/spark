@@ -13,7 +13,7 @@ namespace Spark {
 namespace {
 
 Spark::GameObject& AddRoot(Spark::GameWorld& w, Spark::Array<Spark::GameObject*>& roots, const char* name) {
-    Spark::GameObject* go = w.CreateGameObject();
+    Spark::GameObject* go = w.Entities().Create();
     go->GetName() = Spark::Utf8String(name);
     roots.PushBack(go);
     return *go;
@@ -438,16 +438,15 @@ void RenderLayers2DDemo::Render(
         Spark::Scene& /*scene*/,
         Spark::GameWorld& world,
         Spark::IEngineContext& context) {
-    (void)Spark::SubmitStandardLitSceneFromWorldWithCamera(
-            world,
-            context,
-            Spark::Vector3{0.35F, 0.88F, 0.48F}.Normalized(),
-            Spark::Vector3{1.0F, 0.98F, 0.92F},
-            0.95F,
-            Spark::Vector3{0.42F, 0.52F, 0.38F},
-            false,
-            sceneTime,
-            Spark::SceneSpriteSortMode::SortOrderThenWorldY);
+    Spark::LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Spark::Vector3{0.35F, 0.88F, 0.48F}.Normalized(),
+                    Spark::Vector3{1.0F, 0.98F, 0.92F},
+                    0.95F)
+            .WithAmbient(Spark::Vector3{0.42F, 0.52F, 0.38F})
+            .WithSceneTime(sceneTime)
+            .WithSpriteSortMode(Spark::SceneSpriteSortMode::SortOrderThenWorldY);
+    (void)world.Rendering().SubmitLitWithCamera(context, litOptions);
 }
 
 }  // namespace Spark

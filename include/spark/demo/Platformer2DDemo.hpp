@@ -13,9 +13,9 @@
 #include "spark/demo/platformer2d/Platformer2DExplosionFx.hpp"
 #include "spark/gameflow/GameFlowCoordinator.hpp"
 #include "spark/gameflow/GameFlowPersistentData.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 #include "spark/demo/platformer2d/Platformer2DHealthHud.hpp"
 #include "spark/demo/platformer2d/Platformer2DPlayerCombat.hpp"
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
@@ -39,6 +39,8 @@ namespace Spark {
 /**
  * Teaching-oriented 2D platformer shell. Gameplay is split into small subsystems under
  * <c>spark/demo/platformer2d/</c> (object pools, squad AI, HUD observer, player combat facade).
+ *
+ * **Canonical 2D frame pipeline** (paired with <c>GltfSamples3DDemo</c> for 3D) — programming guide Part 1, <c>04-engine-loop.md</c>.
  *
  * Patterns demonstrated:
  * - **Facade** — this class wires subsystems without embedding every detail.

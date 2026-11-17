@@ -23,14 +23,8 @@ void SoundSubsystem::DrainSoundCues(GameWorld& world, IEngineContext& context) {
     if (audio == nullptr || !audio->IsRunning()) {
         return;
     }
-    world.ForEachActiveGameObject([audio](GameObject* o) {
-        if (o == nullptr) {
-            return;
-        }
-        SoundCueComponent* sc = o->GetComponent<SoundCueComponent>();
-        if (sc != nullptr) {
-            sc->FlushTo(audio);
-        }
+    world.Entities().ForEachComponent<SoundCueComponent>([audio](GameObject* /*owner*/, SoundCueComponent& cue) {
+        cue.FlushTo(audio);
     });
 }
 

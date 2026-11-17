@@ -4,7 +4,7 @@
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
 #include <cstdio>
@@ -258,7 +258,7 @@ SceneDocument SceneSerializer::Capture(
         const SceneCaptureContext& ctx,
         const Function<bool(const GameObject*)>& includeEntity) const {
     SceneDocument doc;
-    world.ForEachGameObject([&](const GameObject* object) {
+    world.Entities().ForEach([&](const GameObject* object) {
         if (object == nullptr) {
             return;
         }

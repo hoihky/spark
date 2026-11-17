@@ -50,7 +50,7 @@ void FillCompositeViewFromTilemapGridFrame(Scene2DCompositeViewDesc& view, const
 
 void CollectScene2DCompositeViews(GameWorld& world, SceneRenderParams& params) noexcept {
     params.scene2DCompositeViews.Clear();
-    world.ForEachGameObject([&](GameObject* object) {
+    world.Entities().ForEach([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

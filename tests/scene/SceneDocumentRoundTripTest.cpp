@@ -30,7 +30,7 @@ namespace {
 
 Spark::GameObject* FindByName(Spark::GameWorld& world, const char* name) {
     Spark::GameObject* found = nullptr;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (object != nullptr && object->GetName() == Spark::Utf8String(name)) {
             found = object;
         }
@@ -40,7 +40,7 @@ Spark::GameObject* FindByName(Spark::GameWorld& world, const char* name) {
 
 const Spark::GameObject* FindByName(const Spark::GameWorld& world, const char* name) {
     const Spark::GameObject* found = nullptr;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (object != nullptr && object->GetName() == Spark::Utf8String(name)) {
             found = object;
         }

@@ -58,7 +58,7 @@ Spark::GameObject* SpawnReferenceCube(
         const Spark::Vector3& albedo,
         const float roughness,
         const float metallic) {
-    Spark::GameObject* cube = w.CreateGameObject();
+    Spark::GameObject* cube = w.Entities().Create();
     cube->GetName() = Spark::Utf8String("SkyDemoProp");
     Spark::TransformComponent* tr = cube->AddComponent<Spark::TransformComponent>();
     tr->SetTranslation(pos);
@@ -106,7 +106,7 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent, groundWorldSpan);
         w.Assets().RegisterMesh(groundAsset, "spark/demo/ground");
 
-        groundObject = w.CreateGameObject();
+        groundObject = w.Entities().Create();
         groundObject->GetName() = Spark::Utf8String("Ground");
         groundObject->AddComponent<Spark::TransformComponent>();
         groundObject->AddComponent<Spark::MeshComponent>(
@@ -129,7 +129,7 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         roots.PushBack(SpawnReferenceCube(
                 w, unitCubeAsset, {4.8F, 0.56F, -3.6F}, 1.05F, {0.84F, 0.44F, 0.30F}, 0.38F, 0.12F));
 
-        skyObject = w.CreateGameObject();
+        skyObject = w.Entities().Create();
         skyObject->GetName() = Spark::Utf8String("SkyEnvironment");
         skyTransform = skyObject->AddComponent<Spark::TransformComponent>();
         skyMesh = skyObject->AddComponent<Spark::MeshComponent>(skyBoxMesh, Spark::Vector3::One);
@@ -138,7 +138,7 @@ void SkyDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         roots.PushBack(skyObject);
         ApplySkyModeVisuals();
 
-        Spark::GameObject* postGo = w.CreateGameObject();
+        Spark::GameObject* postGo = w.Entities().Create();
         postGo->GetName() = Spark::Utf8String("SkyPostVolume");
         postGo->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
         postVolume = postGo->AddComponent<Spark::PostProcessVolumeComponent>();

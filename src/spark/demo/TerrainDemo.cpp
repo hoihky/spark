@@ -32,7 +32,7 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         ts.lacunarity = 2.05F;
         ts.seed = 0xC047ACEEu;
 
-        terrainObject = w.CreateGameObject();
+        terrainObject = w.Entities().Create();
         terrainObject->GetName() = Spark::Utf8String("ProceduralTerrain");
         terrainObject->AddComponent<Spark::TransformComponent>();
         terrainObject->AddComponent<Spark::TerrainComponent>(ts);
@@ -47,7 +47,7 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         unitCubeAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TerrainMarkerCube"));
         *unitCubeAsset = Spark::Mesh::CreateUnitCube();
         w.Assets().RegisterMesh(unitCubeAsset, "spark/terrain/marker_cube");
-        markerObject = w.CreateGameObject();
+        markerObject = w.Entities().Create();
         markerObject->GetName() = Spark::Utf8String("TerrainMarker");
         {
             Spark::TransformComponent* tr = markerObject->AddComponent<Spark::TransformComponent>();
@@ -62,7 +62,7 @@ void TerrainDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
         roots.PushBack(markerObject);
 
-        editCursorObject = w.CreateGameObject();
+        editCursorObject = w.Entities().Create();
         editCursorObject->GetName() = Spark::Utf8String("TerrainEditCursor");
         editCursorTransform = editCursorObject->AddComponent<Spark::TransformComponent>();
         editCursorTransform->SetUniformScale(0.34F);
@@ -302,7 +302,7 @@ void TerrainDemo::AddPointLight(
             float intensity,
             float range)
 {
-        Spark::GameObject* light = w.CreateGameObject();
+        Spark::GameObject* light = w.Entities().Create();
         light->GetName() = Spark::Utf8String("TerrainPointLight");
         Spark::TransformComponent* tr = light->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation(position);

@@ -1,7 +1,7 @@
 #include "spark/scene/editor/SceneEditorPlaySession.hpp"
 
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/scene/core/SceneInstanceTracker.hpp"
+#include "spark/scene/core/load/SceneInstanceTracker.hpp"
 #include "spark/scene/editor/SceneEditorContentModel.hpp"
 
 namespace Spark {

@@ -38,14 +38,14 @@ public:
     [[nodiscard]] bool Submit() const noexcept;
 
 private:
-    GameWorld& world_;
-    IEngineContext& context_;
-    LitSceneSubmitOptions options_{};
-    SceneLightingSetup lightingSetup_{SceneLightingSetup::FromProfile(SceneLightingProfile::Default)};
-    bool hasLightingSetup_ = false;
-    Matrix4 viewProjection_{};
-    Vector3 cameraPositionWorld_{};
-    bool hasView_ = false;
+    GameWorld& hostWorld;
+    IEngineContext& engineContext;
+    LitSceneSubmitOptions submitOptions{};
+    SceneLightingSetup lightingSetup{SceneLightingSetup::FromProfile(SceneLightingProfile::Default)};
+    bool hasLightingSetup = false;
+    Matrix4 viewProjection{};
+    Vector3 cameraPositionWorld{};
+    bool hasView = false;
 };
 
 }  // namespace Spark

@@ -5,16 +5,16 @@
 namespace Spark {
 
 void WorldQuery::Collect(GameObjectQueryResult& out, const GameObjectQueryFilter& filter) const {
-    world_.CollectGameObjects(out, filter);
+    hostWorld.CollectGameObjects(out, filter);
 }
 
 GameObjectQueryResult WorldQuery::Query(const GameObjectQueryFilter& filter) const {
-    return world_.QueryGameObjects(filter);
+    return hostWorld.QueryGameObjects(filter);
 }
 
 std::size_t WorldQuery::CollectInto(Array<GameObject*>& out, const GameObjectQueryFilter& filter) const {
     const std::size_t before = out.GetSize();
-    world_.ForEachGameObject([&](GameObject* object) { out.PushBack(object); }, filter);
+    hostWorld.Entities().ForEach([&](GameObject* object) { out.PushBack(object); }, filter);
     return out.GetSize() - before;
 }
 
@@ -42,12 +42,12 @@ std::size_t WorldQuery::CollectWithTag(const char* tag, GameObjectQueryResult& o
 }
 
 GameObject* WorldQuery::FindWithTag(const char* tag, bool includeInactive) const {
-    return world_.FindGameObjectWithTag(tag, QueryFilter::WithTag(tag, includeInactive));
+    return hostWorld.FindGameObjectWithTag(tag, QueryFilter::WithTag(tag, includeInactive));
 }
 
 GameObject* WorldQuery::FindByName(const char* name, bool includeInactive) const {
     GameObjectQueryFilter f = includeInactive ? QueryFilter::IncludeInactive() : QueryFilter::ActiveOnly();
-    return world_.FindGameObjectByName(name, f);
+    return hostWorld.FindGameObjectByName(name, f);
 }
 
 std::size_t WorldQuery::CollectWithComponent(

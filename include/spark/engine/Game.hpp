@@ -23,6 +23,7 @@ public:
 
     void OnAttach(IEngineContext& /*context*/) override {}
     void OnDetach() override {}
+    /** Component OnUpdate, VFX pump, and spatial audio — call from `OnUpdate` after game rules that must run first. */
     void OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
         GetWorld().Simulation().RunDefaultSlice(timing, context);
     }

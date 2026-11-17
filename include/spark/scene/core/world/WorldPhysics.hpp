@@ -9,31 +9,37 @@ namespace Spark {
 /** Physics stepping bound to a world + subsystem pair. */
 class WorldPhysics final : public WorldView {
 public:
-    WorldPhysics(GameWorld& world, PhysicsSubsystem& physics) noexcept : WorldView(world), physics_(physics) {}
+    WorldPhysics(GameWorld& world, PhysicsSubsystem& physics) noexcept
+        : WorldView(world)
+        , physicsSubsystem(physics) {}
 
-    void Simulate2D(const FrameTiming& timing) { physics_.Simulate2D(world_, timing); }
+    void Simulate2D(const FrameTiming& timing) { physicsSubsystem.Simulate2D(hostWorld, timing); }
 
-    void Simulate3D(const FrameTiming& timing) { physics_.Simulate3D(world_, timing); }
+    void Simulate3D(const FrameTiming& timing) { physicsSubsystem.Simulate3D(hostWorld, timing); }
 
-    void SimulateAll3D(const FrameTiming& timing) { physics_.SimulateAll3D(world_, timing); }
+    void SimulateAll3D(const FrameTiming& timing) { physicsSubsystem.SimulateAll3D(hostWorld, timing); }
 
     void SimulateCharacters2D(const FrameTiming& timing) {
-        physics_.SimulateCharacterControllers2D(world_, timing);
+        physicsSubsystem.SimulateCharacterControllers2D(hostWorld, timing);
     }
 
     void SimulateCharacters3D(const FrameTiming& timing) {
-        physics_.SimulateCharacterControllers3D(world_, timing);
+        physicsSubsystem.SimulateCharacterControllers3D(hostWorld, timing);
     }
 
-    void SimulateTriggers2D(const FrameTiming& timing) { physics_.SimulateTriggerVolumes2D(world_, timing); }
+    void SimulateTriggers2D(const FrameTiming& timing) {
+        physicsSubsystem.SimulateTriggerVolumes2D(hostWorld, timing);
+    }
 
-    void SimulateTriggers3D(const FrameTiming& timing) { physics_.SimulateTriggerVolumes3D(world_, timing); }
+    void SimulateTriggers3D(const FrameTiming& timing) {
+        physicsSubsystem.SimulateTriggerVolumes3D(hostWorld, timing);
+    }
 
-    [[nodiscard]] PhysicsSubsystem& Subsystem() noexcept { return physics_; }
-    [[nodiscard]] const PhysicsSubsystem& Subsystem() const noexcept { return physics_; }
+    [[nodiscard]] PhysicsSubsystem& Subsystem() noexcept { return physicsSubsystem; }
+    [[nodiscard]] const PhysicsSubsystem& Subsystem() const noexcept { return physicsSubsystem; }
 
 private:
-    PhysicsSubsystem& physics_;
+    PhysicsSubsystem& physicsSubsystem;
 };
 
 }  // namespace Spark

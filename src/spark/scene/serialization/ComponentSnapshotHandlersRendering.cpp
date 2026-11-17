@@ -300,7 +300,7 @@ GameObject* FindGameObjectByName(GameWorld& world, const char* name) noexcept {
         return nullptr;
     }
     GameObject* found = nullptr;
-    world.ForEachGameObject([&](GameObject* o) {
+    world.Entities().ForEach([&](GameObject* o) {
         if (o == nullptr || found != nullptr) {
             return;
         }

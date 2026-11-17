@@ -6,15 +6,15 @@ namespace Spark {
 
 std::int32_t SceneShadowParticipation::ResolveAgainstDefault(const std::int32_t defaultFlags) const noexcept {
     std::int32_t flags = defaultFlags;
-    if (castOverride_.HasValue()) {
-        if (*castOverride_) {
+    if (castOverride.HasValue()) {
+        if (*castOverride) {
             flags |= kSceneShadowCast;
         } else {
             flags &= ~kSceneShadowCast;
         }
     }
-    if (receiveOverride_.HasValue()) {
-        if (*receiveOverride_) {
+    if (receiveOverride.HasValue()) {
+        if (*receiveOverride) {
             flags |= kSceneShadowReceive;
         } else {
             flags &= ~kSceneShadowReceive;
@@ -24,13 +24,13 @@ std::int32_t SceneShadowParticipation::ResolveAgainstDefault(const std::int32_t 
 }
 
 void SceneShadowParticipation::ApplyTo(MaterialComponent& material) const noexcept {
-    if (castOverride_.HasValue()) {
-        material.SetShadowCastOverride(*castOverride_);
+    if (castOverride.HasValue()) {
+        material.SetShadowCastOverride(*castOverride);
     } else {
         material.ClearShadowCastOverride();
     }
-    if (receiveOverride_.HasValue()) {
-        material.SetShadowReceiveOverride(*receiveOverride_);
+    if (receiveOverride.HasValue()) {
+        material.SetShadowReceiveOverride(*receiveOverride);
     } else {
         material.ClearShadowReceiveOverride();
     }
@@ -38,8 +38,8 @@ void SceneShadowParticipation::ApplyTo(MaterialComponent& material) const noexce
 
 SceneShadowParticipation SceneShadowParticipation::FromMaterial(const MaterialComponent& material) noexcept {
     SceneShadowParticipation p;
-    p.castOverride_ = material.GetShadowCastOverride();
-    p.receiveOverride_ = material.GetShadowReceiveOverride();
+    p.castOverride = material.GetShadowCastOverride();
+    p.receiveOverride = material.GetShadowReceiveOverride();
     return p;
 }
 

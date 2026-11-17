@@ -109,7 +109,7 @@ bool TilemapEditSession::Attach(GameObject& inOwner) noexcept {
 
 bool TilemapEditSession::Attach(GameObject& inOwner, const TilemapEditSessionOptions& options) noexcept {
     Detach();
-    const TilemapDocumentCapturer::Result captured = documentCapturer_.CaptureFromOwner(inOwner);
+    const TilemapDocumentCapturer::Result captured = documentCapturer.CaptureFromOwner(inOwner);
     if (!captured.IsSuccess()) {
         return false;
     }
@@ -307,7 +307,7 @@ void TilemapEditSession::TryAutoRebake() noexcept {
     if (!IsAttached() || autoRebakePolicy == TilemapEditAutoRebakePolicy::Off || owner == nullptr) {
         return;
     }
-    static_cast<void>(derivedRebaker_.RebakeForRevision(
+    static_cast<void>(derivedRebaker.RebakeForRevision(
             *owner, revisionTracker.GetLastRevision(), derivedRebakeOptions, rebakeWorld, rebakePhysics));
 }
 
@@ -321,7 +321,7 @@ void TilemapEditSession::RunValidationIfEnabled() noexcept {
             options.runtimeMaxTileIdExclusive = tileset->GetCellCount();
         }
     }
-    const TilemapEditValidationReport report = validator_.Validate(document, options);
+    const TilemapEditValidationReport report = validator.Validate(document, options);
     lastValidationSummary = report.FormatSummary();
 }
 
@@ -559,7 +559,7 @@ TilemapDerivedDataRebaker::Result TilemapEditSession::RebakeDerivedDataForLastEd
         const TilemapDerivedDataRebaker::Options& options,
         GameWorld* worldForPhysics,
         PhysicsSubsystem* physics) const noexcept {
-    return derivedRebaker_.RebakeForRevision(
+    return derivedRebaker.RebakeForRevision(
             owner, revisionTracker.GetLastRevision(), options, worldForPhysics, physics);
 }
 

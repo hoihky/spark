@@ -35,12 +35,12 @@ void HealthHud::Initialize(
         tex = MakeWhitePixelTexture();
     }
 
-    root = world.CreateGameObject();
+    root = world.Entities().Create();
     root->GetName() = Spark::Utf8String("PlatHealthHud");
     rootTr = root->AddComponent<Spark::TransformComponent>();
     roots.Track(root);
 
-    Spark::GameObject* trackGo = world.CreateGameObject();
+    Spark::GameObject* trackGo = world.Entities().Create();
     trackGo->GetName() = Spark::Utf8String("PlatHealthTrack");
     trackTr = trackGo->AddComponent<Spark::TransformComponent>();
     trackGo->AddComponent<Spark::SpriteComponent>(
@@ -50,7 +50,7 @@ void HealthHud::Initialize(
             9800);
     roots.Track(trackGo);
 
-    Spark::GameObject* fillGo = world.CreateGameObject();
+    Spark::GameObject* fillGo = world.Entities().Create();
     fillGo->GetName() = Spark::Utf8String("PlatHealthFill");
     fillTr = fillGo->AddComponent<Spark::TransformComponent>();
     fillSpr = fillGo->AddComponent<Spark::SpriteComponent>(
@@ -60,7 +60,7 @@ void HealthHud::Initialize(
             9801);
     roots.Track(fillGo);
 
-    Spark::GameObject* glossGo = world.CreateGameObject();
+    Spark::GameObject* glossGo = world.Entities().Create();
     glossGo->GetName() = Spark::Utf8String("PlatHealthGloss");
     glossTr = glossGo->AddComponent<Spark::TransformComponent>();
     glossGo->AddComponent<Spark::SpriteComponent>(
@@ -70,7 +70,7 @@ void HealthHud::Initialize(
             9802);
     roots.Track(glossGo);
 
-    Spark::GameObject* textGo = world.CreateGameObject();
+    Spark::GameObject* textGo = world.Entities().Create();
     textGo->GetName() = Spark::Utf8String("PlatHealthText");
     healthText = textGo->AddComponent<Spark::TextOverlayComponent>();
     healthText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);

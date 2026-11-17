@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/scene/core/SceneSpawn2D.hpp"
+#include "spark/scene/core/spawn/SceneSpawn2D.hpp"
 
 namespace Spark {
 

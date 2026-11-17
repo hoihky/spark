@@ -8,7 +8,7 @@
 namespace Spark {
 
 void ProcessGridNavAgents2D(GameWorld& world, const float deltaTimeSeconds) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -21,7 +21,7 @@ void ProcessGridNavAgents2D(GameWorld& world, const float deltaTimeSeconds) noex
 }
 
 void ProcessNavMeshAgents(GameWorld& world) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

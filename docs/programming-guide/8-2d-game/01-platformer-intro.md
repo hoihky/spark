@@ -1,6 +1,6 @@
 # Platformer Introduction
 
-This part applies **Parts 2–7** to a shippable side-scroller. The reference implementation is **`Platformer2DDemo`** (SparkDemo **#6**) — sources under `src/spark/demo/Platformer2DDemo.cpp` and `platformer2d/`.
+This part applies **Parts 2–7** to a shippable side-scroller. The reference implementation is **`Platformer2DDemo`** (SparkDemo **#6**) — sources under `src/spark/demo/Platformer2DDemo.cpp` and `platformer2d/`. It is the **canonical facet sample**: entity spawn via `world.Entities().Create()`, assets via `world.Assets().RegisterTexture`, level scans via `world.Entities().ForEach` (see [ECS and Scene](../1-overview-architecture/06-ecs-and-scene.md)).
 
 ## What the demo proves
 
@@ -49,14 +49,17 @@ class PlatformerGame(Game):
 
 ## Simulate order (critical)
 
-1. `world.UpdateGameObjects` — input (50), FSM (100), animators (200), parallax (290), camera (300)
-2. Read `PlayerInputComponent` → set `CharacterController2D` intent
-3. `physics.Simulate2D`
-4. `PickupComponent::ProcessDeferredDestroys`
-5. Bullets / enemy AI
-6. `SimulateGameAi` if using nav agents
+SparkDemo runs **`Platformer2DDemo::Simulate`** then **`Game::OnUpdate` → `RunDefaultSlice`** (components, VFX, audio). Inside `Simulate`:
 
-Skipping step 3 before gameplay rules causes one-frame overlap bugs.
+1. `PlayerInputComponent::Refresh` → set `CharacterController2D` intent (before physics)
+2. `world.Physics(physics).Simulate2D(timing)`
+3. `world.Simulation().RunGameplaySlice()` (deferred pickup destroys)
+4. Bullets / enemy squad / gem presentation
+5. `OnRender` — `world.Rendering().SubmitLitWithCamera`
+
+Component ticks (FSM, animators, parallax, camera rig) run in **`RunDefaultSlice`**, not at the top of `Simulate`. Do not call `ProcessVfx` — the default slice already pumps VFX.
+
+See [Engine Loop](../1-overview-architecture/04-engine-loop.md) for the full facet map.
 
 ## Minimal entry point
 

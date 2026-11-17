@@ -6,7 +6,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <cmath>
 
@@ -62,7 +62,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         atlasTex = Detail::MakeTetrisBlockAtlas();
         w.Assets().RegisterTexture(atlasTex, "spark/tetris/blocks");
 
-        boardGo = w.CreateGameObject();
+        boardGo = w.Entities().Create();
         boardGo->GetName() = Spark::Utf8String("TetrisBoard");
         boardGo->AddComponent<Spark::TransformComponent>();
         tilemap = boardGo->AddComponent<Spark::TilemapComponent>(
@@ -75,7 +75,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 10);
         roots.PushBack(boardGo);
 
-        boardPadGo = w.CreateGameObject();
+        boardPadGo = w.Entities().Create();
         boardPadGo->GetName() = Spark::Utf8String("TetrisBoardPad");
         {
             Spark::TransformComponent* tr = boardPadGo->AddComponent<Spark::TransformComponent>();
@@ -93,7 +93,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         ghostCells.Clear();
         ghostCells.Reserve(4);
         for (int gi = 0; gi < 4; ++gi) {
-            Spark::GameObject* ghost = w.CreateGameObject();
+            Spark::GameObject* ghost = w.Entities().Create();
             ghost->GetName() = Spark::Utf8String("TetrisGhostCell");
             ghost->AddComponent<Spark::TransformComponent>();
             ghost->AddComponent<Spark::BlendModeComponent>(Spark::SceneBlendMode::Multiply);
@@ -106,7 +106,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             roots.PushBack(ghost);
         }
 
-        lineFlashGo = w.CreateGameObject();
+        lineFlashGo = w.Entities().Create();
         lineFlashGo->GetName() = Spark::Utf8String("TetrisLineFlash");
         {
             Spark::TransformComponent* tr = lineFlashGo->AddComponent<Spark::TransformComponent>();
@@ -121,7 +121,7 @@ void Tetris2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 900);
         roots.PushBack(lineFlashGo);
 
-        fpsHudObject = w.CreateGameObject();
+        fpsHudObject = w.Entities().Create();
         fpsHudObject->GetName() = Spark::Utf8String("TetrisFpsHud");
         fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
         fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
@@ -240,8 +240,6 @@ void Tetris2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
 
         UpdateGhostSprites();
         UpdateBoardPad();
-        Spark::ProcessVfx(world);
-
         if (fpsText != nullptr) {
             fpsText->SetText(Spark::Utf8String(
                     std::format(
@@ -278,19 +276,14 @@ void Tetris2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spar
         Spark::Vector3 pr{};
         Spark::Vector3 pu{};
         renderCam.BillboardBasisWorld(pr, pu);
-        Spark::SubmitStandardLitSceneFromWorld(
-                world,
-                context,
-                viewProj,
-                camPos,
-                Spark::Vector3{0.35F, 0.88F, 0.42F}.Normalized(),
-                Spark::Vector3{0.95F, 0.97F, 1.0F},
-                0.75F,
-                Spark::Vector3{0.08F, 0.09F, 0.12F},
-                true,
-                pr,
-                pu,
-                0.0F);
+        Spark::LitSceneSubmitOptions litOptions{};
+        litOptions.WithDirectionalLight(
+                        Spark::Vector3{0.35F, 0.88F, 0.42F}.Normalized(),
+                        Spark::Vector3{0.95F, 0.97F, 1.0F},
+                        0.75F)
+                .WithAmbient(Spark::Vector3{0.08F, 0.09F, 0.12F})
+                .WithParticles(true, pr, pu);
+        world.Rendering().SubmitLit(context, viewProj, camPos, litOptions);
     }
 
 std::uint32_t Tetris2DDemo::timingHackU32(Spark::IEngineContext& context)

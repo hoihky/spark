@@ -5,7 +5,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/memory/UniquePtr.hpp"
-#include "spark/scene/core/SceneInstanceTracker.hpp"
+#include "spark/scene/core/load/SceneInstanceTracker.hpp"
 #include "spark/scene/editor/SceneEditorContentModel.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/prefab/PrefabCatalog.hpp"

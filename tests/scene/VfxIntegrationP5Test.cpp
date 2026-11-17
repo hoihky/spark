@@ -29,7 +29,7 @@ TEST(VfxIntegrationP5Test, AnimationEventQueuesVfxPlayRequest) {
     Spark::ProcessVfx(world);
 
     Spark::Array<Spark::SceneParticleInstance> instances{};
-    world.ForEachActiveGameObject([&instances](Spark::GameObject* object) {
+    world.Entities().ForEachActive([&instances](Spark::GameObject* object) {
         if (object == nullptr || object->GetName() != Spark::Utf8String("__vfx_pooled")) {
             return;
         }

@@ -16,10 +16,11 @@
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
 #include "spark/scene/tilemap/Tileset.hpp"
 #include "spark/scene/editor/SceneLevelLoader.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/config.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -135,7 +136,7 @@ GameObject* SpawnShowcaseChest(
     if (!g_showcaseSpawn.atlas) {
         return nullptr;
     }
-    GameObject* chest = world.CreateGameObject();
+    GameObject* chest = world.Entities().Create();
     chest->GetName() = marker.name.IsEmpty() ? Utf8String("Chest") : marker.name;
     const Vector3 pos = TilemapObjectQuery{}.MarkerWorldPosition(marker, frame);
     if (TransformComponent* tr = chest->AddComponent<TransformComponent>()) {
@@ -186,7 +187,7 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
     atlasTex = Detail::MakeShowcaseAtlas();
     w.Assets().RegisterTexture(atlasTex, "spark/tilemap_showcase/atlas");
 
-    boardGo = w.CreateGameObject();
+    boardGo = w.Entities().Create();
     boardGo->GetName() = Spark::Utf8String("TilemapShowcaseBoard");
     boardGo->AddComponent<Spark::TransformComponent>();
     tilemap = boardGo->AddComponent<Spark::TilemapComponent>(
@@ -231,7 +232,7 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
     boardGo->AddComponent<Spark::TilemapCollider2DComponent>();
     roots.PushBack(boardGo);
 
-    playerGo = w.CreateGameObject();
+    playerGo = w.Entities().Create();
     playerGo->GetName() = Spark::Utf8String("TilemapShowcasePlayer");
     {
         Spark::TransformComponent* tr = playerGo->AddComponent<Spark::TransformComponent>();
@@ -244,7 +245,7 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
 
     pathMarkers.Reserve(48);
     for (int i = 0; i < 48; ++i) {
-        Spark::GameObject* m = w.CreateGameObject();
+        Spark::GameObject* m = w.Entities().Create();
         m->GetName() = Spark::Utf8String("PathMarker");
         m->AddComponent<Spark::TransformComponent>()->SetTranslation({-50.0F, -50.0F, 0.0F});
         m->AddComponent<Spark::SpriteComponent>(
@@ -256,7 +257,7 @@ void TilemapShowcase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& con
         roots.PushBack(m);
     }
 
-    hudGo = w.CreateGameObject();
+    hudGo = w.Entities().Create();
     hudGo->GetName() = Spark::Utf8String("TilemapShowcaseHud");
     hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
     hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
@@ -287,7 +288,7 @@ namespace {
 Spark::GameObject* FindTilemapBoard(Spark::GameWorld& world, const Spark::SceneInstanceId instanceId) noexcept
 {
     Spark::GameObject* found = nullptr;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (found != nullptr || object == nullptr || object->GetSceneInstanceId() != instanceId) {
             return;
         }
@@ -856,20 +857,15 @@ void TilemapShowcase2DDemo::Render(
     Spark::Vector3 pr{};
     Spark::Vector3 pu{};
     camera.BillboardBasisWorld(pr, pu);
-    Spark::SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Spark::Vector3{0.42F, 0.78F, 0.38F}.Normalized(),
-            Spark::Vector3{0.94F, 0.97F, 1.0F},
-            0.75F,
-            Spark::Vector3{0.06F, 0.09F, 0.12F},
-            false,
-            pr,
-            pu,
-            0.0F,
-            SceneSpriteSortMode::SortOrderThenWorldY);
+    Spark::LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Spark::Vector3{0.42F, 0.78F, 0.38F}.Normalized(),
+                    Spark::Vector3{0.94F, 0.97F, 1.0F},
+                    0.75F)
+            .WithAmbient(Spark::Vector3{0.06F, 0.09F, 0.12F})
+            .WithParticles(false, pr, pu)
+            .WithSpriteSortMode(SceneSpriteSortMode::SortOrderThenWorldY);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 }
 
 }  // namespace Spark

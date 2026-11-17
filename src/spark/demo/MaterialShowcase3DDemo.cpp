@@ -365,7 +365,7 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
             Utf8String(MaterialLibraryWorkflow::kDefaultAssetKey),
             Utf8String(matFilePath));
 
-    GameObject* ground = w.CreateGameObject();
+    GameObject* ground = w.Entities().Create();
     ground->GetName() = Utf8String("Ground");
     ground->AddComponent<TransformComponent>();
     ground->AddComponent<MeshComponent>(groundMesh, SceneMeshSlot::GroundPlane, Vector3{0.38F, 0.4F, 0.42F});
@@ -376,7 +376,7 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     }
     roots.PushBack(ground);
 
-    showcaseSphere = w.CreateGameObject();
+    showcaseSphere = w.Entities().Create();
     showcaseSphere->GetName() = Utf8String("MatShowcaseSphere");
     showcaseTransform = showcaseSphere->AddComponent<TransformComponent>();
     if (showcaseTransform != nullptr) {
@@ -387,7 +387,7 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     ApplyMaterialState();
     roots.PushBack(showcaseSphere);
 
-    librarySphere = w.CreateGameObject();
+    librarySphere = w.Entities().Create();
     librarySphere->GetName() = Utf8String("MatLibrarySphere");
     libraryTransform = librarySphere->AddComponent<TransformComponent>();
     if (libraryTransform != nullptr) {
@@ -403,7 +403,7 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     }
     roots.PushBack(librarySphere);
 
-    GameObject* plGo = w.CreateGameObject();
+    GameObject* plGo = w.Entities().Create();
     plGo->GetName() = Utf8String("RimPoint");
     if (TransformComponent* tr = plGo->AddComponent<TransformComponent>()) {
         tr->SetTranslation({-4.2F, 2.4F, 3.5F});
@@ -411,7 +411,7 @@ void MaterialShowcase3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     plGo->AddComponent<PointLightComponent>(Vector3{0.55F, 0.78F, 1.0F}, 2.8F, 16.0F)->SetCastsShadow(true);
     roots.PushBack(plGo);
 
-    GameObject* spotGo = w.CreateGameObject();
+    GameObject* spotGo = w.Entities().Create();
     spotGo->GetName() = Utf8String("KeySpot");
     const Vector3 spotPos{4.8F, 4.2F, 6.5F};
     const Vector3 spotTarget{0.0F, 0.65F, 0.0F};
@@ -537,20 +537,14 @@ void MaterialShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
     }
     const Vector3 pu = Vector3::Cross(forward, pr).Normalized();
 
-    SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.32F, 0.88F, 0.34F}.Normalized(),
-            Vector3{1.0F, 0.98F, 0.93F},
-            1.15F,
-            Vector3{0.09F, 0.1F, 0.13F},
-            false,
-            pr,
-            pu,
-            0.0F,
-            SceneSpriteSortMode::SortOrderOnly);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.32F, 0.88F, 0.34F}.Normalized(),
+                    Vector3{1.0F, 0.98F, 0.93F},
+                    1.15F)
+            .WithAmbient(Vector3{0.09F, 0.1F, 0.13F})
+            .WithParticles(false, pr, pu);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 
     Spark::SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {

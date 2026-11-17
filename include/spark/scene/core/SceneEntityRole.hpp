@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
 namespace Spark {

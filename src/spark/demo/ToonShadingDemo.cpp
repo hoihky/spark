@@ -25,7 +25,7 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
     w.Assets().RegisterMesh(groundMesh, "spark/demo/toon_ground");
 
-    GameObject* ground = w.CreateGameObject();
+    GameObject* ground = w.Entities().Create();
     ground->GetName() = Utf8String("Ground");
     ground->AddComponent<TransformComponent>();
     ground->AddComponent<MeshComponent>(
@@ -39,7 +39,7 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
 
     auto addCube = [&](float x, float z, Vector3 albedo, SceneShadingModel shade, int bands, float rimI, float rimP,
                        float scaleY = 1.0F) {
-        GameObject* go = w.CreateGameObject();
+        GameObject* go = w.Entities().Create();
         go->GetName() = Utf8String("Shape");
         if (TransformComponent* tr = go->AddComponent<TransformComponent>()) {
             tr->SetTranslation({x, kCubeScale * scaleY, z});
@@ -75,7 +75,7 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     addCube(3.2F, 0.0F, Vector3{0.55F, 0.42F, 0.92F}, SceneShadingModel::ToonCel, 2, 0.62F, 2.8F, 1.15F);
     addCube(3.2F, 2.5F, Vector3{0.92F, 0.5F, 0.38F}, SceneShadingModel::ToonCel, 6, 0.28F, 6.0F);
 
-    GameObject* plGo = w.CreateGameObject();
+    GameObject* plGo = w.Entities().Create();
     plGo->GetName() = Utf8String("FillLight");
     if (TransformComponent* tr = plGo->AddComponent<TransformComponent>()) {
         tr->SetTranslation({-1.2F, 3.4F, 3.8F});
@@ -83,7 +83,7 @@ void ToonShadingDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     plGo->AddComponent<PointLightComponent>(Vector3{0.75F, 0.55F, 1.0F}, 2.4F, 14.0F)->SetCastsShadow(true);
     roots.PushBack(plGo);
 
-    GameObject* spotGo = w.CreateGameObject();
+    GameObject* spotGo = w.Entities().Create();
     spotGo->GetName() = Utf8String("KeySpot");
     const Vector3 spotPos{3.8F, 5.2F, 9.5F};
     const Vector3 spotTarget{0.3F, 1.0F, 0.0F};
@@ -174,20 +174,14 @@ void ToonShadingDemo::Render(Scene& scene, GameWorld& world, IEngineContext& con
     }
     const Vector3 pu = Vector3::Cross(forward, pr).Normalized();
 
-    SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.38F, 0.86F, 0.28F}.Normalized(),
-            Vector3{1.0F, 0.97F, 0.92F},
-            1.25F,
-            Vector3{0.1F, 0.11F, 0.14F},
-            false,
-            pr,
-            pu,
-            0.0F,
-            SceneSpriteSortMode::SortOrderOnly);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.38F, 0.86F, 0.28F}.Normalized(),
+                    Vector3{1.0F, 0.97F, 0.92F},
+                    1.25F)
+            .WithAmbient(Vector3{0.1F, 0.11F, 0.14F})
+            .WithParticles(false, pr, pu);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 
     Spark::SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {

@@ -26,7 +26,7 @@ void AiSubsystem::RunFrame(GameWorld& world, const FrameTiming& timing, IEngineC
     ProcessGridNav2D(world, timing.deltaTimeSeconds);
     ProcessNavMesh(world);
     ProcessPerception(world);
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

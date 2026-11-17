@@ -24,62 +24,62 @@ public:
 
     [[nodiscard]] static SceneShadowParticipation CastAndReceive() noexcept {
         SceneShadowParticipation p;
-        p.castOverride_ = true;
-        p.receiveOverride_ = true;
+        p.castOverride = true;
+        p.receiveOverride = true;
         return p;
     }
 
     [[nodiscard]] static SceneShadowParticipation None() noexcept {
         SceneShadowParticipation p;
-        p.castOverride_ = false;
-        p.receiveOverride_ = false;
+        p.castOverride = false;
+        p.receiveOverride = false;
         return p;
     }
 
     [[nodiscard]] static SceneShadowParticipation ReceiveOnly() noexcept {
         SceneShadowParticipation p;
-        p.castOverride_ = false;
-        p.receiveOverride_ = true;
+        p.castOverride = false;
+        p.receiveOverride = true;
         return p;
     }
 
     [[nodiscard]] static SceneShadowParticipation CastOnly() noexcept {
         SceneShadowParticipation p;
-        p.castOverride_ = true;
-        p.receiveOverride_ = false;
+        p.castOverride = true;
+        p.receiveOverride = false;
         return p;
     }
 
     SceneShadowParticipation& WithCastOverride(const bool casts) noexcept {
-        castOverride_ = casts;
+        castOverride = casts;
         return *this;
     }
 
     SceneShadowParticipation& WithReceiveOverride(const bool receives) noexcept {
-        receiveOverride_ = receives;
+        receiveOverride = receives;
         return *this;
     }
 
     SceneShadowParticipation& ClearCastOverride() noexcept {
-        castOverride_.Reset();
+        castOverride.Reset();
         return *this;
     }
 
     SceneShadowParticipation& ClearReceiveOverride() noexcept {
-        receiveOverride_.Reset();
+        receiveOverride.Reset();
         return *this;
     }
 
     SceneShadowParticipation& ClearAllOverrides() noexcept {
-        castOverride_.Reset();
-        receiveOverride_.Reset();
+        castOverride.Reset();
+        receiveOverride.Reset();
         return *this;
     }
 
-    [[nodiscard]] bool HasCastOverride() const noexcept { return castOverride_.HasValue(); }
-    [[nodiscard]] bool HasReceiveOverride() const noexcept { return receiveOverride_.HasValue(); }
-    [[nodiscard]] Optional<bool> GetCastOverride() const noexcept { return castOverride_; }
-    [[nodiscard]] Optional<bool> GetReceiveOverride() const noexcept { return receiveOverride_; }
+    [[nodiscard]] bool HasCastOverride() const noexcept { return castOverride.HasValue(); }
+    [[nodiscard]] bool HasReceiveOverride() const noexcept { return receiveOverride.HasValue(); }
+    [[nodiscard]] Optional<bool> GetCastOverride() const noexcept { return castOverride; }
+    [[nodiscard]] Optional<bool> GetReceiveOverride() const noexcept { return receiveOverride; }
 
     /** Applies explicit overrides onto default shadow flag bits. */
     [[nodiscard]] std::int32_t ResolveAgainstDefault(const std::int32_t defaultFlags) const noexcept;
@@ -88,8 +88,8 @@ public:
     [[nodiscard]] static SceneShadowParticipation FromMaterial(const MaterialComponent& material) noexcept;
 
 private:
-    Optional<bool> castOverride_{};
-    Optional<bool> receiveOverride_{};
+    Optional<bool> castOverride{};
+    Optional<bool> receiveOverride{};
 };
 
 }  // namespace Spark

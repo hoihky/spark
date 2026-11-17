@@ -29,7 +29,7 @@ flowchart LR
 
 ```cpp
 #include "spark/scene/editor/SceneLevelLoader.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
 
 SceneLoadSession session(sceneManager);
 

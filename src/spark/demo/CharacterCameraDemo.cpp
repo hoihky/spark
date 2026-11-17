@@ -111,7 +111,7 @@ struct CharTreeLayoutSpec {
         uniformScale = placement.targetHeightM / height;
     }
 
-    Spark::GameObject* tree = w.CreateGameObject();
+    Spark::GameObject* tree = w.Entities().Create();
     tree->GetName() = Spark::Utf8String(name);
     Spark::TransformComponent* tr = tree->AddComponent<Spark::TransformComponent>();
     tr->SetUniformScale(uniformScale);
@@ -227,7 +227,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
             }
         }
 
-        Spark::GameObject* skyObj = w.CreateGameObject();
+        Spark::GameObject* skyObj = w.Entities().Create();
         skyObj->GetName() = Spark::Utf8String("CharSky");
         skyTransform = skyObj->AddComponent<Spark::TransformComponent>();
         charSkyMesh = skyObj->AddComponent<Spark::MeshComponent>(skyBoxMesh, Spark::Vector3::One);
@@ -236,7 +236,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         roots.PushBack(skyObj);
         ApplyCharacterSkyVisuals();
 
-        Spark::GameObject* ground = w.CreateGameObject();
+        Spark::GameObject* ground = w.Entities().Create();
         ground->GetName() = Spark::Utf8String("CharGround");
         Spark::TransformComponent* groundTr = ground->AddComponent<Spark::TransformComponent>();
         groundTr->SetUniformScale(kCharGroundLayoutScale);
@@ -258,7 +258,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         SpawnForestTrees(w);
         characterPhysics.GetQueries3D().RebuildStatics(w);
 
-        characterRoot = w.CreateGameObject();
+        characterRoot = w.Entities().Create();
         characterRoot->GetName() = Spark::Utf8String("Player");
         characterRootTr = characterRoot->AddComponent<Spark::TransformComponent>();
         characterRootTr->SetTranslation(rig.characterPosition);
@@ -322,7 +322,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
             playerAnimator = nullptr;
             charAnimFsm = nullptr;
             auto setupPart = [&](const char* name, Spark::Vector3 localPos, Spark::Vector3 localScale, Spark::Vector3 albedo) {
-                Spark::GameObject* part = w.CreateGameObject();
+                Spark::GameObject* part = w.Entities().Create();
                 part->GetName() = Spark::Utf8String(name);
                 part->SetParent(characterRoot);
                 Spark::TransformComponent* tr = part->AddComponent<Spark::TransformComponent>();
@@ -348,7 +348,7 @@ void CharacterCameraDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         helpHud.SetControlHints(
                 "WASD walk · Shift sprint · F melee · H hurt · R root motion · B skeleton · M model · V FP · F1");
 
-        Spark::GameObject* springArmRig = w.CreateGameObject();
+        Spark::GameObject* springArmRig = w.Entities().Create();
         springArmRig->GetName() = Spark::Utf8String("CharSpringArmRig");
         springArmRig->SetParent(characterRoot);
         Spark::TransformComponent* armTr = springArmRig->AddComponent<Spark::TransformComponent>();
@@ -888,7 +888,7 @@ void CharacterCameraDemo::AddPointLight(
             float intensity,
             float range)
 {
-        Spark::GameObject* light = w.CreateGameObject();
+        Spark::GameObject* light = w.Entities().Create();
         light->GetName() = Spark::Utf8String("CharPointLight");
         Spark::TransformComponent* tr = light->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation(position);
@@ -1081,7 +1081,7 @@ void CharacterCameraDemo::ApplyAvatarModel(const CharAvatarModel model) {
                     .Normalized());
 
     if (characterVisual == nullptr) {
-        characterVisual = characterRoot->GetWorld().CreateGameObject();
+        characterVisual = characterRoot->GetWorld().Entities().Create();
         characterVisual->GetName() = Spark::Utf8String("PlayerVisual");
         characterVisual->SetParent(characterRoot);
         characterVisualTr = characterVisual->AddComponent<Spark::TransformComponent>();
@@ -1209,7 +1209,7 @@ void CharacterCameraDemo::SetupAttackSocketMarker() {
         return;
     }
     if (attackSocketMarker == nullptr) {
-        attackSocketMarker = characterVisual->GetWorld().CreateGameObject();
+        attackSocketMarker = characterVisual->GetWorld().Entities().Create();
         attackSocketMarker->GetName() = Spark::Utf8String("AttackSocketMarker");
         attackSocketMarker->SetParent(characterVisual);
         Spark::TransformComponent* markerTr = attackSocketMarker->AddComponent<Spark::TransformComponent>();
@@ -1265,7 +1265,7 @@ void CharacterCameraDemo::SpawnMeleeTrainingDummies(Spark::GameWorld& w) {
             Spark::Vector3{-2.2F, 0.0F, -3.5F},
     };
     for (std::size_t i = 0; i < 2; ++i) {
-        Spark::GameObject* dummy = w.CreateGameObject();
+        Spark::GameObject* dummy = w.Entities().Create();
         dummy->GetName() = Spark::Utf8String(i == 0 ? "MeleeDummyA" : "MeleeDummyB");
         Spark::TransformComponent* tr = dummy->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation(positions[i]);

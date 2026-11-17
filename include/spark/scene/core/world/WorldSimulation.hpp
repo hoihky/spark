@@ -20,15 +20,15 @@ public:
     using WorldView::WorldView;
 
     void UpdateComponents(const FrameTiming& timing, IEngineContext& context) {
-        world_.UpdateGameObjects(timing, context);
+        hostWorld.UpdateGameObjects(timing, context);
     }
 
-    void ProcessVfx() { world_.GetVfxSubsystem().Process(world_); }
+    void ProcessVfx() { hostWorld.GetVfxSubsystem().Process(hostWorld); }
 
-    void ProcessAudio(IEngineContext& context) { SoundSubsystem::ProcessFrame(world_, context); }
+    void ProcessAudio(IEngineContext& context) { SoundSubsystem::ProcessFrame(hostWorld, context); }
 
     void RunAi(const FrameTiming& timing, IEngineContext& context) {
-        AiSubsystem::RunFrame(world_, timing, context);
+        AiSubsystem::RunFrame(hostWorld, timing, context);
     }
 
     void RunDefaultSlice(const FrameTiming& timing, IEngineContext& context) {
@@ -40,9 +40,9 @@ public:
     /** Post-physics gameplay flush (pickup destroys). No-op when <c>SPARK_HAS_GAMEPLAY</c> is 0. Call after <c>Physics().Simulate2D</c>. */
     void RunGameplaySlice() noexcept {
 #if SPARK_HAS_GAMEPLAY
-        GameplaySubsystem::AfterPhysics2D(world_);
+        GameplaySubsystem::AfterPhysics2D(hostWorld);
 #else
-        (void)world_;
+        (void)hostWorld;
 #endif
     }
 };

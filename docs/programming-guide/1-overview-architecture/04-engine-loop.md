@@ -48,6 +48,63 @@ sequenceDiagram
 
 **ImGui rule:** build all `ImGui::Begin` / widget code inside **`OnRender`**, not `OnUpdate`. Retained Spark UI uses `ProcessUiCanvasesInput` during update and `PaintUiCanvases` when assembling `SceneRenderParams` — see [UI and Toolkits](08-ui-and-toolkits.md).
 
+## Canonical frame order (facets)
+
+Reference implementations:
+
+| Demo | Role |
+|------|------|
+| **`Platformer2DDemo`** (#6) | 2D: input → `Physics().Simulate2D` → `RunGameplaySlice` → rules → `Rendering().SubmitLitWithCamera` |
+| **`GltfSamples3DDemo`** (#21) | 3D: fly camera → `Rendering().FillLit` + custom `SceneRenderParams` |
+| **`Game` base class** | Default `OnUpdate`: `GetWorld().Simulation().RunDefaultSlice` |
+
+`RunDefaultSlice` runs **component `OnUpdate`**, **`ProcessVfx`**, and **`SoundSubsystem::ProcessFrame`** — it does **not** step physics or AI. Call those explicitly in the order your game requires.
+
+### `Game` / single `IGame` subclass
+
+```cpp
+void MyGame::OnUpdate(const FrameTiming& timing, IEngineContext& context) override {
+    // 1) Input and rules that must run before component ticks (optional).
+    ReadInputAndSetIntent(context);
+
+    // 2) Default slice: components, VFX, audio cues.
+    GetWorld().Simulation().RunDefaultSlice(timing, context);
+
+    // 3) Physics (after controllers wrote intent, if you simulate after components).
+    GetWorld().Physics(physics).Simulate2D(timing);  // or Simulate3D / SimulateAll3D
+
+    // 4) Post-physics gameplay (2D pickups / interactables when SPARK_HAS_GAMEPLAY).
+    GetWorld().Simulation().RunGameplaySlice();
+
+    // 5) Optional AI (not in RunDefaultSlice).
+    GetWorld().Simulation().RunAi(timing, context);
+}
+```
+
+Order varies by genre — **platformer** refreshes input *before* physics and calls `RunDefaultSlice` *after* `Simulate` via the shell (see SparkDemo below).
+
+### SparkDemo shell (`Game` + `Simulate` hook)
+
+Launcher games implement `Simulate` **then** the shell calls `Game::OnUpdate` → `RunDefaultSlice`:
+
+```text
+Simulate()     — demo rules, physics, AI (whatever this sample needs)
+Game::OnUpdate — RunDefaultSlice (components, VFX, audio)
+OnRender       — world.Rendering().SubmitLit* / FillLit + SetSceneRenderParams
+```
+
+Do **not** call `ProcessVfx` or `UpdateGameObjects` manually in demos on this path — that duplicates `RunDefaultSlice`. Exception: immediate VFX feedback (e.g. button “play effect”) may call `world.Simulation().ProcessVfx()` once.
+
+### Render
+
+| Pattern | API |
+|---------|-----|
+| Fixed camera matrices | `world.Rendering().SubmitLit(context, viewProj, camPos, options)` |
+| Main `Camera2D` / `Camera` in ECS | `world.Rendering().SubmitLitWithCamera(context, options)` |
+| Custom fog / IBL / overlays after fill | `world.Rendering().FillLit(..., params)` then patch `params` and `context.SetSceneRenderParams` |
+
+Build lighting with `LitSceneSubmitOptions` (`WithDirectionalLight`, `WithParticles`, `WithSceneTime`, …).
+
 ## `FrameTiming`
 
 ```cpp
@@ -115,10 +172,12 @@ def on_update(self, timing: FrameTiming, context: EngineContext) -> None:
 
 ```cpp
 void OnRender(IRenderFrame&, IEngineContext& context) override {
-    SubmitStandardLitSceneFromWorldWithCamera(
-        GetWorld(), context,
-        sunDir, sunColor, sunIntensity, ambient,
-        enableParticles, sceneTimeSeconds);
+    LitSceneSubmitOptions opts{};
+    opts.WithDirectionalLight(sunDir, sunColor, sunIntensity)
+        .WithAmbient(ambient)
+        .WithParticles(true, camRight, camUp)
+        .WithSceneTime(sceneTimeSeconds);
+    GetWorld().Rendering().SubmitLitWithCamera(context, opts);
 }
 ```
 
@@ -127,9 +186,12 @@ void OnRender(IRenderFrame&, IEngineContext& context) override {
 ```csharp
 public override void OnRender(IRenderFrame frame, IEngineContext context)
 {
-    SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
-        World, context, SunDir, SunColor, Intensity, Ambient,
-        enableParticles: true, _sceneTime);
+    var opts = new LitSceneSubmitOptions()
+        .WithDirectionalLight(SunDir, SunColor, Intensity)
+        .WithAmbient(Ambient)
+        .WithParticles(true)
+        .WithSceneTime(_sceneTime);
+    World.Rendering.SubmitLitWithCamera(context, opts);
 }
 ```
 
@@ -141,7 +203,7 @@ def on_render(self, context: EngineContext) -> None:
     pass
 ```
 
-Custom fly-camera games must build `viewProjection` manually (see [IGame and Game](05-igame-contract.md)).
+Custom fly-camera games must build `viewProjection` manually (see [IGame and Game](05-igame-contract.md) and `GltfSamples3DDemo`).
 
 ## Screenshots and recording
 
@@ -150,15 +212,16 @@ Custom fly-camera games must build `viewProjection` manually (see [IGame and Gam
 
 On macOS, prefer in-engine **F12** over system capture (MoltenVK windows often record black externally).
 
-## Recommended order inside `OnUpdate`
+## Legacy vs facet quick map
 
-1. Read input / write velocities.
-2. `Game::OnUpdate` (components, animation, sound cue prep).
-3. `PhysicsSubsystem::Simulate2D` / `SimulateAll3D`.
-4. Game rules (scoring, spawns) that depend on physics results.
-5. Optional: `SimulateGameAi`, `ProcessVfx`, async `world.Assets().Pump()`.
+| Prefer | Legacy (still valid) |
+|--------|----------------------|
+| `world.Simulation().RunDefaultSlice` | `UpdateGameObjects` + separate VFX/audio |
+| `world.Physics(physics).Simulate2D/3D` | `physics.Simulate2D(world, …)` |
+| `world.Rendering().SubmitLit` / `FillLit` | `SubmitStandardLitSceneFromWorld` |
+| `world.Simulation().RunAi` | `SimulateGameAi` / `AiSubsystem::RunFrame` |
 
-Rendering never mutates physics state — only reads transforms after simulation.
+See also `docs/API_POLISH.md`.
 
 ## Demo shell shortcuts
 

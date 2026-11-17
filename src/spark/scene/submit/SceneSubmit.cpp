@@ -321,7 +321,7 @@ void FillStandardLitSceneFromWorld(
     SceneSubmitDetail::ApplyEcsDirectionalLight(world, params);
     const std::int32_t defaultShadowFlags = DefaultShadowFlagsFor(resolvedLighting);
 
-    world.ForEachActiveGameObject([&params](GameObject* o) {
+    world.Entities().ForEachActive([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -342,7 +342,7 @@ void FillStandardLitSceneFromWorld(
         params.pointLights.PushBack(gpu);
     });
 
-    world.ForEachActiveGameObject([&params](GameObject* o) {
+    world.Entities().ForEachActive([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -365,7 +365,7 @@ void FillStandardLitSceneFromWorld(
         params.pointLights.PushBack(gpu);
     });
 
-    world.ForEachActiveGameObject([&params](GameObject* o) {
+    world.Entities().ForEachActive([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -427,7 +427,7 @@ void FillStandardLitSceneFromWorld(
         DispatchDrawableFrustumCull(
                 *sceneForCulling, viewProjection, sceneForCulling->GetSpatialPartitionKind(), rigidSink);
     } else {
-        world.ForEachActiveGameObject([&](GameObject* o) {
+        world.Entities().ForEachActive([&](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -443,7 +443,7 @@ void FillStandardLitSceneFromWorld(
     }
 
     ScenePartitionKind skinnedPartition = ScenePartitionKind::None;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr || skinnedPartition != ScenePartitionKind::None) {
             return;
         }
@@ -514,7 +514,7 @@ void FillStandardLitSceneFromWorld(
     SkinnedAnimationService& skinnedService = world.GetSkinnedAnimationService();
     skinnedService.ResetPolicyToDefaults();
     bool skinnedBudgetApplied = false;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (skinnedBudgetApplied || o == nullptr) {
             return;
         }
@@ -537,7 +537,7 @@ void FillStandardLitSceneFromWorld(
     const SceneSpriteTileCull spriteTileCull(viewProjection);
     const SceneTilemapSubmitter tilemapSubmitter{};
 
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -606,7 +606,7 @@ void FillStandardLitSceneFromWorld(
     if (enableParticles) {
         params.particleCameraRight = particleCameraRight.Normalized();
         params.particleCameraUp = particleCameraUp.Normalized();
-        world.ForEachActiveGameObject([&params, &findOrAddTexture](GameObject* o) {
+        world.Entities().ForEachActive([&params, &findOrAddTexture](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -653,7 +653,7 @@ void FillStandardLitSceneFromWorld(
     }
 
     params.decals.Clear();
-    world.ForEachActiveGameObject([&params, &findOrAddTexture](GameObject* o) {
+    world.Entities().ForEachActive([&params, &findOrAddTexture](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -675,7 +675,7 @@ void FillStandardLitSceneFromWorld(
         params.decals.PushBack(draw);
     });
 
-    world.ForEachActiveGameObject([&params](GameObject* o) {
+    world.Entities().ForEachActive([&params](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -709,7 +709,7 @@ void FillStandardLitSceneFromWorld(
     foliageCollector.CollectInto(world, params, findOrAddTexture);
 
 #if SPARK_HAS_GAMEPLAY
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

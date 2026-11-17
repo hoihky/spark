@@ -1,9 +1,9 @@
 #pragma once
 
 #include "spark/core/Utf8String.hpp"
-#include "spark/scene/core/SceneSpawn.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
-#include "spark/scene/core/SpawnPointService.hpp"
+#include "spark/scene/core/spawn/SceneSpawn.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
+#include "spark/scene/core/spawn/SpawnPointService.hpp"
 
 namespace Spark {
 

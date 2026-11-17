@@ -2,7 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/ecs/GameObjectQuery.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 #include "spark/scene/core/world/WorldView.hpp"
 
 namespace Spark {
@@ -80,7 +80,7 @@ std::size_t WorldQuery::CollectWithComponents(
         Array<GameObject*>& out,
         const GameObjectQueryFilter& filter) const {
     const std::size_t before = out.GetSize();
-    world_.GetEntityGraph().ForEachWithComponents<ComponentTypes...>(
+    hostWorld.GetEntityGraph().ForEachWithComponents<ComponentTypes...>(
             [&](GameObject* object) { out.PushBack(object); }, filter);
     return out.GetSize() - before;
 }

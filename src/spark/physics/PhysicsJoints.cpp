@@ -78,7 +78,7 @@ void ApplyPositionDelta3D(
 }  // namespace
 
 void SolveDistanceJoints2D(GameWorld& world, const float stiffnessScale) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* owner) {
+    world.Entities().ForEachActive([&](GameObject* owner) {
         if (owner == nullptr) {
             return;
         }
@@ -120,7 +120,7 @@ void SolveDistanceJoints2D(GameWorld& world, const float stiffnessScale) noexcep
 }
 
 void SolveHingeJoints2D(GameWorld& world, const float stiffnessScale) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* owner) {
+    world.Entities().ForEachActive([&](GameObject* owner) {
         if (owner == nullptr) {
             return;
         }
@@ -161,7 +161,7 @@ void SolveHingeJoints2D(GameWorld& world, const float stiffnessScale) noexcept {
 }
 
 void SolveHingeJoints3D(GameWorld& world, const float stiffnessScale) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* owner) {
+    world.Entities().ForEachActive([&](GameObject* owner) {
         if (owner == nullptr) {
             return;
         }
@@ -206,7 +206,7 @@ void SolveSpringJoints3D(GameWorld& world, const float deltaTimeSeconds) noexcep
     if (deltaTimeSeconds <= 0.0F) {
         return;
     }
-    world.ForEachActiveGameObject([&](GameObject* owner) {
+    world.Entities().ForEachActive([&](GameObject* owner) {
         if (owner == nullptr) {
             return;
         }

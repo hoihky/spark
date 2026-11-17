@@ -2,7 +2,7 @@
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/scene/core/GameWorld.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 #include "spark/scene/prefab/PrefabInstantiator.hpp"
 
 namespace Spark {

@@ -3,7 +3,6 @@
 #include "spark/demo/DemoFoundation.hpp"
 #include "spark/audio/SoundFileLoader.hpp"
 #include "spark/audio/SoundEngine.hpp"
-#include "spark/ai/AiSubsystem.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
@@ -194,7 +193,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             }
         }
 
-        mazeSkyObject = w.CreateGameObject();
+        mazeSkyObject = w.Entities().Create();
         mazeSkyObject->GetName() = Spark::Utf8String("Maze3DSky");
         mazeSkyTransform = mazeSkyObject->AddComponent<Spark::TransformComponent>();
         mazeSkyMeshComp = mazeSkyObject->AddComponent<Spark::MeshComponent>(skyBoxMesh, Spark::Vector3::One);
@@ -219,7 +218,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             w.Assets().RegisterTexture(wallBrickTex, "spark/maze3d/wall_bricks");
         }
 
-        Spark::GameObject* ground = w.CreateGameObject();
+        Spark::GameObject* ground = w.Entities().Create();
         ground->GetName() = Spark::Utf8String("Maze3DGround");
         Spark::TransformComponent* groundTr = ground->AddComponent<Spark::TransformComponent>();
         {
@@ -261,7 +260,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 if (cells[static_cast<std::size_t>(j * kMazeW + i)] == 0) {
                     continue;
                 }
-                Spark::GameObject* g = w.CreateGameObject();
+                Spark::GameObject* g = w.Entities().Create();
                 g->GetName() = Spark::Utf8String("Maze3DWall");
                 Spark::TransformComponent* tr = g->AddComponent<Spark::TransformComponent>();
                 const float cx = originX + (static_cast<float>(i) + 0.5F) * kCellWorld;
@@ -337,7 +336,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                     const float phase = static_cast<float>(sconceCount) * 1.73F;
                     const float hue = 0.55F + 0.12F * std::sin(phase * 0.7F);
 
-                    Spark::GameObject* torchGo = w.CreateGameObject();
+                    Spark::GameObject* torchGo = w.Entities().Create();
                     torchGo->GetName() = useRealLight ? Spark::Utf8String("Maze3DTorchLit")
                                                       : Spark::Utf8String("Maze3DTorchEmissive");
                     Spark::TransformComponent* torchTr = torchGo->AddComponent<Spark::TransformComponent>();
@@ -380,7 +379,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         const float px = originX + (static_cast<float>(spawnI) + 0.5F) * kCellWorld;
         const float pz = originZ + (static_cast<float>(spawnJ) + 0.5F) * kCellWorld;
 
-        playerGo = w.CreateGameObject();
+        playerGo = w.Entities().Create();
         playerGo->GetName() = Spark::Utf8String("Maze3DPlayer");
         playerTr = playerGo->AddComponent<Spark::TransformComponent>();
         playerTr->SetTranslation({px, 0.0F, pz});
@@ -443,7 +442,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 const float h = std::max(1.0e-4F, rbmax.y - rbmin.y);
                 sc = kTargetHeightM / h;
             }
-            Spark::GameObject* vis = w.CreateGameObject();
+            Spark::GameObject* vis = w.Entities().Create();
             vis->GetName() = Spark::Utf8String("Maze3DPlayerVisual");
             vis->SetParent(playerGo);
             Spark::TransformComponent* vtr = vis->AddComponent<Spark::TransformComponent>();
@@ -473,7 +472,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         } else {
             useHumanAvatar = false;
             characterAvatarHudName = Spark::Utf8String("Cube (glTF missing)");
-            Spark::GameObject* vis = w.CreateGameObject();
+            Spark::GameObject* vis = w.Entities().Create();
             vis->GetName() = Spark::Utf8String("Maze3DPlayerVisual");
             vis->SetParent(playerGo);
             Spark::TransformComponent* vtr = vis->AddComponent<Spark::TransformComponent>();
@@ -488,7 +487,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         {
             const float pathX = originX + (static_cast<float>(kMazeW / 2) + 0.5F) * kCellWorld;
             const float pathZ = originZ + (static_cast<float>(kMazeH / 2) + 0.5F) * kCellWorld;
-            patrolPathGo = w.CreateGameObject();
+            patrolPathGo = w.Entities().Create();
             patrolPathGo->GetName() = Spark::Utf8String("Maze3DPatrolPath");
             Spark::TransformComponent* pathTr = patrolPathGo->AddComponent<Spark::TransformComponent>();
             pathTr->SetTranslation({pathX, 0.0F, pathZ});
@@ -501,7 +500,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             patrol->GetWaypoints().PushBack({0.0F, 0.0F, leg});
             roots.PushBack(patrolPathGo);
 
-            guardGo = w.CreateGameObject();
+            guardGo = w.Entities().Create();
             guardGo->GetName() = Spark::Utf8String("Maze3DGuard");
             Spark::TransformComponent* guardTr = guardGo->AddComponent<Spark::TransformComponent>();
             guardTr->SetTranslation({pathX, 0.85F, pathZ});
@@ -547,7 +546,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
         for (int gi = 0; gi < gemsTotal; ++gi) {
             const Maze3DCell c = floorCells[static_cast<std::size_t>(gi)];
-            Spark::GameObject* gem = w.CreateGameObject();
+            Spark::GameObject* gem = w.Entities().Create();
             gem->GetName() = Spark::Utf8String("Maze3DGem");
             Spark::TransformComponent* gtr = gem->AddComponent<Spark::TransformComponent>();
             const float gx = originX + (static_cast<float>(c.i) + 0.5F) * kCellWorld;
@@ -589,7 +588,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         const float mazeCenterX = originX + 0.5F * static_cast<float>(kMazeW) * kCellWorld;
         const float mazeCenterZ = originZ + 0.5F * static_cast<float>(kMazeH) * kCellWorld;
 
-        Spark::GameObject* lightA = w.CreateGameObject();
+        Spark::GameObject* lightA = w.Entities().Create();
         lightA->GetName() = Spark::Utf8String("Maze3DLightA");
         Spark::TransformComponent* lta = lightA->AddComponent<Spark::TransformComponent>();
         lta->SetTranslation({mazeCenterX - kCellWorld * 4.0F, 14.0F, mazeCenterZ - kCellWorld * 3.0F});
@@ -597,7 +596,7 @@ void Maze3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 ->SetCastsShadow(false);
         roots.PushBack(lightA);
 
-        Spark::GameObject* lightB = w.CreateGameObject();
+        Spark::GameObject* lightB = w.Entities().Create();
         lightB->GetName() = Spark::Utf8String("Maze3DLightB");
         Spark::TransformComponent* ltb = lightB->AddComponent<Spark::TransformComponent>();
         ltb->SetTranslation({mazeCenterX + kCellWorld * 5.0F, 10.0F, mazeCenterZ + kCellWorld * 4.0F});
@@ -690,7 +689,6 @@ void Maze3DDemo::Unload(Spark::GameWorld& w)
 void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContext& context, Spark::GameWorld& world)
 {
         sceneTime += timing.totalTimeSeconds;
-        Spark::ProcessVfx(world);
         Spark::IInput& in = context.GetInput();
         const float dt = timing.deltaTimeSeconds;
 
@@ -772,8 +770,8 @@ void Maze3DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineContex
                         useHumanAvatar ? (qYaw * humanModelBindFix).Normalized() : qYaw.Normalized());
             }
 
-            physics.Simulate3D(world, timing);
-            Spark::AiSubsystem::RunFrame(world, timing, context);
+            world.Physics(physics).Simulate3D(timing);
+            world.Simulation().RunAi(timing, context);
 
             const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
             rig.characterPosition.x = p.x;

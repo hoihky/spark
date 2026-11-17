@@ -23,7 +23,7 @@ namespace {
 
 void CollectUiCanvases(const GameWorld& world, Array<UiCanvasComponent*>& out) {
     out.Clear();
-    world.ForEachActiveGameObject([&out](GameObject* object) {
+    world.Entities().ForEachActive([&out](GameObject* object) {
         if (object == nullptr) {
             return;
         }

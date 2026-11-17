@@ -5,7 +5,10 @@
 
 namespace Spark {
 
-/** Fly-camera scene displaying Khronos DamagedHelmet.glb. */
+/**
+ * Fly-camera scene displaying Khronos DamagedHelmet.glb.
+ * Canonical **3D frame pipeline** sample (with `Platformer2DDemo` for 2D): see Part 1 — Engine Loop.
+ */
 class GltfSamples3DDemo {
 public:
     void Load(GameWorld& w, IEngineContext& context);

@@ -86,7 +86,7 @@ Array<GameObject*> SceneEntityRoleClassifier::CollectInstanceObjects(
         const GameWorld& world,
         const SceneInstanceId instanceId) noexcept {
     Array<GameObject*> objects{};
-    world.ForEachGameObject([&](GameObject* object) {
+    world.Entities().ForEach([&](GameObject* object) {
         if (object != nullptr && object->GetSceneInstanceId() == instanceId) {
             objects.PushBack(object);
         }

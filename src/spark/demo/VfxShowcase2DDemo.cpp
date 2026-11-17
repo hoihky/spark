@@ -6,7 +6,6 @@
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -17,7 +16,7 @@ namespace Spark {
 namespace {
 
 GameObject& AddRoot(GameWorld& world, Array<GameObject*>& roots, const char* name) {
-    GameObject* go = world.CreateGameObject();
+    GameObject* go = world.Entities().Create();
     go->GetName() = Utf8String(name);
     roots.PushBack(go);
     return *go;
@@ -74,7 +73,7 @@ void VfxShowcase2DDemo::Unload(GameWorld& world) {
 void VfxShowcase2DDemo::PlayAt(GameWorld& world, const Vector3& worldPos) {
     const VfxShowcase2DDetail::Entry& entry = VfxShowcase2DDetail::EntryAt(selectedIndex);
     world.GetVfxSubsystem().Queue(entry.assetKey, worldPos);
-    ProcessVfx(world);
+    world.Simulation().ProcessVfx();
 }
 
 bool VfxShowcase2DDemo::PickWorldXY(
@@ -108,7 +107,6 @@ bool VfxShowcase2DDemo::PickWorldXY(
 }
 
 void VfxShowcase2DDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world) {
-    ProcessVfx(world);
     IInput& in = context.GetInput();
 
     if (in.IsKeyPressedThisFrame(GLFW_KEY_UP) || in.IsKeyPressedThisFrame(GLFW_KEY_LEFT_BRACKET)) {
@@ -168,20 +166,15 @@ void VfxShowcase2DDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineContex
     Vector3 pr{};
     Vector3 pu{};
     camera.BillboardBasisWorld(pr, pu);
-    SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.55F, 0.62F, 0.72F}.Normalized(),
-            Vector3{0.96F, 0.98F, 1.0F},
-            0.65F,
-            Vector3{0.08F, 0.10F, 0.14F},
-            true,
-            pr,
-            pu,
-            0.0F,
-            SceneSpriteSortMode::SortOrderThenWorldY);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.55F, 0.62F, 0.72F}.Normalized(),
+                    Vector3{0.96F, 0.98F, 1.0F},
+                    0.65F)
+            .WithAmbient(Vector3{0.08F, 0.10F, 0.14F})
+            .WithParticles(true, pr, pu)
+            .WithSpriteSortMode(SceneSpriteSortMode::SortOrderThenWorldY);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 
     SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {

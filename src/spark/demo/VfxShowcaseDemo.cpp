@@ -280,7 +280,7 @@ void VfxShowcaseDemo::Load(GameWorld& w, IEngineContext& context) {
     roots.Clear();
     groundAsset = MakeShared<Mesh>(Utf8String("VfxShowcaseGround"));
     *groundAsset = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
-    groundObject = w.CreateGameObject();
+    groundObject = w.Entities().Create();
     groundObject->GetName() = Utf8String("Ground");
     groundObject->AddComponent<TransformComponent>();
     groundObject->AddComponent<MeshComponent>(groundAsset, SceneMeshSlot::GroundPlane, Vector3{0.32F, 0.38F, 0.34F});
@@ -288,7 +288,7 @@ void VfxShowcaseDemo::Load(GameWorld& w, IEngineContext& context) {
 
     pedestalAsset = MakeShared<Mesh>(Utf8String("VfxShowcasePedestal"));
     *pedestalAsset = Mesh::CreateUnitCube();
-    pedestalObject = w.CreateGameObject();
+    pedestalObject = w.Entities().Create();
     pedestalObject->GetName() = Utf8String("Pedestal");
     if (TransformComponent* tr = pedestalObject->AddComponent<TransformComponent>()) {
         tr->SetTranslation({previewPosition.x, 0.18F, previewPosition.z});
@@ -298,7 +298,7 @@ void VfxShowcaseDemo::Load(GameWorld& w, IEngineContext& context) {
             pedestalAsset, SceneMeshSlot::UnitCube, Vector3{0.42F, 0.44F, 0.48F});
     roots.PushBack(pedestalObject);
 
-    previewObject = w.CreateGameObject();
+    previewObject = w.Entities().Create();
     previewObject->GetName() = Utf8String("VfxPreview");
     if (TransformComponent* tr = previewObject->AddComponent<TransformComponent>()) {
         tr->SetTranslation(previewPosition);
@@ -364,13 +364,13 @@ void VfxShowcaseDemo::PlaySelectedEffect(GameWorld& world) {
     const VfxShowcaseDetail::Entry& entry = SelectedEntry();
     if (entry.isComposite) {
         world.GetVfxSubsystem().Queue(entry.assetKey, previewPosition);
-        ProcessVfx(world);
+        world.Simulation().ProcessVfx();
         SetStatusMessage(std::format("Played composite '{}'.", entry.assetKey).c_str());
         return;
     }
     if (entry.isBurst) {
         world.GetVfxSubsystem().Queue(entry.assetKey, previewPosition);
-        ProcessVfx(world);
+        world.Simulation().ProcessVfx();
         SetStatusMessage(std::format("Played burst '{}'.", entry.assetKey).c_str());
         return;
     }
@@ -386,8 +386,6 @@ void VfxShowcaseDemo::PlaySelectedEffect(GameWorld& world) {
 void VfxShowcaseDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& world) {
     activeWorld = &world;
     ApplyTuningToEmitter();
-    ProcessVfx(world);
-
     IInput& in = context.GetInput();
     if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
         in.SetCursorCaptured(!in.IsCursorCaptured());
@@ -668,7 +666,7 @@ void VfxShowcaseDemo::BuildRetainedUi(GameWorld& world) {
         uiRoot = nullptr;
         uiCanvas = nullptr;
     }
-    uiRoot = world.CreateGameObject();
+    uiRoot = world.Entities().Create();
     uiRoot->GetName() = Utf8String("VfxShowcaseUi");
     uiCanvas = uiRoot->AddComponent<UiCanvasComponent>();
     uiCanvas->SetSortOrder(100);

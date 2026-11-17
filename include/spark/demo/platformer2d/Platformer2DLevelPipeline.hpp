@@ -2,8 +2,8 @@
 
 #include "spark/core/Utf8String.hpp"
 #include "spark/demo/DemoFoundation.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
-#include "spark/scene/core/SceneSpawn.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
+#include "spark/scene/core/spawn/SceneSpawn.hpp"
 
 namespace Spark {
 

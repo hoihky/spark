@@ -16,7 +16,7 @@ void FoliageSceneCollector::CollectInto(
     params.foliageBatches.Clear();
     params.foliageInstances.Clear();
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }
@@ -50,7 +50,7 @@ void FoliageSceneCollector::CollectInto(
         params.foliageBatches.PushBack(batch);
     });
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

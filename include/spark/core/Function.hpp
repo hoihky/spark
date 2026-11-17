@@ -131,27 +131,27 @@ public:
     }
 
     [[nodiscard]] explicit operator bool() const noexcept { return IsBound(); }
-    [[nodiscard]] bool IsBound() const noexcept { return invoke_ != nullptr; }
+    [[nodiscard]] bool IsBound() const noexcept { return invokeFn != nullptr; }
 
     void Reset() noexcept {
-        if (callable_ != nullptr && destroy_ != nullptr) {
-            destroy_(callable_);
+        if (heapCallable != nullptr && destroyFn != nullptr) {
+            destroyFn(heapCallable);
         }
-        callable_ = nullptr;
-        invoke_ = nullptr;
-        destroy_ = nullptr;
-        clone_ = nullptr;
+        heapCallable = nullptr;
+        invokeFn = nullptr;
+        destroyFn = nullptr;
+        cloneFn = nullptr;
     }
 
     R operator()(Args... args) const {
-        if (invoke_ == nullptr) {
+        if (invokeFn == nullptr) {
             if constexpr (IsSameV<R, void>) {
                 return;
             } else {
                 return R{};
             }
         }
-        return invoke_(callable_, Forward<Args>(args)...);
+        return invokeFn(heapCallable, Forward<Args>(args)...);
     }
 
 private:
@@ -159,39 +159,39 @@ private:
     using DestroyFn = void (*)(void*) noexcept;
     using CloneFn = void (*)(void*, void*&);
 
-    void* callable_ = nullptr;
-    InvokeFn invoke_ = nullptr;
-    DestroyFn destroy_ = nullptr;
-    CloneFn clone_ = nullptr;
+    void* heapCallable = nullptr;
+    InvokeFn invokeFn = nullptr;
+    DestroyFn destroyFn = nullptr;
+    CloneFn cloneFn = nullptr;
 
     template<typename Stored>
     void BindCallable(Stored&& callable) {
         using HeapStored = DecayT<Stored>;
-        callable_ = new HeapStored(Forward<Stored>(callable));
-        invoke_ = &Detail::FunctionVtable<HeapStored, R, Args...>::Invoke;
-        destroy_ = &Detail::FunctionVtable<HeapStored, R, Args...>::Destroy;
-        clone_ = &Detail::FunctionVtable<HeapStored, R, Args...>::Clone;
+        heapCallable = new HeapStored(Forward<Stored>(callable));
+        invokeFn = &Detail::FunctionVtable<HeapStored, R, Args...>::Invoke;
+        destroyFn = &Detail::FunctionVtable<HeapStored, R, Args...>::Destroy;
+        cloneFn = &Detail::FunctionVtable<HeapStored, R, Args...>::Clone;
     }
 
     void CopyFrom(const Function& other) {
-        if (!other.callable_) {
+        if (!other.heapCallable) {
             return;
         }
-        other.clone_(other.callable_, callable_);
-        invoke_ = other.invoke_;
-        destroy_ = other.destroy_;
-        clone_ = other.clone_;
+        other.cloneFn(other.heapCallable, heapCallable);
+        invokeFn = other.invokeFn;
+        destroyFn = other.destroyFn;
+        cloneFn = other.cloneFn;
     }
 
     void MoveFrom(Function&& other) noexcept {
-        callable_ = other.callable_;
-        invoke_ = other.invoke_;
-        destroy_ = other.destroy_;
-        clone_ = other.clone_;
-        other.callable_ = nullptr;
-        other.invoke_ = nullptr;
-        other.destroy_ = nullptr;
-        other.clone_ = nullptr;
+        heapCallable = other.heapCallable;
+        invokeFn = other.invokeFn;
+        destroyFn = other.destroyFn;
+        cloneFn = other.cloneFn;
+        other.heapCallable = nullptr;
+        other.invokeFn = nullptr;
+        other.destroyFn = nullptr;
+        other.cloneFn = nullptr;
     }
 };
 

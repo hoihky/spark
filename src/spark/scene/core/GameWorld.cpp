@@ -7,20 +7,20 @@
 
 namespace Spark {
 
-GameWorld::GameWorld() : entityGraph_(*this) {
-    assetStore_.Start();
+GameWorld::GameWorld() : entityGraph(*this) {
+    assetStore.Start();
 }
 
 GameWorld::~GameWorld() {
-    presentation_.Shutdown(*this);
-    assetStore_.Shutdown();
-    entityGraph_.DestroyAllRootObjectsImmediate();
+    presentation.Shutdown(*this);
+    assetStore.Shutdown();
+    entityGraph.DestroyAllRootObjectsImmediate();
 }
 
 void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& context) {
-    assetStore_.Loader().Pump(*this);
-    entityGraph_.SetUpdating(true);
-    entityGraph_.ForEachActive([&](GameObject* o) {
+    assetStore.Loader().Pump(*this);
+    entityGraph.SetUpdating(true);
+    entityGraph.ForEachActive([&](GameObject* o) {
         if (o == nullptr || o->pendingDestroy) {
             return;
         }
@@ -32,16 +32,16 @@ void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& con
         }
         o->UpdateComponents(timing, context);
     });
-    entityGraph_.SetUpdating(false);
-    entityGraph_.FlushPendingDestroys();
+    entityGraph.SetUpdating(false);
+    entityGraph.FlushPendingDestroys();
 }
 
 void GameWorld::SetUiFont(SharedPtr<Font> font) {
-    presentation_.SetUiFont(MoveTemp(font));
+    presentation.SetUiFont(MoveTemp(font));
 }
 
 void GameWorld::SetUiBoldFont(SharedPtr<Font> font) {
-    presentation_.SetUiBoldFont(MoveTemp(font));
+    presentation.SetUiBoldFont(MoveTemp(font));
 }
 
 }  // namespace Spark

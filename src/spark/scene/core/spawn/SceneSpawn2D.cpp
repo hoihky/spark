@@ -1,10 +1,11 @@
-#include "spark/scene/core/SpawnPoint2DService.hpp"
+#include "spark/scene/core/spawn/SceneSpawn2D.hpp"
 
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/spawn/SpawnPoint2DService.hpp"
 
 #include <cmath>
 #include <cstring>
@@ -24,7 +25,7 @@ namespace {
 
 SceneSpawnPose2D SpawnPoint2DService::Resolve(const GameWorld& world, const char* spawnName) const noexcept {
     SceneSpawnPose2D out{};
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (out.found || object == nullptr) {
             return;
         }
@@ -50,6 +51,11 @@ SceneSpawnPose2D SpawnPoint2DService::Resolve(const GameWorld& world, const char
         }
     });
     return out;
+}
+
+SceneSpawnPose2D FindSpawnPoint2D(const GameWorld& world, const char* spawnName) noexcept {
+    static const SpawnPoint2DService kDefaultService{};
+    return kDefaultService.Resolve(world, spawnName);
 }
 
 }  // namespace Spark

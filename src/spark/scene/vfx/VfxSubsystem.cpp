@@ -32,7 +32,7 @@ GameObject* VfxSubsystem::Acquire(GameWorld& world) {
         return object;
     }
 
-    GameObject* object = world.CreateGameObject();
+    GameObject* object = world.Entities().Create();
     object->GetName() = Utf8String("__vfx_pooled");
     object->AddComponent<TransformComponent>();
     object->AddComponent<ParticleEmitterComponent>();
@@ -71,12 +71,12 @@ void VfxSubsystem::Reset() noexcept {
 void VfxSubsystem::Shutdown(GameWorld& world) noexcept {
     for (std::size_t i = 0; i < active.GetSize(); ++i) {
         if (active[i] != nullptr) {
-            world.DestroyGameObject(active[i]);
+            world.Entities().Destroy(active[i]);
         }
     }
     for (std::size_t i = 0; i < pool.GetSize(); ++i) {
         if (pool[i] != nullptr) {
-            world.DestroyGameObject(pool[i]);
+            world.Entities().Destroy(pool[i]);
         }
     }
     Reset();

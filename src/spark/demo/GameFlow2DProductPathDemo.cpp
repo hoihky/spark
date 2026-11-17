@@ -23,7 +23,7 @@
 #include "spark/physics/2d/Collision2D.hpp"
 #include "spark/save/GameSave.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
-#include "spark/scene/core/SceneSpawn.hpp"
+#include "spark/scene/core/spawn/SceneSpawn.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <GLFW/glfw3.h>
@@ -202,7 +202,7 @@ GameObject* SpawnProductGem(
         gem = g_bindings.gemPool->Acquire(world, kP0GemPrefabPath, nullptr);
     }
     if (gem == nullptr) {
-        gem = world.CreateGameObject();
+        gem = world.Entities().Create();
     }
     ConfigureSpawnedGem(*gem, center, frame);
     return gem;
@@ -218,7 +218,7 @@ GameObject* SpawnProductGoal(
     }
     const GridPathfinder::Cell goalCell{marker.cellX, marker.cellY};
     const Vector2 center = frame.CellCenterToWorldXY(goalCell);
-    GameObject* goal = world.CreateGameObject();
+    GameObject* goal = world.Entities().Create();
     goal->GetName() = Utf8String("P0Goal");
     TransformComponent* tr = goal->AddComponent<TransformComponent>();
     tr->SetTranslation({center.x, center.y, 0.04F});
@@ -440,7 +440,7 @@ void GameFlow2DProductPathDemo::TryCollectNearbyGems(GameWorld& world) noexcept 
     const float collectRadius = cell * 0.58F;
     const float collectRadiusSq = collectRadius * collectRadius;
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr || object == playerObject) {
             return;
         }
@@ -613,7 +613,7 @@ void GameFlow2DProductPathDemo::SetupProductChaser(
     }
 
     if (chaserObject == nullptr) {
-        chaserObject = world.CreateGameObject();
+        chaserObject = world.Entities().Create();
         chaserObject->GetName() = Utf8String("P0Chaser");
         roots.Track(chaserObject);
     }
@@ -773,7 +773,7 @@ void GameFlow2DProductPathDemo::SetupProductPatrol(
     }
 
     if (patrolObject == nullptr) {
-        patrolObject = world.CreateGameObject();
+        patrolObject = world.Entities().Create();
         patrolObject->GetName() = Utf8String("P0Patrol");
         roots.Track(patrolObject);
     }
@@ -1128,7 +1128,7 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     loadSession = MakeUnique<SceneLoadSession>(*sceneManager);
     gemPool = MakeUnique<GameObjectPool>(*sceneManager);
 
-    flowObject = world.CreateGameObject();
+    flowObject = world.Entities().Create();
     flowObject->GetName() = Utf8String("P0GameFlow");
     gameState = flowObject->AddComponent<GameStateComponent>(GameFlowState::Intro);
     flow.Bind(gameState, &persistent);
@@ -1144,7 +1144,7 @@ void GameFlow2DProductPathDemo::Load(GameWorld& world, IEngineContext& context) 
     SharedPtr<Texture2D> playerTex = MakePlayerTexture();
     world.Assets().RegisterTexture(playerTex, "spark/p0_demo/player");
 
-    playerObject = world.CreateGameObject();
+    playerObject = world.Entities().Create();
     playerObject->GetName() = Utf8String("P0Player");
     playerTr = playerObject->AddComponent<TransformComponent>();
     playerTr->SetUniformScale(0.55F);
@@ -1371,7 +1371,7 @@ void GameFlow2DProductPathDemo::Simulate(const FrameTiming& timing, IEngineConte
     }
 
     if (canMove) {
-        physics.Simulate2D(world, timing);
+        world.Physics(physics).Simulate2D(timing);
         world.Simulation().RunGameplaySlice();
         if (fogOfWar != nullptr && walkGrid != nullptr && playerObject != nullptr) {
             const Vector3 playerPos = playerObject->GetWorldMatrix().TransformPoint(Vector3::Zero);
@@ -1401,20 +1401,15 @@ void GameFlow2DProductPathDemo::Render(Scene& /*scene*/, GameWorld& world, IEngi
     Vector3 pr{};
     Vector3 pu{};
     camera.BillboardBasisWorld(pr, pu);
-    SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.55F, 0.62F, 0.72F}.Normalized(),
-            Vector3{0.96F, 0.98F, 1.0F},
-            0.65F,
-            Vector3{0.08F, 0.10F, 0.14F},
-            true,
-            pr,
-            pu,
-            0.0F,
-            SceneSpriteSortMode::SortOrderThenWorldY);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.55F, 0.62F, 0.72F}.Normalized(),
+                    Vector3{0.96F, 0.98F, 1.0F},
+                    0.65F)
+            .WithAmbient(Vector3{0.08F, 0.10F, 0.14F})
+            .WithParticles(true, pr, pu)
+            .WithSpriteSortMode(SceneSpriteSortMode::SortOrderThenWorldY);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 
     SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {

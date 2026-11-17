@@ -44,7 +44,7 @@ public:
 
     void ApplySpatialPolicyFromFirstMatchingObject() noexcept {
         bool found = false;
-        world.ForEachActiveGameObject([this, &found](GameObject* o) {
+        world.Entities().ForEachActive([this, &found](GameObject* o) {
             if (found || o == nullptr) {
                 return;
             }
@@ -104,7 +104,7 @@ public:
      */
     template<typename Fn>
     void ForEachDrawable(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -124,7 +124,7 @@ public:
      */
     template<typename Fn>
     void ForEachSkinnedDrawable(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -145,7 +145,7 @@ public:
      */
     template<typename Fn>
     void ForEachPointLight(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -160,7 +160,7 @@ public:
     /** Invokes fn(spotLightComponent, worldMatrix) for every object with an enabled SpotLightComponent. */
     template<typename Fn>
     void ForEachSpotLight(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -175,7 +175,7 @@ public:
     /** Invokes fn(directionalLightComponent, worldMatrix) for every enabled DirectionalLightComponent. */
     template<typename Fn>
     void ForEachDirectionalLight(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -190,7 +190,7 @@ public:
     /** Invokes fn(cameraComponent, worldMatrix) for every object with an enabled CameraComponent. */
     template<typename Fn>
     void ForEachCamera(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -205,7 +205,7 @@ public:
     /** Invokes fn(camera2dComponent, worldMatrix) for every object with an enabled Camera2DComponent. */
     template<typename Fn>
     void ForEachCamera2D(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -220,7 +220,7 @@ public:
     /** Screen-space text overlays (TextOverlayComponent). */
     template<typename Fn>
     void ForEachTextOverlay(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -238,7 +238,7 @@ public:
      */
     template<typename Fn>
     void ForEachSky(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -261,7 +261,7 @@ public:
      */
     template<typename Fn>
     void ForEachWaterBody(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -304,7 +304,7 @@ public:
      */
     template<typename Fn>
     void ForEachParticleEmitter(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -319,7 +319,7 @@ public:
     /** UI roots (<c>UiCanvasComponent</c>); use with <c>ProcessUiCanvasesInput</c> / <c>PaintUiCanvases</c>. */
     template<typename Fn>
     void ForEachUiCanvas(Fn&& fn) const {
-        world.ForEachActiveGameObject([&fn](GameObject* o) {
+        world.Entities().ForEachActive([&fn](GameObject* o) {
             if (o == nullptr) {
                 return;
             }

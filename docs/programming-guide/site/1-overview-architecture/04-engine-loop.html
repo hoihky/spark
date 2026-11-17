@@ -1146,6 +1146,81 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     E-&gt;&gt;V: PresentFrame
 </pre>
 <p><strong>ImGui rule:</strong> build all <code>ImGui::Begin</code> / widget code inside <strong><code>OnRender</code></strong>, not <code>OnUpdate</code>. Retained Spark UI uses <code>ProcessUiCanvasesInput</code> during update and <code>PaintUiCanvases</code> when assembling <code>SceneRenderParams</code> — see <a href="08-ui-and-toolkits.html">UI and Toolkits</a>.</p>
+<h2 id="canonical-frame-order-facets">Canonical frame order (facets)</h2>
+<p>Reference implementations:</p>
+<table>
+<thead>
+<tr>
+<th>Demo</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>Platformer2DDemo</code></strong> (#6)</td>
+<td>2D: input → <code>Physics().Simulate2D</code> → <code>RunGameplaySlice</code> → rules → <code>Rendering().SubmitLitWithCamera</code></td>
+</tr>
+<tr>
+<td><strong><code>GltfSamples3DDemo</code></strong> (#21)</td>
+<td>3D: fly camera → <code>Rendering().FillLit</code> + custom <code>SceneRenderParams</code></td>
+</tr>
+<tr>
+<td><strong><code>Game</code> base class</strong></td>
+<td>Default <code>OnUpdate</code>: <code>GetWorld().Simulation().RunDefaultSlice</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>RunDefaultSlice</code> runs <strong>component <code>OnUpdate</code></strong>, <strong><code>ProcessVfx</code></strong>, and <strong><code>SoundSubsystem::ProcessFrame</code></strong> — it does <strong>not</strong> step physics or AI. Call those explicitly in the order your game requires.</p>
+<h3 id="game-single-igame-subclass"><code>Game</code> / single <code>IGame</code> subclass</h3>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">MyGame::OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span> <span class="hljs-keyword">override</span> </span>{
+    <span class="hljs-comment">// 1) Input and rules that must run before component ticks (optional).</span>
+    <span class="hljs-built_in">ReadInputAndSetIntent</span>(context);
+
+    <span class="hljs-comment">// 2) Default slice: components, VFX, audio cues.</span>
+    <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Simulation</span>().<span class="hljs-built_in">RunDefaultSlice</span>(timing, context);
+
+    <span class="hljs-comment">// 3) Physics (after controllers wrote intent, if you simulate after components).</span>
+    <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Physics</span>(physics).<span class="hljs-built_in">Simulate2D</span>(timing);  <span class="hljs-comment">// or Simulate3D / SimulateAll3D</span>
+
+    <span class="hljs-comment">// 4) Post-physics gameplay (2D pickups / interactables when SPARK_HAS_GAMEPLAY).</span>
+    <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Simulation</span>().<span class="hljs-built_in">RunGameplaySlice</span>();
+
+    <span class="hljs-comment">// 5) Optional AI (not in RunDefaultSlice).</span>
+    <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Simulation</span>().<span class="hljs-built_in">RunAi</span>(timing, context);
+}
+</code></pre>
+<p>Order varies by genre — <strong>platformer</strong> refreshes input <em>before</em> physics and calls <code>RunDefaultSlice</code> <em>after</em> <code>Simulate</code> via the shell (see SparkDemo below).</p>
+<h3 id="sparkdemo-shell-game-simulate-hook">SparkDemo shell (<code>Game</code> + <code>Simulate</code> hook)</h3>
+<p>Launcher games implement <code>Simulate</code> <strong>then</strong> the shell calls <code>Game::OnUpdate</code> → <code>RunDefaultSlice</code>:</p>
+<pre><code class="hljs language-text language-plaintext" data-highlighted="yes">Simulate()     — demo rules, physics, AI (whatever this sample needs)
+Game::OnUpdate — RunDefaultSlice (components, VFX, audio)
+OnRender       — world.Rendering().SubmitLit* / FillLit + SetSceneRenderParams
+</code></pre>
+<p>Do <strong>not</strong> call <code>ProcessVfx</code> or <code>UpdateGameObjects</code> manually in demos on this path — that duplicates <code>RunDefaultSlice</code>. Exception: immediate VFX feedback (e.g. button “play effect”) may call <code>world.Simulation().ProcessVfx()</code> once.</p>
+<h3 id="render">Render</h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fixed camera matrices</td>
+<td><code>world.Rendering().SubmitLit(context, viewProj, camPos, options)</code></td>
+</tr>
+<tr>
+<td>Main <code>Camera2D</code> / <code>Camera</code> in ECS</td>
+<td><code>world.Rendering().SubmitLitWithCamera(context, options)</code></td>
+</tr>
+<tr>
+<td>Custom fog / IBL / overlays after fill</td>
+<td><code>world.Rendering().FillLit(..., params)</code> then patch <code>params</code> and <code>context.SetSceneRenderParams</code></td>
+</tr>
+</tbody>
+</table>
+<p>Build lighting with <code>LitSceneSubmitOptions</code> (<code>WithDirectionalLight</code>, <code>WithParticles</code>, <code>WithSceneTime</code>, …).</p>
 <h2 id="frametiming"><code>FrameTiming</code></h2>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">FrameTiming</span> {
     <span class="hljs-type">float</span> deltaTimeSeconds;   <span class="hljs-comment">// Motion integration — always use this</span>
@@ -1191,18 +1266,23 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <h2 id="concept-drive-render-from-onrender">Concept: drive render from <code>OnRender</code></h2>
 <h3 id="c_2">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; context)</span> <span class="hljs-keyword">override</span> </span>{
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(
-        <span class="hljs-built_in">GetWorld</span>(), context,
-        sunDir, sunColor, sunIntensity, ambient,
-        enableParticles, sceneTimeSeconds);
+    LitSceneSubmitOptions opts{};
+    opts.<span class="hljs-built_in">WithDirectionalLight</span>(sunDir, sunColor, sunIntensity)
+        .<span class="hljs-built_in">WithAmbient</span>(ambient)
+        .<span class="hljs-built_in">WithParticles</span>(<span class="hljs-literal">true</span>, camRight, camUp)
+        .<span class="hljs-built_in">WithSceneTime</span>(sceneTimeSeconds);
+    <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLitWithCamera</span>(context, opts);
 }
 </code></pre>
 <h3 id="c_3">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnRender</span>(<span class="hljs-params">IRenderFrame frame, IEngineContext context</span>)</span>
 {
-    SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
-        World, context, SunDir, SunColor, Intensity, Ambient,
-        enableParticles: <span class="hljs-literal">true</span>, _sceneTime);
+    <span class="hljs-keyword">var</span> opts = <span class="hljs-keyword">new</span> LitSceneSubmitOptions()
+        .WithDirectionalLight(SunDir, SunColor, Intensity)
+        .WithAmbient(Ambient)
+        .WithParticles(<span class="hljs-literal">true</span>)
+        .WithSceneTime(_sceneTime);
+    World.Rendering.SubmitLitWithCamera(context, opts);
 }
 </code></pre>
 <h3 id="python_1">Python</h3>
@@ -1210,22 +1290,41 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-comment"># Native host or template calls FillStandardLitSceneFromWorld after updates.</span>
     <span class="hljs-keyword">pass</span>
 </code></pre>
-<p>Custom fly-camera games must build <code>viewProjection</code> manually (see <a href="05-igame-contract.html">IGame and Game</a>).</p>
+<p>Custom fly-camera games must build <code>viewProjection</code> manually (see <a href="05-igame-contract.html">IGame and Game</a> and <code>GltfSamples3DDemo</code>).</p>
 <h2 id="screenshots-and-recording">Screenshots and recording</h2>
 <ul>
 <li><strong>F12</strong> — async PNG to <code>SPARK_BUILD_ASSETS_DIR/screenshots/spark_YYYYMMDD_HHMMSS.png</code> (engine-internal binding).</li>
 <li><strong>F9</strong> — MP4 recording toggle (see root <code>README.md</code>).</li>
 </ul>
 <p>On macOS, prefer in-engine <strong>F12</strong> over system capture (MoltenVK windows often record black externally).</p>
-<h2 id="recommended-order-inside-onupdate">Recommended order inside <code>OnUpdate</code></h2>
-<ol>
-<li>Read input / write velocities.</li>
-<li><code>Game::OnUpdate</code> (components, animation, sound cue prep).</li>
-<li><code>PhysicsSubsystem::Simulate2D</code> / <code>SimulateAll3D</code>.</li>
-<li>Game rules (scoring, spawns) that depend on physics results.</li>
-<li>Optional: <code>SimulateGameAi</code>, <code>ProcessVfx</code>, async <code>world.Assets().Pump()</code>.</li>
-</ol>
-<p>Rendering never mutates physics state — only reads transforms after simulation.</p>
+<h2 id="legacy-vs-facet-quick-map">Legacy vs facet quick map</h2>
+<table>
+<thead>
+<tr>
+<th>Prefer</th>
+<th>Legacy (still valid)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>world.Simulation().RunDefaultSlice</code></td>
+<td><code>UpdateGameObjects</code> + separate VFX/audio</td>
+</tr>
+<tr>
+<td><code>world.Physics(physics).Simulate2D/3D</code></td>
+<td><code>physics.Simulate2D(world, …)</code></td>
+</tr>
+<tr>
+<td><code>world.Rendering().SubmitLit</code> / <code>FillLit</code></td>
+<td><code>SubmitStandardLitSceneFromWorld</code></td>
+</tr>
+<tr>
+<td><code>world.Simulation().RunAi</code></td>
+<td><code>SimulateGameAi</code> / <code>AiSubsystem::RunFrame</code></td>
+</tr>
+</tbody>
+</table>
+<p>See also <code>docs/API_POLISH.md</code>.</p>
 <h2 id="demo-shell-shortcuts">Demo shell shortcuts</h2>
 <p>When running <strong>SparkDemo</strong>: <strong>TAB</strong> menu, <strong>H</strong> help, <strong>F3</strong> FPS. These are implemented in the shell, not in individual demos.</p>
 <p>Next: <a href="05-igame-contract.html">IGame and Game</a>.</p></div>

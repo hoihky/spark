@@ -28,7 +28,7 @@ void EnemySquad::Load(
         const float ey = Config::kEnemySpawns[static_cast<std::size_t>(ei)][1];
         const float pMin = Config::kEnemySpawns[static_cast<std::size_t>(ei)][2];
         const float pMax = Config::kEnemySpawns[static_cast<std::size_t>(ei)][3];
-        Spark::GameObject* ego = world.CreateGameObject();
+        Spark::GameObject* ego = world.Entities().Create();
         ego->GetName() = Spark::Utf8String("PlatEnemy");
         Spark::TransformComponent* etr = ego->AddComponent<Spark::TransformComponent>();
         etr->SetTranslation({ex, ey, 0.045F + 0.0002F * static_cast<float>(ei)});
@@ -77,7 +77,7 @@ Spark::GameObject* EnemySquad::SpawnAt(
     const std::size_t ei = enemies.GetSize();
     enemies.PushBack({});
     const float ey = worldY;
-    Spark::GameObject* ego = world.CreateGameObject();
+    Spark::GameObject* ego = world.Entities().Create();
     ego->GetName() = Spark::Utf8String("PlatEnemy");
     Spark::TransformComponent* etr = ego->AddComponent<Spark::TransformComponent>();
     etr->SetTranslation({worldX, ey, 0.045F + 0.0002F * static_cast<float>(ei)});

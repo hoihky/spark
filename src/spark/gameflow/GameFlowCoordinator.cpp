@@ -1,7 +1,7 @@
 #include "spark/gameflow/GameFlowCoordinator.hpp"
 
 #include "spark/save/GameSave.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 
 namespace Spark {
 

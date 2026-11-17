@@ -58,7 +58,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
         world.Assets().RegisterTexture(skyHdrTex, "spark/demo/water_lake_sky");
     }
 
-    skyObject = world.CreateGameObject();
+    skyObject = world.Entities().Create();
     skyObject->GetName() = Utf8String("LakeSky");
     skyObject->AddComponent<TransformComponent>();
     skyObject->AddComponent<SkyComponent>(SceneSkyMode::Dome);
@@ -79,7 +79,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
     meshSettings.SetRebuildMoveThreshold(32.0F);
     meshSettings.SetWorldUnitsPerTextureRepeat(16.0F);
 
-    waterObject = world.CreateGameObject();
+    waterObject = world.Entities().Create();
     waterObject->GetName() = Utf8String("OceanWater");
     waterObject->AddComponent<TransformComponent>();
     const Vector3 waterSurfaceColor{0.04F, 0.36F, 0.52F};
@@ -130,7 +130,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
     islandSettings.worldUnitsPerTextureRepeat = 28.0F;
     islandSettings.seed = 0xBEAC41u;
 
-    GameObject* island = world.CreateGameObject();
+    GameObject* island = world.Entities().Create();
     island->GetName() = Utf8String("BeachIsland");
     island->AddComponent<TransformComponent>();
     if (TerrainComponent* terrain = island->AddComponent<TerrainComponent>(
@@ -157,7 +157,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
     *seabedMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent * 2.0F);
     world.Assets().RegisterMesh(seabedMesh, "spark/demo/water_lake_seabed");
 
-    GameObject* seabed = world.CreateGameObject();
+    GameObject* seabed = world.Entities().Create();
     seabed->GetName() = Utf8String("Seabed");
     seabed->AddComponent<TransformComponent>()->SetTranslation({0.0F, kSeabedY, kPropZ});
     seabed->AddComponent<MeshComponent>(
@@ -180,7 +180,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
             {-8.0F, 10.0F, {0.35F, 0.90F, 0.98F}},
     };
     for (const AbsorptionMarker& marker : markers) {
-        GameObject* cube = world.CreateGameObject();
+        GameObject* cube = world.Entities().Create();
         cube->GetName() = Utf8String("AbsorptionCube");
         if (TransformComponent* transform = cube->AddComponent<TransformComponent>()) {
             transform->SetTranslation({marker.centerX, marker.centerY, kPropZ});
@@ -196,7 +196,7 @@ void WaterLakeDemo::Load(GameWorld& world, IEngineContext& context) {
         roots.PushBack(cube);
     }
 
-    GameObject* postGo = world.CreateGameObject();
+    GameObject* postGo = world.Entities().Create();
     postGo->GetName() = Utf8String("PostVolume");
     postGo->AddComponent<TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
     if (PostProcessVolumeComponent* post = postGo->AddComponent<PostProcessVolumeComponent>()) {
@@ -333,22 +333,15 @@ void WaterLakeDemo::Render(Scene& scene, GameWorld& world, IEngineContext& conte
     params.worldClearColorEnabled = !skyHasHdr;
     params.worldClearColor = {0.42F, 0.76F, 0.98F};
 
-    FillStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.38F, 0.90F, 0.20F}.Normalized(),
-            {1.0F, 0.96F, 0.86F},
-            1.08F,
-            Vector3{0.12F, 0.14F, 0.18F},
-            false,
-            {},
-            {},
-            sceneTime,
-            params,
-            SceneSpriteSortMode::SortOrderOnly,
-            &scene);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.38F, 0.90F, 0.20F}.Normalized(),
+                    Vector3{1.0F, 0.96F, 0.86F},
+                    1.08F)
+            .WithAmbient(Vector3{0.12F, 0.14F, 0.18F})
+            .WithSceneTime(sceneTime)
+            .WithSceneForCulling(&scene);
+    world.Rendering().FillLit(context, viewProj, camera.position, litOptions, params);
 
     helpHud.PatchSceneRenderParams(params, world);
     context.SetSceneRenderParams(params);

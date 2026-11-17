@@ -14,7 +14,7 @@
 #include "spark/ecs/components/gameplay/DamageZone2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/Hurtbox2DComponent.hpp"
 #include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
-#include "spark/scene/core/SceneSpawn2D.hpp"
+#include "spark/scene/core/spawn/SceneSpawn2D.hpp"
 #include "spark/ecs/components/physics/2d/Rigidbody2DComponent.hpp"
 #include "spark/physics/2d/CollisionFilter2D.hpp"
 #include "spark/ecs/components/physics/2d/OneWayPlatform2DComponent.hpp"
@@ -237,7 +237,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     world.Assets().RegisterTexture(bgCloudTex, "spark/plat/bg_cloud");
     world.Assets().RegisterTexture(goalFlagTex, "spark/plat/goal_flag");
 
-    bgSkyGo = world.CreateGameObject();
+    bgSkyGo = world.Entities().Create();
     bgSkyGo->GetName() = Spark::Utf8String("PlatBgSky");
     bgSkyTr = bgSkyGo->AddComponent<Spark::TransformComponent>();
     bgSkyTr->SetTranslation({kBackgroundAnchorX, 4.2F, -0.45F});
@@ -250,7 +250,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     }
     roots.Track(bgSkyGo);
 
-    bgMountainsGo = world.CreateGameObject();
+    bgMountainsGo = world.Entities().Create();
     bgMountainsGo->GetName() = Spark::Utf8String("PlatBgMountains");
     bgMountainsTr = bgMountainsGo->AddComponent<Spark::TransformComponent>();
     bgMountainsTr->SetTranslation({kBackgroundAnchorX, 1.35F, -0.35F});
@@ -266,7 +266,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     }
     roots.Track(bgMountainsGo);
 
-    bgHillsGo = world.CreateGameObject();
+    bgHillsGo = world.Entities().Create();
     bgHillsGo->GetName() = Spark::Utf8String("PlatBgHills");
     bgHillsTr = bgHillsGo->AddComponent<Spark::TransformComponent>();
     bgHillsTr->SetTranslation({kBackgroundAnchorX, 0.55F, -0.25F});
@@ -282,7 +282,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     }
     roots.Track(bgHillsGo);
 
-    bgCloudGoA = world.CreateGameObject();
+    bgCloudGoA = world.Entities().Create();
     bgCloudGoA->GetName() = Spark::Utf8String("PlatBgCloudA");
     bgCloudTrA = bgCloudGoA->AddComponent<Spark::TransformComponent>();
     bgCloudTrA->SetTranslation({6.0F, 6.8F, -0.15F});
@@ -299,7 +299,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     }
     roots.Track(bgCloudGoA);
 
-    bgCloudGoB = world.CreateGameObject();
+    bgCloudGoB = world.Entities().Create();
     bgCloudGoB->GetName() = Spark::Utf8String("PlatBgCloudB");
     bgCloudTrB = bgCloudGoB->AddComponent<Spark::TransformComponent>();
     bgCloudTrB->SetTranslation({34.0F, 7.4F, -0.14F});
@@ -317,7 +317,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     }
     roots.Track(bgCloudGoB);
 
-    goalGlowGo = world.CreateGameObject();
+    goalGlowGo = world.Entities().Create();
     goalGlowGo->GetName() = Spark::Utf8String("PlatGoalGlow");
     goalGlowTr = goalGlowGo->AddComponent<Spark::TransformComponent>();
     goalGlowTr->SetTranslation({kGoalCenterX, kGoalCenterY + 0.35F, 0.02F});
@@ -331,7 +331,7 @@ void Platformer2DDemo::SpawnBackgroundLayers(Spark::GameWorld& world)
     goalGlowGo->SetActive(false);
     roots.Track(goalGlowGo);
 
-    goalFlagGo = world.CreateGameObject();
+    goalFlagGo = world.Entities().Create();
     goalFlagGo->GetName() = Spark::Utf8String("PlatGoalFlag");
     goalFlagTr = goalFlagGo->AddComponent<Spark::TransformComponent>();
     goalFlagTr->SetTranslation({kGoalCenterX, kGoalCenterY + 0.95F, 0.03F});
@@ -528,7 +528,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         const float cy = (y0 + y1) * 0.5F;
         const float sx = std::abs(x1 - x0);
         const float sy = std::abs(y1 - y0);
-        Spark::GameObject* go = w.CreateGameObject();
+        Spark::GameObject* go = w.Entities().Create();
         go->GetName() = Spark::Utf8String("Plat");
         Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
         tr->SetTranslation({cx, cy, 0.01F + 0.001F * static_cast<float>(i)});
@@ -550,7 +550,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             go->AddComponent<Spark::OneWayPlatform2DComponent>();
         }
         if (i == 9) {
-            Spark::GameObject* lava = w.CreateGameObject();
+            Spark::GameObject* lava = w.Entities().Create();
             lava->GetName() = Spark::Utf8String("PlatLavaZone");
             lava->SetParent(go);
             Spark::TransformComponent* lavaTr = lava->AddComponent<Spark::TransformComponent>();
@@ -569,7 +569,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         roots.Track(go);
     }
 
-    playerObject = w.CreateGameObject();
+    playerObject = w.Entities().Create();
     playerObject->GetName() = Spark::Utf8String("Player");
     playerTr = playerObject->AddComponent<Spark::TransformComponent>();
     playerTr->SetScale({playerBaseScaleX, playerBaseScaleY, 1.0F});
@@ -590,7 +590,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 Spark::Vector4{})) {
         playerLit->SetNormalMap(playerNormalTex);
     }
-    Spark::GameObject* playerTorch = w.CreateGameObject();
+    Spark::GameObject* playerTorch = w.Entities().Create();
     playerTorch->GetName() = Spark::Utf8String("PlayerTorchLight");
     playerTorch->SetParent(playerObject);
     playerTorch->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 0.35F, 0.0F});
@@ -632,7 +632,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerMelee->SetQueryFilter(meleeFilter);
     playerHealth = playerObject->AddComponent<Spark::HealthComponent>(Platformer2D::Config::kPlayerMaxHealth);
     playerDamageable = playerObject->AddComponent<Spark::DamageableComponent>();
-    Spark::GameObject* playerHurtboxGo = w.CreateGameObject();
+    Spark::GameObject* playerHurtboxGo = w.Entities().Create();
     playerHurtboxGo->GetName() = Spark::Utf8String("PlayerHurtbox");
     playerHurtboxGo->SetParent(playerObject);
     playerHurtboxGo->AddComponent<Spark::TransformComponent>();
@@ -659,7 +659,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerInput->SetActionMap(actionMap);
     roots.Track(playerObject);
 
-    gameFlowGo = w.CreateGameObject();
+    gameFlowGo = w.Entities().Create();
     gameFlowGo->GetName() = Spark::Utf8String("PlatGameFlow");
     gameState = gameFlowGo->AddComponent<Spark::GameStateComponent>(Spark::GameFlowState::Playing);
     gameFlow.Bind(gameState, &persistentData);
@@ -690,7 +690,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     healthHud.Initialize(w, hudWhiteTex, roots);
     SpawnBackgroundLayers(w);
 
-    goalTriggerGo = w.CreateGameObject();
+    goalTriggerGo = w.Entities().Create();
     goalTriggerGo->GetName() = Spark::Utf8String("PlatGoalTrigger");
     Spark::TransformComponent* goalTriggerTr = goalTriggerGo->AddComponent<Spark::TransformComponent>();
     goalTriggerTr->SetTranslation({kGoalCenterX, kGoalCenterY, 0.0F});
@@ -705,7 +705,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     roots.Track(goalTriggerGo);
 
     for (int gi = 0; gi < kGemCount; ++gi) {
-        Spark::GameObject* gem = w.CreateGameObject();
+        Spark::GameObject* gem = w.Entities().Create();
         gem->GetName() = Spark::Utf8String("PlatGem");
         Spark::TransformComponent* gtr = gem->AddComponent<Spark::TransformComponent>();
         gtr->SetTranslation(
@@ -797,7 +797,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             });
     explosions.Initialize(w);
 
-    Spark::GameObject* playerSpawnGo = w.CreateGameObject();
+    Spark::GameObject* playerSpawnGo = w.Entities().Create();
     playerSpawnGo->GetName() = Spark::Utf8String("PlatPlayerSpawn");
     Spark::TransformComponent* playerSpawnTr = playerSpawnGo->AddComponent<Spark::TransformComponent>();
     playerSpawnTr->SetTranslation(
@@ -817,7 +817,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     RespawnPlayerAtSpawn();
     healthHud.SetHealth(Platformer2D::Config::kPlayerMaxHealth, Platformer2D::Config::kPlayerMaxHealth);
 
-    Spark::GameObject* cameraBoundsGo = w.CreateGameObject();
+    Spark::GameObject* cameraBoundsGo = w.Entities().Create();
     cameraBoundsGo->GetName() = Spark::Utf8String("PlatCameraBounds");
     Spark::TransformComponent* cameraBoundsTr = cameraBoundsGo->AddComponent<Spark::TransformComponent>();
     cameraBoundsTr->SetTranslation(
@@ -827,7 +827,7 @@ void Platformer2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             {Platformer2D::Config::kCameraBoundsHalfW, Platformer2D::Config::kCameraBoundsHalfH});
     roots.Track(cameraBoundsGo);
 
-    mainCameraGo = w.CreateGameObject();
+    mainCameraGo = w.Entities().Create();
     mainCameraGo->GetName() = Spark::Utf8String("MainCamera");
     roots.Track(mainCameraGo);
     Spark::TransformComponent* camTr = mainCameraGo->AddComponent<Spark::TransformComponent>();
@@ -959,6 +959,11 @@ void Platformer2DDemo::Simulate(
         Spark::IEngineContext& context,
         Spark::GameWorld& world)
 {
+    // Canonical 2D frame (SparkDemo): this hook runs before Game::OnUpdate → RunDefaultSlice.
+    // (1) Input + rules that must precede component OnUpdate / physics.
+    // (2) world.Physics(physics).Simulate2D + world.Simulation().RunGameplaySlice().
+    // (3) Rules that consume physics (projectiles, pickups, HUD).
+    // Components, VFX, and audio cues pump in RunDefaultSlice — do not call ProcessVfx here.
     engineContext = &context;
     sceneTime += timing.deltaTimeSeconds;
     const float dt = timing.deltaTimeSeconds;
@@ -972,6 +977,7 @@ void Platformer2DDemo::Simulate(
 
     playerCombat.TickCooldown(dt, playerDamageable);
 
+    // --- (1) Pre-slice: input + locomotion intent ---
     if (gameplayActive && playerInput != nullptr && playerObject != nullptr) {
         playerInput->Refresh(*playerObject, context);
     }
@@ -1005,9 +1011,11 @@ void Platformer2DDemo::Simulate(
         }
     }
 
-    physics.Simulate2D(world, timing);
+    // --- (2) Physics + post-physics gameplay flush ---
+    world.Physics(physics).Simulate2D(timing);
     world.Simulation().RunGameplaySlice();
 
+    // --- (3) Post-physics game rules ---
     if (playerTr != nullptr) {
         const bool attackPressed =
                 playerInput != nullptr && playerInput->WasActionPressedThisFrame("Attack");
@@ -1124,15 +1132,16 @@ void Platformer2DDemo::Simulate(
 
 void Platformer2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spark::IEngineContext& context)
 {
-    (void)Spark::SubmitStandardLitSceneFromWorldWithCamera(
-            world,
-            context,
-            Spark::Vector3{0.62F, 0.48F, 0.62F}.Normalized(),
-            Spark::Vector3{1.0F, 0.94F, 0.88F},
-            1.05F,
-            Spark::Vector3{0.22F, 0.28F, 0.38F},
-            true,
-            sceneTime);
+    // ECS camera + lit submit via world.Rendering() (see 04-engine-loop.md).
+    Spark::LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Spark::Vector3{0.62F, 0.48F, 0.62F}.Normalized(),
+                    Spark::Vector3{1.0F, 0.94F, 0.88F},
+                    1.05F)
+            .WithAmbient(Spark::Vector3{0.22F, 0.28F, 0.38F})
+            .WithParticles(true, {}, {})
+            .WithSceneTime(sceneTime);
+    (void)world.Rendering().SubmitLitWithCamera(context, litOptions);
 
     Spark::SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {

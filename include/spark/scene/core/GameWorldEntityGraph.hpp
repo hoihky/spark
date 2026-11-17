@@ -18,7 +18,7 @@ class GameWorld;
  */
 class GameWorldEntityGraph {
 public:
-    explicit GameWorldEntityGraph(GameWorld& owner) noexcept : owner_(owner) {}
+    explicit GameWorldEntityGraph(GameWorld& owner) noexcept : ownerWorld(owner) {}
 
     [[nodiscard]] GameObject* Create();
 
@@ -156,7 +156,7 @@ private:
     static void MarkSubtreePendingDestroy(GameObject* root);
     static bool HasPendingDestroyAncestor(const GameObject* object);
 
-    GameWorld& owner_;
+    GameWorld& ownerWorld;
     Array<UniquePtr<GameObject>> objects;
     Array<GameObject*> pendingDestroyRoots;
     bool updatingGameObjects = false;

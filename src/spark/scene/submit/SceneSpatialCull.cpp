@@ -80,7 +80,7 @@ struct SkinnedRecord {
 
 void GatherDrawables(const Scene& scene, Array<DrawableRecord>& out) {
     out.Clear();
-    scene.GetWorld().ForEachActiveGameObject([&out](GameObject* o) {
+    scene.GetWorld().Entities().ForEachActive([&out](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -105,7 +105,7 @@ void GatherDrawables(const Scene& scene, Array<DrawableRecord>& out) {
 
 void GatherWaterBodies(const Scene& scene, Array<DrawableRecord>& out) {
     out.Clear();
-    scene.GetWorld().ForEachActiveGameObject([&out](GameObject* o) {
+    scene.GetWorld().Entities().ForEachActive([&out](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -130,7 +130,7 @@ void GatherWaterBodies(const Scene& scene, Array<DrawableRecord>& out) {
 
 void GatherSkinned(const GameWorld& world, Array<SkinnedRecord>& out) {
     out.Clear();
-    world.ForEachActiveGameObject([&out](GameObject* o) {
+    world.Entities().ForEachActive([&out](GameObject* o) {
         if (o == nullptr) {
             return;
         }
@@ -629,7 +629,7 @@ void RunSkinnedCull(
 void DispatchDrawableFrustumCull(
         const Scene& scene, const Matrix4& viewProjection, ScenePartitionKind mode, DrawableFrustumSink& sink) {
     if (mode == ScenePartitionKind::None) {
-        scene.GetWorld().ForEachActiveGameObject([&sink](GameObject* o) {
+        scene.GetWorld().Entities().ForEachActive([&sink](GameObject* o) {
             if (o == nullptr) {
                 return;
             }
@@ -658,7 +658,7 @@ void DispatchSkinnedDrawableFrustumCull(
         ScenePartitionKind mode,
         SkinnedDrawableFrustumSink& sink) {
     if (mode == ScenePartitionKind::None) {
-        world.ForEachActiveGameObject([&sink](GameObject* o) {
+        world.Entities().ForEachActive([&sink](GameObject* o) {
             if (o == nullptr) {
                 return;
             }

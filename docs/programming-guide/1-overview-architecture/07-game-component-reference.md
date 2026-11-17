@@ -74,11 +74,17 @@ go.get_component_health().apply_damage(10.0)
 ### C++
 
 ```cpp
-world.ForEachActiveGameObject([&](GameObject* o) {
+world.Entities().ForEachActive([&](GameObject* o) {
     if (o == nullptr) return;
     if (PickupComponent* p = o->GetComponent<PickupComponent>()) {
         (void)p;
     }
+});
+
+// Or only owners with a given component:
+world.Entities().ForEachComponent<PickupComponent>([&](GameObject* o, PickupComponent& pickup) {
+    (void)o;
+    (void)pickup;
 });
 ```
 
@@ -1415,7 +1421,7 @@ tod->SetPriority(1);
 
 ```cpp
 #include "spark/ecs/components/world/SpawnPoint2DComponent.hpp"
-#include "spark/scene/core/SceneSpawn2D.hpp"
+#include "spark/scene/core/spawn/SceneSpawn2D.hpp"
 
 auto* spawn = marker->AddComponent<SpawnPoint2DComponent>();
 spawn->SetSpawnName("PlayerStart");

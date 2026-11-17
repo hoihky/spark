@@ -132,7 +132,7 @@ See `include/spark/engine/SceneRenderParams.hpp` (`MaxSceneTextures = 32`) and `
 | Capability | Evidence |
 |------------|----------|
 | `GameWorld` + hierarchy, parenting, active flag | `include/spark/scene/core/GameWorld.hpp`, `include/spark/ecs/GameObject.hpp` |
-| `SceneManager` — additive/replace load, async assets | `include/spark/scene/core/SceneManager.hpp`, `include/spark/scene/assets/GameWorldAssetLoader.hpp` |
+| `SceneManager` — additive/replace load, async assets | `include/spark/scene/core/load/SceneManager.hpp`, `include/spark/scene/assets/GameWorldAssetLoader.hpp` |
 | `spark_scene_v4` text serialization | `include/spark/scene/serialization/SceneDocument.hpp`, `SceneSerializer.hpp` |
 | ~28 component snapshot handlers | `src/spark/scene/serialization/ComponentSnapshotRegistry.cpp` |
 | Frustum spatial culling (BVH/octree/etc.) | `include/spark/scene/core/ScenePartitionKind.hpp`, `src/spark/scene/SceneSpatialCull.cpp` |
@@ -300,7 +300,7 @@ DIY LevelManager
 | glTF skinned import | `src/spark/scene/skinned_mesh_gltf.cpp` |
 | Materials | `include/spark/ecs/components/rendering/MaterialComponent.hpp` |
 | Texture upload | `include/spark/render/scene/VulkanSceneTextureUploader.hpp` |
-| Scene I/O | `include/spark/scene/serialization/`, `include/spark/scene/core/SceneManager.hpp` |
+| Scene I/O | `include/spark/scene/serialization/`, `include/spark/scene/core/load/SceneManager.hpp` |
 | Scene submit | `include/spark/scene/submit/SceneSubmit.hpp` |
 | Editor prototype | `include/spark/demo/SceneEditor3DDemo.hpp` |
 | Demos | `CharacterCameraDemo.cpp`, `Maze3DDemo.cpp`, `MaterialShowcase3DDemo.cpp` |

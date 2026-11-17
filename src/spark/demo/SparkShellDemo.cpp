@@ -315,6 +315,7 @@ public:
             }
 #endif
         }
+        // Default simulation slice: components, VFX, spatial audio (after demo-specific Simulate).
         Game::OnUpdate(timing, context);
     }
 
@@ -1004,7 +1005,7 @@ private:
         if (launcherCanvas != nullptr) {
             return;
         }
-        launcherUiRoot = world.CreateGameObject();
+        launcherUiRoot = world.Entities().Create();
         launcherUiRoot->GetName() = Utf8String("ShellLauncherUi");
         launcherCanvas = launcherUiRoot->AddComponent<UiCanvasComponent>();
         launcherCanvas->SetSortOrder(200);

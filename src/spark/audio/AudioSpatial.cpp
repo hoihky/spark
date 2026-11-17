@@ -38,7 +38,7 @@ void ProcessAudioListeners(const GameWorld& world) noexcept {
     gFrameListener.valid = false;
     bool found = false;
     std::int32_t bestPriority = 0;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

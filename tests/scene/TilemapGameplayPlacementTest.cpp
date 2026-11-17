@@ -16,7 +16,7 @@ namespace {
 
 const Spark::GameObject* FindByName(const Spark::GameWorld& world, const char* name) {
     const Spark::GameObject* found = nullptr;
-    world.ForEachGameObject([&](const Spark::GameObject* object) {
+    world.Entities().ForEach([&](const Spark::GameObject* object) {
         if (found == nullptr && object != nullptr && object->GetName() == Spark::Utf8String(name)) {
             found = object;
         }

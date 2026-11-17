@@ -8,8 +8,8 @@
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapTileAnimatorComponent.hpp"
 #include "spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 #include "spark/memory/UniquePtr.hpp"
 #include "spark/scene/tilemap/TilemapEditSession.hpp"
 

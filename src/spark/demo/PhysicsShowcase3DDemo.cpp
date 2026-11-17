@@ -62,7 +62,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     ballMesh = MakeShared<Mesh>(Utf8String("PhysShowBall"));
     *ballMesh = Mesh::CreateSkySphere(0.18F, 10, 18);
 
-    GameObject* sky = w.CreateGameObject();
+    GameObject* sky = w.Entities().Create();
     sky->GetName() = Utf8String("PhysShowSky");
     sky->AddComponent<TransformComponent>()->SetUniformScale(96.0F);
     SkyComponent* skyComp = sky->AddComponent<SkyComponent>(SceneSkyMode::Box);
@@ -70,7 +70,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     sky->AddComponent<MeshComponent>(skyMesh, SceneMeshSlot::Custom, Vector3{0.32F, 0.45F, 0.68F});
     roots.PushBack(sky);
 
-    GameObject* ground = w.CreateGameObject();
+    GameObject* ground = w.Entities().Create();
     ground->GetName() = Utf8String("PhysShowGround");
     ground->AddComponent<TransformComponent>();
     ground->AddComponent<MeshComponent>(
@@ -86,7 +86,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     }
     roots.PushBack(ground);
 
-    GameObject* thinWall = w.CreateGameObject();
+    GameObject* thinWall = w.Entities().Create();
     thinWall->GetName() = Utf8String("PhysShowCcdWall");
     TransformComponent* wallTr = thinWall->AddComponent<TransformComponent>();
     wallTr->SetTranslation({6.0F, 1.2F, 10.0F});
@@ -98,7 +98,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     thinWall->AddComponent<Rigidbody3DComponent>(RigidbodyBodyType3D::Static, 1.0F);
     roots.PushBack(thinWall);
 
-    GameObject* goal = w.CreateGameObject();
+    GameObject* goal = w.Entities().Create();
     goal->GetName() = Utf8String("PhysShowGoal");
     TransformComponent* goalTr = goal->AddComponent<TransformComponent>();
     goalTr->SetTranslation({0.0F, 1.5F, 14.0F});
@@ -110,7 +110,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     goalTrigger->SetMaskBits(CollisionFilter3D::LayerBit(PhysicsLayers3D::Player));
     roots.PushBack(goal);
 
-    player = w.CreateGameObject();
+    player = w.Entities().Create();
     player->GetName() = Utf8String("PhysShowPlayer");
     playerTransform = player->AddComponent<TransformComponent>();
     playerTransform->SetTranslation({0.0F, 0.55F, -4.0F});
@@ -123,12 +123,12 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
             | CollisionFilter3D::LayerBit(PhysicsLayers3D::Enemy));
     roots.PushBack(player);
 
-    carrierAnchor = w.CreateGameObject();
+    carrierAnchor = w.Entities().Create();
     carrierAnchor->GetName() = Utf8String("PhysShowCarryAnchor");
     carrierAnchor->AddComponent<TransformComponent>();
     roots.PushBack(carrierAnchor);
 
-    crate = w.CreateGameObject();
+    crate = w.Entities().Create();
     crate->GetName() = Utf8String("PhysShowCrate");
     TransformComponent* crateTr = crate->AddComponent<TransformComponent>();
     constexpr float kCrateScale = 0.95F;
@@ -150,7 +150,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     crate->AddComponent<PhysicsAttachedBody3DComponent>();
     roots.PushBack(crate);
 
-    GameObject* blocker = w.CreateGameObject();
+    GameObject* blocker = w.Entities().Create();
     blocker->GetName() = Utf8String("PhysShowBlocker");
     TransformComponent* blockTr = blocker->AddComponent<TransformComponent>();
     blockTr->SetTranslation({7.5F, 1.1F, 2.0F});
@@ -165,7 +165,7 @@ void PhysicsShowcase3DDemo::Load(GameWorld& w, IEngineContext& context) {
     blockRb->SetAngularDamping(1.5F);
     roots.PushBack(blocker);
 
-    GameObject* light = w.CreateGameObject();
+    GameObject* light = w.Entities().Create();
     light->GetName() = Utf8String("PhysShowSun");
     light->AddComponent<TransformComponent>()->SetTranslation({14.0F, 24.0F, 10.0F});
     PointLightComponent* pl = light->AddComponent<PointLightComponent>();
@@ -266,7 +266,7 @@ void PhysicsShowcase3DDemo::SpawnFastProjectile(GameWorld& world) {
         projectiles.RemoveAt(0);
     }
 
-    GameObject* shot = world.CreateGameObject();
+    GameObject* shot = world.Entities().Create();
     shot->GetName() = Utf8String("PhysShowProjectile");
     shot->AddComponent<TransformComponent>()->SetTranslation(spawn);
     shot->AddComponent<MeshComponent>(ballMesh, SceneMeshSlot::Custom, Vector3{0.95F, 0.25F, 0.2F});
@@ -481,7 +481,7 @@ void PhysicsShowcase3DDemo::Simulate(
     PhysicsWorld3DSettings& settings = physics.GetWorld3D().GetSettings();
     settings.fixedSimulationTimestep = useFixedStep ? (1.0F / 60.0F) : 0.0F;
 
-    physics.SimulateAll3D(world, timing);
+    world.Physics(physics).SimulateAll3D(timing);
 
     if (goalTrigger != nullptr && player != nullptr && goalTrigger->IsOverlapping(*player)) {
         ++goalStayTicks;

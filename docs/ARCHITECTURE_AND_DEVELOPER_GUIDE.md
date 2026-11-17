@@ -433,9 +433,9 @@ Use these iterators to build **`SceneRenderParams`** manually (demos often do th
 | API | Header | Role |
 |-----|--------|------|
 | `SceneSerializer` / `SceneDeserializer` | `spark/scene/serialization/SceneSerializer.hpp` | Capture / apply `SceneDocument` (writes **v4**, reads v3 + v4) |
-| `SceneManager` | `spark/scene/core/SceneManager.hpp` | `LoadSceneFromFile`, `BeginLoadSceneAsync`, `Pump`, `UnloadScene` |
+| `SceneManager` | `spark/scene/core/load/SceneManager.hpp` | `LoadSceneFromFile`, `BeginLoadSceneAsync`, `Pump`, `UnloadScene` |
 | `GameWorldAssetLoader` | `spark/scene/assets/GameWorldAssetLoader.hpp` | Worker-thread I/O + decode; `Pump(GameWorld&)` commits caches on main thread |
-| `SceneInstanceId` | `spark/scene/core/SceneInstanceId.hpp` | Opaque id per loaded scene instance; stored on `GameObject` |
+| `SceneInstanceId` | `spark/scene/core/load/SceneInstanceId.hpp` | Opaque id per loaded scene instance; stored on `GameObject` |
 
 Typical async usage from `IGame::OnUpdate`:
 

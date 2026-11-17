@@ -234,7 +234,7 @@ void SceneWaterSubmit::SubmitFromWorld(
     if (sceneForCulling != nullptr) {
         sceneForCulling->ForEachWaterBodyInViewFrustum(viewProjection, submitOne);
     } else {
-        world.ForEachActiveGameObject([&](GameObject* o) {
+        world.Entities().ForEachActive([&](GameObject* o) {
             if (o == nullptr) {
                 return;
             }

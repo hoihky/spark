@@ -53,14 +53,14 @@ void SceneEditor3DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context
         *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
         w.Assets().RegisterMesh(groundAsset, "spark/scene_editor/ground");
 
-        Spark::GameObject* ground = w.CreateGameObject();
+        Spark::GameObject* ground = w.Entities().Create();
         ground->GetName() = Spark::Utf8String("SceneEditorGround");
         ground->AddComponent<Spark::TransformComponent>();
         ground->AddComponent<Spark::MeshComponent>(
                 groundAsset, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.48F, 0.52F, 0.55F});
         contentModel.TrackRoot(ground);
 
-        Spark::GameObject* sun = w.CreateGameObject();
+        Spark::GameObject* sun = w.Entities().Create();
         sun->GetName() = Spark::Utf8String("SceneEditorSun");
         Spark::TransformComponent* str = sun->AddComponent<Spark::TransformComponent>();
         str->SetTranslation({24.0F, 38.0F, 18.0F});
@@ -648,7 +648,7 @@ void SceneEditor3DDemo::SyncLightGizmoEmissive(Spark::GameObject* go) noexcept
             float intensity,
             float range)
 {
-        Spark::GameObject* go = w.CreateGameObject();
+        Spark::GameObject* go = w.Entities().Create();
         go->GetName() = Spark::Utf8String("SceneEditorUserLight");
         Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
         constexpr float kGizmoScale = 0.2F;
@@ -858,7 +858,7 @@ void SceneEditor3DDemo::LoadSceneFromFile(Spark::GameWorld& w)
             if (parsed < 11) {
                 continue;
             }
-            Spark::GameObject* go = w.CreateGameObject();
+            Spark::GameObject* go = w.Entities().Create();
             go->GetName() = Spark::Utf8String("SceneEditorPlaced");
             Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
             tr->SetTranslation({tx, ty, tz});

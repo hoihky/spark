@@ -3,8 +3,8 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/components/gameplay/GameStateComponent.hpp"
 #include "spark/gameflow/GameFlowPersistentData.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 
 namespace Spark {
 

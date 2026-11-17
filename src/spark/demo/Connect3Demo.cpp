@@ -5,7 +5,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <cmath>
 
@@ -17,7 +17,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         atlasTex = Detail::MakeGemAtlas();
         w.Assets().RegisterTexture(atlasTex, "spark/connect3/gems");
 
-        boardGo = w.CreateGameObject();
+        boardGo = w.Entities().Create();
         boardGo->GetName() = Utf8String("Connect3Board");
         boardGo->AddComponent<TransformComponent>();
         tilemap = boardGo->AddComponent<TilemapComponent>(
@@ -30,7 +30,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 12);
         roots.PushBack(boardGo);
 
-        boardPadGo = w.CreateGameObject();
+        boardPadGo = w.Entities().Create();
         boardPadGo->GetName() = Utf8String("Connect3BoardPad");
         {
             TransformComponent* tr = boardPadGo->AddComponent<TransformComponent>();
@@ -45,7 +45,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 4);
         roots.PushBack(boardPadGo);
 
-        cursorGlowGo = w.CreateGameObject();
+        cursorGlowGo = w.Entities().Create();
         cursorGlowGo->GetName() = Utf8String("Connect3CursorGlow");
         {
             TransformComponent* tr = cursorGlowGo->AddComponent<TransformComponent>();
@@ -59,7 +59,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 20);
         roots.PushBack(cursorGlowGo);
 
-        selectionGlowGo = w.CreateGameObject();
+        selectionGlowGo = w.Entities().Create();
         selectionGlowGo->GetName() = Utf8String("Connect3SelectionGlow");
         {
             TransformComponent* tr = selectionGlowGo->AddComponent<TransformComponent>();
@@ -74,7 +74,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 21);
         roots.PushBack(selectionGlowGo);
 
-        matchFlashGo = w.CreateGameObject();
+        matchFlashGo = w.Entities().Create();
         matchFlashGo->GetName() = Utf8String("Connect3MatchFlash");
         {
             TransformComponent* tr = matchFlashGo->AddComponent<TransformComponent>();
@@ -89,7 +89,7 @@ void Connect3Demo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 950);
         roots.PushBack(matchFlashGo);
 
-        hudGo = w.CreateGameObject();
+        hudGo = w.Entities().Create();
         hudGo->GetName() = Utf8String("Connect3Hud");
         hudText = hudGo->AddComponent<TextOverlayComponent>();
         hudText->SetScreenPosition(DemoHud::kScreenMargin, DemoHud::kScreenMargin);
@@ -263,7 +263,6 @@ void Connect3Demo::Simulate(const Spark::FrameTiming& timing, Spark::IEngineCont
                             .c_str()));
         }
 
-        ProcessVfx(world);
     }
 
 void Connect3Demo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spark::IEngineContext& context)
@@ -294,19 +293,15 @@ void Connect3Demo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, Spar
         Vector3 pr{};
         Vector3 pu{};
         renderCam.BillboardBasisWorld(pr, pu);
-        SubmitStandardLitSceneFromWorld(
-                world,
-                context,
-                viewProj,
-                camPos,
-                Vector3{0.38F, 0.86F, 0.44F}.Normalized(),
-                Vector3{0.95F, 0.97F, 1.0F},
-                0.78F,
-                Vector3{0.06F, 0.07F, 0.1F},
-                true,
-                pr,
-                pu,
-                animTime);
+        LitSceneSubmitOptions litOptions{};
+        litOptions.WithDirectionalLight(
+                        Vector3{0.38F, 0.86F, 0.44F}.Normalized(),
+                        Vector3{0.95F, 0.97F, 1.0F},
+                        0.78F)
+                .WithAmbient(Vector3{0.06F, 0.07F, 0.1F})
+                .WithParticles(true, pr, pu)
+                .WithSceneTime(animTime);
+        world.Rendering().SubmitLit(context, viewProj, camPos, litOptions);
     }
 
 std::uint32_t Connect3Demo::timingHackU32(Spark::IEngineContext& context)

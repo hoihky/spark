@@ -40,7 +40,7 @@ TEST(GltfVisualParityTest, ChronographWatchSceneImportBindsMaterials) {
     int materialCount = 0;
     int multiMaterialCount = 0;
     int texturedMaterialCount = 0;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (object == nullptr) {
             return;
         }
@@ -63,7 +63,7 @@ TEST(GltfVisualParityTest, ChronographWatchSceneImportBindsMaterials) {
     EXPECT_GT(texturedMaterialCount, 0);
 
     int meshesMissingMaterial = 0;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (object == nullptr || object->GetComponent<Spark::MeshComponent>() == nullptr) {
             return;
         }
@@ -117,7 +117,7 @@ TEST(GltfVisualParityTest, FoxBindFromPathUsesSceneSkinnedImport) {
     ASSERT_TRUE(Spark::GltfAssetBinder::BindFromPath(*owner, foxPath.CStr()));
 
     int skinnedCount = 0;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (object != nullptr && object->GetComponent<Spark::SkinnedMeshComponent>() != nullptr) {
             ++skinnedCount;
         }

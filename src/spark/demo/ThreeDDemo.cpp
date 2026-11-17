@@ -59,7 +59,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             w.Assets().RegisterTexture(brickTex, "spark/demo/bricks");
         }
 
-        groundObject = w.CreateGameObject();
+        groundObject = w.Entities().Create();
         groundObject->GetName() = Spark::Utf8String("Ground");
         groundObject->AddComponent<Spark::TransformComponent>();
         groundObject->AddComponent<Spark::MeshComponent>(
@@ -68,7 +68,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                 Spark::ScenePartitionKind::BoundingVolumeHierarchy);
         roots.PushBack(groundObject);
 
-        cubeObject = w.CreateGameObject();
+        cubeObject = w.Entities().Create();
         cubeObject->GetName() = Spark::Utf8String("Cube");
         {
             Spark::TransformComponent* tr = cubeObject->AddComponent<Spark::TransformComponent>();
@@ -87,7 +87,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
 
         Spark::SharedPtr<Spark::Mesh> billboardMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("DemoBillboard"));
         *billboardMesh = Spark::Mesh::CreateSkyBillboardPlane(0.55F, 0.55F);
-        Spark::GameObject* billboardMarker = w.CreateGameObject();
+        Spark::GameObject* billboardMarker = w.Entities().Create();
         billboardMarker->GetName() = Spark::Utf8String("BillboardMarker");
         {
             Spark::TransformComponent* tr = billboardMarker->AddComponent<Spark::TransformComponent>();
@@ -103,7 +103,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         billboard->SetMode(Spark::BillboardMode::YAxisLocked);
         roots.PushBack(billboardMarker);
 
-        Spark::GameObject* decalGo = w.CreateGameObject();
+        Spark::GameObject* decalGo = w.Entities().Create();
         decalGo->GetName() = Spark::Utf8String("GroundDecal");
         {
             Spark::TransformComponent* tr = decalGo->AddComponent<Spark::TransformComponent>();
@@ -116,7 +116,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         decal->SetOpacity(0.72F);
         roots.PushBack(decalGo);
 
-        Spark::GameObject* texturedCube = w.CreateGameObject();
+        Spark::GameObject* texturedCube = w.Entities().Create();
         texturedCube->GetName() = Spark::Utf8String("TexturedCube");
         {
             Spark::TransformComponent* tr = texturedCube->AddComponent<Spark::TransformComponent>();
@@ -132,7 +132,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
         roots.PushBack(texturedCube);
 
-        Spark::GameObject* brickCube = w.CreateGameObject();
+        Spark::GameObject* brickCube = w.Entities().Create();
         brickCube->GetName() = Spark::Utf8String("BrickCube");
         {
             Spark::TransformComponent* tr = brickCube->AddComponent<Spark::TransformComponent>();
@@ -165,7 +165,7 @@ void ThreeDDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         PollPendingGltfLoads(w);
 
         auto addPointLight = [this, &w](Spark::Vector3 pos, Spark::Vector3 color, float intensity, float range) {
-            Spark::GameObject* light = w.CreateGameObject();
+            Spark::GameObject* light = w.Entities().Create();
             light->GetName() = Spark::Utf8String("PointLight");
             Spark::TransformComponent* tr = light->AddComponent<Spark::TransformComponent>();
             tr->SetTranslation(pos);
@@ -217,7 +217,7 @@ void ThreeDDemo::SpawnHero(
                 path.CStr());
     }
 
-    Spark::GameObject* heroObject = w.CreateGameObject();
+    Spark::GameObject* heroObject = w.Entities().Create();
     heroObject->GetName() = Spark::Utf8String(usedHelmetGltf ? "DamagedHelmet" : "SimpleCar");
     Spark::Vector3 heroMin{};
     Spark::Vector3 heroMax{};
@@ -260,7 +260,7 @@ void ThreeDDemo::SpawnChair(Spark::GameWorld& w, const Spark::GltfAsset& asset, 
         return;
     }
     chairMeshAsset = asset.mesh;
-    Spark::GameObject* chairObject = w.CreateGameObject();
+    Spark::GameObject* chairObject = w.Entities().Create();
     chairObject->GetName() = Spark::Utf8String("SheenChair");
     Spark::Vector3 chairMin{};
     Spark::Vector3 chairMax{};
@@ -297,7 +297,7 @@ void ThreeDDemo::SpawnFox(Spark::GameWorld& w, const Spark::SkinnedGltfAsset& as
     if (!asset.mesh || !asset.skeleton) {
         return;
     }
-    Spark::GameObject* foxObject = w.CreateGameObject();
+    Spark::GameObject* foxObject = w.Entities().Create();
     foxObject->GetName() = Spark::Utf8String("FoxWalk");
     {
         Spark::TransformComponent* tr = foxObject->AddComponent<Spark::TransformComponent>();
@@ -533,7 +533,7 @@ void ThreeDDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
             params.draws.PushBack(drawList[di]);
         }
 
-        world.ForEachActiveGameObject([&params, &findOrAddTexture](Spark::GameObject* o) {
+        world.Entities().ForEachActive([&params, &findOrAddTexture](Spark::GameObject* o) {
             if (o == nullptr || params.decals.GetSize() >= Spark::SceneRenderParams::MaxDecals) {
                 return;
             }

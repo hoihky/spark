@@ -2,7 +2,7 @@
 
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/math/Transform.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 
 #include <cmath>
 
@@ -47,7 +47,7 @@ PrefabInstantiateResult PrefabInstantiator::Instantiate(
     }
 
     GameWorld& world = manager.GetWorld();
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr || object->GetSceneInstanceId() != result.instanceId) {
             return;
         }

@@ -1,4 +1,4 @@
-#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
 
 namespace Spark {
 

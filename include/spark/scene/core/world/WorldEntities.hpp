@@ -17,40 +17,40 @@ class WorldEntities final : public WorldView {
 public:
     using WorldView::WorldView;
 
-    [[nodiscard]] GameObject* Create() { return world_.CreateGameObject(); }
+    [[nodiscard]] GameObject* Create() { return hostWorld.CreateGameObject(); }
 
-    void Destroy(GameObject* object) { world_.DestroyGameObject(object); }
-    void DestroyAtEndOfFrame(GameObject* object) { world_.DestroyGameObjectAtEndOfFrame(object); }
-    void DestroyImmediate(GameObject* object) { world_.DestroyGameObjectImmediate(object); }
+    void Destroy(GameObject* object) { hostWorld.DestroyGameObject(object); }
+    void DestroyAtEndOfFrame(GameObject* object) { hostWorld.DestroyGameObjectAtEndOfFrame(object); }
+    void DestroyImmediate(GameObject* object) { hostWorld.DestroyGameObjectImmediate(object); }
 
     [[nodiscard]] bool SetParent(GameObject* child, GameObject* newParent) {
-        return world_.SetParent(child, newParent);
+        return hostWorld.SetParent(child, newParent);
     }
 
-    [[nodiscard]] GameObject* TryGet(EntityId id) const noexcept { return world_.TryGetGameObject(id); }
+    [[nodiscard]] GameObject* TryGet(EntityId id) const noexcept { return hostWorld.TryGetGameObject(id); }
 
-    [[nodiscard]] WorldQuery Query() const noexcept { return WorldQuery{const_cast<GameWorld&>(world_)}; }
+    [[nodiscard]] WorldQuery Query() const noexcept { return WorldQuery{const_cast<GameWorld&>(hostWorld)}; }
 
 #include "spark/scene/core/world/WorldEntitiesIteration.inl"
 
     [[nodiscard]] GameObject* FindByTag(const char* tag, const GameObjectQueryFilter& filter = {}) const {
-        return world_.FindGameObjectWithTag(tag, filter);
+        return hostWorld.FindGameObjectWithTag(tag, filter);
     }
 
     [[nodiscard]] GameObject* FindByName(const char* name, const GameObjectQueryFilter& filter = {}) const {
-        return world_.FindGameObjectByName(name, filter);
+        return hostWorld.FindGameObjectByName(name, filter);
     }
 
-    [[nodiscard]] bool IsAlive(const GameObject* object) const noexcept { return world_.IsGameObjectAlive(object); }
+    [[nodiscard]] bool IsAlive(const GameObject* object) const noexcept { return hostWorld.IsGameObjectAlive(object); }
 
-    [[nodiscard]] std::size_t Count() const noexcept { return world_.GetGameObjectCount(); }
+    [[nodiscard]] std::size_t Count() const noexcept { return hostWorld.GetGameObjectCount(); }
 
     void Collect(GameObjectQueryResult& out, const GameObjectQueryFilter& filter = {}) const {
-        world_.CollectGameObjects(out, filter);
+        hostWorld.CollectGameObjects(out, filter);
     }
 
     [[nodiscard]] GameObjectQueryResult Select(const GameObjectQueryFilter& filter = {}) const {
-        return world_.QueryGameObjects(filter);
+        return hostWorld.QueryGameObjects(filter);
     }
 };
 

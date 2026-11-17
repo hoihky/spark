@@ -41,7 +41,7 @@ namespace {
 }  // namespace
 
 void ProcessPerceptionSensors(GameWorld& world) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* sensorObj) {
+    world.Entities().ForEachActive([&](GameObject* sensorObj) {
         if (sensorObj == nullptr) {
             return;
         }
@@ -65,7 +65,7 @@ void ProcessPerceptionSensors(GameWorld& world) noexcept {
         const float hearR = sensor->GetHearingRadius();
         const float hearR2 = hearR * hearR;
 
-        world.ForEachActiveGameObject([&](GameObject* other) {
+        world.Entities().ForEachActive([&](GameObject* other) {
             if (other == nullptr || other == sensorObj) {
                 return;
             }

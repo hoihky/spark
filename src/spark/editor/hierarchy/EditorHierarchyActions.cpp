@@ -28,7 +28,7 @@ Utf8String MakeUniqueEmptyName(const GameWorld& world) {
             candidate.AppendUtf8(buf);
         }
         bool taken = false;
-        world.ForEachGameObject([&](const GameObject* object) {
+        world.Entities().ForEach([&](const GameObject* object) {
             if (object != nullptr && object->GetName() == candidate) {
                 taken = true;
             }

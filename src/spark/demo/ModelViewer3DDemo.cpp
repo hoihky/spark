@@ -223,7 +223,7 @@ void ModelViewer3DDemo::ShowModel(GameWorld& w, const std::size_t index) {
         return;
     }
 
-    modelPivot = w.CreateGameObject();
+    modelPivot = w.Entities().Create();
     modelPivot->GetName() = Utf8String(spec.label);
     TransformComponent* pivotTr = modelPivot->AddComponent<TransformComponent>();
     pivotTr->SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, spec.yawRadians));
@@ -282,7 +282,7 @@ void ModelViewer3DDemo::Load(GameWorld& w, IEngineContext& context) {
 
     skyMesh = MakeShared<Mesh>(Utf8String("ModelViewerSky"));
     *skyMesh = Mesh::CreateSkySphere(1.0F, 20, 40);
-    GameObject* sky = w.CreateGameObject();
+    GameObject* sky = w.Entities().Create();
     sky->GetName() = Utf8String("ModelViewerSky");
     if (TransformComponent* skyTr = sky->AddComponent<TransformComponent>()) {
         skyTr->SetUniformScale(120.0F);
@@ -305,7 +305,7 @@ void ModelViewer3DDemo::Load(GameWorld& w, IEngineContext& context) {
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
     w.Assets().RegisterMesh(groundMesh, "spark/demo/model_viewer_ground");
 
-    GameObject* ground = w.CreateGameObject();
+    GameObject* ground = w.Entities().Create();
     ground->GetName() = Utf8String("Ground");
     ground->AddComponent<MeshComponent>(groundMesh, SceneMeshSlot::GroundPlane, Vector3{0.46F, 0.48F, 0.50F});
     sceneRoots.PushBack(ground);
@@ -378,22 +378,14 @@ void ModelViewer3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& c
     params.iblUseHdrSkyEnvironment = true;
     params.directionalShadowsEnabled = true;
     params.ssaoEnabled = false;
-    FillStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.35F, 0.88F, 0.32F}.Normalized(),
-            {1.0F, 0.96F, 0.90F},
-            0.92F,
-            {0.10F, 0.11F, 0.13F},
-            false,
-            {},
-            {},
-            0.0F,
-            params,
-            SceneSpriteSortMode::SortOrderOnly,
-            &scene);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.35F, 0.88F, 0.32F}.Normalized(),
+                    Vector3{1.0F, 0.96F, 0.90F},
+                    0.92F)
+            .WithAmbient(Vector3{0.10F, 0.11F, 0.13F})
+            .WithSceneForCulling(&scene);
+    world.Rendering().FillLit(context, viewProj, camera.position, litOptions, params);
 
     scene.ForEachTextOverlay([&params](const TextOverlayComponent& tc) {
         ScreenTextDraw d{};

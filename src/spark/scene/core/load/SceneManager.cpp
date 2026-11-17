@@ -1,4 +1,4 @@
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObject.hpp"

@@ -33,7 +33,7 @@ struct ControllerBody2D {
 
 void CollectControllers(GameWorld& world, Array<ControllerBody2D>& out) noexcept {
     out.Clear();
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

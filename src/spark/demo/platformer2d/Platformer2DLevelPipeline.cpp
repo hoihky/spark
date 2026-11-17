@@ -10,7 +10,7 @@
 #include "spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
 #include "spark/scene/editor/SceneLevelLoader.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
 
@@ -20,7 +20,7 @@ namespace {
 
 GameObject* FindLevelRoot(GameWorld& world, const SceneInstanceId instanceId) noexcept {
     GameObject* found = nullptr;
-    world.ForEachGameObject([&](GameObject* object) {
+    world.Entities().ForEach([&](GameObject* object) {
         if (found != nullptr || object == nullptr || object->GetSceneInstanceId() != instanceId) {
             return;
         }

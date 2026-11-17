@@ -1,6 +1,6 @@
-#include "spark/scene/core/SceneInstanceTracker.hpp"
+#include "spark/scene/core/load/SceneInstanceTracker.hpp"
 
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 
 namespace Spark {
 

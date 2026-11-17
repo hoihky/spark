@@ -80,7 +80,7 @@ void SetHeroFacing(TransformComponent& transform, const float facingSign) noexce
 }
 
 GameObject& AddRoot(GameWorld& world, Array<GameObject*>& roots, const char* name) {
-    GameObject* go = world.CreateGameObject();
+    GameObject* go = world.Entities().Create();
     go->GetName() = Utf8String(name);
     roots.PushBack(go);
     return *go;
@@ -258,20 +258,14 @@ void SparkPixShowcase2DDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineC
     Vector3 pr{};
     Vector3 pu{};
     camera.BillboardBasisWorld(pr, pu);
-    SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.55F, 0.62F, 0.72F}.Normalized(),
-            Vector3{0.96F, 0.98F, 1.0F},
-            0.65F,
-            Vector3{0.08F, 0.10F, 0.14F},
-            false,
-            pr,
-            pu,
-            0.0F,
-            SceneSpriteSortMode::SortOrderOnly);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.55F, 0.62F, 0.72F}.Normalized(),
+                    Vector3{0.96F, 0.98F, 1.0F},
+                    0.65F)
+            .WithAmbient(Vector3{0.08F, 0.10F, 0.14F})
+            .WithParticles(false, pr, pu);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 
     SceneRenderParams* sceneParams = nullptr;
     if (context.TryGetMutableSceneRenderParams(sceneParams) && sceneParams != nullptr) {

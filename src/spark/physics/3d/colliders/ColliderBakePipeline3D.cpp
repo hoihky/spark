@@ -28,7 +28,7 @@ void ColliderBakePipeline3D::Rebuild(
     outGrid.SetCellSize(cellWorldSize);
 
     ColliderBakeContext3D context{outColliders, outGrid};
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

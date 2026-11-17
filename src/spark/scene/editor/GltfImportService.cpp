@@ -2,7 +2,7 @@
 
 #include "spark/platform/NativeFilePicker.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 #include "spark/scene/prefab/PrefabInstantiator.hpp"
 
 namespace Spark {

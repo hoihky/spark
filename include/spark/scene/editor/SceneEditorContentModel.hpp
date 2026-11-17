@@ -5,7 +5,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/memory/SharedPtr.hpp"
 #include "spark/scene/core/SceneEntityRole.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 #include "spark/scene/serialization/SceneSerializer.hpp"

@@ -1,6 +1,5 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 
-#include "spark/ai/AiSubsystem.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 
 namespace Spark {
@@ -32,7 +31,7 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         cubeMesh = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("SteerCube"));
         *cubeMesh = Spark::Mesh::CreateUnitCube();
 
-        GameObject* sky = w.CreateGameObject();
+        GameObject* sky = w.Entities().Create();
         sky->GetName() = Spark::Utf8String("SteerSky");
         TransformComponent* skyTr = sky->AddComponent<TransformComponent>();
         skyTr->SetUniformScale(90.0F);
@@ -40,14 +39,14 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         sky->AddComponent<MeshComponent>(skyMesh, Spark::SceneMeshSlot::Custom, Spark::Vector3{0.4F, 0.55F, 0.85F});
         roots.PushBack(sky);
 
-        GameObject* ground = w.CreateGameObject();
+        GameObject* ground = w.Entities().Create();
         ground->GetName() = Spark::Utf8String("SteerGround");
         ground->AddComponent<TransformComponent>();
         ground->AddComponent<MeshComponent>(
                 groundMesh, Spark::SceneMeshSlot::GroundPlane, Spark::Vector3{0.42F, 0.46F, 0.4F});
         roots.PushBack(ground);
 
-        GameObject* light = w.CreateGameObject();
+        GameObject* light = w.Entities().Create();
         light->GetName() = Spark::Utf8String("SteerSun");
         TransformComponent* ltr = light->AddComponent<TransformComponent>();
         ltr->SetTranslation({22.0F, 36.0F, 16.0F});
@@ -59,7 +58,7 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         roots.PushBack(light);
 
         auto addSphere = [&](const char* name, const Vector3& color) -> GameObject* {
-            GameObject* o = w.CreateGameObject();
+            GameObject* o = w.Entities().Create();
             o->GetName() = Spark::Utf8String(name);
             TransformComponent* tr = o->AddComponent<TransformComponent>();
             tr->SetUniformScale(1.0F);
@@ -89,7 +88,7 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         flockGos.Clear();
         flockGos.Reserve(kFlock);
         for (std::size_t i = 0; i < kFlock; ++i) {
-            GameObject* b = w.CreateGameObject();
+            GameObject* b = w.Entities().Create();
             b->GetName() = Spark::Utf8String("SteerFlock");
             TransformComponent* tr = b->AddComponent<TransformComponent>();
             const float a = static_cast<float>(i) * 0.42F;
@@ -113,7 +112,7 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
         obstacleGos.Clear();
         obstacleGos.Reserve(obstacleCenters.GetSize());
         for (std::size_t i = 0; i < obstacleCenters.GetSize(); ++i) {
-            GameObject* box = w.CreateGameObject();
+            GameObject* box = w.Entities().Create();
             box->GetName() = Spark::Utf8String("SteerObstacle");
             TransformComponent* tr = box->AddComponent<TransformComponent>();
             const float r = obstacleRadii[i];
@@ -137,7 +136,7 @@ void SteeringShowcase3DDemo::Load(GameWorld& w, IEngineContext& context)
                 "[ ] cycle · 1-9 Seek…Interpose · 0 Hide · - Path · = Offset · QWER flock · TYUI O combines · "
                 "arrows move magenta target · cyan agent = ECS AiAgent patrol · F1");
 
-        ecsPatrolPathGo = w.CreateGameObject();
+        ecsPatrolPathGo = w.Entities().Create();
         ecsPatrolPathGo->GetName() = Spark::Utf8String("SteerEcsPatrolPath");
         TransformComponent* ecsPathTr = ecsPatrolPathGo->AddComponent<TransformComponent>();
         ecsPathTr->SetTranslation({-14.0F, 0.0F, -12.0F});
@@ -391,7 +390,7 @@ void SteeringShowcase3DDemo::Simulate(const FrameTiming& timing, IEngineContext&
         }
 
         ResolveSteeringDemoCollisions();
-        AiSubsystem::RunFrame(world, timing, context);
+        world.Simulation().RunAi(timing, context);
 
         helpHud.SetDetail(ModeName(mode));
         helpHud.Update(timing, context);

@@ -31,7 +31,7 @@ void ProcessAmbientZones(const GameWorld& world) noexcept {
 
     bool found = false;
     std::int32_t bestPriority = 0;
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

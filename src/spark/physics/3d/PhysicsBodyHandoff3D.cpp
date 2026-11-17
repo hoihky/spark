@@ -69,7 +69,7 @@ void PhysicsBodyHandoff3D::ReleaseRigidbody(GameObject& carried, const Vector3& 
 }
 
 void PhysicsBodyHandoff3D::SynchronizeAttachedBodies(GameWorld& world) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

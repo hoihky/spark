@@ -36,7 +36,7 @@ void PickupComponent::OnUpdate(
 }
 
 void PickupComponent::ProcessDeferredDestroys(GameWorld& world) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

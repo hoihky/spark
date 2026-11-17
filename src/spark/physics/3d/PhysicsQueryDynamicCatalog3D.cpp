@@ -100,7 +100,7 @@ void PhysicsQueryDynamicCatalog3D::Rebuild(GameWorld& world) {
         return;
     }
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

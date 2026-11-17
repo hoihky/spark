@@ -27,6 +27,7 @@ class WorldGameplay;
 /**
  * Facade over entity graph, assets, and presentation.
  * Prefer <c>Entities()</c>, <c>Assets()</c>, <c>QueryObjects()</c>.
+ * Layout: <c>include/spark/scene/core/README.md</c> and <c>docs/SCENE_CORE.md</c>.
  */
 class GameWorld {
 public:
@@ -37,53 +38,51 @@ public:
     GameWorld& operator=(GameWorld&&) = delete;
     ~GameWorld();
 
-    [[nodiscard]] GameObject* CreateGameObject() { return entityGraph_.Create(); }
-    void DestroyGameObject(GameObject* object) { entityGraph_.Destroy(object); }
-    void DestroyGameObjectAtEndOfFrame(GameObject* object) { entityGraph_.DestroyAtEndOfFrame(object); }
-    void DestroyGameObjectImmediate(GameObject* object) { entityGraph_.DestroyImmediate(object); }
-    void FlushPendingDestroyGameObjects() { entityGraph_.FlushPendingDestroys(); }
+    [[nodiscard]] GameObject* CreateGameObject() { return entityGraph.Create(); }
+    void DestroyGameObject(GameObject* object) { entityGraph.Destroy(object); }
+    void DestroyGameObjectAtEndOfFrame(GameObject* object) { entityGraph.DestroyAtEndOfFrame(object); }
+    void DestroyGameObjectImmediate(GameObject* object) { entityGraph.DestroyImmediate(object); }
+    void FlushPendingDestroyGameObjects() { entityGraph.FlushPendingDestroys(); }
     [[nodiscard]] bool SetParent(GameObject* child, GameObject* newParent) {
-        return entityGraph_.SetParent(child, newParent);
+        return entityGraph.SetParent(child, newParent);
     }
 
-    [[nodiscard]] std::size_t GetGameObjectCount() const noexcept { return entityGraph_.GetCount(); }
+    [[nodiscard]] std::size_t GetGameObjectCount() const noexcept { return entityGraph.GetCount(); }
 
-#include "spark/scene/core/compat/GameWorldEntityApi.inl"
-
-    [[nodiscard]] GameObject* FindGameObjectById(std::uint64_t id) const noexcept { return entityGraph_.FindById(id); }
-    [[nodiscard]] GameObject* TryGetGameObject(EntityId id) const noexcept { return entityGraph_.TryGet(id); }
-    [[nodiscard]] bool IsGameObjectAlive(const GameObject* object) const noexcept { return entityGraph_.IsAlive(object); }
+    [[nodiscard]] GameObject* FindGameObjectById(std::uint64_t id) const noexcept { return entityGraph.FindById(id); }
+    [[nodiscard]] GameObject* TryGetGameObject(EntityId id) const noexcept { return entityGraph.TryGet(id); }
+    [[nodiscard]] bool IsGameObjectAlive(const GameObject* object) const noexcept { return entityGraph.IsAlive(object); }
     [[nodiscard]] GameObject* FindGameObjectByName(const char* name, const GameObjectQueryFilter& filter = {}) const {
-        return entityGraph_.FindByName(name, filter);
+        return entityGraph.FindByName(name, filter);
     }
     [[nodiscard]] GameObject* FindGameObjectWithTag(const char* tag, const GameObjectQueryFilter& filter = {}) const {
-        return entityGraph_.FindWithTag(tag, filter);
+        return entityGraph.FindWithTag(tag, filter);
     }
     void CollectGameObjects(GameObjectQueryResult& out, const GameObjectQueryFilter& filter) const {
-        entityGraph_.Collect(out, filter);
+        entityGraph.Collect(out, filter);
     }
     [[nodiscard]] GameObjectQueryResult QueryGameObjects(const GameObjectQueryFilter& filter = {}) const {
-        return entityGraph_.Query(filter);
+        return entityGraph.Query(filter);
     }
 
     void UpdateGameObjects(const FrameTiming& timing, IEngineContext& context);
 
-    [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return presentation_.Vfx(); }
-    [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return presentation_.Vfx(); }
-    [[nodiscard]] WindSubsystem& GetWindSubsystem() noexcept { return presentation_.Wind(); }
-    [[nodiscard]] const WindSubsystem& GetWindSubsystem() const noexcept { return presentation_.Wind(); }
+    [[nodiscard]] VfxSubsystem& GetVfxSubsystem() noexcept { return presentation.Vfx(); }
+    [[nodiscard]] const VfxSubsystem& GetVfxSubsystem() const noexcept { return presentation.Vfx(); }
+    [[nodiscard]] WindSubsystem& GetWindSubsystem() noexcept { return presentation.Wind(); }
+    [[nodiscard]] const WindSubsystem& GetWindSubsystem() const noexcept { return presentation.Wind(); }
     [[nodiscard]] SkinnedAnimationService& GetSkinnedAnimationService() noexcept {
-        return presentation_.SkinnedAnimation();
+        return presentation.SkinnedAnimation();
     }
     [[nodiscard]] const SkinnedAnimationService& GetSkinnedAnimationService() const noexcept {
-        return presentation_.SkinnedAnimation();
+        return presentation.SkinnedAnimation();
     }
-    [[nodiscard]] SkinnedIkService& GetSkinnedIkService() noexcept { return presentation_.SkinnedIk(); }
-    [[nodiscard]] const SkinnedIkService& GetSkinnedIkService() const noexcept { return presentation_.SkinnedIk(); }
+    [[nodiscard]] SkinnedIkService& GetSkinnedIkService() noexcept { return presentation.SkinnedIk(); }
+    [[nodiscard]] const SkinnedIkService& GetSkinnedIkService() const noexcept { return presentation.SkinnedIk(); }
     void SetUiFont(SharedPtr<Font> font);
-    [[nodiscard]] const SharedPtr<Font>& GetUiFont() const noexcept { return presentation_.GetUiFont(); }
+    [[nodiscard]] const SharedPtr<Font>& GetUiFont() const noexcept { return presentation.GetUiFont(); }
     void SetUiBoldFont(SharedPtr<Font> font);
-    [[nodiscard]] const SharedPtr<Font>& GetUiBoldFont() const noexcept { return presentation_.GetUiBoldFont(); }
+    [[nodiscard]] const SharedPtr<Font>& GetUiBoldFont() const noexcept { return presentation.GetUiBoldFont(); }
 
     [[nodiscard]] WorldEntities Entities() noexcept;
     [[nodiscard]] WorldEntities Entities() const noexcept;
@@ -101,19 +100,19 @@ public:
     [[nodiscard]] WorldGameplay Gameplay() noexcept;
     [[nodiscard]] WorldGameplay Gameplay() const noexcept;
 
-    [[nodiscard]] GameWorldEntityGraph& GetEntityGraph() noexcept { return entityGraph_; }
-    [[nodiscard]] const GameWorldEntityGraph& GetEntityGraph() const noexcept { return entityGraph_; }
+    [[nodiscard]] GameWorldEntityGraph& GetEntityGraph() noexcept { return entityGraph; }
+    [[nodiscard]] const GameWorldEntityGraph& GetEntityGraph() const noexcept { return entityGraph; }
 
 private:
     friend class GameObject;
     friend class WorldAssets;
 
-    [[nodiscard]] GameWorldAssetStore& AssetStore() noexcept { return assetStore_; }
-    [[nodiscard]] const GameWorldAssetStore& AssetStore() const noexcept { return assetStore_; }
+    [[nodiscard]] GameWorldAssetStore& AssetStore() noexcept { return assetStore; }
+    [[nodiscard]] const GameWorldAssetStore& AssetStore() const noexcept { return assetStore; }
 
-    GameWorldEntityGraph entityGraph_;
-    GameWorldAssetStore assetStore_;
-    GameWorldPresentation presentation_;
+    GameWorldEntityGraph entityGraph;
+    GameWorldAssetStore assetStore;
+    GameWorldPresentation presentation;
 };
 
 }  // namespace Spark

@@ -9,10 +9,10 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
-#include "spark/scene/core/SceneInstanceTracker.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
-#include "spark/scene/core/SceneManager.hpp"
-#include "spark/scene/core/SpawnPointService.hpp"
+#include "spark/scene/core/load/SceneInstanceTracker.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
+#include "spark/scene/core/spawn/SpawnPointService.hpp"
 #include "spark/scene/editor/SceneEditorContentModel.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/prefab/PrefabCatalog.hpp"
@@ -36,7 +36,7 @@ Spark::Utf8String SmokeScenePath() {
 
 Spark::GameObject* FindByName(Spark::GameWorld& world, const char* name) {
     Spark::GameObject* found = nullptr;
-    world.ForEachGameObject([&](Spark::GameObject* object) {
+    world.Entities().ForEach([&](Spark::GameObject* object) {
         if (object != nullptr && object->GetName() == Spark::Utf8String(name)) {
             found = object;
         }

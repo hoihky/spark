@@ -391,7 +391,7 @@ void TryStepOffset(
 
 void CollectControllers(GameWorld& world, Array<ControllerBody>& out) noexcept {
     out.Clear();
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

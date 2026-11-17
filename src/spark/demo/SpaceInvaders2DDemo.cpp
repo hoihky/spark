@@ -7,7 +7,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <cmath>
 
@@ -38,7 +38,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         fxTex = Detail::MakeSpaceInvadersAtlas();
         w.Assets().RegisterTexture(fxTex, "spark/spaceinv/fx");
 
-        hudGo = w.CreateGameObject();
+        hudGo = w.Entities().Create();
         hudGo->GetName() = Spark::Utf8String("SpaceInvadersHud");
         hudText = hudGo->AddComponent<Spark::TextOverlayComponent>();
         hudText->SetScreenPosition(Spark::DemoHud::kScreenMargin, Spark::DemoHud::kScreenMargin);
@@ -50,7 +50,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         for (int j = 0; j < kAlienRows; ++j) {
             for (int i = 0; i < kAlienCols; ++i) {
                 const int idx = j * kAlienCols + i;
-                Spark::GameObject* go = w.CreateGameObject();
+                Spark::GameObject* go = w.Entities().Create();
                 go->GetName() = Spark::Utf8String("Alien");
                 Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
                 tr->SetUniformScale(usingBundledShipArt ? Detail::kBundledAlienScale : 0.88F);
@@ -70,7 +70,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
             }
         }
 
-        playerGo = w.CreateGameObject();
+        playerGo = w.Entities().Create();
         playerGo->GetName() = Spark::Utf8String("Player");
         playerTr = playerGo->AddComponent<Spark::TransformComponent>();
         playerTr->SetUniformScale(usingBundledShipArt ? Detail::kBundledPlayerScale : 1.05F);
@@ -83,7 +83,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         roots.PushBack(playerGo);
 
         if (!usingBundledShipArt) {
-            playerShadowGo = w.CreateGameObject();
+            playerShadowGo = w.Entities().Create();
             playerShadowGo->GetName() = Spark::Utf8String("PlayerShadow");
             {
                 Spark::TransformComponent* tr = playerShadowGo->AddComponent<Spark::TransformComponent>();
@@ -104,7 +104,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         playerBullets.Clear();
         playerBullets.Resize(static_cast<std::size_t>(kMaxPlayerBullets));
         for (int b = 0; b < kMaxPlayerBullets; ++b) {
-            Spark::GameObject* go = w.CreateGameObject();
+            Spark::GameObject* go = w.Entities().Create();
             go->GetName() = Spark::Utf8String("PBullet");
             Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
             tr->SetUniformScale(usingBundledProjectileArt ? Detail::kBundledPlayerBulletScale : 0.22F);
@@ -123,7 +123,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         enemyBullets.Clear();
         enemyBullets.Resize(static_cast<std::size_t>(kMaxEnemyBullets));
         for (int b = 0; b < kMaxEnemyBullets; ++b) {
-            Spark::GameObject* go = w.CreateGameObject();
+            Spark::GameObject* go = w.Entities().Create();
             go->GetName() = Spark::Utf8String("EBullet");
             Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
             tr->SetUniformScale(usingBundledProjectileArt ? Detail::kBundledEnemyBulletScale : 0.2F);
@@ -140,7 +140,7 @@ void SpaceInvaders2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& conte
         explosions.Clear();
         explosions.Resize(12);
         for (std::size_t e = 0; e < explosions.GetSize(); ++e) {
-            Spark::GameObject* go = w.CreateGameObject();
+            Spark::GameObject* go = w.Entities().Create();
             go->GetName() = Spark::Utf8String("Explosion");
             Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
             tr->SetUniformScale(1.4F);
@@ -306,7 +306,6 @@ void SpaceInvaders2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEng
             }
         }
 
-        Spark::ProcessVfx(world);
 
         if (hudText != nullptr) {
             const char* phase = (gamePhase == 0) ? "PLAY" : (gamePhase == 1) ? "YOU WIN" : "GAME OVER";
@@ -347,19 +346,14 @@ void SpaceInvaders2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& worl
         Spark::Vector3 pr{};
         Spark::Vector3 pu{};
         renderCam.BillboardBasisWorld(pr, pu);
-        Spark::SubmitStandardLitSceneFromWorld(
-                world,
-                context,
-                viewProj,
-                camPos,
-                Spark::Vector3{0.28F, 0.55F, 0.92F}.Normalized(),
-                Spark::Vector3{0.9F, 0.95F, 1.0F},
-                0.55F,
-                Spark::Vector3{0.04F, 0.05F, 0.09F},
-                true,
-                pr,
-                pu,
-                0.0F);
+        Spark::LitSceneSubmitOptions litOptions{};
+        litOptions.WithDirectionalLight(
+                        Spark::Vector3{0.28F, 0.55F, 0.92F}.Normalized(),
+                        Spark::Vector3{0.9F, 0.95F, 1.0F},
+                        0.55F)
+                .WithAmbient(Spark::Vector3{0.04F, 0.05F, 0.09F})
+                .WithParticles(true, pr, pu);
+        world.Rendering().SubmitLit(context, viewProj, camPos, litOptions);
     }
 
 std::uint32_t SpaceInvaders2DDemo::timingHackU32(Spark::IEngineContext& context)

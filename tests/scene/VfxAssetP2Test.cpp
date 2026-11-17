@@ -119,7 +119,7 @@ TEST(VfxSubsystemTest, QueuedOneShotCreatesParticles) {
     Spark::ProcessVfx(world);
 
     Spark::Array<Spark::SceneParticleInstance> instances{};
-    world.ForEachActiveGameObject([&instances](Spark::GameObject* object) {
+    world.Entities().ForEachActive([&instances](Spark::GameObject* object) {
         if (object == nullptr) {
             return;
         }

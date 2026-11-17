@@ -16,7 +16,7 @@ void RigidbodyIntegrator2D::Integrate(
         GameWorld& world,
         const float deltaTimeSeconds,
         const PhysicsWorld2DSettings& settings) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* o) {
+    world.Entities().ForEachActive([&](GameObject* o) {
         if (o == nullptr) {
             return;
         }

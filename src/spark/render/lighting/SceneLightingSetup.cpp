@@ -8,101 +8,102 @@ SceneLightingSetup SceneLightingSetup::FromProfile(const SceneLightingProfile pr
     return SceneLightingSetup{profile};
 }
 
-SceneLightingSetup::SceneLightingSetup(const SceneLightingProfile profile) noexcept : profile_(profile) {}
+SceneLightingSetup::SceneLightingSetup(const SceneLightingProfile initialProfile) noexcept
+    : profile(initialProfile) {}
 
 SceneLightingSetup& SceneLightingSetup::WithExposure(const float exposureMultiplier) noexcept {
-    exposure_ = exposureMultiplier;
+    exposure = exposureMultiplier;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithShadowCascades(const float nearPlane, const float farPlane) noexcept {
-    cascadeNear_ = nearPlane;
-    cascadeFar_ = farPlane;
+    cascadeNear = nearPlane;
+    cascadeFar = farPlane;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithShadowDistanceFade(
         const float endWorldMeters,
         const float startRatio) noexcept {
-    shadowDistanceMax_ = endWorldMeters;
-    shadowFadeStartRatio_ = startRatio;
+    shadowDistanceMax = endWorldMeters;
+    shadowFadeStartRatio = startRatio;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithDirectionalShadows(const bool enabled) noexcept {
-    directionalShadows_ = enabled;
+    directionalShadows = enabled;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithPunctualShadows(const bool enabled) noexcept {
-    punctualShadows_ = enabled;
+    punctualShadows = enabled;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithDefaultShadowParticipation(
-        const bool castByDefault,
-        const bool receiveByDefault) noexcept {
-    castByDefault_ = castByDefault;
-    receiveByDefault_ = receiveByDefault;
+        const bool castDefault,
+        const bool receiveDefault) noexcept {
+    castByDefault = castDefault;
+    receiveByDefault = receiveDefault;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithTimeOfDay(const bool enabled, const float normalizedTime) noexcept {
-    useTimeOfDay_ = enabled;
-    timeOfDay_ = normalizedTime;
+    useTimeOfDay = enabled;
+    timeOfDay = normalizedTime;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithSsao(const bool enabled) noexcept {
-    ssaoEnabled_ = enabled;
+    ssaoEnabled = enabled;
     return *this;
 }
 
 SceneLightingSetup& SceneLightingSetup::WithAmbientScale(const float scale) noexcept {
-    ambientScale_ = scale;
+    ambientScale = scale;
     return *this;
 }
 
 void SceneLightingSetup::ApplyTo(SceneRenderParams& params) const noexcept {
-    params.lightingProfile = profile_;
-    if (exposure_.HasValue()) {
-        params.exposure = *exposure_;
+    params.lightingProfile = profile;
+    if (exposure.HasValue()) {
+        params.exposure = *exposure;
     }
-    if (cascadeNear_.HasValue()) {
-        params.shadowCascadeNear = *cascadeNear_;
+    if (cascadeNear.HasValue()) {
+        params.shadowCascadeNear = *cascadeNear;
     }
-    if (cascadeFar_.HasValue()) {
-        params.shadowCascadeFar = *cascadeFar_;
+    if (cascadeFar.HasValue()) {
+        params.shadowCascadeFar = *cascadeFar;
     }
-    if (shadowDistanceMax_.HasValue()) {
-        params.shadowDistanceMax = *shadowDistanceMax_;
+    if (shadowDistanceMax.HasValue()) {
+        params.shadowDistanceMax = *shadowDistanceMax;
     }
-    if (shadowFadeStartRatio_.HasValue()) {
-        params.shadowFadeStartRatio = *shadowFadeStartRatio_;
+    if (shadowFadeStartRatio.HasValue()) {
+        params.shadowFadeStartRatio = *shadowFadeStartRatio;
     }
-    if (directionalShadows_.HasValue()) {
-        params.directionalShadowsEnabled = *directionalShadows_;
+    if (directionalShadows.HasValue()) {
+        params.directionalShadowsEnabled = *directionalShadows;
     }
-    if (punctualShadows_.HasValue()) {
-        params.punctualShadowsEnabled = *punctualShadows_;
+    if (punctualShadows.HasValue()) {
+        params.punctualShadowsEnabled = *punctualShadows;
     }
-    if (castByDefault_.HasValue()) {
-        params.shadowsCastByDefault = *castByDefault_;
+    if (castByDefault.HasValue()) {
+        params.shadowsCastByDefault = *castByDefault;
     }
-    if (receiveByDefault_.HasValue()) {
-        params.shadowsReceiveByDefault = *receiveByDefault_;
+    if (receiveByDefault.HasValue()) {
+        params.shadowsReceiveByDefault = *receiveByDefault;
     }
-    if (useTimeOfDay_.HasValue()) {
-        params.useTimeOfDay = *useTimeOfDay_;
+    if (useTimeOfDay.HasValue()) {
+        params.useTimeOfDay = *useTimeOfDay;
     }
-    if (timeOfDay_.HasValue()) {
-        params.timeOfDay = *timeOfDay_;
+    if (timeOfDay.HasValue()) {
+        params.timeOfDay = *timeOfDay;
     }
-    if (ssaoEnabled_.HasValue()) {
-        params.ssaoEnabled = *ssaoEnabled_;
+    if (ssaoEnabled.HasValue()) {
+        params.ssaoEnabled = *ssaoEnabled;
     }
-    if (ambientScale_.HasValue()) {
-        params.ambientScale = *ambientScale_;
+    if (ambientScale.HasValue()) {
+        params.ambientScale = *ambientScale;
     }
 }
 

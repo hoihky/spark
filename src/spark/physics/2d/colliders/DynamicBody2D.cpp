@@ -21,7 +21,7 @@ void RefreshDynamicBody2D(DynamicBody2D& body) noexcept {
 
 void CollectDynamicBodies2D(GameWorld& world, Array<DynamicBody2D>& out) {
     out.Clear();
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

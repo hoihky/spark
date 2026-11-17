@@ -738,6 +738,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/camera/Camera2D.cpp
         src/spark/scene/camera/Camera.cpp
         src/spark/scene/camera/CharacterCameraRig.cpp
+        # scene/core — world runtime + facets
         src/spark/scene/core/GameWorld.cpp
         src/spark/scene/core/GameWorldEntityGraph.cpp
         src/spark/scene/core/GameWorldAssetStore.cpp
@@ -970,12 +971,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/serialization/SceneSerializer.cpp
         src/spark/scene/assets/GltfAssetPathResolver.cpp
         src/spark/scene/assets/ScenePathResolver.cpp
-        src/spark/scene/core/SpawnPointService.cpp
-        src/spark/scene/core/SpawnPoint2DService.cpp
-        src/spark/scene/core/SceneSpawn2D.cpp
-        src/spark/scene/core/SceneInstanceTracker.cpp
+        src/spark/scene/core/spawn/SceneSpawn.cpp
+        src/spark/scene/core/spawn/SceneSpawn2D.cpp
+        src/spark/scene/core/load/SceneInstanceTracker.cpp
         src/spark/scene/core/SceneEntityRole.cpp
-        src/spark/scene/core/SceneLoadSession.cpp
+        src/spark/scene/core/load/SceneLoadSession.cpp
         src/spark/scene/prefab/PrefabCatalog.cpp
         src/spark/scene/prefab/GltfPrefabImporter.cpp
         src/spark/scene/editor/SceneEditorContentModel.cpp
@@ -988,10 +988,9 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/editor/SceneLevelLoader.cpp
         src/spark/scene/editor/GltfImportService.cpp
         src/spark/platform/NativeFilePicker.cpp
-        src/spark/scene/core/SceneSpawn.cpp
         src/spark/scene/prefab/PrefabInstantiator.cpp
         src/spark/scene/assets/GameWorldAssetLoader.cpp
-        src/spark/scene/core/SceneManager.cpp
+        src/spark/scene/core/load/SceneManager.cpp
         src/spark/physics/2d/shapes/BoxShape2D.cpp
         src/spark/physics/2d/BroadPhase2D.cpp
         src/spark/physics/2d/CharacterController2D.cpp

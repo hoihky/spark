@@ -19,7 +19,7 @@ namespace Spark {
 namespace {
 
 void SolveDistanceJoints(GameWorld& world, const float stiffnessScale) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* owner) {
+    world.Entities().ForEachActive([&](GameObject* owner) {
         if (owner == nullptr) {
             return;
         }

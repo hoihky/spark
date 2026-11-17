@@ -2,9 +2,9 @@
 
 #include "spark/scene/camera/FlyCamera.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scene/core/SceneInstanceTracker.hpp"
-#include "spark/scene/core/SceneLoadSession.hpp"
-#include "spark/scene/core/SpawnPointService.hpp"
+#include "spark/scene/core/load/SceneInstanceTracker.hpp"
+#include "spark/scene/core/load/SceneLoadSession.hpp"
+#include "spark/scene/core/spawn/SpawnPointService.hpp"
 #include "spark/scene/editor/SceneEditorContentModel.hpp"
 
 namespace Spark {

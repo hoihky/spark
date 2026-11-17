@@ -114,7 +114,7 @@ public:
         }
     }
 
-    [[nodiscard]] bool HasValue() const noexcept { return engaged_; }
+    [[nodiscard]] bool HasValue() const noexcept { return valueEngaged; }
 
     [[nodiscard]] T& Value() & {
         return *Ptr();
@@ -146,16 +146,16 @@ public:
     [[nodiscard]] T&& operator*() && noexcept { return MoveTemp(*Ptr()); }
 
 private:
-    alignas(T) unsigned char storage_[sizeof(T)]{};
-    bool engaged_ = false;
+    alignas(T) unsigned char valueStorage[sizeof(T)]{};
+    bool valueEngaged = false;
 
-    [[nodiscard]] T* Ptr() noexcept { return reinterpret_cast<T*>(storage_); }
-    [[nodiscard]] const T* Ptr() const noexcept { return reinterpret_cast<const T*>(storage_); }
+    [[nodiscard]] T* Ptr() noexcept { return reinterpret_cast<T*>(valueStorage); }
+    [[nodiscard]] const T* Ptr() const noexcept { return reinterpret_cast<const T*>(valueStorage); }
 
     template<typename... Args>
     void ConstructFromArgs(Args&&... args) {
         new (Ptr()) T(Forward<Args>(args)...);
-        engaged_ = true;
+        valueEngaged = true;
     }
 
     void Construct(const T& value) { ConstructFromArgs(value); }
@@ -164,7 +164,7 @@ private:
 
     void DestroyValue() noexcept {
         Ptr()->~T();
-        engaged_ = false;
+        valueEngaged = false;
     }
 };
 

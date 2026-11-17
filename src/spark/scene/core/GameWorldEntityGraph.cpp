@@ -7,7 +7,7 @@ namespace Spark {
 
 GameObject* GameWorldEntityGraph::Create() {
     const std::uint64_t oid = nextObjectId++;
-    objects.PushBack(UniquePtr<GameObject>(new GameObject(owner_, oid)));
+    objects.PushBack(UniquePtr<GameObject>(new GameObject(ownerWorld, oid)));
     return objects.GetLast().Get();
 }
 
@@ -42,7 +42,7 @@ void GameWorldEntityGraph::CollectSubtreePostOrder(GameObject* root, Array<GameO
 }
 
 void GameWorldEntityGraph::DestroyImmediateInternal(GameObject* object) {
-    if (object == nullptr || object->world != &owner_) {
+    if (object == nullptr || object->world != &ownerWorld) {
         return;
     }
     Array<GameObject*> order;
@@ -64,7 +64,7 @@ void GameWorldEntityGraph::DestroyImmediate(GameObject* object) {
 }
 
 void GameWorldEntityGraph::EnqueueDestroy(GameObject* object) {
-    if (object == nullptr || object->world != &owner_) {
+    if (object == nullptr || object->world != &ownerWorld) {
         return;
     }
     if (object->pendingDestroy || HasPendingDestroyAncestor(object)) {
@@ -104,7 +104,7 @@ void GameWorldEntityGraph::FlushPendingDestroys() {
 }
 
 void GameWorldEntityGraph::Destroy(GameObject* object) {
-    if (object == nullptr || object->world != &owner_) {
+    if (object == nullptr || object->world != &ownerWorld) {
         return;
     }
     if (updatingGameObjects) {
@@ -124,7 +124,7 @@ void GameWorldEntityGraph::EraseStorage(GameObject* pointer) {
 }
 
 bool GameWorldEntityGraph::IsAlive(const GameObject* object) const noexcept {
-    if (object == nullptr || object->world != &owner_ || object->pendingDestroy) {
+    if (object == nullptr || object->world != &ownerWorld || object->pendingDestroy) {
         return false;
     }
     for (std::size_t i = 0; i < objects.GetSize(); ++i) {
@@ -136,11 +136,11 @@ bool GameWorldEntityGraph::IsAlive(const GameObject* object) const noexcept {
 }
 
 bool GameWorldEntityGraph::SetParent(GameObject* child, GameObject* newParent) {
-    if (child == nullptr || child->world != &owner_) {
+    if (child == nullptr || child->world != &ownerWorld) {
         return false;
     }
     if (newParent != nullptr) {
-        if (newParent->world != &owner_) {
+        if (newParent->world != &ownerWorld) {
             return false;
         }
         if (newParent == child) {

@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>01 platformer intro</h1>
           </header>
           <div class="doc-body"><h1 id="platformer-introduction">Platformer Introduction</h1>
-<p>This part applies <strong>Parts 2–7</strong> to a shippable side-scroller. The reference implementation is <strong><code>Platformer2DDemo</code></strong> (SparkDemo <strong>#6</strong>) — sources under <code>src/spark/demo/Platformer2DDemo.cpp</code> and <code>platformer2d/</code>.</p>
+<p>This part applies <strong>Parts 2–7</strong> to a shippable side-scroller. The reference implementation is <strong><code>Platformer2DDemo</code></strong> (SparkDemo <strong>#6</strong>) — sources under <code>src/spark/demo/Platformer2DDemo.cpp</code> and <code>platformer2d/</code>. It is the <strong>canonical facet sample</strong>: entity spawn via <code>world.Entities().Create()</code>, assets via <code>world.Assets().RegisterTexture</code>, level scans via <code>world.Entities().ForEach</code> (see <a href="../1-overview-architecture/06-ecs-and-scene.html">ECS and Scene</a>).</p>
 <h2 id="what-the-demo-proves">What the demo proves</h2>
 <table>
 <thead>
@@ -1147,15 +1147,16 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
         context.physics.simulate_2d(self.world, timing)
 </code></pre>
 <h2 id="simulate-order-critical">Simulate order (critical)</h2>
+<p>SparkDemo runs <strong><code>Platformer2DDemo::Simulate</code></strong> then <strong><code>Game::OnUpdate</code> → <code>RunDefaultSlice</code></strong> (components, VFX, audio). Inside <code>Simulate</code>:</p>
 <ol>
-<li><code>world.UpdateGameObjects</code> — input (50), FSM (100), animators (200), parallax (290), camera (300)</li>
-<li>Read <code>PlayerInputComponent</code> → set <code>CharacterController2D</code> intent</li>
-<li><code>physics.Simulate2D</code></li>
-<li><code>PickupComponent::ProcessDeferredDestroys</code></li>
-<li>Bullets / enemy AI</li>
-<li><code>SimulateGameAi</code> if using nav agents</li>
+<li><code>PlayerInputComponent::Refresh</code> → set <code>CharacterController2D</code> intent (before physics)</li>
+<li><code>world.Physics(physics).Simulate2D(timing)</code></li>
+<li><code>world.Simulation().RunGameplaySlice()</code> (deferred pickup destroys)</li>
+<li>Bullets / enemy squad / gem presentation</li>
+<li><code>OnRender</code> — <code>world.Rendering().SubmitLitWithCamera</code></li>
 </ol>
-<p>Skipping step 3 before gameplay rules causes one-frame overlap bugs.</p>
+<p>Component ticks (FSM, animators, parallax, camera rig) run in <strong><code>RunDefaultSlice</code></strong>, not at the top of <code>Simulate</code>. Do not call <code>ProcessVfx</code> — the default slice already pumps VFX.</p>
+<p>See <a href="../1-overview-architecture/04-engine-loop.html">Engine Loop</a> for the full facet map.</p>
 <h2 id="minimal-entry-point">Minimal entry point</h2>
 <h3 id="c_1">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/engine/Engine.hpp&quot;</span></span>

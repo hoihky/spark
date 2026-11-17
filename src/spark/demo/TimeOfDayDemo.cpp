@@ -173,7 +173,7 @@ bool TimeOfDayDemo::TryPlaceCar(
         return false;
     }
 
-    Spark::GameObject* go = w.CreateGameObject();
+    Spark::GameObject* go = w.Entities().Create();
     go->GetName() = Spark::Utf8String("Lantern");
 
     Spark::TransformComponent* tr = go->AddComponent<Spark::TransformComponent>();
@@ -206,7 +206,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     groundAsset = Spark::MakeShared<Spark::Mesh>(Spark::Utf8String("TodGround"));
     *groundAsset = Spark::Mesh::CreateGroundPlane(Spark::kSceneGroundHalfExtent);
 
-    groundObject = w.CreateGameObject();
+    groundObject = w.Entities().Create();
     groundObject->GetName() = Spark::Utf8String("Ground");
     groundObject->AddComponent<Spark::TransformComponent>();
     groundObject->AddComponent<Spark::MeshComponent>(
@@ -215,7 +215,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
 
     carLoaded = TryPlaceCar(w, "/models/Lantern.glb", {0.0F, 0.0F, 0.0F}, 0.0F, 2.2F);
 
-    Spark::GameObject* driverGo = w.CreateGameObject();
+    Spark::GameObject* driverGo = w.Entities().Create();
     driverGo->GetName() = Spark::Utf8String("TodDriver");
     timeDriver = driverGo->AddComponent<Spark::TimeOfDayDriverComponent>();
     timeDriver->SetDayLengthSeconds(cycleDurationSeconds);
@@ -223,7 +223,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     timeDriver->SetLooping(false);
     roots.PushBack(driverGo);
 
-    Spark::GameObject* fogGo = w.CreateGameObject();
+    Spark::GameObject* fogGo = w.Entities().Create();
     fogGo->GetName() = Spark::Utf8String("TodFogVolume");
     fogGo->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
     fogVolume = fogGo->AddComponent<Spark::FogVolumeComponent>();
@@ -232,7 +232,7 @@ void TimeOfDayDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context) {
     fogVolume->SetFogColor({0.62F, 0.68F, 0.78F});
     roots.PushBack(fogGo);
 
-    Spark::GameObject* postGo = w.CreateGameObject();
+    Spark::GameObject* postGo = w.Entities().Create();
     postGo->GetName() = Spark::Utf8String("TodPostVolume");
     postGo->AddComponent<Spark::TransformComponent>()->SetTranslation({0.0F, 2.0F, 0.0F});
     postVolume = postGo->AddComponent<Spark::PostProcessVolumeComponent>();
@@ -394,22 +394,15 @@ void TimeOfDayDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::
     params.worldClearColorEnabled = true;
     params.worldClearColor = ComputeProceduralSkyClearColor(params.timeOfDay);
 
-    FillStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Spark::Vector3{0.35F, 0.88F, 0.48F}.Normalized(),
-            {1.0F, 0.98F, 0.92F},
-            0.95F,
-            Spark::Vector3{0.42F, 0.52F, 0.38F},
-            false,
-            {},
-            {},
-            static_cast<float>(cycleClockSeconds),
-            params,
-            SceneSpriteSortMode::SortOrderOnly,
-            &scene);
+    Spark::LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Spark::Vector3{0.35F, 0.88F, 0.48F}.Normalized(),
+                    Spark::Vector3{1.0F, 0.98F, 0.92F},
+                    0.95F)
+            .WithAmbient(Spark::Vector3{0.42F, 0.52F, 0.38F})
+            .WithSceneTime(static_cast<float>(cycleClockSeconds))
+            .WithSceneForCulling(&scene);
+    world.Rendering().FillLit(context, viewProj, camera.position, litOptions, params);
 
     scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
         Spark::ScreenTextDraw d{};

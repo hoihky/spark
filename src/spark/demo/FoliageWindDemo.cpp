@@ -44,7 +44,7 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
     *groundRef = Mesh::CreateGroundPlane(kSceneGroundHalfExtent, kMeadowHalfExtent * 2.0F);
     world.Assets().RegisterMesh(groundRef, "spark/demo/foliage_wind_ground");
 
-    GameObject* groundObject = world.CreateGameObject();
+    GameObject* groundObject = world.Entities().Create();
     groundObject->GetName() = Utf8String("Ground");
     TransformComponent* groundTr = groundObject->AddComponent<TransformComponent>();
     const float groundScale = kMeadowHalfExtent / kSceneGroundHalfExtent;
@@ -56,7 +56,7 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
     }
     roots.PushBack(groundObject);
 
-    windEnvironmentObject = world.CreateGameObject();
+    windEnvironmentObject = world.Entities().Create();
     windEnvironmentObject->GetName() = Utf8String("WindEnvironment");
     windEnvironmentObject->AddComponent<TransformComponent>();
     WindEnvironmentComponent* windEnv = windEnvironmentObject->AddComponent<WindEnvironmentComponent>();
@@ -76,7 +76,7 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
     SharedPtr<Texture2D> grassTex = GrassFoliageAlbedoTexture::CreateSharedBladeAlbedo();
     world.Assets().RegisterTexture(grassTex, "spark/demo/foliage_wind_grass_albedo");
 
-    GameObject* field = world.CreateGameObject();
+    GameObject* field = world.Entities().Create();
     field->GetName() = Utf8String("GrassField");
     TransformComponent* fieldTr = field->AddComponent<TransformComponent>();
     fieldTr->SetTranslation({0.0F, 0.0F, 0.0F});
@@ -158,7 +158,7 @@ void FoliageWindDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineContext&
     options.sceneTimeSeconds = sceneTime;
 
     SceneRenderParams params{};
-    FillStandardLitSceneFromWorld(world, context, viewProj, camera.position, options, params);
+    world.Rendering().FillLit(context, viewProj, camera.position, options, params);
     params.lightingProfile = SceneLightingProfile::Outdoor;
     params.worldClearColorEnabled = true;
     params.worldClearColor = {0.55F, 0.74F, 0.95F};

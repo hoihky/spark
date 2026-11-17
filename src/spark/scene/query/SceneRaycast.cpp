@@ -113,9 +113,9 @@ bool Scene::RaycastPick(const SceneRay& ray, SceneRaycastHit& outHit, const Scen
 
     const auto visitObjects = [&](auto&& fn) {
         if (options.includeInactive) {
-            world.ForEachGameObject(Forward<decltype(fn)>(fn));
+            world.Entities().ForEach(Forward<decltype(fn)>(fn));
         } else {
-            world.ForEachActiveGameObject(Forward<decltype(fn)>(fn));
+            world.Entities().ForEachActive(Forward<decltype(fn)>(fn));
         }
     };
 

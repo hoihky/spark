@@ -30,7 +30,7 @@ public:
     GameWorld& GetWorld() noexcept;
 
     void OnUpdate(const FrameTiming& timing, IEngineContext& context) override;
-    // Default: world.UpdateGameObjects + ProcessSoundCues
+    // Default: world.Simulation().RunDefaultSlice (components, VFX, spatial audio)
 };
 ```
 
@@ -46,7 +46,7 @@ public:
         auto& world = GetWorld();
         auto cube = MakeShared<Mesh>(Mesh::CreateUnitCube());
         world.Assets().RegisterMesh(cube, "demo/cube");
-        GameObject* go = world.CreateGameObject();
+        GameObject* go = world.Entities().Create();
         go->AddComponent<TransformComponent>();
         go->AddComponent<MeshComponent>(cube, SceneMeshSlot::Custom, Vector3{0.7F, 0.3F, 0.2F});
         go->AddComponent<MaterialComponent>(nullptr)->SetRoughness(0.4F);
@@ -65,10 +65,12 @@ public:
                          * camera.ViewMatrix();
         Vector3 pr{}, pu{};
         camera.BillboardBasis(pr, pu);
-        SubmitStandardLitSceneFromWorld(GetWorld(), ctx, vp, camera.position,
-            Vector3{0.3F, -1.0F, 0.2F}.Normalized(),
-            Vector3{1.0F, 0.98F, 0.95F}, 1.2F, Vector3{0.15F, 0.17F, 0.22F},
-            false, pr, pu, 0.0F);
+        LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(Vector3{0.3F, -1.0F, 0.2F}.Normalized(),
+                Vector3{1.0F, 0.98F, 0.95F}, 1.2F)
+            .WithAmbient(Vector3{0.15F, 0.17F, 0.22F})
+            .WithParticles(false, pr, pu);
+        GetWorld().Rendering().SubmitLit(ctx, vp, camera.position, opts);
     }
 };
 ```

@@ -8,7 +8,7 @@
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
-#include "spark/scene/core/SceneManager.hpp"
+#include "spark/scene/core/load/SceneManager.hpp"
 #include "spark/scene/prefab/PrefabInstantiator.hpp"
 
 #include <cmath>

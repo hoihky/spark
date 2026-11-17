@@ -54,7 +54,7 @@ GameObject* Platformer2DSpawnHost::SpawnGem(
     }
     const Spark::Vector2 pos = MarkerWorldXY(mapOwner, marker, frame);
     const std::size_t gi = demo->gemObjects.GetSize();
-    GameObject* gem = world.CreateGameObject();
+    GameObject* gem = world.Entities().Create();
     gem->GetName() = Utf8String("PlatGem");
     TransformComponent* gtr = gem->AddComponent<TransformComponent>();
     gtr->SetTranslation({pos.x, pos.y, 0.05F + 0.0003F * static_cast<float>(gi)});
@@ -146,7 +146,7 @@ GameObject* Platformer2DSpawnHost::SpawnGoal(
         world.DestroyGameObject(demo->goalTriggerGo);
         demo->goalTriggerGo = nullptr;
     }
-    demo->goalTriggerGo = world.CreateGameObject();
+    demo->goalTriggerGo = world.Entities().Create();
     demo->goalTriggerGo->GetName() = Utf8String("PlatGoalTrigger");
     TransformComponent* goalTriggerTr = demo->goalTriggerGo->AddComponent<TransformComponent>();
     goalTriggerTr->SetTranslation({pos.x, pos.y, 0.0F});

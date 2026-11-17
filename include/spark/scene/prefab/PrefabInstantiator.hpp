@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
 
 namespace Spark {
 

@@ -22,7 +22,7 @@ public:
             const Vector3& cameraPositionWorld,
             const LitSceneSubmitOptions& options,
             SceneRenderParams& outParams) {
-        LitScene::Fill(world_, context, viewProjection, cameraPositionWorld, options, outParams);
+        LitScene::Fill(hostWorld, context, viewProjection, cameraPositionWorld, options, outParams);
     }
 
     void SubmitLit(
@@ -30,18 +30,18 @@ public:
             const Matrix4& viewProjection,
             const Vector3& cameraPositionWorld,
             const LitSceneSubmitOptions& options) {
-        LitScene::Submit(world_, context, viewProjection, cameraPositionWorld, options);
+        LitScene::Submit(hostWorld, context, viewProjection, cameraPositionWorld, options);
     }
 
     [[nodiscard]] bool SubmitLitWithCamera(IEngineContext& context, const LitSceneSubmitOptions& options) {
-        return LitScene::SubmitWithCamera(world_, context, options);
+        return LitScene::SubmitWithCamera(hostWorld, context, options);
     }
 
     [[nodiscard]] bool ResolveCamera(
             float framebufferWidth,
             float framebufferHeight,
             SceneRenderParams& outParams) const noexcept {
-        return LitScene::TryResolveCamera(world_, framebufferWidth, framebufferHeight, outParams);
+        return LitScene::TryResolveCamera(hostWorld, framebufferWidth, framebufferHeight, outParams);
     }
 };
 

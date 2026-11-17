@@ -116,7 +116,7 @@ void HierarchyPanel::OnTick(const FrameTiming& /*timing*/, EditorContext& ctx) {
 
 std::uint32_t HierarchyPanel::ComputeSceneRevision() const noexcept {
     std::uint32_t rev = 0;
-    world->ForEachGameObject([&](GameObject* obj) {
+    world->Entities().ForEach([&](GameObject* obj) {
         if (obj == nullptr) {
             return;
         }
@@ -139,7 +139,7 @@ void HierarchyPanel::RebuildTree() {
     nodeObjects.Clear();
 
     Array<GameObject*> allObjects;
-    world->ForEachGameObject([&](GameObject* obj) {
+    world->Entities().ForEach([&](GameObject* obj) {
         if (obj == nullptr) {
             return;
         }

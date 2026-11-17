@@ -88,7 +88,7 @@ bool GltfSamples3DDemo::TryPlaceRigidGltf(
         }
     }
 
-    GameObject* go = w.CreateGameObject();
+    GameObject* go = w.Entities().Create();
     const char* slash = std::strrchr(relativePath, '/');
     go->GetName() = Utf8String(slash != nullptr ? slash + 1 : relativePath);
 
@@ -119,7 +119,7 @@ void GltfSamples3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
 
     skyMesh = MakeShared<Mesh>(Utf8String("GltfSamplesSky"));
     *skyMesh = Mesh::CreateSkySphere(1.0F, 20, 40);
-    GameObject* sky = w.CreateGameObject();
+    GameObject* sky = w.Entities().Create();
     sky->GetName() = Utf8String("EnvSky");
     if (TransformComponent* skyTr = sky->AddComponent<TransformComponent>()) {
         skyTr->SetUniformScale(120.0F);
@@ -142,7 +142,7 @@ void GltfSamples3DDemo::Load(GameWorld& w, IEngineContext& /*context*/) {
     *groundMesh = Mesh::CreateGroundPlane(kSceneGroundHalfExtent);
     w.Assets().RegisterMesh(groundMesh, "spark/demo/gltf_samples_ground");
 
-    GameObject* ground = w.CreateGameObject();
+    GameObject* ground = w.Entities().Create();
     ground->GetName() = Utf8String("Ground");
     ground->AddComponent<MeshComponent>(groundMesh, SceneMeshSlot::GroundPlane, Vector3{0.48F, 0.50F, 0.52F});
     roots.PushBack(ground);
@@ -185,6 +185,7 @@ void GltfSamples3DDemo::Unload(GameWorld& w) {
 }
 
 void GltfSamples3DDemo::Simulate(const FrameTiming& timing, IEngineContext& context, GameWorld& /*world*/) {
+    // Canonical 3D frame: custom fly camera here; SparkDemo then calls Game::OnUpdate → RunDefaultSlice.
     IInput& in = context.GetInput();
     if (in.IsKeyPressedThisFrame(GLFW_KEY_F1)) {
         in.SetCursorCaptured(!in.IsCursorCaptured());
@@ -199,6 +200,7 @@ void GltfSamples3DDemo::Simulate(const FrameTiming& timing, IEngineContext& cont
 }
 
 void GltfSamples3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& context) {
+    // Custom view/proj + FillLit (tweak params) + HUD paint — use SubmitLit when no custom SceneRenderParams.
     int fbW = 0;
     int fbH = 0;
     context.GetFramebufferSize(fbW, fbH);
@@ -218,22 +220,14 @@ void GltfSamples3DDemo::Render(Scene& scene, GameWorld& world, IEngineContext& c
     params.iblUseHdrSkyEnvironment = true;
     params.directionalShadowsEnabled = true;
     params.ssaoEnabled = false;
-    FillStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Vector3{0.35F, 0.88F, 0.32F}.Normalized(),
-            {1.0F, 0.96F, 0.90F},
-            0.90F,
-            {0.10F, 0.11F, 0.13F},
-            false,
-            {},
-            {},
-            0.0F,
-            params,
-            SceneSpriteSortMode::SortOrderOnly,
-            &scene);
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Vector3{0.35F, 0.88F, 0.32F}.Normalized(),
+                    Vector3{1.0F, 0.96F, 0.90F},
+                    0.90F)
+            .WithAmbient(Vector3{0.10F, 0.11F, 0.13F})
+            .WithSceneForCulling(&scene);
+    world.Rendering().FillLit(context, viewProj, camera.position, litOptions, params);
 
     scene.ForEachTextOverlay([&params](const TextOverlayComponent& tc) {
         ScreenTextDraw d{};

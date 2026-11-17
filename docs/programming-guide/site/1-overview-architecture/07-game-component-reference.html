@@ -1162,11 +1162,17 @@ go.get_component_health().apply_damage(<span class="hljs-number">10.0</span>)
 </code></pre>
 <h3 id="concept-iteration-without-a-query-language">Concept: iteration without a query language</h3>
 <h3 id="c_2">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">ForEachActiveGameObject</span>([&amp;](GameObject* o) {
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">ForEachActive</span>([&amp;](GameObject* o) {
     <span class="hljs-keyword">if</span> (o == <span class="hljs-literal">nullptr</span>) <span class="hljs-keyword">return</span>;
     <span class="hljs-keyword">if</span> (PickupComponent* p = o-&gt;<span class="hljs-built_in">GetComponent</span>&lt;PickupComponent&gt;()) {
         (<span class="hljs-type">void</span>)p;
     }
+});
+
+<span class="hljs-comment">// Or only owners with a given component:</span>
+world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">ForEachComponent</span>&lt;PickupComponent&gt;([&amp;](GameObject* o, PickupComponent&amp; pickup) {
+    (<span class="hljs-type">void</span>)o;
+    (<span class="hljs-type">void</span>)pickup;
 });
 </code></pre>
 <h3 id="c_3">C#</h3>
@@ -2409,7 +2415,7 @@ tod-&gt;<span class="hljs-built_in">SetPriority</span>(<span class="hljs-number"
 <p><strong>Kind:</strong> <code>SpawnPoint2D</code> · <strong>Resolved by:</strong> <code>FindSpawnPoint2D</code> / <code>SpawnPoint2DService</code></p>
 <p>2D counterpart to <code>SpawnPointComponent</code>: world XY from the transform, planar facing from local Z rotation (or explicit radians), optional <code>teamId</code>.</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/world/SpawnPoint2DComponent.hpp&quot;</span></span>
-<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/scene/core/SceneSpawn2D.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/scene/core/spawn/SceneSpawn2D.hpp&quot;</span></span>
 
 <span class="hljs-keyword">auto</span>* spawn = marker-&gt;<span class="hljs-built_in">AddComponent</span>&lt;SpawnPoint2DComponent&gt;();
 spawn-&gt;<span class="hljs-built_in">SetSpawnName</span>(<span class="hljs-string">&quot;PlayerStart&quot;</span>);

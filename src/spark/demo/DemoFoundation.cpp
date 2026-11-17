@@ -106,7 +106,7 @@ void DemoFpsToggleOverlay::EnsureMounted(GameWorld& world) {
     if (object != nullptr) {
         return;
     }
-    object = world.CreateGameObject();
+    object = world.Entities().Create();
     object->GetName() = Utf8String("ShellFpsOverlay");
     text = object->AddComponent<TextOverlayComponent>();
     DemoHud::Apply(*text);

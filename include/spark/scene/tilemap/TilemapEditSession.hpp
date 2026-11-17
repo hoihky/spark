@@ -175,9 +175,9 @@ private:
     Array<TilemapEditCommand> undoStack{};
     Array<TilemapEditCommand> redoStack{};
 
-    TilemapDocumentCapturer documentCapturer_{};
-    TilemapDerivedDataRebaker derivedRebaker_{};
-    TilemapEditValidator validator_{};
+    TilemapDocumentCapturer documentCapturer{};
+    TilemapDerivedDataRebaker derivedRebaker{};
+    TilemapEditValidator validator{};
 };
 
 }  // namespace Spark

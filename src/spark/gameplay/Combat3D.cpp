@@ -96,7 +96,7 @@ void CombatHurtboxSphereQuery::CollectOverlaps(
     queryFilter.maskBits = filter.queryMaskBits;
     queryFilter.isTrigger = true;
 
-    world->ForEachActiveGameObject([&](GameObject* object) {
+    world->Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

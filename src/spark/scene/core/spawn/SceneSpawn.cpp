@@ -1,9 +1,10 @@
-#include "spark/scene/core/SpawnPointService.hpp"
+#include "spark/scene/core/spawn/SceneSpawn.hpp"
 
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/world/SpawnPointComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/spawn/SpawnPointService.hpp"
 
 #include <cstring>
 
@@ -11,7 +12,7 @@ namespace Spark {
 
 SceneSpawnPose SpawnPointService::Resolve(const GameWorld& world, const char* spawnName) const noexcept {
     SceneSpawnPose out{};
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (out.found || object == nullptr) {
             return;
         }
@@ -32,6 +33,11 @@ SceneSpawnPose SpawnPointService::Resolve(const GameWorld& world, const char* sp
         }
     });
     return out;
+}
+
+SceneSpawnPose FindSpawnPoint(const GameWorld& world, const char* spawnName) noexcept {
+    static const SpawnPointService kDefaultService{};
+    return kDefaultService.Resolve(world, spawnName);
 }
 
 }  // namespace Spark

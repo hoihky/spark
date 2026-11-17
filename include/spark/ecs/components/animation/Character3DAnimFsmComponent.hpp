@@ -205,7 +205,7 @@ private:
     std::size_t combatBbSlot = static_cast<std::size_t>(-1);
     bool useUpperBodyCombatOverlay = true;
     bool useLocomotionController = true;
-    Character3DCombatGraphDriver combatGraphDriver_{*this};
+    Character3DCombatGraphDriver combatGraphDriver{*this};
     LocomotionController locomotionController{};
 };
 

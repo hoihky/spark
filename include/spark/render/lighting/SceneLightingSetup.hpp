@@ -29,25 +29,25 @@ public:
 
     void ApplyTo(SceneRenderParams& params) const noexcept;
 
-    [[nodiscard]] SceneLightingProfile GetProfile() const noexcept { return profile_; }
+    [[nodiscard]] SceneLightingProfile GetProfile() const noexcept { return profile; }
 
 private:
     explicit SceneLightingSetup(const SceneLightingProfile profile) noexcept;
 
-    SceneLightingProfile profile_ = SceneLightingProfile::Default;
-    Optional<float> exposure_;
-    Optional<float> cascadeNear_;
-    Optional<float> cascadeFar_;
-    Optional<float> shadowDistanceMax_;
-    Optional<float> shadowFadeStartRatio_;
-    Optional<bool> directionalShadows_;
-    Optional<bool> punctualShadows_;
-    Optional<bool> castByDefault_;
-    Optional<bool> receiveByDefault_;
-    Optional<bool> useTimeOfDay_;
-    Optional<float> timeOfDay_;
-    Optional<bool> ssaoEnabled_;
-    Optional<float> ambientScale_;
+    SceneLightingProfile profile = SceneLightingProfile::Default;
+    Optional<float> exposure;
+    Optional<float> cascadeNear;
+    Optional<float> cascadeFar;
+    Optional<float> shadowDistanceMax;
+    Optional<float> shadowFadeStartRatio;
+    Optional<bool> directionalShadows;
+    Optional<bool> punctualShadows;
+    Optional<bool> castByDefault;
+    Optional<bool> receiveByDefault;
+    Optional<bool> useTimeOfDay;
+    Optional<float> timeOfDay;
+    Optional<bool> ssaoEnabled;
+    Optional<float> ambientScale;
 };
 
 }  // namespace Spark

@@ -33,7 +33,7 @@ This document tracks the object-oriented façade layer added without removing le
 
 | Piece | Role |
 |-------|------|
-| `compat/GameWorldEntityApi.inl` | Legacy iteration templates → `entityGraph_` |
+| `scene/core/load/`, `scene/core/spawn/` | Level load + spawn includes (canonical paths only) |
 | `WorldEntities` + `WorldEntitiesIteration.inl` | Preferred entity iteration / `Select` |
 | `QueryFilter` | Builders in `GameObjectQuery.hpp` |
 | `WorldQuery` | `CollectRoots`, `CollectScene`, batched collect |
@@ -46,9 +46,31 @@ This document tracks the object-oriented façade layer added without removing le
 | `WorldGameplay` | `world.Gameplay()` facet |
 | `WorldSimulation::RunGameplaySlice` | Call after 2D physics (projectiles still flush inside `PhysicsSubsystem::Simulate2D`) |
 
+## Entity iteration (engine internals)
+
+| Pass | Preferred API |
+|------|----------------|
+| Full scene walk (active only) | `world.Entities().ForEachActive(fn)` |
+| Full scene (incl. inactive) | `world.Entities().ForEach(fn)` |
+| Single component type | `world.Entities().ForEachComponent<T>(fn)` |
+| Batched tag/component gather | `world.QueryObjects().CollectWithTag` / `CollectWithComponent` |
+
+## Frame pipeline (canonical demos)
+
+| Demo | Update | Render |
+|------|--------|--------|
+| `Platformer2DDemo` | Input → `Physics().Simulate2D` → `RunGameplaySlice` → rules; shell then `Game::OnUpdate` → `RunDefaultSlice` | `Rendering().SubmitLitWithCamera` |
+| `GltfSamples3DDemo` | Fly camera; shell then `RunDefaultSlice` | `Rendering().FillLit` + custom `SceneRenderParams` |
+
+Documented in `docs/programming-guide/1-overview-architecture/04-engine-loop.md`. Most SparkDemo `Simulate` paths no longer call `ProcessVfx` / `SubmitStandardLitSceneFromWorld` directly.
+
 ## Next increments (not done yet)
 
 - ~~Flat `GameWorld` asset API~~ — removed; use `world.Assets()` everywhere (C#: `world.Assets`).
+- ~~Engine internals on flat `ForEach*`~~ — migrated to `Entities()` / `ForEachComponent`.
+- ~~`GameWorldEntityApi.inl`~~ — removed; use `world.Entities()` (canonical sample: `Platformer2DDemo`).
+- ~~Canonical frame order doc + two reference demos~~ — `04-engine-loop.md`, `Platformer2DDemo`, `GltfSamples3DDemo`.
+- ~~Demo `physics.Simulate*(world, …)`~~ — migrated; tests/docs may still show legacy `PhysicsSubsystem` call style.
 - `GameplaySnapshotRegistry` single registrar instead of many `Register*SnapshotHandlers`.
 - Editor / ImGui facades on `IEngineContext`.
 - Expose `LitSceneBuilder` to C# interop when script games need fluent submit.

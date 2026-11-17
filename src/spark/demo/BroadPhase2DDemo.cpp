@@ -9,7 +9,7 @@
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/vfx/VfxSubsystemProcess.hpp"
+#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <cstdio>
 
@@ -432,7 +432,7 @@ void BroadPhase2DDemo::SpawnEnemies(Spark::GameWorld& world, const Spark::Array<
         const Spark::Vector4 tint = EnemyTypeTint(typeIdx);
         const Spark::Vector4 emit = EnemyTypeEmission(typeIdx);
 
-        Spark::GameObject* ego = world.CreateGameObject();
+        Spark::GameObject* ego = world.Entities().Create();
         ego->GetName() = Spark::Utf8String("MazeEnemy");
         enemy.go = ego;
         enemy.tr = ego->AddComponent<Spark::TransformComponent>();
@@ -446,7 +446,7 @@ void BroadPhase2DDemo::SpawnEnemies(Spark::GameWorld& world, const Spark::Array<
         ego->AddComponent<Spark::BoxCollider2DComponent>();
         enemy.rb = ego->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Dynamic, 1.0F);
         enemy.rb->SetGravityScale(0.0F);
-        Spark::GameObject* hurtGo = world.CreateGameObject();
+        Spark::GameObject* hurtGo = world.Entities().Create();
         hurtGo->GetName() = Spark::Utf8String("MazeEnemyHurtbox");
         hurtGo->SetParent(ego);
         hurtGo->AddComponent<Spark::TransformComponent>();
@@ -593,7 +593,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             if (cells[static_cast<std::size_t>(y * kMazeW + x)] != 0) {
                 continue;
             }
-            Spark::GameObject* floorGo = w.CreateGameObject();
+            Spark::GameObject* floorGo = w.Entities().Create();
             floorGo->GetName() = Spark::Utf8String("MazeFloor");
             Spark::TransformComponent* floorTr = floorGo->AddComponent<Spark::TransformComponent>();
             const float cx = mazeOriginX + (static_cast<float>(x) + 0.5F) * kCellWorld;
@@ -616,7 +616,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
             if (cells[static_cast<std::size_t>(y * kMazeW + x)] == 0) {
                 continue;
             }
-            Spark::GameObject* g = w.CreateGameObject();
+            Spark::GameObject* g = w.Entities().Create();
             g->GetName() = Spark::Utf8String("MazeWall");
             Spark::TransformComponent* tr = g->AddComponent<Spark::TransformComponent>();
             const float cx = mazeOriginX + (static_cast<float>(x) + 0.5F) * kCellWorld;
@@ -639,7 +639,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         }
     }
 
-    playerGo = w.CreateGameObject();
+    playerGo = w.Entities().Create();
     playerGo->GetName() = Spark::Utf8String("MazePlayer");
     playerTr = playerGo->AddComponent<Spark::TransformComponent>();
     static constexpr int kSpawnLogicalX = 1;
@@ -666,7 +666,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     playerRb->SetVelocity(Spark::Vector2::Zero);
     playerHealth = playerGo->AddComponent<Spark::HealthComponent>(kPlayerMaxHealth);
     playerDamageable = playerGo->AddComponent<Spark::DamageableComponent>();
-    Spark::GameObject* playerHurtboxGo = w.CreateGameObject();
+    Spark::GameObject* playerHurtboxGo = w.Entities().Create();
     playerHurtboxGo->GetName() = Spark::Utf8String("MazePlayerHurtbox");
     playerHurtboxGo->SetParent(playerGo);
     playerHurtboxGo->AddComponent<Spark::TransformComponent>();
@@ -707,7 +707,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     }
     for (int gi = 0; gi < gemsTotal; ++gi) {
         const MazeIJ c = floorCells[static_cast<std::size_t>(gi)];
-        Spark::GameObject* gem = w.CreateGameObject();
+        Spark::GameObject* gem = w.Entities().Create();
         gem->GetName() = Spark::Utf8String("MazeGem");
         Spark::TransformComponent* gtr = gem->AddComponent<Spark::TransformComponent>();
         const float gx = mazeOriginX + (static_cast<float>(c.i) + 0.5F) * kCellWorld;
@@ -745,7 +745,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
                  mazeOriginY + (static_cast<float>(c.j) + 0.5F) * kCellWorld});
     }
 
-    fpsHudObject = w.CreateGameObject();
+    fpsHudObject = w.Entities().Create();
     fpsHudObject->GetName() = Spark::Utf8String("MazeFpsHud");
     fpsText = fpsHudObject->AddComponent<Spark::TextOverlayComponent>();
     fpsText->SetScreenPosition(Spark::DemoHud::kScreenMargin, 86.0F);
@@ -754,7 +754,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     roots.PushBack(playerGo);
     roots.PushBack(fpsHudObject);
 
-    mainCameraGo = w.CreateGameObject();
+    mainCameraGo = w.Entities().Create();
     mainCameraGo->GetName() = Spark::Utf8String("MazeCamera");
     Spark::TransformComponent* camTr = mainCameraGo->AddComponent<Spark::TransformComponent>();
     camTr->SetTranslation({px, py, 0.0F});
@@ -775,7 +775,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
     {
         const float hingeX = px + 2.8F * kCellWorld;
         const float hingeY = py;
-        Spark::GameObject* hingeAnchor = w.CreateGameObject();
+        Spark::GameObject* hingeAnchor = w.Entities().Create();
         hingeAnchor->GetName() = Spark::Utf8String("Maze2DHingeAnchor");
         Spark::TransformComponent* anchorTr = hingeAnchor->AddComponent<Spark::TransformComponent>();
         anchorTr->SetTranslation({hingeX, hingeY, 0.04F});
@@ -789,7 +789,7 @@ void BroadPhase2DDemo::Load(Spark::GameWorld& w, Spark::IEngineContext& context)
         hingeAnchor->AddComponent<Spark::Rigidbody2DComponent>(Spark::RigidbodyBodyType2D::Static, 1.0F);
         roots.PushBack(hingeAnchor);
 
-        Spark::GameObject* swingPlat = w.CreateGameObject();
+        Spark::GameObject* swingPlat = w.Entities().Create();
         swingPlat->GetName() = Spark::Utf8String("Maze2DSwingPlat");
         Spark::TransformComponent* swingTr = swingPlat->AddComponent<Spark::TransformComponent>();
         swingTr->SetTranslation({hingeX, hingeY - 1.6F * kCellWorld, 0.05F});
@@ -920,7 +920,6 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
     sceneTime = timing.totalTimeSeconds;
     Spark::IInput& in = context.GetInput();
     const float dt = timing.deltaTimeSeconds;
-    Spark::ProcessVfx(world);
 
     if (playerHurtCooldown > 0.0F) {
         playerHurtCooldown = std::max(0.0F, playerHurtCooldown - dt);
@@ -973,7 +972,7 @@ void BroadPhase2DDemo::Simulate(const Spark::FrameTiming& timing, Spark::IEngine
             }
         }
 
-        physics.Simulate2D(world, timing);
+        world.Physics(physics).Simulate2D(timing);
         world.Simulation().RunGameplaySlice();
 
         const Spark::Vector3 p = playerTr->GetLocalTransform().translation;
@@ -1114,20 +1113,16 @@ void BroadPhase2DDemo::Render(Spark::Scene& /*scene*/, Spark::GameWorld& world, 
     Spark::Vector3 pr{};
     Spark::Vector3 pu{};
     camera.BillboardBasisWorld(pr, pu);
-    Spark::SubmitStandardLitSceneFromWorld(
-            world,
-            context,
-            viewProj,
-            camera.position,
-            Spark::Vector3{0.18F, 0.62F, 0.88F}.Normalized(),
-            Spark::Vector3{0.95F, 0.92F, 0.88F},
-            0.95F,
-            Spark::Vector3{0.10F, 0.12F, 0.18F},
-            true,
-            pr,
-            pu,
-            sceneTime,
-            Spark::SceneSpriteSortMode::SortOrderThenWorldY);
+    Spark::LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(
+                    Spark::Vector3{0.18F, 0.62F, 0.88F}.Normalized(),
+                    Spark::Vector3{0.95F, 0.92F, 0.88F},
+                    0.95F)
+            .WithAmbient(Spark::Vector3{0.10F, 0.12F, 0.18F})
+            .WithParticles(true, pr, pu)
+            .WithSceneTime(sceneTime)
+            .WithSpriteSortMode(Spark::SceneSpriteSortMode::SortOrderThenWorldY);
+    world.Rendering().SubmitLit(context, viewProj, camera.position, litOptions);
 }
 
 }  // namespace Spark

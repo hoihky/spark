@@ -72,7 +72,7 @@ void Projectile2DComponent::MarkDeferredDestroy(GameObject& owner) noexcept {
 }
 
 void Projectile2DComponent::ProcessDeferredDestroys(GameWorld& world) noexcept {
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

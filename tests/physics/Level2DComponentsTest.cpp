@@ -16,7 +16,7 @@
 #include "spark/gameplay/CameraBounds2DResolve.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/physics/2d/PhysicsQueries2D.hpp"
-#include "spark/scene/core/SceneSpawn2D.hpp"
+#include "spark/scene/core/spawn/SceneSpawn2D.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace {

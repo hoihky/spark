@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>06 ecs and scene</h1>
           </header>
           <div class="doc-body"><h1 id="ecs-and-scene">ECS and Scene</h1>
-<p>Spark ECS is <strong>gameplay-oriented</strong>: entities are <code>GameObject</code>, data and behavior are <code>GameComponent</code> derivatives looked up by <code>ComponentKind</code>. There is no archetype/query DSL — use <code>ForEachGameObjectWithComponents</code> and tags for iteration.</p>
+<p>Spark ECS is <strong>gameplay-oriented</strong>: entities are <code>GameObject</code>, data and behavior are <code>GameComponent</code> derivatives looked up by <code>ComponentKind</code>. There is no archetype/query DSL — use <strong><code>world.Entities()</code></strong> (<code>WorldEntities</code>) for iteration and <strong><code>world.QueryObjects()</code></strong> (<code>WorldQuery</code>) for batched gathers.</p>
 <p><code>Scene</code> is a <strong>read/query façade</strong> over the same <code>GameWorld</code> the game mutates; rendering uses <code>FillStandardLitSceneFromWorld(world, …)</code> rather than Scene iterators in most games.</p>
 <h2 id="entity-gameobject">Entity: <code>GameObject</code></h2>
 <table>
@@ -1172,16 +1172,42 @@ T* <span class="hljs-title">AddComponent</span><span class="hljs-params">(Args&a
 </tbody>
 </table>
 <p>Full table: <a href="07-game-component-reference.html#update-priorities">Game Component Reference</a>.</p>
-<h2 id="gameworld-ownership"><code>GameWorld</code> ownership</h2>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function">GameObject* <span class="hljs-title">CreateGameObject</span><span class="hljs-params">()</span></span>;
-<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">DestroyGameObject</span><span class="hljs-params">(GameObject* object)</span></span>;
-<span class="hljs-function"><span class="hljs-type">bool</span> <span class="hljs-title">SetParent</span><span class="hljs-params">(GameObject* child, GameObject* newParent)</span></span>;
-<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">UpdateGameObjects</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span></span>;
+<h2 id="gameworld-and-facets"><code>GameWorld</code> and facets</h2>
+<p>Prefer <strong>facets</strong> over flat <code>GameWorld</code> helpers for entity and asset work (same pattern in C#: <code>world.Entities</code>, <code>world.Assets</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Facet</th>
+<th>C++</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entities</td>
+<td><code>world.Entities()</code></td>
+<td><code>Create</code>, <code>Destroy</code>, <code>SetParent</code>, <code>ForEachActive</code>, <code>ForEachComponent</code></td>
+</tr>
+<tr>
+<td>Query</td>
+<td><code>world.QueryObjects()</code></td>
+<td><code>CollectWithTag</code>, <code>CollectWithComponent</code>, filtered <code>Collect</code></td>
+</tr>
+<tr>
+<td>Assets</td>
+<td><code>world.Assets()</code></td>
+<td>Load/register textures, glTF, pump async jobs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Canonical C++ sample:</strong> <code>Platformer2DDemo</code> and <code>src/spark/demo/platformer2d/*</code> use <code>world.Entities().Create()</code>, <code>world.Assets().RegisterTexture</code>, and <code>world.Entities().ForEach</code> for level teardown.</p>
+<p>Low-level <code>GameWorld</code> lifecycle methods remain (<code>CreateGameObject</code>, <code>DestroyGameObject</code>, …) and are what <code>WorldEntities::Create()</code> delegates to.</p>
+<p><strong>Assets:</strong> <code>world.Assets()</code> — <code>RegisterMesh</code>, <code>RegisterTexture</code>, <code>LoadGltf</code>, async <code>RequestGltf</code> + <code>Pump</code>. <strong>UI fonts</strong> stay on <code>GameWorld</code>: <code>SetUiFont</code> / <code>SetUiBoldFont</code>.</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">UpdateGameObjects</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span></span>;
 </code></pre>
-<p><strong>Assets:</strong> <code>world.Assets()</code> (<code>WorldAssets</code>) — <code>RegisterMesh</code>, <code>RegisterTexture</code>, <code>LoadGltf</code>, <code>LoadSkinnedGltf</code>, async <code>RequestGltf</code> + <code>Pump</code>, lookups by key/path. <strong>UI fonts</strong> stay on <code>GameWorld</code>: <code>SetUiFont</code> / <code>SetUiBoldFont</code>.</p>
 <h2 id="concept-create-a-player-entity">Concept: create a player entity</h2>
 <h3 id="c">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* player = world.<span class="hljs-built_in">CreateGameObject</span>();
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* player = world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">Create</span>();
 player-&gt;<span class="hljs-built_in">SetTag</span>(<span class="hljs-string">&quot;player&quot;</span>);
 TransformComponent* tr = player-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
 tr-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">0.0F</span>, <span class="hljs-number">1.0F</span>, <span class="hljs-number">0.0F</span>});
@@ -1205,9 +1231,9 @@ player.add_sprite(<span class="hljs-string">&quot;game/hero&quot;</span>, tint, 
 <h2 id="concept-hierarchy">Concept: hierarchy</h2>
 <p>Parent transforms compose automatically:</p>
 <h3 id="c_2">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* root = world.<span class="hljs-built_in">CreateGameObject</span>();
-GameObject* child = world.<span class="hljs-built_in">CreateGameObject</span>();
-world.<span class="hljs-built_in">SetParent</span>(child, root);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* root = world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">Create</span>();
+GameObject* child = world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">Create</span>();
+world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">SetParent</span>(child, root);
 root-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">10</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>});
 child-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetTranslation</span>({<span class="hljs-number">0</span>, <span class="hljs-number">2</span>, <span class="hljs-number">0</span>});
 <span class="hljs-comment">// child world ≈ (10, 2, 0)</span>
@@ -1224,12 +1250,12 @@ child.get_or_add_transform().set_translation(Vector3(<span class="hljs-number">0
 </code></pre>
 <h2 id="concept-queries-and-tags">Concept: queries and tags</h2>
 <h3 id="c_4">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* player = world.<span class="hljs-built_in">FindGameObjectWithTag</span>(<span class="hljs-string">&quot;player&quot;</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">GameObject* player = world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">FindByTag</span>(<span class="hljs-string">&quot;player&quot;</span>);
 
-world.<span class="hljs-built_in">ForEachGameObjectWithComponents</span>&lt;MeshComponent, MaterialComponent&gt;(
+world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">ForEachWithComponents</span>&lt;MeshComponent, MaterialComponent&gt;(
     [](GameObject* go) { <span class="hljs-comment">/* lit mesh */</span> });
 
-GameObject* camGo = world.<span class="hljs-built_in">FindFirstGameObjectWithComponents</span>&lt;Camera2DComponent&gt;();
+GameObject* camGo = world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">FindFirstWithComponents</span>&lt;Camera2DComponent&gt;();
 </code></pre>
 <h3 id="c_5">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> player = world.FindGameObjectWithTag(<span class="hljs-string">&quot;player&quot;</span>);

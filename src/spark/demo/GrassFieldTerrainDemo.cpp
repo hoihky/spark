@@ -72,7 +72,7 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     terrainSettings.lacunarity = 2.1F;
     terrainSettings.seed = 0xA7F20C31u;
 
-    GameObject* terrainObject = world.CreateGameObject();
+    GameObject* terrainObject = world.Entities().Create();
     terrainObject->GetName() = Utf8String("GrassFieldTerrain");
     terrainObject->AddComponent<TransformComponent>();
     TerrainComponent* terrainComponent = terrainObject->AddComponent<TerrainComponent>(terrainSettings);
@@ -83,7 +83,7 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     roots.PushBack(terrainObject);
     SetupDemoCameraNearGrass(camera, *terrainComponent, *terrainObject);
 
-    windEnvironmentObject = world.CreateGameObject();
+    windEnvironmentObject = world.Entities().Create();
     windEnvironmentObject->GetName() = Utf8String("WindEnvironment");
     windEnvironmentObject->AddComponent<TransformComponent>();
     WindEnvironmentComponent* windEnv = windEnvironmentObject->AddComponent<WindEnvironmentComponent>();
@@ -97,7 +97,7 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     windEnv->GetSettings() = wind;
     roots.PushBack(windEnvironmentObject);
 
-    viewTargetObject = world.CreateGameObject();
+    viewTargetObject = world.Entities().Create();
     viewTargetObject->GetName() = Utf8String("GrassViewTarget");
     viewTargetObject->AddComponent<TransformComponent>();
     roots.PushBack(viewTargetObject);
@@ -108,7 +108,7 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     SharedPtr<Texture2D> grassTex = GrassFoliageAlbedoTexture::CreateSharedBladeAlbedo();
     world.Assets().RegisterTexture(grassTex, "spark/demo/grass_field_albedo");
 
-    GameObject* grassRoot = world.CreateGameObject();
+    GameObject* grassRoot = world.Entities().Create();
     grassRoot->GetName() = Utf8String("TerrainGrassField");
     if (TransformComponent* grassTr = grassRoot->AddComponent<TransformComponent>()) {
         grassTr->SetTranslation({kGrassPatchCenterX, 0.0F, kGrassPatchCenterZ});
@@ -229,7 +229,7 @@ void GrassFieldTerrainDemo::Render(Scene& /*scene*/, GameWorld& world, IEngineCo
         }
     }
 
-    FillStandardLitSceneFromWorld(world, context, viewProj, camera.position, options, params);
+    world.Rendering().FillLit(context, viewProj, camera.position, options, params);
     params.lightingProfile = SceneLightingProfile::Outdoor;
     params.worldClearColorEnabled = true;
     params.worldClearColor = {0.52F, 0.7F, 0.94F};

@@ -1130,7 +1130,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-function">GameWorld&amp; <span class="hljs-title">GetWorld</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span>;
 
     <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnUpdate</span><span class="hljs-params">(<span class="hljs-type">const</span> FrameTiming&amp; timing, IEngineContext&amp; context)</span> <span class="hljs-keyword">override</span></span>;
-    <span class="hljs-comment">// Default: world.UpdateGameObjects + ProcessSoundCues</span>
+    <span class="hljs-comment">// Default: world.Simulation().RunDefaultSlice (components, VFX, spatial audio)</span>
 };
 </code></pre>
 <h2 id="concept-minimal-lit-3d-game">Concept: minimal lit 3D game</h2>
@@ -1142,7 +1142,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
         <span class="hljs-keyword">auto</span>&amp; world = <span class="hljs-built_in">GetWorld</span>();
         <span class="hljs-keyword">auto</span> cube = <span class="hljs-built_in">MakeShared</span>&lt;Mesh&gt;(Mesh::<span class="hljs-built_in">CreateUnitCube</span>());
         world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RegisterMesh</span>(cube, <span class="hljs-string">&quot;demo/cube&quot;</span>);
-        GameObject* go = world.<span class="hljs-built_in">CreateGameObject</span>();
+        GameObject* go = world.<span class="hljs-built_in">Entities</span>().<span class="hljs-built_in">Create</span>();
         go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;();
         go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3{<span class="hljs-number">0.7F</span>, <span class="hljs-number">0.3F</span>, <span class="hljs-number">0.2F</span>});
         go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MaterialComponent&gt;(<span class="hljs-literal">nullptr</span>)-&gt;<span class="hljs-built_in">SetRoughness</span>(<span class="hljs-number">0.4F</span>);
@@ -1161,10 +1161,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
                          * camera.<span class="hljs-built_in">ViewMatrix</span>();
         Vector3 pr{}, pu{};
         camera.<span class="hljs-built_in">BillboardBasis</span>(pr, pu);
-        <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(<span class="hljs-built_in">GetWorld</span>(), ctx, vp, camera.position,
-            Vector3{<span class="hljs-number">0.3F</span>, <span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.2F</span>}.<span class="hljs-built_in">Normalized</span>(),
-            Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">1.2F</span>, Vector3{<span class="hljs-number">0.15F</span>, <span class="hljs-number">0.17F</span>, <span class="hljs-number">0.22F</span>},
-            <span class="hljs-literal">false</span>, pr, pu, <span class="hljs-number">0.0F</span>);
+        LitSceneSubmitOptions opts{};
+        opts.<span class="hljs-built_in">WithDirectionalLight</span>(Vector3{<span class="hljs-number">0.3F</span>, <span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.2F</span>}.<span class="hljs-built_in">Normalized</span>(),
+                Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">1.2F</span>)
+            .<span class="hljs-built_in">WithAmbient</span>(Vector3{<span class="hljs-number">0.15F</span>, <span class="hljs-number">0.17F</span>, <span class="hljs-number">0.22F</span>})
+            .<span class="hljs-built_in">WithParticles</span>(<span class="hljs-literal">false</span>, pr, pu);
+        <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(ctx, vp, camera.position, opts);
     }
 };
 </code></pre>

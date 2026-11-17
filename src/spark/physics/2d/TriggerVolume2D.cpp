@@ -182,7 +182,7 @@ void TriggerVolumeWorld2D::Simulate(GameWorld& world, const FrameTiming& timing)
     Array<TriggerVolumeEntry2D> volumes;
     Array<TriggerProbeEntry2D> probes;
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }
@@ -198,7 +198,7 @@ void TriggerVolumeWorld2D::Simulate(GameWorld& world, const FrameTiming& timing)
         }
     });
 
-    world.ForEachActiveGameObject([&](GameObject* object) {
+    world.Entities().ForEachActive([&](GameObject* object) {
         if (object == nullptr) {
             return;
         }

@@ -62,7 +62,7 @@ void ImGuiShowcaseDemo::BuildRetainedUi(GameWorld& world) {
     if (uiBuilt) {
         return;
     }
-    uiRoot = world.CreateGameObject();
+    uiRoot = world.Entities().Create();
     uiRoot->GetName() = Utf8String("ImGuiShowcaseUi");
     uiCanvas = uiRoot->AddComponent<UiCanvasComponent>();
     uiCanvas->SetSortOrder(180);

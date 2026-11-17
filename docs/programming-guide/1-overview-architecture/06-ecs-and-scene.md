@@ -1,6 +1,6 @@
 # ECS and Scene
 
-Spark ECS is **gameplay-oriented**: entities are `GameObject`, data and behavior are `GameComponent` derivatives looked up by `ComponentKind`. There is no archetype/query DSL — use `ForEachGameObjectWithComponents` and tags for iteration.
+Spark ECS is **gameplay-oriented**: entities are `GameObject`, data and behavior are `GameComponent` derivatives looked up by `ComponentKind`. There is no archetype/query DSL — use **`world.Entities()`** (`WorldEntities`) for iteration and **`world.QueryObjects()`** (`WorldQuery`) for batched gathers.
 
 `Scene` is a **read/query façade** over the same `GameWorld` the game mutates; rendering uses `FillStandardLitSceneFromWorld(world, …)` rather than Scene iterators in most games.
 
@@ -42,23 +42,32 @@ Each `GameObject` **stable-sorts** components by `UpdatePriority()` before `OnUp
 
 Full table: [Game Component Reference](07-game-component-reference.md#update-priorities).
 
-## `GameWorld` ownership
+## `GameWorld` and facets
+
+Prefer **facets** over flat `GameWorld` helpers for entity and asset work (same pattern in C#: `world.Entities`, `world.Assets`).
+
+| Facet | C++ | Typical use |
+|-------|-----|----------------|
+| Entities | `world.Entities()` | `Create`, `Destroy`, `SetParent`, `ForEachActive`, `ForEachComponent` |
+| Query | `world.QueryObjects()` | `CollectWithTag`, `CollectWithComponent`, filtered `Collect` |
+| Assets | `world.Assets()` | Load/register textures, glTF, pump async jobs |
+
+**Canonical C++ sample:** `Platformer2DDemo` and `src/spark/demo/platformer2d/*` use `world.Entities().Create()`, `world.Assets().RegisterTexture`, and `world.Entities().ForEach` for level teardown.
+
+Low-level `GameWorld` lifecycle methods remain (`CreateGameObject`, `DestroyGameObject`, …) and are what `WorldEntities::Create()` delegates to.
+
+**Assets:** `world.Assets()` — `RegisterMesh`, `RegisterTexture`, `LoadGltf`, async `RequestGltf` + `Pump`. **UI fonts** stay on `GameWorld`: `SetUiFont` / `SetUiBoldFont`.
 
 ```cpp
-GameObject* CreateGameObject();
-void DestroyGameObject(GameObject* object);
-bool SetParent(GameObject* child, GameObject* newParent);
 void UpdateGameObjects(const FrameTiming& timing, IEngineContext& context);
 ```
-
-**Assets:** `world.Assets()` (`WorldAssets`) — `RegisterMesh`, `RegisterTexture`, `LoadGltf`, `LoadSkinnedGltf`, async `RequestGltf` + `Pump`, lookups by key/path. **UI fonts** stay on `GameWorld`: `SetUiFont` / `SetUiBoldFont`.
 
 ## Concept: create a player entity
 
 ### C++
 
 ```cpp
-GameObject* player = world.CreateGameObject();
+GameObject* player = world.Entities().Create();
 player->SetTag("player");
 TransformComponent* tr = player->AddComponent<TransformComponent>();
 tr->SetTranslation({0.0F, 1.0F, 0.0F});
@@ -93,9 +102,9 @@ Parent transforms compose automatically:
 ### C++
 
 ```cpp
-GameObject* root = world.CreateGameObject();
-GameObject* child = world.CreateGameObject();
-world.SetParent(child, root);
+GameObject* root = world.Entities().Create();
+GameObject* child = world.Entities().Create();
+world.Entities().SetParent(child, root);
 root->AddComponent<TransformComponent>()->SetTranslation({10, 0, 0});
 child->AddComponent<TransformComponent>()->SetTranslation({0, 2, 0});
 // child world ≈ (10, 2, 0)
@@ -122,12 +131,12 @@ child.get_or_add_transform().set_translation(Vector3(0, 2, 0))
 ### C++
 
 ```cpp
-GameObject* player = world.FindGameObjectWithTag("player");
+GameObject* player = world.Entities().FindByTag("player");
 
-world.ForEachGameObjectWithComponents<MeshComponent, MaterialComponent>(
+world.Entities().ForEachWithComponents<MeshComponent, MaterialComponent>(
     [](GameObject* go) { /* lit mesh */ });
 
-GameObject* camGo = world.FindFirstGameObjectWithComponents<Camera2DComponent>();
+GameObject* camGo = world.Entities().FindFirstWithComponents<Camera2DComponent>();
 ```
 
 ### C\#

@@ -117,7 +117,7 @@ void Character3DAnimFsmComponent::ConfigureLocomotionFromSkeleton(
     locomotionController.SetWalkSpeedThreshold(walkThresh);
     locomotionController.SetRunSpeedThreshold(runThresh);
     locomotionController.SetCrossfadeDuration(crossfadeDuration);
-    combatGraphDriver_.RebuildActionSpecs();
+    combatGraphDriver.RebuildActionSpecs();
 }
 
 void Character3DAnimFsmComponent::SetCombatClips(
@@ -129,7 +129,7 @@ void Character3DAnimFsmComponent::SetCombatClips(
     hurtClip = hurtClipIndex;
     staggerClip = staggerClipIndex;
     deathClip = deathClipIndex;
-    combatGraphDriver_.RebuildActionSpecs();
+    combatGraphDriver.RebuildActionSpecs();
 }
 
 void Character3DAnimFsmComponent::SetAttackClip(const std::uint32_t attackClipIndex) noexcept {
@@ -419,10 +419,10 @@ void Character3DAnimFsmComponent::OnUpdate(
     }
 
     CombatActionKind graphPending = ToCombatActionKind(combatCommand);
-    combatGraphDriver_.ProcessFrame(*anim, owner, graphPending);
+    combatGraphDriver.ProcessFrame(*anim, owner, graphPending);
 
     const bool upperCombatOverlayPlaying =
-            useUpperBodyCombatOverlay && combatGraphDriver_.IsOverlayPresenting();
+            useUpperBodyCombatOverlay && combatGraphDriver.IsOverlayPresenting();
     const auto shouldApplyCombatClip = [&](const CombatClipPlayback& playback) {
         if (!playback.IsActive()) {
             return false;

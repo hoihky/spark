@@ -5,8 +5,8 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
-#include "spark/scene/core/SceneInstanceId.hpp"
-#include "spark/scene/core/SceneSpawn.hpp"
+#include "spark/scene/core/load/SceneInstanceId.hpp"
+#include "spark/scene/core/spawn/SceneSpawn.hpp"
 #include "spark/scene/prefab/PrefabInstantiator.hpp"
 #include "spark/scene/serialization/SceneDocument.hpp"
 
