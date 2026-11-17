@@ -39,7 +39,7 @@ Key header groups:
 - **Components:** `spark/ecs/components/` — domain subfolders (`core/`, `rendering/`, `lighting/`, `camera/`, `physics/2d|3d/`, `animation/`, `ai/`, `audio/`, `ui/`, `world/`).
 - **Math & containers:** `spark/math/`, `spark/core/`, `spark/core/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`, `Optional`, `Function`, `HashMap`, `Queue`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
-- **Fast path for lit scenes:** `spark/scene/submit/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).
+- **Fast path for lit scenes:** `spark/scene/submit/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (`LitSceneSubmitter`, `SceneMeshSubmitCollectors`, `SceneDrawListSorter`, `SceneSubmitMaterial.cpp`, …). See `include/spark/scene/submit/README.md`.
 
 ---
 
@@ -199,7 +199,7 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **Particles** | CPU billboards, additive pass | `SceneParticleInstance`, `particles`, `particleCameraRight` / `Up` |
 | **Screen UI** | Solid rects + text, three paint layers | `screenRects` / `screenTexts`, overlay, late; `ScreenRectDraw`, `ScreenTextDraw`, `NextUiPaintOrder` |
 | **ECS → standard frame** | One-call fill for typical 3D scenes | `SubmitStandardLitSceneFromWorld` (`spark/scene/submit/SceneSubmit.hpp`) |
-| **Lit scene facade** | Fluent camera + lighting + submit | `LitSceneBuilder`, `LitSceneSubmitOptions` (`spark/scene/submit/`) |
+| **Lit scene facade** | Fluent camera + lighting + submit | `LitScene::Builder`, `LitSceneSubmitOptions` (`LitScene.hpp`) |
 | **Lighting preset setup** | Profile + overrides without touching draw lists | `SceneLightingSetup` (`spark/render/lighting/SceneLightingSetup.hpp`) |
 | **Shadow participation VO** | Cast/receive intent for materials and draws | `SceneShadowParticipation` (`spark/render/lighting/SceneShadowParticipation.hpp`) |
 | **Params validation** | Clamp unsafe lighting / SSAO / fog values | `SceneRenderParams::Sanitize()` |
@@ -211,7 +211,7 @@ Gap analysis (more light types, material channels, IBL, caps): [`MATERIALS_AND_L
 Existing positional APIs are unchanged. For new gameplay code, prefer the options struct or builder:
 
 ```cpp
-#include "spark/scene/submit/LitSceneBuilder.hpp"
+#include "spark/scene/submit/LitScene.hpp"
 #include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 #include "spark/render/lighting/SceneLightingSetup.hpp"
 
@@ -223,7 +223,7 @@ Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor)
     .WithShadowDistanceFade(150.0F)
     .ApplyTo(params);  // optional: or chain on LitSceneBuilder
 
-Spark::LitSceneBuilder(world, context)
+Spark::LitScene::Builder(world, context)
     .WithLightingSetup(Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor))
     .WithOptions(opts)
     .WithCameraFromWorld()

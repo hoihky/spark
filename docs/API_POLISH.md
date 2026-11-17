@@ -73,7 +73,7 @@ Documented in `docs/programming-guide/1-overview-architecture/04-engine-loop.md`
 - ~~Demo `physics.Simulate*(world, …)`~~ — migrated; tests/docs may still show legacy `PhysicsSubsystem` call style.
 - `GameplaySnapshotRegistry` single registrar instead of many `Register*SnapshotHandlers`.
 - Editor / ImGui facades on `IEngineContext`.
-- Expose `LitSceneBuilder` to C# interop when script games need fluent submit.
+- C#: `LitScene.Builder` + `LitSceneSubmitOptions` in **spark-sharp** (see `docs/CSHARP_SCENE_SUBMIT_SYNC.md`).
 
 ## C# regeneration
 

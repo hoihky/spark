@@ -38,6 +38,8 @@ These patterns are skipped by bindgen (`validate_component_script_catalog.py` / 
 
 Non-component engine APIs (Vulkan, `IEngineContext`, editor, raw physics world) remain C++-only unless added manually to **`SparkInterop.h`**.
 
+**Scene submit / spatial (Nov 2025):** C++ refactor (`LitSceneSubmitter`, `spark/scene/spatial`, `SceneDrawListSorter`) stays native-internal. Script surface: `LitSceneSubmitOptions`, `LitScene.Builder`, camera resolve, frustum flag — see **[CSHARP_SCENE_SUBMIT_SYNC.md](CSHARP_SCENE_SUBMIT_SYNC.md)**.
+
 ## Closing a gap
 
 1. Add `{ "suffix", "member" }` to **`component-script-catalog.json`** in **spark-sharp** and implement the C++ member in **`include/spark/ecs/components/...`** (this repo).
