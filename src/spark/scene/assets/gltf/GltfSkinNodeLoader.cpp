@@ -6,7 +6,7 @@
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Transform.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/assets/gltf/GltfSkinnedMeshBuilder.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 

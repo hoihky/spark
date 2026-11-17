@@ -3,7 +3,7 @@
 #include "spark/media/VideoRecorder.hpp"
 
 #include "spark/core/Utility.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <cmath>
 

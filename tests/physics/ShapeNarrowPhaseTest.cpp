@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/physics/2d/Collision2D.hpp"
 #include "spark/physics/3d/Collision3D.hpp"
 #include "spark/physics/2d/shapes/Shapes.hpp"

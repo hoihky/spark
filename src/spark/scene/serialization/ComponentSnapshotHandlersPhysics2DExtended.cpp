@@ -4,7 +4,7 @@
 #include "spark/ecs/components/physics/2d/DistanceJoint2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/HingeJoint2DComponent.hpp"
 #include "spark/ecs/components/physics/2d/PhysicsMaterial2DComponent.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/serialization/ComponentSnapshotPayload.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"

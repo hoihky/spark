@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/foliage/FoliageInstanceRecord.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/texture/Texture2D.hpp"

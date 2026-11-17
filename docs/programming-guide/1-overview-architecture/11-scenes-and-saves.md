@@ -105,7 +105,7 @@ pass  # pools not yet exposed — use C++ coordinator or extend interop
 ### C++
 
 ```cpp
-#include "spark/save/GameSave.hpp"
+#include "spark/gameplay/save/GameSave.hpp"
 
 GameSaveSlot slot{};
 if (GameSave::TryLoad(GameSave::DefaultSlotPath(), slot)) {

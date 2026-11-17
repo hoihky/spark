@@ -20,7 +20,7 @@
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"

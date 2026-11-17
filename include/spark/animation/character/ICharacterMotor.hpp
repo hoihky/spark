@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/character/CharacterLocomotionState.hpp"
+#include "spark/animation/character/CharacterLocomotionState.hpp"
 #include "spark/math/Vector3.hpp"
 
 namespace Spark {

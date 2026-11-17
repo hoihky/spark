@@ -35,7 +35,7 @@
 #include "spark/demo/SparkEditorDemo.hpp"
 #endif
 #include "spark/demo/TimeOfDayDemo.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/ui/Ui.hpp"

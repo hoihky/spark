@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/core/UiTypes.hpp"
 
 namespace Spark {

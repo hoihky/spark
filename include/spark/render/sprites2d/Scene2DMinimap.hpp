@@ -2,7 +2,7 @@
 
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector2.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"
 #include "spark/scene/render/RenderTexture.hpp"

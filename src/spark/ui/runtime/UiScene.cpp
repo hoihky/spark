@@ -4,7 +4,7 @@
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/scene/core/GameWorld.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 #include "spark/demo/DemoGuiFrame.hpp"
 #include "spark/ui/core/UiLayoutMetrics.hpp"
 #include "spark/ui/core/UiPointerState.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/foliage/WindSubsystem.hpp"
 #include "spark/scene/submit/SkinnedAnimationService.hpp"
 #include "spark/scene/submit/SkinnedIkService.hpp"

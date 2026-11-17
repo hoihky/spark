@@ -6,7 +6,7 @@
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/SkinnedAnimationBudget.hpp"
 #include "spark/scene/submit/SkinnedIkService.hpp"

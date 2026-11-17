@@ -816,7 +816,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/texture/TextureHalfFloat.cpp
         src/spark/scene/texture/Ktx2TextureLoader.cpp
         src/spark/scene/texture/stb_image_impl.cpp
-        src/spark/text/Font.cpp
+        src/spark/ui/text/Font.cpp
         src/spark/ecs/components/rendering/TextOverlayComponent.cpp
         src/spark/ecs/components/ui/UiCanvasComponent.cpp
         src/spark/ecs/components/rendering/SkyComponent.cpp
@@ -870,8 +870,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ui/runtime/UiScene.cpp
         src/spark/ui/runtime/UiSystem.cpp
         src/spark/ui/runtime/UiToolkitSettings.cpp
-        src/spark/imgui/ImGuiLayerRegistry.cpp
-        src/spark/imgui/ImGuiLayerFactory.cpp
+        src/spark/ui/imgui/ImGuiLayerRegistry.cpp
+        src/spark/ui/imgui/ImGuiLayerFactory.cpp
         src/spark/render/platform/window.cpp
         src/spark/render/core/VulkanDeviceContext.cpp
         src/spark/render/core/VulkanFrameCapture.cpp
@@ -962,7 +962,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/serialization/ComponentSnapshotHandlersMore.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersRendering.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersTilemap.cpp
-        src/spark/save/GameSave.cpp
+        src/spark/gameplay/save/GameSave.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersUi.cpp
         src/spark/scene/serialization/ComponentSnapshotPayload.cpp
@@ -1052,10 +1052,10 @@ set(SPARK_ENGINE_SOURCES
         src/spark/physics/core/ColliderMaterial.cpp
         src/spark/ecs/components/physics/3d/PhysicsContactListener3DComponent.cpp
         src/spark/ecs/components/physics/3d/PhysicsAttachedBody3DComponent.cpp
-        src/spark/character/KinematicCharacterMotor.cpp
-        src/spark/character/MotionArbitrator.cpp
-        src/spark/character/CharacterRootMotionApplicator.cpp
-        src/spark/character/CharacterSimulationPipeline.cpp
+        src/spark/animation/character/KinematicCharacterMotor.cpp
+        src/spark/animation/character/MotionArbitrator.cpp
+        src/spark/animation/character/CharacterRootMotionApplicator.cpp
+        src/spark/animation/character/CharacterSimulationPipeline.cpp
         src/spark/ecs/components/character/Character3DBodyComponent.cpp
         src/spark/ecs/components/character/Character3DVisualComponent.cpp
         src/spark/animation/AnimationJointMask.cpp

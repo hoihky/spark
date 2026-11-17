@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/math/Transform.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"

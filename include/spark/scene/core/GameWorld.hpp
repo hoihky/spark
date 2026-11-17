@@ -3,7 +3,7 @@
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObjectQuery.hpp"
 #include "spark/engine/FrameTiming.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/EntityId.hpp"
 #include "spark/scene/core/GameWorldAssetStore.hpp"
 #include "spark/scene/core/GameWorldEntityGraph.hpp"

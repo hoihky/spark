@@ -2,7 +2,7 @@
 
 #include "spark/editor/EditorContext.hpp"
 #include "spark/editor/IEditorPanel.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
 
 namespace Spark {

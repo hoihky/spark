@@ -2,8 +2,8 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/HashMap.hpp"
-#include "spark/memory/SharedPtr.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/SharedPtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/render/IRenderTarget.hpp"
 #include "spark/render/IRenderTargetService.hpp"
 #include "spark/render/scene/VulkanOffscreenRenderTarget.hpp"

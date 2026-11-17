@@ -4,7 +4,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utility.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 namespace Spark {
 

@@ -4,7 +4,7 @@
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapObjectLayerComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TilemapDocumentCapture.hpp"
 #include "spark/scene/tilemap/TilemapDocumentSerializer.hpp"

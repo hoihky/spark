@@ -7,7 +7,7 @@
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Matrix4.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <type_traits>
 

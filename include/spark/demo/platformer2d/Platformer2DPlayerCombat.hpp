@@ -6,7 +6,7 @@
 #include "spark/ecs/components/gameplay/DamageableComponent.hpp"
 #include "spark/ecs/components/gameplay/HealthComponent.hpp"
 #include "spark/audio/SoundClip.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 namespace Spark {
 class GameObject;

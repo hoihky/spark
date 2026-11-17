@@ -6,7 +6,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Quaternion.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <cstdint>
 

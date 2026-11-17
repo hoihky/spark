@@ -2,7 +2,7 @@
 
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/serialization/ComponentSnapshotPayload.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"

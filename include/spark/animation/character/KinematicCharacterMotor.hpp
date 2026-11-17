@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/character/ICharacterMotor.hpp"
+#include "spark/animation/character/ICharacterMotor.hpp"
 
 namespace Spark {
 

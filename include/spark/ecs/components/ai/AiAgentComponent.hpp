@@ -7,7 +7,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector2.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/core/Utility.hpp"
 
 #include <cstddef>

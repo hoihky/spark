@@ -7,7 +7,7 @@
 
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 #include "spark/engine/IInput.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/core/IUiRenderer.hpp"
 #include "spark/ui/core/UiLayoutMetrics.hpp"
 #include "spark/ui/spark/controls/SparkControls.hpp"

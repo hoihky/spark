@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/physics/3d/Collision3D.hpp"
 #include "spark/physics/3d/shapes/IShape3D.hpp"

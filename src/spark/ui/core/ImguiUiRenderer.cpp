@@ -2,7 +2,7 @@
 
 #include "spark/config.hpp"
 #include "spark/engine/IInput.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/ui/runtime/UiFrameContext.hpp"
 

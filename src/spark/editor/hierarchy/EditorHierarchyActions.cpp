@@ -10,7 +10,7 @@
 #include "spark/editor/commands/SetGameObjectParentCommand.hpp"
 #include "spark/editor/hierarchy/HierarchySceneSnapshot.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/editor/SceneEditorContentModel.hpp"
 

@@ -1,8 +1,8 @@
 #include "spark/ecs/components/character/Character3DBodyComponent.hpp"
 
 #include "spark/animation/IRootMotionApplicator.hpp"
-#include "spark/character/CharacterRootMotionApplicator.hpp"
-#include "spark/character/CharacterSimulationPipeline.hpp"
+#include "spark/animation/character/CharacterRootMotionApplicator.hpp"
+#include "spark/animation/character/CharacterSimulationPipeline.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
 #include "spark/ecs/components/animation/RootMotionComponent.hpp"

@@ -4,7 +4,7 @@
 #include "spark/animation/Skeleton.hpp"
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Matrix4.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 #include <cstdint>
 

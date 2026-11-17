@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/core/Utility.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #ifndef NOMINMAX
 #define NOMINMAX

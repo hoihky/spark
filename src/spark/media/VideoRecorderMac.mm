@@ -3,7 +3,7 @@
 #import <CoreVideo/CoreVideo.h>
 
 #include "spark/media/VideoRecorder.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/core/Utf8String.hpp"
 
 #include <cstdio>

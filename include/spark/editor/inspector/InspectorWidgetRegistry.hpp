@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/editor/inspector/IInspectorWidget.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/core/Array.hpp"
 
 namespace Spark::Editor {

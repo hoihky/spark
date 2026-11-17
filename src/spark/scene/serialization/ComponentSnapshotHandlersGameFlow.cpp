@@ -7,7 +7,7 @@
 #include "spark/input/InputAction.hpp"
 #include "spark/ecs/components/input/PlayerInputComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapObjectSpawnComponent.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"
 

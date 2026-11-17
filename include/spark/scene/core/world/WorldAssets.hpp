@@ -2,7 +2,7 @@
 
 #include "spark/core/Utf8String.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/assets/AssetLoadEvents.hpp"
 #include "spark/scene/assets/CachedAssetKind.hpp"
 #include "spark/scene/assets/GameWorldAssetCache.hpp"

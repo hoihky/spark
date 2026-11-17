@@ -21,7 +21,7 @@
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/physics/2d/Collision2D.hpp"
-#include "spark/save/GameSave.hpp"
+#include "spark/gameplay/save/GameSave.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/scene/core/spawn/SceneSpawn.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"

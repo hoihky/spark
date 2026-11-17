@@ -1,7 +1,7 @@
 #include "spark/editor/EditorUiFont.hpp"
 
 #include "spark/config.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 #include <iostream>

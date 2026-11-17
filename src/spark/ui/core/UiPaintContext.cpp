@@ -9,7 +9,7 @@
 #include "spark/math/Vector3.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 #include <algorithm>
 #include <cmath>

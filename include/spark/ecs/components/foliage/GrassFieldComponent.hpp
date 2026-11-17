@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/foliage/FoliageInstanceRecord.hpp"
 #include "spark/scene/foliage/GrassChunkCoordinate.hpp"
 #include "spark/scene/foliage/GrassChunkNeighborhood.hpp"

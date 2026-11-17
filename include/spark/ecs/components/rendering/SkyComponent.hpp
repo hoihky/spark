@@ -4,7 +4,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 namespace Spark {

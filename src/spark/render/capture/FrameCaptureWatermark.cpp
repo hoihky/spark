@@ -2,7 +2,7 @@
 
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 #include <algorithm>
 #include <cmath>

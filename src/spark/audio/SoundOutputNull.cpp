@@ -1,6 +1,6 @@
 #include "spark/audio/ISoundOutput.hpp"
 
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 namespace Spark {
 

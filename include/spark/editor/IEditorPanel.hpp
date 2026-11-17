@@ -2,7 +2,7 @@
 
 #include "spark/core/Utf8String.hpp"
 #include "spark/editor/EditorContext.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/core/IUiElement.hpp"
 
 namespace Spark::Editor {

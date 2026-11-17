@@ -4,7 +4,7 @@
 #include "spark/core/Utf8String.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/ecs/GameObjectQuery.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/core/EntityId.hpp"
 
 namespace Spark {

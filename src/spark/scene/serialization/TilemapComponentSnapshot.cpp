@@ -1,7 +1,7 @@
 #include "spark/scene/serialization/TilemapComponentSnapshot.hpp"
 
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/serialization/ComponentSnapshotPayload.hpp"
 #include "spark/scene/tilemap/Tileset.hpp"
 #include "spark/scene/texture/Texture2D.hpp"

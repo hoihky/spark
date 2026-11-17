@@ -4,7 +4,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/texture/Texture2D.hpp"

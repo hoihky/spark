@@ -1,6 +1,6 @@
 #include "spark/render/scene/VulkanSceneTextureUploader.hpp"
 
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/render/core/VulkanRendererGpu.hpp"
 #include "spark/render/gpu/VulkanTextureFormatSupport.hpp"
 #include "spark/scene/texture/Texture2D.hpp"

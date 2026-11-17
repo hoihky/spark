@@ -3,7 +3,7 @@
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapAutotileComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapGameplayGridComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TileAutotile.hpp"
 #include "spark/scene/tilemap/TileDefinition.hpp"

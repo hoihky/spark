@@ -4,7 +4,7 @@
 #include "spark/audio/SoundClip.hpp"
 #include "spark/audio/SoundMixer.hpp"
 #include "spark/core/Array.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 namespace Spark {
 

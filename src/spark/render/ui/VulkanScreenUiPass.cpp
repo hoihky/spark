@@ -8,7 +8,7 @@
 #include "spark/render/scene/VulkanRenderTargetRegistry.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 #include <cmath>
 #include <cstring>

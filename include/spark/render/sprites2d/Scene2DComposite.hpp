@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/render/sprites2d/Scene2DRuntimeLimits.hpp"
 #include "spark/scene/render/RenderTexture.hpp"
 

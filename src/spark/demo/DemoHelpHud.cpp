@@ -5,7 +5,7 @@
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/scene/core/GameWorld.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 #include "spark/ui/core/UiPaintContext.hpp"
 
 #include <GLFW/glfw3.h>

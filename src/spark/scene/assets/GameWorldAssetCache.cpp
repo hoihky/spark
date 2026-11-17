@@ -4,7 +4,7 @@
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/assets/gltf/GltfRigidLoader.hpp"
 #include "spark/scene/assets/gltf/GltfSceneLoader.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/material/MaterialAsset.hpp"
 #include "spark/scene/material/MaterialAssetLoader.hpp"
 

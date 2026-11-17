@@ -2,7 +2,7 @@
 
 #include "spark/config.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
 #include "spark/ui/runtime/UiToolkitSettings.hpp"
 
 #if SPARK_ENABLE_IMGUI

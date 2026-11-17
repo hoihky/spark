@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "spark/save/GameSave.hpp"
+#include "spark/gameplay/save/GameSave.hpp"
 
 #include <cstdio>
 

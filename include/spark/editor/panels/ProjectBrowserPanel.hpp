@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/editor/IEditorPanel.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/editor/SceneEditorAssetBrowser.hpp"
 #include "spark/scene/editor/SceneEditorAssetCatalog.hpp"
 #include "spark/ui/controls/IUiControls.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/engine/IGame.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 namespace Spark {
 

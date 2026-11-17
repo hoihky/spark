@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/character/MotionArbitrationMode.hpp"
+#include "spark/animation/character/MotionArbitrationMode.hpp"
 #include "spark/math/Vector3.hpp"
 
 namespace Spark {

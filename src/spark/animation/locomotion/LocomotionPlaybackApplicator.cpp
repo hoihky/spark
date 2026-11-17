@@ -4,7 +4,7 @@
 #include "spark/animation/locomotion/LocomotionPlaybackDecision.hpp"
 #include "spark/animation/Skeleton.hpp"
 #include "spark/ecs/components/animation/AnimatorComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 namespace Spark {
 

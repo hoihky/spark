@@ -506,7 +506,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Forward-lit 3D</strong> with directional + optional <strong>shadow map</strong>, <strong>point</strong> and <strong>spot</strong> lights, <strong>PBR</strong> and <strong>toon</strong> shading, optional <strong>normal</strong> and <strong>ORM</strong> texture maps on draws.</li>
 <li><strong>Optional</strong> 2D and <strong>3D</strong> toy physics (<code>PhysicsSubsystem</code>, <code>PhysicsWorld2D</code>, <code>PhysicsWorld3D</code>).</li>
 <li>A <strong>retained-mode UI</strong> (<code>UiCanvasComponent</code>, controls under <code>spark/ui/</code>).</li>
-<li>Optional <strong>Dear ImGui</strong> tool UI (<code>spark/imgui/</code>, <code>SPARK_ENABLE_IMGUI</code>, docking branch) alongside the retained stack.</li>
+<li>Optional <strong>Dear ImGui</strong> tool UI (<code>spark/ui/imgui/</code>, <code>SPARK_ENABLE_IMGUI</code>, docking branch) alongside the retained stack.</li>
 <li><strong>Asset loading</strong> (meshes, glTF, textures, fonts, skinned characters) with caching on <code>WorldAssets</code> (<code>world.Assets()</code>) backed by <code>GameWorldAssetCache</code>.</li>
 </ul>
 <p>The default executable (<code>src/main.cpp</code>) constructs <code>Engine</code> with <strong><code>NewShellDemoGame()</code></strong> (<code>spark/demo/NewShellDemoGame.hpp</code>) — the interactive launcher plus <strong>22</strong> built-in modes (3D fly scenes, terrain sculpting, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, 3D model viewer, Dear ImGui docking demo, etc.). Launcher rows are defined in <strong><code>DemoCatalog</code></strong> (<code>include/spark/demo/DemoCatalog.hpp</code>); recommended demos are marked with <code>*</code> in the menu.</p>
@@ -551,7 +551,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><strong>Engine loop:</strong> <code>spark/engine/</code> — <code>Engine</code>, <code>IGame</code>, <code>Game</code>, <code>ISceneProvider</code>, <code>IEngineContext</code>, <code>EngineContext</code>, <code>GlfwInput</code>, <code>FrameTiming</code>, <code>SceneRenderParams</code>.</li>
 <li><strong>World &amp; entities:</strong> <code>spark/scene/core/GameWorld.hpp</code>, <code>spark/ecs/GameObject.hpp</code>, <code>spark/scene/core/Scene.hpp</code>.</li>
 <li><strong>Components:</strong> <code>spark/ecs/components/</code> — domain subfolders (<code>core/</code>, <code>rendering/</code>, <code>lighting/</code>, <code>camera/</code>, <code>physics/2d|3d/</code>, <code>animation/</code>, <code>ai/</code>, <code>audio/</code>, <code>ui/</code>, <code>world/</code>).</li>
-<li><strong>Math &amp; containers:</strong> <code>spark/math/</code>, <code>spark/core/</code>, <code>spark/memory/</code> (<code>SharedPtr</code>, <code>UniquePtr</code>, <code>Array</code>, <code>Utf8String</code>, <code>Optional</code>, <code>Function</code>, <code>HashMap</code>, <code>Queue</code>).</li>
+<li><strong>Math &amp; containers:</strong> <code>spark/math/</code>, <code>spark/core/</code>, <code>spark/core/</code> (<code>SharedPtr</code>, <code>UniquePtr</code>, <code>Array</code>, <code>Utf8String</code>, <code>Optional</code>, <code>Function</code>, <code>HashMap</code>, <code>Queue</code>).</li>
 <li><strong>Rendering contract:</strong> <code>spark/engine/SceneRenderParams.hpp</code> — what the GPU path consumes each frame.</li>
 <li><strong>Fast path for lit scenes:</strong> <code>spark/scene/submit/SceneSubmit.hpp</code> — <code>SubmitStandardLitSceneFromWorld</code> (implementation split across <code>SceneSubmit.cpp</code>, <code>SceneSubmitLighting.cpp</code>, <code>SceneSubmitMaterial.cpp</code>, <code>SceneSubmitDrawPartition.cpp</code>).</li>
 </ul>
@@ -1275,7 +1275,7 @@ Spark::LitSceneBuilder(world, context)
 <tr>
 <td><strong>Frame facade</strong></td>
 <td><code>NewFrame</code> / <code>Render</code> without leaking backends into <code>IGame</code></td>
-<td><code>IImGuiLayer</code> (<code>spark/imgui/IImGuiLayer.hpp</code>)</td>
+<td><code>IImGuiLayer</code> (<code>spark/ui/imgui/IImGuiLayer.hpp</code>)</td>
 </tr>
 <tr>
 <td><strong>Vulkan hook</strong></td>
@@ -2099,7 +2099,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <p>See <a href="gui-toolkit-architecture.html"><code>GUI_TOOLKIT_ARCHITECTURE.md</code></a> for the full layer diagram and migration phases.</p>
 <p><strong>UI GPU note:</strong> <code>VulkanScreenUiPass</code> draws all solid rects then all text per layer (main, overlay, late) for stable Vulkan batching. Dear ImGui draws <strong>after</strong> screen UI in the present subpass when enabled.</p>
 <hr />
-<h2 id="121-dear-imgui-sparkimgui">12.1 Dear ImGui (<code>spark/imgui/</code>)</h2>
+<h2 id="121-dear-imgui-sparkuiimgui">12.1 Dear ImGui (<code>spark/ui/imgui/</code>)</h2>
 <p>Optional when <code>SPARK_ENABLE_IMGUI=ON</code> (default):</p>
 <ul>
 <li><strong><code>IImGuiLayer</code></strong> — <code>SetEnabled</code>, <code>BeginFrame</code>, <code>EndFrame</code>, <code>WantsCaptureMouse</code> / <code>WantsCaptureKeyboard</code>, <code>InstallPlatformCallbacks</code>.</li>
@@ -2112,7 +2112,7 @@ PaintUiCanvases(world, params, fbW, fbH);
 <h2 id="13-conventions-types">13. Conventions &amp; Types</h2>
 <ul>
 <li><strong>Strings:</strong> gameplay-visible strings often use <strong><code>Utf8String</code></strong> (<code>spark/core/Utf8String.hpp</code>).</li>
-<li><strong>Ownership:</strong> <code>SharedPtr</code> / <code>UniquePtr</code> (<code>spark/memory/</code>) instead of <code>std::shared_ptr</code> in hot paths (project style).</li>
+<li><strong>Ownership:</strong> <code>SharedPtr</code> / <code>UniquePtr</code> (<code>spark/core/</code>) instead of <code>std::shared_ptr</code> in hot paths (project style).</li>
 <li><strong>Collections:</strong> <code>spark/core/Array.hpp</code>, <code>HashMap</code>, etc.</li>
 <li><strong>Math:</strong> <code>Vector2/3/4</code>, <code>Matrix4</code>, <code>Quaternion</code>, <code>Transform</code> under <code>spark/math/</code>.</li>
 </ul>

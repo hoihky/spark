@@ -2,7 +2,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/media/VideoRecordingSettings.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/render/core/VulkanFrameSync.hpp"
 
 #include <vulkan/vulkan.h>

@@ -3,7 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"

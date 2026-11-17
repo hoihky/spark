@@ -1,6 +1,6 @@
 #include "spark/media/VideoRecorder.hpp"
 
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #if defined(SPARK_PLATFORM_APPLE)
 

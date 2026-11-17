@@ -2,7 +2,7 @@
 
 #include "spark/engine/FrameTiming.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
 
 namespace Spark {

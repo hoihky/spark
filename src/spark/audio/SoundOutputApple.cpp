@@ -3,7 +3,7 @@
 #include "spark/config.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/core/Utility.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <AudioToolbox/AudioQueue.h>
 #include <cstring>

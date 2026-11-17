@@ -1,4 +1,4 @@
-#include "spark/character/KinematicCharacterMotor.hpp"
+#include "spark/animation/character/KinematicCharacterMotor.hpp"
 
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"

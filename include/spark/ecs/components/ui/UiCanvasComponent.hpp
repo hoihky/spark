@@ -2,7 +2,7 @@
 
 #include "spark/core/TypeTraits.hpp"
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/core/IUiElement.hpp"
 #include "spark/ui/core/UiTheme.hpp"
 #include "spark/ui/core/UiTypes.hpp"

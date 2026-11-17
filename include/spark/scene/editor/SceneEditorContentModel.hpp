@@ -3,7 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/ecs/GameObject.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/SceneEntityRole.hpp"
 #include "spark/scene/core/load/SceneInstanceId.hpp"
 #include "spark/scene/mesh/Mesh.hpp"

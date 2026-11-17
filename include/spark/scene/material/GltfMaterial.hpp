@@ -4,7 +4,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"

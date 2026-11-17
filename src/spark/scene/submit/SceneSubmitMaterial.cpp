@@ -8,7 +8,7 @@
 #include "spark/ecs/components/rendering/TerrainComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 

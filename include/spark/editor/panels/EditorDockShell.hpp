@@ -2,7 +2,7 @@
 
 #include "spark/editor/EditorDefaultLayout.hpp"
 #include "spark/editor/IEditorPanel.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
 #include "spark/ui/core/UiTypes.hpp"
 

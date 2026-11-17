@@ -10,7 +10,7 @@
 #include "spark/render/scene/SceneShadingModel.hpp"
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 #include "spark/scene/material/MaterialGltfExtensions.hpp"
@@ -20,7 +20,7 @@
 #include "spark/scene/material/MaterialUvMap.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapLayerSortMode.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 #include "spark/scene/foliage/FoliageInstanceRecord.hpp"
 #include "spark/scene/foliage/SceneFoliageInstancedBatch.hpp"
 

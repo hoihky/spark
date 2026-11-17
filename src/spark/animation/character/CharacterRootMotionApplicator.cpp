@@ -1,6 +1,6 @@
-#include "spark/character/CharacterRootMotionApplicator.hpp"
+#include "spark/animation/character/CharacterRootMotionApplicator.hpp"
 
-#include "spark/character/MotionArbitrator.hpp"
+#include "spark/animation/character/MotionArbitrator.hpp"
 #include "spark/ecs/GameObject.hpp"
 
 namespace Spark {

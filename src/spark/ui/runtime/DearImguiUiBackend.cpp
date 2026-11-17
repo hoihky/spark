@@ -1,7 +1,7 @@
 #include "spark/ui/runtime/DearImguiUiBackend.hpp"
 
 #include "spark/engine/IInput.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/ui/core/ImguiUiRenderer.hpp"
 #include "spark/ui/core/UiPointerState.hpp"

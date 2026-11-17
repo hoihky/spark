@@ -2,5 +2,5 @@
 
 /** Smart pointers: SharedPtr, WeakPtr, UniquePtr (single-threaded ref counts). */
 
-#include "spark/memory/SharedPtr.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/SharedPtr.hpp"
+#include "spark/core/UniquePtr.hpp"

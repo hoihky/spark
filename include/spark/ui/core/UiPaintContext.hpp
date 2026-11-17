@@ -6,7 +6,7 @@
 #include "spark/ui/core/UiTypes.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
 
 namespace Spark {

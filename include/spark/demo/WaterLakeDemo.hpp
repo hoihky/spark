@@ -5,7 +5,7 @@
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
 #include "spark/ecs/components/water/WaterBodyComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/water/WaterWavePreset.hpp"
 

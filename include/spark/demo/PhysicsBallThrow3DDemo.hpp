@@ -16,7 +16,7 @@
 #include "spark/ecs/components/physics/3d/SphereCollider3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/SpringJoint3DComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/core/Scene.hpp"

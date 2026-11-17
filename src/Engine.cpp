@@ -12,7 +12,7 @@
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ui/runtime/UiSystem.hpp"
 #include "spark/media/VideoRecordingSettings.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/render/core/VulkanRenderer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/config.hpp"

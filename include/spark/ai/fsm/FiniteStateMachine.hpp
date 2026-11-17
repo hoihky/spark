@@ -2,7 +2,7 @@
 
 #include "spark/ai/fsm/IFsmState.hpp"
 #include "spark/core/Array.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <cstddef>
 #include <cstdint>

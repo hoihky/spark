@@ -10,7 +10,7 @@
 #include "spark/ecs/components/physics/2d/TilemapCollider2DComponent.hpp"
 #include "spark/scene/core/load/SceneLoadSession.hpp"
 #include "spark/scene/core/load/SceneManager.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/tilemap/TilemapEditSession.hpp"
 
 #include <cstdint>

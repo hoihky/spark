@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <cstddef>
 #include <cstdint>

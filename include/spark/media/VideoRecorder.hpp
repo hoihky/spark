@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/media/VideoRecordingSettings.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <cstddef>
 #include <cstdint>

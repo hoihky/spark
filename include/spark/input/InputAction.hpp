@@ -5,7 +5,7 @@
 #include "spark/input/InputActionSample.hpp"
 #include "spark/input/InputActionTypes.hpp"
 #include "spark/input/IInputBinding.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 namespace Spark {
 

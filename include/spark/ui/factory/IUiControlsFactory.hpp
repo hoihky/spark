@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
 #include "spark/ui/factory/ControlDesc.hpp"
 

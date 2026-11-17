@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/tilemap/TilemapBrush.hpp"
 #include "spark/scene/tilemap/TilemapEditSession.hpp"

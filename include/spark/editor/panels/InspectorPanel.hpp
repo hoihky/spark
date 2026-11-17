@@ -5,7 +5,7 @@
 #include "spark/editor/inspector/InspectorEditTracker.hpp"
 #include "spark/editor/inspector/InspectorWidgetRegistry.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
 
 namespace Spark {

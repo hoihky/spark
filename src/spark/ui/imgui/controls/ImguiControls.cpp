@@ -1,7 +1,7 @@
 #include "spark/ui/imgui/controls/ImguiControls.hpp"
 
 #include "spark/config.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/core/ImguiUiRenderer.hpp"
 #include "spark/ui/core/IUiRenderer.hpp"
 #include "spark/ui/core/UiElementBase.hpp"

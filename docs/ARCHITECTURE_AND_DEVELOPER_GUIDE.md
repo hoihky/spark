@@ -14,7 +14,7 @@ Spark is a **C++23** codebase that provides:
 - **Forward-lit 3D** with directional + optional **shadow map**, **point** and **spot** lights, **PBR** and **toon** shading, optional **normal** and **ORM** texture maps on draws.
 - **Optional** 2D and **3D** toy physics (`PhysicsSubsystem`, `PhysicsWorld2D`, `PhysicsWorld3D`).
 - A **retained-mode UI** (`UiCanvasComponent`, controls under `spark/ui/`).
-- Optional **Dear ImGui** tool UI (`spark/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
+- Optional **Dear ImGui** tool UI (`spark/ui/imgui/`, `SPARK_ENABLE_IMGUI`, docking branch) alongside the retained stack.
 - **Asset loading** (meshes, glTF, textures, fonts, skinned characters) with caching on `WorldAssets` (`world.Assets()`) backed by `GameWorldAssetCache`.
 
 The default executable (`src/main.cpp`) constructs `Engine` with **`NewShellDemoGame()`** (`spark/demo/NewShellDemoGame.hpp`) — the interactive launcher plus **22** built-in modes (3D fly scenes, terrain sculpting, maze, 2D games, tilemap showcase, scene editor prototype, material showcase, glTF PBR sample, 3D model viewer, Dear ImGui docking demo, etc.). Launcher rows are defined in **`DemoCatalog`** (`include/spark/demo/DemoCatalog.hpp`); recommended demos are marked with `*` in the menu.
@@ -37,7 +37,7 @@ Key header groups:
 - **Engine loop:** `spark/engine/` — `Engine`, `IGame`, `Game`, `ISceneProvider`, `IEngineContext`, `EngineContext`, `GlfwInput`, `FrameTiming`, `SceneRenderParams`.
 - **World & entities:** `spark/scene/core/GameWorld.hpp`, `spark/ecs/GameObject.hpp`, `spark/scene/core/Scene.hpp`.
 - **Components:** `spark/ecs/components/` — domain subfolders (`core/`, `rendering/`, `lighting/`, `camera/`, `physics/2d|3d/`, `animation/`, `ai/`, `audio/`, `ui/`, `world/`).
-- **Math & containers:** `spark/math/`, `spark/core/`, `spark/memory/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`, `Optional`, `Function`, `HashMap`, `Queue`).
+- **Math & containers:** `spark/math/`, `spark/core/`, `spark/core/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`, `Optional`, `Function`, `HashMap`, `Queue`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
 - **Fast path for lit scenes:** `spark/scene/submit/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (implementation split across `SceneSubmit.cpp`, `SceneSubmitLighting.cpp`, `SceneSubmitMaterial.cpp`, `SceneSubmitDrawPartition.cpp`).
 
@@ -334,7 +334,7 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | Feature | Role | Primary types / paths |
 |--------|------|------------------------|
 | **Build flag** | Link docking-branch ImGui + GLFW/Vulkan backends | `SPARK_ENABLE_IMGUI` (CMake, default ON), `cmake/SparkImGui.cmake` |
-| **Frame facade** | `NewFrame` / `Render` without leaking backends into `IGame` | `IImGuiLayer` (`spark/imgui/IImGuiLayer.hpp`) |
+| **Frame facade** | `NewFrame` / `Render` without leaking backends into `IGame` | `IImGuiLayer` (`spark/ui/imgui/IImGuiLayer.hpp`) |
 | **Vulkan hook** | Record draw lists after screen UI in present pass | `IImGuiVulkanBackend`, `VulkanRenderer::RecordImGuiDrawData` |
 | **Input capture** | Gate game pointer when ImGui hovers widgets | `WantsCaptureMouse`, `WantsCaptureKeyboard` |
 | **GLFW chaining** | Install callbacks after `GlfwInput::WireToWindow` | `IImGuiLayer::InstallPlatformCallbacks` |
@@ -804,7 +804,7 @@ See [`GUI_TOOLKIT_ARCHITECTURE.md`](GUI_TOOLKIT_ARCHITECTURE.md) for the full la
 
 ---
 
-## 12.1 Dear ImGui (`spark/imgui/`)
+## 12.1 Dear ImGui (`spark/ui/imgui/`)
 
 Optional when `SPARK_ENABLE_IMGUI=ON` (default):
 
@@ -820,7 +820,7 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDem
 ## 13. Conventions & Types
 
 - **Strings:** gameplay-visible strings often use **`Utf8String`** (`spark/core/Utf8String.hpp`).
-- **Ownership:** `SharedPtr` / `UniquePtr` (`spark/memory/`) instead of `std::shared_ptr` in hot paths (project style).
+- **Ownership:** `SharedPtr` / `UniquePtr` (`spark/core/`) instead of `std::shared_ptr` in hot paths (project style).
 - **Collections:** `spark/core/Array.hpp`, `HashMap`, etc.
 - **Math:** `Vector2/3/4`, `Matrix4`, `Quaternion`, `Transform` under `spark/math/`.
 

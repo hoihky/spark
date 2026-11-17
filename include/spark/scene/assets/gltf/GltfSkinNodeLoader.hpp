@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/core/Utf8String.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 struct cgltf_data;
 struct cgltf_node;

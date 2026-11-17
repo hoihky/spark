@@ -1,7 +1,7 @@
 #include "spark/scene/core/GameWorldPresentation.hpp"
 
 #include "spark/scene/core/GameWorld.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 namespace Spark {
 

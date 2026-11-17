@@ -2,7 +2,7 @@
 
 #include "spark/core/TypeTraits.hpp"
 #include "spark/ui/core/IUiElement.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/ui/controls/IUiControls.hpp"
 
 namespace Spark::Ui {

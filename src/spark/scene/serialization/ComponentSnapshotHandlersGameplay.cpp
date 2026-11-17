@@ -19,7 +19,7 @@
 #include "spark/ecs/components/rendering/DecalProjectorComponent.hpp"
 #include "spark/ecs/components/tilemap/TilemapMapSourceComponent.hpp"
 #include "spark/ecs/components/world/SpawnPointComponent.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/scene/serialization/ComponentSnapshotPayload.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"
 #include "spark/scene/serialization/IComponentSnapshotHandler.hpp"

@@ -2,7 +2,7 @@
 
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/math/Vector4.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 

@@ -2,9 +2,9 @@
 
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 #include <algorithm>
 #include <cmath>

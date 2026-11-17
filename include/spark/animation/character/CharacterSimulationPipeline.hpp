@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/character/CharacterIntent.hpp"
+#include "spark/animation/character/CharacterIntent.hpp"
 #include "spark/physics/3d/CharacterController3D.hpp"
 
 namespace Spark {

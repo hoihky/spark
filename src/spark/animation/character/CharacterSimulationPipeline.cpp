@@ -1,7 +1,7 @@
-#include "spark/character/CharacterSimulationPipeline.hpp"
+#include "spark/animation/character/CharacterSimulationPipeline.hpp"
 
-#include "spark/character/KinematicCharacterMotor.hpp"
-#include "spark/character/MotionArbitrator.hpp"
+#include "spark/animation/character/KinematicCharacterMotor.hpp"
+#include "spark/animation/character/MotionArbitrator.hpp"
 #include "spark/ecs/components/character/Character3DBodyComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/FrameTiming.hpp"

@@ -4,7 +4,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/input/InputAction.hpp"
 #include "spark/input/InputActionTypes.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 namespace Spark {
 

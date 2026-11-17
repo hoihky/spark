@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/ecs/GameComponent.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 namespace Spark {
 

@@ -12,7 +12,7 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/assets/GameWorldAssetLoader.hpp"
 #include "spark/scene/serialization/ComponentSnapshotRegistry.hpp"

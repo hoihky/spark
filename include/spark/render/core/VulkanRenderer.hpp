@@ -44,10 +44,10 @@
 #include "spark/render/foliage/VulkanFoliageInstancedPass.hpp"
 #include "spark/render/platform/Window.hpp"
 
-#include "spark/imgui/IImGuiLayer.hpp"
-#include "spark/imgui/ImGuiLayerFactory.hpp"
-#include "spark/imgui/ImGuiLayerRegistry.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/ImGuiLayerFactory.hpp"
+#include "spark/ui/imgui/ImGuiLayerRegistry.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 #include <cstddef>
 #include <cstdint>

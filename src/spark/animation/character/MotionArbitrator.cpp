@@ -1,6 +1,6 @@
-#include "spark/character/MotionArbitrator.hpp"
+#include "spark/animation/character/MotionArbitrator.hpp"
 
-#include "spark/character/ICharacterMotor.hpp"
+#include "spark/animation/character/ICharacterMotor.hpp"
 
 namespace Spark {
 

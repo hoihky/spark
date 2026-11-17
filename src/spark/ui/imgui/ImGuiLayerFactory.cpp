@@ -1,9 +1,9 @@
 #include "spark/config.hpp"
-#include "spark/imgui/ImGuiLayerFactory.hpp"
+#include "spark/ui/imgui/ImGuiLayerFactory.hpp"
 
 #include "spark/engine/IInput.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/render/platform/Window.hpp"
 
 namespace Spark {

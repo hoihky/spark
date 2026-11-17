@@ -3,7 +3,7 @@
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/engine/IFramePresenter.hpp"
 #include "spark/render/IRenderTargetService.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
 #include "spark/render/platform/Window.hpp"
 #include "spark/scene/core/Scene.hpp"
 

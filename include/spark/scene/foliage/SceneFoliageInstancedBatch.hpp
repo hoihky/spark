@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/math/Vector3.hpp"
 

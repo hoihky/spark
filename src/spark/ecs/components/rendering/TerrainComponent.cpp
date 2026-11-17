@@ -4,7 +4,7 @@
 #include "spark/ecs/GameObject.hpp"
 #include "spark/math/Constants.hpp"
 #include "spark/math/Matrix4.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/TerrainMeshGenerator.hpp"
 

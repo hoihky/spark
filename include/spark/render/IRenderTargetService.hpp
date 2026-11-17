@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 namespace Spark {
 

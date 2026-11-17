@@ -3,7 +3,7 @@
 #include "spark/ecs/GameComponent.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 
 namespace Spark {

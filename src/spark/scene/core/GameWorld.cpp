@@ -3,7 +3,7 @@
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MultiMaterialComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 namespace Spark {
 

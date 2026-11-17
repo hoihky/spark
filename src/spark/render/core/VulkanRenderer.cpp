@@ -4,7 +4,7 @@
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/core/Array.hpp"
 #include "spark/core/Utf8String.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector4.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
@@ -26,8 +26,8 @@
 
 #include "spark/config.hpp"
 #if SPARK_ENABLE_IMGUI
-#include "spark/imgui/ImGuiVulkanBackend.hpp"
-#include "spark/imgui/ImGuiVulkanBackendAccess.hpp"
+#include "spark/ui/imgui/ImGuiVulkanBackend.hpp"
+#include "spark/ui/imgui/ImGuiVulkanBackendAccess.hpp"
 #endif
 
 #include <algorithm>

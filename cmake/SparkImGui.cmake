@@ -40,8 +40,8 @@ function(spark_setup_imgui target_name)
 
     target_compile_definitions(${target_name} PUBLIC SPARK_ENABLE_IMGUI=1)
     target_sources(${target_name} PRIVATE
-            src/spark/imgui/ImGuiVulkanLayer.cpp
-            src/spark/imgui/ImGuiLayerFactory.cpp
+            src/spark/ui/imgui/ImGuiVulkanLayer.cpp
+            src/spark/ui/imgui/ImGuiLayerFactory.cpp
     )
     target_link_libraries(${target_name} PRIVATE spark_imgui)
 endfunction()

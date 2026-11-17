@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "spark/character/KinematicCharacterMotor.hpp"
-#include "spark/character/MotionArbitrationMode.hpp"
-#include "spark/character/MotionArbitrator.hpp"
+#include "spark/animation/character/KinematicCharacterMotor.hpp"
+#include "spark/animation/character/MotionArbitrationMode.hpp"
+#include "spark/animation/character/MotionArbitrator.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/core/Array.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TileAnimation.hpp"
 #include "spark/scene/tilemap/TileAutotile.hpp"

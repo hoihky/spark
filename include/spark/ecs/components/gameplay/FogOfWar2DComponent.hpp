@@ -4,7 +4,7 @@
 #include "spark/gameplay/fog/FogOfWarExplorationMap.hpp"
 #include "spark/gameplay/fog/FogOfWarMaskTextureBuilder.hpp"
 #include "spark/gameplay/fog/FogOfWarScreenPresenter.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/tilemap/TilemapGridCoordinates.hpp"

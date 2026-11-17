@@ -3,7 +3,7 @@
 #include "spark/engine/EngineRunOptions.hpp"
 #include "spark/core/Utility.hpp"
 #include "spark/engine/IGame.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 
 namespace Spark {
 

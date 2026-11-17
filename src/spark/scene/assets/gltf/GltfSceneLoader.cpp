@@ -1,7 +1,7 @@
 #include "spark/scene/assets/gltf/GltfSceneLoader.hpp"
 
 #include "spark/core/HashMap.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 #include "spark/scene/assets/gltf/GltfDataLoader.hpp"
 #include "spark/scene/assets/gltf/GltfMeshBuilder.hpp"
 #include "spark/scene/assets/gltf/GltfNodeTransforms.hpp"

@@ -1,7 +1,7 @@
 #include "spark/ui/core/SparkUiRenderer.hpp"
 
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/text/Font.hpp"
+#include "spark/ui/text/Font.hpp"
 
 namespace Spark::Ui {
 

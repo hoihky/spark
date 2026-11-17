@@ -1,9 +1,9 @@
 #pragma once
 
-#include "spark/character/CharacterIntent.hpp"
-#include "spark/character/KinematicCharacterMotor.hpp"
-#include "spark/character/MotionArbitrationMode.hpp"
-#include "spark/character/MotionArbitrator.hpp"
+#include "spark/animation/character/CharacterIntent.hpp"
+#include "spark/animation/character/KinematicCharacterMotor.hpp"
+#include "spark/animation/character/MotionArbitrationMode.hpp"
+#include "spark/animation/character/MotionArbitrator.hpp"
 #include "spark/ecs/GameComponent.hpp"
 namespace Spark {
 

@@ -3,10 +3,10 @@
 #if SPARK_ENABLE_IMGUI
 
 #include "spark/engine/IInput.hpp"
-#include "spark/imgui/IImGuiLayer.hpp"
-#include "spark/imgui/ImGuiVulkanBackend.hpp"
-#include "spark/imgui/ImGuiVulkanBackendAccess.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/ui/imgui/IImGuiLayer.hpp"
+#include "spark/ui/imgui/ImGuiVulkanBackend.hpp"
+#include "spark/ui/imgui/ImGuiVulkanBackendAccess.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/render/platform/Window.hpp"
 
 #include <imgui.h>

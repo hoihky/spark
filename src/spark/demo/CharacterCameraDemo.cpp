@@ -1,7 +1,7 @@
 #include "spark/demo/CharacterCameraDemo.hpp"
 
-#include "spark/character/CharacterIntent.hpp"
-#include "spark/character/CharacterSimulationPipeline.hpp"
+#include "spark/animation/character/CharacterIntent.hpp"
+#include "spark/animation/character/CharacterSimulationPipeline.hpp"
 #include "spark/ecs/components/animation/AnimationLayerStackComponent.hpp"
 #include "spark/ecs/components/character/Character3DVisualComponent.hpp"
 #include "spark/ecs/components/physics/3d/PhysicsLayer3DComponent.hpp"

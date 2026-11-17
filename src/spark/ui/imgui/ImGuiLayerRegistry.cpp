@@ -1,4 +1,4 @@
-#include "spark/imgui/ImGuiLayerRegistry.hpp"
+#include "spark/ui/imgui/ImGuiLayerRegistry.hpp"
 
 namespace Spark {
 

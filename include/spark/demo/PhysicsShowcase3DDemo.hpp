@@ -5,7 +5,7 @@
 #include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/ecs/components/physics/3d/CharacterController3DComponent.hpp"
 #include "spark/ecs/components/physics/3d/TriggerVolume3DComponent.hpp"
-#include "spark/memory/UniquePtr.hpp"
+#include "spark/core/UniquePtr.hpp"
 #include "spark/physics/PhysicsSubsystem.hpp"
 #include "spark/scene/core/Scene.hpp"
 

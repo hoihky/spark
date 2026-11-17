@@ -1,6 +1,6 @@
 #pragma once
 
-#include "spark/save/GameSave.hpp"
+#include "spark/gameplay/save/GameSave.hpp"
 
 namespace Spark {
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "spark/audio/SoundClip.hpp"
-#include "spark/memory/SharedPtr.hpp"
+#include "spark/core/SharedPtr.hpp"
 
 namespace Spark {
 
