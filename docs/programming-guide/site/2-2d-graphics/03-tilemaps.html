@@ -1093,7 +1093,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <h2 id="rendering-path">Rendering path</h2>
 <pre class="mermaid">flowchart LR
   TS[Tileset atlas] --&gt; TM[TilemapComponent]
-  TM --&gt; Fill[Rendering().FillLit]
+  TM --&gt; Fill[&quot;Rendering FillLit&quot;]
   Fill --&gt; VTM[VulkanTilemapPass]
   VTM --&gt; HDR[HDR scene buffer]
 </pre>

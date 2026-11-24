@@ -8,8 +8,8 @@ Sprites are the primary **world-space 2D drawable** in Spark. Each `SpriteCompon
 
 ```mermaid
 flowchart LR
-  ECS[SpriteComponent + Transform] --> Fill[Rendering().FillLit]
-  Fill --> Params[SceneRenderParams.sprites]
+  ECS[SpriteComponent + Transform] --> Fill["Rendering FillLit"]
+  Fill --> Params["SceneRenderParams.sprites"]
   Params --> Vulkan[VulkanSpritePass batch]
   Vulkan --> Composite[HDR scene + 2D composite]
 ```

@@ -6,7 +6,7 @@ This chapter is a **subsystem map** of Spark: what ships in the engine tree, how
 
 ```mermaid
 flowchart LR
-    ECS[GameWorld ECS] --> Fill[Rendering().FillLit]
+    ECS[GameWorld ECS] --> Fill["Rendering FillLit"]
     Fill --> SRP[SceneRenderParams]
     PHY[PhysicsSubsystem] --> ECS
     AI[SimulateGameAi] --> ECS

@@ -10,8 +10,8 @@ flowchart LR
   Draw[SceneDrawItem shadowFlags]
   Params --> CSM[VulkanCsmPass]
   Draw --> CSM
-  PL[Point/Spot castsShadow] --> Punct[VulkanPunctualShadows]
-  CSM --> Lit[pbr.frag shadow compare]
+  PL["Point/Spot castsShadow"] --> Punct[VulkanPunctualShadows]
+  CSM --> Lit["pbr.frag shadow compare"]
   Punct --> Lit
 ```
 

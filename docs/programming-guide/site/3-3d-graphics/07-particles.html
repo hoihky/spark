@@ -1092,9 +1092,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <pre class="mermaid">flowchart TB
   PE[ParticleEmitterComponent]
   VP[VfxPlayerComponent]
-  PE --&gt; Collect[CollectInstances / submit walk]
+  PE --&gt; Collect[&quot;CollectInstances / submit walk&quot;]
   VP --&gt; VfxProc[ProcessVfxSubsystem]
-  Collect --&gt; Params[SceneRenderParams.particles]
+  Collect --&gt; Params[&quot;SceneRenderParams.particles&quot;]
   VfxProc --&gt; Params
   Params --&gt; Vulkan[Billboard pass in scene]
 </pre>

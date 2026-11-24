@@ -8,9 +8,9 @@
 
 ```mermaid
 flowchart TB
-  SE[SceneEditor3D #10]
-  IM[ImGui #20]
-  ED[SparkEditor #24]
+  SE["SceneEditor3D demo 10"]
+  IM["ImGui demo 20"]
+  ED["SparkEditor demo 24"]
   SE --> ED
   IM --> ED
   Plan[SPARK_EDITOR_PLAN]

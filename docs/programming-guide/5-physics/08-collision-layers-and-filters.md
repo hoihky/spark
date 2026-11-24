@@ -31,11 +31,11 @@ Queries and triggers honor the same masks when filters are passed.
 
 ```mermaid
 flowchart TB
-  Cat[categoryBits — what I am]
-  Mask[maskBits — what I hit]
+  Cat["categoryBits - what I am"]
+  Mask["maskBits - what I hit"]
   Cat --> Sim[PhysicsWorld simulate]
   Mask --> Sim
-  Cat --> Q[PhysicsQueries overlap/ray]
+  Cat --> Q["PhysicsQueries overlap/ray"]
   Mask --> Q
   Cat --> T[TriggerVolume3D]
   Mask --> T

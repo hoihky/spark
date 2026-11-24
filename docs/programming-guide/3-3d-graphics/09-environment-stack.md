@@ -19,11 +19,11 @@ Primitives: [Terrain and sky](06-terrain-and-sky.md) · [Lighting](03-lighting.m
 flowchart TB
   TOD[TimeOfDayDriverComponent]
   TERR[TerrainComponent]
-  SKY[SkyComponent / clear color]
+  SKY["SkyComponent / clear color"]
   H2O[WaterBodyComponent]
-  GR[GrassField / FoliageInstancedMesh]
+  GR["GrassField / FoliageInstancedMesh"]
   TOD --> Params[SceneRenderParams]
-  TERR --> Fill[Rendering().FillLit]
+  TERR --> Fill["Rendering FillLit"]
   SKY --> Fill
   H2O --> Fill
   GR --> Fill

@@ -9,7 +9,7 @@ flowchart TB
   Cams[CameraComponent on active objects]
   Cams --> Resolve[TryResolveMainCamera]
   Resolve --> VP[ViewProjection + position]
-  VP --> Submit[Rendering().FillLit]
+  VP --> Submit["Rendering FillLit"]
 ```
 
 Highest **priority** among enabled `CameraComponent` instances wins unless your game passes an explicit matrix (fly camera demos).

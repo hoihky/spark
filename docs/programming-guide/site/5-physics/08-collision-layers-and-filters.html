@@ -1135,11 +1135,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </code></pre>
 <p>Queries and triggers honor the same masks when filters are passed.</p>
 <pre class="mermaid">flowchart TB
-  Cat[categoryBits — what I am]
-  Mask[maskBits — what I hit]
+  Cat[&quot;categoryBits - what I am&quot;]
+  Mask[&quot;maskBits - what I hit&quot;]
   Cat --&gt; Sim[PhysicsWorld simulate]
   Mask --&gt; Sim
-  Cat --&gt; Q[PhysicsQueries overlap/ray]
+  Cat --&gt; Q[&quot;PhysicsQueries overlap/ray&quot;]
   Mask --&gt; Q
   Cat --&gt; T[TriggerVolume3D]
   Mask --&gt; T

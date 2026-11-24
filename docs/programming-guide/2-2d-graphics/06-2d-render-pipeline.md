@@ -11,10 +11,10 @@ flowchart TB
   subgraph collect [ECS collection]
     SPR[SpriteComponent]
     TM[TilemapComponent]
-    L2[SpriteLighting2D / PointLight2D]
+    L2["SpriteLighting2D / PointLight2D"]
     PT[Particles SpriteLayer]
   end
-  collect --> Fill[Rendering().FillLit]
+  collect --> Fill["Rendering FillLit"]
   Fill --> SRP[SceneRenderParams]
   SRP --> HDR[HDR scene pass]
   HDR --> COMP[2D composite capture optional]

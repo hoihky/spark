@@ -11,7 +11,7 @@ flowchart TB
   SK[SkinnedMeshComponent]
   FSM --> AN
   AN --> SK
-  SK --> Submit[world.Rendering().FillLit skinned path]
+  SK --> Submit["world.Rendering FillLit skinned path"]
 ```
 
 ## Asset types

@@ -16,7 +16,7 @@ flowchart LR
   Cam --> Blend[ApplyRegionalRenderVolumes]
   FV --> Blend
   PP --> Blend
-  Blend --> Params[SceneRenderParams fog / SSAO / exposure]
+  Blend --> Params["SceneRenderParams fog / SSAO / exposure"]
   TOD[TimeOfDayDriver] --> Params
 ```
 

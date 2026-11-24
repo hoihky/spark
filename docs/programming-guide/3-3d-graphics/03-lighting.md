@@ -6,7 +6,7 @@ Lighting in Spark is **hybrid**: a directional sun + ambient hemisphere in `Scen
 
 ```mermaid
 flowchart TB
-  Sun[world.Rendering().FillLit args]
+  Sun["world.Rendering FillLit args"]
   DL[DirectionalLightComponent]
   PL[PointLightComponent]
   SL[SpotLightComponent]
@@ -17,7 +17,7 @@ flowchart TB
   PL --> Params
   SL --> Params
   PL2 --> Params
-  EM --> Shader[pbr.frag emissive term]
+  EM --> Shader["pbr.frag emissive term"]
 ```
 
 | Component | GPU representation |

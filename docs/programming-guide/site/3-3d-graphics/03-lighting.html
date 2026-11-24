@@ -1090,7 +1090,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p>Lighting in Spark is <strong>hybrid</strong>: a directional sun + ambient hemisphere in <code>SceneRenderParams</code>, punctual lights from ECS components, emissive materials, IBL for specular, optional time-of-day drivers, and regional volumes. <code>world.Rendering().FillLit</code> calls <code>SceneLightingResolver::Resolve</code> then merges component lights.</p>
 <h2 id="light-sources-map">Light sources map</h2>
 <pre class="mermaid">flowchart TB
-  Sun[world.Rendering().FillLit args]
+  Sun[&quot;world.Rendering FillLit args&quot;]
   DL[DirectionalLightComponent]
   PL[PointLightComponent]
   SL[SpotLightComponent]
@@ -1101,7 +1101,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
   PL --&gt; Params
   SL --&gt; Params
   PL2 --&gt; Params
-  EM --&gt; Shader[pbr.frag emissive term]
+  EM --&gt; Shader[&quot;pbr.frag emissive term&quot;]
 </pre>
 <table>
 <thead>

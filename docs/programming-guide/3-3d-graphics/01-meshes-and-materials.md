@@ -8,9 +8,9 @@
 
 ```mermaid
 flowchart LR
-  M[Mesh / SkinnedMesh] --> MC[MeshComponent]
+  M["Mesh / SkinnedMesh"] --> MC[MeshComponent]
   MAT[MaterialComponent] --> Draw[SceneDrawItem]
-  MC --> Fill[Rendering().FillLit]
+  MC --> Fill["Rendering FillLit"]
   MAT --> Fill
   Fill --> Vulkan[VulkanScenePass]
   Vulkan --> IBL[IBL + shadows + fog]

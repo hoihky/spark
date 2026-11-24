@@ -1092,8 +1092,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <pre class="mermaid">flowchart LR
   TC[TerrainComponent mesh regen]
   TC --&gt; Draw[SceneDrawItem + shadow cast]
-  Sky[SkyComponent / clear color] --&gt; BG[Background / depth]
-  Draw --&gt; Fill[Rendering().FillLit]
+  Sky[&quot;SkyComponent / clear color&quot;] --&gt; BG[&quot;Background / depth&quot;]
+  Draw --&gt; Fill[&quot;Rendering FillLit&quot;]
   Sky --&gt; Fill
 </pre>
 <h2 id="class-design-terraincomponent">Class design: <code>TerrainComponent</code></h2>

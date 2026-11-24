@@ -1091,8 +1091,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p><strong>Try it:</strong> SparkDemo launcher <strong>Hello</strong> / Python <code>hello_game.py</code> (checkerboard triangle), <strong>Platformer2D</strong>, and <strong>Tilemap Showcase</strong> for layered stacks.</p>
 <h2 id="mental-model">Mental model</h2>
 <pre class="mermaid">flowchart LR
-  ECS[SpriteComponent + Transform] --&gt; Fill[Rendering().FillLit]
-  Fill --&gt; Params[SceneRenderParams.sprites]
+  ECS[SpriteComponent + Transform] --&gt; Fill[&quot;Rendering FillLit&quot;]
+  Fill --&gt; Params[&quot;SceneRenderParams.sprites&quot;]
   Params --&gt; Vulkan[VulkanSpritePass batch]
   Vulkan --&gt; Composite[HDR scene + 2D composite]
 </pre>

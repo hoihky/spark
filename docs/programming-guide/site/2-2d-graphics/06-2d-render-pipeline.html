@@ -1094,10 +1094,10 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
   subgraph collect [ECS collection]
     SPR[SpriteComponent]
     TM[TilemapComponent]
-    L2[SpriteLighting2D / PointLight2D]
+    L2[&quot;SpriteLighting2D / PointLight2D&quot;]
     PT[Particles SpriteLayer]
   end
-  collect --&gt; Fill[Rendering().FillLit]
+  collect --&gt; Fill[&quot;Rendering FillLit&quot;]
   Fill --&gt; SRP[SceneRenderParams]
   SRP --&gt; HDR[HDR scene pass]
   HDR --&gt; COMP[2D composite capture optional]

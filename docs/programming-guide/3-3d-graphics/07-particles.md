@@ -8,9 +8,9 @@ Particles are **CPU-simulated billboards** collected into `SceneRenderParams::pa
 flowchart TB
   PE[ParticleEmitterComponent]
   VP[VfxPlayerComponent]
-  PE --> Collect[CollectInstances / submit walk]
+  PE --> Collect["CollectInstances / submit walk"]
   VP --> VfxProc[ProcessVfxSubsystem]
-  Collect --> Params[SceneRenderParams.particles]
+  Collect --> Params["SceneRenderParams.particles"]
   VfxProc --> Params
   Params --> Vulkan[Billboard pass in scene]
 ```

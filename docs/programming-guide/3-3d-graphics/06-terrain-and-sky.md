@@ -8,8 +8,8 @@ Outdoor scenes combine **heightfield `TerrainComponent`**, optional **`SkyCompon
 flowchart LR
   TC[TerrainComponent mesh regen]
   TC --> Draw[SceneDrawItem + shadow cast]
-  Sky[SkyComponent / clear color] --> BG[Background / depth]
-  Draw --> Fill[Rendering().FillLit]
+  Sky["SkyComponent / clear color"] --> BG["Background / depth"]
+  Draw --> Fill["Rendering FillLit"]
   Sky --> Fill
 ```
 

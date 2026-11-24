@@ -1091,9 +1091,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p><strong>Demos:</strong> launcher <strong>#21</strong> <code>GltfSamples3DDemo</code> (PBR + IBL), <strong>#22</strong> <code>ModelViewer3DDemo</code>, FPS sample procedural cubes.</p>
 <h2 id="data-flow">Data flow</h2>
 <pre class="mermaid">flowchart LR
-  M[Mesh / SkinnedMesh] --&gt; MC[MeshComponent]
+  M[&quot;Mesh / SkinnedMesh&quot;] --&gt; MC[MeshComponent]
   MAT[MaterialComponent] --&gt; Draw[SceneDrawItem]
-  MC --&gt; Fill[Rendering().FillLit]
+  MC --&gt; Fill[&quot;Rendering FillLit&quot;]
   MAT --&gt; Fill
   Fill --&gt; Vulkan[VulkanScenePass]
   Vulkan --&gt; IBL[IBL + shadows + fog]

@@ -20,8 +20,8 @@ flowchart TB
     ECS[UiCanvasComponent] --> Tree[IUiElement tree]
     Factory[IUiControlsFactory] --> Tree
     Router[UiInputRouter] --> ECS
-    System[UiSystem] --> Paint[SparkUiRenderer / ImguiUiRenderer]
-    Paint --> SRP[screenRects / screenTexts]
+    System[UiSystem] --> Paint["SparkUiRenderer / ImguiUiRenderer"]
+    Paint --> SRP["screenRects / screenTexts"]
 ```
 
 | Piece | Role |
