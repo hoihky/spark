@@ -1,6 +1,7 @@
 #include "spark/gameplay/fog/FogOfWarScreenPresenter.hpp"
 
 #include "spark/engine/SceneRenderParams.hpp"
+#include "spark/scene/submit/Scene2DSubmitCaps.hpp"
 #include "spark/math/Matrix4.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
@@ -24,7 +25,8 @@ void FogOfWarScreenPresenter::AppendWorldSprite(
         frame.mapWidth == 0U || frame.mapHeight == 0U) {
         return;
     }
-    if (params.sprites.GetSize() >= SceneRenderParams::MaxSprites) {
+    if (!Scene2DSubmitCaps::HasSpriteCapacity(params)) {
+        Scene2DSubmitCaps::NotifySpriteCapacityReached();
         return;
     }
 

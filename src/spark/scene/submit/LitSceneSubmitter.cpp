@@ -1,5 +1,6 @@
 #include "spark/scene/submit/LitSceneSubmitter.hpp"
 
+#include "spark/scene/submit/Scene2DSubmitCaps.hpp"
 #include "spark/scene/submit/detail/SceneSubmitLighting.hpp"
 
 #include "spark/core/Array.hpp"
@@ -293,7 +294,8 @@ void LitSceneSubmitter::CollectSpritesTilemapsAndParticles(
         if (sc == nullptr) {
             return;
         }
-        if (params.sprites.GetSize() >= SceneRenderParams::MaxSprites) {
+        if (!Scene2DSubmitCaps::HasSpriteCapacity(params)) {
+            Scene2DSubmitCaps::NotifySpriteCapacityReached();
             return;
         }
         const Matrix4 spriteModel = o->GetWorldMatrix();
@@ -374,7 +376,8 @@ void LitSceneSubmitter::CollectSpritesTilemapsAndParticles(
             const ResolvedDrawableSort resolved =
                     DrawableSortResolver::Resolve(*o, pe->GetSpriteLayerSortOrder());
             for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
-                if (params.sprites.GetSize() >= SceneRenderParams::MaxSprites) {
+                if (!Scene2DSubmitCaps::HasSpriteCapacity(params)) {
+                    Scene2DSubmitCaps::NotifySpriteCapacityReached();
                     return;
                 }
                 const SceneParticleInstance& particle = chunk[ci];
@@ -392,7 +395,8 @@ void LitSceneSubmitter::CollectSpritesTilemapsAndParticles(
             return;
         }
         for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
-            if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
+            if (!Scene2DSubmitCaps::HasParticleCapacity(params)) {
+                Scene2DSubmitCaps::NotifyParticleCapacityReached();
                 return;
             }
             chunk[ci].textureLayer = textureLayer;

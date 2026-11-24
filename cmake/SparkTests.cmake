@@ -91,6 +91,9 @@ function(spark_add_physics_tests)
             tests/scene/ComponentSnapshotRegistryBuiltInHandlersTest.cpp
             tests/scene/LitSceneWaterFillTest.cpp
             tests/scene/SkinnedAnimationBudgetCountersTest.cpp
+            tests/scene/FullFrameIntegrationGoldenTest.cpp
+            tests/scene/Scene2DSubmitCapsTest.cpp
+            tests/scene/LitSceneSubmit2DLightingTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

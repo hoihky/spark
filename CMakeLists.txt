@@ -775,6 +775,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/submit/SceneSpatialCull.cpp
         src/spark/scene/submit/SceneSpriteTileCull.cpp
         src/spark/scene/texture/SceneTileAtlas.cpp
+        src/spark/scene/submit/Scene2DSubmitCaps.cpp
+        src/spark/scene/submit/Scene2DSubmitCaps.cpp
         src/spark/scene/submit/SceneTilemapSubmit.cpp
         src/spark/scene/submit/RenderLayerRegistry.cpp
         src/spark/scene/submit/DrawableSortResolver.cpp

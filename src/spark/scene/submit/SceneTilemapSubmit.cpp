@@ -1,5 +1,6 @@
 #include "spark/scene/submit/SceneTilemapSubmit.hpp"
 
+#include "spark/scene/submit/Scene2DSubmitCaps.hpp"
 #include "spark/scene/submit/SceneDrawListSorter.hpp"
 
 #include "spark/ecs/components/tilemap/TilemapAutotileComponent.hpp"
@@ -10,8 +11,6 @@
 
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"
-
-#include <cstdio>
 
 namespace Spark {
 
@@ -76,11 +75,8 @@ void SceneTilemapSubmit::Submit(
         }
 
         for (std::uint32_t layerIndex = 0; layerIndex < tilemap->GetLayerCount(); ++layerIndex) {
-            if (params.tilemaps.GetSize() >= SceneRenderParams::MaxTilemapDraws) {
-                std::fprintf(
-                        stderr,
-                        "Spark: tilemap draw limit (%u) reached\n",
-                        SceneRenderParams::MaxTilemapDraws);
+            if (!Scene2DSubmitCaps::HasTilemapDrawCapacity(params)) {
+                Scene2DSubmitCaps::NotifyTilemapDrawCapacityReached();
                 return;
             }
 
@@ -89,14 +85,9 @@ void SceneTilemapSubmit::Submit(
                 continue;
             }
 
-            const std::uint32_t remainingTiles =
-                    SceneRenderParams::MaxTilemapTiles -
-                    static_cast<std::uint32_t>(params.tilemapTiles.GetSize());
+            const std::uint32_t remainingTiles = Scene2DSubmitCaps::RemainingTilemapTiles(params);
             if (remainingTiles == 0) {
-                std::fprintf(
-                        stderr,
-                        "Spark: tilemap tile pool limit (%u) reached\n",
-                        SceneRenderParams::MaxTilemapTiles);
+                Scene2DSubmitCaps::NotifyTilemapTileCapacityReached();
                 return;
             }
 

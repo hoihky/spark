@@ -3,6 +3,7 @@
 
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
+#include "spark/scene/submit/Scene2DSubmitCaps.hpp"
 #include "spark/ui/core/UiTheme.hpp"
 #include "spark/ui/core/UiLayoutMetrics.hpp"
 #include "spark/math/Matrix4.hpp"
@@ -693,7 +694,8 @@ void UiPaintContext::EmitSprite(
     if (params == nullptr || textureLayer < 0) {
         return;
     }
-    if (params->sprites.GetSize() >= SceneRenderParams::MaxSprites) {
+    if (!Scene2DSubmitCaps::HasSpriteCapacity(*params)) {
+        Scene2DSubmitCaps::NotifySpriteCapacityReached();
         return;
     }
     SceneSpriteDraw sd{};

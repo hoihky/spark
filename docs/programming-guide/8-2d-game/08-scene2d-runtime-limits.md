@@ -16,6 +16,18 @@ P0 minimap wiring lives on `Scene2DCompositeViewComponent` — attach via Part 7
 | Scene texture layers | 16 | GPU sprite array |
 | Composite views | 4 | `SceneRenderParams::scene2DCompositeViews` |
 
+## Spill behavior
+
+When a cap is hit during `world.Rendering().FillLit` / UI paint, Spark **drops** the overflow for that frame and prints **one** `stderr` warning per cap for the process (`Scene2DSubmitCaps`). There is no automatic spill buffer.
+
+| If you are approaching… | Do this first |
+|-------------------------|----------------|
+| **8k sprites** | Tilemaps for static layers; cull off-screen; merge decorative quads; defer UI to rects |
+| **64 tilemap draws** | Multiple map objects only when layers must sort independently |
+| **65k tile instances** | Smaller visible regions, fewer layers, chunked maps (roadmap) |
+
+Public headers for checks: `spark/scene/submit/Scene2DSubmitCaps.hpp` (same numbers as `Scene2DRuntimeLimits`).
+
 ## Minimap / fog / outline
 
 ### Authoring (ECS)

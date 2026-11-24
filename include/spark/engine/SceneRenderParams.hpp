@@ -9,6 +9,7 @@
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/scene/SceneShadingModel.hpp"
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
+#include "spark/render/sprites2d/Scene2DRuntimeLimits.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
 #include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
@@ -520,12 +521,12 @@ struct SceneRenderParams {
     WaterRenderingProfile waterRenderingProfile = WaterRenderingProfile::Default;
 
     /** Alpha-blended sprite quads (after tilemaps, before additive particles). Sorted per <c>spriteSortMode</c>. */
-    static constexpr std::uint32_t MaxSprites = 8192;
+    static constexpr std::uint32_t MaxSprites = Scene2DRuntimeLimits::MaxSprites;
     Array<SceneSpriteDraw> sprites;
 
     /** Dedicated tilemap pass: culled tile instances + layer metadata (before sprites). */
-    static constexpr std::uint32_t MaxTilemapDraws = 64;
-    static constexpr std::uint32_t MaxTilemapTiles = 65536;
+    static constexpr std::uint32_t MaxTilemapDraws = Scene2DRuntimeLimits::MaxTilemapDraws;
+    static constexpr std::uint32_t MaxTilemapTiles = Scene2DRuntimeLimits::MaxTilemapTiles;
     Array<SceneTilemapDraw> tilemaps;
     Array<SceneTilemapTileInstance> tilemapTiles;
 
@@ -533,7 +534,7 @@ struct SceneRenderParams {
     Array<Scene2DCompositeViewDesc> scene2DCompositeViews;
 
     /** Billboard particles (additive pass). Filled from ParticleEmitterComponent. */
-    static constexpr std::uint32_t MaxParticles = 8192;
+    static constexpr std::uint32_t MaxParticles = Scene2DRuntimeLimits::MaxParticles;
     Array<SceneParticleInstance> particles;
     /** Camera-facing billboard axes in world space (normalized). */
     Vector3 particleCameraRight{1.0F, 0.0F, 0.0F};
@@ -550,7 +551,7 @@ struct SceneRenderParams {
     /** Solid quads (panels, control chrome). */
     Array<ScreenRectDraw> screenRects;
     /** Textured UI quads (skin sprites, icons). Drawn after rects, before text, per layer. */
-    static constexpr std::uint32_t MaxUiTextures = 16;
+    static constexpr std::uint32_t MaxUiTextures = Scene2DRuntimeLimits::MaxUiTextures;
     Array<SharedPtr<Texture2D>> uiTextures;
     Array<ScreenSpriteDraw> screenSprites;
     /** Screen-space labels (e.g. from <c>GuiPaintContext::DrawText</c>). */

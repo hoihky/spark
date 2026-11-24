@@ -231,7 +231,8 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | `MaxSpotLights` | 128 | Same |
 | Punctual shadows | Max 2 point + 4 spot per frame | No API to assign **shadow priority** to lights (many local lights, stadiums, arenas) |
 | Skinned instancing | 128 joints per draw | No multi-draw skinned instancing for duplicate agents |
-| `MaxSprites` | Fixed cap on `sprites` array | Documented limit; no spill or batch API |
+| `MaxSprites` | `8192` via `Scene2DRuntimeLimits` | Hard cap; spill = drop + one `stderr` line per process (`Scene2DSubmitCaps`); batching API TBD (§3.6) |
+| `MaxTilemapTiles` | `65536` culled instances / frame | Same spill path; split maps or chunk streaming before scaling past cap |
 | Skinning | 128 joints per draw (`Skeleton::MaxJoints`) | No multi-draw skinned instancing |
 | Custom meshes | `SceneMeshSlot::Custom` + `VulkanCustomMeshPool` GPU upload | No persistent `GpuMeshHandle` owned by game code; pool clears cached mesh pointers when params have no custom draws (demo switch safe) |
 
@@ -273,9 +274,30 @@ Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_L
 
 ### 3.6 2D / UI render API (runtime)
 
+**Authoritative caps:** `Scene2DRuntimeLimits` (mirrored on `SceneRenderParams`). Product submit paths must use `Scene2DSubmitCaps` (`HasSpriteCapacity`, `Notify*CapacityReached`) — not raw array sizes.
+
+| Resource | Cap | Spill strategy (today) | Before you exceed the cap |
+|----------|----:|------------------------|---------------------------|
+| **Sprites** | 8192 | Drop additional quads for the frame; log once per process | Frustum cull (`SceneSpriteTileCull`), Y-sort only visible actors; move static art to **tilemaps**; pool UI quads; avoid 1 GO per grass blade |
+| **Tilemap layer draws** | 64 | Stop submitting further layer entries; log once | Split TMX into multiple roots (foreground / background); composite views for minimap |
+| **Tile instances** | 65536 | Stop appending culled tiles; log once | Camera culling (default), smaller maps, **chunked maps** (editor roadmap), lower layer count |
+| **Particles** | 8192 | Drop instances; log once | Lower `ParticleEmitterComponent::SetMaxParticles`, VFX pools, sprite-layer particles share sprite cap |
+| **Scene texture layers** | 16 | `findTexture` fails → `textureLayer = -1` (magenta skip) | Atlases, material libraries, fewer unique textures per frame |
+| **UI textures** | 16 | `AcquireUiTextureLayer` returns `-1` | Atlas UI sprites |
+| **Composite views** | 4 | Skip extra `Scene2DCompositeViewDesc` | Minimap + fog only; no duplicate captures |
+
+**Planned (not implemented):** instancing / batching APIs to raise effective throughput without raising GPU SSBO size (`kMaxQuadInstancesGpu = MaxSprites + MaxTilemapTiles` in `VulkanSpriteInstanceGpu.hpp`). Order of work:
+
+1. **P1 — `SpriteDrawableBatch` / merged static quads** — one `SceneSpriteDraw` with instance buffer for props sharing material + atlas (keeps sort key).
+2. **P1 — Tile chunk components** — multiple `TilemapComponent` roots with spatial unload (see tilemap editor roadmap Phase D).
+3. **P2 — GPU multi-draw indirect** for identical tile layers (same atlas + blend).
+4. **P2 — `SubmitSpritesBatched` public helper** — gameplay pushes N instances without N ECS sprites.
+
+Until P1 exists, treat **8192 sprites** and **65536 tile instances** as hard per-frame ceilings in shipping content.
+
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
-| **Sprite batching** | Per-sprite `SceneSpriteDraw` | `SubmitSpritesBatched` from `SpriteComponent` tiles |
+| **Sprite batching** | Per-sprite `SceneSpriteDraw` + spill via `Scene2DSubmitCaps` | `SubmitSpritesBatched` / `SpriteDrawableBatch` (see spill table) |
 | **GUI paint order** | `paintOrder` on draws; GPU pass batches rects then text per layer | Documented limitation; no `ForceInterleavedUiPaint` flag |
 | **World-space UI** | Screen-space `UiCanvasComponent` only | World-space canvas or billboard UI component |
 

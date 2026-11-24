@@ -13,8 +13,6 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/SceneRigidMeshDrawBuilder.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/submit/SkinnedIkService.hpp"
-
 namespace Spark {
 
 RigidDrawableSubmitCollector::RigidDrawableSubmitCollector(
@@ -102,32 +100,9 @@ void SkinnedDrawableSubmitCollector::FillJointPalette(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
         Array<Matrix4>& outPalette) {
-    const std::uint32_t jointCount = animator != nullptr && animator->GetSkeleton()
-            ? animator->GetSkeleton()->GetJointCount()
-            : (mesh.GetSkeleton() ? mesh.GetSkeleton()->GetJointCount() : 0U);
-    if (jointCount == 0) {
-        outPalette.Clear();
-        return;
-    }
-    outPalette.Resize(jointCount);
-
-    if (animator == nullptr || !animator->GetSkeleton()) {
-        if (const SharedPtr<Skeleton>& skeleton = mesh.GetSkeleton()) {
-            skeleton->BuildBindPosePalette(outPalette.GetData(), Skeleton::MaxJoints);
-        }
-        return;
-    }
-
-    if (owner != nullptr && SkinnedIkService::ObjectUsesIk(*owner)) {
-        Array<Transform> pose;
-        if (animator->TrySampleEvaluatedPose(pose)) {
-            inGameWorld.GetSkinnedIkService().ApplyToPose(*owner, ownerWorld, *animator, pose);
-            animator->GetSkeleton()->BuildPaletteFromPose(pose, outPalette.GetData(), Skeleton::MaxJoints);
-            return;
-        }
-    }
-
-    animator->ComputeJointPalette(outPalette.GetData(), Skeleton::MaxJoints);
+    outPalette.Clear();
+    (void)inGameWorld.GetSkinnedAnimationService().TryResolvePalette(
+            owner, ownerWorld, inGameWorld, mesh, animator, outPalette, Skeleton::MaxJoints);
 }
 
 void SkinnedDrawableSubmitCollector::OnSkinnedDrawable(
