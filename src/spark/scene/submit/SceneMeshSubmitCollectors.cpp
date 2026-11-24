@@ -13,6 +13,8 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/scene/submit/SceneRigidMeshDrawBuilder.hpp"
+#include "spark/ecs/components/rendering/MeshLodComponent.hpp"
+#include "spark/scene/lod/MeshLodSubmit.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
 namespace Spark {
 
@@ -21,12 +23,14 @@ RigidDrawableSubmitCollector::RigidDrawableSubmitCollector(
         SceneRenderParams& inParams,
         const SceneSubmitDetail::FindSceneTextureFn& inFindTexture,
         const std::int32_t inDefaultShadowFlags,
-        const bool inSkiesSubmittedOutsideCull) noexcept
+        const bool inSkiesSubmittedOutsideCull,
+        const Vector3& inCameraPositionWorld) noexcept
     : drawList(inDrawList),
       params(inParams),
       findTexture(inFindTexture),
       defaultShadowFlags(inDefaultShadowFlags),
-      skiesSubmittedOutsideCull(inSkiesSubmittedOutsideCull) {}
+      skiesSubmittedOutsideCull(inSkiesSubmittedOutsideCull),
+      cameraPositionWorld(inCameraPositionWorld) {}
 
 void RigidDrawableSubmitCollector::OnDrawable(
         GameObject* object,
@@ -37,6 +41,12 @@ void RigidDrawableSubmitCollector::OnDrawable(
         return;
     }
     if (!mc.GetMesh() && mc.GetSlot() == SceneMeshSlot::Custom) {
+        return;
+    }
+    MeshLodComponent* lod = object != nullptr ? object->GetComponent<MeshLodComponent>() : nullptr;
+    const MeshLodResolvedDraw resolved =
+            MeshLodResolveRigidDraw(mc, lod, cameraPositionWorld, worldM);
+    if (resolved.culled) {
         return;
     }
     const MultiMaterialComponent* multiMat = object->GetComponent<MultiMaterialComponent>();
@@ -56,23 +66,26 @@ void RigidDrawableSubmitCollector::OnDrawable(
     }
     SceneDrawItem baseItem{};
     baseItem.model = worldM;
-    baseItem.mesh = mc.GetSlot();
+    baseItem.mesh = resolved.meshSlot;
     baseItem.albedo = mc.GetAlbedo();
     baseItem.textureLayer = -1;
-    if (mc.GetSlot() == SceneMeshSlot::Custom) {
-        baseItem.customMesh = mc.GetMesh();
+    if (resolved.meshSlot == SceneMeshSlot::Custom) {
+        baseItem.customMesh = resolved.rigidMesh;
+        if (!baseItem.customMesh) {
+            return;
+        }
     }
-    if (mc.GetSlot() == SceneMeshSlot::GroundPlane) {
+    if (resolved.meshSlot == SceneMeshSlot::GroundPlane) {
         baseItem.doubleSided = true;
     }
     baseItem.shadowFlags = SceneSubmitDetail::ResolveDrawableShadowFlags(
-            object, mc.GetSlot(), worldM, mat, defaultShadowFlags);
+            object, resolved.meshSlot, worldM, mat, defaultShadowFlags);
     DrawableSortResolver::ApplyToSceneDrawItem(*object, baseItem, 0);
 
-    if (mc.GetSlot() == SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
-        !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
+    if (resolved.meshSlot == SceneMeshSlot::Custom && resolved.rigidMesh && multiMat != nullptr &&
+        !resolved.rigidMesh->GetSubmeshes().IsEmpty()) {
         SceneRigidMeshDrawBuilder builder(findTexture, params);
-        builder.AppendRigidMeshDraws(drawList, baseItem, *mc.GetMesh(), mat, multiMat);
+        builder.AppendRigidMeshDraws(drawList, baseItem, *resolved.rigidMesh, mat, multiMat);
         return;
     }
 
@@ -89,12 +102,14 @@ SkinnedDrawableSubmitCollector::SkinnedDrawableSubmitCollector(
         Array<SceneDrawItem>& inDrawList,
         SceneRenderParams& inParams,
         const SceneSubmitDetail::FindSceneTextureFn& findTexture,
-        const std::int32_t inDefaultShadowFlags) noexcept
+        const std::int32_t inDefaultShadowFlags,
+        const Vector3& inCameraPositionWorld) noexcept
     : gameWorld(inGameWorld),
       drawList(inDrawList),
       params(inParams),
       materialApplicator(inParams, findTexture),
-      defaultShadowFlags(inDefaultShadowFlags) {}
+      defaultShadowFlags(inDefaultShadowFlags),
+      cameraPositionWorld(inCameraPositionWorld) {}
 
 void SkinnedDrawableSubmitCollector::FillJointPalette(
         GameObject* owner,
@@ -102,10 +117,18 @@ void SkinnedDrawableSubmitCollector::FillJointPalette(
         GameWorld& inGameWorld,
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
-        Array<Matrix4>& outPalette) {
+        Array<Matrix4>& outPalette,
+        const std::uint32_t paletteUpdateStride) {
     outPalette.Clear();
     (void)inGameWorld.GetSkinnedAnimationService().TryResolvePalette(
-            owner, ownerWorld, inGameWorld, mesh, animator, outPalette, Skeleton::MaxJoints);
+            owner,
+            ownerWorld,
+            inGameWorld,
+            mesh,
+            animator,
+            outPalette,
+            Skeleton::MaxJoints,
+            paletteUpdateStride);
 }
 
 void SkinnedDrawableSubmitCollector::OnSkinnedDrawable(
@@ -115,6 +138,12 @@ void SkinnedDrawableSubmitCollector::OnSkinnedDrawable(
         const AnimatorComponent* anim,
         const Matrix4& world) {
     if (!smc.GetMesh()) {
+        return;
+    }
+    MeshLodComponent* lod = object != nullptr ? object->GetComponent<MeshLodComponent>() : nullptr;
+    const MeshLodResolvedDraw resolved =
+            MeshLodResolveSkinnedDraw(smc, lod, cameraPositionWorld, world);
+    if (resolved.culled || !resolved.skinnedMesh) {
         return;
     }
     const std::uint32_t jc = anim != nullptr && anim->GetSkeleton()
@@ -129,12 +158,13 @@ void SkinnedDrawableSubmitCollector::OnSkinnedDrawable(
     SceneDrawItem baseItem{};
     baseItem.model = world;
     baseItem.mesh = SceneMeshSlot::Custom;
-    baseItem.skinnedMesh = smc.GetMesh();
+    baseItem.skinnedMesh = resolved.skinnedMesh;
     baseItem.albedo = {0.9F, 0.88F, 0.82F};
     baseItem.textureLayer = -1;
     baseItem.metallic = 0.0F;
     baseItem.roughness = 0.5F;
-    FillJointPalette(object, world, gameWorld, smc, anim, baseItem.jointPalette);
+    FillJointPalette(
+            object, world, gameWorld, smc, anim, baseItem.jointPalette, resolved.paletteUpdateStride);
     if (baseItem.jointPalette.IsEmpty()) {
         return;
     }
@@ -143,7 +173,7 @@ void SkinnedDrawableSubmitCollector::OnSkinnedDrawable(
         DrawableSortResolver::ApplyToSceneDrawItem(*object, baseItem, 0);
     }
 
-    materialApplicator.AppendSkinnedDraws(drawList, baseItem, *smc.GetMesh(), mat, multiMat);
+    materialApplicator.AppendSkinnedDraws(drawList, baseItem, *resolved.skinnedMesh, mat, multiMat);
 }
 
 }  // namespace Spark

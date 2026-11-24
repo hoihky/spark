@@ -124,6 +124,7 @@ enum class ComponentKind : std::uint32_t {
     FoliageInstancedMesh,
     GrassField,
     RigidMeshInstancedBatch,
+    MeshLod,
     Character3DBody,
     Character3DVisual,
     AnimationLayerStack,

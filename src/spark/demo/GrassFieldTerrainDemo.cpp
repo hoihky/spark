@@ -22,16 +22,16 @@ constexpr float kGrassPatchCenterX = 8.0F;
 constexpr float kGrassPatchCenterZ = 12.0F;
 
 /** Local meadow patch (not full terrain). */
-constexpr float kGrassPatchHalfExtentX = 22.0F;
-constexpr float kGrassPatchHalfExtentZ = 20.0F;
-constexpr float kGrassPlacementRadiusMeters = 18.0F;
+constexpr float kGrassPatchHalfExtentX = 28.0F;
+constexpr float kGrassPatchHalfExtentZ = 26.0F;
+constexpr float kGrassPlacementRadiusMeters = 24.0F;
 
-/** Locked F2 playtest baseline (coverage vs FPS). */
-constexpr float kGrassMaxViewMeters = 24.0F;
-constexpr std::uint32_t kGrassFrameInstanceBudget = SceneRenderParams::DefaultMaxGrassInstancesPerFrame;
-constexpr float kGrassDensityPerSqM = 9.0F;
-constexpr std::uint32_t kGrassMaxCachedPerChunk = 880U;
-constexpr float kGrassChunkSizeMeters = 16.0F;
+/** Dense streamed meadow (32768 global foliage cap). */
+constexpr float kGrassMaxViewMeters = 52.0F;
+constexpr std::uint32_t kGrassFrameInstanceBudget = 14000U;
+constexpr float kGrassDensityPerSqM = 24.0F;
+constexpr std::uint32_t kGrassMaxCachedPerChunk = 2600U;
+constexpr float kGrassChunkSizeMeters = 14.0F;
 
 void SetupDemoCameraNearGrass(FlyCamera& flyCamera, const TerrainComponent& terrain, const GameObject& terrainObject) {
     flyCamera.moveSpeed = 10.0F;
@@ -125,11 +125,11 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
     scatter.SetChunkSizeMeters(kGrassChunkSizeMeters);
     scatter.SetPlacementRadiusMeters(kGrassPlacementRadiusMeters);
     scatter.SetDensityPerSquareMeter(kGrassDensityPerSqM);
-    scatter.SetSamplesPerCell(1);
+    scatter.SetSamplesPerCell(2);
     scatter.SetMaxViewDistanceMeters(kGrassMaxViewMeters);
     scatter.SetMaxVisibleInstances(kGrassFrameInstanceBudget);
     scatter.SetMaxCachedInstancesPerChunk(kGrassMaxCachedPerChunk);
-    scatter.SetDistanceFadeOuterFraction(0.28F);
+    scatter.SetDistanceFadeOuterFraction(0.22F);
     scatter.SetMaxSlopeDegrees(58.0F);
     scatter.SetAlbedoTint({0.48F, 0.94F, 0.34F});
     roots.PushBack(grassRoot);
@@ -142,7 +142,7 @@ void GrassFieldTerrainDemo::Load(GameWorld& world, IEngineContext& context) {
 
     helpHud.Mount(world, "Grass field terrain");
     helpHud.SetControlHints("F1 mouse | WASD fly | +/- wind | local grass meadow");
-    helpHud.SetDetail("Grass only in ~38 m patch near spawn · fly out to bare hills");
+    helpHud.SetDetail("Dense streamed grass · 24/m² · ~52 m view · 14k frame budget");
     context.GetInput().SetCursorCaptured(true);
 }
 

@@ -18,6 +18,13 @@ SkinnedPaletteResolver::SkinnedPaletteResolver(
         SkeletonPaletteCache& inPaletteCache) noexcept
         : budget(inBudget), paletteCache(inPaletteCache) {}
 
+bool SkinnedPaletteResolver::ShouldRefreshPaletteThisFrame(const std::uint32_t paletteUpdateStride) const noexcept {
+    if (paletteUpdateStride <= 1U) {
+        return true;
+    }
+    return (submitFrameIndex % paletteUpdateStride) == 0U;
+}
+
 void SkinnedPaletteResolver::FillBindPose(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
@@ -36,11 +43,18 @@ bool SkinnedPaletteResolver::TryResolveAnimatedPalette(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
         Array<Matrix4>& outPalette,
-        const std::uint32_t paletteMax) {
+        const std::uint32_t paletteMax,
+        const std::uint32_t paletteUpdateStride) {
     if (animator != nullptr && animator->GetSkeleton()) {
         cacheKey.CaptureFromAnimator(*animator, paletteCache.GetQuantizationHz());
         if (paletteCache.IsEnabled() && paletteCache.TryCopy(cacheKey, outPalette)) {
             budget.RecordPaletteCacheHit();
+            return true;
+        }
+
+        if (!ShouldRefreshPaletteThisFrame(paletteUpdateStride)) {
+            FillBindPose(mesh, animator, outPalette, paletteMax);
+            budget.RecordBindPoseFallback();
             return true;
         }
 
@@ -69,7 +83,8 @@ bool SkinnedPaletteResolver::TryResolve(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
         Array<Matrix4>& outPalette,
-        const std::uint32_t paletteMax) {
+        const std::uint32_t paletteMax,
+        const std::uint32_t paletteUpdateStride) {
     if (paletteMax == 0 || !mesh.GetMesh()) {
         return false;
     }
@@ -85,7 +100,7 @@ bool SkinnedPaletteResolver::TryResolve(
     }
     outPalette.Resize(jointCount);
 
-    if (!TryResolveAnimatedPalette(mesh, animator, outPalette, paletteMax)) {
+    if (!TryResolveAnimatedPalette(mesh, animator, outPalette, paletteMax, paletteUpdateStride)) {
         return false;
     }
     return budget.ConsumeSkinnedDraw();
@@ -98,9 +113,10 @@ bool SkinnedPaletteResolver::TryResolve(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
         Array<Matrix4>& outPalette,
-        const std::uint32_t paletteMax) {
+        const std::uint32_t paletteMax,
+        const std::uint32_t paletteUpdateStride) {
     if (owner == nullptr || !SkinnedIkService::ObjectUsesIk(*owner)) {
-        return TryResolve(mesh, animator, outPalette, paletteMax);
+        return TryResolve(mesh, animator, outPalette, paletteMax, paletteUpdateStride);
     }
 
     if (paletteMax == 0 || !mesh.GetMesh()) {
@@ -120,6 +136,12 @@ bool SkinnedPaletteResolver::TryResolve(
 
     if (animator == nullptr || !animator->GetSkeleton()) {
         FillBindPose(mesh, animator, outPalette, paletteMax);
+        return budget.ConsumeSkinnedDraw();
+    }
+
+    if (!ShouldRefreshPaletteThisFrame(paletteUpdateStride)) {
+        FillBindPose(mesh, animator, outPalette, paletteMax);
+        budget.RecordBindPoseFallback();
         return budget.ConsumeSkinnedDraw();
     }
 

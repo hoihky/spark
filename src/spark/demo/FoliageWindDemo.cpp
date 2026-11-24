@@ -8,6 +8,10 @@
 #include "spark/ecs/components/foliage/WindEnvironmentComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MeshLodComponent.hpp"
+#include "spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp"
+#include "spark/engine/SceneRenderParams.hpp"
+#include "spark/scene/lod/MeshLodLevel.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/foliage/GrassBladeMesh.hpp"
@@ -20,11 +24,16 @@ namespace Spark {
 
 namespace {
 
-constexpr float kMeadowHalfExtent = 10.0F;
+/** Dense fill (2% skip, 32768 foliage cap). */
+constexpr float kMeadowNearHalfExtent = 16.0F;
+constexpr float kGrassNearSpacing = 0.185F;
+constexpr float kGrassFarHalfExtent = 23.0F;
+constexpr float kGrassFarSpacing = 0.88F;
+constexpr float kGrassScatterSkip = 0.02F;
 
 void SetupDemoCamera(FlyCamera& flyCamera) noexcept {
     flyCamera.moveSpeed = 5.0F;
-    flyCamera.position = {kMeadowHalfExtent * 0.55F, 1.85F, kMeadowHalfExtent * 1.05F};
+    flyCamera.position = {kMeadowNearHalfExtent * 0.55F, 1.85F, kMeadowNearHalfExtent * 1.05F};
     flyCamera.SnapLookAt({0.0F, 0.35F, 0.0F});
 }
 
@@ -39,13 +48,13 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
     world.GetWindSubsystem().Reset();
 
     SharedPtr<Mesh> groundRef = MakeShared<Mesh>(Utf8String("FoliageWindGroundRef"));
-    *groundRef = Mesh::CreateGroundPlane(kSceneGroundHalfExtent, kMeadowHalfExtent * 2.0F);
+    *groundRef = Mesh::CreateGroundPlane(kSceneGroundHalfExtent, kGrassFarHalfExtent * 2.0F);
     world.Assets().RegisterMesh(groundRef, "spark/demo/foliage_wind_ground");
 
     GameObject* groundObject = world.Entities().Create();
     groundObject->GetName() = Utf8String("Ground");
     TransformComponent* groundTr = groundObject->AddComponent<TransformComponent>();
-    const float groundScale = kMeadowHalfExtent / kSceneGroundHalfExtent;
+    const float groundScale = kGrassFarHalfExtent / kSceneGroundHalfExtent;
     groundTr->SetUniformScale(groundScale);
     groundObject->AddComponent<MeshComponent>(groundRef, SceneMeshSlot::GroundPlane, Vector3{0.32F, 0.38F, 0.28F});
     if (MaterialComponent* groundMat = groundObject->AddComponent<MaterialComponent>()) {
@@ -78,18 +87,60 @@ void FoliageWindDemo::Load(GameWorld& world, IEngineContext& context) {
     field->GetName() = Utf8String("GrassField");
     TransformComponent* fieldTr = field->AddComponent<TransformComponent>();
     fieldTr->SetTranslation({0.0F, 0.0F, 0.0F});
-    FoliageInstancedMeshComponent* foliage = field->AddComponent<FoliageInstancedMeshComponent>();
-    foliage->SetBladeMesh(bladeMesh);
-    foliage->SetAlbedoTexture(grassTex);
-    foliage->SetAlbedoTint({0.52F, 0.92F, 0.38F});
-    foliage->SetWindBendScale(0.26F);
-    foliage->SetAlphaCutoff(0.42F);
-    foliage->ConfigureGridWithinSquare(kMeadowHalfExtent, 0.2F, 0.45F);
+    FoliageInstancedMeshComponent* foliageNear = field->AddComponent<FoliageInstancedMeshComponent>();
+    foliageNear->SetBladeMesh(bladeMesh);
+    foliageNear->SetAlbedoTexture(grassTex);
+    foliageNear->SetAlbedoTint({0.52F, 0.92F, 0.38F});
+    foliageNear->SetWindBendScale(0.28F);
+    foliageNear->SetAlphaCutoff(0.42F);
+    foliageNear->SetScatterSkipFraction(kGrassScatterSkip);
+    foliageNear->ConfigureGridWithinSquare(kMeadowNearHalfExtent, kGrassNearSpacing, 0.22F);
     roots.PushBack(field);
+
+    GameObject* grassFar = world.Entities().Create();
+    grassFar->GetName() = Utf8String("GrassFieldFarLod");
+    grassFar->AddComponent<TransformComponent>();
+    FoliageInstancedMeshComponent* foliageFar = grassFar->AddComponent<FoliageInstancedMeshComponent>();
+    foliageFar->SetBladeMesh(bladeMesh);
+    foliageFar->SetAlbedoTexture(grassTex);
+    foliageFar->SetAlbedoTint({0.45F, 0.82F, 0.32F});
+    foliageFar->SetWindBendScale(0.18F);
+    foliageFar->SetAlphaCutoff(0.48F);
+    foliageFar->SetScatterSkipFraction(kGrassScatterSkip);
+    foliageFar->ConfigureGridWithinSquare(kGrassFarHalfExtent, kGrassFarSpacing, 0.22F);
+    roots.PushBack(grassFar);
+
+    GameObject* pebbles = world.Entities().Create();
+    pebbles->GetName() = Utf8String("MeadowPebblesInstanced");
+    if (TransformComponent* pebbleTr = pebbles->AddComponent<TransformComponent>()) {
+        pebbleTr->SetTranslation({0.0F, -0.03F, 0.0F});
+        pebbleTr->SetUniformScale(0.14F);
+    }
+    pebbles->AddComponent<MeshComponent>(SharedPtr<Mesh>{}, SceneMeshSlot::UnitCube, Vector3{0.38F, 0.36F, 0.34F});
+    if (MaterialComponent* pebbleMat = pebbles->AddComponent<MaterialComponent>()) {
+        pebbleMat->SetTint({0.38F, 0.36F, 0.34F});
+        pebbleMat->SetMetallic(0.05F);
+        pebbleMat->SetRoughness(0.88F);
+    }
+    auto* pebbleBatch = pebbles->AddComponent<RigidMeshInstancedBatchComponent>();
+    pebbleBatch->ConfigureGrid(34, 34, 1.05F);
+    if (MeshLodComponent* pebbleLod = pebbles->AddComponent<MeshLodComponent>()) {
+        pebbleLod->SetHorizontalDistance(true);
+        pebbleLod->SetHysteresisMeters(2.5F);
+        MeshLodLevel nearPebbles{};
+        nearPebbles.minDistance = 0.0F;
+        nearPebbles.meshSlot = SceneMeshSlot::UnitCube;
+        pebbleLod->GetLevels().PushBack(nearPebbles);
+        MeshLodLevel farPebbles{};
+        farPebbles.minDistance = 32.0F;
+        farPebbles.culled = true;
+        pebbleLod->GetLevels().PushBack(farPebbles);
+    }
+    roots.PushBack(pebbles);
 
     helpHud.Mount(world, "Foliage wind meadow");
     helpHud.SetControlHints("W toggle wind | +/- wind speed | F1 mouse | WASD fly");
-    helpHud.SetDetail("GPU instanced grass blades · global wind UBO");
+    helpHud.SetDetail("Dense GPU grass (near+far tiers) · opaque pebble instancing + mesh LOD");
     context.GetInput().SetCursorCaptured(true);
 }
 

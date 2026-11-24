@@ -12,6 +12,7 @@ namespace Spark {
 
 void SkinnedAnimationService::BeginSubmitFrame(const std::uint32_t frameIndex) noexcept {
     submitFrameIndex = frameIndex;
+    resolver.SetSubmitFrameIndex(frameIndex);
     budget.BeginFrame();
     paletteCache.BeginFrame(frameIndex);
 }
@@ -34,8 +35,9 @@ bool SkinnedAnimationService::TryResolvePalette(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
         Array<Matrix4>& outPalette,
-        const std::uint32_t paletteMax) {
-    return resolver.TryResolve(mesh, animator, outPalette, paletteMax);
+        const std::uint32_t paletteMax,
+        const std::uint32_t paletteUpdateStride) {
+    return resolver.TryResolve(mesh, animator, outPalette, paletteMax, paletteUpdateStride);
 }
 
 bool SkinnedAnimationService::TryResolvePalette(
@@ -45,8 +47,10 @@ bool SkinnedAnimationService::TryResolvePalette(
         const SkinnedMeshComponent& mesh,
         const AnimatorComponent* animator,
         Array<Matrix4>& outPalette,
-        const std::uint32_t paletteMax) {
-    return resolver.TryResolve(owner, ownerWorld, world, mesh, animator, outPalette, paletteMax);
+        const std::uint32_t paletteMax,
+        const std::uint32_t paletteUpdateStride) {
+    return resolver.TryResolve(
+            owner, ownerWorld, world, mesh, animator, outPalette, paletteMax, paletteUpdateStride);
 }
 
 }  // namespace Spark

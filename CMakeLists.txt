@@ -768,6 +768,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/ecs/components/foliage/WindEnvironmentComponent.cpp
         src/spark/ecs/components/foliage/FoliageInstancedMeshComponent.cpp
         src/spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.cpp
+        src/spark/ecs/components/rendering/MeshLodComponent.cpp
         src/spark/ecs/components/foliage/GrassFieldComponent.cpp
         src/spark/scene/assets/GameWorldAssetCache.cpp
         src/spark/scene/query/SpatialMath.cpp
@@ -951,6 +952,8 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/submit/LitSceneSubmitter.cpp
         src/spark/scene/submit/SceneDrawListSorter.cpp
         src/spark/scene/submit/MeshInstancedSceneCollector.cpp
+        src/spark/scene/lod/MeshLodSelector.cpp
+        src/spark/scene/lod/MeshLodSubmit.cpp
         src/spark/scene/submit/SceneMeshSubmitCollectors.cpp
         src/spark/scene/submit/SceneRigidMeshDrawBuilder.cpp
         src/spark/scene/submit/SceneSubmit.cpp

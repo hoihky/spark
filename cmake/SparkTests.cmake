@@ -97,6 +97,8 @@ function(spark_add_physics_tests)
             tests/scene/DrawableSortSceneDrawTest.cpp
             tests/scene/TransparentPassPartitionTest.cpp
             tests/scene/MeshInstancedSubmitTest.cpp
+            tests/scene/MeshLodSelectorTest.cpp
+            tests/scene/MeshLodSubmitTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

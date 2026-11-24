@@ -51,6 +51,10 @@ public:
      */
     void ConfigureGridWithinSquare(float halfExtentMeters, float spacingMeters, float edgeMarginMeters = 0.4F) noexcept;
 
+    /** Fraction of grid slots skipped for natural gaps (0 = solid fill, default 0.08). */
+    void SetScatterSkipFraction(float fraction) noexcept;
+    [[nodiscard]] float GetScatterSkipFraction() const noexcept { return scatterSkipFraction; }
+
     void AppendInstanceRecords(Array<FoliageInstanceRecord>& outInstances, const Matrix4& ownerWorld) const;
 
 private:
@@ -70,6 +74,7 @@ private:
     float edgeMarginMeters = 0.4F;
     bool useSquareBounds = false;
     bool gridDirty = true;
+    float scatterSkipFraction = 0.08F;
 
     Array<FoliageInstanceRecord> cachedInstances{};
 };

@@ -503,7 +503,7 @@ struct SceneRenderParams {
     float windSimulationTimeSeconds = 0.0F;
 
     /** GPU-instanced foliage batches (F1); rendered after opaque meshes. */
-    static constexpr std::uint32_t MaxFoliageInstances = 16384;
+    static constexpr std::uint32_t MaxFoliageInstances = 32768;
     /** Rigid mesh GPU instancing on the main opaque lit pass (props / crowds). */
     static constexpr std::uint32_t MaxRigidMeshInstances = 4096;
     static constexpr std::uint32_t MaxFoliageBatches = 32;

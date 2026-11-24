@@ -140,7 +140,7 @@ Registered today: Transform, Mesh, Material, **`GltfSceneSource`** (v2 instance 
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
 | **Occlusion** | Frustum culling only (`ForEach*InViewFrustum`) | Occlusion query API or prebuilt cell visibility |
-| **LOD** | Always full mesh | `MeshLodComponent` + `Scene::ForEachDrawableLod(view, distance)` |
+| **LOD** | **`MeshLodComponent`** + submit LOD resolve; `Scene::ForEachDrawableLod` / `ForEachSkinnedDrawableLod` (+ frustum variants) | Impostor/billboard tiers (FOLIAGE F4), streaming unload |
 | **Light iterators** | Point, spot, directional (`ForEachDirectionalLight`) | Area lights, light probes |
 | **Physics overlap from Scene** | Separate `PhysicsQueries2D` | `Scene::OverlapSphere`, `Raycast` unified with 3D physics bodies |
 | **Picking** | `Scene::RaycastPick` (rigid + skinned bind pose); `MeshRaycast` for low-level use | Physics-body picks, deformed skinned mesh picks; **unified** scene raycast vs `PhysicsQueries3D` (see §2.5) |
@@ -173,7 +173,7 @@ Registered today: Transform, Mesh, Material, **`GltfSceneSource`** (v2 instance 
 | **Joint by name** | Joint index on sockets | Stable `FindJoint("RightHand")` across assets |
 | **Root motion arbitration** | Root motion + character motor both exist | Policy for when clip drives vs motor drives (plant, release, physics handoff) |
 | **Reach / carry IK** | Aim IK, foot IK | Two-hand reach, look-at chain extensions (game sets targets) |
-| **Animation LOD** | Skinned draw budget component | Per-agent palette update rate / LOD for many identical rigs |
+| **Animation LOD** | Skinned budget + per-LOD `paletteUpdateStride` on `MeshLodComponent` (M7-07 partial) | Hz-based tiers, identical-rig batching |
 | **2D velocity blend** | `Sprite2DCharacterAnimFsmComponent` discrete states | Blend sprite clips by velocity vector (top-down / side-view) |
 | **Retargeting** | Single skeleton per asset | Cross-skeleton clip retarget (deferred spike in M5-11; tracked in M7) |
 
@@ -218,7 +218,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | **Render layers / queues** | `DrawableSortKey` + `SceneRenderQueue` on `SceneDrawItem` (meshes, water, skinned); sprites/tilemaps share `DrawableSortResolver` | Bitmask `layerMask` for selective passes; dedicated UI-only geometry queue (screen UI stays on `ScreenRectDraw`) |
 | **Instancing** | One `SceneDrawItem` per object; **rigid mesh instancing** on main opaque lit pass (`RigidMeshInstancedBatchComponent`, binding **16**, `scene_instanced.vert` + `scene.frag`); foliage pass (F1) | Skinned / GPU-driven MDI crowds; see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4-08 |
 | **Velocity trails** | CPU particles | Entity-attached ribbon/trail module (speed-readable motion) — see [`VFX_ROADMAP.md`](VFX_ROADMAP.md) P6 |
-| **LOD selection** | Caller picks mesh | Submit helper chooses LOD from camera distance — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4 |
+| **LOD selection** | **`MeshLodResolveRigidDraw` / `MeshLodResolveSkinnedDraw`** in lit submit | Instanced LOD bucketing (F4), GPU select |
 | **Foliage (grass / trees)** | Per-entity glTF trees only (`CharacterCameraDemo`) | `GrassFieldComponent`, `TreeInstanceBatch`, wind UBO — [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
 | **Custom shaders** | `SceneShadingModel::LitPbr` / `ToonCel` | Material shader graph or `userShaderId` escape hatch |
 

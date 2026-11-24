@@ -57,6 +57,11 @@ void FoliageInstancedMeshComponent::ConfigureGrid(
     gridDirty = true;
 }
 
+void FoliageInstancedMeshComponent::SetScatterSkipFraction(const float fraction) noexcept {
+    scatterSkipFraction = std::clamp(fraction, 0.0F, 0.45F);
+    gridDirty = true;
+}
+
 void FoliageInstancedMeshComponent::ConfigureGridWithinSquare(
         const float halfExtentMeters,
         const float spacingMeters,
@@ -103,7 +108,7 @@ void FoliageInstancedMeshComponent::RebuildInstanceCache() {
             const float r1 = Hash01(index * 7U + 41U);
             const float r2 = Hash01(index * 11U + 93U);
             const float r3 = Hash01(index * 13U + 127U);
-            if (r0 < 0.08F) {
+            if (r0 < scatterSkipFraction) {
                 ++index;
                 continue;
             }

@@ -3,6 +3,7 @@
 #include "spark/core/Array.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/math/Matrix4.hpp"
+#include "spark/math/Vector3.hpp"
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
@@ -25,7 +26,8 @@ public:
             SceneRenderParams& params,
             const SceneSubmitDetail::FindSceneTextureFn& findTexture,
             std::int32_t defaultShadowFlags,
-            bool skiesSubmittedOutsideCull) noexcept;
+            bool skiesSubmittedOutsideCull,
+            const Vector3& cameraPositionWorld) noexcept;
 
     void OnDrawable(
             GameObject* object,
@@ -39,6 +41,7 @@ private:
     SceneSubmitDetail::FindSceneTextureFn findTexture;
     std::int32_t defaultShadowFlags = 0;
     bool skiesSubmittedOutsideCull = false;
+    Vector3 cameraPositionWorld{};
 };
 
 /** Skinned mesh frustum sink with joint palette resolve. */
@@ -49,7 +52,8 @@ public:
             Array<SceneDrawItem>& drawList,
             SceneRenderParams& params,
             const SceneSubmitDetail::FindSceneTextureFn& findTexture,
-            std::int32_t defaultShadowFlags) noexcept;
+            std::int32_t defaultShadowFlags,
+            const Vector3& cameraPositionWorld) noexcept;
 
     void OnSkinnedDrawable(GameObject* object,
             const SkinnedMeshComponent& skinned,
@@ -64,13 +68,15 @@ private:
             GameWorld& gameWorld,
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
-            Array<Matrix4>& outPalette);
+            Array<Matrix4>& outPalette,
+            std::uint32_t paletteUpdateStride);
 
     GameWorld& gameWorld;
     Array<SceneDrawItem>& drawList;
     SceneRenderParams& params;
     SkinnedSceneDrawMaterialApplicator materialApplicator;
     std::int32_t defaultShadowFlags = 0;
+    Vector3 cameraPositionWorld{};
 };
 
 }  // namespace Spark

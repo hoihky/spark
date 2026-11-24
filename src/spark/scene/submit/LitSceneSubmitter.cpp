@@ -222,7 +222,7 @@ void LitSceneSubmitter::CollectMeshDraws(
     }
 
     RigidDrawableSubmitCollector rigidCollector{
-            drawList, params, findTexture, defaultShadowFlags, skiesSubmittedOutsideCull};
+            drawList, params, findTexture, defaultShadowFlags, skiesSubmittedOutsideCull, cameraPositionWorld};
     if (sceneForCulling != nullptr) {
         DispatchDrawableFrustumCull(
                 *sceneForCulling, viewProjection, sceneForCulling->GetSpatialPartitionKind(), rigidCollector);
@@ -267,7 +267,8 @@ void LitSceneSubmitter::CollectMeshDraws(
     static std::uint32_t skinnedSubmitFrameSerial = 0;
     skinnedService.BeginSubmitFrame(++skinnedSubmitFrameSerial);
 
-    SkinnedDrawableSubmitCollector skinnedCollector{world, drawList, params, findTexture, defaultShadowFlags};
+    SkinnedDrawableSubmitCollector skinnedCollector{
+            world, drawList, params, findTexture, defaultShadowFlags, cameraPositionWorld};
     DispatchSkinnedDrawableFrustumCull(world, viewProjection, skinnedPartition, skinnedCollector);
 
     SceneDrawListSorter::StableSortOpaqueDraws(drawList);

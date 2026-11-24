@@ -7,6 +7,9 @@
 #include "spark/ecs/components/world/SceneSpatialPolicyComponent.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
+#include "spark/ecs/components/rendering/MeshLodComponent.hpp"
+#include "spark/math/Vector3.hpp"
+#include "spark/scene/lod/MeshLodSubmit.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"
 #include "spark/ecs/components/lighting/SpotLightComponent.hpp"
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
@@ -119,6 +122,65 @@ public:
     }
 
     /**
+     * Like ForEachDrawable, but applies {@link MeshLodComponent} distance selection at submit.
+     * Callback receives the resolved LOD drawable (mesh slot, custom mesh, culled flag, palette stride).
+     */
+    template<typename Fn>
+    void ForEachDrawableLod(const Vector3& cameraPositionWorld, Fn&& fn) const {
+        world.Entities().ForEachActive([&fn, &cameraPositionWorld](GameObject* o) {
+            if (o == nullptr) {
+                return;
+            }
+            const MeshComponent* mc = o->GetComponent<MeshComponent>();
+            if (mc == nullptr) {
+                return;
+            }
+            if (!mc->GetMesh() && mc->GetSlot() == SceneMeshSlot::Custom) {
+                return;
+            }
+            const MaterialComponent* mat = o->GetComponent<MaterialComponent>();
+            const Matrix4 worldMatrix = o->GetWorldMatrix();
+            MeshLodComponent* lod = o->GetComponent<MeshLodComponent>();
+            const MeshLodResolvedDraw resolved =
+                    MeshLodResolveRigidDraw(*mc, lod, cameraPositionWorld, worldMatrix);
+            if (resolved.culled) {
+                return;
+            }
+            fn(o, *mc, mat, worldMatrix, resolved);
+        });
+    }
+
+    template<typename Fn>
+    void ForEachDrawableLodInViewFrustum(
+            const Matrix4& viewProjection,
+            const Vector3& cameraPositionWorld,
+            Fn&& fn) const {
+        if (sceneSpatialPartitionKind == ScenePartitionKind::None) {
+            ForEachDrawableLod(cameraPositionWorld, std::forward<Fn>(fn));
+            return;
+        }
+        struct LocalSink final : DrawableFrustumSink {
+            Fn& f;
+            Vector3 cameraPos;
+            explicit LocalSink(Fn& inF, const Vector3& cam) noexcept : f(inF), cameraPos(cam) {}
+            void OnDrawable(GameObject* object,
+                    const MeshComponent& mesh,
+                    const MaterialComponent* material,
+                    const Matrix4& worldMatrix) override {
+                MeshLodComponent* lod =
+                        object != nullptr ? object->GetComponent<MeshLodComponent>() : nullptr;
+                const MeshLodResolvedDraw resolved =
+                        MeshLodResolveRigidDraw(mesh, lod, cameraPos, worldMatrix);
+                if (resolved.culled) {
+                    return;
+                }
+                f(object, mesh, material, worldMatrix, resolved);
+            }
+        } sink{fn, cameraPositionWorld};
+        DispatchDrawableFrustumCull(*this, viewProjection, sceneSpatialPartitionKind, sink);
+    }
+
+    /**
      * Skinned draws: SkinnedMeshComponent + optional MaterialComponent; animator supplies skeleton sampling.
      * Caller should sample AnimatorComponent + skeleton into joint palette when building SceneDrawItem.
      */
@@ -137,6 +199,60 @@ public:
             const Matrix4 worldMatrix = o->GetWorldMatrix();
             fn(o, *smc, mat, anim, worldMatrix);
         });
+    }
+
+    template<typename Fn>
+    void ForEachSkinnedDrawableLod(const Vector3& cameraPositionWorld, Fn&& fn) const {
+        world.Entities().ForEachActive([&fn, &cameraPositionWorld](GameObject* o) {
+            if (o == nullptr) {
+                return;
+            }
+            const SkinnedMeshComponent* smc = o->GetComponent<SkinnedMeshComponent>();
+            if (smc == nullptr || !smc->GetMesh()) {
+                return;
+            }
+            const MaterialComponent* mat = o->GetComponent<MaterialComponent>();
+            const AnimatorComponent* anim = o->GetComponent<AnimatorComponent>();
+            const Matrix4 worldMatrix = o->GetWorldMatrix();
+            MeshLodComponent* lod = o->GetComponent<MeshLodComponent>();
+            const MeshLodResolvedDraw resolved =
+                    MeshLodResolveSkinnedDraw(*smc, lod, cameraPositionWorld, worldMatrix);
+            if (resolved.culled || !resolved.skinnedMesh) {
+                return;
+            }
+            fn(o, *smc, mat, anim, worldMatrix, resolved);
+        });
+    }
+
+    template<typename Fn>
+    void ForEachSkinnedDrawableLodInViewFrustum(
+            const Matrix4& viewProjection,
+            const Vector3& cameraPositionWorld,
+            Fn&& fn) const {
+        if (sceneSpatialPartitionKind == ScenePartitionKind::None) {
+            ForEachSkinnedDrawableLod(cameraPositionWorld, std::forward<Fn>(fn));
+            return;
+        }
+        struct LocalSink final : SkinnedDrawableFrustumSink {
+            Fn& f;
+            Vector3 cameraPos;
+            explicit LocalSink(Fn& inF, const Vector3& cam) noexcept : f(inF), cameraPos(cam) {}
+            void OnSkinnedDrawable(GameObject* object,
+                    const SkinnedMeshComponent& skinned,
+                    const MaterialComponent* material,
+                    const AnimatorComponent* animator,
+                    const Matrix4& worldMatrix) override {
+                MeshLodComponent* lod =
+                        object != nullptr ? object->GetComponent<MeshLodComponent>() : nullptr;
+                const MeshLodResolvedDraw resolved =
+                        MeshLodResolveSkinnedDraw(skinned, lod, cameraPos, worldMatrix);
+                if (resolved.culled || !resolved.skinnedMesh) {
+                    return;
+                }
+                f(object, skinned, material, animator, worldMatrix, resolved);
+            }
+        } sink{fn, cameraPositionWorld};
+        DispatchSkinnedDrawableFrustumCull(*this, viewProjection, sceneSpatialPartitionKind, sink);
     }
 
     /**

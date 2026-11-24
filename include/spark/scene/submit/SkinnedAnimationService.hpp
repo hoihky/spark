@@ -30,7 +30,8 @@ public:
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
             Array<Matrix4>& outPalette,
-            std::uint32_t paletteMax);
+            std::uint32_t paletteMax,
+            std::uint32_t paletteUpdateStride = 1U);
 
     [[nodiscard]] bool TryResolvePalette(
             GameObject* owner,
@@ -39,7 +40,8 @@ public:
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
             Array<Matrix4>& outPalette,
-            std::uint32_t paletteMax);
+            std::uint32_t paletteMax,
+            std::uint32_t paletteUpdateStride = 1U);
 
     [[nodiscard]] SkeletonPaletteCache& GetPaletteCache() noexcept { return paletteCache; }
     [[nodiscard]] const SkeletonPaletteCache& GetPaletteCache() const noexcept { return paletteCache; }

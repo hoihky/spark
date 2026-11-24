@@ -22,11 +22,14 @@ class SkinnedPaletteResolver {
 public:
     SkinnedPaletteResolver(SkinnedAnimationBudget& budget, SkeletonPaletteCache& paletteCache) noexcept;
 
+    void SetSubmitFrameIndex(std::uint32_t frameIndex) noexcept { submitFrameIndex = frameIndex; }
+
     [[nodiscard]] bool TryResolve(
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
             Array<Matrix4>& outPalette,
-            std::uint32_t paletteMax);
+            std::uint32_t paletteMax,
+            std::uint32_t paletteUpdateStride = 1U);
 
     [[nodiscard]] bool TryResolve(
             GameObject* owner,
@@ -35,14 +38,18 @@ public:
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
             Array<Matrix4>& outPalette,
-            std::uint32_t paletteMax);
+            std::uint32_t paletteMax,
+            std::uint32_t paletteUpdateStride = 1U);
 
 private:
     [[nodiscard]] bool TryResolveAnimatedPalette(
             const SkinnedMeshComponent& mesh,
             const AnimatorComponent* animator,
             Array<Matrix4>& outPalette,
-            std::uint32_t paletteMax);
+            std::uint32_t paletteMax,
+            std::uint32_t paletteUpdateStride);
+
+    [[nodiscard]] bool ShouldRefreshPaletteThisFrame(std::uint32_t paletteUpdateStride) const noexcept;
 
     void FillBindPose(
             const SkinnedMeshComponent& mesh,
@@ -53,6 +60,7 @@ private:
     SkinnedAnimationBudget& budget;
     SkeletonPaletteCache& paletteCache;
     SkeletonPaletteCacheKey cacheKey{};
+    std::uint32_t submitFrameIndex = 0U;
 };
 
 }  // namespace Spark
