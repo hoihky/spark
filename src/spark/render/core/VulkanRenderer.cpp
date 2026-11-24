@@ -318,6 +318,7 @@ void VulkanRenderer::RecordSceneCommandBuffer(
     if (frameIndex < sceneDescriptors.DescriptorSetCount()) {
         const VulkanCustomMeshPool::Bindings customMesh = customMeshPool.GetBindings();
         const VulkanSceneOpaqueRecordContext opaqueCtx{
+                .customMeshPool = &customMeshPool,
                 .scene = &pendingScene,
                 .sceneParamsValid = sceneParamsValid,
                 .frameIndex = frameIndex,
@@ -325,6 +326,7 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                 .pipelineLit = scenePipeline.PipelineLit(),
                 .pipelineSky = scenePipeline.PipelineSky(),
                 .pipelineLitTransparent = scenePipeline.PipelineLitTransparent(),
+                .pipelineLitInstanced = scenePipeline.PipelineLitInstanced(),
                 .pipelineLayout = scenePipeline.PipelineLayout(),
                 .descriptorSet = sceneDescriptors.DescriptorSet(frameIndex),
                 .meshBindings =
@@ -790,6 +792,7 @@ void VulkanRenderer::DestroyPersistentSceneResources() {
     particlePass.DestroyGpuResources(device());
     spritePass.DestroyGpuResources(device());
     foliagePass.DestroyGpuResources(device());
+    sceneOpaquePass.DestroyRigidInstanceGpuBuffers(device());
     screenUi.DestroyResources(device());
 }
 
@@ -809,6 +812,8 @@ void VulkanRenderer::CreatePersistentSceneResources() {
     clusteredForwardLights.CreateBuffers(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     spritePass.CreateGpuResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     foliagePass.CreateGpuResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
+    sceneOpaquePass.CreateRigidInstanceGpuBuffers(
+            physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight);
     sceneDescriptors.CreatePoolAndSets(
             device(),
             VulkanFrameSync::kMaxFramesInFlight,
@@ -820,6 +825,7 @@ void VulkanRenderer::CreatePersistentSceneResources() {
                     .punctualShadow = punctualShadow,
                     .spritePass = spritePass,
                     .foliagePass = foliagePass,
+                    .opaquePass = sceneOpaquePass,
             });
     CreateSceneGeometry();
     screenUi.CreateResources(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight, shaderLoader);

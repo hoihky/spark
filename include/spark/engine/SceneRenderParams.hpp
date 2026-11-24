@@ -26,6 +26,7 @@
 #include "spark/ui/text/Font.hpp"
 #include "spark/scene/foliage/FoliageInstanceRecord.hpp"
 #include "spark/scene/foliage/SceneFoliageInstancedBatch.hpp"
+#include "spark/scene/mesh/MeshInstanceRecord.hpp"
 
 #include <cstdint>
 
@@ -268,6 +269,10 @@ struct SceneDrawItem {
     MaterialGltfExtensions gltfExtensions{};
 };
 
+#define SPARK_SCENE_DRAW_ITEM_COMPLETE 1
+#include "spark/scene/mesh/SceneMeshInstancedBatch.hpp"
+#undef SPARK_SCENE_DRAW_ITEM_COMPLETE
+
 /**
  * Water surface draw collected after opaque partition (see <c>SceneRenderParams::waterDraws</c>).
  * <c>sortDepth</c> is squared distance from the camera for back-to-front ordering.
@@ -499,6 +504,8 @@ struct SceneRenderParams {
 
     /** GPU-instanced foliage batches (F1); rendered after opaque meshes. */
     static constexpr std::uint32_t MaxFoliageInstances = 16384;
+    /** Rigid mesh GPU instancing on the main opaque lit pass (props / crowds). */
+    static constexpr std::uint32_t MaxRigidMeshInstances = 4096;
     static constexpr std::uint32_t MaxFoliageBatches = 32;
     /**
      * Grass field merged instance cap per frame (F2-08, open-world A2 alignment).
@@ -508,6 +515,8 @@ struct SceneRenderParams {
     std::uint32_t maxGrassInstancesPerFrame = DefaultMaxGrassInstancesPerFrame;
     Array<SceneFoliageInstancedBatch> foliageBatches;
     Array<FoliageInstanceRecord> foliageInstances;
+    Array<SceneMeshInstancedBatch> meshInstancedBatches;
+    Array<MeshInstanceRecord> meshInstances;
 
     /**
      * Sprite pass ordering. <c>SortOrderThenWorldY</c> uses each draw’s model translation world Y (<c>m[13]</c>) as a

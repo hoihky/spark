@@ -29,6 +29,7 @@
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
 #include "spark/scene/foliage/FoliageSceneCollector.hpp"
+#include "spark/scene/submit/MeshInstancedSceneCollector.hpp"
 #include "spark/scene/foliage/WindSubsystem.hpp"
 #include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/scene/submit/SceneDrawListSorter.hpp"
@@ -89,6 +90,8 @@ void LitSceneSubmitter::ResetSceneParams(
     params.tilemapTiles.Clear();
     params.foliageBatches.Clear();
     params.foliageInstances.Clear();
+    params.meshInstancedBatches.Clear();
+    params.meshInstances.Clear();
     params.uiFont = world.GetUiFont();
     params.uiBoldFont = world.GetUiBoldFont();
     params.draws.Reserve(32);
@@ -467,6 +470,8 @@ void LitSceneSubmitter::FinalizeScene(
     world.GetWindSubsystem().WriteFrameToSceneRenderParams(params);
     FoliageSceneCollector foliageCollector{};
     foliageCollector.CollectInto(world, params, findTexture);
+    MeshInstancedSceneCollector meshInstancedCollector{};
+    meshInstancedCollector.CollectInto(world, params, findTexture);
 
 #if SPARK_HAS_GAMEPLAY
     world.Entities().ForEachActive([&](GameObject* object) {

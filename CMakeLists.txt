@@ -407,6 +407,7 @@ file(MAKE_DIRECTORY ${SPV_DIR})
 
 set(SHADER_SOURCES
         ${SHADER_DIR}/scene.vert
+        ${SHADER_DIR}/scene_instanced.vert
         ${SHADER_DIR}/scene.frag
         ${SHADER_DIR}/shadow_depth.vert
         ${SHADER_DIR}/particle.vert
@@ -437,7 +438,7 @@ foreach (SHADER ${SHADER_SOURCES})
             OUTPUT ${SPV}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${SPV_DIR}
             COMMAND ${GLSLANG_VALIDATOR} -V --target-env vulkan1.0 -I${SHADER_DIR} ${SHADER} -o ${SPV}
-            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/scene_screen.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_screen.glsl ${SHADER_DIR}/water_background.glsl ${SHADER_DIR}/water_detail.glsl ${SHADER_DIR}/water_foam.glsl ${SHADER_DIR}/water_ssr.glsl ${SHADER_DIR}/water_reflection.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl ${SHADER_DIR}/foliage_instance.glsl ${SHADER_DIR}/wind.glsl
+            DEPENDS ${SHADER} ${SHADER_DIR}/clustered_lights.glsl ${SHADER_DIR}/equirect.glsl ${SHADER_DIR}/gerstner_wave.glsl ${SHADER_DIR}/ibl.glsl ${SHADER_DIR}/punctual_shadows.glsl ${SHADER_DIR}/scene_push.glsl ${SHADER_DIR}/mesh_instance.glsl ${SHADER_DIR}/scene_ubo.glsl ${SHADER_DIR}/scene_screen.glsl ${SHADER_DIR}/post_common.glsl ${SHADER_DIR}/water_push.glsl ${SHADER_DIR}/water_screen.glsl ${SHADER_DIR}/water_background.glsl ${SHADER_DIR}/water_detail.glsl ${SHADER_DIR}/water_foam.glsl ${SHADER_DIR}/water_ssr.glsl ${SHADER_DIR}/water_reflection.glsl ${SHADER_DIR}/water_sun_shadow.glsl ${SHADER_DIR}/color_space.glsl ${SHADER_DIR}/foliage_instance.glsl ${SHADER_DIR}/wind.glsl
             COMMENT "SPIR-V: ${NAME_WE}.${EXT_NO_DOT}"
             VERBATIM
     )
@@ -766,6 +767,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/foliage/GrassInstanceTintGenerator.cpp
         src/spark/ecs/components/foliage/WindEnvironmentComponent.cpp
         src/spark/ecs/components/foliage/FoliageInstancedMeshComponent.cpp
+        src/spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.cpp
         src/spark/ecs/components/foliage/GrassFieldComponent.cpp
         src/spark/scene/assets/GameWorldAssetCache.cpp
         src/spark/scene/query/SpatialMath.cpp
@@ -948,6 +950,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/scene/submit/LitScene.cpp
         src/spark/scene/submit/LitSceneSubmitter.cpp
         src/spark/scene/submit/SceneDrawListSorter.cpp
+        src/spark/scene/submit/MeshInstancedSceneCollector.cpp
         src/spark/scene/submit/SceneMeshSubmitCollectors.cpp
         src/spark/scene/submit/SceneRigidMeshDrawBuilder.cpp
         src/spark/scene/submit/SceneSubmit.cpp

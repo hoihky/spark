@@ -12,7 +12,10 @@
 
 namespace Spark {
 
+class VulkanCustomMeshPool;
+
 struct VulkanSceneOpaqueRecordContext {
+    const VulkanCustomMeshPool* customMeshPool = nullptr;
     const SceneRenderParams* scene = nullptr;
     bool sceneParamsValid = false;
     std::uint32_t frameIndex = 0;
@@ -20,6 +23,7 @@ struct VulkanSceneOpaqueRecordContext {
     VkPipeline pipelineLit = VK_NULL_HANDLE;
     VkPipeline pipelineSky = VK_NULL_HANDLE;
     VkPipeline pipelineLitTransparent = VK_NULL_HANDLE;
+    VkPipeline pipelineLitInstanced = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
     SceneMeshDrawBindings meshBindings{};
@@ -72,7 +76,15 @@ public:
         float iridescenceIor = 1.3F;
         float iridescenceThicknessMin = 100.0F;
         float iridescenceThicknessMax = 400.0F;
+        std::uint32_t instanceBase = 0;
     };
+
+    void CreateRigidInstanceGpuBuffers(
+            VkPhysicalDevice physicalDevice,
+            VkDevice device,
+            std::uint32_t framesInFlight);
+    void DestroyRigidInstanceGpuBuffers(VkDevice device) noexcept;
+    [[nodiscard]] VkBuffer RigidInstanceBuffer(std::uint32_t frameIndex) const noexcept;
 
     void Record(VkCommandBuffer commandBuffer, const VulkanSceneOpaqueRecordContext& ctx) const;
     /** Non-sky lit meshes (used by <c>VulkanWaterPass</c> until a dedicated water shader exists). */
@@ -85,6 +97,16 @@ public:
             VkCommandBuffer commandBuffer,
             const VulkanSceneOpaqueRecordContext& ctx,
             const Array<CustomMeshGpuSlice>& transparentPacked) const;
+
+private:
+    [[nodiscard]] bool UploadRigidInstances(std::uint32_t frameIndex, const SceneRenderParams& scene) const;
+    void RecordRigidInstancedBatches(
+            VkCommandBuffer commandBuffer,
+            const VulkanSceneOpaqueRecordContext& ctx) const;
+
+    Array<VkBuffer> rigidInstanceBuffers;
+    Array<VkDeviceMemory> rigidInstanceMemory;
+    Array<void*> rigidInstanceMapped;
 };
 
 }  // namespace Spark

@@ -16,6 +16,10 @@ void VulkanScenePipeline::DestroyGraphicsPipeline(const VkDevice device) {
         vkDestroyPipeline(device, pipelineLit, nullptr);
         pipelineLit = VK_NULL_HANDLE;
     }
+    if (pipelineLitInstanced != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, pipelineLitInstanced, nullptr);
+        pipelineLitInstanced = VK_NULL_HANDLE;
+    }
     if (pipelineLitTransparent != VK_NULL_HANDLE) {
         vkDestroyPipeline(device, pipelineLitTransparent, nullptr);
         pipelineLitTransparent = VK_NULL_HANDLE;
@@ -31,6 +35,10 @@ void VulkanScenePipeline::DestroyGraphicsPipeline(const VkDevice device) {
     if (vertModule != VK_NULL_HANDLE) {
         vkDestroyShaderModule(device, vertModule, nullptr);
         vertModule = VK_NULL_HANDLE;
+    }
+    if (vertInstancedModule != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device, vertInstancedModule, nullptr);
+        vertInstancedModule = VK_NULL_HANDLE;
     }
     if (fragModule != VK_NULL_HANDLE) {
         vkDestroyShaderModule(device, fragModule, nullptr);
@@ -231,6 +239,20 @@ void VulkanScenePipeline::CreateGraphicsPipeline(
         throw std::runtime_error("VulkanScenePipeline: vkCreateGraphicsPipelines failed");
     }
 
+    const Array<char> vertInstancedCode = shaders.ReadSpvFile("scene_instanced.vert.spv");
+    vertInstancedModule = shaders.CreateShaderModule(vertInstancedCode);
+    VkPipelineShaderStageCreateInfo instancedVertStage = vertShaderStage;
+    instancedVertStage.module = vertInstancedModule;
+    const VkPipelineShaderStageCreateInfo instancedStages[] = {instancedVertStage, fragShaderStage};
+    pipelineCreateInfo.pStages = instancedStages;
+    pipelineCreateInfo.pDepthStencilState = &depthStencil;
+    pipelineCreateInfo.pColorBlendState = &colorBlending;
+    if (vkCreateGraphicsPipelines(
+                device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineLitInstanced) != VK_SUCCESS) {
+        throw std::runtime_error("VulkanScenePipeline: vkCreateGraphicsPipelines (instanced) failed");
+    }
+
+    pipelineCreateInfo.pStages = shaderStages;
     pipelineCreateInfo.pDepthStencilState = &depthStencilSky;
     pipelineCreateInfo.pRasterizationState = &rasterizerSky;
     if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipelineSky) !=

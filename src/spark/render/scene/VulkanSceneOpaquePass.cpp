@@ -2,7 +2,13 @@
 #include "spark/render/scene/VulkanSceneOpaquePass.hpp"
 
 #include "spark/core/Array.hpp"
+#include "spark/render/core/VulkanRendererGpu.hpp"
+#include "spark/render/scene/VulkanCustomMeshPool.hpp"
+#include "spark/render/scene/VulkanRigidMeshInstanceGpu.hpp"
 #include "spark/render/scene/VulkanSceneMeshDraw.hpp"
+#include "spark/scene/mesh/MeshInstanceRecord.hpp"
+#include "spark/scene/mesh/SceneMeshInstancedBatch.hpp"
+#include "spark/math/Matrix4.hpp"
 #include "spark/render/scene/VulkanSceneRaster.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
@@ -12,6 +18,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <stdexcept>
 
 namespace {
 
@@ -65,7 +72,7 @@ void FillMaterialExtensionPush(
 
 namespace Spark {
 
-static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 348);
+static_assert(sizeof(VulkanSceneOpaquePass::ModelPushConstants) == 352);
 static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, mapUvScale) == 176);
 static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, clearcoatFactor) == 296);
 static_assert(offsetof(VulkanSceneOpaquePass::ModelPushConstants, emissiveStrength) == 304);
@@ -196,6 +203,7 @@ void VulkanSceneOpaquePass::Record(
             }
         }
 
+        push.instanceBase = 0;
         vkCmdPushConstants(
                 commandBuffer,
                 ctx.pipelineLayout,
@@ -206,6 +214,7 @@ void VulkanSceneOpaquePass::Record(
         vkCmdDrawIndexed(commandBuffer, range.indexCount, 1, range.firstIndex, range.vertexOffset, 0);
     }
 
+    RecordRigidInstancedBatches(commandBuffer, ctx);
     VulkanScreenUiClip::RestoreFramebufferScissor(commandBuffer, fullScissor);
 }
 
@@ -454,6 +463,212 @@ void VulkanSceneOpaquePass::RecordTransparent(
                 sizeof(ModelPushConstants),
                 &push);
         vkCmdDrawIndexed(commandBuffer, range.indexCount, 1, range.firstIndex, range.vertexOffset, 0);
+    }
+}
+
+void VulkanSceneOpaquePass::CreateRigidInstanceGpuBuffers(
+        const VkPhysicalDevice physicalDevice,
+        const VkDevice device,
+        const std::uint32_t framesInFlight) {
+    DestroyRigidInstanceGpuBuffers(device);
+    rigidInstanceBuffers.Resize(framesInFlight);
+    rigidInstanceMemory.Resize(framesInFlight);
+    rigidInstanceMapped.Resize(framesInFlight);
+    for (std::uint32_t i = 0; i < framesInFlight; ++i) {
+        VulkanRendererGpu::CreateBuffer(
+                physicalDevice,
+                device,
+                static_cast<VkDeviceSize>(kRigidMeshInstanceSsboBytes),
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                rigidInstanceBuffers[i],
+                rigidInstanceMemory[i]);
+        if (vkMapMemory(
+                    device,
+                    rigidInstanceMemory[i],
+                    0,
+                    static_cast<VkDeviceSize>(kRigidMeshInstanceSsboBytes),
+                    0,
+                    &rigidInstanceMapped[i]) != VK_SUCCESS) {
+            throw std::runtime_error("vkMapMemory rigid mesh instance SSBO failed");
+        }
+    }
+}
+
+void VulkanSceneOpaquePass::DestroyRigidInstanceGpuBuffers(const VkDevice device) noexcept {
+    if (device == VK_NULL_HANDLE) {
+        return;
+    }
+    for (std::size_t i = 0; i < rigidInstanceBuffers.GetSize(); ++i) {
+        if (rigidInstanceMapped[i] != nullptr) {
+            vkUnmapMemory(device, rigidInstanceMemory[i]);
+            rigidInstanceMapped[i] = nullptr;
+        }
+        if (rigidInstanceBuffers[i] != VK_NULL_HANDLE) {
+            vkDestroyBuffer(device, rigidInstanceBuffers[i], nullptr);
+            rigidInstanceBuffers[i] = VK_NULL_HANDLE;
+        }
+        if (rigidInstanceMemory[i] != VK_NULL_HANDLE) {
+            vkFreeMemory(device, rigidInstanceMemory[i], nullptr);
+            rigidInstanceMemory[i] = VK_NULL_HANDLE;
+        }
+    }
+    rigidInstanceBuffers.Clear();
+    rigidInstanceMemory.Clear();
+    rigidInstanceMapped.Clear();
+}
+
+VkBuffer VulkanSceneOpaquePass::RigidInstanceBuffer(const std::uint32_t frameIndex) const noexcept {
+    if (frameIndex >= rigidInstanceBuffers.GetSize()) {
+        return VK_NULL_HANDLE;
+    }
+    return rigidInstanceBuffers[frameIndex];
+}
+
+bool VulkanSceneOpaquePass::UploadRigidInstances(
+        const std::uint32_t frameIndex,
+        const SceneRenderParams& scene) const {
+    if (frameIndex >= rigidInstanceMapped.GetSize() || rigidInstanceMapped[frameIndex] == nullptr) {
+        return false;
+    }
+    const std::size_t count = scene.meshInstances.GetSize();
+    if (count == 0) {
+        return true;
+    }
+    if (count > static_cast<std::size_t>(kMaxRigidMeshInstancesGpu)) {
+        return false;
+    }
+    auto* dst = static_cast<VulkanRigidMeshInstanceGpu*>(rigidInstanceMapped[frameIndex]);
+    for (std::size_t i = 0; i < count; ++i) {
+        std::memcpy(dst[i].model, scene.meshInstances[i].GetModelMatrix().m, sizeof(dst[i].model));
+    }
+    return true;
+}
+
+void VulkanSceneOpaquePass::RecordRigidInstancedBatches(
+        const VkCommandBuffer commandBuffer,
+        const VulkanSceneOpaqueRecordContext& ctx) const {
+    if (!ctx.sceneParamsValid || ctx.scene == nullptr || ctx.pipelineLitInstanced == VK_NULL_HANDLE ||
+        ctx.pipelineLayout == VK_NULL_HANDLE || ctx.descriptorSet == VK_NULL_HANDLE ||
+        ctx.customMeshPool == nullptr || ctx.scene->meshInstancedBatches.IsEmpty() ||
+        ctx.scene->meshInstances.IsEmpty()) {
+        return;
+    }
+    if (!UploadRigidInstances(ctx.frameIndex, *ctx.scene)) {
+        return;
+    }
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipelineLitInstanced);
+    vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            ctx.pipelineLayout,
+            0,
+            1,
+            &ctx.descriptorSet,
+            0,
+            nullptr);
+
+    const VkDeviceSize vbOffset = 0;
+    SceneMeshGeometryBinding bound = SceneMeshGeometryBinding::None;
+
+    for (std::size_t bi = 0; bi < ctx.scene->meshInstancedBatches.GetSize(); ++bi) {
+        const SceneMeshInstancedBatch& batch = ctx.scene->meshInstancedBatches[bi];
+        if (batch.GetInstanceCount() == 0U) {
+            continue;
+        }
+        const SceneDrawItem& d = batch.GetDrawTemplate();
+        if (d.skyMode != SceneSkyMode::None || d.opacity < 0.999F || d.alphaBlend ||
+            d.gltfExtensions.transmissionFactor > 0.01F) {
+            continue;
+        }
+
+        SceneMeshDrawRange range{};
+        if (d.mesh == SceneMeshSlot::UnitCube || d.mesh == SceneMeshSlot::GroundPlane) {
+            range = ResolveSceneMeshDrawRange(d, 0, ctx.meshBindings);
+        } else if (d.mesh == SceneMeshSlot::Custom && d.customMesh) {
+            const CustomMeshGpuSlice slice = ctx.customMeshPool->TryGetRigidMeshSlice(d.customMesh.Get());
+            if (slice.indexCount > 0U && ctx.meshBindings.customVertexBuffer != VK_NULL_HANDLE &&
+                ctx.meshBindings.customIndexBuffer != VK_NULL_HANDLE) {
+                range.drawable = true;
+                range.binding = SceneMeshGeometryBinding::CustomDynamic;
+                range.indexCount = slice.indexCount;
+                range.firstIndex = slice.firstIndex;
+                range.vertexOffset = slice.vertexOffset;
+            }
+        }
+        if (!range.drawable || range.indexCount == 0U) {
+            continue;
+        }
+
+        if (range.binding == SceneMeshGeometryBinding::StaticScene) {
+            if (bound != SceneMeshGeometryBinding::StaticScene) {
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, &ctx.meshBindings.staticVertexBuffer, &vbOffset);
+                vkCmdBindIndexBuffer(commandBuffer, ctx.meshBindings.staticIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                bound = SceneMeshGeometryBinding::StaticScene;
+            }
+        } else if (range.binding == SceneMeshGeometryBinding::CustomDynamic) {
+            if (bound != SceneMeshGeometryBinding::CustomDynamic) {
+                vkCmdBindVertexBuffers(commandBuffer, 0, 1, &ctx.meshBindings.customVertexBuffer, &vbOffset);
+                vkCmdBindIndexBuffer(commandBuffer, ctx.meshBindings.customIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+                bound = SceneMeshGeometryBinding::CustomDynamic;
+            }
+        }
+
+        VulkanSceneApplyRasterState(commandBuffer, d, d.skyMode);
+
+        ModelPushConstants push{};
+        std::memcpy(push.model, Matrix4::Identity.m, sizeof(push.model));
+        push.albedo[0] = d.albedo.x;
+        push.albedo[1] = d.albedo.y;
+        push.albedo[2] = d.albedo.z;
+        push.albedo[3] = d.opacity > 0.0F ? d.opacity : 1.0F;
+        push.textureLayer = d.textureLayer;
+        push.skyMode = static_cast<std::int32_t>(d.skyMode);
+        push.metallic = d.metallic;
+        push.roughness = d.roughness;
+        push.metallicFactor = d.metallicFactor;
+        push.roughnessFactor = d.roughnessFactor;
+        push.occlusionStrength = d.occlusionStrength;
+        push.shadowFlags = d.shadowFlags;
+        push.alphaCutoff = d.alphaCutoff;
+        FillMaterialMapUvPush(push, d);
+        push.emissive[0] = d.emissiveColor.x;
+        push.emissive[1] = d.emissiveColor.y;
+        push.emissive[2] = d.emissiveColor.z;
+        push.emissive[3] = d.emissiveIntensity;
+        push.emissiveFactor[0] = d.emissiveFactor.x;
+        push.emissiveFactor[1] = d.emissiveFactor.y;
+        push.emissiveFactor[2] = d.emissiveFactor.z;
+        FillMaterialExtensionPush(push, d.gltfExtensions);
+        push.albedoHdrLinear = d.textureIsHdrLinear ? 1 : 0;
+        push.normalScale = d.normalScale;
+        push.useSkinning = 0;
+        push.jointCount = 0;
+        push.shadingModel = static_cast<std::int32_t>(d.shadingModel);
+        push.toonDiffuseBands = std::clamp(d.toonDiffuseBands, 2, 8);
+        push.toonRimIntensity = d.toonRimIntensity;
+        push.toonRimPower = d.toonRimPower;
+        push.normalMapLayer = d.normalMapLayer;
+        push.metallicRoughnessMapLayer = d.metallicRoughnessMapLayer;
+        push.emissiveMapLayer = d.emissiveMapLayer;
+        push.iridescenceThicknessMapLayer = d.iridescenceThicknessMapLayer;
+        push.instanceBase = batch.GetInstanceBegin();
+
+        vkCmdPushConstants(
+                commandBuffer,
+                ctx.pipelineLayout,
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                0,
+                sizeof(ModelPushConstants),
+                &push);
+        vkCmdDrawIndexed(
+                commandBuffer,
+                range.indexCount,
+                batch.GetInstanceCount(),
+                range.firstIndex,
+                range.vertexOffset,
+                0);
     }
 }
 

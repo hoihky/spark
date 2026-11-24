@@ -39,6 +39,7 @@ layout(push_constant) uniform Push {
     float iridescenceIor;
     float iridescenceThicknessMin;
     float iridescenceThicknessMax;
+    uint instanceBase;
 } push;
 
 #endif

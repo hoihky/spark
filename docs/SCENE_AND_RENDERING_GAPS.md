@@ -216,7 +216,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 
 **Regression tests:** `tests/scene/TransparentPassPartitionTest.cpp` — opacity / `alphaBlend` / `transmissionFactor` partition, sky exclusion, `BackToFrontByDepth` vs `None`, and `VulkanSceneOpaqueSnapshot::IsRequired` (opaque HDR copy before water + transparent).
 | **Render layers / queues** | `DrawableSortKey` + `SceneRenderQueue` on `SceneDrawItem` (meshes, water, skinned); sprites/tilemaps share `DrawableSortResolver` | Bitmask `layerMask` for selective passes; dedicated UI-only geometry queue (screen UI stays on `ScreenRectDraw`) |
-| **Instancing** | One `SceneDrawItem` per object; foliage instancing pass (F1) | General **character/prop** instancing on main opaque path; skinned instancing — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F1, F4-08 |
+| **Instancing** | One `SceneDrawItem` per object; **rigid mesh instancing** on main opaque lit pass (`RigidMeshInstancedBatchComponent`, binding **16**, `scene_instanced.vert` + `scene.frag`); foliage pass (F1) | Skinned / GPU-driven MDI crowds; see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4-08 |
 | **Velocity trails** | CPU particles | Entity-attached ribbon/trail module (speed-readable motion) — see [`VFX_ROADMAP.md`](VFX_ROADMAP.md) P6 |
 | **LOD selection** | Caller picks mesh | Submit helper chooses LOD from camera distance — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4 |
 | **Foliage (grass / trees)** | Per-entity glTF trees only (`CharacterCameraDemo`) | `GrassFieldComponent`, `TreeInstanceBatch`, wind UBO — [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |

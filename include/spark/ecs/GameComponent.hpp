@@ -123,6 +123,7 @@ enum class ComponentKind : std::uint32_t {
     WindEnvironment,
     FoliageInstancedMesh,
     GrassField,
+    RigidMeshInstancedBatch,
     Character3DBody,
     Character3DVisual,
     AnimationLayerStack,

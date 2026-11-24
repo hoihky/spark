@@ -238,6 +238,14 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
         }
     }
     if (!hasCustomDraw) {
+        for (std::size_t i = 0; i < scene.meshInstancedBatches.GetSize(); ++i) {
+            if (scene.meshInstancedBatches[i].GetDrawTemplate().customMesh) {
+                hasCustomDraw = true;
+                break;
+            }
+        }
+    }
+    if (!hasCustomDraw) {
         ClearKnownMeshes();
         return;
     }
@@ -295,6 +303,9 @@ void VulkanCustomMeshPool::RegisterMeshesFromDraws(const SceneRenderParams& scen
         if (foliageMesh) {
             tryAddRigid(foliageMesh.Get());
         }
+    }
+    for (std::size_t i = 0; i < scene.meshInstancedBatches.GetSize(); ++i) {
+        ingest(scene.meshInstancedBatches[i].GetDrawTemplate());
     }
 }
 

@@ -20,6 +20,7 @@ public:
     void DestroyGraphicsPipeline(VkDevice device);
 
     [[nodiscard]] VkPipeline PipelineLit() const noexcept { return pipelineLit; }
+    [[nodiscard]] VkPipeline PipelineLitInstanced() const noexcept { return pipelineLitInstanced; }
     [[nodiscard]] VkPipeline PipelineLitTransparent() const noexcept { return pipelineLitTransparent; }
     [[nodiscard]] VkPipeline PipelineSky() const noexcept { return pipelineSky; }
     [[nodiscard]] VkPipelineLayout PipelineLayout() const noexcept { return pipelineLayout; }
@@ -27,7 +28,9 @@ public:
 private:
     VkShaderModule vertModule = VK_NULL_HANDLE;
     VkShaderModule fragModule = VK_NULL_HANDLE;
+    VkShaderModule vertInstancedModule = VK_NULL_HANDLE;
     VkPipeline pipelineLit = VK_NULL_HANDLE;
+    VkPipeline pipelineLitInstanced = VK_NULL_HANDLE;
     VkPipeline pipelineLitTransparent = VK_NULL_HANDLE;
     VkPipeline pipelineSky = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
