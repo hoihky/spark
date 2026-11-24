@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "spark/engine/SceneRenderParams.hpp"
+#include "spark/math/Matrix4.hpp"
+#include "spark/math/Vector3.hpp"
 #include "spark/scene/submit/SceneDrawListSorter.hpp"
 
 TEST(SceneDrawListSorterTest, StableSortOpaqueOrdersMeshSlots) {
@@ -49,22 +51,28 @@ TEST(SceneDrawListSorterTest, TransparentSortsFartherFirstByModelTranslation) {
     Spark::Array<Spark::SceneDrawItem> items;
     Spark::SceneDrawItem nearItem{};
     nearItem.opacity = 0.4F;
-    nearItem.model.m[14] = -2.0F;
+    nearItem.model = Spark::Matrix4::Translation({0.0F, 0.0F, -2.0F});
 
     Spark::SceneDrawItem farItem{};
     farItem.opacity = 0.4F;
-    farItem.model.m[14] = -20.0F;
+    farItem.model = Spark::Matrix4::Translation({0.0F, 0.0F, -20.0F});
 
     items.PushBack(nearItem);
     items.PushBack(farItem);
 
     Spark::SceneRenderParams params{};
     params.transparentSortMode = Spark::SceneTransparentSortMode::BackToFrontByDepth;
-    Spark::SceneDrawListSorter::PartitionIntoSceneParams(items, params, {0.0F, 0.0F, 0.0F});
+    const Spark::Vector3 camera{0.0F, 0.0F, 0.0F};
+    Spark::SceneDrawListSorter::PartitionIntoSceneParams(items, params, camera);
 
     ASSERT_EQ(params.transparentDraws.GetSize(), 2U);
-    // Back-to-front pass emits nearer transparent draws before farther ones (see SortTransparentBackToFront).
-    EXPECT_GT(params.transparentDraws[0].model.m[14], params.transparentDraws[1].model.m[14]);
+    const auto sqDist = [&camera](const Spark::SceneDrawItem& item) {
+        const float dx = item.model.m[12] - camera.x;
+        const float dy = item.model.m[13] - camera.y;
+        const float dz = item.model.m[14] - camera.z;
+        return dx * dx + dy * dy + dz * dz;
+    };
+    EXPECT_GT(sqDist(params.transparentDraws[0]), sqDist(params.transparentDraws[1]));
 }
 
 TEST(SceneDrawListSorterTest, StableSortSpritesBySortOrder) {

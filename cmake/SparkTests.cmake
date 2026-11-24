@@ -95,6 +95,7 @@ function(spark_add_physics_tests)
             tests/scene/Scene2DSubmitCapsTest.cpp
             tests/scene/LitSceneSubmit2DLightingTest.cpp
             tests/scene/DrawableSortSceneDrawTest.cpp
+            tests/scene/TransparentPassPartitionTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

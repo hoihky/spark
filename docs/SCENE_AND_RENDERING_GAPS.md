@@ -213,6 +213,8 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | Gap | Current API | Missing API / behavior |
 |-----|-------------|------------------------|
 | **Transparency queue** | `transparentDraws` + `SceneTransparentSortMode`; `renderQueue = Transparent` on partitioned draws | Per-material render queue override API |
+
+**Regression tests:** `tests/scene/TransparentPassPartitionTest.cpp` — opacity / `alphaBlend` / `transmissionFactor` partition, sky exclusion, `BackToFrontByDepth` vs `None`, and `VulkanSceneOpaqueSnapshot::IsRequired` (opaque HDR copy before water + transparent).
 | **Render layers / queues** | `DrawableSortKey` + `SceneRenderQueue` on `SceneDrawItem` (meshes, water, skinned); sprites/tilemaps share `DrawableSortResolver` | Bitmask `layerMask` for selective passes; dedicated UI-only geometry queue (screen UI stays on `ScreenRectDraw`) |
 | **Instancing** | One `SceneDrawItem` per object; foliage instancing pass (F1) | General **character/prop** instancing on main opaque path; skinned instancing — see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F1, F4-08 |
 | **Velocity trails** | CPU particles | Entity-attached ribbon/trail module (speed-readable motion) — see [`VFX_ROADMAP.md`](VFX_ROADMAP.md) P6 |
