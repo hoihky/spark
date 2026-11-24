@@ -20,6 +20,7 @@ set(SPARK_GAMEPLAY_SOURCES
         src/spark/gameplay/gameflow/GameFlowPersistentData.cpp
         src/spark/gameplay/Combat2D.cpp
         src/spark/gameplay/Combat3D.cpp
+        src/spark/gameplay/FloatingCombatTextPresenter.cpp
         src/spark/gameplay/GameplayDamageEvent.cpp
         src/spark/gameplay/GameplayDamageApplier.cpp
         src/spark/gameplay/GameplayDamageDeal.cpp

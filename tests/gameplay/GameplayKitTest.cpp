@@ -9,7 +9,11 @@
 #include "spark/ecs/Signal.hpp"
 #include "spark/gameplay/Combat3D.hpp"
 #include "spark/gameplay/DamageTypes.hpp"
+#include "spark/gameplay/FloatingCombatTextPresenter.hpp"
 #include "spark/gameplay/GameplayDamageEvent.hpp"
+#include "spark/scene/camera/Camera2D.hpp"
+#include "spark/scene/camera/WorldSpaceScreenProject.hpp"
+#include "spark/engine/SceneRenderParams.hpp"
 #include "spark/gameplay/GameplayInteractionProcessor.hpp"
 #include "spark/gameplay/GameplayItemStack.hpp"
 #include "spark/gameplay/GameplayPickupDelivery.hpp"
@@ -118,4 +122,42 @@ TEST(GameplayKit, PickupDeliveryFindsCollectorOnChild) {
     bag->AddComponent<Spark::GameplayInventoryCollectorComponent>();
 
     EXPECT_TRUE(Spark::GameplayPickupDelivery::TryDeliverToCollector(*player, "coin", 2, nullptr));
+}
+
+TEST(GameplayKit, WorldSpaceScreenProjectMatchesCamera2D) {
+    Spark::Camera2D cam{};
+    cam.position = {4.0F, 2.0F, 0.0F};
+    cam.halfExtentY = 5.0F;
+    constexpr float fbW = 800.0F;
+    constexpr float fbH = 600.0F;
+    const Spark::Matrix4 vp = cam.ViewProjection(fbW, fbH);
+
+    float sxCam = 0.0F;
+    float syCam = 0.0F;
+    ASSERT_TRUE(cam.TryWorldXYToScreen(4.0F, 2.0F, fbW, fbH, sxCam, syCam));
+
+    float sx = 0.0F;
+    float sy = 0.0F;
+    ASSERT_TRUE(Spark::TryWorldToScreenPixels(vp, {4.0F, 2.0F, 0.0F}, fbW, fbH, sx, sy));
+    EXPECT_NEAR(sx, sxCam, 0.5F);
+    EXPECT_NEAR(sy, syCam, 0.5F);
+    EXPECT_NEAR(sx, fbW * 0.5F, 1.0F);
+    EXPECT_NEAR(sy, fbH * 0.5F, 1.0F);
+}
+
+TEST(GameplayKit, FloatingCombatTextPresenterAppendsOverlayText) {
+    Spark::FloatingCombatTextPresenter presenter{};
+    presenter.SpawnDamage({0.0F, 0.0F, 0.0F}, 12.0F);
+
+    Spark::SceneRenderParams params{};
+    Spark::Camera2D cam{};
+    params.viewProjection = cam.ViewProjection(640.0F, 480.0F);
+    presenter.AppendDraws(params, 640.0F, 480.0F);
+
+    ASSERT_EQ(params.screenOverlayTexts.GetSize(), 1U);
+    EXPECT_EQ(params.screenOverlayTexts[0].text, Spark::Utf8String("12"));
+    EXPECT_GT(params.screenOverlayTexts[0].alpha, 0.0F);
+
+    presenter.Advance(2.0F);
+    EXPECT_EQ(presenter.ActiveCount(), 0U);
 }

@@ -110,6 +110,17 @@ if (GameplayDamageEvent.TryFromSignal(id, payload, out var evt))
 
 **Game-specific layers** (armor, crit, hitstop) build on `GameplayDamageDeal` or component multipliers.
 
+### Floating damage numbers
+
+World-space popups are **not** a `UiCanvas` feature. Recommended path:
+
+| Approach | API |
+|----------|-----|
+| Screen-projected text | `FloatingCombatTextPresenter` (`SpawnDamage`, `Advance`, `AppendDraws`) |
+| World sprites | Pooled `SpriteComponent` + your digit atlas |
+
+Listen on `GameplayDamageEvent`, spawn at the victim transform (or hit point), then append draws after `FillLit`. See [Camera and HUD — floating damage](../8-2d-game/05-camera-hud.md#floating-damage-numbers-world-space).
+
 ---
 
 ## Interaction

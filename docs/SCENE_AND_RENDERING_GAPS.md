@@ -299,7 +299,9 @@ Until P1 exists, treat **8192 sprites** and **65536 tile instances** as hard per
 |-----|-------------|------------------------|
 | **Sprite batching** | Per-sprite `SceneSpriteDraw` + spill via `Scene2DSubmitCaps` | `SubmitSpritesBatched` / `SpriteDrawableBatch` (see spill table) |
 | **GUI paint order** | `paintOrder` on draws; GPU pass batches rects then text per layer | Documented limitation; no `ForceInterleavedUiPaint` flag |
-| **World-space UI** | Screen-space `UiCanvasComponent` only | World-space canvas or billboard UI component |
+| **World-space UI** | Screen-space `UiCanvasComponent`, `TextOverlayComponent`, and `screen*Texts` layers only | Retained world-space canvas / billboard layout component |
+
+**Floating combat text (action games):** use **`FloatingCombatTextPresenter`** + `TryWorldToScreenPixels` → `screenOverlayTexts` (screen-projected, tracks camera), or pooled **`SpriteComponent`** digit quads for atlas-native motion. Do **not** use `UiCanvas` for per-hit popups. Guide: [`05-camera-hud.md`](programming-guide/8-2d-game/05-camera-hud.md#floating-damage-numbers-world-space).
 
 ---
 

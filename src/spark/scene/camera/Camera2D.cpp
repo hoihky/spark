@@ -1,7 +1,7 @@
 #include "spark/scene/camera/Camera2D.hpp"
 
 #include "spark/math/Constants.hpp"
-#include "spark/math/Vector4.hpp"
+#include "spark/scene/camera/WorldSpaceScreenProject.hpp"
 
 #include <cmath>
 
@@ -49,16 +49,7 @@ bool Camera2D::TryWorldXYToScreen(
         return false;
     }
     const Matrix4 viewProj = ViewProjection(framebufferWidth, framebufferHeight);
-    const Vector4 clip = viewProj * Vector4(worldX, worldY, 0.0F, 1.0F);
-    if (std::fabs(clip.w) < Epsilon) {
-        return false;
-    }
-    const float invW = 1.0F / clip.w;
-    const float ndcX = clip.x * invW;
-    const float ndcY = clip.y * invW;
-    outScreenX = (ndcX + 1.0F) * 0.5F * framebufferWidth;
-    outScreenY = (ndcY + 1.0F) * 0.5F * framebufferHeight;
-    return true;
+    return TryWorldToScreenPixels(viewProj, {worldX, worldY, 0.0F}, framebufferWidth, framebufferHeight, outScreenX, outScreenY);
 }
 
 float RotationZRadFromQuaternion(const Quaternion& q) noexcept {

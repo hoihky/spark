@@ -736,6 +736,7 @@ set(SPARK_ENGINE_SOURCES
         src/spark/animation/RootMotionSampler.cpp
         src/spark/scene/camera/FlyCamera.cpp
         src/spark/scene/camera/Camera2D.cpp
+        src/spark/scene/camera/WorldSpaceScreenProject.cpp
         src/spark/scene/camera/Camera.cpp
         src/spark/scene/camera/CharacterCameraRig.cpp
         # scene/core — world runtime + facets

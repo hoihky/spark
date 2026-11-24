@@ -5,6 +5,7 @@
 #include "spark/gameplay/Combat2D.hpp"
 #include "spark/gameplay/Combat3D.hpp"
 #include "spark/gameplay/DamageTypes.hpp"
+#include "spark/gameplay/FloatingCombatTextPresenter.hpp"
 #include "spark/gameplay/GameplayDamageApplier.hpp"
 #include "spark/gameplay/GameplayDamageDeal.hpp"
 #include "spark/gameplay/GameplayDamageEvent.hpp"

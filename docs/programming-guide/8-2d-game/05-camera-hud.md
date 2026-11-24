@@ -203,6 +203,70 @@ bounds->SetWorldMin({minX, minY});
 bounds->SetWorldMax({maxX, maxY});
 ```
 
+## Floating damage numbers (world-space)
+
+Spark does **not** ship a `WorldSpaceUiCanvas`. Choose between **screen-projected text** (recommended for readable numbers) and **world sprites** (stylistic digit atlases).
+
+| Path | When to use | Pipeline |
+|------|-------------|----------|
+| **Screen-projected text** | Damage/heal numbers, crit text, pickup “+10” | `FloatingCombatTextPresenter` → `SceneRenderParams::screenOverlayTexts` via `TryWorldToScreenPixels` |
+| **World sprites** | Pixel fonts baked into atlas, heavy motion blur, strict depth sort with actors | Pooled `SpriteComponent` quads at hit `Transform`; animate in world XY; counts toward sprite cap |
+| **UiCanvas / `TextOverlay`** | HUD bars, menus, static labels | **Not** for per-hit world popups — both are **screen-pixel** retained or fixed coordinates |
+
+### Screen-projected path (C++)
+
+Call **after** `FillLit` (which clears UI draw lists) and **before** present:
+
+```cpp
+#include "spark/gameplay/FloatingCombatTextPresenter.hpp"
+#include "spark/gameplay/GameplayDamageEvent.hpp"
+
+FloatingCombatTextPresenter floatingText{};
+
+// On damage signal (use victim world position + optional hit offset):
+void OnHit(const Vector3& worldAt, float applied) {
+    floatingText.SpawnDamage(worldAt, applied);
+}
+
+// Each frame:
+floatingText.Advance(timing.deltaTimeSeconds);
+world.Rendering().FillLit(world, ctx, viewProj, ...);
+floatingText.AppendDraws(params, static_cast<float>(fbW), static_cast<float>(fbH));
+```
+
+`AppendDraws` uses the same `params.viewProjection` as the frame’s world draw. Numbers rise in **world +Y**, then project each frame so they track a moving camera.
+
+Lower-level projection without the presenter:
+
+```cpp
+#include "spark/scene/camera/WorldSpaceScreenProject.hpp"
+
+float sx = 0.0F;
+float sy = 0.0F;
+if (TryWorldToScreenPixels(params.viewProjection, hitWorld, fbW, fbH, sx, sy)) {
+    ScreenTextDraw d{};
+    d.x = sx;
+    d.y = sy;
+  // ...
+    d.paintOrder = params.NextUiPaintOrder();
+    params.screenOverlayTexts.PushBack(MoveTemp(d));
+}
+```
+
+`Camera2D::TryWorldXYToScreen` is the 2D convenience wrapper around the same math.
+
+### Sprite path (outline)
+
+1. Pool inactive `GameObject`s with `SpriteComponent` + digit strip UVs (or one glyph per spawn).
+2. On `SignalId::DamageApplied`, activate at `target->GetWorldMatrix().translation` (or hurtbox center).
+3. Tween world position / tint / scale in `OnUpdate`; deactivate when TTL expires.
+4. Set `sortOrder` above terrain, below foreground; respect `Scene2DSubmitCaps` sprite budget.
+
+### What is not supported yet
+
+- Retained **world-space** UI layout (billboard panels, nameplates with layout boxes) — gap tracked in `SCENE_AND_RENDERING_GAPS.md`.
+- Automatic wiring from `GameplayDamageEvent` — spawn popups in your combat listener or a small game system.
+
 ## HUD components
 
 | Component | Use |
@@ -210,6 +274,7 @@ bounds->SetWorldMax({maxX, maxY});
 | `TextOverlayComponent` | Simple strings (gems, state name) |
 | `UiCanvasComponent` | Retained UI layout (menus, inventory shells) |
 | `Scene2DCompositeViewComponent` | Minimap texture in HUD layer |
+| `FloatingCombatTextPresenter` | Ephemeral world-anchored combat numbers (screen-projected) |
 
 ```cpp
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
