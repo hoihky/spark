@@ -43,13 +43,30 @@ struct SkinnedRecord {
     Vector3 aabbMax{};
 };
 
-[[nodiscard]] bool TryWorldAabbFromMesh(const MeshComponent& mc, const Matrix4& world, Vector3& outMin, Vector3& outMax) {
-    if (!mc.GetMesh()) {
-        return false;
+[[nodiscard]] bool TryBuiltinMeshLocalBounds(SceneMeshSlot slot, Vector3& outMin, Vector3& outMax) noexcept {
+    switch (slot) {
+    case SceneMeshSlot::UnitCube:
+        outMin = Vector3{-0.5F, -0.5F, -0.5F};
+        outMax = Vector3{0.5F, 0.5F, 0.5F};
+        return true;
+    case SceneMeshSlot::GroundPlane:
+        outMin = Vector3{-0.5F, 0.0F, -0.5F};
+        outMax = Vector3{0.5F, 0.0F, 0.5F};
+        return true;
+    case SceneMeshSlot::Custom:
+        break;
     }
+    return false;
+}
+
+[[nodiscard]] bool TryWorldAabbFromMesh(const MeshComponent& mc, const Matrix4& world, Vector3& outMin, Vector3& outMax) {
     Vector3 lm;
     Vector3 lx;
-    if (!mc.GetMesh()->TryComputeAxisAlignedBounds(lm, lx)) {
+    if (!mc.GetMesh()) {
+        if (!TryBuiltinMeshLocalBounds(mc.GetSlot(), lm, lx)) {
+            return false;
+        }
+    } else if (!mc.GetMesh()->TryComputeAxisAlignedBounds(lm, lx)) {
         lm = Vector3{-1.0F, -1.0F, -1.0F};
         lx = Vector3{1.0F, 1.0F, 1.0F};
     }
@@ -90,7 +107,10 @@ void GatherDrawables(const Scene& scene, Array<DrawableRecord>& out) {
             return;
         }
         const MeshComponent* mc = o->GetComponent<MeshComponent>();
-        if (mc == nullptr || !mc->GetMesh()) {
+        if (mc == nullptr) {
+            return;
+        }
+        if (!mc->GetMesh() && mc->GetSlot() == SceneMeshSlot::Custom) {
             return;
         }
         DrawableRecord r{};
@@ -288,7 +308,10 @@ void DispatchDrawableFrustumCull(
                 return;
             }
             const MeshComponent* mc = o->GetComponent<MeshComponent>();
-            if (mc == nullptr || !mc->GetMesh()) {
+            if (mc == nullptr) {
+                return;
+            }
+            if (!mc->GetMesh() && mc->GetSlot() == SceneMeshSlot::Custom) {
                 return;
             }
             const MaterialComponent* mat = o->GetComponent<MaterialComponent>();

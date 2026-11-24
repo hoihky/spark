@@ -72,7 +72,22 @@ void OctTree::InsertRecursive(
             nodes.push_back(child);
         }
         for (const int p : old) {
-            InsertRecursive(nodeIndex, p, itemBounds, depth);
+            int redistributeChild = -1;
+            if (depth < treeOptions.maxDepth) {
+                const AxisAlignedBox& oldBounds = itemBounds[p];
+                for (int o = 0; o < 8; ++o) {
+                    const int ci = n.children[static_cast<std::size_t>(o)];
+                    if (CellFullyContains(nodes[static_cast<std::size_t>(ci)].cell, oldBounds)) {
+                        redistributeChild = ci;
+                        break;
+                    }
+                }
+            }
+            if (redistributeChild >= 0) {
+                InsertRecursive(redistributeChild, p, itemBounds, depth + 1);
+            } else {
+                n.items.push_back(p);
+            }
         }
     }
 
