@@ -9,6 +9,7 @@
 #include "spark/scene/core/GameWorld.hpp"
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/scene/submit/SceneDrawListSorter.hpp"
 #include "spark/scene/submit/SceneRigidMeshDrawBuilder.hpp"
 #include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
@@ -105,6 +106,7 @@ void SceneWaterSubmit::AppendBodyDraw(
     if (mesh.GetSlot() == SceneMeshSlot::Custom) {
         baseItem.customMesh = mesh.GetMesh();
     }
+    DrawableSortResolver::ApplyToSceneDrawItem(owner, baseItem, 0);
 
     const MultiMaterialComponent* multiMat = owner.GetComponent<MultiMaterialComponent>();
     if (mesh.GetSlot() == SceneMeshSlot::Custom && mesh.GetMesh() && multiMat != nullptr &&

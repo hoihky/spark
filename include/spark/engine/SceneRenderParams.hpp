@@ -11,6 +11,8 @@
 #include "spark/render/sprites2d/Scene2DComposite.hpp"
 #include "spark/render/sprites2d/Scene2DRuntimeLimits.hpp"
 #include "spark/render/sprites2d/SpriteLighting2D.hpp"
+#include "spark/scene/submit/DrawableSortKey.hpp"
+#include "spark/scene/submit/SceneRenderQueue.hpp"
 #include "spark/core/SharedPtr.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
@@ -244,6 +246,10 @@ struct SceneDrawItem {
     float toonRimPower = 4.0F;
     /** When true, both faces are rasterized (glTF doubleSided / foliage). */
     bool doubleSided = false;
+    /** Resolved from <c>RenderLayerComponent</c> + sorting groups (same path as sprites/tilemaps). */
+    DrawableSortKey drawableSort{};
+    float sortWorldYAnchor = 0.0F;
+    SceneRenderQueue renderQueue = SceneRenderQueue::Opaque;
     /** 1 = opaque; &lt; 1 submits to <c>transparentDraws</c> (back-to-front sorted). */
     float opacity = 1.0F;
     /** glTF alpha_mode=MASK cutoff; 0 = no alpha test. */

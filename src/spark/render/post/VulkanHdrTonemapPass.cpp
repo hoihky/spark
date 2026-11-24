@@ -203,6 +203,10 @@ void VulkanHdrTonemapPass::DestroyFlightTargets(VkDevice device) {
 }
 
 void VulkanHdrTonemapPass::DestroyTonemapPipeline(VkDevice device) {
+    if (tonemapOffscreenPipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, tonemapOffscreenPipeline, nullptr);
+        tonemapOffscreenPipeline = VK_NULL_HANDLE;
+    }
     if (tonemapPipeline != VK_NULL_HANDLE) {
         vkDestroyPipeline(device, tonemapPipeline, nullptr);
         tonemapPipeline = VK_NULL_HANDLE;
@@ -600,6 +604,172 @@ void VulkanHdrTonemapPass::RecordTonemap(
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &tonemapVertexBuffer, &vbOff);
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
     // UI passes recorded by caller before vkCmdEndRenderPass.
+}
+
+void VulkanHdrTonemapPass::CreateOffscreenTonemapPipeline(
+        const VkDevice device,
+        const VkRenderPass offscreenColorRenderPass) {
+    if (tonemapOffscreenPipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device, tonemapOffscreenPipeline, nullptr);
+        tonemapOffscreenPipeline = VK_NULL_HANDLE;
+    }
+    if (offscreenColorRenderPass == VK_NULL_HANDLE || tonemapPipelineLayout == VK_NULL_HANDLE ||
+        tonemapVertModule == VK_NULL_HANDLE || tonemapFragModule == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkPipelineShaderStageCreateInfo stages[2]{};
+    stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    stages[0].module = tonemapVertModule;
+    stages[0].pName = "main";
+    stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    stages[1].module = tonemapFragModule;
+    stages[1].pName = "main";
+
+    VkVertexInputBindingDescription binding{};
+    binding.binding = 0;
+    binding.stride = sizeof(float) * 2;
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    VkVertexInputAttributeDescription attr{};
+    attr.binding = 0;
+    attr.location = 0;
+    attr.format = VK_FORMAT_R32G32_SFLOAT;
+    attr.offset = 0;
+
+    VkPipelineVertexInputStateCreateInfo vertexInput{};
+    vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInput.vertexBindingDescriptionCount = 1;
+    vertexInput.pVertexBindingDescriptions = &binding;
+    vertexInput.vertexAttributeDescriptionCount = 1;
+    vertexInput.pVertexAttributeDescriptions = &attr;
+
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.scissorCount = 1;
+
+    VkPipelineRasterizationStateCreateInfo raster{};
+    raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    raster.polygonMode = VK_POLYGON_MODE_FILL;
+    raster.cullMode = VK_CULL_MODE_NONE;
+    raster.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    raster.lineWidth = 1.0F;
+
+    VkPipelineMultisampleStateCreateInfo ms{};
+    ms.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    VkPipelineColorBlendAttachmentState blendAtt{};
+    blendAtt.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+                              VK_COLOR_COMPONENT_A_BIT;
+    blendAtt.blendEnable = VK_FALSE;
+
+    VkPipelineColorBlendStateCreateInfo blend{};
+    blend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    blend.attachmentCount = 1;
+    blend.pAttachments = &blendAtt;
+
+    VkDynamicState dynStates[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+    VkPipelineDynamicStateCreateInfo dynamicState{};
+    dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+    dynamicState.dynamicStateCount = 2;
+    dynamicState.pDynamicStates = dynStates;
+
+    VkGraphicsPipelineCreateInfo pipeInfo{};
+    pipeInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipeInfo.stageCount = 2;
+    pipeInfo.pStages = stages;
+    pipeInfo.pVertexInputState = &vertexInput;
+    pipeInfo.pInputAssemblyState = &inputAssembly;
+    pipeInfo.pViewportState = &viewportState;
+    pipeInfo.pRasterizationState = &raster;
+    pipeInfo.pMultisampleState = &ms;
+    pipeInfo.pColorBlendState = &blend;
+    pipeInfo.pDynamicState = &dynamicState;
+    pipeInfo.layout = tonemapPipelineLayout;
+    pipeInfo.renderPass = offscreenColorRenderPass;
+    pipeInfo.subpass = 0;
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeInfo, nullptr, &tonemapOffscreenPipeline) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("tonemap offscreen pipeline create failed");
+    }
+}
+
+void VulkanHdrTonemapPass::RecordTonemapToOffscreenFramebuffer(
+        const VkCommandBuffer commandBuffer,
+        const std::uint32_t flightIndex,
+        const VkRenderPass offscreenRenderPass,
+        const VkFramebuffer framebuffer,
+        const VkExtent2D extent,
+        const float exposure) noexcept {
+    if (tonemapOffscreenPipeline == VK_NULL_HANDLE || commandBuffer == VK_NULL_HANDLE ||
+        offscreenRenderPass == VK_NULL_HANDLE || framebuffer == VK_NULL_HANDLE || extent.width == 0U ||
+        extent.height == 0U || flightIndex >= tonemapDescriptorSets.GetSize()) {
+        return;
+    }
+
+    VkClearValue clear{};
+    clear.color.float32[0] = 0.0F;
+    clear.color.float32[1] = 0.0F;
+    clear.color.float32[2] = 0.0F;
+    clear.color.float32[3] = 1.0F;
+
+    VkRenderPassBeginInfo rpBegin{};
+    rpBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    rpBegin.renderPass = offscreenRenderPass;
+    rpBegin.framebuffer = framebuffer;
+    rpBegin.renderArea.offset = {0, 0};
+    rpBegin.renderArea.extent = extent;
+    rpBegin.clearValueCount = 1;
+    rpBegin.pClearValues = &clear;
+
+    vkCmdBeginRenderPass(commandBuffer, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, tonemapOffscreenPipeline);
+
+    VkViewport vp{};
+    vp.x = 0.0F;
+    vp.y = 0.0F;
+    vp.width = static_cast<float>(extent.width);
+    vp.height = static_cast<float>(extent.height);
+    vp.minDepth = 0.0F;
+    vp.maxDepth = 1.0F;
+    vkCmdSetViewport(commandBuffer, 0, 1, &vp);
+    VkRect2D sc{};
+    sc.offset = {0, 0};
+    sc.extent = extent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &sc);
+
+    vkCmdBindDescriptorSets(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            tonemapPipelineLayout,
+            0,
+            1,
+            &tonemapDescriptorSets[flightIndex],
+            0,
+            nullptr);
+
+    TonemapPushConstants push{};
+    push.exposure = exposure;
+    push.invGamma = 1.0F / 2.35F;
+    vkCmdPushConstants(
+            commandBuffer,
+            tonemapPipelineLayout,
+            VK_SHADER_STAGE_FRAGMENT_BIT,
+            0,
+            sizeof(TonemapPushConstants),
+            &push);
+
+    const VkDeviceSize vbOff = 0;
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &tonemapVertexBuffer, &vbOff);
+    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    vkCmdEndRenderPass(commandBuffer);
 }
 
 }  // namespace Spark

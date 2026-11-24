@@ -21,6 +21,9 @@ struct SceneRenderParams;
 /** Records orthographic 2D composite resubmits into <c>RenderTexture</c> targets (minimap, etc.). */
 class VulkanScene2DCompositeCapture final {
 public:
+    /** Scene exposure written during ortho capture; HDR HUD blit uses the same value when tonemapping. */
+    static constexpr float kCompositeCaptureExposure = 1.35F;
+
     struct RecordContext {
         const SceneRenderParams* scene = nullptr;
         bool sceneParamsValid = false;

@@ -11,6 +11,7 @@
 #include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
 #include "spark/ecs/components/water/WaterBodyComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/submit/DrawableSortResolver.hpp"
 #include "spark/scene/submit/SceneRigidMeshDrawBuilder.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
 namespace Spark {
@@ -49,6 +50,7 @@ void RigidDrawableSubmitCollector::OnDrawable(
         }
         SceneDrawItem item{};
         SceneSubmitDetail::PopulateSkyDrawItem(item, *sky, mc, mat, worldM, params);
+        DrawableSortResolver::ApplyToSceneDrawItem(*object, item, 0);
         drawList.PushBack(item);
         return;
     }
@@ -65,6 +67,7 @@ void RigidDrawableSubmitCollector::OnDrawable(
     }
     baseItem.shadowFlags = SceneSubmitDetail::ResolveDrawableShadowFlags(
             object, mc.GetSlot(), worldM, mat, defaultShadowFlags);
+    DrawableSortResolver::ApplyToSceneDrawItem(*object, baseItem, 0);
 
     if (mc.GetSlot() == SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
         !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
@@ -136,6 +139,9 @@ void SkinnedDrawableSubmitCollector::OnSkinnedDrawable(
         return;
     }
     baseItem.shadowFlags = defaultShadowFlags;
+    if (object != nullptr) {
+        DrawableSortResolver::ApplyToSceneDrawItem(*object, baseItem, 0);
+    }
 
     materialApplicator.AppendSkinnedDraws(drawList, baseItem, *smc.GetMesh(), mat, multiMat);
 }

@@ -69,9 +69,13 @@ void SortTransparentBackToFront(
 
 int SceneDrawListSorter::OpaqueDrawSortKey(const SceneDrawItem& item) noexcept {
     if (item.skyMode != SceneSkyMode::None) {
-        return -100;
+        return -100000;
     }
-    return DrawSortLayer(item.mesh);
+    const int queueBand = static_cast<int>(item.renderQueue) * 1'000'000;
+    const int layerBand = static_cast<int>(item.drawableSort.sortingLayerOrder) * 1'000;
+    const int orderInLayer = item.drawableSort.sortingOrder;
+    const int meshBand = DrawSortLayer(item.mesh);
+    return queueBand + layerBand + orderInLayer + meshBand;
 }
 
 void SceneDrawListSorter::StableSortOpaqueDraws(Array<SceneDrawItem>& items) noexcept {
@@ -181,10 +185,12 @@ void SceneDrawListSorter::PartitionIntoSceneParams(
         SceneRenderParams& params,
         const Vector3& cameraPositionWorld) noexcept {
     for (std::size_t di = 0; di < sortedDrawList.GetSize(); ++di) {
-        if (IsTransparentSceneDraw(sortedDrawList[di])) {
-            params.transparentDraws.PushBack(sortedDrawList[di]);
+        SceneDrawItem item = sortedDrawList[di];
+        if (IsTransparentSceneDraw(item)) {
+            item.renderQueue = SceneRenderQueue::Transparent;
+            params.transparentDraws.PushBack(item);
         } else {
-            params.draws.PushBack(sortedDrawList[di]);
+            params.draws.PushBack(item);
         }
     }
     SortTransparentBackToFront(params.transparentDraws, cameraPositionWorld, params.transparentSortMode);

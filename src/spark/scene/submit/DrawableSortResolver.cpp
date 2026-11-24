@@ -1,5 +1,6 @@
 #include "spark/scene/submit/DrawableSortResolver.hpp"
 
+#include "spark/engine/SceneRenderParams.hpp"
 #include "spark/ecs/GameObject.hpp"
 #include "spark/ecs/components/rendering/RenderLayerComponent.hpp"
 #include "spark/ecs/components/rendering/SortingGroupComponent.hpp"
@@ -92,6 +93,32 @@ ResolvedDrawableSort DrawableSortResolver::Resolve(const GameObject& drawable, c
     }
     resolved.worldYAnchor = ResolveWorldYAnchor(drawable, sortingGroup);
     return resolved;
+}
+
+SceneRenderQueue DrawableSortResolver::ResolveRenderQueue(const std::int16_t sortingLayerOrder) noexcept {
+    if (sortingLayerOrder <= 0) {
+        return SceneRenderQueue::Background;
+    }
+    if (sortingLayerOrder >= 400) {
+        return SceneRenderQueue::Overlay;
+    }
+    return SceneRenderQueue::Opaque;
+}
+
+void DrawableSortResolver::ApplyToSceneDrawItem(
+        const GameObject& drawable,
+        SceneDrawItem& item,
+        const std::int32_t nativeOrder) noexcept {
+    const ResolvedDrawableSort resolved = Resolve(drawable, nativeOrder);
+    item.drawableSort = resolved.key;
+    item.sortWorldYAnchor = resolved.worldYAnchor;
+    item.renderQueue = ResolveRenderQueue(resolved.key.sortingLayerOrder);
+}
+
+void DrawableSortResolver::ApplyToSpriteDraw(const ResolvedDrawableSort& resolved, SceneSpriteDraw& draw) noexcept {
+    draw.sortingLayerOrder = resolved.key.sortingLayerOrder;
+    draw.sortOrder = resolved.key.sortingOrder;
+    draw.sortWorldY = resolved.worldYAnchor;
 }
 
 }  // namespace Spark

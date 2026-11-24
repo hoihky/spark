@@ -46,10 +46,10 @@ Public headers for checks: `spark/scene/submit/Scene2DSubmitCaps.hpp` (same numb
 | Composite capture | `VulkanScene2DCompositeCapture` — ortho VP, resubmit tilemaps/sprites via `Vulkan2DCompositePass` |
 | Render pass selection | `RenderTextureFormat::Rgba8Unorm` → **LDR offscreen render pass** (`VulkanOffscreenLdrRenderPass`); `HdrRGBA16Float` → HDR pass |
 | Pipelines | Sprite pass maintains **HDR** and **LDR offscreen** pipeline variants (same shaders, compatible subpass layout) |
-| HUD blit | `VulkanScreenUiPass::RecordCompositeRenderTextureBlits` — `vkCmdCopyImage` from offscreen RGBA8 into the UI sprite atlas layer |
+| HUD blit | `VulkanScreenUiPass::RecordCompositeRenderTextureBlits` — LDR: `vkCmdCopyImage` from RGBA8 offscreen into the UI atlas; HDR: `VulkanCompositeTonemapBlit` + `VulkanHdrTonemapPass::RecordTonemapToOffscreenFramebuffer` then copy scratch RGBA8 |
 | Player marker | `PatchScene2DMinimapHud` — screen-space dot using `ComputeMinimapOrthoBoundsSquare` / `WorldXYToMinimapSquareUv` |
 
-**Why RGBA8 for minimap:** the UI atlas is `R8G8B8A8_UNORM`. HDR offscreen color cannot be copied with `vkCmdCopyImage` (texel size mismatch); minimap capture therefore uses LDR targets and the LDR render pass.
+**UI atlas format:** the UI atlas is `R8G8B8A8_UNORM`. HDR offscreen color cannot be copied with `vkCmdCopyImage` (texel size mismatch). Use either an LDR `RenderTexture` (direct copy) or `HdrRGBA16Float` (ortho HDR capture + tonemap blit into a scratch LDR image, then copy). The stock minimap path still uses `Rgba8Unorm` for minimal GPU work.
 
 CPU fallback when GPU capture is off: `RebuildMinimapTextureFromGameplayGrid` fills a walkability tint texture.
 

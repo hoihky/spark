@@ -21,4 +21,4 @@ ECS → `SceneRenderParams` for the standard lit renderer. Refactor log: `docs/S
 
 ## 2D ordering
 
-`DrawableSortResolver`, `DrawableSortKey`, `RenderLayerRegistry` — sorting layers / render layers for sprites and tilemaps.
+`DrawableSortResolver`, `DrawableSortKey`, `SceneRenderQueue`, `RenderLayerRegistry` — sorting layers for sprites, tilemaps, and `SceneDrawItem` mesh submits.

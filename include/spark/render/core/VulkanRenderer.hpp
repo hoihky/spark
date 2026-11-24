@@ -38,6 +38,7 @@
 #include "spark/render/ui/VulkanScreenUiPass.hpp"
 #include "spark/render/gpu/VulkanSpvShaderLoader.hpp"
 #include "spark/render/sprites2d/Vulkan2DCompositePass.hpp"
+#include "spark/render/sprites2d/VulkanCompositeTonemapBlit.hpp"
 #include "spark/render/sprites2d/VulkanScene2DCompositeCapture.hpp"
 #include "spark/render/sprites2d/VulkanSpritePass.hpp"
 #include "spark/render/sprites2d/VulkanTilemapPass.hpp"
@@ -150,6 +151,7 @@ private:
     VulkanFoliageInstancedPass foliagePass;
     Vulkan2DCompositePass composite2DPass;
     VulkanScene2DCompositeCapture scene2DCompositeCapture;
+    VulkanCompositeTonemapBlit compositeTonemapBlit;
     VulkanRenderTargetRegistry renderTargetRegistry;
 
     VulkanPresentationSwapchain& presentSwapchain() noexcept { return deviceContext.GetSwapchain(); }

@@ -64,6 +64,15 @@ public:
             const VulkanPresentationFramebuffers& presentationFramebuffers,
             float exposure);
 
+    void CreateOffscreenTonemapPipeline(VkDevice device, VkRenderPass offscreenColorRenderPass);
+    void RecordTonemapToOffscreenFramebuffer(
+            VkCommandBuffer commandBuffer,
+            std::uint32_t flightIndex,
+            VkRenderPass offscreenRenderPass,
+            VkFramebuffer framebuffer,
+            VkExtent2D extent,
+            float exposure) noexcept;
+
     [[nodiscard]] VkRenderPass HdrRenderPass() const noexcept { return hdrRenderPass; }
     [[nodiscard]] VkRenderPass HdrResumeRenderPass() const noexcept { return hdrResumeRenderPass; }
     [[nodiscard]] FlightTarget& Flight(std::uint32_t frameIndex) noexcept { return flights[frameIndex]; }
@@ -86,6 +95,7 @@ private:
     VkShaderModule tonemapVertModule = VK_NULL_HANDLE;
     VkShaderModule tonemapFragModule = VK_NULL_HANDLE;
     VkPipeline tonemapPipeline = VK_NULL_HANDLE;
+    VkPipeline tonemapOffscreenPipeline = VK_NULL_HANDLE;
     VkPipelineLayout tonemapPipelineLayout = VK_NULL_HANDLE;
     VkDescriptorSetLayout tonemapDescriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool tonemapDescriptorPool = VK_NULL_HANDLE;

@@ -313,9 +313,7 @@ void LitSceneSubmitter::CollectSpritesTilemapsAndParticles(
             sd.uvRect = spriteTex->ScaleUvRectForSceneLayer(sd.uvRect);
         }
         const ResolvedDrawableSort resolved = DrawableSortResolver::Resolve(*o, sc->GetSortOrder());
-        sd.sortOrder = resolved.key.sortingOrder;
-        sd.sortingLayerOrder = resolved.key.sortingLayerOrder;
-        sd.sortWorldY = resolved.worldYAnchor;
+        DrawableSortResolver::ApplyToSpriteDraw(resolved, sd);
         if (sc->GetTexture()) {
             sd.textureLayer = findTexture(sc->GetTexture(), nullptr, nullptr);
         } else {
@@ -386,8 +384,7 @@ void LitSceneSubmitter::CollectSpritesTilemapsAndParticles(
                 sd.tint = particle.color;
                 sd.uvRect = particle.uvRect;
                 sd.textureLayer = particle.textureLayer >= 0 ? particle.textureLayer : textureLayer;
-                sd.sortOrder = resolved.key.sortingOrder;
-                sd.sortingLayerOrder = resolved.key.sortingLayerOrder;
+                DrawableSortResolver::ApplyToSpriteDraw(resolved, sd);
                 sd.sortWorldY = particle.position.y;
                 sd.blendMode = SceneBlendMode::Additive;
                 params.sprites.PushBack(sd);

@@ -84,6 +84,7 @@ void VulkanRenderer::CleanupSwapchain() {
     hdrTonemapPass.DestroyFlightTargets(device());
     opaqueBackground.Destroy(device());
     hdrTonemapPass.DestroyRenderPass(device());
+    compositeTonemapBlit.Destroy(device());
     offscreenLdrRenderPass.Destroy(device());
     DestroyDepthResources();
 
@@ -143,6 +144,9 @@ void VulkanRenderer::RecreateSwapchain() {
     CreateFramebuffers();
     hdrTonemapPass.CreateTonemapPipeline(
             physicalDevice(), device(), presentRenderPass.vkPass, VulkanFrameSync::kMaxFramesInFlight, shaderLoader);
+    compositeTonemapBlit.BindDevice(physicalDevice(), device());
+    compositeTonemapBlit.Create(device());
+    hdrTonemapPass.CreateOffscreenTonemapPipeline(device(), compositeTonemapBlit.TonemapOutputRenderPass());
     screenSpaceEffectsPass.CreatePipeline(physicalDevice(), device(), VulkanFrameSync::kMaxFramesInFlight, shaderLoader);
     for (std::uint32_t fi = 0; fi < VulkanFrameSync::kMaxFramesInFlight; ++fi) {
         if (fi < sceneDescriptors.DescriptorSetCount() && hdrTonemapPass.HasFlight(fi) &&
@@ -173,6 +177,8 @@ void VulkanRenderer::RecreateSwapchain() {
 void VulkanRenderer::CreateRenderPass() {
     hdrTonemapPass.CreateRenderPass(device(), sceneDepthFormat);
     offscreenLdrRenderPass.Create(device(), sceneDepthFormat);
+    compositeTonemapBlit.BindDevice(physicalDevice(), device());
+    compositeTonemapBlit.Create(device());
     presentRenderPass.Create(device(), presentSwapchain().imageFormat, VK_FORMAT_UNDEFINED);
     renderTargetRegistry.BindDevice(
             physicalDevice(),
@@ -467,7 +473,15 @@ void VulkanRenderer::RecordSceneCommandBuffer(
                         .quadIndexCount = spriteQuadIndexCount,
                         .presentExtent = presentSwapchain().extent,
                 });
-        screenUi.RecordCompositeRenderTextureBlits(commandBuffer, pendingScene, renderTargetRegistry);
+        screenUi.RecordCompositeRenderTextureBlits(
+                commandBuffer,
+                pendingScene,
+                renderTargetRegistry,
+                hdrTonemapPass,
+                compositeTonemapBlit,
+                device(),
+                frameIndex,
+                VulkanScene2DCompositeCapture::kCompositeCaptureExposure);
     }
 
     hdrTonemapPass.TransitionColorToShaderRead(commandBuffer, frameIndex);

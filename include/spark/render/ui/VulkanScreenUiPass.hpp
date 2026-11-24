@@ -12,6 +12,8 @@
 namespace Spark {
 
 class Font;
+class VulkanCompositeTonemapBlit;
+class VulkanHdrTonemapPass;
 class VulkanRenderTargetRegistry;
 
 /** Host-owned Vulkan handles required for font atlas upload. */
@@ -61,11 +63,16 @@ public:
     void ReleaseRetiredUiTextureAtlases(VkDevice device, std::uint64_t frameCounter);
     void UpdateUiSpriteDescriptorImages(VkDevice device);
 
-    /** Copies captured <c>RenderTexture</c> colors into matching <c>uiTextures</c> layers (GPU path). */
+    /** Copies (or tonemap + copy for HDR) composite captures into matching <c>uiTextures</c> atlas layers. */
     void RecordCompositeRenderTextureBlits(
             VkCommandBuffer commandBuffer,
             const SceneRenderParams& scene,
-            VulkanRenderTargetRegistry& renderTargets);
+            VulkanRenderTargetRegistry& renderTargets,
+            VulkanHdrTonemapPass& hdrTonemapPass,
+            VulkanCompositeTonemapBlit& compositeTonemapBlit,
+            VkDevice device,
+            std::uint32_t frameIndex,
+            float compositeCaptureExposure);
 
     void Record(
             VkCommandBuffer commandBuffer,

@@ -63,7 +63,7 @@ void VulkanScene2DCompositeCapture::Record(VkCommandBuffer commandBuffer, const 
         captureScene.cameraPositionWorld = view.worldCenter;
         captureScene.worldClearColorEnabled = true;
         captureScene.worldClearColor = {0.78F, 0.70F, 0.55F};
-        captureScene.exposure = 1.35F;
+        captureScene.exposure = kCompositeCaptureExposure;
         captureScene.lightIntensity = std::max(captureScene.lightIntensity, 0.85F);
         captureScene.ambientScale = std::max(captureScene.ambientScale, 1.25F);
         ctx.uniformWriter->Write(
@@ -129,7 +129,9 @@ void VulkanScene2DCompositeCapture::Record(VkCommandBuffer commandBuffer, const 
 
         vkCmdEndRenderPass(commandBuffer);
         gpu->SyncColorLayoutAfterHdrRenderPassEnd();
-        gpu->TransitionColorImage(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        if (ldrCapture) {
+            gpu->TransitionColorImage(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        }
     }
 
     SceneRenderParams restoreScene = scene;

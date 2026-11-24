@@ -4,8 +4,11 @@
 #include "spark/render/scene/SceneBlendMode.hpp"
 
 #include "spark/render/core/VulkanRendererGpu.hpp"
+#include "spark/render/post/VulkanHdrTonemapPass.hpp"
 #include "spark/render/scene/VulkanOffscreenRenderTarget.hpp"
 #include "spark/render/scene/VulkanRenderTargetRegistry.hpp"
+#include "spark/render/sprites2d/VulkanCompositeTonemapBlit.hpp"
+#include "spark/scene/render/RenderTextureFormat.hpp"
 #include "spark/render/ui/VulkanScreenUiClip.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/ui/text/Font.hpp"
@@ -1995,7 +1998,12 @@ void VulkanScreenUiPass::RecordUiTextureUpload(const VkCommandBuffer commandBuff
 void VulkanScreenUiPass::RecordCompositeRenderTextureBlits(
         const VkCommandBuffer commandBuffer,
         const SceneRenderParams& scene,
-        VulkanRenderTargetRegistry& renderTargets) {
+        VulkanRenderTargetRegistry& renderTargets,
+        VulkanHdrTonemapPass& hdrTonemapPass,
+        VulkanCompositeTonemapBlit& compositeTonemapBlit,
+        const VkDevice device,
+        const std::uint32_t frameIndex,
+        const float compositeCaptureExposure) {
     if (commandBuffer == VK_NULL_HANDLE || activeUiSpriteAtlas.image == VK_NULL_HANDLE ||
         scene.scene2DCompositeViews.IsEmpty()) {
         return;
@@ -2029,6 +2037,25 @@ void VulkanScreenUiPass::RecordCompositeRenderTextureBlits(
             continue;
         }
 
+        const bool hdrCapture = view.target->GetColorFormat() == RenderTextureFormat::HdrRGBA16Float;
+        VkImage copySrcImage = srcGpu->ColorImage();
+        VkImageLayout copySrcLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+
+        if (hdrCapture) {
+            if (device == VK_NULL_HANDLE) {
+                continue;
+            }
+            srcGpu->TransitionColorImage(commandBuffer, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            hdrTonemapPass.UpdateTonemapDescriptor(device, frameIndex, srcGpu->ColorView());
+            compositeTonemapBlit.EnsureScratch(srcExtent);
+            compositeTonemapBlit.RecordTonemap(
+                    commandBuffer, hdrTonemapPass, frameIndex, compositeCaptureExposure);
+            copySrcImage = compositeTonemapBlit.ScratchColorImage();
+            copySrcLayout = compositeTonemapBlit.ScratchColorLayout();
+        } else if (srcGpu->ColorLayout() != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+            srcGpu->TransitionColorImage(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+        }
+
         VulkanRendererGpu::SceneTexBarrierRegion(
                 commandBuffer,
                 activeUiSpriteAtlas.image,
@@ -2052,8 +2079,8 @@ void VulkanScreenUiPass::RecordCompositeRenderTextureBlits(
         region.extent = {copyW, copyH, 1};
         vkCmdCopyImage(
                 commandBuffer,
-                srcGpu->ColorImage(),
-                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                copySrcImage,
+                copySrcLayout,
                 activeUiSpriteAtlas.image,
                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                 1,

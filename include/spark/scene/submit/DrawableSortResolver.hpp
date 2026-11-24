@@ -1,12 +1,15 @@
 #pragma once
 
 #include "spark/scene/submit/DrawableSortKey.hpp"
+#include "spark/scene/submit/SceneRenderQueue.hpp"
 
 namespace Spark {
 
 class GameObject;
 class RenderLayerComponent;
 class SortingGroupComponent;
+struct SceneDrawItem;
+struct SceneSpriteDraw;
 
 /**
  * Resolves effective 2D draw order for sprites and tilemaps from the ECS hierarchy.
@@ -20,6 +23,14 @@ class SortingGroupComponent;
 class DrawableSortResolver {
 public:
     [[nodiscard]] static ResolvedDrawableSort Resolve(const GameObject& drawable, std::int32_t nativeOrder) noexcept;
+
+    /** Maps registry sorting layer order to coarse render queue (Background / Opaque / Overlay). */
+    [[nodiscard]] static SceneRenderQueue ResolveRenderQueue(std::int16_t sortingLayerOrder) noexcept;
+
+    /** Writes <c>drawableSort</c>, <c>sortWorldYAnchor</c>, and <c>renderQueue</c> on mesh draws. */
+    static void ApplyToSceneDrawItem(const GameObject& drawable, SceneDrawItem& item, std::int32_t nativeOrder) noexcept;
+
+    static void ApplyToSpriteDraw(const ResolvedDrawableSort& resolved, SceneSpriteDraw& draw) noexcept;
 
 private:
     [[nodiscard]] static const SortingGroupComponent* FindNearestSortingGroup(const GameObject& drawable) noexcept;
