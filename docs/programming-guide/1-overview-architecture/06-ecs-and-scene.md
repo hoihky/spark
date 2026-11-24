@@ -196,10 +196,15 @@ Payload tables: [Game Component Reference — Signals](07-game-component-referen
 
 ```cpp
 void ForEachDrawable(const DrawableFn& fn);
+void ForEachDrawableLod(Vector3 cameraPos, const LodDrawableFn& fn);
+void ForEachDrawableLodInViewFrustum(Matrix4 viewProj, Vector3 cameraPos, const LodDrawableFn& fn);
 void ForEachSkinnedDrawable(const SkinnedFn& fn);
+void ForEachSkinnedDrawableLod(Vector3 cameraPos, const LodSkinnedFn& fn);
 void ForEachSprite(const SpriteFn& fn);
 void SetSpatialPartitionKind(ScenePartitionKind kind);
 ```
+
+LOD callbacks receive a `MeshLodResolvedDraw` (selected mesh, distance, `paletteUpdateStride`) when `MeshLodComponent` is present.
 
 Use for editor tooling, culling experiments, or custom render paths — production games usually call `world.Rendering().FillLit` directly on `GameWorld`.
 

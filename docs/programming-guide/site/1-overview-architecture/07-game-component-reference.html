@@ -1983,7 +1983,7 @@ enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;
 </code></pre>
 <h3 id="projectile2dcomponent"><code>Projectile2DComponent</code></h3>
 <p><strong>Kind:</strong> <code>Projectile2D</code> · <strong>Priority:</strong> 220 · <strong>Damage path:</strong> <code>TryApplyCombatDamage2D</code></p>
-<p>Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; <code>destroyOwnerOnDeactivate</code> queues destroy flushed by <code>Projectile2DComponent::ProcessDeferredDestroys</code> (called from <code>PhysicsSubsystem::Simulate2D</code>).</p>
+<p>Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; <code>destroyOwnerOnDeactivate</code> queues destroy via <code>DestroyGameObjectAtEndOfFrame</code> (flushed at the end of <code>PhysicsSubsystem::Simulate2D</code>).</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/physics/2d/Projectile2DComponent.hpp&quot;</span></span>
 
 <span class="hljs-keyword">auto</span>* shot = bulletGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Projectile2DComponent&gt;();
@@ -2497,8 +2497,8 @@ pickup-&gt;<span class="hljs-built_in">SetOnCollected</span>([](GameObject&amp; 
 });
 <span class="hljs-comment">// Without SetOnCollected, TryCollect uses GameplayPickupDelivery → GameplayInventoryCollectorComponent.</span>
 
-<span class="hljs-comment">// After Simulate2D (flushes deferred destroys):</span>
-PickupComponent::<span class="hljs-built_in">ProcessDeferredDestroys</span>(world);
+<span class="hljs-comment">// `PhysicsSubsystem::Simulate2D` flushes the shared destroy queue; optional extra flush:</span>
+world.<span class="hljs-built_in">FlushPendingDestroyGameObjects</span>();
 </code></pre>
 <p><strong>Pool + dissolve (P0 gems):</strong> set <code>SetDestroyOwnerOnCollect(false)</code>, run dissolve/VFX in <code>SetOnCollected</code>, then <code>ResetForRespawn()</code> and <code>GameObjectPool::Release</code> when the effect finishes. Disable <code>SetAutoCollectOnTriggerEnter</code> during dissolve to avoid re-entry.</p>
 <h3 id="scene2dcompositeviewcomponent"><code>Scene2DCompositeViewComponent</code></h3>

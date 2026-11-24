@@ -8,8 +8,8 @@ Outdoor and open-world scenes stack **terrain**, **sky / IBL**, **water**, **fol
 | `SkyDemo` | **#2** | Sky box / dome / HDR equirect |
 | `TimeOfDayDemo` | **#17 / N** | Sun cycle, fog + post volumes ([ch.10](10-post-process-fog-volumes.md)) |
 | `WaterLakeDemo` | **#23 / W** | Island terrain + infinite ocean, SSR, waves |
-| `FoliageWindDemo` | **#27 / G** | Wind-driven instanced foliage |
-| `GrassFieldTerrainDemo` | **#28 / H** | Terrain-scattered grass chunks |
+| `FoliageWindDemo` | **#27 / G** | Dense wind grass + opaque instanced pebbles with `MeshLod` |
+| `GrassFieldTerrainDemo` | **#28 / H** | High-density streamed grass on terrain |
 
 Primitives: [Terrain and sky](06-terrain-and-sky.md) · [Lighting](03-lighting.md) · **Part 7:** [3D rendering](../7-game-components-usage/02-3d-rendering.md).
 
@@ -215,8 +215,11 @@ Instanced cards on terrain with wind UBO — `FoliageInstancedMeshComponent` reb
 ```cpp
 #include "spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp"
 
-meadow->AddComponent<FoliageInstancedMeshComponent>();
-// Assign mesh/material, scatter transforms; demo rebuilds GPU instances each frame with wind phase.
+auto* inst = meadow->AddComponent<FoliageInstancedMeshComponent>();
+inst->SetBladeMesh(bladeMesh);
+inst->SetScatterSkipFraction(0.02F);
+inst->ConfigureGridWithinSquare(16.0F, 0.19F, 0.22F);
+// Foliage pass only — for rocks/props use RigidMeshInstancedBatchComponent on the lit pass.
 ```
 
 ### C\#
@@ -245,8 +248,11 @@ Chunked grass scattered on heightfield with slope culling and streaming policy.
 GameObject* grass = world.CreateGameObject("GrassField");
 auto* field = grass->AddComponent<GrassFieldComponent>();
 field->SetTerrainObject(terrainGo);
-field->GetBounds().SetHalfExtentsMeters(40.0F, 40.0F);
-// Before submit: field->PrepareForRender(*grass, cameraPosition, maxInstancesPerFrame);
+field->GetBounds().SetHalfExtentsMeters(28.0F, 26.0F);
+field->GetScatterSettings().SetDensityPerSquareMeter(24.0F);
+field->GetScatterSettings().SetMaxVisibleInstances(14000U);
+params.maxGrassInstancesPerFrame = 14000U;
+field->PrepareForRender(*grass, cameraPosition, params.maxGrassInstancesPerFrame);
 ```
 
 ### C\#
@@ -285,8 +291,9 @@ Attach grass to the **same** terrain used for player raycasts so blades follow s
 |--------|------------------|
 | Terrain | `subdivX/Z` cost — lower for background hills |
 | Water | SSR steps/distance trade GPU for reflection quality |
-| Grass | Chunk streaming — shrink bounds while prototyping |
-| Foliage | Instance count vs overdraw in wind demo |
+| Grass | `maxGrassInstancesPerFrame`, chunk cache, view distance — see `GrassFieldTerrainDemo` |
+| Foliage | `MaxFoliageInstances` (32768 SSBO); `SetScatterSkipFraction`; dual near/far grids in wind demo |
+| Props | `RigidMeshInstancedBatch` (4096 cap) + `MeshLodComponent` to cull distant opaque instances |
 
 External: [Water roadmap](../../WATER_ROADMAP.md), [Foliage roadmap](../../FOLIAGE_ROADMAP.md).
 

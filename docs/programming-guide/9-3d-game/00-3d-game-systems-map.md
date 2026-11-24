@@ -12,7 +12,7 @@
 | `PhysicsShowcase3DDemo` | **#29 / P** | Layers, triggers, carry, CCD, replay |
 | `TimeOfDayDemo` | **#17 / N** | TOD, fog/post volumes — [ch.10](../3-3d-graphics/10-post-process-fog-volumes.md) |
 | `WaterLakeDemo` | **#23 / W** | Island, ocean, SSR — [environment stack](../3-3d-graphics/09-environment-stack.md) |
-| `FoliageWindDemo` / `GrassFieldTerrainDemo` | **#27–28** | Foliage + grass on terrain — [environment stack](../3-3d-graphics/09-environment-stack.md) |
+| `FoliageWindDemo` / `GrassFieldTerrainDemo` | **#27–28** | Dense foliage + streamed grass; opaque instancing/LOD sample in wind demo — [environment stack](../3-3d-graphics/09-environment-stack.md) |
 | `GameFlow2DProductPathDemo` | — | (2D) see [Part 8](../8-2d-game/00-2d-game-systems-map.md) |
 
 Custom **FPS arena** chapters (**01–06**) combine fly camera + hitscan from `SceneEditor3DDemo` / throw demo patterns.

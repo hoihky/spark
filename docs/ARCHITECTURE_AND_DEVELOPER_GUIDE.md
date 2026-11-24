@@ -291,7 +291,9 @@ When resolving textures from components into `sceneTextures`, use **`ApplyMateri
 | **Sky backdrop** | Box / dome / plane modes | `SkyComponent`, `SceneSkyMode` on draws; often combined with `MeshComponent` |
 | **Solid sky tint** | Clear HDR color attachment when no sky draw covers the horizon | `worldClearColorEnabled` + `worldClearColor` (see `TerrainDemo`) |
 | **Water (planned)** | Surfaces, waves, buoyancy | [`docs/WATER_ROADMAP.md`](WATER_ROADMAP.md) |
-| **Foliage (planned)** | Grass, instanced trees, wind | [`docs/FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
+| **Foliage** | GPU instanced grass (`VulkanFoliageInstancedPass`, SSBO 15), `GrassFieldComponent` streaming | [`docs/FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
+| **Opaque mesh instancing** | Rigid props/crowds on lit pass (`RigidMeshInstancedBatchComponent`, `scene_instanced.vert`, SSBO 16) | Collect: `MeshInstancedSceneCollector` |
+| **Mesh LOD (submit)** | `MeshLodComponent` → `MeshLodResolve*` in lit collect; optional `paletteUpdateStride` for skinned animation LOD | `spark/scene/lod/` |
 
 ### 5.8 Characters and animation
 

@@ -1117,7 +1117,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>World / env</td>
-<td><a href="#terrain">#terrain</a> · <a href="#waterbody">#waterbody</a> · <a href="#timeofdaydriver">#timeofdaydriver</a> · <a href="#fogvolume">#fogvolume</a></td>
+<td><a href="#terrain">#terrain</a> · <a href="#grassfield">#grassfield</a> · <a href="#meshlod">#meshlod</a> · <a href="#rigidmeshinstancedbatch">#rigidmeshinstancedbatch</a></td>
 </tr>
 <tr>
 <td>glTF</td>
@@ -1297,8 +1297,18 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><code>FoliageInstancedMesh</code> / <code>GrassField</code></td>
-<td>foliage</td>
+<td>foliage pass (wind grass)</td>
 <td><strong>#27–28</strong></td>
+</tr>
+<tr>
+<td><code>RigidMeshInstancedBatch</code></td>
+<td>opaque lit crowds/props (not foliage)</td>
+<td><strong>#27</strong> pebble demo</td>
+</tr>
+<tr>
+<td><code>MeshLod</code></td>
+<td>distance mesh/skeleton LOD at submit</td>
+<td>paired with mesh or skinned stacks</td>
 </tr>
 <tr>
 <td><code>GltfSceneSource</code> / <code>GltfInstanceNode</code></td>
@@ -1460,13 +1470,40 @@ sensor-&gt;<span class="hljs-built_in">SetSightFovDegrees</span>(<span class="hl
 <h3 id="foliageinstancedmeshcomponent-foliageinstancedmesh"><code>FoliageInstancedMeshComponent</code> {#foliageinstancedmesh}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::FoliageInstancedMesh</code> |
 | <strong>Header</strong> | <code>spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp</code> |</p>
-<p>Wind-driven instances — demo <strong>#27</strong>.</p>
+<p>Wind-driven <strong>foliage pass</strong> instances (binding 15) — not the opaque <code>RigidMeshInstancedBatch</code> path.</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* grass = meadow-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FoliageInstancedMeshComponent&gt;();
+grass-&gt;<span class="hljs-built_in">SetBladeMesh</span>(bladeMesh);
+grass-&gt;<span class="hljs-built_in">SetScatterSkipFraction</span>(<span class="hljs-number">0.02F</span>);  <span class="hljs-comment">// 0 = solid grid; default 0.08</span>
+grass-&gt;<span class="hljs-built_in">ConfigureGridWithinSquare</span>(halfExtentMeters, spacingMeters, edgeMargin);
+</code></pre>
+<p>Demo <strong>#27</strong> (<code>FoliageWindDemo</code>): dense near + sparse far rings under <code>MaxFoliageInstances</code> (32768).</p>
 <h3 id="grassfieldcomponent-grassfield"><code>GrassFieldComponent</code> {#grassfield}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::GrassField</code> |
 | <strong>Header</strong> | <code>spark/ecs/components/foliage/GrassFieldComponent.hpp</code> |</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">field-&gt;<span class="hljs-built_in">SetTerrainObject</span>(terrainGo);
-field-&gt;<span class="hljs-built_in">GetBounds</span>().<span class="hljs-built_in">SetHalfExtentsMeters</span>(<span class="hljs-number">40.0F</span>, <span class="hljs-number">40.0F</span>);
+field-&gt;<span class="hljs-built_in">SetViewTargetObject</span>(cameraRig);  <span class="hljs-comment">// or SetStreamingViewWorld each frame</span>
+field-&gt;<span class="hljs-built_in">GetScatterSettings</span>().<span class="hljs-built_in">SetDensityPerSquareMeter</span>(<span class="hljs-number">24.0F</span>);
+field-&gt;<span class="hljs-built_in">GetScatterSettings</span>().<span class="hljs-built_in">SetSamplesPerCell</span>(<span class="hljs-number">2</span>);
+<span class="hljs-comment">// Before FillLit: field-&gt;PrepareForRender(*grassRoot, cameraPos, params.maxGrassInstancesPerFrame);</span>
 </code></pre>
+<p>Demo <strong>#28</strong>: see constants in <code>GrassFieldTerrainDemo.cpp</code> (14k frame budget in demo).</p>
+<h3 id="rigidmeshinstancedbatchcomponent-rigidmeshinstancedbatch"><code>RigidMeshInstancedBatchComponent</code> {#rigidmeshinstancedbatch}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::RigidMeshInstancedBatch</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp</code> |</p>
+<p>Same object needs <code>MeshComponent</code> (+ optional <code>MaterialComponent</code>). Collected on the <strong>opaque lit</strong> pass (<code>scene_instanced.vert</code>, SSBO binding <strong>16</strong>).</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(<span class="hljs-literal">nullptr</span>, SceneMeshSlot::UnitCube, Vector3::One);
+<span class="hljs-keyword">auto</span>* batch = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;RigidMeshInstancedBatchComponent&gt;();
+batch-&gt;<span class="hljs-built_in">ConfigureGrid</span>(<span class="hljs-number">32</span>, <span class="hljs-number">32</span>, <span class="hljs-number">1.0F</span>);
+</code></pre>
+<h3 id="meshlodcomponent-meshlod"><code>MeshLodComponent</code> {#meshlod}</h3>
+<p>| <strong>Kind</strong> | <code>ComponentKind::MeshLod</code> |
+| <strong>Header</strong> | <code>spark/ecs/components/rendering/MeshLodComponent.hpp</code> |</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* lod = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshLodComponent&gt;();
+lod-&gt;<span class="hljs-built_in">SetHorizontalDistance</span>(<span class="hljs-literal">true</span>);  <span class="hljs-comment">// XZ distance for open worlds</span>
+lod-&gt;<span class="hljs-built_in">GetLevels</span>().<span class="hljs-built_in">PushBack</span>({.minDistance = <span class="hljs-number">0.0F</span>, .meshSlot = SceneMeshSlot::UnitCube});
+lod-&gt;<span class="hljs-built_in">GetLevels</span>().<span class="hljs-built_in">PushBack</span>({.minDistance = <span class="hljs-number">40.0F</span>, .culled = <span class="hljs-literal">true</span>});
+</code></pre>
+<p>Submit calls <code>MeshLodResolveRigidDraw</code> / <code>MeshLodResolveSkinnedDraw</code>. Skinned tiers may set <code>paletteUpdateStride</code> on <code>MeshLodLevel</code> (animation LOD, M7-07). Query: <code>Scene::ForEachDrawableLod</code>, <code>ForEachSkinnedDrawableLod</code> (+ frustum variants).</p>
 <h3 id="particleemittercomponent-vfxplayercomponent-vfx"><code>ParticleEmitterComponent</code> / <code>VfxPlayerComponent</code> {#vfx}</h3>
 <p>Emitters for local FX; <code>VfxPlayer</code> plays <code>.sparkvfx</code> assets — <a href="../3-3d-graphics/08-vfx-and-sparkvfx.html">VFX chapter</a>.</p>
 <hr />

@@ -2,7 +2,7 @@
 
 Living plan for **grass fields**, **wind-reactive tree foliage**, **GPU instancing**, and **LOD/impostors** at open-world scale without melting the forward renderer. Complements [`OPEN_WORLD_ACTION_ROADMAP.md`](OPEN_WORLD_ACTION_ROADMAP.md) Phase C (LOD/visibility) and Phase D (weather/wind), and shares a global **wind field** with [`WATER_ROADMAP.md`](WATER_ROADMAP.md).
 
-**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.7 (terrain/sky), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) (instancing gap), [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), `include/spark/engine/SceneRenderParams.hpp`, `src/spark/scene/submit/` (`LitSceneSubmitter`, foliage collect), `src/spark/scene/submit/SceneSpatialCull.cpp`, `src/spark/render/sprites2d/VulkanTilemapPass.cpp` (2D instancing reference), `src/spark/render/scene/VulkanSceneOpaquePass.cpp`, `shaders/scene.vert`, `shaders/scene.frag`.
+**Architecture anchors:** [`ARCHITECTURE_AND_DEVELOPER_GUIDE.md`](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) §5.7 (terrain/foliage), [`SCENE_AND_RENDERING_GAPS.md`](SCENE_AND_RENDERING_GAPS.md) (lod/instancing status), [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), `include/spark/engine/SceneRenderParams.hpp`, `src/spark/scene/submit/` (`LitSceneSubmitter`, `FoliageSceneCollector`, `MeshInstancedSceneCollector`), `src/spark/render/foliage/VulkanFoliageInstancedPass.cpp` (binding **15**), `src/spark/render/scene/VulkanSceneOpaquePass.cpp` + `shaders/scene_instanced.vert` (rigid crowds/props, binding **16**), `src/spark/scene/lod/MeshLodSubmit.cpp`.
 
 **Related content:** Khronos sample trees `assets/models/Tree_1_C_Color1.gltf`, `Tree_3_A_Color1.gltf` (placed per-entity in `CharacterCameraDemo` today); `TerrainComponent` for height/slope masks; `BillboardComponent` for impostor direction.
 
@@ -40,11 +40,12 @@ Copy the **Issue body** block under each task when filing issues (see [§9](#9-b
 | `BillboardComponent` | Done — camera-facing quads (impostor precursor) |
 | **Global wind / gust system** | **Done (F0 v1)** — `WindSubsystem`, `WindEnvironmentComponent`, scene UBO (`windDirectionSpeed` / `windGustParams`), `shaders/wind.glsl` |
 | **3D mesh GPU instancing (foliage)** | **Done (F1)** — `VulkanFoliageInstancedPass`, SSBO binding 15, `FoliageSceneCollector` |
-| **Grass meadow (prototype)** | **Done** — `FoliageWindDemo` flat grid (`FoliageInstancedMeshComponent`) |
+| **Grass meadow (prototype)** | **Done** — `FoliageWindDemo` dense near+far grids (`FoliageInstancedMeshComponent`, `SetScatterSkipFraction`) |
 | **Grass field on terrain (F2)** | **Mostly done** — `GrassFieldComponent`, chunk streaming, `GrassFieldTerrainDemo` (#28, **H**) |
+| **Rigid prop instancing (opaque lit)** | **Done** — `RigidMeshInstancedBatchComponent` + `MeshLodComponent` (wind demo pebbles; not grass) |
 | **Tree instancing + LOD** | **Not started** (F3–F4) |
 | **Foliage wind vertex shader** | **Done** — `sparkWindBendLocalPosition` in `foliage.vert` |
-| **Mesh LOD metadata in submit** | **Not started** — gap in `SCENE_AND_RENDERING_GAPS.md` |
+| **Mesh LOD at lit submit** | **Partial** — `MeshLodComponent` + `MeshLodSubmit` (foliage batches still single LOD) |
 | **Impostor / baked tree cards** | **Not started** |
 | **Foliage wind demo** | **Done** — `FoliageWindDemo` (launcher #27, hotkey **G**) |
 | **Grass field terrain demo** | **Done** — `GrassFieldTerrainDemo` (launcher #28, hotkey **H**) |
@@ -397,11 +398,22 @@ done
 | `assets/models/Tree_1_C_Color1.gltf` | Sample tree asset |
 | `tests/scene/GltfSceneGraphTest.cpp` | Tree load validation |
 | `docs/WATER_ROADMAP.md` | Shared wind field |
-| `docs/SCENE_AND_RENDERING_GAPS.md` | Instancing + LOD gaps |
+| `docs/SCENE_AND_RENDERING_GAPS.md` | Instancing + LOD status |
+| `src/spark/scene/submit/MeshInstancedSceneCollector.cpp` | Opaque rigid instancing collect |
+| `include/spark/ecs/components/rendering/MeshLodComponent.hpp` | Distance LOD metadata |
+| `include/spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp` | Opaque lit instancing |
+| `shaders/scene_instanced.vert` | Per-instance model matrix (SSBO 16) |
 | `docs/programming-guide/3-3d-graphics/06-terrain-and-sky.md` | Guide home (F7) |
 
 ---
 
-*Last updated: 2026-10-03 — F0/F1 complete; F2 grass fields on terrain (`GrassFieldComponent`, `GrassFieldTerrainDemo`), distance fade, frame budget, perf-oriented streaming merge. Remaining F2: F2-04 density mask (P1).*
+*Last updated: 2026-11-24 — F0/F1 complete; F2 grass on terrain; **32768** foliage instance SSBO cap; dense demo tuning; opaque rigid instancing + mesh LOD on lit path (see `SCENE_AND_RENDERING_GAPS.md`). Remaining F2: F2-04 density mask (P1).*
 
-**F2 demo baseline (playtest):** `DefaultMaxGrassInstancesPerFrame` = **2400**, view **38 m**, density **5/m²**, chunk cache **720** — see `GrassFieldTerrainDemo.cpp`.
+**Demo baselines (see source constants in `GrassFieldTerrainDemo.cpp` / `FoliageWindDemo.cpp`):**
+
+| Demo | Grass density / spacing | Budget / cap |
+|------|-------------------------|--------------|
+| **Grass field terrain (#28)** | **24/m²**, 2 samples/cell, **52 m** view, 14 m chunks | **14 000** instances/frame (`maxGrassInstancesPerFrame`); chunk cache **2600** |
+| **Foliage wind (#27)** | Near **0.185 m** grid on 16 m patch; far **0.88 m** on 23 m ring; **2%** scatter skip | Foliage SSBO **32 768** instances (`MaxFoliageInstances`) |
+
+**API:** `FoliageInstancedMeshComponent::SetScatterSkipFraction` — lower values fill the grid denser (0 = solid).

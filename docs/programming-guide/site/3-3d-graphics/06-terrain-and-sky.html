@@ -1205,7 +1205,7 @@ terrain.regenerate_mesh(terrain_go)
 <pre><code class="hljs language-python language-python" data-highlighted="yes">go.add_sky().set_sun_direction(sun_dir)
 </code></pre>
 <h2 id="foliage-and-grass">Foliage and grass</h2>
-<p><code>FoliageBatchComponent</code> / wind demos (<code>FoliageWindDemo</code>, <code>GrassFieldTerrainDemo</code>) instance cards on terrain — collected into <code>params.foliageBatches</code> during submit. Extended stack: <a href="09-environment-stack.html">Environment stack</a>.</p>
+<p><code>FoliageInstancedMeshComponent</code> / <code>GrassFieldComponent</code> feed <code>FoliageSceneCollector</code> → <code>params.foliageBatches</code> (cap <code>MaxFoliageInstances</code>). Opaque prop crowds use <code>RigidMeshInstancedBatchComponent</code> on the lit pass instead. See <a href="09-environment-stack.html">Environment stack</a>.</p>
 <h2 id="water-pairing">Water pairing</h2>
 <p><code>WaterBodyComponent</code> draws via <code>waterDraws</code> with receive-only shadows. Large <code>shadowCascadeFar</code> keeps shoreline CSM stable (<code>WaterLakeDemo</code>).</p>
 <h2 id="picking-locomotion">Picking / locomotion</h2>

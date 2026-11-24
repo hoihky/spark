@@ -1143,7 +1143,19 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><code>GrassFieldComponent</code></td>
-<td>Instanced grass cards</td>
+<td>Streamed terrain grass (foliage pass)</td>
+</tr>
+<tr>
+<td><code>FoliageInstancedMeshComponent</code></td>
+<td>Wind meadow grids (foliage pass)</td>
+</tr>
+<tr>
+<td><code>RigidMeshInstancedBatchComponent</code></td>
+<td>Opaque lit prop/crowd instancing</td>
+</tr>
+<tr>
+<td><code>MeshLodComponent</code></td>
+<td>Distance LOD at lit submit</td>
 </tr>
 </tbody>
 </table>
@@ -1319,10 +1331,34 @@ decal-&gt;<span class="hljs-built_in">SetAlbedoTexture</span>(splatTex);
 </code></pre>
 <hr />
 <h2 id="grassfieldcomponent">GrassFieldComponent</h2>
-<p><strong>Header:</strong> <code>spark/ecs/components/rendering/GrassFieldComponent.hpp</code></p>
-<p><strong>When to use:</strong> Instanced grass/foliage cards on terrain (<code>FoliageWindDemo</code>, <code>GrassFieldTerrainDemo</code>).</p>
+<p><strong>Header:</strong> <code>spark/ecs/components/foliage/GrassFieldComponent.hpp</code></p>
+<p><strong>When to use:</strong> Chunk-streamed grass on terrain (<code>GrassFieldTerrainDemo</code> <strong>#28</strong>). Call <code>PrepareForRender</code> before <code>FillLit</code>; set <code>SceneRenderParams::maxGrassInstancesPerFrame</code>.</p>
 <h4 id="c_22">C++</h4>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">field-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GrassFieldComponent&gt;()-&gt;<span class="hljs-built_in">SetPatchRadius</span>(<span class="hljs-number">48.0F</span>);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* field = grass-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GrassFieldComponent&gt;();
+field-&gt;<span class="hljs-built_in">SetTerrainObject</span>(terrain);
+field-&gt;<span class="hljs-built_in">GetScatterSettings</span>().<span class="hljs-built_in">SetDensityPerSquareMeter</span>(<span class="hljs-number">24.0F</span>);
+field-&gt;<span class="hljs-built_in">PrepareForRender</span>(*grass, cameraPos, params.maxGrassInstancesPerFrame);
+</code></pre>
+<hr />
+<h2 id="foliageinstancedmeshcomponent">FoliageInstancedMeshComponent</h2>
+<p><strong>Header:</strong> <code>spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp</code></p>
+<p><strong>When to use:</strong> Flat wind meadows (<code>FoliageWindDemo</code> <strong>#27</strong>). Not interchangeable with <code>RigidMeshInstancedBatchComponent</code> (grass needs foliage wind shader).</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">inst-&gt;<span class="hljs-built_in">SetScatterSkipFraction</span>(<span class="hljs-number">0.02F</span>);
+inst-&gt;<span class="hljs-built_in">ConfigureGridWithinSquare</span>(halfExtent, spacing, edgeMargin);
+</code></pre>
+<hr />
+<h2 id="rigidmeshinstancedbatchcomponent">RigidMeshInstancedBatchComponent</h2>
+<p><strong>Header:</strong> <code>spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp</code></p>
+<p><strong>When to use:</strong> Many identical <strong>opaque</strong> meshes (props, rocks). Requires sibling <code>MeshComponent</code>. Collected via <code>MeshInstancedSceneCollector</code>.</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;({}, SceneMeshSlot::UnitCube, Vector3::One);
+go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;RigidMeshInstancedBatchComponent&gt;()-&gt;<span class="hljs-built_in">ConfigureGrid</span>(<span class="hljs-number">24</span>, <span class="hljs-number">24</span>, <span class="hljs-number">1.0F</span>);
+</code></pre>
+<hr />
+<h2 id="meshlodcomponent">MeshLodComponent</h2>
+<p><strong>Header:</strong> <code>spark/ecs/components/rendering/MeshLodComponent.hpp</code></p>
+<p><strong>When to use:</strong> Swap rigid/skinned mesh assets or cull draws by camera distance during lit submit. Optional <code>paletteUpdateStride</code> per <code>MeshLodLevel</code> throttles skinned palette updates.</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">lod-&gt;<span class="hljs-built_in">GetLevels</span>().<span class="hljs-built_in">PushBack</span>({.minDistance = <span class="hljs-number">0.0F</span>, .rigidMesh = lod0});
+lod-&gt;<span class="hljs-built_in">GetLevels</span>().<span class="hljs-built_in">PushBack</span>({.minDistance = <span class="hljs-number">50.0F</span>, .culled = <span class="hljs-literal">true</span>});
 </code></pre>
 <h4 id="c_23">C#</h4>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">go.AddGrassField();

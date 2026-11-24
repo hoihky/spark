@@ -758,8 +758,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>Deferred destroy</strong></td>
-<td><code>DestroyGameObject</code> defers during <code>UpdateGameObjects</code>; <code>DestroyGameObjectAtEndOfFrame</code></td>
-<td>Same deferral when destroying from physics/AI ticks outside <code>UpdateGameObjects</code></td>
+<td>Single queue: defer during <code>UpdateGameObjects</code>, <code>PhysicsSubsystem::Simulate*</code>, <code>AiSubsystem::RunFrame</code>; <code>DestroyGameObjectAtEndOfFrame</code> enqueues; <code>FlushPendingDestroyGameObjects</code> at slice end</td>
+<td>—</td>
 </tr>
 <tr>
 <td><strong>Component queries</strong></td>
@@ -862,8 +862,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>LOD</strong></td>
-<td>Always full mesh</td>
-<td><code>MeshLodComponent</code> + <code>Scene::ForEachDrawableLod(view, distance)</code></td>
+<td><strong><code>MeshLodComponent</code></strong> + submit LOD resolve; <code>Scene::ForEachDrawableLod</code> / <code>ForEachSkinnedDrawableLod</code> (+ frustum variants)</td>
+<td>Impostor/billboard tiers (FOLIAGE F4), streaming unload</td>
 </tr>
 <tr>
 <td><strong>Light iterators</strong></td>
@@ -992,8 +992,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>Animation LOD</strong></td>
-<td>Skinned draw budget component</td>
-<td>Per-agent palette update rate / LOD for many identical rigs</td>
+<td>Skinned budget + per-LOD <code>paletteUpdateStride</code> on <code>MeshLodComponent</code> (M7-07 partial)</td>
+<td>Hz-based tiers, identical-rig batching</td>
 </tr>
 <tr>
 <td><strong>2D velocity blend</strong></td>
@@ -1103,41 +1103,18 @@ C &lt;kind&gt; &lt;payload&gt;
 <tbody>
 <tr>
 <td><strong>Transparency queue</strong></td>
-<td><code>transparentDraws</code> + <code>SceneTransparentSortMode</code> (material opacity &lt; 1); opaque <code>draws</code></td>
-<td><code>SceneDrawItem::sortKey</code> for fine-grained ordering within queues</td>
-</tr>
-<tr>
-<td><strong>Render layers / queues</strong></td>
-<td><code>shadowFlags</code> only</td>
-<td>Per-draw <code>layerMask</code>, <code>renderQueue</code> (background / opaque / transparent / overlay / UI-only)</td>
-</tr>
-<tr>
-<td><strong>Instancing</strong></td>
-<td>One <code>SceneDrawItem</code> per object; foliage instancing pass (F1)</td>
-<td>General <strong>character/prop</strong> instancing on main opaque path; skinned instancing — see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F1, F4-08</td>
-</tr>
-<tr>
-<td><strong>Velocity trails</strong></td>
-<td>CPU particles</td>
-<td>Entity-attached ribbon/trail module (speed-readable motion) — see <a href="vfx-roadmap.html"><code>VFX_ROADMAP.md</code></a> P6</td>
-</tr>
-<tr>
-<td><strong>LOD selection</strong></td>
-<td>Caller picks mesh</td>
-<td>Submit helper chooses LOD from camera distance — see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F4</td>
-</tr>
-<tr>
-<td><strong>Foliage (grass / trees)</strong></td>
-<td>Per-entity glTF trees only (<code>CharacterCameraDemo</code>)</td>
-<td><code>GrassFieldComponent</code>, <code>TreeInstanceBatch</code>, wind UBO — <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a></td>
-</tr>
-<tr>
-<td><strong>Custom shaders</strong></td>
-<td><code>SceneShadingModel::LitPbr</code> / <code>ToonCel</code></td>
-<td>Material shader graph or <code>userShaderId</code> escape hatch</td>
+<td><code>transparentDraws</code> + <code>SceneTransparentSortMode</code>; <code>renderQueue = Transparent</code> on partitioned draws</td>
+<td>Per-material render queue override API</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Regression tests:</strong> <code>tests/scene/TransparentPassPartitionTest.cpp</code> — opacity / <code>alphaBlend</code> / <code>transmissionFactor</code> partition, sky exclusion, <code>BackToFrontByDepth</code> vs <code>None</code>, and <code>VulkanSceneOpaqueSnapshot::IsRequired</code> (opaque HDR copy before water + transparent).
+| <strong>Render layers / queues</strong> | <code>DrawableSortKey</code> + <code>SceneRenderQueue</code> on <code>SceneDrawItem</code> (meshes, water, skinned); sprites/tilemaps share <code>DrawableSortResolver</code> | Bitmask <code>layerMask</code> for selective passes; dedicated UI-only geometry queue (screen UI stays on <code>ScreenRectDraw</code>) |
+| <strong>Instancing</strong> | One <code>SceneDrawItem</code> per object; <strong>rigid mesh instancing</strong> on main opaque lit pass (<code>RigidMeshInstancedBatchComponent</code>, binding <strong>16</strong>, <code>scene_instanced.vert</code> + <code>scene.frag</code>); foliage pass (F1) | Skinned / GPU-driven MDI crowds; see <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> F4-08 |
+| <strong>Velocity trails</strong> | CPU particles | Entity-attached ribbon/trail module (speed-readable motion) — see <a href="vfx-roadmap.html"><code>VFX_ROADMAP.md</code></a> P6 |
+| <strong>LOD selection</strong> | <strong><code>MeshLodResolveRigidDraw</code> / <code>MeshLodResolveSkinnedDraw</code></strong> in lit submit | Instanced LOD bucketing (F4), GPU select |
+| <strong>Foliage (grass / trees)</strong> | <code>GrassFieldComponent</code>, <code>FoliageInstancedMeshComponent</code>, foliage pass (binding <strong>15</strong>), demos <strong>#27–28</strong> | Per-chunk foliage LOD buckets, tree instancing (F3–F4) — <a href="foliage-roadmap.html"><code>FOLIAGE_ROADMAP.md</code></a> |
+| <strong>Custom shaders</strong> | <code>SceneShadingModel::LitPbr</code> / <code>ToonCel</code> | Material shader graph or <code>userShaderId</code> escape hatch |</p>
 <h3 id="32-scenerenderparams-limits">3.2 <code>SceneRenderParams</code> limits</h3>
 <table>
 <thead>
@@ -1185,8 +1162,28 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><code>MaxSprites</code></td>
-<td>Fixed cap on <code>sprites</code> array</td>
-<td>Documented limit; no spill or batch API</td>
+<td><code>8192</code> via <code>Scene2DRuntimeLimits</code></td>
+<td>Hard cap; spill = drop + one <code>stderr</code> line per process (<code>Scene2DSubmitCaps</code>); batching API TBD (§3.6)</td>
+</tr>
+<tr>
+<td><code>MaxTilemapTiles</code></td>
+<td><code>65536</code> culled instances / frame</td>
+<td>Same spill path; split maps or chunk streaming before scaling past cap</td>
+</tr>
+<tr>
+<td><code>MaxFoliageInstances</code></td>
+<td><code>32768</code> (foliage SSBO)</td>
+<td>No per-blade LOD in foliage pass; use distance fade + chunk budgets</td>
+</tr>
+<tr>
+<td><code>MaxRigidMeshInstances</code></td>
+<td><code>4096</code> (opaque lit instancing SSBO)</td>
+<td>No skinned/GPU-indirect crowds (F4-08)</td>
+</tr>
+<tr>
+<td><code>maxGrassInstancesPerFrame</code></td>
+<td>default <strong>2400</strong>; demos raise via <code>SceneRenderParams</code></td>
+<td>Global trim applies to <code>GrassFieldComponent</code> batches only</td>
 </tr>
 <tr>
 <td>Skinning</td>
@@ -1333,6 +1330,69 @@ C &lt;kind&gt; &lt;payload&gt;
 </tbody>
 </table>
 <h3 id="36-2d-ui-render-api-runtime">3.6 2D / UI render API (runtime)</h3>
+<p><strong>Authoritative caps:</strong> <code>Scene2DRuntimeLimits</code> (mirrored on <code>SceneRenderParams</code>). Product submit paths must use <code>Scene2DSubmitCaps</code> (<code>HasSpriteCapacity</code>, <code>Notify*CapacityReached</code>) — not raw array sizes.</p>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th style="text-align: right;">Cap</th>
+<th>Spill strategy (today)</th>
+<th>Before you exceed the cap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sprites</strong></td>
+<td style="text-align: right;">8192</td>
+<td>Drop additional quads for the frame; log once per process</td>
+<td>Frustum cull (<code>SceneSpriteTileCull</code>), Y-sort only visible actors; move static art to <strong>tilemaps</strong>; pool UI quads; avoid 1 GO per grass blade</td>
+</tr>
+<tr>
+<td><strong>Tilemap layer draws</strong></td>
+<td style="text-align: right;">64</td>
+<td>Stop submitting further layer entries; log once</td>
+<td>Split TMX into multiple roots (foreground / background); composite views for minimap</td>
+</tr>
+<tr>
+<td><strong>Tile instances</strong></td>
+<td style="text-align: right;">65536</td>
+<td>Stop appending culled tiles; log once</td>
+<td>Camera culling (default), smaller maps, <strong>chunked maps</strong> (editor roadmap), lower layer count</td>
+</tr>
+<tr>
+<td><strong>Particles</strong></td>
+<td style="text-align: right;">8192</td>
+<td>Drop instances; log once</td>
+<td>Lower <code>ParticleEmitterComponent::SetMaxParticles</code>, VFX pools, sprite-layer particles share sprite cap</td>
+</tr>
+<tr>
+<td><strong>Scene texture layers</strong></td>
+<td style="text-align: right;">16</td>
+<td><code>findTexture</code> fails → <code>textureLayer = -1</code> (magenta skip)</td>
+<td>Atlases, material libraries, fewer unique textures per frame</td>
+</tr>
+<tr>
+<td><strong>UI textures</strong></td>
+<td style="text-align: right;">16</td>
+<td><code>AcquireUiTextureLayer</code> returns <code>-1</code></td>
+<td>Atlas UI sprites</td>
+</tr>
+<tr>
+<td><strong>Composite views</strong></td>
+<td style="text-align: right;">4</td>
+<td>Skip extra <code>Scene2DCompositeViewDesc</code></td>
+<td>Minimap + fog only; no duplicate captures</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Planned (not implemented):</strong> instancing / batching APIs to raise effective throughput without raising GPU SSBO size (<code>kMaxQuadInstancesGpu = MaxSprites + MaxTilemapTiles</code> in <code>VulkanSpriteInstanceGpu.hpp</code>). Order of work:</p>
+<ol>
+<li><strong>P1 — <code>SpriteDrawableBatch</code> / merged static quads</strong> — one <code>SceneSpriteDraw</code> with instance buffer for props sharing material + atlas (keeps sort key).</li>
+<li><strong>P1 — Tile chunk components</strong> — multiple <code>TilemapComponent</code> roots with spatial unload (see tilemap editor roadmap Phase D).</li>
+<li><strong>P2 — GPU multi-draw indirect</strong> for identical tile layers (same atlas + blend).</li>
+<li><strong>P2 — <code>SubmitSpritesBatched</code> public helper</strong> — gameplay pushes N instances without N ECS sprites.</li>
+</ol>
+<p>Until P1 exists, treat <strong>8192 sprites</strong> and <strong>65536 tile instances</strong> as hard per-frame ceilings in shipping content.</p>
 <table>
 <thead>
 <tr>
@@ -1344,8 +1404,8 @@ C &lt;kind&gt; &lt;payload&gt;
 <tbody>
 <tr>
 <td><strong>Sprite batching</strong></td>
-<td>Per-sprite <code>SceneSpriteDraw</code></td>
-<td><code>SubmitSpritesBatched</code> from <code>SpriteComponent</code> tiles</td>
+<td>Per-sprite <code>SceneSpriteDraw</code> + spill via <code>Scene2DSubmitCaps</code></td>
+<td><code>SubmitSpritesBatched</code> / <code>SpriteDrawableBatch</code> (see spill table)</td>
 </tr>
 <tr>
 <td><strong>GUI paint order</strong></td>
@@ -1354,11 +1414,12 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>World-space UI</strong></td>
-<td>Screen-space <code>UiCanvasComponent</code> only</td>
-<td>World-space canvas or billboard UI component</td>
+<td>Screen-space <code>UiCanvasComponent</code>, <code>TextOverlayComponent</code>, and <code>screen*Texts</code> layers only</td>
+<td>Retained world-space canvas / billboard layout component</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Floating combat text (action games):</strong> use <strong><code>FloatingCombatTextPresenter</code></strong> + <code>TryWorldToScreenPixels</code> → <code>screenOverlayTexts</code> (screen-projected, tracks camera), or pooled <strong><code>SpriteComponent</code></strong> digit quads for atlas-native motion. Do <strong>not</strong> use <code>UiCanvas</code> for per-hit popups. Guide: <a href="programming-guide/8-2d-game/05-camera-hud.md#floating-damage-numbers-world-space"><code>05-camera-hud.md</code></a>.</p>
 <hr />
 <h2 id="4-cross-cutting-api-design-gaps">4. Cross-cutting API design gaps</h2>
 <table>
@@ -1438,8 +1499,8 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>6</strong></td>
-<td>Instancing fields on submit path</td>
-<td>Crowds, props</td>
+<td>~~Instancing fields on submit path~~ (rigid opaque <strong>partial</strong>); foliage F1 done</td>
+<td>Skinned/GPU-driven crowds, foliage LOD buckets</td>
 </tr>
 <tr>
 <td><strong>7</strong></td>

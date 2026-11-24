@@ -496,7 +496,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
       <article class="doc-body">
         <h1 id="foliage-engine-roadmap-tracked-tasks">Foliage — Engine Roadmap &amp; Tracked Tasks</h1>
 <p>Living plan for <strong>grass fields</strong>, <strong>wind-reactive tree foliage</strong>, <strong>GPU instancing</strong>, and <strong>LOD/impostors</strong> at open-world scale without melting the forward renderer. Complements <a href="open-world-action-roadmap.html"><code>OPEN_WORLD_ACTION_ROADMAP.md</code></a> Phase C (LOD/visibility) and Phase D (weather/wind), and shares a global <strong>wind field</strong> with <a href="water-roadmap.html"><code>WATER_ROADMAP.md</code></a>.</p>
-<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.7 (terrain/sky), <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a> (instancing gap), <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>, <code>include/spark/engine/SceneRenderParams.hpp</code>, <code>src/spark/scene/submit/</code> (<code>LitSceneSubmitter</code>, foliage collect), <code>src/spark/scene/submit/SceneSpatialCull.cpp</code>, <code>src/spark/render/sprites2d/VulkanTilemapPass.cpp</code> (2D instancing reference), <code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code>, <code>shaders/scene.vert</code>, <code>shaders/scene.frag</code>.</p>
+<p><strong>Architecture anchors:</strong> <a href="architecture-and-developer-guide.html"><code>ARCHITECTURE_AND_DEVELOPER_GUIDE.md</code></a> §5.7 (terrain/foliage), <a href="scene-and-rendering-gaps.html"><code>SCENE_AND_RENDERING_GAPS.md</code></a> (lod/instancing status), <a href="lighting-and-shadows.html"><code>LIGHTING_AND_SHADOWS.md</code></a>, <code>include/spark/engine/SceneRenderParams.hpp</code>, <code>src/spark/scene/submit/</code> (<code>LitSceneSubmitter</code>, <code>FoliageSceneCollector</code>, <code>MeshInstancedSceneCollector</code>), <code>src/spark/render/foliage/VulkanFoliageInstancedPass.cpp</code> (binding <strong>15</strong>), <code>src/spark/render/scene/VulkanSceneOpaquePass.cpp</code> + <code>shaders/scene_instanced.vert</code> (rigid crowds/props, binding <strong>16</strong>), <code>src/spark/scene/lod/MeshLodSubmit.cpp</code>.</p>
 <p><strong>Related content:</strong> Khronos sample trees <code>assets/models/Tree_1_C_Color1.gltf</code>, <code>Tree_3_A_Color1.gltf</code> (placed per-entity in <code>CharacterCameraDemo</code> today); <code>TerrainComponent</code> for height/slope masks; <code>BillboardComponent</code> for impostor direction.</p>
 <p><strong>Non-goals (defer):</strong> per-blade rigid-body physics, skeletal animation on leaves, Nanite-style virtualized geometry, full procedural tree generation in-engine.</p>
 <hr />
@@ -578,11 +578,15 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Grass meadow (prototype)</strong></td>
-<td><strong>Done</strong> — <code>FoliageWindDemo</code> flat grid (<code>FoliageInstancedMeshComponent</code>)</td>
+<td><strong>Done</strong> — <code>FoliageWindDemo</code> dense near+far grids (<code>FoliageInstancedMeshComponent</code>, <code>SetScatterSkipFraction</code>)</td>
 </tr>
 <tr>
 <td><strong>Grass field on terrain (F2)</strong></td>
 <td><strong>Mostly done</strong> — <code>GrassFieldComponent</code>, chunk streaming, <code>GrassFieldTerrainDemo</code> (#28, <strong>H</strong>)</td>
+</tr>
+<tr>
+<td><strong>Rigid prop instancing (opaque lit)</strong></td>
+<td><strong>Done</strong> — <code>RigidMeshInstancedBatchComponent</code> + <code>MeshLodComponent</code> (wind demo pebbles; not grass)</td>
 </tr>
 <tr>
 <td><strong>Tree instancing + LOD</strong></td>
@@ -593,8 +597,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><strong>Done</strong> — <code>sparkWindBendLocalPosition</code> in <code>foliage.vert</code></td>
 </tr>
 <tr>
-<td><strong>Mesh LOD metadata in submit</strong></td>
-<td><strong>Not started</strong> — gap in <code>SCENE_AND_RENDERING_GAPS.md</code></td>
+<td><strong>Mesh LOD at lit submit</strong></td>
+<td><strong>Partial</strong> — <code>MeshLodComponent</code> + <code>MeshLodSubmit</code> (foliage batches still single LOD)</td>
 </tr>
 <tr>
 <td><strong>Impostor / baked tree cards</strong></td>
@@ -1452,7 +1456,23 @@ done
 </tr>
 <tr>
 <td><code>docs/SCENE_AND_RENDERING_GAPS.md</code></td>
-<td>Instancing + LOD gaps</td>
+<td>Instancing + LOD status</td>
+</tr>
+<tr>
+<td><code>src/spark/scene/submit/MeshInstancedSceneCollector.cpp</code></td>
+<td>Opaque rigid instancing collect</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/rendering/MeshLodComponent.hpp</code></td>
+<td>Distance LOD metadata</td>
+</tr>
+<tr>
+<td><code>include/spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp</code></td>
+<td>Opaque lit instancing</td>
+</tr>
+<tr>
+<td><code>shaders/scene_instanced.vert</code></td>
+<td>Per-instance model matrix (SSBO 16)</td>
 </tr>
 <tr>
 <td><code>docs/programming-guide/3-3d-graphics/06-terrain-and-sky.md</code></td>
@@ -1461,8 +1481,30 @@ done
 </tbody>
 </table>
 <hr />
-<p><em>Last updated: 2026-10-03 — F0/F1 complete; F2 grass fields on terrain (<code>GrassFieldComponent</code>, <code>GrassFieldTerrainDemo</code>), distance fade, frame budget, perf-oriented streaming merge. Remaining F2: F2-04 density mask (P1).</em></p>
-<p><strong>F2 demo baseline (playtest):</strong> <code>DefaultMaxGrassInstancesPerFrame</code> = <strong>2400</strong>, view <strong>38 m</strong>, density <strong>5/m²</strong>, chunk cache <strong>720</strong> — see <code>GrassFieldTerrainDemo.cpp</code>.</p>
+<p><em>Last updated: 2026-11-24 — F0/F1 complete; F2 grass on terrain; </em><em>32768</em><em> foliage instance SSBO cap; dense demo tuning; opaque rigid instancing + mesh LOD on lit path (see <code>SCENE_AND_RENDERING_GAPS.md</code>). Remaining F2: F2-04 density mask (P1).</em></p>
+<p><strong>Demo baselines (see source constants in <code>GrassFieldTerrainDemo.cpp</code> / <code>FoliageWindDemo.cpp</code>):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Demo</th>
+<th>Grass density / spacing</th>
+<th>Budget / cap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Grass field terrain (#28)</strong></td>
+<td><strong>24/m²</strong>, 2 samples/cell, <strong>52 m</strong> view, 14 m chunks</td>
+<td><strong>14 000</strong> instances/frame (<code>maxGrassInstancesPerFrame</code>); chunk cache <strong>2600</strong></td>
+</tr>
+<tr>
+<td><strong>Foliage wind (#27)</strong></td>
+<td>Near <strong>0.185 m</strong> grid on 16 m patch; far <strong>0.88 m</strong> on 23 m ring; <strong>2%</strong> scatter skip</td>
+<td>Foliage SSBO <strong>32 768</strong> instances (<code>MaxFoliageInstances</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>API:</strong> <code>FoliageInstancedMeshComponent::SetScatterSkipFraction</code> — lower values fill the grid denser (0 = solid).</p>
       </article>
     </main>
 

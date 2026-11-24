@@ -84,8 +84,8 @@ Each phase **unlocks** the next. Within a phase: **P0** (must) → **P1** → **
 
 | ID | Feature | Priority | Notes |
 |----|---------|----------|--------|
-| C1 | **Mesh LOD** — metadata + distance selection in `Scene` or submit path | P0 | |
-| C2 | **LOD hysteresis** — reduce popping | P1 | |
+| C1 | **Mesh LOD** — metadata + distance selection in `Scene` or submit path | P0 | **Partial** — `MeshLodComponent`, `MeshLodSubmit`, `Scene::ForEachDrawableLod*` |
+| C2 | **LOD hysteresis** — reduce popping | P1 | **Partial** — `MeshLodSelector` + component `activeLodIndex` |
 | C3 | **Impostors / billboards / simplified clusters** for distant architecture | P1 | |
 | C4 | **Frustum + sector culling** — aggressive defaults | P0 | Leverage existing `Scene` spatial options |
 | C5 | **GPU occlusion / PVS** | P2 | Only if profiling proves need |

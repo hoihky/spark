@@ -1294,10 +1294,14 @@ world.ForEachWithComponents&lt;MeshComponent, MaterialComponent&gt;(go =&gt; { }
 <p>Payload tables: <a href="07-game-component-reference.html#signals-sparkecssignalhpp">Game Component Reference — Signals</a>.</p>
 <h2 id="scene-query-layer"><code>Scene</code> query layer</h2>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachDrawable</span><span class="hljs-params">(<span class="hljs-type">const</span> DrawableFn&amp; fn)</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachDrawableLod</span><span class="hljs-params">(Vector3 cameraPos, <span class="hljs-type">const</span> LodDrawableFn&amp; fn)</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachDrawableLodInViewFrustum</span><span class="hljs-params">(Matrix4 viewProj, Vector3 cameraPos, <span class="hljs-type">const</span> LodDrawableFn&amp; fn)</span></span>;
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachSkinnedDrawable</span><span class="hljs-params">(<span class="hljs-type">const</span> SkinnedFn&amp; fn)</span></span>;
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachSkinnedDrawableLod</span><span class="hljs-params">(Vector3 cameraPos, <span class="hljs-type">const</span> LodSkinnedFn&amp; fn)</span></span>;
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachSprite</span><span class="hljs-params">(<span class="hljs-type">const</span> SpriteFn&amp; fn)</span></span>;
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetSpatialPartitionKind</span><span class="hljs-params">(ScenePartitionKind kind)</span></span>;
 </code></pre>
+<p>LOD callbacks receive a <code>MeshLodResolvedDraw</code> (selected mesh, distance, <code>paletteUpdateStride</code>) when <code>MeshLodComponent</code> is present.</p>
 <p>Use for editor tooling, culling experiments, or custom render paths — production games usually call <code>world.Rendering().FillLit</code> directly on <code>GameWorld</code>.</p>
 <h2 id="concept-full-render-hand-off">Concept: full render hand-off</h2>
 <h3 id="c_8">C++</h3>

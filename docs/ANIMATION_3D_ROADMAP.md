@@ -190,7 +190,7 @@ Add loop mode to AnimatorComponent and stop unconditional fmod looping in Skelet
 | AN3D-M7-04 | **Joint lookup by name** — stable across glTF assets on `Skeleton` | P1 | [ ] |
 | AN3D-M7-05 | **Root motion arbitration API** — motor vs clip ownership flags documented + enforced in `Character3DBody` path | P1 | [ ] |
 | AN3D-M7-06 | **Reach IK extension** — two-hand / carry target hooks on IK service | P2 | [ ] |
-| AN3D-M7-07 | **Animation LOD** — reduce palette update rate by distance / budget tier (`MeshLodLevel::paletteUpdateStride` at submit) | P1 | [~] |
+| AN3D-M7-07 | **Animation LOD** — reduce palette update rate by distance / budget tier (`MeshLodLevel::paletteUpdateStride` → `SkinnedPaletteResolver` off-stride cache/bind pose) | P1 | [~] |
 | AN3D-M7-08 | **2D sprite velocity blend** — `SpriteAnimator` mix by `velocity` vector (top-down / side) | P1 | [ ] |
 | AN3D-M7-09 | **Retargeting spike** — feasibility doc or minimal bone-map prototype (extends M5-11) | P2 | [ ] |
 

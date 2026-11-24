@@ -14,7 +14,7 @@ One page **oriented at 3D action / FPS / open slices** — mirror of [2D compone
 | Animation | [#animator](#animator) · [#character3danimfsm](#character3danimfsm) · [#rootmotion](#rootmotion) |
 | Camera / character | [#charactercontroller3d](#charactercontroller3d) · [#camerafollow3d](#camerafollow3d) · [#springarm3d](#springarm3d) · [#character3dbody](#character3dbody) |
 | Physics 3D | [#boxcollider3d](#boxcollider3d) · [#rigidbody3d](#rigidbody3d) · [#triggervolume3d](#triggervolume3d) · [#physicslayer3d](#physicslayer3d) |
-| World / env | [#terrain](#terrain) · [#waterbody](#waterbody) · [#timeofdaydriver](#timeofdaydriver) · [#fogvolume](#fogvolume) |
+| World / env | [#terrain](#terrain) · [#grassfield](#grassfield) · [#meshlod](#meshlod) · [#rigidmeshinstancedbatch](#rigidmeshinstancedbatch) |
 | glTF | [#gltfscenesource](#gltfscenesource) |
 | AI 3D | [#navmeshagent](#navmeshagent) · [#perceptionsensor](#perceptionsensor) |
 
@@ -55,7 +55,9 @@ One page **oriented at 3D action / FPS / open slices** — mirror of [2D compone
 | `FootIk` / `AimIk` | IK at submit | Grounding, aim |
 | `FogVolume` / `PostProcessVolume` | regional render | Mood, caves |
 | `TimeOfDayDriver` | sun cycle | **#17** |
-| `FoliageInstancedMesh` / `GrassField` | foliage | **#27–28** |
+| `FoliageInstancedMesh` / `GrassField` | foliage pass (wind grass) | **#27–28** |
+| `RigidMeshInstancedBatch` | opaque lit crowds/props (not foliage) | **#27** pebble demo |
+| `MeshLod` | distance mesh/skeleton LOD at submit | paired with mesh or skinned stacks |
 | `GltfSceneSource` / `GltfInstanceNode` | imported scenes | **#21** |
 | `NavMeshAgent` / `PerceptionSensor` | guards | **#8** |
 | `SpawnPoint` | spawn metadata | Scene markers |
@@ -290,7 +292,16 @@ sensor->SetSightFovDegrees(120.0F);
 | **Kind** | `ComponentKind::FoliageInstancedMesh` |
 | **Header** | `spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp` |
 
-Wind-driven instances — demo **#27**.
+Wind-driven **foliage pass** instances (binding 15) — not the opaque `RigidMeshInstancedBatch` path.
+
+```cpp
+auto* grass = meadow->AddComponent<FoliageInstancedMeshComponent>();
+grass->SetBladeMesh(bladeMesh);
+grass->SetScatterSkipFraction(0.02F);  // 0 = solid grid; default 0.08
+grass->ConfigureGridWithinSquare(halfExtentMeters, spacingMeters, edgeMargin);
+```
+
+Demo **#27** (`FoliageWindDemo`): dense near + sparse far rings under `MaxFoliageInstances` (32768).
 
 ### `GrassFieldComponent` {#grassfield}
 
@@ -299,8 +310,40 @@ Wind-driven instances — demo **#27**.
 
 ```cpp
 field->SetTerrainObject(terrainGo);
-field->GetBounds().SetHalfExtentsMeters(40.0F, 40.0F);
+field->SetViewTargetObject(cameraRig);  // or SetStreamingViewWorld each frame
+field->GetScatterSettings().SetDensityPerSquareMeter(24.0F);
+field->GetScatterSettings().SetSamplesPerCell(2);
+// Before FillLit: field->PrepareForRender(*grassRoot, cameraPos, params.maxGrassInstancesPerFrame);
 ```
+
+Demo **#28**: see constants in `GrassFieldTerrainDemo.cpp` (14k frame budget in demo).
+
+### `RigidMeshInstancedBatchComponent` {#rigidmeshinstancedbatch}
+
+| **Kind** | `ComponentKind::RigidMeshInstancedBatch` |
+| **Header** | `spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp` |
+
+Same object needs `MeshComponent` (+ optional `MaterialComponent`). Collected on the **opaque lit** pass (`scene_instanced.vert`, SSBO binding **16**).
+
+```cpp
+go->AddComponent<MeshComponent>(nullptr, SceneMeshSlot::UnitCube, Vector3::One);
+auto* batch = go->AddComponent<RigidMeshInstancedBatchComponent>();
+batch->ConfigureGrid(32, 32, 1.0F);
+```
+
+### `MeshLodComponent` {#meshlod}
+
+| **Kind** | `ComponentKind::MeshLod` |
+| **Header** | `spark/ecs/components/rendering/MeshLodComponent.hpp` |
+
+```cpp
+auto* lod = go->AddComponent<MeshLodComponent>();
+lod->SetHorizontalDistance(true);  // XZ distance for open worlds
+lod->GetLevels().PushBack({.minDistance = 0.0F, .meshSlot = SceneMeshSlot::UnitCube});
+lod->GetLevels().PushBack({.minDistance = 40.0F, .culled = true});
+```
+
+Submit calls `MeshLodResolveRigidDraw` / `MeshLodResolveSkinnedDraw`. Skinned tiers may set `paletteUpdateStride` on `MeshLodLevel` (animation LOD, M7-07). Query: `Scene::ForEachDrawableLod`, `ForEachSkinnedDrawableLod` (+ frustum variants).
 
 ### `ParticleEmitterComponent` / `VfxPlayerComponent` {#vfx}
 

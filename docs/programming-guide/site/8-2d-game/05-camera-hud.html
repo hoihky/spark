@@ -1226,6 +1226,79 @@ world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in"
 bounds-&gt;<span class="hljs-built_in">SetWorldMin</span>({minX, minY});
 bounds-&gt;<span class="hljs-built_in">SetWorldMax</span>({maxX, maxY});
 </code></pre>
+<h2 id="floating-damage-numbers-world-space">Floating damage numbers (world-space)</h2>
+<p>Spark does <strong>not</strong> ship a <code>WorldSpaceUiCanvas</code>. Choose between <strong>screen-projected text</strong> (recommended for readable numbers) and <strong>world sprites</strong> (stylistic digit atlases).</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>When to use</th>
+<th>Pipeline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Screen-projected text</strong></td>
+<td>Damage/heal numbers, crit text, pickup “+10”</td>
+<td><code>FloatingCombatTextPresenter</code> → <code>SceneRenderParams::screenOverlayTexts</code> via <code>TryWorldToScreenPixels</code></td>
+</tr>
+<tr>
+<td><strong>World sprites</strong></td>
+<td>Pixel fonts baked into atlas, heavy motion blur, strict depth sort with actors</td>
+<td>Pooled <code>SpriteComponent</code> quads at hit <code>Transform</code>; animate in world XY; counts toward sprite cap</td>
+</tr>
+<tr>
+<td><strong>UiCanvas / <code>TextOverlay</code></strong></td>
+<td>HUD bars, menus, static labels</td>
+<td><strong>Not</strong> for per-hit world popups — both are <strong>screen-pixel</strong> retained or fixed coordinates</td>
+</tr>
+</tbody>
+</table>
+<h3 id="screen-projected-path-c">Screen-projected path (C++)</h3>
+<p>Call <strong>after</strong> <code>FillLit</code> (which clears UI draw lists) and <strong>before</strong> present:</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/gameplay/FloatingCombatTextPresenter.hpp&quot;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/gameplay/GameplayDamageEvent.hpp&quot;</span></span>
+
+FloatingCombatTextPresenter floatingText{};
+
+<span class="hljs-comment">// On damage signal (use victim world position + optional hit offset):</span>
+<span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnHit</span><span class="hljs-params">(<span class="hljs-type">const</span> Vector3&amp; worldAt, <span class="hljs-type">float</span> applied)</span> </span>{
+    floatingText.<span class="hljs-built_in">SpawnDamage</span>(worldAt, applied);
+}
+
+<span class="hljs-comment">// Each frame:</span>
+floatingText.<span class="hljs-built_in">Advance</span>(timing.deltaTimeSeconds);
+world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">FillLit</span>(world, ctx, viewProj, ...);
+floatingText.<span class="hljs-built_in">AppendDraws</span>(params, <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">float</span>&gt;(fbW), <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">float</span>&gt;(fbH));
+</code></pre>
+<p><code>AppendDraws</code> uses the same <code>params.viewProjection</code> as the frame’s world draw. Numbers rise in <strong>world +Y</strong>, then project each frame so they track a moving camera.</p>
+<p>Lower-level projection without the presenter:</p>
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/scene/camera/WorldSpaceScreenProject.hpp&quot;</span></span>
+
+<span class="hljs-type">float</span> sx = <span class="hljs-number">0.0F</span>;
+<span class="hljs-type">float</span> sy = <span class="hljs-number">0.0F</span>;
+<span class="hljs-keyword">if</span> (<span class="hljs-built_in">TryWorldToScreenPixels</span>(params.viewProjection, hitWorld, fbW, fbH, sx, sy)) {
+    ScreenTextDraw d{};
+    d.x = sx;
+    d.y = sy;
+  <span class="hljs-comment">// ...</span>
+    d.paintOrder = params.<span class="hljs-built_in">NextUiPaintOrder</span>();
+    params.screenOverlayTexts.<span class="hljs-built_in">PushBack</span>(<span class="hljs-built_in">MoveTemp</span>(d));
+}
+</code></pre>
+<p><code>Camera2D::TryWorldXYToScreen</code> is the 2D convenience wrapper around the same math.</p>
+<h3 id="sprite-path-outline">Sprite path (outline)</h3>
+<ol>
+<li>Pool inactive <code>GameObject</code>s with <code>SpriteComponent</code> + digit strip UVs (or one glyph per spawn).</li>
+<li>On <code>SignalId::DamageApplied</code>, activate at <code>target-&gt;GetWorldMatrix().translation</code> (or hurtbox center).</li>
+<li>Tween world position / tint / scale in <code>OnUpdate</code>; deactivate when TTL expires.</li>
+<li>Set <code>sortOrder</code> above terrain, below foreground; respect <code>Scene2DSubmitCaps</code> sprite budget.</li>
+</ol>
+<h3 id="what-is-not-supported-yet">What is not supported yet</h3>
+<ul>
+<li>Retained <strong>world-space</strong> UI layout (billboard panels, nameplates with layout boxes) — gap tracked in <code>SCENE_AND_RENDERING_GAPS.md</code>.</li>
+<li>Automatic wiring from <code>GameplayDamageEvent</code> — spawn popups in your combat listener or a small game system.</li>
+</ul>
 <h2 id="hud-components">HUD components</h2>
 <table>
 <thead>
@@ -1246,6 +1319,10 @@ bounds-&gt;<span class="hljs-built_in">SetWorldMax</span>({maxX, maxY});
 <tr>
 <td><code>Scene2DCompositeViewComponent</code></td>
 <td>Minimap texture in HUD layer</td>
+</tr>
+<tr>
+<td><code>FloatingCombatTextPresenter</code></td>
+<td>Ephemeral world-anchored combat numbers (screen-projected)</td>
 </tr>
 </tbody>
 </table>

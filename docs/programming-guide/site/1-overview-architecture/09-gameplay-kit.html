@@ -1198,6 +1198,27 @@ enemy.add_gameplay_team().set_team_id(<span class="hljs-number">2</span>)
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Handle SignalId.DAMAGE_APPLIED in on_signal when payload exposes damage struct.</span>
 </code></pre>
 <p><strong>Game-specific layers</strong> (armor, crit, hitstop) build on <code>GameplayDamageDeal</code> or component multipliers.</p>
+<h3 id="floating-damage-numbers">Floating damage numbers</h3>
+<p>World-space popups are <strong>not</strong> a <code>UiCanvas</code> feature. Recommended path:</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Screen-projected text</td>
+<td><code>FloatingCombatTextPresenter</code> (<code>SpawnDamage</code>, <code>Advance</code>, <code>AppendDraws</code>)</td>
+</tr>
+<tr>
+<td>World sprites</td>
+<td>Pooled <code>SpriteComponent</code> + your digit atlas</td>
+</tr>
+</tbody>
+</table>
+<p>Listen on <code>GameplayDamageEvent</code>, spawn at the victim transform (or hit point), then append draws after <code>FillLit</code>. See <a href="../8-2d-game/05-camera-hud.html#floating-damage-numbers-world-space">Camera and HUD — floating damage</a>.</p>
 <hr />
 <h2 id="interaction">Interaction</h2>
 <table>

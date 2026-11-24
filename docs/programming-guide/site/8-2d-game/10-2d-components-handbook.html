@@ -2033,7 +2033,7 @@ melee-&gt;<span class="hljs-built_in">SetEndEventName</span>(<span class="hljs-s
 <h3 id="skinnedanimationbudgetcomponent-skinnedanimationbudget"><code>SkinnedAnimationBudgetComponent</code> {#skinnedanimationbudget}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::SkinnedAnimationBudget</code> |
 | <strong>Header</strong> | <code>spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp</code> |
-| <strong>2D</strong> | 3D-only — LOD / budget for skinned characters |</p>
+| <strong>2D</strong> | 3D-only — <code>MeshLodComponent</code> + <code>SkinnedAnimationBudgetComponent</code> |</p>
 <h3 id="camerafollow3dcomponent-camerafollow3d"><code>CameraFollow3DComponent</code> {#camerafollow3d}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::CameraFollow3D</code> |
 | <strong>Header</strong> | <code>spark/ecs/components/camera/CameraFollow3DComponent.hpp</code> |
@@ -2079,8 +2079,7 @@ chest-&gt;<span class="hljs-built_in">SetOnInteract</span>([](GameObject&amp; pl
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* pickup = gem-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PickupComponent&gt;();
 pickup-&gt;<span class="hljs-built_in">SetItemId</span>(<span class="hljs-string">&quot;gem&quot;</span>);
 pickup-&gt;<span class="hljs-built_in">SetAutoCollectOnTriggerEnter</span>(<span class="hljs-literal">true</span>);
-<span class="hljs-comment">// After Simulate2D:</span>
-PickupComponent::<span class="hljs-built_in">ProcessDeferredDestroys</span>(world);
+<span class="hljs-comment">// `PhysicsSubsystem::Simulate2D` flushes pending destroys (collect uses `DestroyGameObjectAtEndOfFrame`).</span>
 </code></pre>
 <h3 id="animationhitbox2dcomponent-animationhitbox2d"><code>AnimationHitbox2DComponent</code> {#animationhitbox2d}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::AnimationHitbox2D</code> |
@@ -2106,7 +2105,7 @@ enemy-&gt;<span class="hljs-built_in">AddComponent</span>&lt;HealthComponent&gt;
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* shot = bulletGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;Projectile2DComponent&gt;();
 shot-&gt;<span class="hljs-built_in">SetDamage</span>(<span class="hljs-number">1.0F</span>);
 shot-&gt;<span class="hljs-built_in">Activate</span>({ox, oy}, {vx, vy}, owner);
-Projectile2DComponent::<span class="hljs-built_in">ProcessDeferredDestroys</span>(world);
+<span class="hljs-comment">// One-shot projectiles with `SetDestroyOwnerOnDeactivate(true)` enqueue destroy; flushed at end of Simulate2D.</span>
 </code></pre>
 <h3 id="damagezone2dcomponent-damagezone2d"><code>DamageZone2DComponent</code> {#damagezone2d}</h3>
 <p>| <strong>Kind</strong> | <code>ComponentKind::DamageZone2D</code> |

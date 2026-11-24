@@ -17,7 +17,10 @@ Components that populate `SceneRenderParams::draws`, `transparentDraws`, `waterD
 | `DecalProjectorComponent` | Projected decals |
 | `FogVolumeComponent` | Local fog |
 | `PostProcessVolumeComponent` | Exposure / grade |
-| `GrassFieldComponent` | Instanced grass cards |
+| `GrassFieldComponent` | Streamed terrain grass (foliage pass) |
+| `FoliageInstancedMeshComponent` | Wind meadow grids (foliage pass) |
+| `RigidMeshInstancedBatchComponent` | Opaque lit prop/crowd instancing |
+| `MeshLodComponent` | Distance LOD at lit submit |
 
 ---
 
@@ -335,14 +338,56 @@ volume.get_or_add_default_component(ComponentKind.PostProcessVolume)
 
 ## GrassFieldComponent
 
-**Header:** `spark/ecs/components/rendering/GrassFieldComponent.hpp`
+**Header:** `spark/ecs/components/foliage/GrassFieldComponent.hpp`
 
-**When to use:** Instanced grass/foliage cards on terrain (`FoliageWindDemo`, `GrassFieldTerrainDemo`).
+**When to use:** Chunk-streamed grass on terrain (`GrassFieldTerrainDemo` **#28**). Call `PrepareForRender` before `FillLit`; set `SceneRenderParams::maxGrassInstancesPerFrame`.
 
 #### C++
 
 ```cpp
-field->AddComponent<GrassFieldComponent>()->SetPatchRadius(48.0F);
+auto* field = grass->AddComponent<GrassFieldComponent>();
+field->SetTerrainObject(terrain);
+field->GetScatterSettings().SetDensityPerSquareMeter(24.0F);
+field->PrepareForRender(*grass, cameraPos, params.maxGrassInstancesPerFrame);
+```
+
+---
+
+## FoliageInstancedMeshComponent
+
+**Header:** `spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp`
+
+**When to use:** Flat wind meadows (`FoliageWindDemo` **#27**). Not interchangeable with `RigidMeshInstancedBatchComponent` (grass needs foliage wind shader).
+
+```cpp
+inst->SetScatterSkipFraction(0.02F);
+inst->ConfigureGridWithinSquare(halfExtent, spacing, edgeMargin);
+```
+
+---
+
+## RigidMeshInstancedBatchComponent
+
+**Header:** `spark/ecs/components/rendering/RigidMeshInstancedBatchComponent.hpp`
+
+**When to use:** Many identical **opaque** meshes (props, rocks). Requires sibling `MeshComponent`. Collected via `MeshInstancedSceneCollector`.
+
+```cpp
+go->AddComponent<MeshComponent>({}, SceneMeshSlot::UnitCube, Vector3::One);
+go->AddComponent<RigidMeshInstancedBatchComponent>()->ConfigureGrid(24, 24, 1.0F);
+```
+
+---
+
+## MeshLodComponent
+
+**Header:** `spark/ecs/components/rendering/MeshLodComponent.hpp`
+
+**When to use:** Swap rigid/skinned mesh assets or cull draws by camera distance during lit submit. Optional `paletteUpdateStride` per `MeshLodLevel` throttles skinned palette updates.
+
+```cpp
+lod->GetLevels().PushBack({.minDistance = 0.0F, .rigidMesh = lod0});
+lod->GetLevels().PushBack({.minDistance = 50.0F, .culled = true});
 ```
 
 #### C\#

@@ -266,7 +266,7 @@ DIY LevelManager
 21. Full component serialization (FSM, AI, audio, sockets) — K8, M7-03
 22. GPU decals polish
 23. **3D navmesh + squad AI primitives** — OPEN_WORLD Phase K
-24. **Crowd / impostor LOD** — FOLIAGE F4-08, OPEN_WORLD C7
+24. **Crowd / impostor LOD** — FOLIAGE F4-08, OPEN_WORLD C7 (opaque rigid instancing ✅ partial — `RigidMeshInstancedBatchComponent`)
 25. **Motion trails** — VFX P6
 
 ---

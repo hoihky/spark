@@ -140,7 +140,7 @@ go.add_sky().set_sun_direction(sun_dir)
 
 ## Foliage and grass
 
-`FoliageBatchComponent` / wind demos (`FoliageWindDemo`, `GrassFieldTerrainDemo`) instance cards on terrain — collected into `params.foliageBatches` during submit. Extended stack: [Environment stack](09-environment-stack.md).
+`FoliageInstancedMeshComponent` / `GrassFieldComponent` feed `FoliageSceneCollector` → `params.foliageBatches` (cap `MaxFoliageInstances`). Opaque prop crowds use `RigidMeshInstancedBatchComponent` on the lit pass instead. See [Environment stack](09-environment-stack.md).
 
 ## Water pairing
 

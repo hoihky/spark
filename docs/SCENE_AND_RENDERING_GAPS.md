@@ -219,7 +219,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | **Instancing** | One `SceneDrawItem` per object; **rigid mesh instancing** on main opaque lit pass (`RigidMeshInstancedBatchComponent`, binding **16**, `scene_instanced.vert` + `scene.frag`); foliage pass (F1) | Skinned / GPU-driven MDI crowds; see [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) F4-08 |
 | **Velocity trails** | CPU particles | Entity-attached ribbon/trail module (speed-readable motion) — see [`VFX_ROADMAP.md`](VFX_ROADMAP.md) P6 |
 | **LOD selection** | **`MeshLodResolveRigidDraw` / `MeshLodResolveSkinnedDraw`** in lit submit | Instanced LOD bucketing (F4), GPU select |
-| **Foliage (grass / trees)** | Per-entity glTF trees only (`CharacterCameraDemo`) | `GrassFieldComponent`, `TreeInstanceBatch`, wind UBO — [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
+| **Foliage (grass / trees)** | `GrassFieldComponent`, `FoliageInstancedMeshComponent`, foliage pass (binding **15**), demos **#27–28** | Per-chunk foliage LOD buckets, tree instancing (F3–F4) — [`FOLIAGE_ROADMAP.md`](FOLIAGE_ROADMAP.md) |
 | **Custom shaders** | `SceneShadingModel::LitPbr` / `ToonCel` | Material shader graph or `userShaderId` escape hatch |
 
 ### 3.2 `SceneRenderParams` limits
@@ -235,6 +235,9 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | Skinned instancing | 128 joints per draw | No multi-draw skinned instancing for duplicate agents |
 | `MaxSprites` | `8192` via `Scene2DRuntimeLimits` | Hard cap; spill = drop + one `stderr` line per process (`Scene2DSubmitCaps`); batching API TBD (§3.6) |
 | `MaxTilemapTiles` | `65536` culled instances / frame | Same spill path; split maps or chunk streaming before scaling past cap |
+| `MaxFoliageInstances` | `32768` (foliage SSBO) | No per-blade LOD in foliage pass; use distance fade + chunk budgets |
+| `MaxRigidMeshInstances` | `4096` (opaque lit instancing SSBO) | No skinned/GPU-indirect crowds (F4-08) |
+| `maxGrassInstancesPerFrame` | default **2400**; demos raise via `SceneRenderParams` | Global trim applies to `GrassFieldComponent` batches only |
 | Skinning | 128 joints per draw (`Skeleton::MaxJoints`) | No multi-draw skinned instancing |
 | Custom meshes | `SceneMeshSlot::Custom` + `VulkanCustomMeshPool` GPU upload | No persistent `GpuMeshHandle` owned by game code; pool clears cached mesh pointers when params have no custom draws (demo switch safe) |
 
@@ -332,7 +335,7 @@ Prioritized for **C++ game authors** (no editor dependency):
 | **3** | ~~Transparent draw list + sort on `SceneRenderParams`~~ | Glass, foliage, alpha meshes (opaque HDR copy + resume pass for transmission) |
 | **4** | `AssetHandle` + async `RequestLoad*` | Large levels without hitches |
 | **5** | `EntityId` + deferred destroy | Safer gameplay code |
-| **6** | Instancing fields on submit path | Crowds, props |
+| **6** | ~~Instancing fields on submit path~~ (rigid opaque **partial**); foliage F1 done | Skinned/GPU-driven crowds, foliage LOD buckets |
 | **7** | `RenderTexture` / multi-view `SceneRenderParams` | Mirrors, split-screen, replay viewport (OPEN_WORLD D8) |
 | **8** | Fixed timestep + determinism hooks | Replay, QA repro, future netcode (OPEN_WORLD A4) |
 | **9** | 3D navmesh + group AI primitives | Many agents, team-scale games (OPEN_WORLD Phase K) |

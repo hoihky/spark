@@ -685,7 +685,7 @@ melee->SetEndEventName("active_end");
 
 | **Kind** | `ComponentKind::SkinnedAnimationBudget` |
 | **Header** | `spark/ecs/components/animation/SkinnedAnimationBudgetComponent.hpp` |
-| **2D** | 3D-only — LOD / budget for skinned characters |
+| **2D** | 3D-only — `MeshLodComponent` + `SkinnedAnimationBudgetComponent` |
 
 ### `CameraFollow3DComponent` {#camerafollow3d}
 

@@ -1141,9 +1141,19 @@ world.Rendering().SubmitLit(context, viewProjection, cameraPositionWorld, opts);
 <td><a href="water-roadmap.html"><code>docs/WATER_ROADMAP.md</code></a></td>
 </tr>
 <tr>
-<td><strong>Foliage (planned)</strong></td>
-<td>Grass, instanced trees, wind</td>
+<td><strong>Foliage</strong></td>
+<td>GPU instanced grass (<code>VulkanFoliageInstancedPass</code>, SSBO 15), <code>GrassFieldComponent</code> streaming</td>
 <td><a href="foliage-roadmap.html"><code>docs/FOLIAGE_ROADMAP.md</code></a></td>
+</tr>
+<tr>
+<td><strong>Opaque mesh instancing</strong></td>
+<td>Rigid props/crowds on lit pass (<code>RigidMeshInstancedBatchComponent</code>, <code>scene_instanced.vert</code>, SSBO 16)</td>
+<td>Collect: <code>MeshInstancedSceneCollector</code></td>
+</tr>
+<tr>
+<td><strong>Mesh LOD (submit)</strong></td>
+<td><code>MeshLodComponent</code> → <code>MeshLodResolve*</code> in lit collect; optional <code>paletteUpdateStride</code> for skinned animation LOD</td>
+<td><code>spark/scene/lod/</code></td>
 </tr>
 </tbody>
 </table>

@@ -1120,12 +1120,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td><code>FoliageWindDemo</code></td>
 <td><strong>#27 / G</strong></td>
-<td>Wind-driven instanced foliage</td>
+<td>Dense wind grass + opaque instanced pebbles with <code>MeshLod</code></td>
 </tr>
 <tr>
 <td><code>GrassFieldTerrainDemo</code></td>
 <td><strong>#28 / H</strong></td>
-<td>Terrain-scattered grass chunks</td>
+<td>High-density streamed grass on terrain</td>
 </tr>
 </tbody>
 </table>
@@ -1287,8 +1287,11 @@ params.timeOfDay = normalized0to1;
 <h3 id="c_8">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/ecs/components/foliage/FoliageInstancedMeshComponent.hpp&quot;</span></span>
 
-meadow-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FoliageInstancedMeshComponent&gt;();
-<span class="hljs-comment">// Assign mesh/material, scatter transforms; demo rebuilds GPU instances each frame with wind phase.</span>
+<span class="hljs-keyword">auto</span>* inst = meadow-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FoliageInstancedMeshComponent&gt;();
+inst-&gt;<span class="hljs-built_in">SetBladeMesh</span>(bladeMesh);
+inst-&gt;<span class="hljs-built_in">SetScatterSkipFraction</span>(<span class="hljs-number">0.02F</span>);
+inst-&gt;<span class="hljs-built_in">ConfigureGridWithinSquare</span>(<span class="hljs-number">16.0F</span>, <span class="hljs-number">0.19F</span>, <span class="hljs-number">0.22F</span>);
+<span class="hljs-comment">// Foliage pass only — for rocks/props use RigidMeshInstancedBatchComponent on the lit pass.</span>
 </code></pre>
 <h3 id="c_9">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">meadow.AddFoliageInstancedMesh();
@@ -1305,8 +1308,11 @@ meadow-&gt;<span class="hljs-built_in">AddComponent</span>&lt;FoliageInstancedMe
 GameObject* grass = world.<span class="hljs-built_in">CreateGameObject</span>(<span class="hljs-string">&quot;GrassField&quot;</span>);
 <span class="hljs-keyword">auto</span>* field = grass-&gt;<span class="hljs-built_in">AddComponent</span>&lt;GrassFieldComponent&gt;();
 field-&gt;<span class="hljs-built_in">SetTerrainObject</span>(terrainGo);
-field-&gt;<span class="hljs-built_in">GetBounds</span>().<span class="hljs-built_in">SetHalfExtentsMeters</span>(<span class="hljs-number">40.0F</span>, <span class="hljs-number">40.0F</span>);
-<span class="hljs-comment">// Before submit: field-&gt;PrepareForRender(*grass, cameraPosition, maxInstancesPerFrame);</span>
+field-&gt;<span class="hljs-built_in">GetBounds</span>().<span class="hljs-built_in">SetHalfExtentsMeters</span>(<span class="hljs-number">28.0F</span>, <span class="hljs-number">26.0F</span>);
+field-&gt;<span class="hljs-built_in">GetScatterSettings</span>().<span class="hljs-built_in">SetDensityPerSquareMeter</span>(<span class="hljs-number">24.0F</span>);
+field-&gt;<span class="hljs-built_in">GetScatterSettings</span>().<span class="hljs-built_in">SetMaxVisibleInstances</span>(<span class="hljs-number">14000U</span>);
+params.maxGrassInstancesPerFrame = <span class="hljs-number">14000U</span>;
+field-&gt;<span class="hljs-built_in">PrepareForRender</span>(*grass, cameraPosition, params.maxGrassInstancesPerFrame);
 </code></pre>
 <h3 id="c_11">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">grass.AddGrassField().SetTerrainObject(terrain);
@@ -1375,11 +1381,15 @@ field-&gt;<span class="hljs-built_in">GetBounds</span>().<span class="hljs-built
 </tr>
 <tr>
 <td>Grass</td>
-<td>Chunk streaming — shrink bounds while prototyping</td>
+<td><code>maxGrassInstancesPerFrame</code>, chunk cache, view distance — see <code>GrassFieldTerrainDemo</code></td>
 </tr>
 <tr>
 <td>Foliage</td>
-<td>Instance count vs overdraw in wind demo</td>
+<td><code>MaxFoliageInstances</code> (32768 SSBO); <code>SetScatterSkipFraction</code>; dual near/far grids in wind demo</td>
+</tr>
+<tr>
+<td>Props</td>
+<td><code>RigidMeshInstancedBatch</code> (4096 cap) + <code>MeshLodComponent</code> to cull distant opaque instances</td>
 </tr>
 </tbody>
 </table>
