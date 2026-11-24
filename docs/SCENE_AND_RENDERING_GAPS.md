@@ -106,7 +106,7 @@ C <kind> <payload>
 | **Multi-scene** | `SceneManager` additive load/unload on one `GameWorld` | Named scene registry, cross-scene references, persistent “manager” world separate from gameplay |
 | **Prefab API** | `PrefabInstantiator::Instantiate`, `SceneManager::InstantiatePrefab` | Component override map on load; editor persists glTF overrides via `gltf_scene` v2 |
 | **Tags / layers** | Name string on `GameObject` | `Tag`, `LayerMask`, query by tag/layer on `Scene` |
-| **Deferred destroy** | `DestroyGameObject` defers during `UpdateGameObjects`; `DestroyGameObjectAtEndOfFrame` | Same deferral when destroying from physics/AI ticks outside `UpdateGameObjects` |
+| **Deferred destroy** | Single queue: defer during `UpdateGameObjects`, `PhysicsSubsystem::Simulate*`, `AiSubsystem::RunFrame`; `DestroyGameObjectAtEndOfFrame` enqueues; `FlushPendingDestroyGameObjects` at slice end | — |
 | **Component queries** | Per-object `GetComponent<T>` | World queries: `ForEach<MeshComponent>`, archetype-style iteration |
 | **Enable/disable** | Per-component visibility flags vary | Uniform `GameObject::SetEnabled` affecting update + render submit |
 

@@ -117,7 +117,6 @@ void EnemySquad::Unload(Spark::GameWorld& world) noexcept
         }
     }
     enemies.Clear();
-    pendingDestroy.Clear();
     defeatedCount = 0;
 }
 
@@ -218,7 +217,7 @@ void EnemySquad::OnEnemyDied(Spark::GameObject& enemy, ExplosionFx& explosions) 
         const Spark::Vector3 epos = slot.tr != nullptr ? slot.tr->GetLocalTransform().translation : Spark::Vector3::Zero;
         explosions.SpawnMeleeDefeat(epos.x, epos.y);
         slot.alive = false;
-        pendingDestroy.PushBack(slot.go);
+        enemy.GetWorld().DestroyGameObjectAtEndOfFrame(&enemy);
         slot.go = nullptr;
         slot.tr = nullptr;
         slot.spr = nullptr;
@@ -228,13 +227,7 @@ void EnemySquad::OnEnemyDied(Spark::GameObject& enemy, ExplosionFx& explosions) 
 }
 
 void EnemySquad::FlushPendingDestroys(Spark::GameWorld& world) noexcept {
-    for (std::size_t i = 0; i < pendingDestroy.GetSize(); ++i) {
-        Spark::GameObject* object = pendingDestroy[i];
-        if (object != nullptr) {
-            world.DestroyGameObject(object);
-        }
-    }
-    pendingDestroy.Clear();
+    world.FlushPendingDestroyGameObjects();
 }
 
 }  // namespace Spark::Platformer2D

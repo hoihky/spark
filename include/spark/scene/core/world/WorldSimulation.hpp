@@ -37,7 +37,7 @@ public:
         ProcessAudio(context);
     }
 
-    /** Post-physics gameplay flush (pickup destroys). No-op when <c>SPARK_HAS_GAMEPLAY</c> is 0. Call after <c>Physics().Simulate2D</c>. */
+    /** Flushes pending entity destroys after 2D physics. No-op when <c>SPARK_HAS_GAMEPLAY</c> is 0. Call after <c>Physics().Simulate2D</c>. */
     void RunGameplaySlice() noexcept {
 #if SPARK_HAS_GAMEPLAY
         GameplaySubsystem::AfterPhysics2D(hostWorld);

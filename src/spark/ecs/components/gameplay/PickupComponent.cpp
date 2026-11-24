@@ -8,7 +8,7 @@
 
 namespace Spark {
 
-void PickupComponent::OnSignal(GameObject& /*owner*/, const SignalId id, const SignalPayload& payload) {
+void PickupComponent::OnSignal(GameObject& owner, const SignalId id, const SignalPayload& payload) {
     if (!autoCollectOnTriggerEnter || collected) {
         return;
     }
@@ -20,34 +20,14 @@ void PickupComponent::OnSignal(GameObject& /*owner*/, const SignalId id, const S
         return;
     }
     if (TryCollect(*other) && destroyOwnerOnCollect) {
-        pendingDestroyOwner = true;
+        owner.GetWorld().DestroyGameObjectAtEndOfFrame(&owner);
     }
 }
 
 void PickupComponent::OnUpdate(
         const FrameTiming& /*timing*/,
-        GameObject& owner,
-        IEngineContext& /*context*/) {
-    if (!pendingDestroyOwner) {
-        return;
-    }
-    pendingDestroyOwner = false;
-    owner.GetWorld().DestroyGameObject(&owner);
-}
-
-void PickupComponent::ProcessDeferredDestroys(GameWorld& world) noexcept {
-    world.Entities().ForEachActive([&](GameObject* object) {
-        if (object == nullptr) {
-            return;
-        }
-        PickupComponent* pickup = object->GetComponent<PickupComponent>();
-        if (pickup == nullptr || !pickup->pendingDestroyOwner) {
-            return;
-        }
-        pickup->pendingDestroyOwner = false;
-        world.DestroyGameObject(object);
-    });
-}
+        GameObject& /*owner*/,
+        IEngineContext& /*context*/) {}
 
 bool PickupComponent::TryCollect(GameObject& collector) noexcept {
     if (collected) {

@@ -11,7 +11,7 @@ class GameWorld;
  */
 class GameplaySubsystem final {
 public:
-    /** Pickup deferred destroys (call after 2D physics; projectiles flush inside <c>PhysicsSubsystem::Simulate2D</c>). */
+    /** Flushes the world's pending destroy queue after 2D physics (idempotent if physics already flushed). */
     static void AfterPhysics2D(GameWorld& world) noexcept;
 
     /** Nearest valid interactable for an interact press. */

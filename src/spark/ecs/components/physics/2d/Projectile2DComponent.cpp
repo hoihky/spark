@@ -44,7 +44,6 @@ void Projectile2DComponent::Activate(
     velocity = velocityIn;
     instigator = instigatorIn;
     hitVictims.Clear();
-    pendingDestroyOwner = false;
 
     if (GameObject* owner = GetOwner()) {
         if (TransformComponent* tr = owner->GetComponent<TransformComponent>()) {
@@ -62,27 +61,10 @@ void Projectile2DComponent::Deactivate() noexcept {
 }
 
 void Projectile2DComponent::MarkDeferredDestroy(GameObject& owner) noexcept {
-    if (destroyOwnerOnDeactivate) {
-        pendingDestroyOwner = true;
-    }
     Deactivate();
-    if (!destroyOwnerOnDeactivate) {
-        (void)owner;
+    if (destroyOwnerOnDeactivate) {
+        owner.GetWorld().DestroyGameObjectAtEndOfFrame(&owner);
     }
-}
-
-void Projectile2DComponent::ProcessDeferredDestroys(GameWorld& world) noexcept {
-    world.Entities().ForEachActive([&](GameObject* object) {
-        if (object == nullptr) {
-            return;
-        }
-        Projectile2DComponent* projectile = object->GetComponent<Projectile2DComponent>();
-        if (projectile == nullptr || !projectile->pendingDestroyOwner) {
-            return;
-        }
-        projectile->pendingDestroyOwner = false;
-        world.DestroyGameObject(object);
-    });
 }
 
 void Projectile2DComponent::TickLifetime(const float deltaSeconds) noexcept {

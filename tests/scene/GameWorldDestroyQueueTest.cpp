@@ -78,6 +78,81 @@ TEST(GameWorldDestroyQueueTest, IsGameObjectAliveRespectsPendingDestroy) {
     world.DestroyGameObjectAtEndOfFrame(object);
     EXPECT_FALSE(world.IsGameObjectAlive(object));
     EXPECT_NE(object, nullptr);
+    EXPECT_EQ(world.GetGameObjectCount(), 1u);
     world.FlushPendingDestroyGameObjects();
     EXPECT_EQ(world.TryGetGameObject(object->GetEntityId()), nullptr);
+}
+
+TEST(GameWorldDestroyQueueTest, DestroyAtEndOfFrameDoesNotFlushImmediately) {
+    Spark::GameWorld world;
+    Spark::GameObject* a = world.CreateGameObject();
+    Spark::GameObject* b = world.CreateGameObject();
+
+    world.DestroyGameObjectAtEndOfFrame(a);
+    world.DestroyGameObjectAtEndOfFrame(b);
+
+    EXPECT_FALSE(world.IsGameObjectAlive(a));
+    EXPECT_FALSE(world.IsGameObjectAlive(b));
+    EXPECT_EQ(world.GetGameObjectCount(), 2u);
+
+    world.FlushPendingDestroyGameObjects();
+    EXPECT_EQ(world.GetGameObjectCount(), 0u);
+}
+
+TEST(GameWorldDestroyQueueTest, DestroyDuringDeferredScopeIsQueuedUntilFlush) {
+    Spark::GameWorld world;
+    Spark::GameObject* victim = world.CreateGameObject();
+    const Spark::EntityId victimId = victim->GetEntityId();
+
+    EXPECT_FALSE(world.DefersDestroyGameObjects());
+    world.BeginDeferredDestroyScope();
+    EXPECT_TRUE(world.DefersDestroyGameObjects());
+
+    world.DestroyGameObject(victim);
+    EXPECT_FALSE(world.IsGameObjectAlive(victim));
+    EXPECT_NE(world.TryGetGameObject(victimId), nullptr);
+    EXPECT_EQ(world.GetGameObjectCount(), 1u);
+
+    world.EndDeferredDestroyScope();
+    EXPECT_FALSE(world.DefersDestroyGameObjects());
+    EXPECT_EQ(world.GetGameObjectCount(), 1u);
+
+    world.FlushPendingDestroyGameObjects();
+    EXPECT_EQ(world.TryGetGameObject(victimId), nullptr);
+    EXPECT_EQ(world.GetGameObjectCount(), 0u);
+}
+
+TEST(GameWorldDestroyQueueTest, EndOfFrameDestroyDuringSubsystemScopeStaysUntilFlush) {
+    Spark::GameWorld world;
+    Spark::GameObject* victim = world.CreateGameObject();
+    const Spark::EntityId victimId = victim->GetEntityId();
+
+    world.BeginDeferredDestroyScope();
+    world.DestroyGameObjectAtEndOfFrame(victim);
+    world.EndDeferredDestroyScope();
+
+    EXPECT_FALSE(world.IsGameObjectAlive(victim));
+    EXPECT_NE(world.TryGetGameObject(victimId), nullptr);
+    EXPECT_EQ(world.GetGameObjectCount(), 1u);
+
+    world.FlushPendingDestroyGameObjects();
+    EXPECT_EQ(world.TryGetGameObject(victimId), nullptr);
+}
+
+TEST(GameWorldDestroyQueueTest, NestedDeferredDestroyScopesDeferUntilOuterFlush) {
+    Spark::GameWorld world;
+    Spark::GameObject* victim = world.CreateGameObject();
+    const Spark::EntityId victimId = victim->GetEntityId();
+
+    world.BeginDeferredDestroyScope();
+    world.BeginDeferredDestroyScope();
+    world.DestroyGameObject(victim);
+    world.EndDeferredDestroyScope();
+    EXPECT_EQ(world.GetGameObjectCount(), 1u);
+
+    world.EndDeferredDestroyScope();
+    EXPECT_EQ(world.GetGameObjectCount(), 1u);
+
+    world.FlushPendingDestroyGameObjects();
+    EXPECT_EQ(world.TryGetGameObject(victimId), nullptr);
 }

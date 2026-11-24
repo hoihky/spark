@@ -1,6 +1,5 @@
 #include "spark/physics/PhysicsSubsystem.hpp"
 
-#include "spark/ecs/components/physics/2d/Projectile2DComponent.hpp"
 #include "spark/scene/core/GameWorld.hpp"
 
 namespace Spark {
@@ -12,13 +11,15 @@ void PhysicsSubsystem::SetBroadPhaseCellSize2D(const float cellWorldSize) noexce
 }
 
 void PhysicsSubsystem::Simulate2D(GameWorld& world, const FrameTiming& timing) {
+    world.BeginDeferredDestroyScope();
     characterController2D.GetSettings().broadPhaseCellSize = world2D.GetBroadPhaseCellSize();
     characterController2D.Prepare(world, timing);
     queries2D.SetCellWorldSize(world2D.GetBroadPhaseCellSize());
     world2D.Simulate(world, timing);
     characterController2D.Finalize(world, timing);
     triggerVolumes2D.Simulate(world, timing);
-    Projectile2DComponent::ProcessDeferredDestroys(world);
+    world.EndDeferredDestroyScope();
+    world.FlushPendingDestroyGameObjects();
 }
 
 void PhysicsSubsystem::SimulateCharacterControllers2D(GameWorld& world, const FrameTiming& timing) {
@@ -31,8 +32,11 @@ void PhysicsSubsystem::SimulateTriggerVolumes2D(GameWorld& world, const FrameTim
 }
 
 void PhysicsSubsystem::Simulate3D(GameWorld& world, const FrameTiming& timing) {
+    world.BeginDeferredDestroyScope();
     queries3D.SetCellWorldSize(world3D.GetBroadPhaseCellSize());
     world3D.Simulate(world, timing);
+    world.EndDeferredDestroyScope();
+    world.FlushPendingDestroyGameObjects();
 }
 
 void PhysicsSubsystem::SimulateCharacterControllers3D(GameWorld& world, const FrameTiming& timing) {
@@ -44,10 +48,13 @@ void PhysicsSubsystem::SimulateTriggerVolumes3D(GameWorld& world, const FrameTim
 }
 
 void PhysicsSubsystem::SimulateAll3D(GameWorld& world, const FrameTiming& timing) {
+    world.BeginDeferredDestroyScope();
     queries3D.SetCellWorldSize(world3D.GetBroadPhaseCellSize());
     world3D.Simulate(world, timing);
     characterController3D.Simulate(world, timing);
     triggerVolumes3D.Simulate(world, timing);
+    world.EndDeferredDestroyScope();
+    world.FlushPendingDestroyGameObjects();
 }
 
 bool PhysicsSubsystem::PlaybackPhysics3DFrame(GameWorld& world, const std::size_t framesBackFromLatest) noexcept {

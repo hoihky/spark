@@ -90,9 +90,6 @@ void GameWorldEntityGraph::EnqueueDestroy(GameObject* object) {
 
 void GameWorldEntityGraph::DestroyAtEndOfFrame(GameObject* object) {
     EnqueueDestroy(object);
-    if (!updatingGameObjects) {
-        FlushPendingDestroys();
-    }
 }
 
 void GameWorldEntityGraph::FlushPendingDestroys() {
@@ -107,7 +104,7 @@ void GameWorldEntityGraph::Destroy(GameObject* object) {
     if (object == nullptr || object->world != &ownerWorld) {
         return;
     }
-    if (updatingGameObjects) {
+    if (deferDestroyDepth > 0) {
         EnqueueDestroy(object);
         return;
     }

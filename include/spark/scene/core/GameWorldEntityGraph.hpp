@@ -31,8 +31,15 @@ public:
 
     [[nodiscard]] std::size_t GetCount() const noexcept { return objects.GetSize(); }
 
-    [[nodiscard]] bool IsUpdating() const noexcept { return updatingGameObjects; }
-    void SetUpdating(bool value) noexcept { updatingGameObjects = value; }
+    /** True while destroy requests are queued instead of applied immediately (update, physics, AI, …). */
+    [[nodiscard]] bool DefersDestroy() const noexcept { return deferDestroyDepth > 0; }
+
+    void BeginDeferredDestroy() noexcept { ++deferDestroyDepth; }
+    void EndDeferredDestroy() noexcept {
+        if (deferDestroyDepth > 0) {
+            --deferDestroyDepth;
+        }
+    }
 
     [[nodiscard]] GameObject* FindById(std::uint64_t id) const noexcept;
     [[nodiscard]] GameObject* TryGet(EntityId id) const noexcept { return FindById(id); }
@@ -159,7 +166,7 @@ private:
     GameWorld& ownerWorld;
     Array<UniquePtr<GameObject>> objects;
     Array<GameObject*> pendingDestroyRoots;
-    bool updatingGameObjects = false;
+    int deferDestroyDepth = 0;
     std::uint64_t nextObjectId = 1;
 };
 

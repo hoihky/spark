@@ -43,6 +43,10 @@ public:
     void DestroyGameObjectAtEndOfFrame(GameObject* object) { entityGraph.DestroyAtEndOfFrame(object); }
     void DestroyGameObjectImmediate(GameObject* object) { entityGraph.DestroyImmediate(object); }
     void FlushPendingDestroyGameObjects() { entityGraph.FlushPendingDestroys(); }
+
+    void BeginDeferredDestroyScope() noexcept { entityGraph.BeginDeferredDestroy(); }
+    void EndDeferredDestroyScope() noexcept { entityGraph.EndDeferredDestroy(); }
+    [[nodiscard]] bool DefersDestroyGameObjects() const noexcept { return entityGraph.DefersDestroy(); }
     [[nodiscard]] bool SetParent(GameObject* child, GameObject* newParent) {
         return entityGraph.SetParent(child, newParent);
     }

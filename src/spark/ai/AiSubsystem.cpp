@@ -23,6 +23,7 @@ void AiSubsystem::ProcessPerception(GameWorld& world) noexcept {
 }
 
 void AiSubsystem::RunFrame(GameWorld& world, const FrameTiming& timing, IEngineContext& context) {
+    world.BeginDeferredDestroyScope();
     ProcessGridNav2D(world, timing.deltaTimeSeconds);
     ProcessNavMesh(world);
     ProcessPerception(world);
@@ -36,6 +37,8 @@ void AiSubsystem::RunFrame(GameWorld& world, const FrameTiming& timing, IEngineC
         }
         agent->SubsystemTick(timing, *o, context);
     });
+    world.EndDeferredDestroyScope();
+    world.FlushPendingDestroyGameObjects();
 }
 
 }  // namespace Spark

@@ -26,9 +26,6 @@ public:
     void OnSignal(GameObject& owner, SignalId id, const SignalPayload& payload) override;
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
-    /** Destroys owners that collected during the last trigger step (safe after <c>Simulate2D</c>). */
-    static void ProcessDeferredDestroys(GameWorld& world) noexcept;
-
     void SetItemId(const char* id) noexcept;
     [[nodiscard]] const char* GetItemId() const noexcept { return itemId.CStr(); }
 
@@ -46,10 +43,7 @@ public:
     [[nodiscard]] bool IsCollected() const noexcept { return collected; }
 
     /** Pool / respawn: clears collected state without running callbacks. */
-    void ResetForRespawn() noexcept {
-        collected = false;
-        pendingDestroyOwner = false;
-    }
+    void ResetForRespawn() noexcept { collected = false; }
 
     /** Attempts collection once; returns true on first successful collect. */
     bool TryCollect(GameObject& collector) noexcept;
@@ -60,7 +54,6 @@ private:
     bool autoCollectOnTriggerEnter = true;
     bool destroyOwnerOnCollect = true;
     bool collected = false;
-    bool pendingDestroyOwner = false;
     CollectedCallback onCollected{};
 };
 

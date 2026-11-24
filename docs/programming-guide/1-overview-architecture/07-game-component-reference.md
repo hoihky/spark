@@ -870,7 +870,7 @@ enemy->AddComponent<HealthComponent>(3.0F);
 
 **Kind:** `Projectile2D` · **Priority:** 220 · **Damage path:** `TryApplyCombatDamage2D`
 
-Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; `destroyOwnerOnDeactivate` queues destroy flushed by `Projectile2DComponent::ProcessDeferredDestroys` (called from `PhysicsSubsystem::Simulate2D`).
+Kinematic projectile with circle/box overlap queries each frame. Deactivate for pools; `destroyOwnerOnDeactivate` queues destroy via `DestroyGameObjectAtEndOfFrame` (flushed at the end of `PhysicsSubsystem::Simulate2D`).
 
 ```cpp
 #include "spark/ecs/components/physics/2d/Projectile2DComponent.hpp"
@@ -1532,8 +1532,8 @@ pickup->SetOnCollected([](GameObject& collector, const char* itemId, int qty) {
 });
 // Without SetOnCollected, TryCollect uses GameplayPickupDelivery → GameplayInventoryCollectorComponent.
 
-// After Simulate2D (flushes deferred destroys):
-PickupComponent::ProcessDeferredDestroys(world);
+// `PhysicsSubsystem::Simulate2D` flushes the shared destroy queue; optional extra flush:
+world.FlushPendingDestroyGameObjects();
 ```
 
 **Pool + dissolve (P0 gems):** set `SetDestroyOwnerOnCollect(false)`, run dissolve/VFX in `SetOnCollected`, then `ResetForRespawn()` and `GameObjectPool::Release` when the effect finishes. Disable `SetAutoCollectOnTriggerEnter` during dissolve to avoid re-entry.

@@ -755,8 +755,7 @@ chest->SetOnInteract([](GameObject& player) { (void)player; });
 auto* pickup = gem->AddComponent<PickupComponent>();
 pickup->SetItemId("gem");
 pickup->SetAutoCollectOnTriggerEnter(true);
-// After Simulate2D:
-PickupComponent::ProcessDeferredDestroys(world);
+// `PhysicsSubsystem::Simulate2D` flushes pending destroys (collect uses `DestroyGameObjectAtEndOfFrame`).
 ```
 
 ### `AnimationHitbox2DComponent` {#animationhitbox2d}
@@ -794,7 +793,7 @@ enemy->AddComponent<HealthComponent>(3.0F);
 auto* shot = bulletGo->AddComponent<Projectile2DComponent>();
 shot->SetDamage(1.0F);
 shot->Activate({ox, oy}, {vx, vy}, owner);
-Projectile2DComponent::ProcessDeferredDestroys(world);
+// One-shot projectiles with `SetDestroyOwnerOnDeactivate(true)` enqueue destroy; flushed at end of Simulate2D.
 ```
 
 ### `DamageZone2DComponent` {#damagezone2d}

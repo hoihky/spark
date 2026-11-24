@@ -19,7 +19,7 @@ GameWorld::~GameWorld() {
 
 void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& context) {
     assetStore.Loader().Pump(*this);
-    entityGraph.SetUpdating(true);
+    entityGraph.BeginDeferredDestroy();
     entityGraph.ForEachActive([&](GameObject* o) {
         if (o == nullptr || o->pendingDestroy) {
             return;
@@ -32,7 +32,7 @@ void GameWorld::UpdateGameObjects(const FrameTiming& timing, IEngineContext& con
         }
         o->UpdateComponents(timing, context);
     });
-    entityGraph.SetUpdating(false);
+    entityGraph.EndDeferredDestroy();
     entityGraph.FlushPendingDestroys();
 }
 

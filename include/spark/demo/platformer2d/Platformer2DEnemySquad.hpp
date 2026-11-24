@@ -63,7 +63,7 @@ public:
     /** Called when an enemy <c>HealthComponent</c> reaches zero (melee or other damage). */
     void OnEnemyDied(Spark::GameObject& enemy, ExplosionFx& explosions) noexcept;
 
-    /** Destroys enemies queued by <c>OnEnemyDied</c> (call after simulation / combat). */
+    /** Flushes <c>GameWorld</c> pending destroys for enemies queued by <c>OnEnemyDied</c>. */
     void FlushPendingDestroys(Spark::GameWorld& world) noexcept;
 
     [[nodiscard]] int GetDefeatedCount() const noexcept { return defeatedCount; }
@@ -79,7 +79,6 @@ private:
             const BulletProfile& profile) noexcept;
 
     Spark::Array<Enemy> enemies{};
-    Spark::Array<Spark::GameObject*> pendingDestroy{};
     Spark::Vector4 idleUv{};
     Spark::Vector4 attackUv{};
     int defeatedCount = 0;

@@ -38,9 +38,6 @@ public:
 
     void OnUpdate(const FrameTiming& timing, GameObject& owner, IEngineContext& context) override;
 
-    /** Destroys owners queued during the last update step (after physics / combat tick). */
-    static void ProcessDeferredDestroys(GameWorld& world) noexcept;
-
     void SetActive(const bool value) noexcept { active = value; }
     [[nodiscard]] bool IsActive() const noexcept { return active; }
 
@@ -106,7 +103,6 @@ private:
     bool blockOnSolidHit = true;
     bool destroyOwnerOnDeactivate = false;
     bool deactivateOnFirstHit = true;
-    bool pendingDestroyOwner = false;
 };
 
 }  // namespace Spark
