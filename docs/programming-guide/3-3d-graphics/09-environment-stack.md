@@ -23,13 +23,13 @@ flowchart TB
   H2O[WaterBodyComponent]
   GR[GrassField / FoliageInstancedMesh]
   TOD --> Params[SceneRenderParams]
-  TERR --> Fill[FillStandardLitSceneFromWorld]
+  TERR --> Fill[Rendering().FillLit]
   SKY --> Fill
   H2O --> Fill
   GR --> Fill
 ```
 
-Collect happens in one **`SubmitStandardLitSceneFromWorld`** call; water and terrain participate in shadow cascades when enabled ([Shadows](04-shadows.md)).
+Collect happens in one **`world.Rendering().SubmitLit`** call; water and terrain participate in shadow cascades when enabled ([Shadows](04-shadows.md)).
 
 ---
 

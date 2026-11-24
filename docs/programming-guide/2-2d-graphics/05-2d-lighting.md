@@ -1,6 +1,6 @@
 # 2D Lighting
 
-2D lighting is implemented inside the **sprite fragment shader** when `SpriteLighting2DComponent` is present on the same `GameObject` as `SpriteComponent`. Directional “sun” comes from `SceneRenderParams` (`lightDirectionWorld`, `lightColor`, `lightIntensity`, `ambientColor`). **Point lights** reuse the 3D `ScenePointLight` array — both `PointLightComponent` and `PointLight2DComponent` append to `params.pointLights` during `FillStandardLitSceneFromWorld`.
+2D lighting is implemented inside the **sprite fragment shader** when `SpriteLighting2DComponent` is present on the same `GameObject` as `SpriteComponent`. Directional “sun” comes from `SceneRenderParams` (`lightDirectionWorld`, `lightColor`, `lightIntensity`, `ambientColor`). **Point lights** reuse the 3D `ScenePointLight` array — both `PointLightComponent` and `PointLight2DComponent` append to `params.pointLights` during `world.Rendering().FillLit`.
 
 2D point lights **do not cast shadows** (`castsShadow = false` in submit).
 
@@ -132,7 +132,7 @@ Submit sets global light; per-sprite modes multiply into the result.
 ### C++
 
 ```cpp
-SubmitStandardLitSceneFromWorldWithCamera(
+world.Rendering().SubmitLitWithCamera(
     world, context, sunDir, sunColor, intensity, ambient,
     enableParticles, sceneTimeSeconds);
 // internally sets params.spriteSortMode — pass SortOrderThenWorldY in overloads that accept sort mode
@@ -141,7 +141,7 @@ SubmitStandardLitSceneFromWorldWithCamera(
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+SceneSubmit.world.Rendering().SubmitLitWithCamera(
     world, context, sunDir, sunColor, 0.85f, ambient,
     enableParticles: false, sceneTime);
 ```

@@ -2,7 +2,7 @@
 
 Spark ECS is **gameplay-oriented**: entities are `GameObject`, data and behavior are `GameComponent` derivatives looked up by `ComponentKind`. There is no archetype/query DSL — use **`world.Entities()`** (`WorldEntities`) for iteration and **`world.QueryObjects()`** (`WorldQuery`) for batched gathers.
 
-`Scene` is a **read/query façade** over the same `GameWorld` the game mutates; rendering uses `FillStandardLitSceneFromWorld(world, …)` rather than Scene iterators in most games.
+`Scene` is a **read/query façade** over the same `GameWorld` the game mutates; rendering uses `world.Rendering().FillLit(world, …)` rather than Scene iterators in most games.
 
 ## Entity: `GameObject`
 
@@ -201,7 +201,7 @@ void ForEachSprite(const SpriteFn& fn);
 void SetSpatialPartitionKind(ScenePartitionKind kind);
 ```
 
-Use for editor tooling, culling experiments, or custom render paths — production games usually call `FillStandardLitSceneFromWorld` directly on `GameWorld`.
+Use for editor tooling, culling experiments, or custom render paths — production games usually call `world.Rendering().FillLit` directly on `GameWorld`.
 
 ## Concept: full render hand-off
 
@@ -209,7 +209,7 @@ Use for editor tooling, culling experiments, or custom render paths — producti
 
 ```cpp
 SceneRenderParams params{};
-FillStandardLitSceneFromWorld(world, context, viewProj, camPos,
+world.Rendering().FillLit(world, context, viewProj, camPos,
     lightDir, lightColor, lightIntensity, ambient, enableParticles,
     camRight, camUp, sceneTime, params);
 PaintUiCanvases(world, params, fbW, fbH);
@@ -220,7 +220,7 @@ context.SetSceneRenderParams(params);
 
 ```csharp
 var p = new SceneRenderParams();
-FillStandardLitSceneFromWorld(World, ctx, vp, camPos, ... , p);
+world.Rendering().FillLit(World, ctx, vp, camPos, ... , p);
 PaintUiCanvases(World, p, fbW, fbH);
 ctx.SetSceneRenderParams(p);
 ```

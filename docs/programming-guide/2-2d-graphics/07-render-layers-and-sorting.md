@@ -92,7 +92,7 @@ Demo **Q** toggles shadow visibility to show broken vs grouped sorting.
 ### C++
 
 ```cpp
-SubmitStandardLitSceneFromWorld(
+world.Rendering().SubmitLit(
     world, context, viewProj, cameraPos,
     sunDir, sunColor, sunIntensity, ambient,
     enableParticles, pr, pu, sceneTimeSeconds,
@@ -102,7 +102,7 @@ SubmitStandardLitSceneFromWorld(
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorld(
+SceneSubmit.world.Rendering().SubmitLit(
     World, context, viewProj, cameraPos,
     sunDir, sunColor, sunIntensity, ambient,
     enableSprites: true, sceneTime,

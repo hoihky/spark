@@ -495,7 +495,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <main class="doc-page">
       <article class="doc-body">
         <h1 id="scene-submit-spatial-refactor-factoring-log">Scene submit &amp; spatial refactor (factoring log)</h1>
-<p>Summary of the <strong>2025–2026</strong> restructuring that split monolithic scene submit into focused types and extracted reusable spatial indexes. Public <strong>gameplay APIs are unchanged in spirit</strong>; prefer <code>LitSceneSubmitOptions</code> and <code>LitScene::Builder</code> over long positional overloads.</p>
+<p>Summary of the <strong>2025–2026</strong> restructuring that split monolithic scene submit into focused types and extracted reusable spatial indexes. Public <strong>gameplay API</strong> for lit submit: <strong><code>world.Rendering().SubmitLit*</code></strong> with <strong><code>LitSceneSubmitOptions</code></strong> (<a href="lit-render-api.html">LIT_RENDER_API.md</a>). Legacy: <code>SceneSubmit.hpp</code>, <code>LitScene::Builder</code>.</p>
 <p><strong>Privacy:</strong> docs and scripts use placeholders (<code>/path/to/spark</code>, <code>SPARK_ENGINE_ROOT</code>). Before push, run <code>./tools/check-paths-privacy.sh</code> — see <a href="PATHS_AND_PRIVACY.md">PATHS_AND_PRIVACY.md</a>.</p>
 <h2 id="module-map">Module map</h2>
 <table>
@@ -512,7 +512,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><strong>Entry</strong></td>
 <td><code>include/spark/scene/submit/SceneSubmit.hpp</code>, <code>LitScene.hpp</code></td>
 <td><code>src/spark/scene/submit/SceneSubmit.cpp</code></td>
-<td><code>FillStandardLitSceneFromWorld</code>, <code>SubmitStandardLitSceneFromWorld*</code></td>
+<td><code>world.Rendering().FillLit</code>, <code>SubmitStandardLitSceneFromWorld*</code></td>
 </tr>
 <tr>
 <td><strong>Pipeline</strong></td>

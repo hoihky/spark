@@ -10,7 +10,7 @@ Complete reference for all **120** built-in `GameComponent` types in Spark (`Com
 2. `PhysicsSubsystem::Simulate2D` / `SimulateAll3D` (+ character controllers, triggers)
 3. `SimulateGameAi` — `ProcessGridNavAgents2D`, `ProcessNavMeshAgents`, `ProcessPerceptionSensors`, then `AiAgentComponent`
 4. `ProcessSoundCues` — `ProcessAudioListeners`, `ProcessAmbientZones`, cue flush
-5. `FillStandardLitSceneFromWorld` — `ProcessTimeOfDayDrivers`, regional fog/post volumes, lighting resolve
+5. `world.Rendering().FillLit` — `ProcessTimeOfDayDrivers`, regional fog/post volumes, lighting resolve
 
 ---
 
@@ -251,7 +251,7 @@ tr->SetRotation(Quaternion::FromAxisAngle(Vector3::UnitY, 0.5F));
 
 ### `MeshComponent`
 
-**Kind:** `Mesh` · **Consumed by:** `SubmitStandardLitSceneFromWorld`
+**Kind:** `Mesh` · **Consumed by:** `world.Rendering().SubmitLit`
 
 Static triangle mesh + optional `SceneMeshSlot` (GroundPlane, SkyBox, Custom, …).
 
@@ -591,7 +591,7 @@ See `Platformer2DDemo::SpawnBackgroundLayers` and `WireParallaxLayers` for a ful
 
 ### `DirectionalLightComponent`
 
-**Kind:** `DirectionalLight` · **Consumed by:** `FillStandardLitSceneFromWorld`
+**Kind:** `DirectionalLight` · **Consumed by:** `world.Rendering().FillLit`
 
 Light direction = owner transform **local +Z** in world space.
 
@@ -1383,7 +1383,7 @@ canvas->SetRoot(MoveTemp(panel));
 
 // Each frame:
 ProcessUiCanvasesInput(world, input, fbW, fbH);
-// After FillStandardLitSceneFromWorld (or equivalent):
+// After world.Rendering().FillLit (or equivalent):
 PaintUiCanvases(world, params, fbW, fbH);
 ```
 
@@ -1403,7 +1403,7 @@ Affects `Scene::ForEachDrawableInViewFrustum` partition strategy.
 
 **Consumed by:** `ProcessTimeOfDayDrivers` before scene lighting resolve
 
-Drives `SceneRenderParams::useTimeOfDay` and `timeOfDay` (0 = midnight, 0.5 = noon). When `loop` is **true** and `dayLengthSeconds > 0`, `ProcessTimeOfDayDrivers` advances time each `FillStandardLitSceneFromWorld` call. Set `loop = false` when your gameplay code owns the clock (see `TimeOfDayDemo`).
+Drives `SceneRenderParams::useTimeOfDay` and `timeOfDay` (0 = midnight, 0.5 = noon). When `loop` is **true** and `dayLengthSeconds > 0`, `ProcessTimeOfDayDrivers` advances time each `world.Rendering().FillLit` call. Set `loop = false` when your gameplay code owns the clock (see `TimeOfDayDemo`).
 
 ```cpp
 auto* tod = worldRoot->AddComponent<TimeOfDayDriverComponent>();

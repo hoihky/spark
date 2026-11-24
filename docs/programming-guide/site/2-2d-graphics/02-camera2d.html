@@ -1135,7 +1135,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p><code>ViewProjection</code> uses <code>OrthographicVulkan</code> — framebuffer <strong>Y increases downward</strong> in NDC. Picking and HUD placement must use the same convention as <code>TerrainScreenToWorldRay</code> (see <a href="03-tilemaps.html#screen--cell-picking-2d">Tilemaps — screen picking</a>).</p>
 <p><strong>Pixel-perfect sizing:</strong> choose <code>halfExtentY</code> so <code>fbHeight / (2 * halfExtentY)</code> ≈ your desired pixels-per-world-unit. Lock gameplay positions to multiples of <code>1/PPU</code> when aligning to tile grids.</p>
 <h2 id="class-design-camera2dcomponent">Class design: <code>Camera2DComponent</code></h2>
-<p>Stores the same parameters on a <code>GameObject</code>. <code>FillStandardLitSceneFromWorld</code> can resolve the active camera from tagged components, or your game can copy <code>Camera2DComponent</code> fields into a local <code>Camera2D</code> each frame (Platformer2D pattern).</p>
+<p>Stores the same parameters on a <code>GameObject</code>. <code>world.Rendering().FillLit</code> can resolve the active camera from tagged components, or your game can copy <code>Camera2DComponent</code> fields into a local <code>Camera2D</code> each frame (Platformer2D pattern).</p>
 <h2 id="concept-submit-the-scene-with-a-2d-camera">Concept: submit the scene with a 2D camera</h2>
 <h3 id="c">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-type">int</span> fbW = <span class="hljs-number">0</span>, fbH = <span class="hljs-number">0</span>;
@@ -1151,7 +1151,7 @@ camera.halfExtentY = <span class="hljs-number">6.5F</span>;
 Vector3 particleRight{}, particleUp{};
 camera.<span class="hljs-built_in">BillboardBasisWorld</span>(particleRight, particleUp);
 
-<span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(
+world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(
     <span class="hljs-built_in">GetWorld</span>(), context, viewProj, camera.position,
     Vector3{<span class="hljs-number">0.30F</span>, <span class="hljs-number">0.86F</span>, <span class="hljs-number">0.36F</span>}.<span class="hljs-built_in">Normalized</span>(),
     Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">0.85F</span>,
@@ -1170,7 +1170,7 @@ fbH = Math.Max(fbH, <span class="hljs-number">1</span>);
 <span class="hljs-keyword">var</span> position = cam2d.GetWorldPosition();
 <span class="hljs-keyword">var</span> viewProj = cam2d.ComputeViewProjection(fbW, fbH);
 
-SceneSubmit.SubmitStandardLitSceneFromWorld(
+SceneSubmit.world.Rendering().SubmitLit(
     world, context, viewProj, position,
     sunDir, sunColor, sunIntensity, ambient,
     enableParticles: <span class="hljs-literal">false</span>,

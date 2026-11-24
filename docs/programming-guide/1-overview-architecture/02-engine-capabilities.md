@@ -6,7 +6,7 @@ This chapter is a **subsystem map** of Spark: what ships in the engine tree, how
 
 ```mermaid
 flowchart LR
-    ECS[GameWorld ECS] --> Fill[FillStandardLitSceneFromWorld]
+    ECS[GameWorld ECS] --> Fill[Rendering().FillLit]
     Fill --> SRP[SceneRenderParams]
     PHY[PhysicsSubsystem] --> ECS
     AI[SimulateGameAi] --> ECS
@@ -22,7 +22,7 @@ flowchart LR
 | Simulation | Components, physics, AI | `GameWorld::UpdateGameObjects`, `PhysicsSubsystem` |
 | Audio | Mixer pump + spatial cues | `SoundEngine`, `ProcessSoundCues` |
 | UI input | Retained canvases | `ProcessUiCanvasesInput` |
-| Render collect | ECS → GPU descriptors | `FillStandardLitSceneFromWorld` |
+| Render collect | ECS → GPU descriptors | `world.Rendering().FillLit` |
 | Present | HDR, tonemap, swapchain | `IEngineContext::SetSceneRenderParams` |
 
 Deep dives: [2D render pipeline](../2-2d-graphics/06-2d-render-pipeline.md), [Meshes and Materials](../3-3d-graphics/01-meshes-and-materials.md).

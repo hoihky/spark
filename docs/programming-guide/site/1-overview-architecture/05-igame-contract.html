@@ -1193,9 +1193,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 
     <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnRender</span>(<span class="hljs-params">IRenderFrame frame, IEngineContext ctx</span>)</span>
     {
-        <span class="hljs-comment">// Build vp from _camera — same as C++ sample</span>
-        SceneSubmit.SubmitStandardLitSceneFromWorld(World, ctx, vp, _camera.Position,
-            sunDir, sunColor, <span class="hljs-number">1.2f</span>, ambient, <span class="hljs-literal">false</span>, pr, pu, <span class="hljs-number">0f</span>);
+        <span class="hljs-keyword">var</span> opts = LitSceneSubmitOptions.Default3D
+            .WithDirectionalLight(sunDir, sunColor, <span class="hljs-number">1.2f</span>)
+            .WithAmbient(ambient)
+            .WithParticles(<span class="hljs-literal">false</span>, pr, pu);
+        World.Rendering.SubmitLit(ctx, vp, _camera.Position, opts);
     }
 }
 </code></pre>
@@ -1233,8 +1235,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     }
 
     <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
-        <span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(<span class="hljs-built_in">GetWorld</span>(), ctx,
-            sunDir, sunColor, <span class="hljs-number">1.0F</span>, ambient, <span class="hljs-literal">false</span>, sceneTime);
+        LitSceneSubmitOptions opts{};
+        opts.<span class="hljs-built_in">WithDirectionalLight</span>(sunDir, sunColor, <span class="hljs-number">1.0F</span>)
+            .<span class="hljs-built_in">WithAmbient</span>(ambient)
+            .<span class="hljs-built_in">WithSceneTime</span>(sceneTime);
+        <span class="hljs-built_in">GetWorld</span>().<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLitWithCamera</span>(ctx, opts);
     }
 
     <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnDetach</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span> </span>{
@@ -1256,7 +1261,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-built_in">super</span>().on_update(timing, context)
     context.physics.simulate_2d(self.world, timing)
 </code></pre>
-<p><code>SubmitStandardLitSceneFromWorldWithCamera</code> resolves the main <code>Camera2DComponent</code> or <code>CameraComponent</code> — add one to the scene when using this shortcut.</p>
+<p><code>world.Rendering().SubmitLitWithCamera</code> resolves the main <code>Camera2DComponent</code> or <code>CameraComponent</code> — add one to the scene when using this shortcut.</p>
 <h2 id="concept-async-gltf-loading">Concept: async glTF loading</h2>
 <h3 id="c_4">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">RequestGltf</span>(<span class="hljs-string">&quot;assets/models/Fox.glb&quot;</span>);

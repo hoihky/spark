@@ -22,7 +22,7 @@ This part walks a **minimal FPS arena**: fly camera, lit cubes, LMB hitscan + em
 | Arena | `MeshComponent`, `MaterialComponent`, registered unit meshes |
 | Shooting | `TryRaycastSphereWorld` vs target transforms |
 | VFX | Emissive materials + short-lived tracer entities |
-| Submit | `SubmitStandardLitSceneFromWorld` (PBR + sun) |
+| Submit | `world.Rendering().SubmitLit` (PBR + sun) |
 
 ## Class design: `FpsGame`
 
@@ -73,7 +73,7 @@ Same as other `Game` subclasses:
 1. `OnAttach` — meshes, arena, input capture, physics settings
 2. `OnUpdate` — camera, shooting, tracer motion, then `Game::OnUpdate`
 3. Optional `physics.SimulateAll3D` if you add rigidbodies later
-4. `OnRender` — build `viewProj`, `SubmitStandardLitSceneFromWorld`
+4. `OnRender` — build `viewProj`, `world.Rendering().SubmitLit`
 
 Reference: `CharacterCameraDemo.cpp` (character + camera), `SceneEditor3DDemo.cpp` (world ray pick).
 

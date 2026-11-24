@@ -1190,7 +1190,7 @@ DemoHelpHud helpHud;
 <p>Do not disable validation to “fix” errors; adjust submit/sanitize paths instead.</p>
 <hr />
 <h2 id="scene-submit-sanitization">Scene submit sanitization</h2>
-<p><code>SceneRenderParams::Sanitize()</code> clamps unsafe lighting, fog, SSAO, and budget fields before Vulkan records draws. Demos that push extreme exposure or particle counts should still call sanitize via <code>SubmitStandardLitSceneFromWorld</code> / <code>LitScene::Builder</code> / <code>LitScene::Submit</code>.</p>
+<p><code>SceneRenderParams::Sanitize()</code> clamps unsafe lighting, fog, SSAO, and budget fields before Vulkan records draws. Demos that push extreme exposure or particle counts should still call sanitize via <code>world.Rendering().SubmitLit*</code> (submit paths sanitize automatically after fill).</p>
 <h3 id="c_2">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;spark/engine/SceneRenderParams.hpp&quot;</span></span>
 

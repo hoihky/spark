@@ -1088,7 +1088,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           </header>
           <div class="doc-body"><h1 id="ecs-and-scene">ECS and Scene</h1>
 <p>Spark ECS is <strong>gameplay-oriented</strong>: entities are <code>GameObject</code>, data and behavior are <code>GameComponent</code> derivatives looked up by <code>ComponentKind</code>. There is no archetype/query DSL — use <strong><code>world.Entities()</code></strong> (<code>WorldEntities</code>) for iteration and <strong><code>world.QueryObjects()</code></strong> (<code>WorldQuery</code>) for batched gathers.</p>
-<p><code>Scene</code> is a <strong>read/query façade</strong> over the same <code>GameWorld</code> the game mutates; rendering uses <code>FillStandardLitSceneFromWorld(world, …)</code> rather than Scene iterators in most games.</p>
+<p><code>Scene</code> is a <strong>read/query façade</strong> over the same <code>GameWorld</code> the game mutates; rendering uses <code>world.Rendering().FillLit(world, …)</code> rather than Scene iterators in most games.</p>
 <h2 id="entity-gameobject">Entity: <code>GameObject</code></h2>
 <table>
 <thead>
@@ -1298,11 +1298,11 @@ world.ForEachWithComponents&lt;MeshComponent, MaterialComponent&gt;(go =&gt; { }
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">ForEachSprite</span><span class="hljs-params">(<span class="hljs-type">const</span> SpriteFn&amp; fn)</span></span>;
 <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SetSpatialPartitionKind</span><span class="hljs-params">(ScenePartitionKind kind)</span></span>;
 </code></pre>
-<p>Use for editor tooling, culling experiments, or custom render paths — production games usually call <code>FillStandardLitSceneFromWorld</code> directly on <code>GameWorld</code>.</p>
+<p>Use for editor tooling, culling experiments, or custom render paths — production games usually call <code>world.Rendering().FillLit</code> directly on <code>GameWorld</code>.</p>
 <h2 id="concept-full-render-hand-off">Concept: full render hand-off</h2>
 <h3 id="c_8">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SceneRenderParams params{};
-<span class="hljs-built_in">FillStandardLitSceneFromWorld</span>(world, context, viewProj, camPos,
+world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">FillLit</span>(world, context, viewProj, camPos,
     lightDir, lightColor, lightIntensity, ambient, enableParticles,
     camRight, camUp, sceneTime, params);
 <span class="hljs-built_in">PaintUiCanvases</span>(world, params, fbW, fbH);
@@ -1310,7 +1310,7 @@ context.<span class="hljs-built_in">SetSceneRenderParams</span>(params);
 </code></pre>
 <h3 id="c_9">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> p = <span class="hljs-keyword">new</span> SceneRenderParams();
-FillStandardLitSceneFromWorld(World, ctx, vp, camPos, ... , p);
+world.Rendering().FillLit(World, ctx, vp, camPos, ... , p);
 PaintUiCanvases(World, p, fbW, fbH);
 ctx.SetSceneRenderParams(p);
 </code></pre>

@@ -1169,14 +1169,14 @@ hatGo-&gt;<span class="hljs-built_in">SetParent</span>(groupedRoot);
 <p>Demo <strong>Q</strong> toggles shadow visibility to show broken vs grouped sorting.</p>
 <h2 id="concept-submit-with-y-sort">Concept: submit with Y-sort</h2>
 <h3 id="c_4">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(
     world, context, viewProj, cameraPos,
     sunDir, sunColor, sunIntensity, ambient,
     enableParticles, pr, pu, sceneTimeSeconds,
     SceneSpriteSortMode::SortOrderThenWorldY);
 </code></pre>
 <h3 id="c_5">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.SubmitStandardLitSceneFromWorld(
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.world.Rendering().SubmitLit(
     World, context, viewProj, cameraPos,
     sunDir, sunColor, sunIntensity, ambient,
     enableSprites: <span class="hljs-literal">true</span>, sceneTime,

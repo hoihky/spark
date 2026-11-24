@@ -20,7 +20,7 @@ flowchart LR
   TOD[TimeOfDayDriver] --> Params
 ```
 
-During `FillStandardLitSceneFromWorld`:
+During `world.Rendering().FillLit`:
 
 1. `ProcessTimeOfDayDrivers` updates `useTimeOfDay` / `timeOfDay`.  
 2. `CollectRegionalFogVolumes` / post volumes merge by **priority** and **shape**.  
@@ -156,7 +156,7 @@ post.get_or_add_default_component(ComponentKind.PostProcessVolume)
 
 ```cpp
 void OnRender(IRenderFrame&, IEngineContext& ctx) override {
-    SubmitStandardLitSceneFromWorld(
+    world.Rendering().SubmitLit(
         GetWorld(), ctx, viewProj, camera.position,
         sunDir, sunColor, 3.2F, ambient,
         enableParticles: true,
@@ -177,7 +177,7 @@ Prefer **`TimeOfDayDriverComponent`** so `ProcessTimeOfDayDrivers` runs consiste
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorld(World, ctx, viewProj, camPos, ...);
+SceneSubmit.world.Rendering().SubmitLit(World, ctx, viewProj, camPos, ...);
 ```
 
 ### Python

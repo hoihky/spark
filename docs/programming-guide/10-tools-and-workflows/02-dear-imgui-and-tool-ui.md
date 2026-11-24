@@ -21,7 +21,7 @@ SparkShell disables some global overlays while ImGui showcase runs (no help HUD 
 
 ```cpp
 void MyToolGame::OnRender(IRenderFrame&, IEngineContext& context) override {
-    SubmitStandardLitSceneFromWorld(...);
+    world.Rendering().SubmitLit(...);
 
     if (IImGuiLayer* imgui = context.TryGetImGuiLayer()) {
         if (imgui->IsAvailable() && imgui->IsEnabled()) {

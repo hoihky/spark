@@ -171,13 +171,13 @@ cam_go.get_or_add_default_component(ComponentKind.SpringArm3D)
 #### C++
 
 ```cpp
-SubmitStandardLitSceneFromWorldWithCamera(world, ctx, sunDir, sunColor, 1.0F, ambient, false, t);
+world.Rendering().SubmitLitWithCamera(world, ctx, sunDir, sunColor, 1.0F, ambient, false, t);
 ```
 
 #### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(World, ctx, ...);
+SceneSubmit.world.Rendering().SubmitLitWithCamera(World, ctx, ...);
 ```
 
 #### Python

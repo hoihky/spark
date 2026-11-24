@@ -1,6 +1,6 @@
 # Shadows
 
-Spark implements **cascaded shadow maps (CSM)** for the directional sun and optional **cubemap / spotlight shadow atlases** for punctual lights. Shadow flags flow from `SceneRenderParams` defaults → per-material overrides → per-draw rules in `FillStandardLitSceneFromWorld`.
+Spark implements **cascaded shadow maps (CSM)** for the directional sun and optional **cubemap / spotlight shadow atlases** for punctual lights. Shadow flags flow from `SceneRenderParams` defaults → per-material overrides → per-draw rules in `world.Rendering().FillLit`.
 
 ## Shadow pipeline
 
@@ -25,7 +25,7 @@ params.lightingProfile = SceneLightingProfile::Outdoor;
 params.directionalShadowsEnabled = true;
 params.punctualShadowsEnabled = true;
 
-FillStandardLitSceneFromWorld(
+world.Rendering().FillLit(
     world, context, viewProj, cameraPos,
     Vector3{0.3F, -1.0F, 0.2F}.Normalized(),
     Vector3{1.0F, 0.98F, 0.95F}, 1.4F,
@@ -36,7 +36,7 @@ PointLightComponent* pl = lamp->AddComponent<PointLightComponent>();
 pl->SetCastsShadow(true);
 ```
 
-`SubmitStandardLitSceneFromWorld` wrappers set the same fields when using lighting presets.
+`world.Rendering().SubmitLit` wrappers set the same fields when using lighting presets.
 
 ### C\#
 
@@ -46,7 +46,7 @@ var p = new SceneRenderParams {
     DirectionalShadowsEnabled = true,
     PunctualShadowsEnabled = true
 };
-FillStandardLitSceneFromWorld(world, ctx, vp, camPos, sunDir, sunColor, 1.4f, ambient,
+world.Rendering().FillLit(world, ctx, vp, camPos, sunDir, sunColor, 1.4f, ambient,
     enableParticles: true, pr, pu, sceneTime, p);
 lamp.GetComponent<PointLightComponent>()?.SetCastsShadow(true);
 ```

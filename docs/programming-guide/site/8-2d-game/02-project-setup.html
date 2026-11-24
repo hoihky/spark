@@ -1135,7 +1135,7 @@ python -m spark samples.hello_game
 <h2 id="concept-render-submit">Concept: render submit</h2>
 <h3 id="c_3">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; ctx)</span> <span class="hljs-keyword">override</span> </span>{
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(
+    world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLitWithCamera</span>(
         <span class="hljs-built_in">GetWorld</span>(), ctx,
         sunDir, sunColor, <span class="hljs-number">1.0F</span>, ambient,
         enableParticles: <span class="hljs-literal">true</span>, sceneTime);
@@ -1143,7 +1143,7 @@ python -m spark samples.hello_game
 </code></pre>
 <p>Requires <code>Camera2DComponent</code> on scene. See <a href="../2-2d-graphics/06-2d-render-pipeline.html">2D render pipeline</a>.</p>
 <h3 id="c_4">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(World, ctx, ...);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.world.Rendering().SubmitLitWithCamera(World, ctx, ...);
 </code></pre>
 <h3 id="python_1">Python</h3>
 <p>Native host submits after <code>on_update</code> when using default script template.</p>

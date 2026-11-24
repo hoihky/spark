@@ -1090,7 +1090,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p>This chapter is a <strong>subsystem map</strong> of Spark: what ships in the engine tree, how pieces connect at runtime, and where to drill down in later parts of the guide. Everything listed here has working coverage in <strong>SparkDemo</strong> or unit tests unless marked experimental.</p>
 <h2 id="runtime-architecture">Runtime architecture</h2>
 <pre class="mermaid">flowchart LR
-    ECS[GameWorld ECS] --&gt; Fill[FillStandardLitSceneFromWorld]
+    ECS[GameWorld ECS] --&gt; Fill[Rendering().FillLit]
     Fill --&gt; SRP[SceneRenderParams]
     PHY[PhysicsSubsystem] --&gt; ECS
     AI[SimulateGameAi] --&gt; ECS
@@ -1131,7 +1131,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <tr>
 <td>Render collect</td>
 <td>ECS → GPU descriptors</td>
-<td><code>FillStandardLitSceneFromWorld</code></td>
+<td><code>world.Rendering().FillLit</code></td>
 </tr>
 <tr>
 <td>Present</td>

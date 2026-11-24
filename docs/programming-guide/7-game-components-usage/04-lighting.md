@@ -1,6 +1,6 @@
 # Component Guide: Lighting
 
-Lights are **ECS components** gathered in `FillStandardLitSceneFromWorld` into `SceneRenderParams::pointLights` / `spotLights`. The directional sun usually comes from submit arguments or `DirectionalLightComponent`.
+Lights are **ECS components** gathered in `world.Rendering().FillLit` into `SceneRenderParams::pointLights` / `spotLights`. The directional sun usually comes from submit arguments or `DirectionalLightComponent`.
 
 2D-specific: `PointLight2DComponent` and `SpriteLighting2DComponent` (see [2D rendering guide](01-2d-rendering.md)).
 

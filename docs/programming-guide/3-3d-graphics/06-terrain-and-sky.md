@@ -9,7 +9,7 @@ flowchart LR
   TC[TerrainComponent mesh regen]
   TC --> Draw[SceneDrawItem + shadow cast]
   Sky[SkyComponent / clear color] --> BG[Background / depth]
-  Draw --> Fill[FillStandardLitSceneFromWorld]
+  Draw --> Fill[Rendering().FillLit]
   Sky --> Fill
 ```
 

@@ -562,7 +562,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <ul>
 <li><code>IGame</code> / <code>Game</code> / <code>Engine::Run</code> — editor is an <code>IGame</code> implementation (<code>EditorGame</code>).</li>
 <li><code>GameWorld</code>, <code>GameObject</code>, <strong>51</strong> <code>ComponentKind</code> values (+ <code>Unknown</code>), hierarchy via <code>SetParent</code>.</li>
-<li><code>Scene</code> + <code>SubmitStandardLitSceneFromWorld</code> — no Vulkan in editor code.</li>
+<li><code>Scene</code> + <code>world.Rendering().SubmitLit</code> — no Vulkan in editor code.</li>
 <li><code>FlyCamera</code>, <code>MeshRaycast</code>, lighting profiles, 2D/3D cameras.</li>
 </ul>
 <h3 id="ui">UI</h3>

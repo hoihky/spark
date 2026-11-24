@@ -199,7 +199,7 @@ public override void OnRender(IRenderFrame frame, IEngineContext context)
 
 ```python
 def on_render(self, context: EngineContext) -> None:
-    # Native host or template calls FillStandardLitSceneFromWorld after updates.
+    # Native host or template calls world.Rendering().FillLit after updates.
     pass
 ```
 
@@ -218,7 +218,7 @@ On macOS, prefer in-engine **F12** over system capture (MoltenVK windows often r
 |--------|----------------------|
 | `world.Simulation().RunDefaultSlice` | `UpdateGameObjects` + separate VFX/audio |
 | `world.Physics(physics).Simulate2D/3D` | `physics.Simulate2D(world, …)` |
-| `world.Rendering().SubmitLit` / `FillLit` | `SubmitStandardLitSceneFromWorld` |
+| `world.Rendering().SubmitLit` / `FillLit` | `world.Rendering().SubmitLit` |
 | `world.Simulation().RunAi` | `SimulateGameAi` / `AiSubsystem::RunFrame` |
 
 See also `docs/API_POLISH.md`.

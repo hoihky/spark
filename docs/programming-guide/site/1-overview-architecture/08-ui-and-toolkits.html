@@ -1207,7 +1207,7 @@ ui_root = world.create_game_object(<span class="hljs-string">&quot;UI&quot;</spa
 </code></pre>
 <p><strong>Paint</strong> when building scene params in <code>OnRender</code>:</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SceneRenderParams params{};
-<span class="hljs-built_in">FillStandardLitSceneFromWorld</span>(..., params);
+world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">FillLit</span>(..., params);
 <span class="hljs-built_in">PaintUiCanvases</span>(<span class="hljs-built_in">GetWorld</span>(), params, fbW, fbH);
 ctx.<span class="hljs-built_in">SetSceneRenderParams</span>(params);
 </code></pre>
@@ -1267,7 +1267,7 @@ Ui::UiToolkitSettings::<span class="hljs-built_in">SetPreferred</span>(Ui::UiBac
             ImGui::<span class="hljs-built_in">End</span>();
         }
     }
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(...);
+    world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(...);
 }
 </code></pre>
 <p><strong>Rules:</strong> no <code>ImGui::Begin</code> in <code>OnUpdate</code>; engine calls <code>NewFrame</code> after update.</p>

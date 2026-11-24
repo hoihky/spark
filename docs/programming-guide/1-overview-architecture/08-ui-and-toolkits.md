@@ -106,7 +106,7 @@ void OnUpdate(const FrameTiming& t, IEngineContext& ctx) override {
 
 ```cpp
 SceneRenderParams params{};
-FillStandardLitSceneFromWorld(..., params);
+world.Rendering().FillLit(..., params);
 PaintUiCanvases(GetWorld(), params, fbW, fbH);
 ctx.SetSceneRenderParams(params);
 ```
@@ -172,7 +172,7 @@ void OnRender(IRenderFrame&, IEngineContext& context) override {
             ImGui::End();
         }
     }
-    SubmitStandardLitSceneFromWorld(...);
+    world.Rendering().SubmitLit(...);
 }
 ```
 

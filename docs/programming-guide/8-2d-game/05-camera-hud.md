@@ -158,7 +158,7 @@ const Matrix4 viewProj = camera.ViewProjection(static_cast<float>(fbW), static_c
 Vector3 pr{}, pu{};
 camera.BillboardBasisWorld(pr, pu);
 
-SubmitStandardLitSceneFromWorld(
+world.Rendering().SubmitLit(
     GetWorld(), context, viewProj, camera.position,
     Vector3{0.30F, 0.86F, 0.36F}.Normalized(),
     Vector3{1.0F, 0.98F, 0.95F}, 0.85F,
@@ -186,7 +186,7 @@ Details: [Runtime limits — composite views](08-scene2d-runtime-limits.md), [Ga
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorld(World, ctx, viewProj, ...);
+SceneSubmit.world.Rendering().SubmitLit(World, ctx, viewProj, ...);
 ```
 
 ## `CameraBounds2DComponent`

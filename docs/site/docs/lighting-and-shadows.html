@@ -566,7 +566,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Time-of-day demo</strong></td>
-<td>SparkDemo menu <strong>17</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn). Props: Khronos <strong><code>Lantern.glb</code></strong> on a ground plane with HDR sky dome, fog/post volumes, and SSAO. Submit uses <code>FillStandardLitSceneFromWorld</code>.</td>
+<td>SparkDemo menu <strong>17</strong> / key <strong>N</strong> — <code>TimeOfDayDemo</code> animates <code>timeOfDay</code> 0→1 over 90s (sunshine → sunset → night → dawn). Props: Khronos <strong><code>Lantern.glb</code></strong> on a ground plane with HDR sky dome, fog/post volumes, and SSAO. Submit uses <code>world.Rendering().FillLit</code>.</td>
 </tr>
 <tr>
 <td><strong>HDR studio IBL demo</strong></td>

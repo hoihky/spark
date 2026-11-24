@@ -6,7 +6,7 @@ ECS → `SceneRenderParams` for the standard lit renderer. Refactor log: `docs/S
 
 | Layer | Types | Notes |
 |-------|--------|--------|
-| **Entry** | `SceneSubmit.hpp`, `LitScene` | Stable free functions; `LitScene::Builder` for fluent camera/light/fill |
+| **Entry** | `WorldRendering.hpp` | **`world.Rendering().SubmitLit*`** (blessed); `SceneSubmit.hpp` legacy |
 | **Pipeline** | `LitSceneSubmitter` | Full-world collect (meshes, 2D, water, lights, foliage) |
 | **Domains** | `SceneWaterSubmit`, `SceneTilemapSubmit` | Specialized passes invoked from the pipeline |
 | **Collect** | `SceneMeshSubmitCollectors` | Rigid + skinned frustum sinks |

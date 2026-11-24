@@ -1120,7 +1120,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <h2 id="concept-imgui-only-in-onrender">Concept: ImGui only in <code>OnRender</code></h2>
 <h4 id="c">C++</h4>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">MyToolGame::OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; context)</span> <span class="hljs-keyword">override</span> </span>{
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(...);
+    world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(...);
 
     <span class="hljs-keyword">if</span> (IImGuiLayer* imgui = context.<span class="hljs-built_in">TryGetImGuiLayer</span>()) {
         <span class="hljs-keyword">if</span> (imgui-&gt;<span class="hljs-built_in">IsAvailable</span>() &amp;&amp; imgui-&gt;<span class="hljs-built_in">IsEnabled</span>()) {

@@ -1091,7 +1091,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p><strong>Try it:</strong> SparkDemo launcher <strong>Hello</strong> / Python <code>hello_game.py</code> (checkerboard triangle), <strong>Platformer2D</strong>, and <strong>Tilemap Showcase</strong> for layered stacks.</p>
 <h2 id="mental-model">Mental model</h2>
 <pre class="mermaid">flowchart LR
-  ECS[SpriteComponent + Transform] --&gt; Fill[FillStandardLitSceneFromWorld]
+  ECS[SpriteComponent + Transform] --&gt; Fill[Rendering().FillLit]
   Fill --&gt; Params[SceneRenderParams.sprites]
   Params --&gt; Vulkan[VulkanSpritePass batch]
   Vulkan --&gt; Composite[HDR scene + 2D composite]
@@ -1099,7 +1099,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <ol>
 <li><strong>Authoring:</strong> attach <code>SpriteComponent</code> on a <code>GameObject</code> with <code>TransformComponent</code>.</li>
 <li><strong>Registration:</strong> textures live in <code>GameWorld</code> under string keys (or inline <code>SharedPtr&lt;Texture2D&gt;</code> on the component).</li>
-<li><strong>Submit:</strong> <code>FillStandardLitSceneFromWorld</code> walks active objects and appends <code>SceneSpriteDraw</code> records.</li>
+<li><strong>Submit:</strong> <code>world.Rendering().FillLit</code> walks active objects and appends <code>SceneSpriteDraw</code> records.</li>
 <li><strong>GPU:</strong> the renderer maps each draw to a texture <strong>layer index</strong> (max <strong>16</strong> unique atlases per frame) and sorts by <code>SceneSpriteSortMode</code>.</li>
 </ol>
 <p>World space is <strong>+Y up</strong>. The orthographic projection used with <code>Camera2D</code> flips framebuffer Y so screen coordinates still grow downward — do not double-apply an OpenGL-style Y flip when picking or placing HUD.</p>
@@ -1299,7 +1299,7 @@ draw.textureLayer = world.<span class="hljs-built_in">ResolveTextureLayer</span>
 params.sprites.<span class="hljs-built_in">PushBack</span>(draw);
 context.<span class="hljs-built_in">SetSceneRenderParams</span>(params);
 </code></pre>
-<p>Production games should prefer <code>FillStandardLitSceneFromWorld</code> so tilemaps, lights, particles, and composite views stay consistent (<a href="06-2d-render-pipeline.html">2D Render Pipeline</a>).</p>
+<p>Production games should prefer <code>world.Rendering().FillLit</code> so tilemaps, lights, particles, and composite views stay consistent (<a href="06-2d-render-pipeline.html">2D Render Pipeline</a>).</p>
 <h2 id="limits-and-debugging">Limits and debugging</h2>
 <table>
 <thead>

@@ -2,7 +2,7 @@
 
 Spark is a desktop-focused **C++23** game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted **retained GUI** toolkit, and optional **Dear ImGui** for immediate-mode tools.
 
-Games can ship as **native C++** (`Game` subclasses), **C#** via spark-sharp interop (`Spark.Scripting`), or **Python** via spark-python — all three target the same ECS and `FillStandardLitSceneFromWorld` render contract.
+Games can ship as **native C++** (`Game` subclasses), **C#** via spark-sharp interop (`Spark.Scripting`), or **Python** via spark-python — all three target the same ECS and `world.Rendering().FillLit` render contract.
 
 ## What You Get
 

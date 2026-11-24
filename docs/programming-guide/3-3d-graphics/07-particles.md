@@ -125,7 +125,7 @@ fx.add_vfx_player().set_vfx_asset_key("vfx/explosion").play_once()
 ### C++
 
 ```cpp
-SubmitStandardLitSceneFromWorldWithCamera(
+world.Rendering().SubmitLitWithCamera(
     world, context, sunDir, sunColor, intensity, ambient,
     true,   // enableParticles
     sceneTime);
@@ -134,7 +134,7 @@ SubmitStandardLitSceneFromWorldWithCamera(
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+SceneSubmit.world.Rendering().SubmitLitWithCamera(
     world, ctx, sunDir, sunColor, intensity, ambient,
     enableParticles: true, sceneTime);
 ```

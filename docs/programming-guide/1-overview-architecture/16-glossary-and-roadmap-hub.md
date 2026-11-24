@@ -10,7 +10,7 @@ The programming guide teaches **how to build games**. Sibling files under `docs/
 |------|---------|
 | `GameWorld` | ECS container; owns `GameObject` graph |
 | `Scene` / `SceneRenderParams` | Render-facing description built each frame |
-| `SubmitStandardLitSceneFromWorld` | Main 3D collect + draw bridge |
+| `world.Rendering().SubmitLit` | Main 3D collect + draw bridge |
 | `PhysicsSubsystem` | You must call `Simulate*` explicitly |
 | `SimulateGameAi` | AI/nav/perception batch — not automatic |
 | `ComponentKind` | Stable enum for every `GameComponent` |

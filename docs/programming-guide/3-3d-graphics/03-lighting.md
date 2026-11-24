@@ -1,12 +1,12 @@
 # Lighting
 
-Lighting in Spark is **hybrid**: a directional sun + ambient hemisphere in `SceneRenderParams`, punctual lights from ECS components, emissive materials, IBL for specular, optional time-of-day drivers, and regional volumes. `FillStandardLitSceneFromWorld` calls `SceneLightingResolver::Resolve` then merges component lights.
+Lighting in Spark is **hybrid**: a directional sun + ambient hemisphere in `SceneRenderParams`, punctual lights from ECS components, emissive materials, IBL for specular, optional time-of-day drivers, and regional volumes. `world.Rendering().FillLit` calls `SceneLightingResolver::Resolve` then merges component lights.
 
 ## Light sources map
 
 ```mermaid
 flowchart TB
-  Sun[FillStandardLitSceneFromWorld args]
+  Sun[world.Rendering().FillLit args]
   DL[DirectionalLightComponent]
   PL[PointLightComponent]
   SL[SpotLightComponent]
@@ -98,7 +98,7 @@ pl.set_casts_shadow(True)
 
 ```cpp
 void OnRender(IRenderFrame&, IEngineContext& ctx) override {
-    SubmitStandardLitSceneFromWorldWithCamera(
+    world.Rendering().SubmitLitWithCamera(
         GetWorld(), ctx,
         Vector3{0.25F, -1.0F, 0.15F}.Normalized(),
         Vector3{1.0F, 0.97F, 0.92F},
@@ -112,7 +112,7 @@ void OnRender(IRenderFrame&, IEngineContext& ctx) override {
 Manual fly camera:
 
 ```cpp
-SubmitStandardLitSceneFromWorld(
+world.Rendering().SubmitLit(
     GetWorld(), ctx, vp, camera.position,
     sunDir, sunColor, 3.5F, ambient,
     true, camRight, camUp, sceneTime);
@@ -121,7 +121,7 @@ SubmitStandardLitSceneFromWorld(
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+SceneSubmit.world.Rendering().SubmitLitWithCamera(
     World, ctx, SunDir, SunColor, 3.5f, Ambient,
     enableParticles: true, sceneTime);
 ```
@@ -162,7 +162,7 @@ Outdoor profiles enable HDR environment radiance + prefiltered specular + BRDF L
 
 ## Time of day
 
-`ProcessTimeOfDayDrivers` inside `FillStandardLitSceneFromWorld` adjusts sun when `SceneRenderParams::useTimeOfDay` is set (`TimeOfDayDemo`, `WaterLakeDemo`).
+`ProcessTimeOfDayDrivers` inside `world.Rendering().FillLit` adjusts sun when `SceneRenderParams::useTimeOfDay` is set (`TimeOfDayDemo`, `WaterLakeDemo`).
 
 ### C++
 

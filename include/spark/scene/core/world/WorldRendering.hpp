@@ -11,7 +11,11 @@ namespace Spark {
 class IEngineContext;
 struct SceneRenderParams;
 
-/** Lit scene fill/submit on a world. */
+/**
+ * **Canonical lit-render API** for gameplay and tools.
+ * Prefer <c>SubmitLit</c> / <c>SubmitLitWithCamera</c> / <c>FillLit</c> over free functions in
+ * <c>SceneSubmit.hpp</c> or <c>LitScene::Builder</c>. See <c>docs/LIT_RENDER_API.md</c>.
+ */
 class WorldRendering final : public WorldView {
 public:
     using WorldView::WorldView;

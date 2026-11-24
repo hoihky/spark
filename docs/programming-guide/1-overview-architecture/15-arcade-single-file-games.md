@@ -234,7 +234,7 @@ world.destroy_game_object(alien)
 |----------------|-------------------------|
 | `Load` / `Unload` | `OnAttach` / `OnDetach` |
 | `Simulate` | `OnUpdate` after `Game::OnUpdate` |
-| `Render` | `OnRender` + `SubmitStandardLitSceneFromWorld` or 2D submit |
+| `Render` | `OnRender` + `world.Rendering().SubmitLit` or 2D submit |
 | `roots.DestroyAll` | Scene unload or `SceneManager` swap |
 | Procedural atlas | Replace with `RegisterTexture` from content pipeline |
 

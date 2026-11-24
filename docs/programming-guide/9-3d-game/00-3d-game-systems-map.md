@@ -25,7 +25,7 @@ Custom **FPS arena** chapters (**01–06**) combine fly camera + hitscan from `S
 | [02](02-project-setup.md) | Project setup | Meshes, physics hook |
 | [03](03-arena.md) | Arena | Ground + targets |
 | [04](04-shooting.md) | Shooting | Hitscan, tracers |
-| [05](05-rendering.md) | Rendering | `SubmitStandardLitSceneFromWorld` |
+| [05](05-rendering.md) | Rendering | `world.Rendering().SubmitLit` |
 | [06](06-extending.md) | Extending | Weapons, glTF, AI hints |
 | [07](07-character-and-third-person.md) | Character camera | CC3D, spring arm, skinned glTF |
 | [08](08-physics-3d-product-path.md) | Physics 3D path | Showcase **P** integration |

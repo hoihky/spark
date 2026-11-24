@@ -1,6 +1,6 @@
 # Cameras in 3D
 
-3D cameras determine **`viewProjection`**, **`cameraPositionWorld`**, and billboard bases passed into `FillStandardLitSceneFromWorld`. Spark supports **ECS `CameraComponent`** (production), **spring-arm third person**, **`FlyCamera`** (demos/FPS), and **`CharacterCameraRig`** helpers.
+3D cameras determine **`viewProjection`**, **`cameraPositionWorld`**, and billboard bases passed into `world.Rendering().FillLit`. Spark supports **ECS `CameraComponent`** (production), **spring-arm third person**, **`FlyCamera`** (demos/FPS), and **`CharacterCameraRig`** helpers.
 
 ## Resolution order
 
@@ -9,7 +9,7 @@ flowchart TB
   Cams[CameraComponent on active objects]
   Cams --> Resolve[TryResolveMainCamera]
   Resolve --> VP[ViewProjection + position]
-  VP --> Submit[FillStandardLitSceneFromWorld]
+  VP --> Submit[Rendering().FillLit]
 ```
 
 Highest **priority** among enabled `CameraComponent` instances wins unless your game passes an explicit matrix (fly camera demos).
@@ -133,7 +133,7 @@ void OnRender(IRenderFrame&, IEngineContext& ctx) override {
                      * camera.ViewMatrix();
     Vector3 camRight{}, camUp{};
     camera.BillboardBasis(camRight, camUp);
-    SubmitStandardLitSceneFromWorld(GetWorld(), ctx, vp, camera.position,
+    world.Rendering().SubmitLit(GetWorld(), ctx, vp, camera.position,
         sunDir, sunColor, sunIntensity, ambient,
         true, camRight, camUp, sceneTimeSeconds);
 }

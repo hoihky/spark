@@ -1095,7 +1095,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>PhysicsSubsystem::Simulate2D</code> / <code>SimulateAll3D</code> (+ character controllers, triggers)</li>
 <li><code>SimulateGameAi</code> — <code>ProcessGridNavAgents2D</code>, <code>ProcessNavMeshAgents</code>, <code>ProcessPerceptionSensors</code>, then <code>AiAgentComponent</code></li>
 <li><code>ProcessSoundCues</code> — <code>ProcessAudioListeners</code>, <code>ProcessAmbientZones</code>, cue flush</li>
-<li><code>FillStandardLitSceneFromWorld</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
+<li><code>world.Rendering().FillLit</code> — <code>ProcessTimeOfDayDrivers</code>, regional fog/post volumes, lighting resolve</li>
 </ol>
 <hr />
 <h2 id="how-to-use-this-reference">How to use this reference</h2>
@@ -1534,7 +1534,7 @@ tr-&gt;<span class="hljs-built_in">SetRotation</span>(Quaternion::<span class="h
 <hr />
 <h2 id="rendering">Rendering</h2>
 <h3 id="meshcomponent"><code>MeshComponent</code></h3>
-<p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>SubmitStandardLitSceneFromWorld</code></p>
+<p><strong>Kind:</strong> <code>Mesh</code> · <strong>Consumed by:</strong> <code>world.Rendering().SubmitLit</code></p>
 <p>Static triangle mesh + optional <code>SceneMeshSlot</code> (GroundPlane, SkyBox, Custom, …).</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SharedPtr&lt;Mesh&gt; cube = world.<span class="hljs-built_in">Assets</span>().<span class="hljs-built_in">LoadMesh</span>(<span class="hljs-string">&quot;assets/models/cube.obj&quot;</span>);
 <span class="hljs-keyword">auto</span>* mesh = go-&gt;<span class="hljs-built_in">AddComponent</span>&lt;MeshComponent&gt;(cube, SceneMeshSlot::Custom, Vector3::One);
@@ -1782,7 +1782,7 @@ parallax-&gt;<span class="hljs-built_in">SetDriftFrequencyHz</span>(<span class=
 <hr />
 <h2 id="lighting">Lighting</h2>
 <h3 id="directionallightcomponent"><code>DirectionalLightComponent</code></h3>
-<p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>FillStandardLitSceneFromWorld</code></p>
+<p><strong>Kind:</strong> <code>DirectionalLight</code> · <strong>Consumed by:</strong> <code>world.Rendering().FillLit</code></p>
 <p>Light direction = owner transform <strong>local +Z</strong> in world space.</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* sun = sunGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;DirectionalLightComponent&gt;(Vector3{<span class="hljs-number">1</span>,<span class="hljs-number">0.97</span>,<span class="hljs-number">0.9</span>}, <span class="hljs-number">1.2F</span>);
 sunGo-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TransformComponent&gt;()-&gt;<span class="hljs-built_in">SetRotation</span>(
@@ -2393,7 +2393,7 @@ canvas-&gt;<span class="hljs-built_in">SetRoot</span>(<span class="hljs-built_in
 
 <span class="hljs-comment">// Each frame:</span>
 <span class="hljs-built_in">ProcessUiCanvasesInput</span>(world, input, fbW, fbH);
-<span class="hljs-comment">// After FillStandardLitSceneFromWorld (or equivalent):</span>
+<span class="hljs-comment">// After world.Rendering().FillLit (or equivalent):</span>
 <span class="hljs-built_in">PaintUiCanvases</span>(world, params, fbW, fbH);
 </code></pre>
 <hr />
@@ -2404,7 +2404,7 @@ canvas-&gt;<span class="hljs-built_in">SetRoot</span>(<span class="hljs-built_in
 <p>Affects <code>Scene::ForEachDrawableInViewFrustum</code> partition strategy.</p>
 <h3 id="timeofdaydrivercomponent"><code>TimeOfDayDriverComponent</code></h3>
 <p><strong>Consumed by:</strong> <code>ProcessTimeOfDayDrivers</code> before scene lighting resolve</p>
-<p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> is <strong>true</strong> and <code>dayLengthSeconds &gt; 0</code>, <code>ProcessTimeOfDayDrivers</code> advances time each <code>FillStandardLitSceneFromWorld</code> call. Set <code>loop = false</code> when your gameplay code owns the clock (see <code>TimeOfDayDemo</code>).</p>
+<p>Drives <code>SceneRenderParams::useTimeOfDay</code> and <code>timeOfDay</code> (0 = midnight, 0.5 = noon). When <code>loop</code> is <strong>true</strong> and <code>dayLengthSeconds &gt; 0</code>, <code>ProcessTimeOfDayDrivers</code> advances time each <code>world.Rendering().FillLit</code> call. Set <code>loop = false</code> when your gameplay code owns the clock (see <code>TimeOfDayDemo</code>).</p>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-keyword">auto</span>* tod = worldRoot-&gt;<span class="hljs-built_in">AddComponent</span>&lt;TimeOfDayDriverComponent&gt;();
 tod-&gt;<span class="hljs-built_in">SetTimeOfDay</span>(<span class="hljs-number">0.35F</span>);
 tod-&gt;<span class="hljs-built_in">SetDayLengthSeconds</span>(<span class="hljs-number">90.0F</span>);

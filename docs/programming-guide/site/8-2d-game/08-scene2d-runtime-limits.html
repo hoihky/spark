@@ -1143,7 +1143,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li>Create a placeholder <code>Texture2D</code> for the HUD atlas layer (<code>CreateMinimapHudPlaceholderTexture</code>).</li>
 <li><code>IRenderTargetService::CreateRenderTarget</code> / <code>EnsureGpuResources</code> allocates GPU images when the Vulkan backend is active.</li>
 <li>Add <code>Scene2DCompositeViewComponent</code> with <code>Scene2DCompositeFeature</code> (<code>Minimap</code>, <code>FogOfWarMask</code>, <code>SceneOutline</code>), normalized screen rect, and world ortho capture center/extent.</li>
-<li>Each frame, <code>FillStandardLitSceneFromWorld</code> → <code>CollectScene2DCompositeViews</code> appends <code>Scene2DCompositeViewDesc</code> entries to <code>SceneRenderParams</code>.</li>
+<li>Each frame, <code>world.Rendering().FillLit</code> → <code>CollectScene2DCompositeViews</code> appends <code>Scene2DCompositeViewDesc</code> entries to <code>SceneRenderParams</code>.</li>
 </ol>
 <h3 id="gpu-capture-pipeline">GPU capture pipeline</h3>
 <table>

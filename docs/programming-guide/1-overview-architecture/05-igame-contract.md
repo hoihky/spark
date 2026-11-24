@@ -100,9 +100,11 @@ public sealed class LitCubeGame : Game
 
     public override void OnRender(IRenderFrame frame, IEngineContext ctx)
     {
-        // Build vp from _camera — same as C++ sample
-        SceneSubmit.SubmitStandardLitSceneFromWorld(World, ctx, vp, _camera.Position,
-            sunDir, sunColor, 1.2f, ambient, false, pr, pu, 0f);
+        var opts = LitSceneSubmitOptions.Default3D
+            .WithDirectionalLight(sunDir, sunColor, 1.2f)
+            .WithAmbient(ambient)
+            .WithParticles(false, pr, pu);
+        World.Rendering.SubmitLit(ctx, vp, _camera.Position, opts);
     }
 }
 ```
@@ -149,8 +151,11 @@ class PlatformerGame final : public Game {
     }
 
     void OnRender(IRenderFrame&, IEngineContext& ctx) override {
-        SubmitStandardLitSceneFromWorldWithCamera(GetWorld(), ctx,
-            sunDir, sunColor, 1.0F, ambient, false, sceneTime);
+        LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(sunDir, sunColor, 1.0F)
+            .WithAmbient(ambient)
+            .WithSceneTime(sceneTime);
+        GetWorld().Rendering().SubmitLitWithCamera(ctx, opts);
     }
 
     void OnDetach() override {
@@ -179,7 +184,7 @@ def on_update(self, timing, context):
     context.physics.simulate_2d(self.world, timing)
 ```
 
-`SubmitStandardLitSceneFromWorldWithCamera` resolves the main `Camera2DComponent` or `CameraComponent` — add one to the scene when using this shortcut.
+`world.Rendering().SubmitLitWithCamera` resolves the main `Camera2DComponent` or `CameraComponent` — add one to the scene when using this shortcut.
 
 ## Concept: async glTF loading
 

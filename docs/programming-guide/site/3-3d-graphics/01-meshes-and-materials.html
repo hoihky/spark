@@ -1093,7 +1093,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <pre class="mermaid">flowchart LR
   M[Mesh / SkinnedMesh] --&gt; MC[MeshComponent]
   MAT[MaterialComponent] --&gt; Draw[SceneDrawItem]
-  MC --&gt; Fill[FillStandardLitSceneFromWorld]
+  MC --&gt; Fill[Rendering().FillLit]
   MAT --&gt; Fill
   Fill --&gt; Vulkan[VulkanScenePass]
   Vulkan --&gt; IBL[IBL + shadows + fog]

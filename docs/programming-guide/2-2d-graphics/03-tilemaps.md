@@ -11,7 +11,7 @@ Spark tilemaps are **multi-layer grids** backed by a shared **`Tileset`** (atlas
 ```mermaid
 flowchart LR
   TS[Tileset atlas] --> TM[TilemapComponent]
-  TM --> Fill[FillStandardLitSceneFromWorld]
+  TM --> Fill[Rendering().FillLit]
   Fill --> VTM[VulkanTilemapPass]
   VTM --> HDR[HDR scene buffer]
 ```

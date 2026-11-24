@@ -11,7 +11,7 @@ flowchart TB
   SK[SkinnedMeshComponent]
   FSM --> AN
   AN --> SK
-  SK --> Submit[FillStandardLitSceneFromWorld skinned path]
+  SK --> Submit[world.Rendering().FillLit skinned path]
 ```
 
 ## Asset types
@@ -136,6 +136,6 @@ Demos use foot IK solvers and weapon sockets on skeleton joints — see `Charact
 
 ## Submit requirements
 
-Skinned draws are collected when `enableParticles`/mesh paths run inside `FillStandardLitSceneFromWorld` — always submit with the same camera as opaque meshes. Normal maps and glTF materials use the same `MaterialComponent` path as rigid meshes.
+Skinned draws are collected when `enableParticles`/mesh paths run inside `world.Rendering().FillLit` — always submit with the same camera as opaque meshes. Normal maps and glTF materials use the same `MaterialComponent` path as rigid meshes.
 
 Next: [Terrain and Sky](06-terrain-and-sky.md).

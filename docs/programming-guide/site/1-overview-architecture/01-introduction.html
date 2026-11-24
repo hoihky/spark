@@ -1088,7 +1088,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
           </header>
           <div class="doc-body"><h1 id="introduction-to-spark">Introduction to Spark</h1>
 <p>Spark is a desktop-focused <strong>C++23</strong> game engine. It combines a GLFW window, Vulkan forward renderer, entity-component scene graph, optional 2D/3D physics, AI modules, audio mixing, a CPU-painted <strong>retained GUI</strong> toolkit, and optional <strong>Dear ImGui</strong> for immediate-mode tools.</p>
-<p>Games can ship as <strong>native C++</strong> (<code>Game</code> subclasses), <strong>C#</strong> via spark-sharp interop (<code>Spark.Scripting</code>), or <strong>Python</strong> via spark-python — all three target the same ECS and <code>FillStandardLitSceneFromWorld</code> render contract.</p>
+<p>Games can ship as <strong>native C++</strong> (<code>Game</code> subclasses), <strong>C#</strong> via spark-sharp interop (<code>Spark.Scripting</code>), or <strong>Python</strong> via spark-python — all three target the same ECS and <code>world.Rendering().FillLit</code> render contract.</p>
 <h2 id="what-you-get">What You Get</h2>
 <table>
 <thead>

@@ -1287,7 +1287,7 @@ OnRender       — world.Rendering().SubmitLit* / FillLit + SetSceneRenderParams
 </code></pre>
 <h3 id="python_1">Python</h3>
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">def</span> <span class="hljs-title function_">on_render</span>(<span class="hljs-params">self, context: EngineContext</span>) -&gt; <span class="hljs-literal">None</span>:
-    <span class="hljs-comment"># Native host or template calls FillStandardLitSceneFromWorld after updates.</span>
+    <span class="hljs-comment"># Native host or template calls world.Rendering().FillLit after updates.</span>
     <span class="hljs-keyword">pass</span>
 </code></pre>
 <p>Custom fly-camera games must build <code>viewProjection</code> manually (see <a href="05-igame-contract.html">IGame and Game</a> and <code>GltfSamples3DDemo</code>).</p>
@@ -1316,7 +1316,7 @@ OnRender       — world.Rendering().SubmitLit* / FillLit + SetSceneRenderParams
 </tr>
 <tr>
 <td><code>world.Rendering().SubmitLit</code> / <code>FillLit</code></td>
-<td><code>SubmitStandardLitSceneFromWorld</code></td>
+<td><code>world.Rendering().SubmitLit</code></td>
 </tr>
 <tr>
 <td><code>world.Simulation().RunAi</code></td>

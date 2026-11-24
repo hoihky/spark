@@ -8,7 +8,7 @@
 
 namespace Spark {
 
-/** Prefer <c>LitScene</c> and <c>WorldRendering</c> for shorter names; symbols here remain stable. */
+/** Legacy free functions — new code uses <c>world.Rendering().SubmitLit*</c> (<c>WorldRendering.hpp</c>). */
 
 class GameWorld;
 class IEngineContext;

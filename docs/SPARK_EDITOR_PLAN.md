@@ -29,7 +29,7 @@ Godot-style game editor for Spark: **2D and 3D**, built on the engine’s retain
 ### Engine & ECS
 - `IGame` / `Game` / `Engine::Run` — editor is an `IGame` implementation (`EditorGame`).
 - `GameWorld`, `GameObject`, **51** `ComponentKind` values (+ `Unknown`), hierarchy via `SetParent`.
-- `Scene` + `SubmitStandardLitSceneFromWorld` — no Vulkan in editor code.
+- `Scene` + `world.Rendering().SubmitLit` — no Vulkan in editor code.
 - `FlyCamera`, `MeshRaycast`, lighting profiles, 2D/3D cameras.
 
 ### UI

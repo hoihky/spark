@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>05 2d lighting</h1>
           </header>
           <div class="doc-body"><h1 id="2d-lighting">2D Lighting</h1>
-<p>2D lighting is implemented inside the <strong>sprite fragment shader</strong> when <code>SpriteLighting2DComponent</code> is present on the same <code>GameObject</code> as <code>SpriteComponent</code>. Directional “sun” comes from <code>SceneRenderParams</code> (<code>lightDirectionWorld</code>, <code>lightColor</code>, <code>lightIntensity</code>, <code>ambientColor</code>). <strong>Point lights</strong> reuse the 3D <code>ScenePointLight</code> array — both <code>PointLightComponent</code> and <code>PointLight2DComponent</code> append to <code>params.pointLights</code> during <code>FillStandardLitSceneFromWorld</code>.</p>
+<p>2D lighting is implemented inside the <strong>sprite fragment shader</strong> when <code>SpriteLighting2DComponent</code> is present on the same <code>GameObject</code> as <code>SpriteComponent</code>. Directional “sun” comes from <code>SceneRenderParams</code> (<code>lightDirectionWorld</code>, <code>lightColor</code>, <code>lightIntensity</code>, <code>ambientColor</code>). <strong>Point lights</strong> reuse the 3D <code>ScenePointLight</code> array — both <code>PointLightComponent</code> and <code>PointLight2DComponent</code> append to <code>params.pointLights</code> during <code>world.Rendering().FillLit</code>.</p>
 <p>2D point lights <strong>do not cast shadows</strong> (<code>castsShadow = false</code> in submit).</p>
 <h2 id="modes-overview">Modes overview</h2>
 <table>
@@ -1232,13 +1232,13 @@ lamp.set_flicker(<span class="hljs-literal">True</span>, <span class="hljs-numbe
 <h2 id="concept-sun-direction-y-sort">Concept: sun direction + Y-sort</h2>
 <p>Submit sets global light; per-sprite modes multiply into the result.</p>
 <h3 id="c_6">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLitWithCamera</span>(
     world, context, sunDir, sunColor, intensity, ambient,
     enableParticles, sceneTimeSeconds);
 <span class="hljs-comment">// internally sets params.spriteSortMode — pass SortOrderThenWorldY in overloads that accept sort mode</span>
 </code></pre>
 <h3 id="c_7">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.world.Rendering().SubmitLitWithCamera(
     world, context, sunDir, sunColor, <span class="hljs-number">0.85f</span>, ambient,
     enableParticles: <span class="hljs-literal">false</span>, sceneTime);
 </code></pre>

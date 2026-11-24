@@ -96,7 +96,7 @@ sprite.set_sort_order(120)
 ## SpriteLighting2DComponent
 
 **Header:** `spark/ecs/components/rendering/SpriteLighting2DComponent.hpp`  
-Selects `SpriteLighting2DMode` (normal map, ramp, rim, hit flash, outline, …). Consumed in `sprite.frag` during `FillStandardLitSceneFromWorld`.
+Selects `SpriteLighting2DMode` (normal map, ramp, rim, hit flash, outline, …). Consumed in `sprite.frag` during `world.Rendering().FillLit`.
 
 **When to use:** Heroes, torches, gems with pickup flash — not flat background tiles.
 
@@ -401,6 +401,6 @@ vfx = fx_go.get_or_add_default_component(ComponentKind.VfxPlayer)
 
 ## Submit reminder
 
-Nothing draws until `FillStandardLitSceneFromWorld` / `SubmitStandardLitSceneFromWorld*` runs with a valid `Camera2DComponent` or custom `viewProjection`. Use `SceneSpriteSortMode::SortOrderThenWorldY` for side-view games.
+Nothing draws until `world.Rendering().FillLit` / `SubmitStandardLitSceneFromWorld*` runs with a valid `Camera2DComponent` or custom `viewProjection`. Use `SceneSpriteSortMode::SortOrderThenWorldY` for side-view games.
 
 Next: [3D rendering components](02-3d-rendering.md).

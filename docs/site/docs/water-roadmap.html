@@ -1290,7 +1290,7 @@ After the opaque HDR pass (and sky if drawn in same pass), copy color + depth to
 <h2 id="implementation-notes-consolidated">Implementation notes (consolidated)</h2>
 <h3 id="end-to-end-data-path">End-to-end data path</h3>
 <pre><code>WaterLakeDemo::Render
-  → FillStandardLitSceneFromWorld (terrain + props + water collection)
+  → world.Rendering().FillLit (terrain + props + water collection)
   → SceneLightingResolver (time of day, cascades, shadow defaults)
 VulkanRenderer
   → directional CSM Record (casters from draws with kSceneShadowCast)
@@ -1335,7 +1335,7 @@ VulkanRenderer
 <tbody>
 <tr>
 <td>Add water</td>
-<td><code>WaterBodyComponent</code> + <code>FillStandardLitSceneFromWorld</code></td>
+<td><code>WaterBodyComponent</code> + <code>world.Rendering().FillLit</code></td>
 </tr>
 <tr>
 <td>Tune waves</td>

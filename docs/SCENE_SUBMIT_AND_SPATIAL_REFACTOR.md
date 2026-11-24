@@ -1,6 +1,6 @@
 # Scene submit & spatial refactor (factoring log)
 
-Summary of the **2025–2026** restructuring that split monolithic scene submit into focused types and extracted reusable spatial indexes. Public **gameplay APIs are unchanged in spirit**; prefer `LitSceneSubmitOptions` and `LitScene::Builder` over long positional overloads.
+Summary of the **2025–2026** restructuring that split monolithic scene submit into focused types and extracted reusable spatial indexes. Public **gameplay API** for lit submit: **`world.Rendering().SubmitLit*`** with **`LitSceneSubmitOptions`** ([LIT_RENDER_API.md](LIT_RENDER_API.md)). Legacy: `SceneSubmit.hpp`, `LitScene::Builder`.
 
 **Privacy:** docs and scripts use placeholders (`/path/to/spark`, `SPARK_ENGINE_ROOT`). Before push, run `./tools/check-paths-privacy.sh` — see [PATHS_AND_PRIVACY.md](PATHS_AND_PRIVACY.md).
 
@@ -8,7 +8,7 @@ Summary of the **2025–2026** restructuring that split monolithic scene submit 
 
 | Area | Headers | Sources | Role |
 |------|---------|---------|------|
-| **Entry** | `include/spark/scene/submit/SceneSubmit.hpp`, `LitScene.hpp` | `src/spark/scene/submit/SceneSubmit.cpp` | `FillStandardLitSceneFromWorld`, `SubmitStandardLitSceneFromWorld*` |
+| **Entry** | `include/spark/scene/submit/SceneSubmit.hpp`, `LitScene.hpp` | `src/spark/scene/submit/SceneSubmit.cpp` | `world.Rendering().FillLit`, `SubmitStandardLitSceneFromWorld*` |
 | **Pipeline** | `LitSceneSubmitter.hpp` | `LitSceneSubmitter.cpp` | Full-world collect orchestration |
 | **Collect** | `SceneMeshSubmitCollectors.hpp` | `SceneMeshSubmitCollectors.cpp` | Rigid + skinned frustum sinks |
 | **Build** | `SceneRigidMeshDrawBuilder.hpp` | … | Submesh + albedo path |

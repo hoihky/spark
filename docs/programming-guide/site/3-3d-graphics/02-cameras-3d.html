@@ -1087,13 +1087,13 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>02 cameras 3d</h1>
           </header>
           <div class="doc-body"><h1 id="cameras-in-3d">Cameras in 3D</h1>
-<p>3D cameras determine <strong><code>viewProjection</code></strong>, <strong><code>cameraPositionWorld</code></strong>, and billboard bases passed into <code>FillStandardLitSceneFromWorld</code>. Spark supports <strong>ECS <code>CameraComponent</code></strong> (production), <strong>spring-arm third person</strong>, <strong><code>FlyCamera</code></strong> (demos/FPS), and <strong><code>CharacterCameraRig</code></strong> helpers.</p>
+<p>3D cameras determine <strong><code>viewProjection</code></strong>, <strong><code>cameraPositionWorld</code></strong>, and billboard bases passed into <code>world.Rendering().FillLit</code>. Spark supports <strong>ECS <code>CameraComponent</code></strong> (production), <strong>spring-arm third person</strong>, <strong><code>FlyCamera</code></strong> (demos/FPS), and <strong><code>CharacterCameraRig</code></strong> helpers.</p>
 <h2 id="resolution-order">Resolution order</h2>
 <pre class="mermaid">flowchart TB
   Cams[CameraComponent on active objects]
   Cams --&gt; Resolve[TryResolveMainCamera]
   Resolve --&gt; VP[ViewProjection + position]
-  VP --&gt; Submit[FillStandardLitSceneFromWorld]
+  VP --&gt; Submit[Rendering().FillLit]
 </pre>
 <p>Highest <strong>priority</strong> among enabled <code>CameraComponent</code> instances wins unless your game passes an explicit matrix (fly camera demos).</p>
 <h2 id="concept-ecs-perspective-camera">Concept: ECS perspective camera</h2>
@@ -1189,7 +1189,7 @@ follow.set_target(player)
                      * camera.<span class="hljs-built_in">ViewMatrix</span>();
     Vector3 camRight{}, camUp{};
     camera.<span class="hljs-built_in">BillboardBasis</span>(camRight, camUp);
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(<span class="hljs-built_in">GetWorld</span>(), ctx, vp, camera.position,
+    world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(<span class="hljs-built_in">GetWorld</span>(), ctx, vp, camera.position,
         sunDir, sunColor, sunIntensity, ambient,
         <span class="hljs-literal">true</span>, camRight, camUp, sceneTimeSeconds);
 }

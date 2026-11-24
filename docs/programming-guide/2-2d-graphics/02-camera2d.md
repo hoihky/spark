@@ -32,7 +32,7 @@ struct Camera2D {
 
 ## Class design: `Camera2DComponent`
 
-Stores the same parameters on a `GameObject`. `FillStandardLitSceneFromWorld` can resolve the active camera from tagged components, or your game can copy `Camera2DComponent` fields into a local `Camera2D` each frame (Platformer2D pattern).
+Stores the same parameters on a `GameObject`. `world.Rendering().FillLit` can resolve the active camera from tagged components, or your game can copy `Camera2DComponent` fields into a local `Camera2D` each frame (Platformer2D pattern).
 
 ## Concept: submit the scene with a 2D camera
 
@@ -52,7 +52,7 @@ const Matrix4 viewProj = camera.ViewProjection(static_cast<float>(fbW), static_c
 Vector3 particleRight{}, particleUp{};
 camera.BillboardBasisWorld(particleRight, particleUp);
 
-SubmitStandardLitSceneFromWorld(
+world.Rendering().SubmitLit(
     GetWorld(), context, viewProj, camera.position,
     Vector3{0.30F, 0.86F, 0.36F}.Normalized(),
     Vector3{1.0F, 0.98F, 0.95F}, 0.85F,
@@ -74,7 +74,7 @@ var cam2d = cameraGo.GetComponent<Camera2DComponent>();
 var position = cam2d.GetWorldPosition();
 var viewProj = cam2d.ComputeViewProjection(fbW, fbH);
 
-SceneSubmit.SubmitStandardLitSceneFromWorld(
+SceneSubmit.world.Rendering().SubmitLit(
     world, context, viewProj, position,
     sunDir, sunColor, sunIntensity, ambient,
     enableParticles: false,

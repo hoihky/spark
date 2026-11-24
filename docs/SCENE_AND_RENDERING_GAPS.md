@@ -34,8 +34,8 @@ Gameplay code should depend on these headers, not on `VulkanRenderer` internals.
 
 | API | Role |
 |-----|------|
-| `FillStandardLitSceneFromWorld` | Walk ECS → fill `SceneRenderParams` (optional `Scene*` for frustum culling) |
-| `SubmitStandardLitSceneFromWorld` | Fill + `IEngineContext::SetSceneRenderParams` |
+| `world.Rendering().FillLit` | Walk ECS → fill `SceneRenderParams` (optional `Scene*` for frustum culling) |
+| `world.Rendering().SubmitLit` | Fill + `IEngineContext::SetSceneRenderParams` |
 | `LitSceneSubmitter` + `SceneSubmitLighting.cpp` / `SceneSubmitMaterial.cpp` / `SceneDrawListSorter.cpp` | Fill orchestration, lighting/material resolve, opaque/transparent partition ([refactor log](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md)) |
 | `ApplyMaterialComponentToSceneDrawItem` | Map `MaterialComponent` textures/scalars onto `SceneDrawItem` |
 | `PaintUiCanvases` / `ProcessUiCanvasesInput` | Retained UI → params + input |
@@ -242,7 +242,7 @@ Games control rendering through **`SceneRenderParams`** and submit helpers — n
 | **glTF extensions** | Core PBR + emissive + **clearcoat**, **transmission** (screen-space), **iridescence**, **material variants**, `normalTexture.scale` | Sheen, specular-glossiness, true multi-layer transmission / OIT |
 | **Second UV** | Single UV in mesh | `uv1` channel on `Mesh` / material |
 | **Decals** | `DecalProjectorComponent` → `SceneRenderParams::decals` | GPU decal projection pass in `VulkanRenderer` (data path implemented) |
-| **Directional light ECS** | `DirectionalLightComponent` + `FillStandardLitSceneFromWorld` override | Multiple directional lights with blending / priority |
+| **Directional light ECS** | `DirectionalLightComponent` + `world.Rendering().FillLit` override | Multiple directional lights with blending / priority |
 | **Reflection probes** | `iblEnabled` + env layer index | `ReflectionProbeComponent`, blend weights per object |
 | **Material instances** | Per-object `MaterialComponent` | Shared `MaterialAsset` + instance overrides |
 
@@ -269,7 +269,7 @@ Details: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md), [`MATERIALS_AND_L
 | **Offscreen targets** | `RenderTexture` token (limited) | First-class multi-pass submit: mirrors, minimap, replay buffer, UI 3D portraits — OPEN_WORLD D8 |
 | **Camera director** | `CameraFollow3D`, `SpringArm3D`, demo rigs | Blend cuts, weighted targets, spline paths, collision pull-in policy — OPEN_WORLD D9 |
 | **Viewport rect** | `worldViewportScissor*` (clip rect) | Sub-rect render without scissor hack; normalized viewport on params |
-| **Orthographic 3D** | `Camera` supports it | First-class in `SubmitStandardLitSceneFromWorld` + shadow fitting |
+| **Orthographic 3D** | `Camera` supports it | First-class in `world.Rendering().SubmitLit` + shadow fitting |
 
 ### 3.6 2D / UI render API (runtime)
 
@@ -340,4 +340,4 @@ Prioritized for **C++ game authors** (no editor dependency):
 
 ---
 
-*Last updated: 2026-08 — glTF KHR extensions (clearcoat, transmission, iridescence, variants), BRDF LUT, screen-space transmission, `FillStandardLitSceneFromWorld` in `TimeOfDayDemo`. See [`programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).*
+*Last updated: 2026-08 — glTF KHR extensions (clearcoat, transmission, iridescence, variants), BRDF LUT, screen-space transmission, `world.Rendering().FillLit` in `TimeOfDayDemo`. See [`programming-guide/1-overview-architecture/07-game-component-reference.md`](programming-guide/1-overview-architecture/07-game-component-reference.md).*

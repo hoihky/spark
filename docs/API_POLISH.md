@@ -7,7 +7,7 @@ This document tracks the object-oriented façade layer added without removing le
 1. **Views over god-methods** — `GameWorld::Entities()`, `Assets()`, `Simulation()`, `Rendering()`, `Physics(subsystem)` group related calls (mirrors spark-sharp; base type is `WorldView`, not `*Facet`).
 2. **Decomposed world** — `GameWorldEntityGraph` (entities), `GameWorldAssetStore` (cache+loader), `GameWorldPresentation` (VFX/wind/skinned/fonts); `WorldAssets` implements the asset surface.
 3. **Subsystem classes over loose scripts** — `AiSubsystem`, `SoundSubsystem`, `PhysicsSubsystem`, `NavSubsystem`, `GameplaySubsystem` own frame pipelines; free functions remain as thin wrappers.
-4. **Short names for verbose pipelines** — `LitScene::Fill` / `Submit` wrap `FillStandardLitSceneFromWorld` / `SubmitStandardLitSceneFromWorld`.
+4. **Short names for verbose pipelines** — `LitScene::Fill` / `Submit` wrap `world.Rendering().FillLit` / `world.Rendering().SubmitLit`.
 5. **No behavior change** — old symbols keep working; new names are preferred in new code and in `Spark::Game`.
 
 ## C++ (implemented)
@@ -22,7 +22,7 @@ This document tracks the object-oriented façade layer added without removing le
 | Audio | `SoundSubsystem::ProcessFrame` | `ProcessSoundCues` |
 | AI | `AiSubsystem::RunFrame` | `SimulateGameAi` |
 | Navigation | `NavSubsystem::ProcessGridNav2D` | `ProcessGridNavAgents2D` |
-| Lit render | `world.Rendering().SubmitLit(...)` / `LitScene::Submit` | `SubmitStandardLitSceneFromWorld` |
+| Lit render | `world.Rendering().SubmitLit*` (**blessed** — [LIT_RENDER_API.md](LIT_RENDER_API.md)) | `world.Rendering().SubmitLit`, `LitScene::Builder` |
 | Scene policy | `scene.ApplySpatialPolicy()` | `ApplySpatialPolicyFromFirstMatchingObject` |
 | Physics | `world.Physics(physics).Simulate3D(timing)` | `physics.Simulate3D(world, timing)` |
 | Batched query | `world.QueryObjects().CollectWithTag("Enemy", buffer)` | `CollectGameObjects` / `FindGameObjectWithTag` |
@@ -62,7 +62,7 @@ This document tracks the object-oriented façade layer added without removing le
 | `Platformer2DDemo` | Input → `Physics().Simulate2D` → `RunGameplaySlice` → rules; shell then `Game::OnUpdate` → `RunDefaultSlice` | `Rendering().SubmitLitWithCamera` |
 | `GltfSamples3DDemo` | Fly camera; shell then `RunDefaultSlice` | `Rendering().FillLit` + custom `SceneRenderParams` |
 
-Documented in `docs/programming-guide/1-overview-architecture/04-engine-loop.md`. Most SparkDemo `Simulate` paths no longer call `ProcessVfx` / `SubmitStandardLitSceneFromWorld` directly.
+Documented in `docs/programming-guide/1-overview-architecture/04-engine-loop.md`. Most SparkDemo `Simulate` paths no longer call `ProcessVfx` / `world.Rendering().SubmitLit` directly.
 
 ## Next increments (not done yet)
 

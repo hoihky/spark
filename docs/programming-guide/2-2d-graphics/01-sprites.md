@@ -8,7 +8,7 @@ Sprites are the primary **world-space 2D drawable** in Spark. Each `SpriteCompon
 
 ```mermaid
 flowchart LR
-  ECS[SpriteComponent + Transform] --> Fill[FillStandardLitSceneFromWorld]
+  ECS[SpriteComponent + Transform] --> Fill[Rendering().FillLit]
   Fill --> Params[SceneRenderParams.sprites]
   Params --> Vulkan[VulkanSpritePass batch]
   Vulkan --> Composite[HDR scene + 2D composite]
@@ -16,7 +16,7 @@ flowchart LR
 
 1. **Authoring:** attach `SpriteComponent` on a `GameObject` with `TransformComponent`.
 2. **Registration:** textures live in `GameWorld` under string keys (or inline `SharedPtr<Texture2D>` on the component).
-3. **Submit:** `FillStandardLitSceneFromWorld` walks active objects and appends `SceneSpriteDraw` records.
+3. **Submit:** `world.Rendering().FillLit` walks active objects and appends `SceneSpriteDraw` records.
 4. **GPU:** the renderer maps each draw to a texture **layer index** (max **16** unique atlases per frame) and sorts by `SceneSpriteSortMode`.
 
 World space is **+Y up**. The orthographic projection used with `Camera2D` flips framebuffer Y so screen coordinates still grow downward — do not double-apply an OpenGL-style Y flip when picking or placing HUD.
@@ -236,7 +236,7 @@ params.sprites.PushBack(draw);
 context.SetSceneRenderParams(params);
 ```
 
-Production games should prefer `FillStandardLitSceneFromWorld` so tilemaps, lights, particles, and composite views stay consistent ([2D Render Pipeline](06-2d-render-pipeline.md)).
+Production games should prefer `world.Rendering().FillLit` so tilemaps, lights, particles, and composite views stay consistent ([2D Render Pipeline](06-2d-render-pipeline.md)).
 
 ## Limits and debugging
 

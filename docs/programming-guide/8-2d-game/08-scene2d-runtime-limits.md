@@ -24,7 +24,7 @@ P0 minimap wiring lives on `Scene2DCompositeViewComponent` — attach via Part 7
 2. Create a placeholder `Texture2D` for the HUD atlas layer (`CreateMinimapHudPlaceholderTexture`).
 3. `IRenderTargetService::CreateRenderTarget` / `EnsureGpuResources` allocates GPU images when the Vulkan backend is active.
 4. Add `Scene2DCompositeViewComponent` with `Scene2DCompositeFeature` (`Minimap`, `FogOfWarMask`, `SceneOutline`), normalized screen rect, and world ortho capture center/extent.
-5. Each frame, `FillStandardLitSceneFromWorld` → `CollectScene2DCompositeViews` appends `Scene2DCompositeViewDesc` entries to `SceneRenderParams`.
+5. Each frame, `world.Rendering().FillLit` → `CollectScene2DCompositeViews` appends `Scene2DCompositeViewDesc` entries to `SceneRenderParams`.
 
 ### GPU capture pipeline
 

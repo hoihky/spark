@@ -13,7 +13,7 @@ Companion repo: **[spark-sharp](../SPARK_SHARP.md)**. Engine-side factoring log:
 | **Mesh collect** | `SceneMeshSubmitCollectors` | Rigid + skinned frustum sinks |
 | **Sort / partition** | `SceneDrawListSorter` | Opaque/transparent partition, sprite/tilemap/water order |
 | **Domains** | `SceneWaterSubmit`, `SceneTilemapSubmit` | Still native-only inside fill |
-| **Public entry** | `SceneSubmit.hpp`, `LitScene` | `LitScene::Builder` replaces standalone `LitSceneBuilder` |
+| **Public entry** | `WorldRendering.hpp` | `world.Rendering().SubmitLit*`; legacy `SceneSubmit.hpp` |
 | **Options** | `LitSceneSubmitOptions` | `sceneForCulling` enables spatial frustum when `Scene` is set |
 
 ## C# surface (spark-sharp)
@@ -21,9 +21,9 @@ Companion repo: **[spark-sharp](../SPARK_SHARP.md)**. Engine-side factoring log:
 | C++ | C# |
 |-----|-----|
 | `LitSceneSubmitOptions` | `LitSceneSubmitOptions` + `SparkLitSceneSubmitOptions` (blittable) |
-| `LitScene::Builder` | `LitScene.Builder` |
-| `FillStandardLitSceneFromWorld(..., options)` | `world.Rendering.FillStandardLitSceneParams(..., options)` |
-| `SubmitStandardLitSceneFromWorldWithCamera` | `LitScene.SubmitWithCamera` / `world.Rendering.SubmitStandardLitWithCamera` |
+| `world.Rendering().SubmitLit` | `world.Rendering.SubmitLit` |
+| `world.Rendering().FillLit(..., options)` | `world.Rendering.FillLit` / `FillStandardLitSceneParams(..., options)` |
+| `world.Rendering().SubmitLitWithCamera` | `world.Rendering.SubmitLitWithCamera` |
 | `TryFillSceneCameraFromWorld` | `LitScene.TryResolveCamera` / `spark_scene_try_resolve_lit_camera` |
 | `ScenePartitionKind` | `ScenePartitionKind` + `SceneSpatialPolicyComponent.Partition` |
 | `LitSceneSubmitter`, `SceneDrawListSorter`, spatial trees | **Not** script API (run inside native fill) |
@@ -34,8 +34,8 @@ Set `LitSceneSubmitOptions.UseSceneFrustumCulling = true` before fill/submit. Na
 
 ### Deprecated
 
-- `LitSceneBuilder` → use `LitScene.Builder` (`using LitSceneBuilder = LitScene.Builder` alias remains).
-- Long positional submit overloads remain but prefer `LitSceneSubmitOptions`.
+- Prefer **`world.Rendering.SubmitLit*`** — see engine [LIT_RENDER_API.md](LIT_RENDER_API.md).
+- `LitScene.Builder`, `SceneSubmit.*`, `SubmitStandardLit*` names remain for compatibility.
 
 ## New interop symbols
 

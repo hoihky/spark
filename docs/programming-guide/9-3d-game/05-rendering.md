@@ -23,7 +23,7 @@ void FpsGame::OnRender(IRenderFrame&, IEngineContext& context) {
     Vector3 pr{}, pu{};
     camera.BillboardBasis(pr, pu);
 
-    SubmitStandardLitSceneFromWorld(
+    world.Rendering().SubmitLit(
         GetWorld(), context, viewProj, camera.position,
         Vector3{0.28F, -1.0F, 0.18F}.Normalized(),
         Vector3{1.0F, 0.97F, 0.92F}, 3.2F,
@@ -42,7 +42,7 @@ public override void OnRender(IRenderFrame frame, IEngineContext context)
     var aspect = (float)fbW / fbH;
     var proj = Matrix4.PerspectiveVulkan(MathF.DegreesToRadians(72f), aspect, 0.1f, 200f);
     var view = _camera.ViewMatrix;
-    SceneSubmit.SubmitStandardLitSceneFromWorld(
+    SceneSubmit.world.Rendering().SubmitLit(
         World, context, proj * view, _camera.Position,
         sunDir, sunColor, 3.2f, ambient, enableSprites: true, sceneTime);
 }
@@ -56,7 +56,7 @@ def on_render(self, frame, context):
     pass
 ```
 
-For **ECS camera** workflows, attach `CameraComponent` + `AudioListenerComponent` and use `SubmitStandardLitSceneFromWorldWithCamera` ([Part 7 — Camera](../7-game-components-usage/05-camera.md)).
+For **ECS camera** workflows, attach `CameraComponent` + `AudioListenerComponent` and use `world.Rendering().SubmitLitWithCamera` ([Part 7 — Camera](../7-game-components-usage/05-camera.md)).
 
 ## Concept: HUD overlay
 
@@ -81,7 +81,7 @@ hud.GetComponent<TextOverlayComponent>()?.SetText(
 hud.get_component_text_overlay().set_text(f"shots {self._shots}")
 ```
 
-`TextOverlayComponent` is collected during `FillStandardLitSceneFromWorld`.
+`TextOverlayComponent` is collected during `world.Rendering().FillLit`.
 
 ## Shadows and particles (next steps)
 

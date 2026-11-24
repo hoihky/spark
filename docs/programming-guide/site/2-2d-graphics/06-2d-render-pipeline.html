@@ -1087,8 +1087,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>06 2d render pipeline</h1>
           </header>
           <div class="doc-body"><h1 id="2d-render-pipeline">2D Render Pipeline</h1>
-<p>This chapter describes how ECS 2D content becomes GPU work in Spark's <strong>standard lit scene</strong> path. The same <code>FillStandardLitSceneFromWorld</code> entry point collects <strong>3D meshes</strong>, <strong>sprites</strong>, <strong>tilemaps</strong>, lights, particles, foliage, water, and UI — but the 2D-specific stages are sprite batching, tilemap chunking, 2D lighting in <code>sprite.frag</code>, and optional <strong>2D composite</strong> offscreen passes.</p>
-<p><strong>Reference implementation:</strong> <code>spark/scene/submit/SceneSubmit.cpp</code> (<code>FillStandardLitSceneFromWorld</code>), <code>VulkanSpritePass</code>, <code>VulkanTilemapPass</code>, <code>VulkanScene2DCompositeCapture</code>.</p>
+<p>This chapter describes how ECS 2D content becomes GPU work in Spark's <strong>standard lit scene</strong> path. The same <code>world.Rendering().FillLit</code> entry point collects <strong>3D meshes</strong>, <strong>sprites</strong>, <strong>tilemaps</strong>, lights, particles, foliage, water, and UI — but the 2D-specific stages are sprite batching, tilemap chunking, 2D lighting in <code>sprite.frag</code>, and optional <strong>2D composite</strong> offscreen passes.</p>
+<p><strong>Reference implementation:</strong> <code>spark/scene/submit/SceneSubmit.cpp</code> (<code>world.Rendering().FillLit</code>), <code>VulkanSpritePass</code>, <code>VulkanTilemapPass</code>, <code>VulkanScene2DCompositeCapture</code>.</p>
 <h2 id="pipeline-overview">Pipeline overview</h2>
 <pre class="mermaid">flowchart TB
   subgraph collect [ECS collection]
@@ -1097,7 +1097,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     L2[SpriteLighting2D / PointLight2D]
     PT[Particles SpriteLayer]
   end
-  collect --&gt; Fill[FillStandardLitSceneFromWorld]
+  collect --&gt; Fill[Rendering().FillLit]
   Fill --&gt; SRP[SceneRenderParams]
   SRP --&gt; HDR[HDR scene pass]
   HDR --&gt; COMP[2D composite capture optional]
@@ -1166,7 +1166,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 };
 </code></pre>
 <p><code>SortOrderThenWorldY</code> is the platformer default: primary key <code>sortOrder</code>, secondary key world <strong>Y</strong> (bottom of sprite) so co-planar characters sort correctly in side-view games.</p>
-<h2 id="what-fillstandardlitscenefromworld-does-2d-slice">What <code>FillStandardLitSceneFromWorld</code> does (2D slice)</h2>
+<h2 id="what-worldrenderingfilllit-does-2d-slice">What <code>world.Rendering().FillLit</code> does (2D slice)</h2>
 <p>On each call the function <strong>clears</strong> prior frame draw lists, resolves directional light + ambient (<code>SceneLightingResolver</code>), gathers enabled <code>PointLightComponent</code> and <code>PointLight2DComponent</code>, then walks active <code>GameObject</code>s to append:</p>
 <ul>
 <li><strong>Sprites</strong> — world matrix, tint, UV rect, sort order, texture layer index.</li>
@@ -1177,7 +1177,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </ul>
 <p>It also runs <code>ProcessTimeOfDayDrivers</code> and <code>ApplyRegionalRenderVolumes</code> before mesh/sprite collection — 2D games often leave these at defaults.</p>
 <p>C++ signature (simplified):</p>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">FillStandardLitSceneFromWorld</span><span class="hljs-params">(
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-type">void</span> world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">FillLit</span>(
     GameWorld&amp; world,
     IEngineContext&amp; context,
     <span class="hljs-type">const</span> Matrix4&amp; viewProjection,
@@ -1192,9 +1192,9 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-type">float</span> sceneTimeSeconds,
     SceneRenderParams&amp; params,
     SceneSpriteSortMode spriteSortMode = SceneSpriteSortMode::SortOrderOnly,
-    <span class="hljs-type">const</span> Scene* sceneForCulling = <span class="hljs-literal">nullptr</span>)</span></span>;
+    <span class="hljs-type">const</span> Scene* sceneForCulling = <span class="hljs-literal">nullptr</span>);
 </code></pre>
-<p>Convenience wrappers (<code>SubmitStandardLitSceneFromWorld</code>, <code>FillStandardLitSceneFromWorldWithCamera</code>) wire camera components and particle billboards.</p>
+<p>Convenience wrappers (<code>world.Rendering().SubmitLit</code>, <code>FillStandardLitSceneFromWorldWithCamera</code>) wire camera components and particle billboards.</p>
 <h2 id="concept-end-to-end-2d-frame">Concept: end-to-end 2D frame</h2>
 <h3 id="c">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Platformer2DGame::OnRender</span><span class="hljs-params">(IRenderFrame&amp;, IEngineContext&amp; context)</span> </span>{
@@ -1207,7 +1207,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     Vector3 pr{}, pu{};
     camera.<span class="hljs-built_in">BillboardBasisWorld</span>(pr, pu);
 
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(
+    world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(
         <span class="hljs-built_in">GetWorld</span>(), context, viewProj, camera.position,
         Vector3{<span class="hljs-number">0.30F</span>, <span class="hljs-number">0.86F</span>, <span class="hljs-number">0.36F</span>}.<span class="hljs-built_in">Normalized</span>(),
         Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">0.85F</span>,
@@ -1225,7 +1225,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-keyword">var</span> viewProj = _camera.ComputeViewProjection(fbW, fbH);
     _camera.BillboardBasisWorld(<span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> pr, <span class="hljs-keyword">out</span> <span class="hljs-keyword">var</span> pu);
 
-    SceneSubmit.SubmitStandardLitSceneFromWorld(
+    SceneSubmit.world.Rendering().SubmitLit(
         World, context, viewProj, _camera.Position,
         _sunDir, _sunColor, <span class="hljs-number">0.85f</span>, _ambient,
         enableParticles: <span class="hljs-literal">false</span>, pr, pu, _sceneTime,
@@ -1233,7 +1233,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 }
 </code></pre>
 <h3 id="python">Python</h3>
-<p>Script-hosted games implement <code>on_render</code> on <code>Game</code> and rely on the engine to call <code>FillStandardLitSceneFromWorld</code> after ECS update — you normally <strong>do not</strong> build <code>SceneRenderParams</code> manually. Ensure the scene has an active <code>Camera2DComponent</code> and sprites/tilemaps on the world you received from <code>context.try_get_scene()</code>.</p>
+<p>Script-hosted games implement <code>on_render</code> on <code>Game</code> and rely on the engine to call <code>world.Rendering().FillLit</code> after ECS update — you normally <strong>do not</strong> build <code>SceneRenderParams</code> manually. Ensure the scene has an active <code>Camera2DComponent</code> and sprites/tilemaps on the world you received from <code>context.try_get_scene()</code>.</p>
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MyGame</span>(<span class="hljs-title class_ inherited__">Game</span>):
     <span class="hljs-keyword">def</span> <span class="hljs-title function_">on_render</span>(<span class="hljs-params">self, context: EngineContext</span>) -&gt; <span class="hljs-literal">None</span>:
         <span class="hljs-comment"># Gameplay already ran in on_update; engine submits the world.</span>
@@ -1242,14 +1242,14 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p>Use C++ or C# <code>OnRender</code> overrides when you need custom sun direction, particle enablement, or manual <code>PaintUiCanvases</code>.</p>
 <h2 id="concept-gui-on-top-of-2d">Concept: GUI on top of 2D</h2>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">SceneRenderParams params{};
-<span class="hljs-built_in">FillStandardLitSceneFromWorld</span>(..., params);
+world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">FillLit</span>(..., params);
 <span class="hljs-built_in">PaintUiCanvases</span>(<span class="hljs-built_in">GetWorld</span>(), params, fbW, fbH);
 context.<span class="hljs-built_in">SetSceneRenderParams</span>(params);
 </code></pre>
 <p>GUI draws into <code>screenRects</code>, <code>screenSprites</code>, and font-backed <code>screenTexts</code> with paint order — after world sprites unless you use late overlay channels.</p>
 <h3 id="c_2">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> p = <span class="hljs-keyword">new</span> SceneRenderParams();
-FillStandardLitSceneFromWorld(world, context, ..., p);
+world.Rendering().FillLit(world, context, ..., p);
 PaintUiCanvases(world, p, fbW, fbH);
 context.SetSceneRenderParams(p);
 </code></pre>

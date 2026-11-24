@@ -534,8 +534,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td><strong>Public entry</strong></td>
-<td><code>SceneSubmit.hpp</code>, <code>LitScene</code></td>
-<td><code>LitScene::Builder</code> replaces standalone <code>LitSceneBuilder</code></td>
+<td><code>WorldRendering.hpp</code></td>
+<td><code>world.Rendering().SubmitLit*</code>; legacy <code>SceneSubmit.hpp</code></td>
 </tr>
 <tr>
 <td><strong>Options</strong></td>
@@ -558,16 +558,16 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <td><code>LitSceneSubmitOptions</code> + <code>SparkLitSceneSubmitOptions</code> (blittable)</td>
 </tr>
 <tr>
-<td><code>LitScene::Builder</code></td>
-<td><code>LitScene.Builder</code></td>
+<td><code>world.Rendering().SubmitLit</code></td>
+<td><code>world.Rendering.SubmitLit</code></td>
 </tr>
 <tr>
-<td><code>FillStandardLitSceneFromWorld(..., options)</code></td>
-<td><code>world.Rendering.FillStandardLitSceneParams(..., options)</code></td>
+<td><code>world.Rendering().FillLit(..., options)</code></td>
+<td><code>world.Rendering.FillLit</code> / <code>FillStandardLitSceneParams(..., options)</code></td>
 </tr>
 <tr>
-<td><code>SubmitStandardLitSceneFromWorldWithCamera</code></td>
-<td><code>LitScene.SubmitWithCamera</code> / <code>world.Rendering.SubmitStandardLitWithCamera</code></td>
+<td><code>world.Rendering().SubmitLitWithCamera</code></td>
+<td><code>world.Rendering.SubmitLitWithCamera</code></td>
 </tr>
 <tr>
 <td><code>TryFillSceneCameraFromWorld</code></td>
@@ -587,8 +587,8 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <p>Set <code>LitSceneSubmitOptions.UseSceneFrustumCulling = true</code> before fill/submit. Native code passes <code>IEngineContext::TryGetScene()</code> as <code>sceneForCulling</code>. Tune acceleration via <code>SceneSpatialPolicyComponent.Partition</code> (<code>Octree</code> → engine <code>OctTree</code>).</p>
 <h3 id="deprecated">Deprecated</h3>
 <ul>
-<li><code>LitSceneBuilder</code> → use <code>LitScene.Builder</code> (<code>using LitSceneBuilder = LitScene.Builder</code> alias remains).</li>
-<li>Long positional submit overloads remain but prefer <code>LitSceneSubmitOptions</code>.</li>
+<li>Prefer <strong><code>world.Rendering.SubmitLit*</code></strong> — see engine <a href="lit-render-api.html">LIT_RENDER_API.md</a>.</li>
+<li><code>LitScene.Builder</code>, <code>SceneSubmit.*</code>, <code>SubmitStandardLit*</code> names remain for compatibility.</li>
 </ul>
 <h2 id="new-interop-symbols">New interop symbols</h2>
 <ul>

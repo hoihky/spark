@@ -26,7 +26,8 @@
 #include "spark/render/platform/Window.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/core/world/WorldRendering.hpp"
+#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 #include "spark/scene/core/SceneEntityRole.hpp"
 #include "spark/scene/prefab/PrefabInstantiator.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
@@ -1184,22 +1185,17 @@ void EditorApplication::OnRender(Scene& scene, IEngineContext& engineContext) {
     const Matrix4 viewProj = proj * view;
 
     const Vector3 lightDir = Vector3{0.35F, 0.88F, 0.32F}.Normalized();
-    FillStandardLitSceneFromWorld(
-            scene.GetWorld(),
+    LitSceneSubmitOptions litOptions{};
+    litOptions.WithDirectionalLight(lightDir, Vector3{1.0F, 0.98F, 0.94F}, 0.95F)
+            .WithAmbient(Vector3{0.11F, 0.12F, 0.14F})
+            .WithSpriteSortMode(SceneSpriteSortMode::SortOrderOnly)
+            .WithSceneForCulling(&scene);
+    scene.GetWorld().Rendering().FillLit(
             engineContext,
             viewProj,
             viewport.GetCamera().position,
-            lightDir,
-            Vector3{1.0F, 0.98F, 0.94F},
-            0.95F,
-            Vector3{0.11F, 0.12F, 0.14F},
-            false,
-            Vector3{1.0F, 0.0F, 0.0F},
-            Vector3{0.0F, 1.0F, 0.0F},
-            0.0F,
-            params,
-            SceneSpriteSortMode::SortOrderOnly,
-            &scene);
+            litOptions,
+            params);
 
     if (!playSession.IsActive()) {
         viewport.AppendGizmoDraws(params, selection);

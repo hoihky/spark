@@ -1153,7 +1153,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </tr>
 <tr>
 <td>Submit</td>
-<td><code>SubmitStandardLitSceneFromWorld</code> (PBR + sun)</td>
+<td><code>world.Rendering().SubmitLit</code> (PBR + sun)</td>
 </tr>
 </tbody>
 </table>
@@ -1195,7 +1195,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <li><code>OnAttach</code> — meshes, arena, input capture, physics settings</li>
 <li><code>OnUpdate</code> — camera, shooting, tracer motion, then <code>Game::OnUpdate</code></li>
 <li>Optional <code>physics.SimulateAll3D</code> if you add rigidbodies later</li>
-<li><code>OnRender</code> — build <code>viewProj</code>, <code>SubmitStandardLitSceneFromWorld</code></li>
+<li><code>OnRender</code> — build <code>viewProj</code>, <code>world.Rendering().SubmitLit</code></li>
 </ol>
 <p>Reference: <code>CharacterCameraDemo.cpp</code> (character + camera), <code>SceneEditor3DDemo.cpp</code> (world ray pick).</p>
 <p>Next: <a href="02-project-setup.html">Project Setup</a>.</p></div>

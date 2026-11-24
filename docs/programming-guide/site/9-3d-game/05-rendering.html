@@ -1105,7 +1105,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     Vector3 pr{}, pu{};
     camera.<span class="hljs-built_in">BillboardBasis</span>(pr, pu);
 
-    <span class="hljs-built_in">SubmitStandardLitSceneFromWorld</span>(
+    world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLit</span>(
         <span class="hljs-built_in">GetWorld</span>(), context, viewProj, camera.position,
         Vector3{<span class="hljs-number">0.28F</span>, <span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.18F</span>}.<span class="hljs-built_in">Normalized</span>(),
         Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.97F</span>, <span class="hljs-number">0.92F</span>}, <span class="hljs-number">3.2F</span>,
@@ -1121,7 +1121,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
     <span class="hljs-keyword">var</span> aspect = (<span class="hljs-built_in">float</span>)fbW / fbH;
     <span class="hljs-keyword">var</span> proj = Matrix4.PerspectiveVulkan(MathF.DegreesToRadians(<span class="hljs-number">72f</span>), aspect, <span class="hljs-number">0.1f</span>, <span class="hljs-number">200f</span>);
     <span class="hljs-keyword">var</span> view = _camera.ViewMatrix;
-    SceneSubmit.SubmitStandardLitSceneFromWorld(
+    SceneSubmit.world.Rendering().SubmitLit(
         World, context, proj * view, _camera.Position,
         sunDir, sunColor, <span class="hljs-number">3.2f</span>, ambient, enableSprites: <span class="hljs-literal">true</span>, sceneTime);
 }
@@ -1131,7 +1131,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <span class="hljs-keyword">def</span> <span class="hljs-title function_">on_render</span>(<span class="hljs-params">self, frame, context</span>):
     <span class="hljs-keyword">pass</span>
 </code></pre>
-<p>For <strong>ECS camera</strong> workflows, attach <code>CameraComponent</code> + <code>AudioListenerComponent</code> and use <code>SubmitStandardLitSceneFromWorldWithCamera</code> (<a href="../7-game-components-usage/05-camera.html">Part 7 — Camera</a>).</p>
+<p>For <strong>ECS camera</strong> workflows, attach <code>CameraComponent</code> + <code>AudioListenerComponent</code> and use <code>world.Rendering().SubmitLitWithCamera</code> (<a href="../7-game-components-usage/05-camera.html">Part 7 — Camera</a>).</p>
 <h2 id="concept-hud-overlay">Concept: HUD overlay</h2>
 <h3 id="c_2">C++</h3>
 <pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">hudText-&gt;<span class="hljs-built_in">SetText</span>(<span class="hljs-built_in">Utf8String</span>(std::format(
@@ -1145,7 +1145,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 <h3 id="python_1">Python</h3>
 <pre><code class="hljs language-python language-python" data-highlighted="yes">hud.get_component_text_overlay().set_text(<span class="hljs-string">f&quot;shots <span class="hljs-subst">{self._shots}</span>&quot;</span>)
 </code></pre>
-<p><code>TextOverlayComponent</code> is collected during <code>FillStandardLitSceneFromWorld</code>.</p>
+<p><code>TextOverlayComponent</code> is collected during <code>world.Rendering().FillLit</code>.</p>
 <h2 id="shadows-and-particles-next-steps">Shadows and particles (next steps)</h2>
 <table>
 <thead>

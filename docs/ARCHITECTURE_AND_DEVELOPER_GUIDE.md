@@ -39,7 +39,7 @@ Key header groups:
 - **Components:** `spark/ecs/components/` — domain subfolders (`core/`, `rendering/`, `lighting/`, `camera/`, `physics/2d|3d/`, `animation/`, `ai/`, `audio/`, `ui/`, `world/`).
 - **Math & containers:** `spark/math/`, `spark/core/`, `spark/core/` (`SharedPtr`, `UniquePtr`, `Array`, `Utf8String`, `Optional`, `Function`, `HashMap`, `Queue`).
 - **Rendering contract:** `spark/engine/SceneRenderParams.hpp` — what the GPU path consumes each frame.
-- **Fast path for lit scenes:** `spark/scene/submit/SceneSubmit.hpp` — `SubmitStandardLitSceneFromWorld` (`LitSceneSubmitter`, `SceneMeshSubmitCollectors`, `SceneDrawListSorter`, `SceneSubmitMaterial.cpp`, …). See `include/spark/scene/submit/README.md`.
+- **Fast path for lit scenes:** `world.Rendering().SubmitLit*` (`WorldRendering.hpp` → `LitSceneSubmitter`, …). Legacy: `SceneSubmit.hpp`. See [LIT_RENDER_API.md](LIT_RENDER_API.md) and `include/spark/scene/submit/README.md`.
 
 ---
 
@@ -198,39 +198,28 @@ This section is a **feature-oriented index**: what exists in the tree today, whi
 | **World sprites** | Alpha quads after opaque scene | `SceneSpriteDraw`, `sprites`, `spriteSortMode` (`SceneSpriteSortMode`) |
 | **Particles** | CPU billboards, additive pass | `SceneParticleInstance`, `particles`, `particleCameraRight` / `Up` |
 | **Screen UI** | Solid rects + text, three paint layers | `screenRects` / `screenTexts`, overlay, late; `ScreenRectDraw`, `ScreenTextDraw`, `NextUiPaintOrder` |
-| **ECS → standard frame** | One-call fill for typical 3D scenes | `SubmitStandardLitSceneFromWorld` (`spark/scene/submit/SceneSubmit.hpp`) |
-| **Lit scene facade** | Fluent camera + lighting + submit | `LitScene::Builder`, `LitSceneSubmitOptions` (`LitScene.hpp`) |
+| **ECS → standard frame** | One-call fill for typical 3D scenes | `world.Rendering().SubmitLit` / `FillLit` (`WorldRendering.hpp`) |
+| **Lit options** | Lighting, particles, culling | `LitSceneSubmitOptions` |
 | **Lighting preset setup** | Profile + overrides without touching draw lists | `SceneLightingSetup` (`spark/render/lighting/SceneLightingSetup.hpp`) |
 | **Shadow participation VO** | Cast/receive intent for materials and draws | `SceneShadowParticipation` (`spark/render/lighting/SceneShadowParticipation.hpp`) |
 | **Params validation** | Clamp unsafe lighting / SSAO / fog values | `SceneRenderParams::Sanitize()` |
 
 Gap analysis (more light types, material channels, IBL, caps): [`MATERIALS_AND_LIGHTING.md`](MATERIALS_AND_LIGHTING.md).
 
-#### Recommended lit-scene path (additive API)
+#### Recommended lit-scene path
 
-Existing positional APIs are unchanged. For new gameplay code, prefer the options struct or builder:
+See **[LIT_RENDER_API.md](LIT_RENDER_API.md)**. Typical game code:
 
 ```cpp
-#include "spark/scene/submit/LitScene.hpp"
 #include "spark/scene/submit/LitSceneSubmitOptions.hpp"
-#include "spark/render/lighting/SceneLightingSetup.hpp"
 
 Spark::LitSceneSubmitOptions opts;
 opts.WithDirectionalLight(sunDir, sunColor, sunIntensity).WithSceneTime(sceneTime);
-
-Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor)
-    .WithShadowCascades(0.12F, 1200.0F)
-    .WithShadowDistanceFade(150.0F)
-    .ApplyTo(params);  // optional: or chain on LitScene::Builder
-
-Spark::LitScene::Builder(world, context)
-    .WithLightingSetup(Spark::SceneLightingSetup::FromProfile(Spark::SceneLightingProfile::Outdoor))
-    .WithOptions(opts)
-    .WithCameraFromWorld()
-    .Submit();
+world.Rendering().SubmitLit(context, viewProjection, cameraPositionWorld, opts);
+// or: world.Rendering().SubmitLitWithCamera(context, opts);
 ```
 
-Call `SceneRenderParams::Sanitize()` when assembling params manually (editor, custom presenters).
+For custom `SceneRenderParams` (editor, demos): `world.Rendering().FillLit(...)`, patch `params`, then `context.SetSceneRenderParams(params)`. Optional: `SceneLightingSetup::ApplyTo(params)` before submit. Call `SceneRenderParams::Sanitize()` when tweaking extremes.
 
 #### Spark core vs C++ standard library
 
@@ -588,7 +577,7 @@ Include umbrella **`spark/ecs/Ecs.hpp`** in tooling if you want a single include
 
 ### 8.1 Component storage model (mental diagram)
 
-Each **`GameObject`** owns a **closed set** of **`GameComponent`** instances keyed by `ComponentKind`. Components are **not** stored in external archetype arrays (no EnTT-style sparse sets in the open-source tree); instead, **`GameWorld::UpdateGameObjects`** walks active objects and dispatches **`OnUpdate`** to each attached component. Rendering does **not** iterate components directly — it uses **`Scene`** helpers or **`SubmitStandardLitSceneFromWorld`**, which read the same components (`MeshComponent`, `TransformComponent`, …) to emit **`SceneDrawItem`** entries.
+Each **`GameObject`** owns a **closed set** of **`GameComponent`** instances keyed by `ComponentKind`. Components are **not** stored in external archetype arrays (no EnTT-style sparse sets in the open-source tree); instead, **`GameWorld::UpdateGameObjects`** walks active objects and dispatches **`OnUpdate`** to each attached component. Rendering does **not** iterate components directly — it uses **`Scene`** helpers or **`world.Rendering().SubmitLit*`**, which read the same components (`MeshComponent`, `TransformComponent`, …) to emit **`SceneDrawItem`** entries.
 
 ```mermaid
 flowchart TB
@@ -619,11 +608,11 @@ flowchart TB
 
 See `include/spark/demo/ThreeDDemo.hpp` and related demos for full examples (sorting helpers live in `spark/demo/ShellDemoSceneUtil.hpp`).
 
-### 9.2 Convenience: `SubmitStandardLitSceneFromWorld`
+### 9.2 Convenience: `world.Rendering().SubmitLit*`
 
-`SubmitStandardLitSceneFromWorld` (`spark/scene/submit/SceneSubmit.hpp`) walks the world and fills **standard lit** parameters (sky, rigid meshes, skinned meshes via `DispatchSkinnedDrawableFrustumCull` when a `SceneSpatialPolicyComponent` is present, point lights, **spot lights**, optional particles, time for sprite effects). Materials pick up **base color**, **normal**, and **metallic–roughness (ORM)** textures when you pass the **`SceneRenderParams*`** overload of `ApplyMaterialComponentToSceneDrawItem` inside the submitter. Optional **`SceneSpriteSortMode::SortOrderThenWorldY`** enables top-down sprite occlusion by world Y after `sortOrder`.
+`WorldRendering::SubmitLit` / `FillLit` delegate to `LitSceneSubmitter` (`spark/scene/submit/`). They collect sky, rigid meshes, skinned meshes (with `SceneSpatialPolicyComponent` frustum cull when enabled), point/spot lights, particles, and sprites. Materials resolve PBR textures into `SceneRenderParams`. Use **`LitSceneSubmitOptions`** for sun/ambient, sprite sort (`SortOrderThenWorldY` for Y-sort), and `WithSceneForCulling`.
 
-Use this when your game matches the **stock lit pipeline** and you do not need custom draw ordering beyond what the submitter provides.
+Legacy free functions in `SceneSubmit.hpp` remain for older samples; do not use them in new code.
 
 ### 9.3 VulkanRenderer internals (rendering logic)
 
@@ -859,7 +848,7 @@ Demo: **`ImGuiShowcaseDemo`** (launcher **#20**, key **G**). **`GltfSamples3DDem
 | `SceneRenderParams` | CPU-side description of one frame’s draws, lights, UI, textures for Vulkan. |
 | `SceneMeshSlot` | Built-in mesh bucket (`UnitCube`, `GroundPlane`, `Custom` CPU mesh). |
 | `IFramePresenter` | Abstract “present this frame” — implemented by `VulkanRenderer`. |
-| `SubmitStandardLitSceneFromWorld` | ECS → standard lit `SceneRenderParams` in one call; optional `SceneSpriteSortMode` for Y-sort. |
+| `world.Rendering().SubmitLit` | ECS → standard lit `SceneRenderParams` in one call; optional `SceneSpriteSortMode` for Y-sort. |
 | `SceneUniformGpu` | std140 UBO (`VulkanSceneUniformGpu.hpp`): matrices, directional + ambient, shadow params, cluster/IBL metadata — must match `scene_ubo.glsl`. |
 | `VulkanScreenSpaceEffectsPass` | Optional SSAO: depth copy + fullscreen composite to scratch HDR before tonemap. |
 | `SceneSpotLight` | CPU cone light: position, range, **normalized** `directionWorld`, inner/outer **full cone angles in radians**, color, intensity. |

@@ -11,6 +11,7 @@
 | [**GLTF_DISPLAY_ROADMAP.md**](GLTF_DISPLAY_ROADMAP.md) | Rendering / assets | glTF display compatibility phases and test matrix |
 | [**ARCHITECTURE_AND_DEVELOPER_GUIDE.md**](ARCHITECTURE_AND_DEVELOPER_GUIDE.md) | Engine & gameplay devs | Loop, ECS, rendering, feature catalog |
 | [**SCENE_AND_RENDERING_GAPS.md**](SCENE_AND_RENDERING_GAPS.md) | Gameplay devs | C++ public API gaps — scene, ECS, rendering (`include/spark/`) |
+| [**LIT_RENDER_API.md**](LIT_RENDER_API.md) | Game + tools devs | **Blessed** `world.Rendering().SubmitLit*` contract |
 | [**SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md**](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md) | Engine devs | Submit pipeline + spatial tree factoring; C# sync pointers |
 | [**CSHARP_SCENE_SUBMIT_SYNC.md**](CSHARP_SCENE_SUBMIT_SYNC.md) | Scripting | C# surface for lit submit after native refactor |
 | [**MODULE_LAYOUT.md**](MODULE_LAYOUT.md) | Engine devs | Include path moves (`memory` → `core`, `scene/submit`, …) |

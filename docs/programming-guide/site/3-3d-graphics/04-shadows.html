@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>04 shadows</h1>
           </header>
           <div class="doc-body"><h1 id="shadows">Shadows</h1>
-<p>Spark implements <strong>cascaded shadow maps (CSM)</strong> for the directional sun and optional <strong>cubemap / spotlight shadow atlases</strong> for punctual lights. Shadow flags flow from <code>SceneRenderParams</code> defaults → per-material overrides → per-draw rules in <code>FillStandardLitSceneFromWorld</code>.</p>
+<p>Spark implements <strong>cascaded shadow maps (CSM)</strong> for the directional sun and optional <strong>cubemap / spotlight shadow atlases</strong> for punctual lights. Shadow flags flow from <code>SceneRenderParams</code> defaults → per-material overrides → per-draw rules in <code>world.Rendering().FillLit</code>.</p>
 <h2 id="shadow-pipeline">Shadow pipeline</h2>
 <pre class="mermaid">flowchart LR
   Params[SceneRenderParams CSM toggles]
@@ -1105,7 +1105,7 @@ params.lightingProfile = SceneLightingProfile::Outdoor;
 params.directionalShadowsEnabled = <span class="hljs-literal">true</span>;
 params.punctualShadowsEnabled = <span class="hljs-literal">true</span>;
 
-<span class="hljs-built_in">FillStandardLitSceneFromWorld</span>(
+world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">FillLit</span>(
     world, context, viewProj, cameraPos,
     Vector3{<span class="hljs-number">0.3F</span>, <span class="hljs-number">-1.0F</span>, <span class="hljs-number">0.2F</span>}.<span class="hljs-built_in">Normalized</span>(),
     Vector3{<span class="hljs-number">1.0F</span>, <span class="hljs-number">0.98F</span>, <span class="hljs-number">0.95F</span>}, <span class="hljs-number">1.4F</span>,
@@ -1115,14 +1115,14 @@ params.punctualShadowsEnabled = <span class="hljs-literal">true</span>;
 PointLightComponent* pl = lamp-&gt;<span class="hljs-built_in">AddComponent</span>&lt;PointLightComponent&gt;();
 pl-&gt;<span class="hljs-built_in">SetCastsShadow</span>(<span class="hljs-literal">true</span>);
 </code></pre>
-<p><code>SubmitStandardLitSceneFromWorld</code> wrappers set the same fields when using lighting presets.</p>
+<p><code>world.Rendering().SubmitLit</code> wrappers set the same fields when using lighting presets.</p>
 <h3 id="c_1">C#</h3>
 <pre><code class="hljs language-csharp language-csharp" data-highlighted="yes"><span class="hljs-keyword">var</span> p = <span class="hljs-keyword">new</span> SceneRenderParams {
     LightingProfile = SceneLightingProfile.Outdoor,
     DirectionalShadowsEnabled = <span class="hljs-literal">true</span>,
     PunctualShadowsEnabled = <span class="hljs-literal">true</span>
 };
-FillStandardLitSceneFromWorld(world, ctx, vp, camPos, sunDir, sunColor, <span class="hljs-number">1.4f</span>, ambient,
+world.Rendering().FillLit(world, ctx, vp, camPos, sunDir, sunColor, <span class="hljs-number">1.4f</span>, ambient,
     enableParticles: <span class="hljs-literal">true</span>, pr, pu, sceneTime, p);
 lamp.GetComponent&lt;PointLightComponent&gt;()?.SetCastsShadow(<span class="hljs-literal">true</span>);
 </code></pre>

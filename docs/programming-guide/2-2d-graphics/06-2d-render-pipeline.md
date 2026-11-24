@@ -1,8 +1,8 @@
 # 2D Render Pipeline
 
-This chapter describes how ECS 2D content becomes GPU work in Spark's **standard lit scene** path. The same `FillStandardLitSceneFromWorld` entry point collects **3D meshes**, **sprites**, **tilemaps**, lights, particles, foliage, water, and UI — but the 2D-specific stages are sprite batching, tilemap chunking, 2D lighting in `sprite.frag`, and optional **2D composite** offscreen passes.
+This chapter describes how ECS 2D content becomes GPU work in Spark's **standard lit scene** path. The same `world.Rendering().FillLit` entry point collects **3D meshes**, **sprites**, **tilemaps**, lights, particles, foliage, water, and UI — but the 2D-specific stages are sprite batching, tilemap chunking, 2D lighting in `sprite.frag`, and optional **2D composite** offscreen passes.
 
-**Reference implementation:** `spark/scene/submit/SceneSubmit.cpp` (`FillStandardLitSceneFromWorld`), `VulkanSpritePass`, `VulkanTilemapPass`, `VulkanScene2DCompositeCapture`.
+**Reference implementation:** `spark/scene/submit/SceneSubmit.cpp` (`world.Rendering().FillLit`), `VulkanSpritePass`, `VulkanTilemapPass`, `VulkanScene2DCompositeCapture`.
 
 ## Pipeline overview
 
@@ -14,7 +14,7 @@ flowchart TB
     L2[SpriteLighting2D / PointLight2D]
     PT[Particles SpriteLayer]
   end
-  collect --> Fill[FillStandardLitSceneFromWorld]
+  collect --> Fill[Rendering().FillLit]
   Fill --> SRP[SceneRenderParams]
   SRP --> HDR[HDR scene pass]
   HDR --> COMP[2D composite capture optional]
@@ -44,7 +44,7 @@ enum class SceneSpriteSortMode : std::uint8_t {
 
 `SortOrderThenWorldY` is the platformer default: primary key `sortOrder`, secondary key world **Y** (bottom of sprite) so co-planar characters sort correctly in side-view games.
 
-## What `FillStandardLitSceneFromWorld` does (2D slice)
+## What `world.Rendering().FillLit` does (2D slice)
 
 On each call the function **clears** prior frame draw lists, resolves directional light + ambient (`SceneLightingResolver`), gathers enabled `PointLightComponent` and `PointLight2DComponent`, then walks active `GameObject`s to append:
 
@@ -59,7 +59,7 @@ It also runs `ProcessTimeOfDayDrivers` and `ApplyRegionalRenderVolumes` before m
 C++ signature (simplified):
 
 ```cpp
-void FillStandardLitSceneFromWorld(
+void world.Rendering().FillLit(
     GameWorld& world,
     IEngineContext& context,
     const Matrix4& viewProjection,
@@ -77,7 +77,7 @@ void FillStandardLitSceneFromWorld(
     const Scene* sceneForCulling = nullptr);
 ```
 
-Convenience wrappers (`SubmitStandardLitSceneFromWorld`, `FillStandardLitSceneFromWorldWithCamera`) wire camera components and particle billboards.
+Convenience wrappers (`world.Rendering().SubmitLit`, `FillStandardLitSceneFromWorldWithCamera`) wire camera components and particle billboards.
 
 ## Concept: end-to-end 2D frame
 
@@ -94,7 +94,7 @@ void Platformer2DGame::OnRender(IRenderFrame&, IEngineContext& context) {
     Vector3 pr{}, pu{};
     camera.BillboardBasisWorld(pr, pu);
 
-    SubmitStandardLitSceneFromWorld(
+    world.Rendering().SubmitLit(
         GetWorld(), context, viewProj, camera.position,
         Vector3{0.30F, 0.86F, 0.36F}.Normalized(),
         Vector3{1.0F, 0.98F, 0.95F}, 0.85F,
@@ -115,7 +115,7 @@ public override void OnRender(IRenderFrame frame, IEngineContext context) {
     var viewProj = _camera.ComputeViewProjection(fbW, fbH);
     _camera.BillboardBasisWorld(out var pr, out var pu);
 
-    SceneSubmit.SubmitStandardLitSceneFromWorld(
+    SceneSubmit.world.Rendering().SubmitLit(
         World, context, viewProj, _camera.Position,
         _sunDir, _sunColor, 0.85f, _ambient,
         enableParticles: false, pr, pu, _sceneTime,
@@ -125,7 +125,7 @@ public override void OnRender(IRenderFrame frame, IEngineContext context) {
 
 ### Python
 
-Script-hosted games implement `on_render` on `Game` and rely on the engine to call `FillStandardLitSceneFromWorld` after ECS update — you normally **do not** build `SceneRenderParams` manually. Ensure the scene has an active `Camera2DComponent` and sprites/tilemaps on the world you received from `context.try_get_scene()`.
+Script-hosted games implement `on_render` on `Game` and rely on the engine to call `world.Rendering().FillLit` after ECS update — you normally **do not** build `SceneRenderParams` manually. Ensure the scene has an active `Camera2DComponent` and sprites/tilemaps on the world you received from `context.try_get_scene()`.
 
 ```python
 class MyGame(Game):
@@ -140,7 +140,7 @@ Use C++ or C# `OnRender` overrides when you need custom sun direction, particle 
 
 ```cpp
 SceneRenderParams params{};
-FillStandardLitSceneFromWorld(..., params);
+world.Rendering().FillLit(..., params);
 PaintUiCanvases(GetWorld(), params, fbW, fbH);
 context.SetSceneRenderParams(params);
 ```
@@ -151,7 +151,7 @@ GUI draws into `screenRects`, `screenSprites`, and font-backed `screenTexts` wit
 
 ```csharp
 var p = new SceneRenderParams();
-FillStandardLitSceneFromWorld(world, context, ..., p);
+world.Rendering().FillLit(world, context, ..., p);
 PaintUiCanvases(world, p, fbW, fbH);
 context.SetSceneRenderParams(p);
 ```

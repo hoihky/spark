@@ -12,7 +12,7 @@
 #include "spark/scene/core/Scene.hpp"
 #include "spark/scene/core/ScenePartitionKind.hpp"
 #include "spark/scene/core/SceneDrawableFrustumSink.hpp"
-#include "spark/scene/submit/LitSceneSubmitter.hpp"
+#include "spark/scene/core/world/WorldRendering.hpp"
 #include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 
 namespace {
@@ -72,8 +72,8 @@ void FillLitScene(
         const LitSceneFrustumSetup& frustum,
         const Spark::LitSceneSubmitOptions& options,
         Spark::SceneRenderParams& outParams) {
-    Spark::LitSceneSubmitter submitter{};
-    submitter.Fill(world, context, frustum.viewProjection, frustum.cameraPosition, options, outParams);
+    world.Rendering().FillLit(
+            context, frustum.viewProjection, frustum.cameraPosition, options, outParams);
 }
 
 }  // namespace

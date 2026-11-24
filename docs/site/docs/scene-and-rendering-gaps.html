@@ -572,11 +572,11 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
 </thead>
 <tbody>
 <tr>
-<td><code>FillStandardLitSceneFromWorld</code></td>
+<td><code>world.Rendering().FillLit</code></td>
 <td>Walk ECS → fill <code>SceneRenderParams</code> (optional <code>Scene*</code> for frustum culling)</td>
 </tr>
 <tr>
-<td><code>SubmitStandardLitSceneFromWorld</code></td>
+<td><code>world.Rendering().SubmitLit</code></td>
 <td>Fill + <code>IEngineContext::SetSceneRenderParams</code></td>
 </tr>
 <tr>
@@ -1227,7 +1227,7 @@ C &lt;kind&gt; &lt;payload&gt;
 </tr>
 <tr>
 <td><strong>Directional light ECS</strong></td>
-<td><code>DirectionalLightComponent</code> + <code>FillStandardLitSceneFromWorld</code> override</td>
+<td><code>DirectionalLightComponent</code> + <code>world.Rendering().FillLit</code> override</td>
 <td>Multiple directional lights with blending / priority</td>
 </tr>
 <tr>
@@ -1328,7 +1328,7 @@ C &lt;kind&gt; &lt;payload&gt;
 <tr>
 <td><strong>Orthographic 3D</strong></td>
 <td><code>Camera</code> supports it</td>
-<td>First-class in <code>SubmitStandardLitSceneFromWorld</code> + shadow fitting</td>
+<td>First-class in <code>world.Rendering().SubmitLit</code> + shadow fitting</td>
 </tr>
 </tbody>
 </table>
@@ -1521,7 +1521,7 @@ C &lt;kind&gt; &lt;payload&gt;
 </tbody>
 </table>
 <hr />
-<p><em>Last updated: 2026-08 — glTF KHR extensions (clearcoat, transmission, iridescence, variants), BRDF LUT, screen-space transmission, <code>FillStandardLitSceneFromWorld</code> in <code>TimeOfDayDemo</code>. See <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</em></p>
+<p><em>Last updated: 2026-08 — glTF KHR extensions (clearcoat, transmission, iridescence, variants), BRDF LUT, screen-space transmission, <code>world.Rendering().FillLit</code> in <code>TimeOfDayDemo</code>. See <a href="../../programming-guide/site/1-overview-architecture/07-game-component-reference.html"><code>programming-guide/1-overview-architecture/07-game-component-reference.md</code></a>.</em></p>
       </article>
     </main>
 

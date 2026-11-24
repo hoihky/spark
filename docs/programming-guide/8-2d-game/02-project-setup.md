@@ -73,7 +73,7 @@ def on_attach(self, context):
 
 ```cpp
 void OnRender(IRenderFrame&, IEngineContext& ctx) override {
-    SubmitStandardLitSceneFromWorldWithCamera(
+    world.Rendering().SubmitLitWithCamera(
         GetWorld(), ctx,
         sunDir, sunColor, 1.0F, ambient,
         enableParticles: true, sceneTime);
@@ -85,7 +85,7 @@ Requires `Camera2DComponent` on scene. See [2D render pipeline](../2-2d-graphics
 ### C\#
 
 ```csharp
-SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(World, ctx, ...);
+SceneSubmit.world.Rendering().SubmitLitWithCamera(World, ctx, ...);
 ```
 
 ### Python

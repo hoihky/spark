@@ -120,7 +120,7 @@ Demo toggles camera distance and cursor capture — mirror `IInput::SetCursorCap
 3. `SimulateCharacterControllers3D`  
 4. `SimulateAll3D`  
 5. `SimulateGameAi` if NPCs present  
-6. `OnRender` — `SubmitStandardLitSceneFromWorld` or `WithCamera`
+6. `OnRender` — `world.Rendering().SubmitLit` or `WithCamera`
 
 Contrast with **Part 9 FPS** chapters: fly camera without CC3D until you adopt ch. **07**.
 

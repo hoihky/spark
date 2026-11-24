@@ -27,4 +27,4 @@ export SPARK_ENGINE_ROOT=/path/to/spark
 
 See **spark-sharp/README.md** and the former **`docs/CSHARP_SCRIPTING.md`** (content migrating to spark-sharp).
 
-**Scene submit parity (C++ refactor):** [CSHARP_SCENE_SUBMIT_SYNC.md](CSHARP_SCENE_SUBMIT_SYNC.md) — interop symbols and managed `LitScene` / `LitSceneSubmitOptions`. Engine factoring details: [SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md).
+**Lit render API:** [LIT_RENDER_API.md](LIT_RENDER_API.md) — use `world.Rendering().SubmitLit*` (C#: `world.Rendering.SubmitLit*`). **Scene submit parity:** [CSHARP_SCENE_SUBMIT_SYNC.md](CSHARP_SCENE_SUBMIT_SYNC.md). **Factoring:** [SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md](SCENE_SUBMIT_AND_SPATIAL_REFACTOR.md).

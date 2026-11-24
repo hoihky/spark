@@ -1167,13 +1167,13 @@ Native.spark_world_process_vfx(world);
 </code></pre>
 <h2 id="concept-enable-in-render-submit">Concept: enable in render submit</h2>
 <h3 id="c_6">C++</h3>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLitWithCamera</span>(
     world, context, sunDir, sunColor, intensity, ambient,
     <span class="hljs-literal">true</span>,   <span class="hljs-comment">// enableParticles</span>
     sceneTime);
 </code></pre>
 <h3 id="c_7">C#</h3>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.world.Rendering().SubmitLitWithCamera(
     world, ctx, sunDir, sunColor, intensity, ambient,
     enableParticles: <span class="hljs-literal">true</span>, sceneTime);
 </code></pre>

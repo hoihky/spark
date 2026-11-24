@@ -1087,7 +1087,7 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
             <h1>Component Guide: Lighting</h1>
           </header>
           <div class="doc-body"><h1 id="component-guide-lighting">Component Guide: Lighting</h1>
-<p>Lights are <strong>ECS components</strong> gathered in <code>FillStandardLitSceneFromWorld</code> into <code>SceneRenderParams::pointLights</code> / <code>spotLights</code>. The directional sun usually comes from submit arguments or <code>DirectionalLightComponent</code>.</p>
+<p>Lights are <strong>ECS components</strong> gathered in <code>world.Rendering().FillLit</code> into <code>SceneRenderParams::pointLights</code> / <code>spotLights</code>. The directional sun usually comes from submit arguments or <code>DirectionalLightComponent</code>.</p>
 <p>2D-specific: <code>PointLight2DComponent</code> and <code>SpriteLighting2DComponent</code> (see <a href="01-2d-rendering.html">2D rendering guide</a>).</p>
 <table>
 <thead>

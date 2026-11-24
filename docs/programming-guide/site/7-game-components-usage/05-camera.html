@@ -1212,10 +1212,10 @@ camGo.AddCameraFollow3D().SetTarget(player);
 <hr />
 <h2 id="submit-with-main-camera">Submit with main camera</h2>
 <h4 id="c_12">C++</h4>
-<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes"><span class="hljs-built_in">SubmitStandardLitSceneFromWorldWithCamera</span>(world, ctx, sunDir, sunColor, <span class="hljs-number">1.0F</span>, ambient, <span class="hljs-literal">false</span>, t);
+<pre><code class="hljs language-cpp language-cpp" data-highlighted="yes">world.<span class="hljs-built_in">Rendering</span>().<span class="hljs-built_in">SubmitLitWithCamera</span>(world, ctx, sunDir, sunColor, <span class="hljs-number">1.0F</span>, ambient, <span class="hljs-literal">false</span>, t);
 </code></pre>
 <h4 id="c_13">C#</h4>
-<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.SubmitStandardLitSceneFromWorldWithCamera(World, ctx, ...);
+<pre><code class="hljs language-csharp language-csharp" data-highlighted="yes">SceneSubmit.world.Rendering().SubmitLitWithCamera(World, ctx, ...);
 </code></pre>
 <h4 id="python_6">Python</h4>
 <pre><code class="hljs language-python language-python" data-highlighted="yes"><span class="hljs-comment"># Native template submits after on_update when Camera2DComponent exists.</span>

@@ -1138,12 +1138,12 @@ pre code.hljs{display:block;overflow-x:auto;padding:1em}code.hljs{padding:3px 5p
   H2O[WaterBodyComponent]
   GR[GrassField / FoliageInstancedMesh]
   TOD --&gt; Params[SceneRenderParams]
-  TERR --&gt; Fill[FillStandardLitSceneFromWorld]
+  TERR --&gt; Fill[Rendering().FillLit]
   SKY --&gt; Fill
   H2O --&gt; Fill
   GR --&gt; Fill
 </pre>
-<p>Collect happens in one <strong><code>SubmitStandardLitSceneFromWorld</code></strong> call; water and terrain participate in shadow cascades when enabled (<a href="04-shadows.html">Shadows</a>).</p>
+<p>Collect happens in one <strong><code>world.Rendering().SubmitLit</code></strong> call; water and terrain participate in shadow cascades when enabled (<a href="04-shadows.html">Shadows</a>).</p>
 <hr />
 <h2 id="concept-terrain-island-game-level-ground">Concept: terrain island (game level ground)</h2>
 <p>Pair <strong><code>TerrainComponent</code></strong> with PBR ground material. <code>WaterLakeDemo</code> builds a smaller island inside an ocean.</p>

@@ -305,7 +305,7 @@ Full binding table: [`LIGHTING_AND_SHADOWS.md`](LIGHTING_AND_SHADOWS.md) § Fram
 
 ```
 WaterLakeDemo::Render
-  → FillStandardLitSceneFromWorld (terrain + props + water collection)
+  → world.Rendering().FillLit (terrain + props + water collection)
   → SceneLightingResolver (time of day, cascades, shadow defaults)
 VulkanRenderer
   → directional CSM Record (casters from draws with kSceneShadowCast)
@@ -329,7 +329,7 @@ VulkanRenderer
 
 | Task | API |
 |------|-----|
-| Add water | `WaterBodyComponent` + `FillStandardLitSceneFromWorld` |
+| Add water | `WaterBodyComponent` + `world.Rendering().FillLit` |
 | Tune waves | `WaterWavePreset`, `.sparkwater` assets, `SetSsrSettings` |
 | Lake + island demo | `WaterLakeDemo` — menu **23** / **W** |
 | Disable prop shadows | `mat->SetShadowCastOverride(false)` |
