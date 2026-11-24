@@ -5,6 +5,7 @@
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 #include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/submit/SceneSubmitTextures.hpp"
 #include "spark/scene/submit/SkinnedSceneDrawMaterialApplicator.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
@@ -115,5 +116,37 @@ void PushSkinnedMeshDraws(
 }
 
 }  // namespace SceneSubmitDetail
+
+void ApplyAlbedoTexture(
+        SceneDrawItem& item,
+        const SharedPtr<Texture2D>& baseColor,
+        const Vector3& tint,
+        const FindSceneTextureFn& findOrAddTexture) {
+    SceneSubmitDetail::ApplyAlbedoTexture(item, baseColor, tint, findOrAddTexture);
+}
+
+void PushRigidMeshDraws(
+        Array<SceneDrawItem>& drawList,
+        SceneDrawItem baseItem,
+        const Mesh& mesh,
+        const MaterialComponent* mat,
+        const MultiMaterialComponent* multiMat,
+        SceneRenderParams& params,
+        const FindSceneTextureFn& findOrAddTexture) {
+    SceneSubmitDetail::PushRigidMeshDraws(
+            drawList, baseItem, mesh, mat, multiMat, params, findOrAddTexture);
+}
+
+void PushSkinnedMeshDraws(
+        Array<SceneDrawItem>& drawList,
+        SceneDrawItem baseItem,
+        const SkinnedMesh& mesh,
+        const MaterialComponent* mat,
+        const MultiMaterialComponent* multiMat,
+        SceneRenderParams& params,
+        const FindSceneTextureFn& findOrAddTexture) {
+    SceneSubmitDetail::PushSkinnedMeshDraws(
+            drawList, baseItem, mesh, mat, multiMat, params, findOrAddTexture);
+}
 
 }  // namespace Spark

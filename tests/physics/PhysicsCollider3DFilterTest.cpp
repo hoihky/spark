@@ -17,6 +17,17 @@ TEST(PhysicsCollider3DFilterTest, BoxColliderBitsOverrideLayerComponent) {
     EXPECT_EQ(filter.categoryBits, Spark::CollisionFilter3D::LayerBit(Spark::PhysicsLayers3D::Enemy));
 }
 
+TEST(PhysicsCollider3DFilterTest, MaskBitsComeFromShapeColliderNotLayer) {
+    Spark::GameWorld world{};
+    Spark::GameObject* object = world.CreateGameObject();
+    object->AddComponent<Spark::PhysicsLayer3DComponent>()->SetMaskBits(0x00FFu);
+    auto* box = object->AddComponent<Spark::BoxCollider3DComponent>();
+    box->SetMaskBits(0x000Fu);
+
+    const Spark::ColliderFilter filter = Spark::PhysicsCollider3DFilter::Resolve(*object);
+    EXPECT_EQ(filter.maskBits, 0x000Fu);
+}
+
 TEST(PhysicsCollider3DFilterTest, LayerComponentUsedWhenNoShapeCollider) {
     Spark::GameWorld world{};
     Spark::GameObject* object = world.CreateGameObject();

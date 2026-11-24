@@ -34,7 +34,6 @@
 #include "spark/ecs/components/camera/Camera2DRigComponent.hpp"
 #include "spark/ecs/components/rendering/BlendModeComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 #include <cstdio>
 
 namespace Spark {

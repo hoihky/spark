@@ -10,8 +10,6 @@
 #include "spark/scene/foliage/GrassBladeMesh.hpp"
 #include "spark/scene/foliage/GrassFoliageAlbedoTexture.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 
 #include <GLFW/glfw3.h>
 

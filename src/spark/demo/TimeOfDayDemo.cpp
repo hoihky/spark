@@ -10,7 +10,6 @@
 #include "spark/math/Matrix4.hpp"
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -6,7 +6,6 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/engine/IEngineContext.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <GLFW/glfw3.h>
 #include <algorithm>

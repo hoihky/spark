@@ -206,6 +206,10 @@ SceneBlendMode ResolveSpriteBlendMode(const GameObject& object) noexcept {
 
 }  // namespace SceneSubmitDetail
 
+SceneBlendMode ResolveSpriteBlendMode(const GameObject& object) noexcept {
+    return SceneSubmitDetail::ResolveSpriteBlendMode(object);
+}
+
 void PartitionSortedDrawItemsIntoSceneParams(
         const Array<SceneDrawItem>& sortedDrawList,
         SceneRenderParams& params,

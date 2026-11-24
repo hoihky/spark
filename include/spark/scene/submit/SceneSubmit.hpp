@@ -5,31 +5,15 @@
 #include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector3.hpp"
 #include "spark/scene/submit/LitSceneSubmitOptions.hpp"
+#include "spark/scene/submit/SceneSubmitMaterials.hpp"
 
 namespace Spark {
 
-/** Legacy free functions — new code uses <c>world.Rendering().SubmitLit*</c> (<c>WorldRendering.hpp</c>). */
+/** @deprecated Legacy free functions — use <c>world.Rendering().SubmitLit*</c> (<c>WorldRendering.hpp</c>). */
 
 class GameWorld;
 class IEngineContext;
-class MaterialComponent;
 class Scene;
-struct SceneDrawItem;
-
-/** Copies PBR + toon fields from <c>MaterialComponent</c> into <c>item</c>. When <c>resolveTextures</c> is non-null,
- * registers normal, metallic-roughness, and emissive textures into <c>resolveTextures->sceneTextures</c> and sets
- * <c>item.normalMapLayer</c> / <c>item.metallicRoughnessMapLayer</c> / <c>item.emissiveMapLayer</c>. Base-color texture
- * stays caller-resolved. */
-void ApplyMaterialComponentToSceneDrawItem(
-        SceneDrawItem& item,
-        const MaterialComponent* mat,
-        SceneRenderParams* resolveTextures = nullptr) noexcept;
-
-/** Copies one <c>MultiMaterialComponent</c> slot into a draw item (textures resolved when <c>resolveTextures</c> is set). */
-void ApplyMultiMaterialSlotToSceneDrawItem(
-        SceneDrawItem& item,
-        const MultiMaterialComponent::Slot& slot,
-        SceneRenderParams* resolveTextures = nullptr) noexcept;
 
 /**
  * Splits a stable-sorted draw list into <c>params.draws</c> and <c>params.transparentDraws</c> (back-to-front).

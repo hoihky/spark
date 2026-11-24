@@ -1,6 +1,6 @@
 #include "spark/demo/SteeringShowcase3DDemo.hpp"
 
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/demo/ShellDemoSceneUtil.hpp"
 
 namespace Spark {
 
@@ -406,93 +406,14 @@ void SteeringShowcase3DDemo::Render(Scene& scene, GameWorld& world, IEngineConte
         const Matrix4 view = camera.ViewMatrix();
         const Matrix4 viewProj = proj * view;
 
-        SceneRenderParams params{};
-        params.viewProjection = viewProj;
-        params.cameraPositionWorld = camera.position;
-        params.lightDirectionWorld = Vector3{0.32F, 0.86F, 0.35F}.Normalized();
-        params.lightColor = {1.0F, 0.96F, 0.92F};
-        params.lightIntensity = 0.95F;
-        params.ambientColor = {0.10F, 0.12F, 0.16F};
-        params.draws.Clear();
-        params.sceneTextures.Clear();
-        params.sceneHdrTextures.Clear();
-        params.pointLights.Clear();
-        params.sprites.Clear();
-        params.screenRects.Clear();
-        params.screenTexts.Clear();
-        params.screenOverlayRects.Clear();
-        params.screenOverlayTexts.Clear();
-        params.screenLateRects.Clear();
-        params.screenLateTexts.Clear();
-        params.uiFont = world.GetUiFont();
-        params.uiBoldFont = world.GetUiBoldFont();
-        params.draws.Reserve(64);
-
-        Array<SceneDrawItem> drawList;
-        drawList.Reserve(64);
-        scene.ForEachPointLight([&params](const PointLightComponent& pl, const Matrix4& worldMat) {
-            if (params.pointLights.GetSize() >= SceneRenderParams::MaxPointLights) {
-                return;
-            }
-            ScenePointLight gpu{};
-            gpu.positionWorld = worldMat.TranslationVector();
-            gpu.range = pl.GetRange();
-            gpu.color = pl.GetColor();
-            gpu.intensity = pl.GetIntensity();
-            gpu.castsShadow = pl.CastsShadow();
-            params.pointLights.PushBack(gpu);
-        });
-
-        scene.ForEachSky([&](GameObject&, const SkyComponent& sk, const MeshComponent& mc, const MaterialComponent* mat,
-                                const Matrix4& world) {
-            SceneDrawItem item{};
-            SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
-            drawList.PushBack(item);
-        });
-
-        scene.ForEachDrawable([&](GameObject* obj, const MeshComponent& mc, const MaterialComponent* mat,
-                                     const Matrix4& world) {
-            if (obj != nullptr && obj->GetComponent<SkyComponent>() != nullptr) {
-                return;
-            }
-            SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
-            if (mc.GetSlot() == SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
-            }
-            Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-                }
-            }
-            item.albedo = alb;
-            drawList.PushBack(item);
-        });
-
-        StableSortDrawItems(drawList);
-        for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
-            params.draws.PushBack(drawList[di]);
-        }
-
-        scene.ForEachTextOverlay([&params](const TextOverlayComponent& tc) {
-            ScreenTextDraw d{};
-            d.text = tc.GetText();
-            d.x = tc.GetScreenX();
-            d.y = tc.GetScreenY();
-            d.sizePixels = tc.GetFontSizePixels();
-            d.color = tc.GetColor();
-            d.alpha = tc.GetAlpha();
-            d.paintOrder = params.NextUiPaintOrder();
-            params.screenTexts.PushBack(MoveTemp(d));
-        });
-
-        helpHud.PatchSceneRenderParams(params, world);
-        context.SetSceneRenderParams(params);
+        LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(
+                        Vector3{0.32F, 0.86F, 0.35F}.Normalized(),
+                        {1.0F, 0.96F, 0.92F},
+                        0.95F)
+                .WithAmbient({0.10F, 0.12F, 0.16F})
+                .WithSceneForCulling(&scene);
+        DemoSubmitLitSceneWithHud(world, context, viewProj, camera.position, opts, helpHud);
     }
 
 [[nodiscard]] bool SteeringShowcase3DDemo::DrawableCollisionMesh(const GameObject* o) noexcept

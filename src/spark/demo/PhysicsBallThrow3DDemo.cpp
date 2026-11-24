@@ -1,7 +1,6 @@
 #include "spark/demo/PhysicsBallThrow3DDemo.hpp"
 
 #include "spark/demo/ShellDemoSceneUtil.hpp"
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
 #include "spark/ui/factory/ControlDesc.hpp"
 #include "spark/ui/factory/IUiControlsFactory.hpp"
 #include "spark/ui/runtime/IUiBackend.hpp"
@@ -253,95 +252,14 @@ void PhysicsBallThrow3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world
         const Spark::Matrix4 view = camera.ViewMatrix();
         const Spark::Matrix4 viewProj = proj * view;
 
-        Spark::SceneRenderParams params{};
-        params.viewProjection = viewProj;
-        params.cameraPositionWorld = camera.position;
-        params.lightDirectionWorld = Spark::Vector3{0.35F, 0.88F, 0.32F}.Normalized();
-        params.lightColor = {1.0F, 0.96F, 0.9F};
-        params.lightIntensity = 0.95F;
-        params.ambientColor = {0.09F, 0.11F, 0.14F};
-
-        params.draws.Clear();
-        params.sceneTextures.Clear();
-        params.sceneHdrTextures.Clear();
-        params.pointLights.Clear();
-        params.sprites.Clear();
-        params.screenRects.Clear();
-        params.screenTexts.Clear();
-        params.screenOverlayRects.Clear();
-        params.screenOverlayTexts.Clear();
-        params.screenLateRects.Clear();
-        params.screenLateTexts.Clear();
-        params.uiFont = world.GetUiFont();
-        params.uiBoldFont = world.GetUiBoldFont();
-        params.draws.Reserve(24);
-
-        scene.ForEachPointLight([&params](const Spark::PointLightComponent& pl, const Spark::Matrix4& worldMat) {
-            if (params.pointLights.GetSize() >= Spark::SceneRenderParams::MaxPointLights) {
-                return;
-            }
-            Spark::ScenePointLight gpu{};
-            gpu.positionWorld = worldMat.TranslationVector();
-            gpu.range = pl.GetRange();
-            gpu.color = pl.GetColor();
-            gpu.intensity = pl.GetIntensity();
-            gpu.castsShadow = pl.CastsShadow();
-            params.pointLights.PushBack(gpu);
-        });
-
-        Spark::Array<Spark::SceneDrawItem> drawList;
-        drawList.Reserve(24);
-        scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
-                                  const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
-            Spark::SceneDrawItem item{};
-            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
-            drawList.PushBack(item);
-        });
-
-        scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc, const Spark::MaterialComponent* mat,
-                                     const Spark::Matrix4& world) {
-            if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
-                return;
-            }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
-            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
-            }
-            Spark::Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Spark::Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-                }
-            }
-            item.albedo = alb;
-            drawList.PushBack(item);
-        });
-
-        StableSortDrawItems(drawList);
-        for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
-            params.draws.PushBack(drawList[di]);
-        }
-
-        scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
-            Spark::ScreenTextDraw d{};
-            d.text = tc.GetText();
-            d.x = tc.GetScreenX();
-            d.y = tc.GetScreenY();
-            d.sizePixels = tc.GetFontSizePixels();
-            d.color = tc.GetColor();
-            d.alpha = tc.GetAlpha();
-            d.paintOrder = params.NextUiPaintOrder();
-            params.screenTexts.PushBack(Spark::MoveTemp(d));
-        });
-
-        PaintUiCanvases(world, params, fbW, fbH);
-        helpHud.PatchSceneRenderParams(params, world);
-        context.SetSceneRenderParams(params);
+        Spark::LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(
+                        Spark::Vector3{0.35F, 0.88F, 0.32F}.Normalized(),
+                        {1.0F, 0.96F, 0.9F},
+                        0.95F)
+                .WithAmbient({0.09F, 0.11F, 0.14F})
+                .WithSceneForCulling(&scene);
+        DemoSubmitLitSceneWithHud(world, context, viewProj, camera.position, opts, helpHud);
     }
 
 namespace {

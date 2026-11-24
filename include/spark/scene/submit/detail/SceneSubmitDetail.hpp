@@ -1,32 +1,35 @@
 #pragma once
 
+/** @deprecated Use <spark/scene/submit/SceneSubmitTextures.hpp>. Engine-internal transitional header. */
+
 #include "spark/core/Array.hpp"
-#include "spark/engine/SceneRenderParams.hpp"
+#include "spark/core/Function.hpp"
 #include "spark/core/SharedPtr.hpp"
+#include "spark/engine/SceneRenderParams.hpp"
+#include "spark/math/Matrix4.hpp"
 #include "spark/math/Vector2.hpp"
 #include "spark/math/Vector3.hpp"
-#include "spark/math/Matrix4.hpp"
-
-#include "spark/core/Function.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
 
 #include <cstdint>
 
 namespace Spark {
 
 class GameObject;
-class GameWorld;
 class MaterialComponent;
-class Scene;
 class Mesh;
 class MeshComponent;
-enum class SceneMeshSlot : std::uint8_t;
 class MultiMaterialComponent;
 class SkinnedMesh;
 class SkyComponent;
 class Texture2D;
+enum class SceneMeshSlot : std::uint8_t;
 struct SceneDrawItem;
+struct SceneSpriteDraw;
 
 namespace SceneSubmitDetail {
+
+using FindSceneTextureFn = Function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>;
 
 std::int32_t FindOrAddSceneTexture(
         SceneRenderParams& params,
@@ -35,15 +38,12 @@ std::int32_t FindOrAddSceneTexture(
         Vector2* outUvOffset = nullptr,
         bool* outIsHdrLinear = nullptr);
 
-using FindSceneTextureFn = Function<std::int32_t(const SharedPtr<Texture2D>&, Vector2*, Vector2*)>;
-
 void ApplyAlbedoTexture(
         SceneDrawItem& item,
         const SharedPtr<Texture2D>& baseColor,
         const Vector3& tint,
         const FindSceneTextureFn& findOrAddTexture);
 
-/** Terrain always casts; submerged ground / underwater props do not pollute CSM. */
 [[nodiscard]] std::int32_t ResolveDrawableShadowFlags(
         const GameObject* object,
         SceneMeshSlot meshSlot,
@@ -51,7 +51,6 @@ void ApplyAlbedoTexture(
         const MaterialComponent* material,
         std::int32_t defaultShadowFlags) noexcept;
 
-/** Water never casts; receives directional CSM when enabled (material override respected). */
 [[nodiscard]] std::int32_t ResolveWaterShadowFlags(
         const MaterialComponent* material,
         const SceneRenderParams& params) noexcept;
@@ -73,6 +72,7 @@ void PushSkinnedMeshDraws(
         const MultiMaterialComponent* multiMat,
         SceneRenderParams& params,
         const FindSceneTextureFn& findOrAddTexture);
+
 void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept;
 
 void PopulateSkyDrawItem(
@@ -83,7 +83,6 @@ void PopulateSkyDrawItem(
         const Matrix4& worldM,
         SceneRenderParams& params) noexcept;
 
-/** Implemented in <c>SceneDrawListSorter.cpp</c>; use <c>SceneDrawListSorter</c> in new code. */
 void StableSortDrawItems(Array<SceneDrawItem>& items);
 void StableSortSprites(Array<SceneSpriteDraw>& items, SceneSpriteSortMode mode);
 [[nodiscard]] SceneBlendMode ResolveSpriteBlendMode(const GameObject& object) noexcept;

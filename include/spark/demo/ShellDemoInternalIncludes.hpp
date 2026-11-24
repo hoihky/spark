@@ -26,7 +26,9 @@
 #include "spark/scene/mesh/SkinnedMesh.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/ui/text/Font.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/core/world/WorldRendering.hpp"
+#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
+#include "spark/scene/submit/SceneSubmitMaterials.hpp"
 #include "spark/ui/Ui.hpp"
 #include "spark/ecs/components/ui/UiCanvasComponent.hpp"
 

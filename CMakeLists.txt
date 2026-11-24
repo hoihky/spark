@@ -972,6 +972,11 @@ set(SPARK_ENGINE_SOURCES
         src/spark/gameplay/save/GameSave.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersPhysics2DExtended.cpp
         src/spark/scene/serialization/ComponentSnapshotHandlersUi.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersGameplay.cpp
+        src/spark/ecs/components/gameplay/DamageableComponent.cpp
+        src/spark/scene/serialization/ComponentSnapshotHandlersGameFlow.cpp
+        src/spark/ecs/components/gameplay/GameStateComponent.cpp
+        src/spark/ecs/components/gameplay/GameFlowTriggerComponent.cpp
         src/spark/scene/serialization/ComponentSnapshotPayload.cpp
         src/spark/scene/serialization/TilemapComponentSnapshot.cpp
         src/spark/scene/serialization/UiWidgetSnapshot.cpp

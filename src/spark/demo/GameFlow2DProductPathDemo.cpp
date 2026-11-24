@@ -24,7 +24,6 @@
 #include "spark/gameplay/save/GameSave.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/scene/core/spawn/SceneSpawn.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <GLFW/glfw3.h>
 #include "spark/scene/tilemap/TilemapGameplayPlacement.hpp"

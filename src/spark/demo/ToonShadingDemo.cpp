@@ -1,6 +1,5 @@
 #include "spark/demo/ToonShadingDemo.hpp"
 
-#include "spark/scene/submit/SceneSubmit.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"

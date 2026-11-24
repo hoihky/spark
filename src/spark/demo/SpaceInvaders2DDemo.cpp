@@ -7,7 +7,6 @@
 #include "spark/ecs/components/rendering/SpriteComponent.hpp"
 #include "spark/ecs/components/core/TransformComponent.hpp"
 #include "spark/render/scene/SceneBlendMode.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <cmath>
 

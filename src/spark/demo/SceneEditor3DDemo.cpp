@@ -9,8 +9,7 @@
 #include "spark/ui/runtime/UiScene.hpp"
 #include "spark/scene/mesh/MeshRaycast.hpp"
 #include "spark/scene/query/SceneRaycast.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/scene/serialization/SceneSerializer.hpp"
 #include "spark/scene/material/MaterialAsset.hpp"
 #include "spark/scene/assets/ScenePathResolver.hpp"
@@ -376,125 +375,44 @@ void SceneEditor3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spa
         const Spark::Matrix4 view = cameraController.camera.ViewMatrix();
         const Spark::Matrix4 viewProj = proj * view;
 
+        Spark::LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(
+                        Spark::Vector3{0.35F, 0.82F, 0.38F}.Normalized(),
+                        {1.0F, 0.97F, 0.92F},
+                        0.92F)
+                .WithAmbient({0.10F, 0.11F, 0.14F})
+                .WithSceneForCulling(&scene);
+
         Spark::SceneRenderParams params{};
-        params.viewProjection = viewProj;
-        params.cameraPositionWorld = cameraController.camera.position;
-        params.lightDirectionWorld = Spark::Vector3{0.35F, 0.82F, 0.38F}.Normalized();
-        params.lightColor = {1.0F, 0.97F, 0.92F};
-        params.lightIntensity = 0.92F;
-        params.ambientColor = {0.10F, 0.11F, 0.14F};
+        world.Rendering().FillLit(
+                context, viewProj, cameraController.camera.position, opts, params);
 
-        bool appliedDirectionalLight = false;
-        scene.ForEachDirectionalLight([&params, &appliedDirectionalLight](
-                                                const Spark::DirectionalLightComponent& dl, const Spark::Matrix4& worldMat) {
-            if (appliedDirectionalLight) {
-                return;
-            }
-            Spark::Vector3 towardLight = worldMat.TransformVector(Spark::Vector3{0.0F, 0.0F, 1.0F});
-            if (towardLight.LengthSquared() < 1.0e-10F) {
-                towardLight = Spark::Vector3{0.0F, 1.0F, 0.0F};
-            } else {
-                towardLight = towardLight.Normalized();
-            }
-            params.lightDirectionWorld = towardLight;
-            params.lightColor = dl.GetColor();
-            params.lightIntensity = dl.GetIntensity();
-            params.directionalShadowsEnabled = dl.CastsShadow();
-            appliedDirectionalLight = true;
-        });
-
-        params.draws.Clear();
-        params.transparentDraws.Clear();
-        params.sceneTextures.Clear();
-        params.pointLights.Clear();
-        params.sprites.Clear();
-        params.screenRects.Clear();
-        params.screenTexts.Clear();
-        params.screenOverlayRects.Clear();
-        params.screenOverlayTexts.Clear();
-        params.screenLateRects.Clear();
-        params.screenLateTexts.Clear();
-        params.uiFont = world.GetUiFont();
-        params.uiBoldFont = world.GetUiBoldFont();
-        params.draws.Reserve(48);
-
-        scene.ForEachPointLight([&params](const Spark::PointLightComponent& pl, const Spark::Matrix4& worldMat) {
-            if (params.pointLights.GetSize() >= Spark::SceneRenderParams::MaxPointLights) {
-                return;
-            }
-            Spark::ScenePointLight gpu{};
-            gpu.positionWorld = worldMat.TranslationVector();
-            gpu.range = pl.GetRange();
-            gpu.color = pl.GetColor();
-            gpu.intensity = pl.GetIntensity();
-            gpu.castsShadow = pl.CastsShadow();
-            params.pointLights.PushBack(gpu);
-        });
-
-        auto findOrAddTexture =
-                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* outUvScale, Spark::Vector2* outUvOffset)
-                -> std::int32_t {
-            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(
-                    params, tex, outUvScale, outUvOffset, nullptr);
-        };
-
-        auto applySelectionHighlight = [&](Spark::SceneDrawItem& item, Spark::GameObject* obj) {
-            if (obj == nullptr || obj != selectedObject) {
-                return;
-            }
+        if (selectedObject != nullptr) {
+            const Spark::Matrix4 selectedWorld = selectedObject->GetWorldMatrix();
             const float pulse = 0.82F + 0.18F * std::sin(selectionPulseTime * 6.8F);
             const Spark::Vector3 rim{0.22F, 0.78F, 1.0F};
-            item.emissiveColor = {
-                    std::min(1.0F, item.emissiveColor.x + rim.x * 0.55F),
-                    std::min(1.0F, item.emissiveColor.y + rim.y * 0.55F),
-                    std::min(1.0F, item.emissiveColor.z + rim.z * 0.55F)};
-            item.emissiveIntensity = item.emissiveIntensity + 2.5F * pulse;
-            item.roughness = std::max(0.06F, item.roughness * 0.55F);
-            item.albedo = {
-                    std::min(1.0F, item.albedo.x * 1.06F + 0.03F),
-                    std::min(1.0F, item.albedo.y * 1.04F + 0.05F),
-                    std::min(1.0F, item.albedo.z * 1.12F + 0.06F)};
-        };
-
-        Spark::Array<Spark::SceneDrawItem> drawList;
-        drawList.Reserve(32);
-        scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
-                                     const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
-            const Spark::MultiMaterialComponent* multiMat =
-                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
-
-            Spark::SceneDrawItem baseItem{};
-            baseItem.model = world;
-            baseItem.mesh = mc.GetSlot();
-            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                baseItem.customMesh = mc.GetMesh();
-            }
-            baseItem.albedo = mc.GetAlbedo();
-            baseItem.textureLayer = -1;
-
-            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
-                !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
-                const std::size_t startCount = drawList.GetSize();
-                Spark::SceneSubmitDetail::PushRigidMeshDraws(
-                        drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
-                for (std::size_t i = startCount; i < drawList.GetSize(); ++i) {
-                    applySelectionHighlight(drawList[i], obj);
+            auto highlightIfSelected = [&](Spark::SceneDrawItem& item) {
+                if ((item.model.TranslationVector() - selectedWorld.TranslationVector()).LengthSquared() > 1.0e-4F) {
+                    return;
                 }
-                return;
+                item.emissiveColor = {
+                        std::min(1.0F, item.emissiveColor.x + rim.x * 0.55F),
+                        std::min(1.0F, item.emissiveColor.y + rim.y * 0.55F),
+                        std::min(1.0F, item.emissiveColor.z + rim.z * 0.55F)};
+                item.emissiveIntensity = item.emissiveIntensity + 2.5F * pulse;
+                item.roughness = std::max(0.06F, item.roughness * 0.55F);
+                item.albedo = {
+                        std::min(1.0F, item.albedo.x * 1.06F + 0.03F),
+                        std::min(1.0F, item.albedo.y * 1.04F + 0.05F),
+                        std::min(1.0F, item.albedo.z * 1.12F + 0.06F)};
+            };
+            for (std::size_t di = 0; di < params.draws.GetSize(); ++di) {
+                highlightIfSelected(params.draws[di]);
             }
-
-            Spark::SceneDrawItem item = baseItem;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                Spark::SceneSubmitDetail::ApplyAlbedoTexture(
-                        item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
+            for (std::size_t di = 0; di < params.transparentDraws.GetSize(); ++di) {
+                highlightIfSelected(params.transparentDraws[di]);
             }
-            applySelectionHighlight(item, obj);
-            drawList.PushBack(item);
-        });
-
-        StableSortDrawItems(drawList);
-        PartitionSortedDrawItemsIntoSceneParams(drawList, params, cameraController.camera.position);
+        }
 
         if (selectedObject != nullptr) {
             Spark::TransformComponent* selTr = selectedObject->GetComponent<Spark::TransformComponent>();

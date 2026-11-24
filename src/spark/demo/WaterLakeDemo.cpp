@@ -10,7 +10,6 @@
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
 #include "spark/scene/mesh/TerrainGeneratorSettings.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 #include "spark/scene/water/WaterBodyExtent.hpp"
 #include "spark/scene/water/WaterBodyMode.hpp"

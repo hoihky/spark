@@ -3,8 +3,14 @@
 #include "spark/config.hpp"
 #include "spark/core/Utf8String.hpp"
 #include "spark/core/SharedPtr.hpp"
+#include "spark/demo/DemoHelpHud.hpp"
+#include "spark/ecs/GameObject.hpp"
+#include "spark/ecs/components/rendering/SkinnedMeshComponent.hpp"
+#include "spark/engine/IEngineContext.hpp"
 #include "spark/scene/core/GameWorld.hpp"
+#include "spark/scene/core/world/WorldRendering.hpp"
 #include "spark/scene/submit/SceneDrawListSorter.hpp"
+#include "spark/ui/runtime/UiScene.hpp"
 #include "spark/ui/text/Font.hpp"
 
 #include <algorithm>
@@ -126,6 +132,44 @@ void MountUiFont(GameWorld& w) {
                 "or re-run CMake with network so it can download (tried SPARK_UI_FONT_PATH, "
                 "build assets, source assets, cwd assets).");
     }
+}
+
+void SetSkinnedMeshesUnderRootActive(GameObject& root, bool active) noexcept {
+    Array<GameObject*> stack{};
+    stack.PushBack(&root);
+    while (!stack.IsEmpty()) {
+        GameObject* current = stack[stack.GetSize() - 1U];
+        stack.PopBack();
+        if (current == nullptr) {
+            continue;
+        }
+        if (current->GetComponent<SkinnedMeshComponent>() != nullptr) {
+            current->SetActive(active);
+        }
+        const Array<GameObject*>& children = current->GetChildren();
+        for (std::size_t ci = 0; ci < children.GetSize(); ++ci) {
+            if (children[ci] != nullptr) {
+                stack.PushBack(children[ci]);
+            }
+        }
+    }
+}
+
+void DemoSubmitLitSceneWithHud(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        LitSceneSubmitOptions options,
+        DemoHelpHud& helpHud) {
+    SceneRenderParams params{};
+    world.Rendering().FillLit(context, viewProjection, cameraPositionWorld, options, params);
+    int fbW = 0;
+    int fbH = 0;
+    context.GetFramebufferSize(fbW, fbH);
+    PaintUiCanvases(world, params, fbW, fbH);
+    helpHud.PatchSceneRenderParams(params, world);
+    context.SetSceneRenderParams(params);
 }
 
 }  // namespace Spark

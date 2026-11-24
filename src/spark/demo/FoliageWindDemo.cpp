@@ -12,8 +12,6 @@
 #include "spark/render/scene/SceneGroundExtent.hpp"
 #include "spark/scene/foliage/GrassBladeMesh.hpp"
 #include "spark/scene/mesh/Mesh.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 #include <GLFW/glfw3.h>

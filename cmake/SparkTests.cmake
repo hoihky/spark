@@ -88,6 +88,9 @@ function(spark_add_physics_tests)
             tests/scene/SceneSpatialIndexTest.cpp
             tests/scene/SceneDrawListSorterTest.cpp
             tests/scene/LitSceneFrustumCullTest.cpp
+            tests/scene/ComponentSnapshotRegistryBuiltInHandlersTest.cpp
+            tests/scene/LitSceneWaterFillTest.cpp
+            tests/scene/SkinnedAnimationBudgetCountersTest.cpp
     )
 
     target_link_libraries(SparkPhysicsTests PRIVATE SparkEngine GTest::gtest_main)

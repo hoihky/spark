@@ -13,7 +13,7 @@ ECS → `SceneRenderParams` for the standard lit renderer. Refactor log: `docs/S
 | **Build** | `SceneRigidMeshDrawBuilder`, `SkinnedSceneDrawMaterialApplicator` | Multi-submesh + material/texture resolve |
 | **Sort** | `SceneDrawListSorter` | Opaque sort, sprite/tilemap/water order, opaque/transparent partition |
 | **Cull** | `SceneSpatialCull`, `SceneSpriteTileCull` | Frustum / tile visibility |
-| **Detail** | `detail/SceneSubmitDetail.hpp` | Texture atlas, shadow flags, sky populate (legacy `SceneSubmitDetail::` forwards) |
+| **Materials / textures** | `SceneSubmitMaterials.hpp`, `SceneSubmitTextures.hpp` | Material → draw item; texture layers (prefer over `detail/SceneSubmitDetail.hpp`) |
 
 ## Skinned animation (adjacent, not draw sort)
 

@@ -5,7 +5,7 @@
 #include "spark/audio/SoundEngine.hpp"
 #include "spark/ecs/components/audio/SoundCueComponent.hpp"
 #include "spark/scene/material/MaterialUvMap.hpp"
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/scene/vfx/VfxSubsystemProcess.hpp"
 
 namespace Spark {
@@ -871,171 +871,39 @@ void Maze3DDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEn
         const Spark::Matrix4 view = rig.ViewMatrix();
         const Spark::Matrix4 viewProj = proj * view;
 
+        if (playerGo != nullptr) {
+            SetSkinnedMeshesUnderRootActive(
+                    *playerGo, rig.mode != Spark::CharacterCameraMode::FirstPerson);
+        }
+
+        const Spark::Vector3 pf = rig.ForwardWorld();
+        Spark::Vector3 pr = Spark::Vector3::Cross(Spark::Vector3::UnitY, pf);
+        if (pr.LengthSquared() < 1.0e-10F) {
+            pr = Spark::Vector3::UnitX;
+        } else {
+            pr = pr.Normalized();
+        }
+        const Spark::Vector3 pu = Spark::Vector3::Cross(pf, pr).Normalized();
+
+        Spark::LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(
+                        Spark::Vector3{0.28F, 0.82F, 0.42F}.Normalized(),
+                        {0.92F, 0.94F, 1.0F},
+                        0.72F)
+                .WithAmbient({0.11F, 0.10F, 0.13F})
+                .WithParticles(true, pr, pu)
+                .WithSceneTime(0.035F)
+                .WithSceneForCulling(&scene);
+
         Spark::SceneRenderParams params{};
-        params.viewProjection = viewProj;
-        params.cameraPositionWorld = rig.CameraWorldPosition();
-        params.lightDirectionWorld = Spark::Vector3{0.28F, 0.82F, 0.42F}.Normalized();
-        params.lightColor = {0.92F, 0.94F, 1.0F};
-        params.lightIntensity = 0.72F;
-        params.ambientColor = {0.11F, 0.10F, 0.13F};
+        world.Rendering().FillLit(context, viewProj, rig.CameraWorldPosition(), opts, params);
         params.lightingProfile = Spark::SceneLightingProfile::NightInterior;
         params.useTimeOfDay = true;
         params.timeOfDay = 0.035F;
-        /** Moonlight CSM only — punctual shadows off for FPS on this large maze. */
         params.directionalShadowsEnabled = true;
         params.punctualShadowsEnabled = false;
         params.ssaoEnabled = false;
-
-        params.draws.Clear();
-        params.sceneTextures.Clear();
-        params.sceneHdrTextures.Clear();
-        params.pointLights.Clear();
-        params.particles.Clear();
-        params.sprites.Clear();
-        params.screenRects.Clear();
-        params.screenTexts.Clear();
-        params.screenOverlayRects.Clear();
-        params.screenOverlayTexts.Clear();
-        params.screenLateRects.Clear();
-        params.screenLateTexts.Clear();
-        params.uiFont = world.GetUiFont();
-        params.uiBoldFont = world.GetUiBoldFont();
-        params.draws.Reserve(128);
-
-        {
-            const Spark::Vector3 pf = rig.ForwardWorld();
-            Spark::Vector3 pr = Spark::Vector3::Cross(Spark::Vector3::UnitY, pf);
-            if (pr.LengthSquared() < 1.0e-10F) {
-                pr = Spark::Vector3::UnitX;
-            } else {
-                pr = pr.Normalized();
-            }
-            const Spark::Vector3 pu = Spark::Vector3::Cross(pf, pr).Normalized();
-            params.particleCameraRight = pr;
-            params.particleCameraUp = pu;
-        }
-
-        scene.ForEachParticleEmitter([&params](const Spark::ParticleEmitterComponent& pe,
-                                                    const Spark::Matrix4& /*emitterWorld*/) {
-            Spark::Array<Spark::SceneParticleInstance> chunk;
-            pe.CollectInstances(chunk);
-            for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
-                if (params.particles.GetSize() >= Spark::SceneRenderParams::MaxParticles) {
-                    return;
-                }
-                params.particles.PushBack(chunk[ci]);
-            }
-        });
-
-        scene.ForEachPointLight([&params](const Spark::PointLightComponent& pl, const Spark::Matrix4& worldMat) {
-            if (params.pointLights.GetSize() >= Spark::SceneRenderParams::MaxPointLights) {
-                return;
-            }
-            Spark::ScenePointLight gpu{};
-            gpu.positionWorld = worldMat.TranslationVector();
-            gpu.range = pl.GetRange();
-            gpu.color = pl.GetColor();
-            gpu.intensity = pl.GetIntensity();
-            gpu.castsShadow = pl.CastsShadow();
-            params.pointLights.PushBack(gpu);
-        });
-
-        auto findOrAddTexture = [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2* uvScale = nullptr,
-                                            Spark::Vector2* uvOffset = nullptr) -> std::int32_t {
-            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, uvScale, uvOffset);
-        };
-
-        Spark::Array<Spark::SceneDrawItem> drawList;
-        drawList.Reserve(160);
-
-        scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
-                                 const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
-            Spark::SceneDrawItem item{};
-            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, world, params);
-            drawList.PushBack(item);
-        });
-
-        scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
-                                     const Spark::MaterialComponent* mat, const Spark::Matrix4& world) {
-            if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
-                return;
-            }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = mc.GetSlot();
-            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                item.customMesh = mc.GetMesh();
-            }
-            Spark::Vector3 alb = mc.GetAlbedo();
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 0.5F;
-            item.emissiveColor = Spark::Vector3::Zero;
-            item.emissiveIntensity = 0.0F;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Spark::Vector3& t = mat->GetTint();
-                    alb = {alb.x * t.x, alb.y * t.y, alb.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-                }
-            }
-            item.albedo = alb;
-            drawList.PushBack(item);
-        });
-
-        scene.ForEachSkinnedDrawable([&](Spark::GameObject* obj, const Spark::SkinnedMeshComponent& smc,
-                                              const Spark::MaterialComponent* mat, const Spark::AnimatorComponent* anim,
-                                              const Spark::Matrix4& world) {
-            if (rig.mode == Spark::CharacterCameraMode::FirstPerson && playerGo != nullptr && obj != nullptr
-                    && obj->GetParent() == playerGo) {
-                return;
-            }
-            if (!smc.GetMesh() || anim == nullptr || !anim->GetSkeleton()) {
-                return;
-            }
-            const std::uint32_t jc = anim->GetSkeleton()->GetJointCount();
-            if (jc == 0) {
-                return;
-            }
-            Spark::SceneDrawItem item{};
-            item.model = world;
-            item.mesh = Spark::SceneMeshSlot::Custom;
-            item.skinnedMesh = smc.GetMesh();
-            item.albedo = {0.9F, 0.88F, 0.82F};
-            item.textureLayer = -1;
-            item.metallic = 0.0F;
-            item.roughness = 0.5F;
-            if (mat != nullptr) {
-                ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                if (mat->GetBaseColorTexture()) {
-                    const Spark::Vector3& t = mat->GetTint();
-                    item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
-                    item.textureLayer = findOrAddTexture(mat->GetBaseColorTexture());
-                }
-            }
-            item.jointPalette.Resize(jc);
-            anim->ComputeJointPalette(item.jointPalette.GetData(), Spark::Skeleton::MaxJoints);
-            drawList.PushBack(item);
-        });
-
-        StableSortDrawItems(drawList);
-        for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
-            params.draws.PushBack(drawList[di]);
-        }
-
-        scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
-            Spark::ScreenTextDraw d{};
-            d.text = tc.GetText();
-            d.x = tc.GetScreenX();
-            d.y = tc.GetScreenY();
-            d.sizePixels = tc.GetFontSizePixels();
-            d.color = tc.GetColor();
-            d.alpha = tc.GetAlpha();
-            d.paintOrder = params.NextUiPaintOrder();
-            params.screenTexts.PushBack(Spark::MoveTemp(d));
-        });
-
+        Spark::PaintUiCanvases(world, params, fbW, fbH);
         helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }

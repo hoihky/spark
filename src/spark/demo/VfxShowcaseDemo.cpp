@@ -454,14 +454,6 @@ void VfxShowcaseDemo::Render(Scene& scene, GameWorld& world, IEngineContext& con
     const Matrix4 view = cameraController.camera.ViewMatrix();
     const Matrix4 viewProj = proj * view;
 
-    SceneRenderParams params{};
-    params.viewProjection = viewProj;
-    params.cameraPositionWorld = cameraController.camera.position;
-    params.lightDirectionWorld = Vector3{0.4F, 0.85F, 0.2F}.Normalized();
-    params.lightColor = {1.0F, 0.98F, 0.92F};
-    params.lightIntensity = 0.92F;
-    params.ambientColor = {0.10F, 0.11F, 0.14F};
-
     const Vector3 f = cameraController.camera.Forward();
     Vector3 r = Vector3::Cross(Vector3::UnitY, f);
     if (r.LengthSquared() < 1.0e-10F) {
@@ -470,70 +462,16 @@ void VfxShowcaseDemo::Render(Scene& scene, GameWorld& world, IEngineContext& con
         r = r.Normalized();
     }
     const Vector3 u = Vector3::Cross(f, r).Normalized();
-    params.particleCameraRight = r;
-    params.particleCameraUp = u;
 
-    params.particles.Clear();
-    scene.ForEachParticleEmitter([&params](const ParticleEmitterComponent& pe, const Matrix4& /*world*/) {
-        Array<SceneParticleInstance> chunk;
-        pe.CollectInstances(chunk);
-        for (std::size_t ci = 0; ci < chunk.GetSize(); ++ci) {
-            if (params.particles.GetSize() >= SceneRenderParams::MaxParticles) {
-                return;
-            }
-            params.particles.PushBack(chunk[ci]);
-        }
-    });
-
-    params.draws.Clear();
-    params.sceneTextures.Clear();
-    params.pointLights.Clear();
-    params.sprites.Clear();
-    params.screenRects.Clear();
-    params.screenTexts.Clear();
-    params.screenOverlayRects.Clear();
-    params.screenOverlayTexts.Clear();
-    params.screenLateRects.Clear();
-    params.screenLateTexts.Clear();
-    params.uiFont = world.GetUiFont();
-    params.uiBoldFont = world.GetUiBoldFont();
-    params.draws.Reserve(16);
-
-    scene.ForEachDrawable([&](GameObject* obj, const MeshComponent& mc, const MaterialComponent* mat,
-                                 const Matrix4& worldMatrix) {
-        if (obj != nullptr && obj->GetComponent<SkyComponent>() != nullptr) {
-            return;
-        }
-        SceneDrawItem item{};
-        item.model = worldMatrix;
-        item.mesh = mc.GetSlot();
-        if (mc.GetSlot() == SceneMeshSlot::Custom) {
-            item.customMesh = mc.GetMesh();
-        }
-        Vector3 alb = mc.GetAlbedo();
-        item.textureLayer = -1;
-        if (mat != nullptr) {
-            ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-        }
-        item.albedo = alb;
-        params.draws.PushBack(item);
-    });
-
-    scene.ForEachTextOverlay([&params](const TextOverlayComponent& tc) {
-        ScreenTextDraw d{};
-        d.text = tc.GetText();
-        d.x = tc.GetScreenX();
-        d.y = tc.GetScreenY();
-        d.sizePixels = tc.GetFontSizePixels();
-        d.color = tc.GetColor();
-        d.alpha = tc.GetAlpha();
-        d.paintOrder = params.NextUiPaintOrder();
-        params.screenTexts.PushBack(MoveTemp(d));
-    });
-
-    PaintUiCanvases(world, params, fbW, fbH);
-    helpHud.PatchSceneRenderParams(params, world);
-    context.SetSceneRenderParams(params);
+    LitSceneSubmitOptions opts{};
+    opts.WithDirectionalLight(
+                    Vector3{0.4F, 0.85F, 0.2F}.Normalized(),
+                    {1.0F, 0.98F, 0.92F},
+                    0.92F)
+            .WithAmbient({0.10F, 0.11F, 0.14F})
+            .WithParticles(true, r, u)
+            .WithSceneForCulling(&scene);
+    DemoSubmitLitSceneWithHud(world, context, viewProj, cameraController.camera.position, opts, helpHud);
 }
 
 ParticleEmitterComponent* VfxShowcaseDemo::PreviewEmitter() noexcept {

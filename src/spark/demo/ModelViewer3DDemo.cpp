@@ -16,7 +16,6 @@
 #include "spark/scene/assets/gltf/GltfAssetBindings.hpp"
 #include "spark/scene/material/GltfMaterial.hpp"
 #include "spark/scene/mesh/SkinnedMesh.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 #include "spark/scene/texture/Texture2D.hpp"
 
 #include <algorithm>

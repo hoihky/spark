@@ -20,7 +20,6 @@
 #include "spark/scene/assets/ScenePathResolver.hpp"
 #include "spark/ecs/components/rendering/TilemapComponent.hpp"
 #include "spark/config.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
 
 #include <algorithm>
 #include <cmath>

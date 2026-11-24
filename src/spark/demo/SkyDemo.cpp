@@ -7,8 +7,7 @@
 #include "spark/render/lighting/SceneLightingProfile.hpp"
 #include "spark/render/lighting/SceneLightingResolver.hpp"
 #include "spark/render/scene/SceneGroundExtent.hpp"
-#include "spark/scene/submit/SceneSubmit.hpp"
-#include "spark/scene/submit/detail/SceneSubmitDetail.hpp"
+#include "spark/demo/ShellDemoSceneUtil.hpp"
 #include "spark/scene/volume/RenderVolumes.hpp"
 
 namespace Spark {
@@ -246,104 +245,22 @@ void SkyDemo::Render(Spark::Scene& scene, Spark::GameWorld& world, Spark::IEngin
         const Spark::Matrix4 view = camera.ViewMatrix();
         const Spark::Matrix4 viewProj = proj * view;
 
+        Spark::LitSceneSubmitOptions opts{};
+        opts.WithDirectionalLight(
+                        Spark::Vector3{0.42F, 0.82F, 0.28F}.Normalized(),
+                        {1.0F, 0.97F, 0.90F},
+                        1.0F)
+                .WithAmbient({0.13F, 0.14F, 0.17F})
+                .WithSceneForCulling(&scene);
         Spark::SceneRenderParams params{};
-        params.viewProjection = viewProj;
-        params.cameraPositionWorld = camera.position;
-        params.lightDirectionWorld = Spark::Vector3{0.42F, 0.82F, 0.28F}.Normalized();
-        params.lightColor = {1.0F, 0.97F, 0.90F};
-        params.lightIntensity = 1.0F;
-        params.ambientColor = {0.13F, 0.14F, 0.17F};
+        world.Rendering().FillLit(context, viewProj, camera.position, opts, params);
         params.directionalShadowsEnabled = true;
         params.shadowDepthSampleFlipV = true;
         params.punctualShadowsEnabled = false;
         params.iblEnabled = false;
         params.iblUseHdrSkyEnvironment = false;
         params.ssaoEnabled = ssaoEnabled;
-
-        Spark::ApplyRegionalRenderVolumes(world, camera.position, params);
-        const Spark::ResolvedSceneLighting resolvedLighting = Spark::SceneLightingResolver::Resolve(params);
-        const std::int32_t shadowFlags = Spark::DefaultShadowFlagsFor(resolvedLighting);
-
-        params.draws.Clear();
-        params.sceneTextures.Clear();
-        params.sceneHdrTextures.Clear();
-        params.pointLights.Clear();
-        params.sprites.Clear();
-        params.screenRects.Clear();
-        params.screenTexts.Clear();
-        params.screenOverlayRects.Clear();
-        params.screenOverlayTexts.Clear();
-        params.screenLateRects.Clear();
-        params.screenLateTexts.Clear();
-        params.uiFont = world.GetUiFont();
-        params.uiBoldFont = world.GetUiBoldFont();
-        params.draws.Reserve(24);
-
-        const auto findOrAddTexture =
-                [&params](const Spark::SharedPtr<Spark::Texture2D>& tex, Spark::Vector2*, Spark::Vector2*) -> std::int32_t {
-            return Spark::SceneSubmitDetail::FindOrAddSceneTexture(params, tex, nullptr, nullptr);
-        };
-
-        Spark::Array<Spark::SceneDrawItem> drawList;
-        drawList.Reserve(16);
-
-        scene.ForEachSky([&](Spark::GameObject&, const Spark::SkyComponent& sk, const Spark::MeshComponent& mc,
-                                 const Spark::MaterialComponent* mat, const Spark::Matrix4& worldM) {
-            Spark::SceneDrawItem item{};
-            Spark::SceneSubmitDetail::PopulateSkyDrawItem(item, sk, mc, mat, worldM, params);
-            drawList.PushBack(item);
-        });
-
-        scene.ForEachDrawable([&](Spark::GameObject* obj, const Spark::MeshComponent& mc,
-                                     const Spark::MaterialComponent* mat, const Spark::Matrix4& worldM) {
-            if (obj != nullptr && obj->GetComponent<Spark::SkyComponent>() != nullptr) {
-                return;
-            }
-            Spark::SceneDrawItem baseItem{};
-            baseItem.model = worldM;
-            baseItem.mesh = mc.GetSlot();
-            baseItem.albedo = mc.GetAlbedo();
-            baseItem.textureLayer = -1;
-            baseItem.shadowFlags = shadowFlags;
-            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom) {
-                baseItem.customMesh = mc.GetMesh();
-            }
-            if (mc.GetSlot() == Spark::SceneMeshSlot::GroundPlane) {
-                baseItem.doubleSided = true;
-            }
-            const Spark::MultiMaterialComponent* multiMat =
-                    obj != nullptr ? obj->GetComponent<Spark::MultiMaterialComponent>() : nullptr;
-            if (mc.GetSlot() == Spark::SceneMeshSlot::Custom && mc.GetMesh() && multiMat != nullptr &&
-                !mc.GetMesh()->GetSubmeshes().IsEmpty()) {
-                Spark::SceneSubmitDetail::PushRigidMeshDraws(
-                        drawList, baseItem, *mc.GetMesh(), mat, multiMat, params, findOrAddTexture);
-                return;
-            }
-            Spark::SceneDrawItem item = baseItem;
-            if (mat != nullptr) {
-                Spark::ApplyMaterialComponentToSceneDrawItem(item, mat, &params);
-                Spark::SceneSubmitDetail::ApplyAlbedoTexture(item, mat->GetBaseColorTexture(), mat->GetTint(), findOrAddTexture);
-            }
-            drawList.PushBack(item);
-        });
-
-        Spark::StableSortDrawItems(drawList);
-        for (std::size_t di = 0; di < drawList.GetSize(); ++di) {
-            params.draws.PushBack(drawList[di]);
-        }
-
-        scene.ForEachTextOverlay([&params](const Spark::TextOverlayComponent& tc) {
-            Spark::ScreenTextDraw d{};
-            d.text = tc.GetText();
-            d.x = tc.GetScreenX();
-            d.y = tc.GetScreenY();
-            d.sizePixels = tc.GetFontSizePixels();
-            d.color = tc.GetColor();
-            d.alpha = tc.GetAlpha();
-            d.paintOrder = params.NextUiPaintOrder();
-            params.screenTexts.PushBack(Spark::MoveTemp(d));
-        });
-
+        Spark::PaintUiCanvases(world, params, fbW, fbH);
         helpHud.PatchSceneRenderParams(params, world);
         context.SetSceneRenderParams(params);
     }

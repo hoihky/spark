@@ -2,7 +2,6 @@
 #include "spark/demo/DemoAssetLoad.hpp"
 #include "spark/config.hpp"
 
-#include "spark/scene/submit/SceneSubmit.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/lighting/PointLightComponent.hpp"

@@ -1,6 +1,10 @@
 #include "spark/scene/submit/SceneSubmit.hpp"
+#include "spark/scene/submit/SceneSubmitTextures.hpp"
 
 #include "spark/ecs/GameObject.hpp"
+#include "spark/render/scene/SceneBlendMode.hpp"
+#include "spark/scene/mesh/Mesh.hpp"
+#include "spark/scene/mesh/SkinnedMesh.hpp"
 #include "spark/ecs/components/rendering/MaterialComponent.hpp"
 #include "spark/ecs/components/rendering/MeshComponent.hpp"
 #include "spark/ecs/components/rendering/SkyComponent.hpp"
@@ -232,7 +236,8 @@ void PopulateSkyDrawItem(
         const Vector3& t = mat->GetTint();
         item.albedo = {item.albedo.x * t.x, item.albedo.y * t.y, item.albedo.z * t.z};
         bool isHdr = false;
-        item.textureLayer = FindOrAddSceneTexture(params, mat->GetBaseColorTexture(), nullptr, nullptr, &isHdr);
+        item.textureLayer = SceneSubmitDetail::FindOrAddSceneTexture(
+                params, mat->GetBaseColorTexture(), nullptr, nullptr, &isHdr);
         Vector2 atlasScale{1.0F, 1.0F};
         Vector2 atlasOffset{};
         SharedPtr<Texture2D> resolved = mat->GetBaseColorTexture()->ResolveAtlasUv(atlasScale, atlasOffset);
@@ -246,6 +251,45 @@ void PopulateSkyDrawItem(
 }
 
 }  // namespace SceneSubmitDetail
+
+std::int32_t FindOrAddSceneTexture(
+        SceneRenderParams& params,
+        const SharedPtr<Texture2D>& tex,
+        Vector2* outUvScale,
+        Vector2* outUvOffset,
+        bool* outIsHdrLinear) {
+    return SceneSubmitDetail::FindOrAddSceneTexture(params, tex, outUvScale, outUvOffset, outIsHdrLinear);
+}
+
+std::int32_t ResolveDrawableShadowFlags(
+        const GameObject* object,
+        SceneMeshSlot meshSlot,
+        const Matrix4& worldMatrix,
+        const MaterialComponent* material,
+        std::int32_t defaultShadowFlags) noexcept {
+    return SceneSubmitDetail::ResolveDrawableShadowFlags(
+            object, meshSlot, worldMatrix, material, defaultShadowFlags);
+}
+
+std::int32_t ResolveWaterShadowFlags(
+        const MaterialComponent* material,
+        const SceneRenderParams& params) noexcept {
+    return SceneSubmitDetail::ResolveWaterShadowFlags(material, params);
+}
+
+void ResolveIblEnvironmentLayer(SceneRenderParams& params) noexcept {
+    SceneSubmitDetail::ResolveIblEnvironmentLayer(params);
+}
+
+void PopulateSkyDrawItem(
+        SceneDrawItem& item,
+        const SkyComponent& sky,
+        const MeshComponent& mc,
+        const MaterialComponent* mat,
+        const Matrix4& worldM,
+        SceneRenderParams& params) noexcept {
+    SceneSubmitDetail::PopulateSkyDrawItem(item, sky, mc, mat, worldM, params);
+}
 
 void ApplyMaterialComponentToSceneDrawItem(
         SceneDrawItem& item,

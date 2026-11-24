@@ -16,8 +16,6 @@ set(SPARK_GAMEPLAY_SOURCES
         src/spark/gameplay/fog/FogOfWarMaskTextureBuilder.cpp
         src/spark/gameplay/fog/FogOfWarScreenPresenter.cpp
         src/spark/gameplay/GameplayDataTable.cpp
-        src/spark/scene/serialization/ComponentSnapshotHandlersGameFlow.cpp
-        src/spark/scene/serialization/ComponentSnapshotHandlersGameplay.cpp
         src/spark/gameplay/gameflow/GameFlowCoordinator.cpp
         src/spark/gameplay/gameflow/GameFlowPersistentData.cpp
         src/spark/gameplay/Combat2D.cpp

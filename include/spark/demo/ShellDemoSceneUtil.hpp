@@ -6,13 +6,27 @@
 #include "spark/math/Vector4.hpp"
 #include "spark/engine/SceneRenderParams.hpp"
 #include "spark/core/Array.hpp"
+#include "spark/scene/submit/LitSceneSubmitOptions.hpp"
 
 namespace Spark {
 
+class DemoHelpHud;
+class GameObject;
 class GameWorld;
+class IEngineContext;
 
 /** Loads Roboto UI fonts into <c>world</c> for demo HUD / portable GUI text. */
 void MountUiFont(GameWorld& world);
+
+void SetSkinnedMeshesUnderRootActive(GameObject& root, bool active) noexcept;
+
+void DemoSubmitLitSceneWithHud(
+        GameWorld& world,
+        IEngineContext& context,
+        const Matrix4& viewProjection,
+        const Vector3& cameraPositionWorld,
+        LitSceneSubmitOptions options,
+        DemoHelpHud& helpHud);
 
 Quaternion QuaternionFromRotationColumns(
         const Vector3& col0, const Vector3& col1, const Vector3& col2) noexcept;
